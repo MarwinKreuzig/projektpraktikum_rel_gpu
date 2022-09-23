@@ -23,6 +23,29 @@
 class NetworkGraph;
 class NeuronMonitor;
 
+enum class SynapticInputCalculatorType : char {
+    Linear,
+    Logarithmic,
+};
+
+/**
+ * @brief Pretty-prints the synaptic input calculator type to the chosen stream
+ * @param out The stream to which to print the fired status
+ * @param element_type The fired status to print
+ * @return The argument out, now altered with the fired status
+ */
+inline std::ostream& operator<<(std::ostream& out, const SynapticInputCalculatorType& calculator_type) {
+    if (calculator_type == SynapticInputCalculatorType::Linear) {
+        return out << "Linear";
+    }
+
+    if (calculator_type == SynapticInputCalculatorType::Logarithmic) {
+        return out << "Logarithmic";
+    }
+
+    return out;
+}
+
 /**
  * This class provides an interface to calculate the background activity and synaptic input
  * that neurons receive. Performs communication with MPI to synchronize with different ranks.
@@ -220,7 +243,7 @@ protected:
      * @brief This hook needs to update this->background_activity for every neuron. 
      * @param disable_flags Which local neurons are disabled
      */
-    virtual void update_background_activity(const std::vector<UpdateStatus>& disable_flags) = 0;
+    virtual void update_background_activity(const std::vector<UpdateStatus>& disable_flags);
 
     /**
      * @brief Sets the synaptic input for the given neuron

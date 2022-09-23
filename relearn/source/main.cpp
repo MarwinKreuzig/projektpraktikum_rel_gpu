@@ -19,7 +19,7 @@
 #include "neurons/CalciumCalculator.h"
 #include "neurons/ElementType.h"
 #include "neurons/helper/NeuronMonitor.h"
-#include "neurons/models/LinearSynapticInputCalculator.h"
+#include "neurons/models/SynapticInputCalculators.h"
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
 #include "neurons/models/SynapticInputCalculator.h"
@@ -220,6 +220,12 @@ int main(int argc, char** argv) {
         { "separate", NodeCacheType::Separate },
     };
 
+    SynapticInputCalculatorType chosen_synapse_input_calculator_type = SynapticInputCalculatorType::Linear;
+    std::map<std::string, SynapticInputCalculatorType> cli_parse_synapse_input_calculator_type{
+        { "linear", SynapticInputCalculatorType::Linear },
+        { "logarithmic", SynapticInputCalculatorType::Logarithmic },
+    };
+
     size_t simulation_steps{};
     app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms.")->required();
 
@@ -321,6 +327,9 @@ int main(int argc, char** argv) {
 
     double synapse_conductance{ SynapticInputCalculator::default_k };
     app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transfered to its neighbors when a neuron spikes. Default is 0.03");
+
+    auto* const opt_synapse_input_calculator_type = app.add_option("--synapse-input-calculator-type", chosen_synapse_input_calculator_type, "The type calculator that transforms the synapse input.");
+    opt_synapse_input_calculator_type->transform(CLI::CheckedTransformer(cli_parse_synapse_input_calculator_type, CLI::ignore_case));
 
     double calcium_decay{ CalciumCalculator::default_tau_C };
     app.add_option("--calcium-decay", calcium_decay, "The decay constant for the intercellular calcium. Must be greater than 0.0");
@@ -575,7 +584,12 @@ int main(int argc, char** argv) {
         RelearnException::check(chosen_kernel_type == KernelType::Gaussian, "Setting the probability kernel type is not supported for the fast multipole methods!");
     }
 
-    auto input_calculator = std::make_unique<LinearSynapticInputCalculator>(synapse_conductance, base_background_activity, background_activity_mean, background_activity_stddev);
+    std::unique_ptr<SynapticInputCalculator> input_calculator{};    
+    if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
+        input_calculator = std::make_unique<LinearSynapticInputCalculator>(synapse_conductance, base_background_activity, background_activity_mean, background_activity_stddev);
+    } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic) {
+        input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, base_background_activity, background_activity_mean, background_activity_stddev);
+    }
 
     std::unique_ptr<NeuronModel> neuron_model{};
     if (chosen_neuron_model == NeuronModelEnum::Poisson) {

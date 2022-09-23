@@ -13,6 +13,8 @@
 #include "mpi/MPIWrapper.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/models/FiredStatusCommunicationMap.h"
+#include "util/Random.h"
+#include "util/Timers.h"
 
 #include <algorithm>
 
@@ -80,4 +82,32 @@ double SynapticInputCalculator::get_distant_synaptic_input(const NetworkGraph& n
     }
 
     return distant_input;
+}
+
+void SynapticInputCalculator::update_background_activity(const std::vector<UpdateStatus>& disable_flags) {
+    Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
+
+    const auto background_activity_stddev = get_background_activity_stddev();
+    const auto background_activity_mean = get_background_activity_mean();
+    const auto base_background_activity = get_base_background_activity();
+
+    const auto number_local_neurons = get_number_neurons();
+
+    // There might be background activity
+    if (background_activity_stddev > 0.0) {
+        for (size_t neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
+            if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
+                continue;
+            }
+
+            const double rnd = RandomHolder::get_random_normal_double(RandomHolderKey::NeuronModel, background_activity_mean, background_activity_stddev);
+            const double input = base_background_activity + rnd;
+
+            set_background_activity(neuron_id, input);
+        }
+    } else {
+        set_background_activity(base_background_activity);
+    }
+
+    Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
 }
