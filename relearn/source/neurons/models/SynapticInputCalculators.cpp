@@ -18,7 +18,7 @@ void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& ne
 
     const auto number_local_neurons = get_number_neurons();
 
-#pragma omp parallel for shared(network_graph, disable_flags, std::ranges::binary_search) default(none)
+#pragma omp parallel for shared(network_graph, disable_flags, number_local_neurons, fired, std::ranges::binary_search) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
@@ -41,7 +41,7 @@ void LogarithmicSynapticInputCalculator::update_synaptic_input(const NetworkGrap
 
     const auto number_local_neurons = get_number_neurons();
 
-#pragma omp parallel for shared(network_graph, disable_flags, std::ranges::binary_search) default(none)
+#pragma omp parallel for shared(network_graph, disable_flags, number_local_neurons, fired, std::ranges::binary_search) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
