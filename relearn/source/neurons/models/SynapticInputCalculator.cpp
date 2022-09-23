@@ -13,7 +13,11 @@
 #include "mpi/MPIWrapper.h"
 #include "neurons/models/FiredStatusCommunicationMap.h"
 
+#include <algorithm>
+
 void SynapticInputCalculator::init(const size_t number_neurons) {
+    RelearnException::check(number_neurons > 0, "SynapticInputCalculator::init: number_neurons was 0");
+
     number_local_neurons = number_neurons;
 
     synaptic_input.resize(number_neurons, 0.0);
@@ -23,6 +27,9 @@ void SynapticInputCalculator::init(const size_t number_neurons) {
 }
 
 void SynapticInputCalculator::create_neurons(const size_t creation_count) {
+    RelearnException::check(number_local_neurons > 0, "SynapticInputCalculator::create_neurons: number_local_neurons was 0");
+    RelearnException::check(creation_count > 0, "SynapticInputCalculator::create_neurons: creation_count was 0");
+
     const auto current_size = number_local_neurons;
     const auto new_size = current_size + creation_count;
     number_local_neurons = new_size;
@@ -31,4 +38,12 @@ void SynapticInputCalculator::create_neurons(const size_t creation_count) {
     background_activity.resize(new_size, 0.0);
 
     fired_status_comm = std::make_unique<FiredStatusCommunicationMap>(MPIWrapper::get_num_ranks(), new_size);
+}
+
+void SynapticInputCalculator::set_synaptic_input(const double value) noexcept {
+    std::ranges::fill(synaptic_input, value);
+}
+
+void SynapticInputCalculator::set_background_activity(const double value) noexcept {
+    std::ranges::fill(background_activity, value);
 }

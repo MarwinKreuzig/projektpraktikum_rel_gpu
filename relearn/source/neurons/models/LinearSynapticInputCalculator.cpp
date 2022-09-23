@@ -21,7 +21,6 @@ void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& ne
 
     const auto number_local_neurons = get_number_neurons();
     const auto k = get_k();
-    auto& synaptic_input = get_inner_synaptic_input();
 
 #pragma omp parallel for shared(network_graph, disable_flags, std::ranges::binary_search) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
@@ -58,7 +57,7 @@ void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& ne
             }
         }
 
-        synaptic_input[neuron_id] = total_input;
+        set_synaptic_input(neuron_id, total_input);
     }
 
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
@@ -73,8 +72,6 @@ void LinearSynapticInputCalculator::update_background_activity(const std::vector
 
     const auto number_local_neurons = get_number_neurons();
 
-    auto& background_activity = get_inner_background_activity();
-
     // There might be background activity
     if (background_activity_stddev > 0.0) {
         for (size_t neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
@@ -84,10 +81,11 @@ void LinearSynapticInputCalculator::update_background_activity(const std::vector
 
             const double rnd = RandomHolder::get_random_normal_double(RandomHolderKey::NeuronModel, background_activity_mean, background_activity_stddev);
             const double input = base_background_activity + rnd;
-            background_activity[neuron_id] = input;
+
+            set_background_activity(neuron_id, input);
         }
     } else {
-        std::ranges::fill(background_activity, base_background_activity);
+        set_background_activity(base_background_activity);
     }
 
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
