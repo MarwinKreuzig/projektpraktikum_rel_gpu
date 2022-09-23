@@ -17,10 +17,7 @@
 void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus> fired, const std::vector<UpdateStatus>& disable_flags) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
-    const auto& fired_status_comm = get_fired_status_communicator();
-
     const auto number_local_neurons = get_number_neurons();
-    const auto k = get_k();
 
 #pragma omp parallel for shared(network_graph, disable_flags, std::ranges::binary_search) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
@@ -29,33 +26,10 @@ void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& ne
         }
 
         NeuronID id{ neuron_id };
-        /**
-         * Determine synaptic input from neurons connected to me
-         */
-
-        // Walk through the local in-edges of my neuron
-        const NetworkGraph::LocalEdges& local_in_edges = network_graph.get_local_in_edges(id);
-
-        auto total_input = 0.0;
-        for (const auto& [src_neuron_id, edge_val] : local_in_edges) {
-            const auto spike = fired[src_neuron_id.get_neuron_id()];
-            if (spike == FiredStatus::Fired) {
-                total_input += k * edge_val;
-            }
-        }
-
-        // Walk through the distant in-edges of my neuron
-        const NetworkGraph::DistantEdges& in_edges = network_graph.get_distant_in_edges(id);
-
-        for (const auto& [key, edge_val] : in_edges) {
-            const auto& rank = key.get_rank();
-            const auto& initiator_neuron_id = key.get_neuron_id();
-
-            const auto contains_id = fired_status_comm->contains(rank, initiator_neuron_id);
-            if (contains_id) {
-                total_input += k * edge_val;
-            }
-        }
+        
+        const auto local_input = get_local_synaptic_input(network_graph, fired, id);
+        const auto distant_input = get_distant_synaptic_input(network_graph, fired, id);
+        const auto total_input = local_input + distant_input;
 
         set_synaptic_input(neuron_id, total_input);
     }

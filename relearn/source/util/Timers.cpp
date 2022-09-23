@@ -37,8 +37,8 @@ std::string Timers::wall_clock_time() {
     time_t rawtime = 0;
     struct tm timeinfo;
 
-    // Needs 1 char more for '\n'
-    char char_buff[size_of_date_string + 1];
+    // Need some more space for '\n' and other checks
+    char char_buff[size_of_date_string + 3];
 
     time(&rawtime);
     localtime_s(&timeinfo, &rawtime);

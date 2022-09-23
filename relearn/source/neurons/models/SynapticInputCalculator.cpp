@@ -11,6 +11,7 @@
 #include "SynapticInputCalculator.h"
 
 #include "mpi/MPIWrapper.h"
+#include "neurons/NetworkGraph.h"
 #include "neurons/models/FiredStatusCommunicationMap.h"
 
 #include <algorithm>
@@ -46,4 +47,37 @@ void SynapticInputCalculator::set_synaptic_input(const double value) noexcept {
 
 void SynapticInputCalculator::set_background_activity(const double value) noexcept {
     std::ranges::fill(background_activity, value);
+}
+
+double SynapticInputCalculator::get_local_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus> fired, const NeuronID& neuron_id) {
+    // Walk through the local in-edges of my neuron
+    const NetworkGraph::LocalEdges& local_in_edges = network_graph.get_local_in_edges(neuron_id);
+
+    auto local_input = 0.0;
+    for (const auto& [src_neuron_id, edge_val] : local_in_edges) {
+        const auto spike = fired[src_neuron_id.get_neuron_id()];
+        if (spike == FiredStatus::Fired) {
+            local_input += k * edge_val;
+        }
+    }
+
+    return local_input;
+}
+
+double SynapticInputCalculator::get_distant_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus> fired, const NeuronID& neuron_id) {
+    // Walk through the distant in-edges of my neuron
+    const NetworkGraph::DistantEdges& in_edges = network_graph.get_distant_in_edges(neuron_id);
+
+    auto distant_input = 0.0;
+    for (const auto& [key, edge_val] : in_edges) {
+        const auto& rank = key.get_rank();
+        const auto& initiator_neuron_id = key.get_neuron_id();
+
+        const auto contains_id = fired_status_comm->contains(rank, initiator_neuron_id);
+        if (contains_id) {
+            distant_input += k * edge_val;
+        }
+    }
+
+    return distant_input;
 }

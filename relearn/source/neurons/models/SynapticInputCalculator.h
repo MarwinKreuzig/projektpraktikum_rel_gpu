@@ -256,6 +256,10 @@ protected:
      */
     void set_background_activity(const double value) noexcept;
 
+    [[nodiscard]] double get_local_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus> fired, const NeuronID& neuron_id);
+
+    [[nodiscard]] double get_distant_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus> fired, const NeuronID& neuron_id);
+
 private:
     size_t number_local_neurons{};
 

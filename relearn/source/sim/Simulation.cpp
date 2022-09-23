@@ -234,8 +234,9 @@ void Simulation::simulate(const size_t number_steps) {
                 if (mn.get_target_id().get_neuron_id() < number_neurons) {
                     mn.record_data();
                 }
-                neurons->get_neuron_model()->reset_fired_recorder();
             }
+
+            neurons->get_neuron_model()->reset_fired_recorder();
         }
 
         for (const auto& [disable_step, disable_ids] : disable_interrupts) {
