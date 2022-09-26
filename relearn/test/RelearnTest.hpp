@@ -22,8 +22,11 @@
 #include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/ElementType.h"
+#include "neurons/FiredStatus.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/SignalType.h"
+#include "neurons/CalciumCalculator.h"
+#include "neurons/helper/SynapseCreationRequests.h"
 #include "neurons/models/SynapticElements.h"
 #include "structure/Cell.h"
 #include "structure/Partition.h"
@@ -31,6 +34,7 @@
 #include "structure/OctreeNode.h"
 #include "util/MemoryHolder.h"
 #include "util/RelearnException.h"
+#include "util/StepParser.h"
 #include "util/TaggedID.h"
 
 #include <chrono>
@@ -38,6 +42,7 @@
 #include <cstdint>
 #include <map>
 #include <random>
+#include <stack>
 #include <tuple>
 #include <vector>
 
@@ -76,9 +81,9 @@ protected:
         init<AdditionalCellAttributes>();
     }
 
-    static void SetUpTestCase();
+    static void SetUpTestSuite();
 
-    static void TearDownTestCase() {
+    static void TearDownTestSuite() {
         RelearnException::hide_messages = false;
         LogFiles::disable = false;
     }
@@ -116,13 +121,13 @@ protected:
     }
 
     double get_random_double(double min, double max) {
-        std::uniform_real_distribution<double> urd(min, max);
+        uniform_real_distribution<double> urd(min, max);
         return urd(mt);
     }
 
     template <typename T>
     T get_random_integer(T min, T max) {
-        std::uniform_int_distribution<T> uid(min, max);
+        uniform_int_distribution<T> uid(min, max);
         return uid(mt);
     }
 
@@ -176,12 +181,12 @@ protected:
     }
 
     int get_random_rank(size_t number_ranks) {
-        std::uniform_int_distribution<int> uid(0, static_cast<int>(number_ranks) - 1);
+        uniform_int_distribution<int> uid(0, static_cast<int>(number_ranks) - 1);
         return uid(mt);
     }
 
     int get_random_rank(size_t number_ranks, int exclude_rank) {
-        std::uniform_int_distribution<int> uid(0, static_cast<int>(number_ranks) - 1);
+        uniform_int_distribution<int> uid(0, static_cast<int>(number_ranks) - 1);
 
         auto rank = uid(mt);
         while (rank == exclude_rank) {
@@ -205,7 +210,7 @@ protected:
     }
 
     NeuronID get_random_neuron_id(size_t number_neurons, size_t offset = 0) {
-        std::uniform_int_distribution<size_t> uid(offset, offset + number_neurons - 1);
+        uniform_int_distribution<size_t> uid(offset, offset + number_neurons - 1);
         return NeuronID{ uid(mt) };
     }
 
@@ -258,7 +263,7 @@ protected:
     }
 
     bool get_random_bool() noexcept {
-        std::uniform_int_distribution<unsigned short> uid_bool(0, 1);
+        uniform_int_distribution<unsigned short> uid_bool(0, 1);
         return uid_bool(mt) == 0;
     }
 
@@ -269,7 +274,7 @@ protected:
     SignalType get_random_signal_type() noexcept {
         return get_random_bool() ? SignalType::Excitatory : SignalType::Inhibitory;
     }
-    
+
     double get_random_gamma_k() noexcept {
         return get_random_double(0.001, 10.0);
     }
@@ -366,6 +371,31 @@ protected:
         return ss.str();
     }
 
+    std::vector<LocalSynapse> generate_local_synapses(size_t number_neurons) {
+        const auto number_synapses = get_random_number_synapses();
+
+        std::map<std::pair<NeuronID, NeuronID>, int> synapse_map{};
+        for (auto i = 0; i < number_synapses; i++) {
+            const auto source = get_random_neuron_id(number_neurons);
+            const auto target = get_random_neuron_id(number_neurons);
+            const auto weight = get_random_synapse_weight();
+
+            synapse_map[{ target, source }] += weight;
+        }
+
+        std::vector<LocalSynapse> synapses{};
+        synapses.reserve(synapse_map.size());
+
+        for (const auto& [pair, weight] : synapse_map) {
+            const auto& [target, source] = pair;
+            if (weight != 0) {
+                synapses.emplace_back(target, source, weight);
+            }
+        }
+
+        return synapses;
+    }
+
     std::tuple<CommunicationMap<SynapseCreationRequest>, std::vector<size_t>, std::vector<size_t>> create_incoming_requests(size_t number_ranks, int current_rank,
         size_t number_neurons, size_t number_requests_lower_bound, size_t number_requests_upper_bound) {
 
@@ -376,15 +406,16 @@ protected:
         for (const auto& target_id : NeuronID::range(number_neurons)) {
             const auto number_requests = get_random_integer<size_t>(number_requests_lower_bound, number_requests_upper_bound);
 
-            const auto id = target_id.get_local_id();
+            const auto id = target_id.get_neuron_id();
 
             for (auto r = 0; r < number_requests; r++) {
                 const auto source_rank = get_random_rank(number_ranks);
                 const auto source_id = get_random_neuron_id(number_neurons);
+                const auto fixed_source_id = (source_id.get_neuron_id() == target_id.get_neuron_id() && current_rank == source_rank) ? NeuronID{ (source_id.get_neuron_id() + 1) % number_neurons } : source_id;
 
                 const auto signal_type = get_random_signal_type();
 
-                const SynapseCreationRequest scr{ target_id, source_id, signal_type };
+                const SynapseCreationRequest scr{ target_id, fixed_source_id, signal_type };
 
                 if (signal_type == SignalType::Excitatory) {
                     number_excitatory_requests[id]++;
@@ -420,7 +451,7 @@ protected:
             se.update_connected_elements(neuron_id, number_connected_elements);
             se.set_signal_type(neuron_id, signal_type);
 
-            const auto i = neuron_id.get_local_id();
+            const auto i = neuron_id.get_neuron_id();
 
             grown_elements[i] = number_grown_elements;
             connected_elements[i] = number_connected_elements;
@@ -431,7 +462,7 @@ protected:
     }
 
     std::shared_ptr<SynapticElements> create_axons(size_t number_elements, double minimal_grown, double maximal_grown) {
-        SynapticElements axons(ElementType::Axon, SynapticElements::default_C_target);
+        SynapticElements axons(ElementType::Axon, CalciumCalculator::default_C_target);
         axons.init(number_elements);
 
         for (const auto& neuron_id : NeuronID::range(number_elements)) {
@@ -447,7 +478,7 @@ protected:
     }
 
     std::shared_ptr<SynapticElements> create_dendrites(size_t number_elements, SignalType signal_type, double minimal_grown, double maximal_grown) {
-        SynapticElements dendrites(ElementType::Axon, SynapticElements::default_C_target);
+        SynapticElements dendrites(ElementType::Axon, CalciumCalculator::default_C_target);
         dendrites.init(number_elements);
 
         for (const auto& neuron_id : NeuronID::range(number_elements)) {
@@ -462,7 +493,7 @@ protected:
     }
 
     std::shared_ptr<SynapticElements> create_axons(size_t number_elements) {
-        SynapticElements axons(ElementType::Axon, SynapticElements::default_C_target);
+        SynapticElements axons(ElementType::Axon, CalciumCalculator::default_C_target);
         axons.init(number_elements);
 
         for (const auto& neuron_id : NeuronID::range(number_elements)) {
@@ -478,7 +509,7 @@ protected:
     }
 
     std::shared_ptr<SynapticElements> create_dendrites(size_t number_elements, SignalType signal_type) {
-        SynapticElements dendrites(ElementType::Axon, SynapticElements::default_C_target);
+        SynapticElements dendrites(ElementType::Axon, CalciumCalculator::default_C_target);
         dendrites.init(number_elements);
 
         for (const auto& neuron_id : NeuronID::range(number_elements)) {
@@ -541,12 +572,26 @@ protected:
         return get_update_status(number_neurons, number_disabled);
     }
 
+    std::vector<FiredStatus> get_fired_status(size_t number_neurons, size_t number_inactive) {
+        std::vector<FiredStatus> status(number_inactive, FiredStatus::Inactive);
+        status.resize(number_neurons, FiredStatus::Fired);
+
+        std::shuffle(status.begin(), status.end(), mt);
+
+        return status;
+    }
+
+    std::vector<FiredStatus> get_fired_status(size_t number_neurons) {
+        const auto number_disabled = get_random_integer<size_t>(0, number_neurons);
+        return get_fired_status(number_neurons, number_disabled);
+    }
+
     std::shared_ptr<NetworkGraph> create_network_graph_all_to_all(size_t number_neurons, int mpi_rank) {
         auto ptr = std::make_shared<NetworkGraph>(number_neurons, mpi_rank);
 
         for (const auto& source_id : NeuronID::range(number_neurons)) {
             for (const auto& target_id : NeuronID::range(number_neurons)) {
-                if (source_id.get_local_id() == target_id.get_local_id()) {
+                if (source_id.get_neuron_id() == target_id.get_neuron_id()) {
                     continue;
                 }
 
@@ -570,7 +615,7 @@ protected:
             for (auto j = 0; j < number_neurons; j++) {
 
                 const auto weight = get_random_synapse_weight();
-                LocalSynapse ls(NeuronID(false, false, target_ids[j]), source_ids[j], weight);
+                LocalSynapse ls(NeuronID(false, target_ids[j]), source_ids[j], weight);
                 ptr->add_synapse(ls);
             }
         }
@@ -624,7 +669,7 @@ protected:
             OctreeNode<AdditionalCellAttributes>* current_node = octree_nodes.top();
             octree_nodes.pop();
 
-            if (current_node->is_child()) {
+            if (current_node->is_leaf()) {
                 return_value.emplace_back(current_node);
                 continue;
             }
@@ -676,14 +721,14 @@ protected:
         return return_value;
     }
 
-    template <typename Algorithm>
-    std::vector<std::tuple<Vec3d, NeuronID>> extract_neurons_tree(const OctreeImplementation<Algorithm>& octree) {
+    template <typename AdditionalCellAttributes>
+    std::vector<std::tuple<Vec3d, NeuronID>> extract_neurons_tree(const OctreeImplementation<AdditionalCellAttributes>& octree) {
         const auto root = octree.get_root();
         if (root == nullptr) {
             return {};
         }
 
-        return extract_neurons<typename Algorithm::AdditionalCellAttributes>(root);
+        return extract_neurons<AdditionalCellAttributes>(root);
     }
 
     constexpr static double min_grown_elements = 0.0;
@@ -702,21 +747,21 @@ protected:
 
     constexpr static int bound_synapse_weight = 10;
 
-    std::mt19937 mt;
+    mt19937 mt;
 
     static int iterations;
     static double eps;
 
 private:
-    static std::uniform_int_distribution<unsigned short> uid_refinement;
-    static std::uniform_int_distribution<unsigned short> uid_small_refinement;
-    static std::uniform_int_distribution<unsigned short> uid_large_refinement;
+    static uniform_int_distribution<unsigned short> uid_refinement;
+    static uniform_int_distribution<unsigned short> uid_small_refinement;
+    static uniform_int_distribution<unsigned short> uid_large_refinement;
 
-    static std::uniform_int_distribution<size_t> uid_num_ranks;
-    static std::uniform_int_distribution<size_t> uid_num_neurons;
-    static std::uniform_int_distribution<size_t> uid_num_synapses;
+    static uniform_int_distribution<size_t> uid_num_ranks;
+    static uniform_int_distribution<size_t> uid_num_neurons;
+    static uniform_int_distribution<size_t> uid_num_synapses;
 
-    static std::uniform_int_distribution<int> uid_synapse_weight;
+    static uniform_int_distribution<int> uid_synapse_weight;
 
     static double position_bounary;
 
@@ -729,7 +774,7 @@ protected:
     static int num_ranks;
     static int num_synapses_per_neuron;
 
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 
@@ -760,22 +805,20 @@ protected:
 
 class NeuronAssignmentTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
     double calculate_box_length(const size_t number_neurons, const double um_per_neuron) const noexcept {
         return ceil(pow(static_cast<double>(number_neurons), 1 / 3.)) * um_per_neuron;
     }
 
-    void generate_neuron_positions(std::vector<Vec3d>& positions,
+    void generate_random_neurons(std::vector<Vec3d>& positions,
         std::vector<std::string>& area_names, std::vector<SignalType>& types);
-
-    void generate_synapses(std::vector<std::tuple<NeuronID, NeuronID, int>>& synapses, size_t number_neurons);
 };
 
 class NeuronModelsTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 
@@ -784,14 +827,14 @@ protected:
 
 class RankNeuronIdTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
 class NeuronsTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 
@@ -803,7 +846,7 @@ protected:
 
 class CellTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 
@@ -856,17 +899,17 @@ protected:
     void test_vpe_mixed();
 };
 
-template <typename AlgorithmType>
+template <typename AdditionalCellAttributes>
 class OctreeTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
-        SetUpTestCaseTemplate<typename AlgorithmType::AdditionalCellAttributes>();
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<AdditionalCellAttributes>();
     }
 };
 
 class BarnesHutTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
@@ -897,56 +940,56 @@ protected:
 
 class PartitionTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
 class NeuronIdTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
 class ConnectorTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
 class KernelTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
 class ProbabilityKernelTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
 class SynapticElementsTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
 class VectorTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
 class SpaceFillingCurveTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
@@ -954,7 +997,7 @@ protected:
 template <typename T>
 class TaggedIDTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
 
@@ -970,9 +1013,86 @@ protected:
         return id.is_global_;
     }
 
-    static TaggedID<T>::value_type get_id(const TaggedID<T>& id) {
+    static typename TaggedID<T>::value_type get_id(const TaggedID<T>& id) {
         return id.id_;
     }
 
     static_assert(sizeof(typename TaggedID<T>::value_type) == sizeof(T));
+};
+
+class IOTest : public RelearnTest {
+protected:
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
+class CalciumCalculatorTest : public RelearnTest {
+protected:
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
+class StepParserTest : public RelearnTest {
+protected:
+    using Interval = StepParser::Interval;
+
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+
+    Interval generate_random_interval() {
+        using int_type = Interval::step_type;
+
+        constexpr auto min = std::numeric_limits<int_type>::min();
+        constexpr auto max = std::numeric_limits<int_type>::max();
+
+        const auto begin = get_random_integer<int_type>(min, max);
+        const auto end = get_random_integer<int_type>(min, max);
+        const auto frequency = get_random_integer<int_type>(min, max);
+
+        return Interval{ std::min(begin, end), std::max(begin, end), frequency };
+    }
+
+    std::string codify_interval(const Interval& interval) {
+        std::stringstream ss{};
+        ss << interval.begin << '-' << interval.end << ':' << interval.frequency;
+        return ss.str();
+    }
+
+    std::pair<Interval, std::string> generate_random_interval_description() {
+        auto interval = generate_random_interval();
+        auto description = codify_interval(interval);
+        return { std::move(interval), std::move(description) };
+    }
+};
+
+class MonitorParserTest : public RelearnTest {
+protected:
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+
+    RankNeuronId generate_random_rank_neuron_id() {
+        using rank_type = int;
+        using neuron_id_type = NeuronID::value_type;
+
+        const auto rank = get_random_integer<rank_type>(0, std::numeric_limits<rank_type>::max());
+        const auto neuron_id = get_random_integer<neuron_id_type>(std::numeric_limits<neuron_id_type>::min(), std::numeric_limits<neuron_id_type>::min());
+
+        return { rank, NeuronID(neuron_id) };
+    }
+
+    std::string codify_rank_neuron_id(const RankNeuronId& rni) {
+        std::stringstream ss{};
+        ss << rni.get_rank() << ':' << rni.get_neuron_id();
+        return ss.str();
+    }
+
+    std::pair<RankNeuronId, std::string> generate_random_rank_neuron_id_description() {
+        auto rank_neuron_id = generate_random_rank_neuron_id();
+        auto description = codify_rank_neuron_id(rank_neuron_id);
+        return { std::move(rank_neuron_id), std::move(description) };
+    }
 };

@@ -20,10 +20,6 @@
  * One SynapseCreationRequest always consists of a target neuron, a source neuron, and a signal type
  */
 class SynapseCreationRequest {
-    NeuronID target{};
-    NeuronID source{};
-    SignalType signal_type{};
-
 public:
     SynapseCreationRequest() = default;
 
@@ -33,7 +29,7 @@ public:
      * @param source The neuron source id of the request
      * @param signal_type The signal type
      */
-    SynapseCreationRequest(NeuronID target, NeuronID source, SignalType signal_type)
+    SynapseCreationRequest(const NeuronID target, const NeuronID source, const SignalType signal_type)
         : target(target)
         , source(source)
         , signal_type(signal_type) {
@@ -103,6 +99,11 @@ public:
             return signal_type;
         }
     }
+
+private:
+    NeuronID target{};
+    NeuronID source{};
+    SignalType signal_type{};
 };
 
 namespace std {
@@ -126,7 +127,7 @@ struct tuple_element<2, typename ::SynapseCreationRequest> {
     using type = SignalType;
 };
 
-} //namespace std
+} // namespace std
 
 /**
  * The response for a SynapseCreationRequest can be that it failed or succeeded

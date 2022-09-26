@@ -25,13 +25,6 @@
  */
 class RankNeuronId {
 public:
-    using rank_type = int;
-
-private:
-    rank_type rank{ -1 }; // MPI rank of the owner
-    NeuronID neuron_id{ NeuronID::uninitialized_id() }; // Neuron id on the owner
-
-public:
     /**
      * @brief Constructs a new RankNeuronId with invalid rank and id
      */
@@ -42,7 +35,7 @@ public:
      * @param rank The MPI rank
      * @param neuron_id The neuron id
      */
-    RankNeuronId(const rank_type rank, const NeuronID neuron_id) noexcept
+    RankNeuronId(const int rank, const NeuronID neuron_id) noexcept
         : rank(rank)
         , neuron_id(neuron_id) {
     }
@@ -52,7 +45,7 @@ public:
      * @return The MPI rank
      * @exception Throws a RelearnException if the rank is negative
      */
-    [[nodiscard]] rank_type get_rank() const {
+    [[nodiscard]] int get_rank() const {
         RelearnException::check(rank >= 0, "RankNeuronId::get_rank: It was negative: {}", rank);
         return rank;
     }
@@ -108,6 +101,10 @@ public:
             return neuron_id;
         }
     }
+
+private:
+    int rank{ -1 }; // MPI rank of the owner
+    NeuronID neuron_id{ NeuronID::uninitialized_id() }; // Neuron id on the owner
 };
 
 namespace std {
@@ -118,7 +115,7 @@ struct tuple_size<::RankNeuronId> {
 
 template <>
 struct tuple_element<0, ::RankNeuronId> {
-    using type = RankNeuronId::rank_type;
+    using type = int;
 };
 
 template <>

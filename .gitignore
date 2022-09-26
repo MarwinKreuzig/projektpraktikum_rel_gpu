@@ -344,6 +344,9 @@ ASALocalRun/
 **/apply_tidy.sh
 **/clang-tidy-output.txt
 **/tidy
+**/libs
+**/tools
+**/more
 /build-test
 /relearn/build-test
 
@@ -355,3 +358,4 @@ ASALocalRun/
 /relearn/googletest/
 /build
 /relearn/build-wsl
+**/out

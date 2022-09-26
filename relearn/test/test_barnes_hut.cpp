@@ -17,7 +17,7 @@
 
 TEST_F(BarnesHutTest, testGetterSetter) {
     const auto& [min, max] = get_random_simulation_box_size();
-    auto octree = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
+    auto octree = std::make_shared<OctreeImplementation<BarnesHutCell>>(min, max, 0);
 
     ASSERT_NO_THROW(BarnesHut algorithm(octree););
 
@@ -95,63 +95,6 @@ TEST_F(BarnesHutTest, testGetterSetterOctreeNode) {
     make_mpi_mem_available<BarnesHutCell>();
 }
 
-TEST_F(BarnesHutTest, testUpdateLeafNodes) {
-    const auto number_neurons = get_random_number_neurons();
-    const auto& [min, max] = get_random_simulation_box_size();
-
-    const auto& axons = create_axons(number_neurons);
-    const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
-    const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
-
-    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons);
-
-    auto octree = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
-
-    std::map<int, Vec3d> positions{};
-    for (const auto& [position, id] : neurons_to_place) {
-        octree->insert(position, id, 0);
-        positions[id.get_local_id()] = position;
-    }
-
-    octree->initializes_leaf_nodes(number_neurons);
-
-    BarnesHut barnes_hut(octree);
-    barnes_hut.set_synaptic_elements(axons, excitatory_dendrites, inhibitory_dendrites);
-
-    const auto update_status = get_update_status(number_neurons);
-
-    ASSERT_NO_THROW(barnes_hut.update_leaf_nodes(update_status));
-
-    const auto& leaf_nodes = extract_branch_nodes(octree->get_root());
-    for (const auto* node : leaf_nodes) {
-        const auto& cell = node->get_cell();
-
-        const auto id = cell.get_neuron_id();
-        const auto local_id = id.get_local_id();
-
-        ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
-        ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
-
-        const auto& golden_position = positions[local_id];
-
-        ASSERT_EQ(cell.get_excitatory_dendrites_position().value(), golden_position);
-        ASSERT_EQ(cell.get_inhibitory_dendrites_position().value(), golden_position);
-
-        if (update_status[local_id] == UpdateStatus::Disabled) {
-            ASSERT_EQ(cell.get_number_excitatory_dendrites(), 0);
-            ASSERT_EQ(cell.get_number_inhibitory_dendrites(), 0);
-        } else {
-            const auto& golden_excitatory_dendrites = excitatory_dendrites->get_free_elements(id);
-            const auto& golden_inhibitory_dendrites = inhibitory_dendrites->get_free_elements(id);
-
-            ASSERT_EQ(cell.get_number_excitatory_dendrites(), golden_excitatory_dendrites);
-            ASSERT_EQ(cell.get_number_inhibitory_dendrites(), golden_inhibitory_dendrites);
-        }
-    }
-
-    make_mpi_mem_available<BarnesHutCell>();
-}
-
 TEST_F(BarnesHutTest, testUpdateFunctor) {
     const auto number_neurons = get_random_number_neurons();
     const auto& [min, max] = get_random_simulation_box_size();
@@ -162,12 +105,12 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons);
 
-    auto octree = std::make_shared<OctreeImplementation<BarnesHut>>(min, max, 0);
+    auto octree = std::make_shared<OctreeImplementation<BarnesHutCell>>(min, max, 0);
 
-    std::map<int, Vec3d> positions{};
+    std::map<NeuronID::value_type, Vec3d> positions{};
     for (const auto& [position, id] : neurons_to_place) {
-        octree->insert(position, id, 0);
-        positions[id.get_local_id()] = position;
+        octree->insert(position, id);
+        positions[id.get_neuron_id()] = position;
     }
 
     octree->initializes_leaf_nodes(number_neurons);
@@ -177,8 +120,7 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
 
     const auto update_status = get_update_status(number_neurons);
 
-    ASSERT_NO_THROW(barnes_hut.update_leaf_nodes(update_status));
-    ASSERT_NO_THROW(octree->update_local_trees());
+    ASSERT_NO_THROW(barnes_hut.update_octree(update_status));
 
     std::stack<OctreeNode<BarnesHutCell>*> stack{};
     stack.push(octree->get_root());
@@ -189,9 +131,9 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
 
         const auto& cell = node->get_cell();
 
-        if (node->is_child()) {
+        if (node->is_leaf()) {
             const auto id = cell.get_neuron_id();
-            const auto local_id = id.get_local_id();
+            const auto local_id = id.get_neuron_id();
 
             ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
             ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());

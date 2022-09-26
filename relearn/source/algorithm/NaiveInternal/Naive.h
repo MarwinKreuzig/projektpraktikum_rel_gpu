@@ -10,10 +10,10 @@
  *
  */
 
-#include "NaiveCell.h"
+#include "algorithm/Internal/ExchangingAlgorithm.h"
+
 #include "Types.h"
-#include "algorithm/Connector.h"
-#include "algorithm/ExchangingAlgorithm.h"
+#include "algorithm/NaiveInternal/NaiveCell.h"
 #include "neurons/SignalType.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseCreationRequests.h"
@@ -35,7 +35,7 @@ class SynapticElements;
  * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
  * It is strongly tied to Octree, and might perform MPI communication via NodeCache::download_children()
  */
-class Naive : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
+class Naive : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, NaiveCell> {
 public:
     using AdditionalCellAttributes = NaiveCell;
     using position_type = typename RelearnTypes::position_type;
@@ -46,44 +46,8 @@ public:
      * @param octree The octree on which the algorithm is to be performed, not null
      * @exception Throws a RelearnException if octree is nullptr
      */
-    explicit Naive(const std::shared_ptr<OctreeImplementation<Naive>>& octree)
-        : global_tree(octree) {
-        RelearnException::check(octree != nullptr, "Naive::Naive: octree was null");
-    }
-
-    /**
-     * @brief Updates all leaf nodes in the octree by the algorithm
-     * @param disable_flags Flags that indicate if a neuron is disabled or enabled. If disabled, it won't be updated
-     * @exception Throws a RelearnException if the number of flags is different than the number of leaf nodes, or if there is an internal error
-     */
-    void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) override;
-
-    /**
-     * @brief Updates the passed node with the values of its children according to the algorithm
-     * @param node The node to update, must not be nullptr
-     * @exception Throws a RelearnException if node is nullptr
-     */
-    static void update_functor(OctreeNode<NaiveCell>* node) {
-        RelearnException::check(node != nullptr, "Naive::update_functor: node is nullptr");
-
-        counter_type my_number_dendrites_excitatory = 0;
-        counter_type my_number_dendrites_inhibitory = 0;
-
-        for (const auto& child : node->get_children()) {
-            if (child == nullptr) {
-                continue;
-            }
-
-            // Sum up number of dendrites
-            const auto child_number_dendrites_excitatory = child->get_cell().get_number_excitatory_dendrites();
-            const auto child_number_dendrites_inhibitory = child->get_cell().get_number_inhibitory_dendrites();
-
-            my_number_dendrites_excitatory += child_number_dendrites_excitatory;
-            my_number_dendrites_inhibitory += child_number_dendrites_inhibitory;
-        }
-
-        node->set_cell_number_dendrites(my_number_dendrites_excitatory, my_number_dendrites_inhibitory);
-    }
+    explicit Naive(const std::shared_ptr<OctreeImplementation<NaiveCell>>& octree)
+        : ForwardAlgorithm(octree) { }
 
 protected:
     /**
@@ -105,9 +69,7 @@ protected:
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank
      */
     [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
-    process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) override {
-        return ForwardConnector::process_requests(creation_requests, excitatory_dendrites, inhibitory_dendrites);
-    }
+    process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) override;
 
     /**
      * @brief Processes all incoming responses from the MPI ranks locally
@@ -117,9 +79,7 @@ protected:
      * @return All synapses from this MPI rank to other MPI ranks
      */
     [[nodiscard]] DistantOutSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
-        const CommunicationMap<SynapseCreationResponse>& creation_responses) override {
-        return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
-    }
+        const CommunicationMap<SynapseCreationResponse>& creation_responses) override;
 
 private:
     /**
@@ -131,30 +91,15 @@ private:
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
      */
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_position, const SignalType dendrite_type_needed);
-
-    [[nodiscard]] double
-    calc_attractiveness_to_connect(
-        const NeuronID& src_neuron_id,
-        const position_type& axon_position,
-        const OctreeNode<NaiveCell>& node_with_dendrite,
-        const SignalType dendrite_type_needed) const;
-
-    [[nodiscard]] std::vector<double> create_interval(
-        const NeuronID& src_neuron_id,
-        const position_type& axon_position,
-        const SignalType dendrite_type_needed,
-        const std::vector<OctreeNode<NaiveCell>*>& vector) const;
+    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_position, SignalType dendrite_type_needed);
 
     [[nodiscard]] static std::tuple<bool, bool> acceptance_criterion_test(
         const position_type& axon_position,
         const OctreeNode<NaiveCell>* node_with_dendrite,
-        const SignalType dendrite_type_needed);
+        SignalType dendrite_type_needed);
 
     [[nodiscard]] static std::vector<OctreeNode<NaiveCell>*> get_nodes_for_interval(
         const position_type& axon_position,
-        OctreeNode<NaiveCell>* const root,
-        const SignalType dendrite_type_needed);
-
-    std::shared_ptr<OctreeImplementation<Naive>> global_tree{};
+        OctreeNode<NaiveCell>* root,
+        SignalType dendrite_type_needed);
 };

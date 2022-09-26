@@ -11,12 +11,13 @@
  */
 
 #include "Config.h"
-#include "RelearnException.h"
+#include "util/RelearnException.h"
 
 #include <spdlog/fmt/bundled/ostream.h>
 
 #include <algorithm>
 #include <cmath>
+#include <numeric>
 #include <ostream>
 #include <type_traits>
 #include <utility>
@@ -27,12 +28,6 @@
  */
 template <typename T>
 class Vec3 {
-    T x{ 0 };
-    T y{ 0 };
-    T z{ 0 };
-
-    static_assert(std::is_arithmetic_v<T>);
-
 public:
     using value_type = T;
 
@@ -216,7 +211,7 @@ public:
     /**
      * @brief Floors the current vector and returns the results in a newly created object.
      *      Can only be used if the values are non-negative
-     * @exception Throws a RelearnException if any of the components are < 0
+     * @exception Throws a RelearnException if any of the components is < 0
      * @return A newly created object with the floored values
      */
     [[nodiscard]] constexpr Vec3<size_t> floor_componentwise() const {
@@ -253,7 +248,7 @@ public:
 
     /**
      * @brief Componentwise divides by the scalar value and changes the current object
-     * @param scalar The value that should be divided by for each component
+     * @param scalar The value that should be divided by for each component, is not checked for 0
      * @return A reference to the current object
      */
     constexpr Vec3<T>& operator/=(const T& scalar) noexcept {
@@ -312,7 +307,7 @@ public:
     }
 
     /**
-     * @brief Calculated the p norm of the current obejct
+     * @brief Calculated the p norm of the (absolute value of the) current obejct
      * @param p The exponent of the norm, must be >= 1.0
      * @exception Throws a RelearnException if p < 1.0
      * @return The calculated norm
@@ -416,6 +411,19 @@ public:
     }
 
     /**
+     * @brief Returns the midpoint between this and other, effectively the same as (*this + other) / 2.
+     * @param other The other vector
+     * @return The middle between this and other
+     */
+    [[nodiscard]] constexpr Vec3 get_midpoint(const Vec3& other) const noexcept {
+        const auto mid_x = std::midpoint(x, other.x);
+        const auto mid_y = std::midpoint(y, other.y);
+        const auto mid_z = std::midpoint(z, other.z);
+
+        return Vec3{ mid_x, mid_y, mid_z };
+    }
+
+    /**
      * @brief Provides a linear order on the vectors by looking at x, in case of equality on y, in case of equality on z
      * @param other The other vector that should be compared
      * @return True iff the current vector is smaller than the other
@@ -462,13 +470,13 @@ public:
 
     /**
      * @brief Prints the object to the ostream in the format (x, y, z)
-     * @param os The stream to which the object should be printed
-     * @param vec The object that should be printed
-     * @return A reference to os that allows chaining.
+     * @param output_stream The stream to which the object should be printed
+     * @param vector The object that should be printed
+     * @return A reference to output_stream that allows chaining.
      *      Is not marked as [[nodiscard]] as that typically does happen when chaining <<
      */
-    friend std::ostream& operator<<(std::ostream& output_stream, const Vec3<T>& vec) {
-        const auto& [x, y, z] = vec;
+    friend std::ostream& operator<<(std::ostream& output_stream, const Vec3<T>& vector) {
+        const auto& [x, y, z] = vector;
         output_stream << '(' << x << ", " << y << ", " << z << ')';
 
         return output_stream;
@@ -512,6 +520,13 @@ public:
             return std::move(z);
         }
     }
+
+private:
+    T x{ 0 };
+    T y{ 0 };
+    T z{ 0 };
+
+    static_assert(std::is_arithmetic_v<T>);
 };
 
 namespace std {

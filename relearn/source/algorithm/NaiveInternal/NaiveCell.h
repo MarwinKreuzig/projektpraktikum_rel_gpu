@@ -10,7 +10,7 @@
  *
  */
 
-#include "algorithm/BarnesHutInternal/BarnesHutCell.h"
+#include "structure/BaseCell.h"
 
-// We need more or less the same attributes
-using NaiveCell = BarnesHutCell;
+// The naive implementation uses the dendrites
+using NaiveCell = BaseCell<true, true, false, false>;

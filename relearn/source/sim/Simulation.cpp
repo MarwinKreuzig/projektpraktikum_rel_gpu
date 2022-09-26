@@ -10,10 +10,6 @@
 
 #include "Simulation.h"
 
-#include "Config.h"
-#include "NeuronIdTranslator.h"
-#include "NeuronToSubdomainAssignment.h"
-#include "SynapseLoader.h"
 #include "algorithm/Algorithms.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
@@ -21,6 +17,8 @@
 #include "neurons/Neurons.h"
 #include "neurons/helper/NeuronMonitor.h"
 #include "neurons/models/NeuronModels.h"
+#include "sim/NeuronToSubdomainAssignment.h"
+#include "sim/SynapseLoader.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
@@ -53,6 +51,10 @@ void Simulation::set_neuron_model(std::unique_ptr<NeuronModel>&& nm) noexcept {
     neuron_models = std::move(nm);
 }
 
+void Simulation::set_calcium_calculator(std::unique_ptr<CalciumCalculator>&& calculator) noexcept {
+    calcium_calculator = std::move(calculator);
+}
+
 void Simulation::set_axons(std::shared_ptr<SynapticElements>&& se) noexcept {
     axons = std::move(se);
 }
@@ -63,14 +65,6 @@ void Simulation::set_dendrites_ex(std::shared_ptr<SynapticElements>&& se) noexce
 
 void Simulation::set_dendrites_in(std::shared_ptr<SynapticElements>&& se) noexcept {
     dendrites_in = std::move(se);
-}
-
-void Simulation::set_target_calcium_calculator(std::function<double(NeuronID::value_type)> calculator) noexcept {
-    target_calcium_calculator = std::move(calculator);
-}
-
-void Simulation::set_initial_calcium_calculator(std::function<double(NeuronID::value_type)> initiator) noexcept {
-    initial_calcium_initiator = std::move(initiator);
 }
 
 void Simulation::set_enable_interrupts(std::vector<std::pair<size_t, std::vector<NeuronID>>> interrupts) {
@@ -103,13 +97,13 @@ void Simulation::set_subdomain_assignment(std::unique_ptr<NeuronToSubdomainAssig
 
 void Simulation::initialize() {
     RelearnException::check(neuron_models != nullptr, "Simulation::initialize: neuron_models is nullptr");
+    RelearnException::check(calcium_calculator != nullptr, "Simulation::initialize: calcium_calculator is nullptr");
     RelearnException::check(axons != nullptr, "Simulation::initialize: axons is nullptr");
     RelearnException::check(dendrites_ex != nullptr, "Simulation::initialize: dendrites_ex is nullptr");
     RelearnException::check(dendrites_in != nullptr, "Simulation::initialize: dendrites_in is nullptr");
     RelearnException::check(neuron_to_subdomain_assignment != nullptr, "Simulation::initialize: neuron_to_subdomain_assignment is nullptr");
 
     neuron_to_subdomain_assignment->initialize();
-    neuron_id_translator = neuron_to_subdomain_assignment->get_neuron_id_translator();
     const auto number_total_neurons = neuron_to_subdomain_assignment->get_total_number_placed_neurons();
 
     partition->set_total_number_neurons(number_total_neurons);
@@ -118,34 +112,18 @@ void Simulation::initialize() {
     const auto my_rank = MPIWrapper::get_my_rank();
     RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank);
 
-    std::vector<double> target_calcium_values(number_local_neurons, 0.0);
-    for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
-        const auto global_id = neuron_id_translator->get_global_id(neuron_id);
-        target_calcium_values[neuron_id.get_local_id()] = target_calcium_calculator(global_id.get_global_id());
-    }
-
-    std::vector<double> initial_calcium_values(number_local_neurons, 0.0);
-    for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
-        const auto global_id = neuron_id_translator->get_global_id(neuron_id);
-        initial_calcium_values[neuron_id.get_local_id()] = initial_calcium_initiator(global_id.get_global_id());
-    }
-
-    neurons = std::make_shared<Neurons>(partition, neuron_models->clone(), axons, dendrites_ex, dendrites_in);
-    neurons->init(number_local_neurons, std::move(target_calcium_values), std::move(initial_calcium_values));
+    neurons = std::make_shared<Neurons>(partition, std::move(neuron_models), std::move(calcium_calculator), axons, dendrites_ex, dendrites_in);
+    neurons->init(number_local_neurons);
     NeuronMonitor::neurons_to_monitor = neurons;
 
-    const auto number_local_subdomains = partition->get_number_local_subdomains();
-    const auto local_subdomain_id_start = partition->get_local_subdomain_id_start();
-    const auto local_subdomain_id_end = partition->get_local_subdomain_id_end();
-
-    auto number_local_neurons_ntsa = neuron_to_subdomain_assignment->get_number_neurons_in_subdomains(local_subdomain_id_start, local_subdomain_id_end, number_local_subdomains);
+    auto number_local_neurons_ntsa = neuron_to_subdomain_assignment->get_number_neurons_in_subdomains();
 
     RelearnException::check(number_local_neurons_ntsa == number_local_neurons,
         "Simulation::initialize: The partition and the NTSA had a disagreement about the number of local neurons");
 
-    auto neuron_positions = neuron_to_subdomain_assignment->get_neuron_positions_in_subdomains(local_subdomain_id_start, local_subdomain_id_end, number_local_subdomains);
-    auto area_names = neuron_to_subdomain_assignment->get_neuron_area_names_in_subdomains(local_subdomain_id_start, local_subdomain_id_end, number_local_subdomains);
-    auto signal_types = neuron_to_subdomain_assignment->get_neuron_types_in_subdomains(local_subdomain_id_start, local_subdomain_id_end, number_local_subdomains);
+    auto neuron_positions = neuron_to_subdomain_assignment->get_neuron_positions_in_subdomains();
+    auto area_names = neuron_to_subdomain_assignment->get_neuron_area_names_in_subdomains();
+    auto signal_types = neuron_to_subdomain_assignment->get_neuron_types_in_subdomains();
 
     RelearnException::check(neuron_positions.size() == number_local_neurons, "Simulation::initialize: neuron_positions had the wrong size");
     RelearnException::check(area_names.size() == number_local_neurons, "Simulation::initialize: area_names had the wrong size");
@@ -159,38 +137,47 @@ void Simulation::initialize() {
     const auto level_of_branch_nodes = partition->get_level_of_subdomain_trees();
 
     if (algorithm_enum == AlgorithmEnum::BarnesHut) {
-        global_tree = std::make_shared<OctreeImplementation<BarnesHut>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+        global_tree = std::make_shared<OctreeImplementation<BarnesHutCell>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
     } else if (algorithm_enum == AlgorithmEnum::BarnesHutInverted) {
-        global_tree = std::make_shared<OctreeImplementation<BarnesHutInverted>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+        global_tree = std::make_shared<OctreeImplementation<BarnesHutInvertedCell>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+    } else if (algorithm_enum == AlgorithmEnum::BarnesHutLocationAware) {
+        global_tree = std::make_shared<OctreeImplementation<BarnesHutCell>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
     } else if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
-        global_tree = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+        global_tree = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
     } else if (algorithm_enum == AlgorithmEnum::Naive) {
-        global_tree = std::make_shared<OctreeImplementation<Naive>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+        global_tree = std::make_shared<OctreeImplementation<NaiveCell>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+    } else {
+        RelearnException::fail("Simulation::initialize: Cannot construct the octree for an unknown algorithm.");
     }
 
+    LogFiles::print_message_rank(0, "Level of branch nodes is: {}", global_tree->get_level_of_branch_nodes());
+
     for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
-        const auto& position = neuron_positions[neuron_id.get_local_id()];
-        global_tree->insert(position, neuron_id, my_rank);
+        const auto& position = neuron_positions[neuron_id.get_neuron_id()];
+        global_tree->insert(position, neuron_id);
     }
 
     global_tree->initializes_leaf_nodes(number_local_neurons);
 
     LogFiles::print_message_rank(0, "Inserted a total of {} neurons", number_total_neurons);
-    LogFiles::print_message_rank(0, "Neurons inserted into subdomains");
-    LogFiles::print_message_rank(0, "Subdomains inserted into global tree");
 
     if (algorithm_enum == AlgorithmEnum::BarnesHut) {
-        auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHut>>(global_tree);
+        auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutCell>>(global_tree);
         auto algorithm_barnes_hut = std::make_shared<BarnesHut>(std::move(cast));
         algorithm_barnes_hut->set_acceptance_criterion(accept_criterion);
         algorithm = std::move(algorithm_barnes_hut);
     } else if (algorithm_enum == AlgorithmEnum::BarnesHutInverted) {
-        auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutInverted>>(global_tree);
+        auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutInvertedCell>>(global_tree);
         auto algorithm_barnes_hut_inverted = std::make_shared<BarnesHutInverted>(std::move(cast));
         algorithm_barnes_hut_inverted->set_acceptance_criterion(accept_criterion);
         algorithm = std::move(algorithm_barnes_hut_inverted);
+    } else if (algorithm_enum == AlgorithmEnum::BarnesHutLocationAware) {
+        auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutCell>>(global_tree);
+        auto algorithm_barnes_hut_location_aware = std::make_shared<BarnesHutLocationAware>(std::move(cast));
+        algorithm_barnes_hut_location_aware->set_acceptance_criterion(accept_criterion);
+        algorithm = std::move(algorithm_barnes_hut_location_aware);
     } else if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
-        auto cast = std::static_pointer_cast<OctreeImplementation<FastMultipoleMethods>>(global_tree);
+        auto cast = std::static_pointer_cast<OctreeImplementation<FastMultipoleMethodsCell>>(global_tree);
         auto algorithm_barnes_hut = std::make_shared<FastMultipoleMethods>(std::move(cast));
         algorithm = std::move(algorithm_barnes_hut);
     } else {
@@ -209,7 +196,6 @@ void Simulation::initialize() {
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 
-    neurons->set_neuron_id_translator(neuron_id_translator);
     auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
 
     auto [local_synapses, in_synapses, out_synapses] = synapse_loader->load_synapses();
@@ -229,6 +215,7 @@ void Simulation::initialize() {
 
 void Simulation::simulate(const size_t number_steps) {
     RelearnException::check(number_steps > 0, "Simulation::simulate: number_steps must be greater than 0");
+    const auto my_rank = MPIWrapper::get_my_rank();
 
     Timers::start(TimerRegion::SIMULATION_LOOP);
 
@@ -244,10 +231,12 @@ void Simulation::simulate(const size_t number_steps) {
             const auto number_neurons = neurons->get_number_neurons();
 
             for (auto& mn : *monitors) {
-                if (mn.get_target_id().get_local_id() < number_neurons) {
+                if (mn.get_target_id().get_neuron_id() < number_neurons) {
                     mn.record_data();
                 }
             }
+
+            neurons->get_neuron_model()->reset_fired_recorder();
         }
 
         for (const auto& [disable_step, disable_ids] : disable_interrupts) {
@@ -268,24 +257,13 @@ void Simulation::simulate(const size_t number_steps) {
         for (const auto& [creation_step, creation_count] : creation_interrupts) {
             if (creation_step == step) {
                 LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Creating {} neurons in step {}", creation_count, creation_step);
-
-                std::vector<double> new_target_calcium_values(creation_count, 0.0);
-                for (size_t neuron_id = 0; neuron_id < creation_count; neuron_id++) {
-                    new_target_calcium_values[neuron_id] = target_calcium_calculator(neuron_id);
-                }
-
-                std::vector<double> new_initial_calcium_values(creation_count, 0.0);
-                for (size_t neuron_id = 0; neuron_id < creation_count; neuron_id++) {
-                    new_initial_calcium_values[neuron_id] = initial_calcium_initiator(neuron_id);
-                }
-
-                neurons->create_neurons(creation_count, new_target_calcium_values, new_initial_calcium_values);
+                neurons->create_neurons(creation_count);
             }
         }
 
         // Provide neuronal network to neuron models for one iteration step
         Timers::start(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
-        neurons->update_electrical_activity();
+        neurons->update_electrical_activity(step);
         Timers::stop_and_add(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
 
         // Calc how many synaptic elements grow/retract
@@ -314,7 +292,7 @@ void Simulation::simulate(const size_t number_steps) {
             const auto global_deletions = global_cnts[0] + global_cnts[1];
             const auto global_creations = global_cnts[2];
 
-            if (0 == MPIWrapper::get_my_rank()) {
+            if (0 == my_rank) {
                 total_synapse_deletions += global_deletions;
                 total_synapse_creations += global_creations;
             }
@@ -328,12 +306,16 @@ void Simulation::simulate(const size_t number_steps) {
             network_graph->debug_check();
         }
 
-        if (step % Config::logfile_update_step == 0) {
+        if (Config::logfile_update_step > 0 && step % Config::logfile_update_step == 0) {
             neurons->print_local_network_histogram(step);
         }
 
-        if (step % Config::calcium_step == 0) {
+        if (Config::calcium_log_step > 0 && step % Config::calcium_log_step == 0) {
             neurons->print_calcium_values_to_file(step);
+        }
+
+        if (Config::synaptic_input_log_step > 0 && step % Config::synaptic_input_log_step == 0) {
+            neurons->print_synaptic_inputs_to_file(step);
         }
 
         if (step % Config::statistics_step == 0) {
@@ -344,14 +326,8 @@ void Simulation::simulate(const size_t number_steps) {
             }
         }
 
-        //if (step % Config::distance_step == 0) {
-        //    const auto average_euclidean_distance = network_graph->get_average_euclidean_distance(neurons->get_extra_info());
-        //    LogFiles::write_to_file(LogFiles::EventType::LocalEuclideanDistance, true,
-        //        "[Step: {}\t] The average euclidean distance for all local synapses is {}", step, average_euclidean_distance);
-        //}
-
         if (step % Config::console_update_step == 0) {
-            if (MPIWrapper::get_my_rank() != 0) {
+            if (my_rank != 0) {
                 continue;
             }
 
@@ -401,39 +377,47 @@ std::vector<std::unique_ptr<NeuronModel>> Simulation::get_models() {
 }
 
 void Simulation::print_neuron_monitors() {
-    for (auto& monitor : *monitors) {
-        auto path = LogFiles::get_output_path();
-        std::ofstream outfile(path + std::to_string(monitor.get_target_id().get_local_id()) + ".csv", std::ios::trunc);
-        outfile << std::setprecision(Constants::print_precision);
+    const auto& path = LogFiles::get_output_path();
 
+    for (auto& monitor : *monitors) {
+        const auto& file_path = path / (MPIWrapper::get_my_rank_str() + '_' + std::to_string(monitor.get_target_id().get_neuron_id()) + ".csv");
+        std::ofstream outfile(file_path, std::ios::trunc);
+
+        const auto file_is_good = outfile.good();
+        const auto file_is_bad = outfile.bad();
+
+        RelearnException::check(file_is_good && !file_is_bad, "Simulation::print_neuron_monitors: The file is bad: {}", file_path);
+
+        constexpr auto description = "Step;Fired;Fired Fraction;x;Secondary Variable;Calcium;Target Calcium;Synaptic Input;Background Activity;Grown Axons;Connected Axons;Grown Excitatory Dendrites;Connected Excitatory Dendrites;Grown Inhibitory Dendrites;Connected Inhibitory Dendrites\n";
+
+        constexpr auto filler = ";";
+        constexpr auto width = 6;
+
+        outfile << std::setprecision(Constants::print_precision);
         outfile.imbue(std::locale());
 
-        outfile << "Step;Fired;Refrac;x;Ca;SynapticInput;background;axons;axons_connected;dendrites_exc;dendrites_exc_connected;dendrites_inh;dendrites_inh_connected";
-        outfile << "\n";
+        outfile << description;
 
         const auto& infos = monitor.get_informations();
-
-        const char* const filler = ";";
-        const auto width = 6;
-
-        auto ctr = 0;
-
+        auto current_step = static_cast<decltype(Config::monitor_step)>(0);
         for (const auto& info : infos) {
-            outfile << ctr << filler;
+            outfile << current_step << filler;
             outfile << info.get_fired() << filler;
-            outfile << info.get_secondary() << filler;
+            outfile << info.get_fraction_fired() << filler;
             outfile << info.get_x() << filler;
+            outfile << info.get_secondary() << filler;
             outfile << info.get_calcium() << filler;
+            outfile << info.get_target_calcium() << filler;
             outfile << info.get_synaptic_input() << filler;
             outfile << info.get_background_activity() << filler;
             outfile << info.get_axons() << filler;
             outfile << info.get_axons_connected() << filler;
-            outfile << info.get_dendrites_exc() << filler;
-            outfile << info.get_dendrites_exc_connected() << filler;
-            outfile << info.get_dendrites_inh() << filler;
-            outfile << info.get_dendrites_inh_connected() << "\n";
+            outfile << info.get_excitatory_dendrites_grown() << filler;
+            outfile << info.get_excitatory_dendrites_connected() << filler;
+            outfile << info.get_inhibitory_dendrites_grown() << filler;
+            outfile << info.get_inhibitory_dendrites_connected() << "\n";
 
-            ctr++;
+            current_step += Config::monitor_step;
         }
 
         outfile.flush();
@@ -453,6 +437,8 @@ void Simulation::snapshot_monitors() {
         for (auto& m : *monitors) {
             m.record_data();
         }
+
+        neurons->get_neuron_model()->reset_fired_recorder();
     }
 }
 

@@ -18,8 +18,8 @@
 using MPIWrapper = MPINoWrapper;
 #else // #if MPI_FOUND
 
-#include "CommunicationMap.h"
 #include "io/LogFiles.h"
+#include "mpi/CommunicationMap.h"
 #include "util/MemoryHolder.h"
 #include "util/RelearnException.h"
 
@@ -80,93 +80,6 @@ public:
 
     using AsyncToken = size_t;
 
-private:
-    MPIWrapper() = default;
-
-    [[nodiscard]] static size_t init_window(size_t size_requested, size_t octree_node_size);
-
-    static void init_globals();
-
-    static void register_custom_function();
-
-    static void free_custom_function();
-
-    static inline int num_ranks{ -1 }; // Number of ranks in MPI_COMM_WORLD
-    static inline int my_rank{ -1 }; // My rank in MPI_COMM_WORLD
-
-    static inline int thread_level_provided{ -1 }; // Thread level provided by MPI
-
-    static inline void* base_ptr{ nullptr }; // Start address of MPI-allocated memory
-    static inline std::vector<int64_t> base_pointers{}; // RMA window base pointers of all procs
-
-    // NOLINTNEXTLINE
-    static inline std::string my_rank_str{ "-1" };
-
-    static inline std::atomic<uint64_t> bytes_sent{ 0 };
-    static inline std::atomic<uint64_t> bytes_received{ 0 };
-    static inline std::atomic<uint64_t> bytes_remote{ 0 };
-
-    static void all_gather(const void* own_data, void* buffer, int size);
-
-    static void all_gather_inl(void* ptr, int count);
-
-    static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank);
-
-    // NOLINTNEXTLINE
-    [[nodiscard]] static AsyncToken async_s(const void* buffer, int count, int rank);
-
-    // NOLINTNEXTLINE
-    [[nodiscard]] static AsyncToken async_recv(void* buffer, int count, int rank);
-
-    [[nodiscard]] static int translate_lock_type(MPI_Locktype lock_type);
-
-    static void get(void* origin, size_t size, int target_rank, int64_t displacement);
-
-    static void reduce_int64(const int64_t* src, int64_t* dst, size_t size, ReduceFunction function, int root_rank);
-
-    static void reduce_double(const double* src, double* dst, size_t size, ReduceFunction function, int root_rank);
-
-    /**
-     * @brief Returns the base addresses of the memory windows of all memory windows.
-     * @return The base addresses of the memory windows. The base address for MPI rank i
-     *      is found at <return>[i]
-     */
-    [[nodiscard]] static const std::vector<int64_t>& get_base_pointers() noexcept {
-        return base_pointers;
-    }
-
-    /**
-     * @brief Sends data to another MPI rank asynchronously
-     * @param buffer The buffer that shall be sent to the other MPI rank
-     * @param rank The other MPI rank that shall receive the data
-     * @param token A token that can be used to query if the asynchronous communication completed
-     * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
-     */
-    template <typename T>
-    [[nodiscard]] static AsyncToken async_send(std::span<T> buffer, const int rank) {
-        return async_s(buffer.data(), static_cast<int>(buffer.size_bytes()), rank);
-    }
-
-    /**
-     * @brief Receives data from another MPI rank asynchronously
-     * @param buffer The buffer where the data shall be written to
-     * @param rank The other MPI rank that shall send the data
-     * @param token A token that can be used to query if the asynchronous communication completed
-     * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
-     */
-    template <typename T>
-    [[nodiscard]] static AsyncToken async_receive(std::span<T> buffer, const int rank) {
-        return async_recv(buffer.data(), static_cast<int>(buffer.size_bytes()), rank);
-    }
-
-    /**
-     * @brief Waits for all supplied tokens
-     * @param The tokens to be waited on
-     * @exception Throws a RelearnException if an MPI error occurs
-     */
-    static void wait_all_tokens(const std::vector<AsyncToken>& tokens);
-
-public:
     /**
      * @brief Initializes the local MPI implementation via MPI_Init_Thread;
      *      initializes the global variables and the custom functions. Must be called before any other call to a member function.
@@ -186,7 +99,8 @@ public:
         // NOLINTNEXTLINE
         auto* cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(base_ptr);
 
-        MemoryHolder<AdditionalCellAttributes>::init(cast, max_num_objects);
+        std::span<OctreeNode<AdditionalCellAttributes>> span{ cast, max_num_objects };
+        MemoryHolder<AdditionalCellAttributes>::init(span);
 
         LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
     }
@@ -350,10 +264,11 @@ public:
         const auto number_ranks = get_num_ranks();
         const auto my_rank = get_my_rank();
 
-        std::vector<size_t> number_requests_outgoing = outgoing_requests.get_request_sizes();
-        std::vector<size_t> number_requests_incoming = all_to_all(number_requests_outgoing);
+        const auto& number_requests_outgoing = outgoing_requests.get_request_sizes_vector();
+        const auto& number_requests_incoming = all_to_all(number_requests_outgoing);
 
-        CommunicationMap<RequestType> incoming_requests(number_ranks);
+        const auto size_hint = outgoing_requests.size();
+        CommunicationMap<RequestType> incoming_requests(number_ranks, size_hint);
         incoming_requests.resize(number_requests_incoming);
 
         std::vector<AsyncToken> async_tokens{};
@@ -388,21 +303,45 @@ public:
         return incoming_requests;
     }
 
-    /** 
+    /**
      * @brief Downloads an OctreeNode on another MPI rank
      * @param dst The local node which shall be the copy of the remote node
      * @param target_rank The other MPI rank
      * @param src The pointer to the remote node, must be inside the remote's memory window
-     * @exception Throws a RelearnException if an MPI error occurs or if target_rank < 0
+     * @param number_elements The number of elements to download
+     * @exception Throws a RelearnException if an MPI error occurs, if number_elements <= 0, or if target_rank < 0
      */
     template <typename AdditionalCellAttributes>
-    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const OctreeNode<AdditionalCellAttributes>* src) {
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const OctreeNode<AdditionalCellAttributes>* src, const int number_elements) {
+        RelearnException::check(number_elements > 0, "MPIWrapper::download_octree_node: number_elements is not positive");
         RelearnException::check(target_rank >= 0, "MPIWrapper::download_octree_node: target_rank is negative");
+
         const auto& base_ptrs = get_base_pointers();
         RelearnException::check(target_rank < base_ptrs.size(), "MPIWrapper::download_octree_node: target_rank is larger than the pointers");
         const auto displacement = int64_t(src) - base_ptrs[target_rank];
 
-        get(dst, sizeof(OctreeNode<AdditionalCellAttributes>), target_rank, displacement);
+        RelearnException::check(displacement >= 0, "MPIWrapper::download_octree_node: displacement is too small: {:X} - {:X}", int64_t(src), base_ptrs[target_rank]);
+
+        get(dst, sizeof(OctreeNode<AdditionalCellAttributes>), target_rank, displacement, number_elements);
+    }
+
+    /**
+     * @brief Downloads an OctreeNode on another MPI rank
+     * @param dst The local node which shall be the copy of the remote node
+     * @param target_rank The other MPI rank
+     * @param offset The offset in the remote's memory window
+     * @param number_elements The number of elements to download
+     * @exception Throws a RelearnException if an MPI error occurs, if number_elements <= 0, if offset < 0, or if target_rank < 0
+     */
+    template <typename AdditionalCellAttributes>
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const uint64_t offset, const int number_elements) {
+        RelearnException::check(number_elements > 0, "MPIWrapper::download_octree_node: number_elements is not positive");
+        RelearnException::check(target_rank >= 0, "MPIWrapper::download_octree_node: target_rank is negative");
+
+        const auto& base_ptrs = get_base_pointers();
+        RelearnException::check(target_rank < base_ptrs.size(), "MPIWrapper::download_octree_node: target_rank is larger than the pointers");
+
+        get(dst, sizeof(OctreeNode<AdditionalCellAttributes>), target_rank, offset, number_elements);
     }
 
     /**
@@ -487,6 +426,92 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs
      */
     static void finalize();
+
+private:
+    MPIWrapper() = default;
+
+    [[nodiscard]] static size_t init_window(size_t size_requested, size_t octree_node_size);
+
+    static void init_globals();
+
+    static void register_custom_function();
+
+    static void free_custom_function();
+
+    static void all_gather(const void* own_data, void* buffer, int size);
+
+    static void all_gather_inl(void* ptr, int count);
+
+    static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank);
+
+    // NOLINTNEXTLINE
+    [[nodiscard]] static AsyncToken async_s(const void* buffer, int count, int rank);
+
+    // NOLINTNEXTLINE
+    [[nodiscard]] static AsyncToken async_recv(void* buffer, int count, int rank);
+
+    [[nodiscard]] static int translate_lock_type(MPI_Locktype lock_type);
+
+    static void get(void* origin, size_t size, int target_rank, uint64_t displacement, int number_elements);
+
+    static void reduce_int64(const int64_t* src, int64_t* dst, size_t size, ReduceFunction function, int root_rank);
+
+    static void reduce_double(const double* src, double* dst, size_t size, ReduceFunction function, int root_rank);
+
+    /**
+     * @brief Returns the base addresses of the memory windows of all memory windows.
+     * @return The base addresses of the memory windows. The base address for MPI rank i
+     *      is found at <return>[i]
+     */
+    [[nodiscard]] static const std::vector<int64_t>& get_base_pointers() noexcept {
+        return base_pointers;
+    }
+
+    /**
+     * @brief Sends data to another MPI rank asynchronously
+     * @param buffer The buffer that shall be sent to the other MPI rank
+     * @param rank The other MPI rank that shall receive the data
+     * @param token A token that can be used to query if the asynchronous communication completed
+     * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
+     */
+    template <typename T>
+    [[nodiscard]] static AsyncToken async_send(std::span<T> buffer, const int rank) {
+        return async_s(buffer.data(), static_cast<int>(buffer.size_bytes()), rank);
+    }
+
+    /**
+     * @brief Receives data from another MPI rank asynchronously
+     * @param buffer The buffer where the data shall be written to
+     * @param rank The other MPI rank that shall send the data
+     * @param token A token that can be used to query if the asynchronous communication completed
+     * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
+     */
+    template <typename T>
+    [[nodiscard]] static AsyncToken async_receive(std::span<T> buffer, const int rank) {
+        return async_recv(buffer.data(), static_cast<int>(buffer.size_bytes()), rank);
+    }
+
+    /**
+     * @brief Waits for all supplied tokens
+     * @param The tokens to be waited on
+     * @exception Throws a RelearnException if an MPI error occurs
+     */
+    static void wait_all_tokens(const std::vector<AsyncToken>& tokens);
+
+    static inline int num_ranks{ -1 }; // Number of ranks in MPI_COMM_WORLD
+    static inline int my_rank{ -1 }; // My rank in MPI_COMM_WORLD
+
+    static inline int thread_level_provided{ -1 }; // Thread level provided by MPI
+
+    static inline void* base_ptr{ nullptr }; // Start address of MPI-allocated memory
+    static inline std::vector<int64_t> base_pointers{}; // RMA window base pointers of all procs
+
+    // NOLINTNEXTLINE
+    static inline std::string my_rank_str{ "-1" };
+
+    static inline std::atomic<uint64_t> bytes_sent{ 0 };
+    static inline std::atomic<uint64_t> bytes_received{ 0 };
+    static inline std::atomic<uint64_t> bytes_remote{ 0 };
 };
 
 #endif

@@ -6,6 +6,7 @@
 #include "mpi/CommunicationMap.h"
 #include "neurons/models/SynapticElements.h"
 
+#include <algorithm>
 #include <map>
 #include <vector>
 
@@ -27,22 +28,21 @@ TEST_F(ConnectorTest, testForwardConnectorExceptions) {
 
     CommunicationMap<SynapseCreationRequest> incoming_requests{ static_cast<int>(number_ranks_1) };
 
-    ASSERT_THROW(ForwardConnector::process_requests(incoming_requests, empty, empty), RelearnException);
-    ASSERT_THROW(ForwardConnector::process_requests(incoming_requests, excitatory_dendrites, empty), RelearnException);
-    ASSERT_THROW(ForwardConnector::process_requests(incoming_requests, empty, inhibitory_dendrites), RelearnException);
-    ASSERT_THROW(ForwardConnector::process_requests(incoming_requests, excitatory_dendrites, inhibitory_dendrites), RelearnException);
+    ASSERT_THROW(auto val = ForwardConnector::process_requests(incoming_requests, empty, empty), RelearnException);
+    ASSERT_THROW(auto val = ForwardConnector::process_requests(incoming_requests, excitatory_dendrites, empty), RelearnException);
+    ASSERT_THROW(auto val = ForwardConnector::process_requests(incoming_requests, empty, inhibitory_dendrites), RelearnException);
+    ASSERT_THROW(auto val = ForwardConnector::process_requests(incoming_requests, excitatory_dendrites, inhibitory_dendrites), RelearnException);
 
     CommunicationMap<SynapseCreationResponse> incoming_responses{ static_cast<int>(number_ranks_1) };
-    ASSERT_THROW(ForwardConnector::process_responses(incoming_requests, incoming_responses, empty), RelearnException);
+    ASSERT_THROW(auto val = ForwardConnector::process_responses(incoming_requests, incoming_responses, empty), RelearnException);
 
     CommunicationMap<SynapseCreationResponse> wrong_incoming_responses{ static_cast<int>(final_number_ranks) };
-    ASSERT_THROW(ForwardConnector::process_responses(incoming_requests, wrong_incoming_responses, empty), RelearnException);
+    ASSERT_THROW(auto val = ForwardConnector::process_responses(incoming_requests, wrong_incoming_responses, empty), RelearnException);
 }
 
 TEST_F(ConnectorTest, testForwardConnectorEmptyMap) {
     const auto number_neurons = get_random_number_neurons();
     const auto number_ranks = get_random_number_ranks() + 1;
-    const auto current_rank = get_random_rank(number_ranks);
 
     const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
     const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Inhibitory);
@@ -96,7 +96,6 @@ TEST_F(ConnectorTest, testForwardConnectorEmptyMap) {
 TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
     const auto number_neurons = get_random_number_neurons();
     const auto number_ranks = get_random_number_ranks() + 1;
-    const auto current_rank = get_random_rank(number_ranks);
 
     const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
     const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Inhibitory);
@@ -113,7 +112,7 @@ TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
         const auto number_vacant_excitatory = excitatory_dendrites->get_free_elements(id);
         number_excitatory_requests += number_vacant_excitatory;
 
-        for (auto i = 0; i < number_vacant_excitatory; i++) {
+        for (auto i = 0U; i < number_vacant_excitatory; i++) {
             SynapseCreationRequest scr(id, NeuronID{ i }, SignalType::Excitatory);
             incoming_requests.append(1, scr);
 
@@ -123,7 +122,7 @@ TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
         const auto number_vacant_inhibitory = inhibitory_dendrites->get_free_elements(id);
         number_inhibitory_requests += number_vacant_inhibitory;
 
-        for (auto i = 0; i < number_vacant_inhibitory; i++) {
+        for (auto i = 0U; i < number_vacant_inhibitory; i++) {
             SynapseCreationRequest scr(id, NeuronID{ i }, SignalType::Inhibitory);
             incoming_requests.append(1, scr);
 
@@ -139,8 +138,13 @@ TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
     const auto& request_sizes = incoming_requests.get_request_sizes();
     const auto& response_sizes = responses.get_request_sizes();
 
-    for (auto i = 0; i < incoming_requests.size(); i++) {
-        ASSERT_EQ(request_sizes[i], response_sizes[i]);
+    // For each saved rank: The number of responses matches the number of requests
+    ASSERT_EQ(request_sizes.size(), response_sizes.size());
+    for (const auto& [rank, size] : request_sizes) {
+        const auto found_in_responses = response_sizes.contains(rank);
+        ASSERT_TRUE(found_in_responses);
+
+        ASSERT_EQ(size, response_sizes.at(rank));
     }
 
     for (const auto& [rank, resps] : responses) {
@@ -171,11 +175,10 @@ TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
 TEST_F(ConnectorTest, testForwardConnectorIncoming) {
     const auto number_neurons = get_random_number_neurons();
     const auto number_ranks = get_random_number_ranks() + 1;
-    const auto current_rank = get_random_rank(number_ranks);
 
     const auto& axons = create_axons(number_neurons);
     const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
-    const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
+    const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Inhibitory);
 
     // The following copies are intentional
     const auto previous_connected_excitatory_counts = excitatory_dendrites->get_connected_elements();
@@ -184,7 +187,7 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
     const auto previous_grown_inhibitory_counts = inhibitory_dendrites->get_grown_elements();
 
     const auto& [incoming_requests, number_excitatory_requests, number_inhibitory_requests]
-        = create_incoming_requests(number_ranks, current_rank, number_neurons, 0, 9);
+        = create_incoming_requests(number_ranks, 0, number_neurons, 0, 9);
 
     auto [responses, synapses] = ForwardConnector::process_requests(incoming_requests, excitatory_dendrites, inhibitory_dendrites);
     auto [local_synapses, distant_in_synapses] = synapses;
@@ -195,9 +198,13 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
     const auto& request_sizes = incoming_requests.get_request_sizes();
     const auto& response_sizes = responses.get_request_sizes();
 
-    // For each rank: The number of responses matches the number of requests
-    for (auto i = 0; i < incoming_requests.size(); i++) {
-        ASSERT_EQ(request_sizes[i], response_sizes[i]);
+    // For each saved rank: The number of responses matches the number of requests
+    ASSERT_EQ(request_sizes.size(), response_sizes.size());
+    for (const auto& [rank, size] : request_sizes) {
+        const auto found_in_responses = response_sizes.contains(rank);
+        ASSERT_TRUE(found_in_responses);
+
+        ASSERT_EQ(size, response_sizes.at(rank));
     }
 
     const auto& now_connected_excitatory_counts = excitatory_dendrites->get_connected_elements();
@@ -210,14 +217,14 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
 
     // The grown elements did not change. There are now not less connected then before, and not more than grown
     for (auto i = 0; i < number_neurons; i++) {
-        ASSERT_EQ(previous_grown_excitatory_counts[i], now_grown_excitatory_counts[i]);
-        ASSERT_EQ(previous_grown_inhibitory_counts[i], now_grown_inhibitory_counts[i]);
+        ASSERT_EQ(previous_grown_excitatory_counts[i], now_grown_excitatory_counts[i]) << i;
+        ASSERT_EQ(previous_grown_inhibitory_counts[i], now_grown_inhibitory_counts[i]) << i;
 
-        ASSERT_GE(now_connected_excitatory_counts[i], previous_connected_excitatory_counts[i]);
-        ASSERT_GE(now_connected_inhibitory_counts[i], previous_connected_inhibitory_counts[i]);
+        ASSERT_GE(now_connected_excitatory_counts[i], previous_connected_excitatory_counts[i]) << i;
+        ASSERT_GE(now_connected_inhibitory_counts[i], previous_connected_inhibitory_counts[i]) << i;
 
-        ASSERT_LE(now_connected_excitatory_counts[i], static_cast<unsigned int>(now_grown_excitatory_counts[i]));
-        ASSERT_LE(now_connected_inhibitory_counts[i], static_cast<unsigned int>(now_grown_inhibitory_counts[i]));
+        ASSERT_LE(now_connected_excitatory_counts[i], static_cast<unsigned int>(now_grown_excitatory_counts[i])) << i;
+        ASSERT_LE(now_connected_inhibitory_counts[i], static_cast<unsigned int>(now_grown_inhibitory_counts[i])) << i;
 
         newly_connected_excitatory_dendrites[i] = now_connected_excitatory_counts[i] - previous_connected_excitatory_counts[i];
         newly_connected_inhibitory_dendrites[i] = now_connected_inhibitory_counts[i] - previous_connected_inhibitory_counts[i];
@@ -227,12 +234,12 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
     for (auto i = 0; i < number_neurons; i++) {
         const auto vacant_excitatory_elements = excitatory_dendrites->get_free_elements(NeuronID{ i });
         if (vacant_excitatory_elements > 0) {
-            ASSERT_EQ(newly_connected_excitatory_dendrites[i], number_excitatory_requests[i]);
+            ASSERT_EQ(newly_connected_excitatory_dendrites[i], number_excitatory_requests[i]) << i;
         }
 
         const auto vacant_inhibitory_elements = inhibitory_dendrites->get_free_elements(NeuronID{ i });
         if (vacant_inhibitory_elements > 0) {
-            ASSERT_EQ(newly_connected_inhibitory_dendrites[i], number_inhibitory_requests[i]);
+            ASSERT_EQ(newly_connected_inhibitory_dendrites[i], number_inhibitory_requests[i]) << i;
         }
     }
 
@@ -246,7 +253,12 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
 
     // Extract things from the return value
     for (auto rank = 0; rank < number_ranks; rank++) {
-        for (auto index = 0; index < request_sizes[rank]; index++) {
+        const auto found_in_requests = request_sizes.contains(rank);
+        if (!found_in_requests) {
+            continue;
+        }
+
+        for (auto index = 0; index < request_sizes.at(rank); index++) {
             const auto& [target_index, source_index, signal_type] = incoming_requests.get_request(rank, index);
             const auto& response = responses.get_request(rank, index);
 
@@ -254,8 +266,8 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
                 continue;
             }
 
-            const auto& target_id = target_index.get_local_id();
-            const auto& source_id = source_index.get_local_id();
+            const auto& target_id = target_index.get_neuron_id();
+            const auto& source_id = source_index.get_neuron_id();
 
             if (signal_type == SignalType::Excitatory) {
                 accepted_excitatory_requests[target_id]++;
@@ -287,9 +299,9 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
         const auto& [target_1, source_1, weight_1] = local_synapses[i];
         const auto& [target_2, source_2, weight_2] = expected_local_synapses[i];
 
-        ASSERT_EQ(target_1, target_2);
-        ASSERT_EQ(source_1, source_2);
-        ASSERT_EQ(weight_1, weight_2);
+        ASSERT_EQ(target_1, target_2) << i;
+        ASSERT_EQ(source_1, source_2) << i;
+        ASSERT_EQ(weight_1, weight_2) << i;
     }
 
     // All and only the accepted distant in synapses are returned
@@ -297,13 +309,13 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
         const auto& [target_1, source_1, weight_1] = distant_in_synapses[i];
         const auto& [target_2, source_2, weight_2] = expected_distant_in_synapses[i];
 
-        ASSERT_EQ(target_1, target_2);
-        ASSERT_EQ(source_1, source_2);
-        ASSERT_EQ(weight_1, weight_2);
+        ASSERT_EQ(target_1, target_2) << i;
+        ASSERT_EQ(source_1, source_2) << i;
+        ASSERT_EQ(weight_1, weight_2) << i;
     }
 
     for (auto i = 0; i < number_neurons; i++) {
-        ASSERT_EQ(accepted_excitatory_requests[i], newly_connected_excitatory_dendrites[i]);
-        ASSERT_EQ(accepted_inhibitory_requests[i], newly_connected_inhibitory_dendrites[i]);
+        ASSERT_EQ(accepted_excitatory_requests[i], newly_connected_excitatory_dendrites[i]) << i;
+        ASSERT_EQ(accepted_inhibitory_requests[i], newly_connected_inhibitory_dendrites[i]) << i;
     }
 }

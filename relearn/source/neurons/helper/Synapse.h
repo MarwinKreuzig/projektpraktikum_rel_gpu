@@ -19,21 +19,17 @@
  * @tparam Target The type of the target
  * @tparam Source The type of the source
  * @tparam Weight The type of the weight
-*/
+ */
 template <typename Target, typename Source, typename Weight>
 class Synapse {
-    Target target{};
-    Source source{};
-    Weight weight{};
-
 public:
     /**
      * @brief Constructs a new synapse with the given parameter
      * @param target The target of the synapse
      * @param source The source of the synapse
      * @param weight The weight of the synapse
-    */
-    Synapse(Target target, Source source, Weight weight)
+     */
+    Synapse(const Target target, const Source source, const Weight weight)
         : target(target)
         , source(source)
         , weight(weight) { }
@@ -102,6 +98,11 @@ public:
             return std::move(weight);
         }
     }
+
+private:
+    Target target{};
+    Source source{};
+    Weight weight{};
 };
 
 namespace std {
@@ -125,4 +126,4 @@ struct tuple_element<2, ::Synapse<Target, Source, Weight>> {
     using type = Weight;
 };
 
-} //namespace std
+} // namespace std

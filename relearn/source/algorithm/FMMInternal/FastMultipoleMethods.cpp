@@ -11,6 +11,7 @@
 #include "FastMultipoleMethods.h"
 #include "FastMultipoleMethodsBase.h"
 
+#include "algorithm/Connector.h"
 #include "algorithm/Kernel/Gaussian.h"
 #include "structure/NodeCache.h"
 #include "structure/Octree.h"
@@ -27,9 +28,10 @@ CommunicationMap<SynapseCreationRequest> FastMultipoleMethods::find_target_neuro
 
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
-    CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks);
+    const auto size_hint = std::min(size_t(number_ranks), number_neurons);
+    CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks, size_hint);
 
-    OctreeNode<FastMultipoleMethodsCell>* root = global_tree->get_root();
+    OctreeNode<FastMultipoleMethodsCell>* root = get_octree_root();
     RelearnException::check(root != nullptr, "FastMultpoleMethods::find_target_neurons: root was nullptr");
 
     // Get number of dendrites
@@ -45,7 +47,7 @@ CommunicationMap<SynapseCreationRequest> FastMultipoleMethods::find_target_neuro
 
     // Stop Timer and make cache empty for next connectivity update
     Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
-    NodeCache<FastMultipoleMethodsCell>::empty();
+    NodeCache<FastMultipoleMethodsCell>::clear();
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
 
     return synapse_creation_requests_outgoing;

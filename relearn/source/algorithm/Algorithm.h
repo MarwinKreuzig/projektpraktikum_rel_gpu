@@ -10,6 +10,7 @@
  *
  */
 
+#include "Types.h"
 #include "neurons/UpdateStatus.h"
 #include "util/RelearnException.h"
 
@@ -22,10 +23,7 @@ class SynapticElements;
 
 /**
  * This is a virtual interface for all algorithms that can be used to create new synapses.
- * It provides Algorithm::update_connectivity, Algorithm::update_leaf_nodes and every derived class must also implement
- * static void update_functor(OctreeNode<Cell>* node)
- * with Cell being exposed publicly via
- * using AdditionalCellAttributes = Cell;
+ * It provides Algorithm::update_connectivity and Algorithm::update_octree.
  */
 class Algorithm {
 public:
@@ -38,8 +36,8 @@ public:
      */
     void set_synaptic_elements(std::shared_ptr<SynapticElements> axons, std::shared_ptr<SynapticElements> excitatory_dendrites, std::shared_ptr<SynapticElements> inhibitory_dendrites) {
         const bool axons_full = axons.operator bool();
-        const bool excitatory_dendrites_full = axons.operator bool();
-        const bool inhibitory_dendrites_full = axons.operator bool();
+        const bool excitatory_dendrites_full = excitatory_dendrites.operator bool();
+        const bool inhibitory_dendrites_full = inhibitory_dendrites.operator bool();
 
         RelearnException::check(axons_full, "Algorithm::set_synaptic_elements: axons was empty");
         RelearnException::check(excitatory_dendrites_full, "Algorithm::set_synaptic_elements: excitatory_dendrites was empty");
@@ -63,14 +61,15 @@ public:
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos) = 0;
 
     /**
-     * @brief Updates all leaf nodes in the octree by the algorithm
-     * @param disable_flags Flags that indicate if a neuron is disabled or enabled
-     * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
+     * @brief Updates the octree according to the necessities of the algorithm.
+     *      Performs communication via MPI
+     * @param disable_flags Flags that indicate if a neuron id disabled or enabled. If disabled, it is ignored for all purposes
+     * @exception Can throw a RelearnException
      */
-    virtual void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) = 0;
+    virtual void update_octree(const std::vector<UpdateStatus>& disable_flags) = 0;
 
 protected:
-    std::shared_ptr<SynapticElements> axons{}; //NOLINTLINE
-    std::shared_ptr<SynapticElements> excitatory_dendrites{}; //NOLINTLINE
-    std::shared_ptr<SynapticElements> inhibitory_dendrites{}; //NOLINTLINE
+    std::shared_ptr<SynapticElements> axons{}; // NOLINT
+    std::shared_ptr<SynapticElements> excitatory_dendrites{}; // NOLINT
+    std::shared_ptr<SynapticElements> inhibitory_dendrites{}; // NOLINT
 };

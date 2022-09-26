@@ -24,19 +24,11 @@ public:
     using position_type = typename RelearnTypes::position_type;
     using counter_type = typename RelearnTypes::counter_type;
 
-private:
-    // Avoiding std::optional<> saves 8 bytes, which translates to 32 bytes per FFM-cell
-
-    position_type position{};
-    counter_type num_free_elements{ 0 };
-    bool is_valid{ false };
-
-public:
     /**
      * @brief Sets the number of free elements
      * @param number_free_elements The number of free elements
      */
-    void set_number_free_elements(const counter_type number_free_elements) noexcept {
+    constexpr void set_number_free_elements(const counter_type number_free_elements) noexcept {
         num_free_elements = number_free_elements;
     }
 
@@ -44,7 +36,7 @@ public:
      * @brief Returns the number of free elements
      * @return The number of free elements
      */
-    [[nodiscard]] counter_type get_number_free_elements() const noexcept {
+    [[nodiscard]] constexpr counter_type get_number_free_elements() const noexcept {
         return num_free_elements;
     }
 
@@ -52,7 +44,7 @@ public:
      * @brief Sets the position of this plasticity element. Can be empty
      * @param virtual_position The new position
      */
-    void set_position(const std::optional<position_type>& virtual_position) noexcept {
+    constexpr void set_position(const std::optional<position_type>& virtual_position) noexcept {
         const auto valid_pos = virtual_position.has_value();
         is_valid = valid_pos;
 
@@ -65,13 +57,20 @@ public:
      * @brief Returns the position of this plasticity element. Can be empty
      * @return The current position
      */
-    [[nodiscard]] std::optional<position_type> get_position() const noexcept {
+    [[nodiscard]] constexpr std::optional<position_type> get_position() const noexcept {
         if (!is_valid) {
             return {};
         }
 
         return position;
     }
+
+private:
+    // Avoiding std::optional<> saves 8 bytes, which translates to 32 bytes per FFM-cell
+
+    position_type position{};
+    counter_type num_free_elements{ 0 };
+    bool is_valid{ false };
 };
 
 /**
@@ -84,16 +83,11 @@ public:
     using position_type = typename RelearnTypes::position_type;
     using counter_type = typename RelearnTypes::counter_type;
 
-private:
-    std::optional<position_type> position{};
-    counter_type num_free_elements{ 0 };
-
-public:
     /**
      * @brief Sets the number of free elements
      * @param number_free_elements The number of free elements
      */
-    void set_number_free_elements(const counter_type number_free_elements) noexcept {
+    constexpr void set_number_free_elements(const counter_type number_free_elements) noexcept {
         num_free_elements = number_free_elements;
     }
 
@@ -101,7 +95,7 @@ public:
      * @brief Returns the number of free elements
      * @return The number of free elements
      */
-    [[nodiscard]] counter_type get_number_free_elements() const noexcept {
+    [[nodiscard]] constexpr counter_type get_number_free_elements() const noexcept {
         return num_free_elements;
     }
 
@@ -109,7 +103,7 @@ public:
      * @brief Sets the position of this plasticity element. Can be empty
      * @param virtual_position The new position
      */
-    void set_position(const std::optional<position_type>& virtual_position) noexcept {
+    constexpr void set_position(const std::optional<position_type>& virtual_position) noexcept {
         position = virtual_position;
     }
 
@@ -117,9 +111,13 @@ public:
      * @brief Returns the position of this plasticity element. Can be empty
      * @return The current position
      */
-    [[nodiscard]] std::optional<position_type> get_position() const noexcept {
+    [[nodiscard]] constexpr std::optional<position_type> get_position() const noexcept {
         return position;
     }
+
+private:
+    std::optional<position_type> position{};
+    counter_type num_free_elements{ 0 };
 };
 
 // Switch for the implementation of VPE (space vs. time trade-off)

@@ -56,7 +56,8 @@ public:
         const auto my_rank = MPIWrapper::get_my_rank();
         const auto number_ranks = creation_requests.get_number_ranks();
 
-        CommunicationMap<SynapseCreationResponse> responses(number_ranks);
+        const auto size_hint = creation_requests.size();
+        CommunicationMap<SynapseCreationResponse> responses(number_ranks, size_hint);
 
         if (creation_requests.empty()) {
             return { responses, {} };
@@ -87,7 +88,12 @@ public:
         for (const auto& [source_rank, request_index] : indices) {
             const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = creation_requests.get_request(source_rank, request_index);
 
-            RelearnException::check(target_neuron_id.get_local_id() < number_neurons, "ForwardConnector::process_requests: target_neuron_id exceeds my neurons");
+            if (source_rank == my_rank && target_neuron_id == source_neuron_id) {
+                responses.set_request(source_rank, request_index, SynapseCreationResponse::Failed);
+                continue;
+            }
+
+            RelearnException::check(target_neuron_id.get_neuron_id() < number_neurons, "ForwardConnector::process_requests: target_neuron_id exceeds my neurons");
 
             const auto& dendrites = (SignalType::Inhibitory == dendrite_type_needed) ? inhibitory_dendrites : excitatory_dendrites;
 
@@ -131,14 +137,14 @@ public:
         const CommunicationMap<SynapseCreationResponse>& creation_responses, const std::shared_ptr<SynapticElements>& axons) {
 
         const auto axons_empty = axons.operator bool();
-        RelearnException::check(axons_empty, "ForwardConnector::process_requests: The axons are empty");
+        RelearnException::check(axons_empty, "ForwardConnector::process_responses: The axons are empty");
 
         RelearnException::check(creation_requests.size() == creation_responses.size(), 
-            "ForwardConnector::process_requests: Requests and Responses had different sizes");
+            "ForwardConnector::process_responses: Requests and Responses had different sizes");
 
         for (auto rank = 0; rank < creation_requests.size(); rank++) {
             RelearnException::check(creation_requests.size(rank) == creation_responses.size(rank),
-                "ForwardConnector::process_requests: Requests and Responses for rank {} had different sizes", rank);
+                "ForwardConnector::process_responses: Requests and Responses for rank {} had different sizes", rank);
         }
 
         const auto number_neurons = axons->get_size();
@@ -162,8 +168,8 @@ public:
 
                 const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = creation_requests.get_request(target_rank, request_index);
 
-                RelearnException::check(source_neuron_id.get_local_id() < number_neurons,
-                    "ForwardConnector::process_responses: The source neuron id was too large: {} vs {}", source_neuron_id.get_local_id(), number_neurons);
+                RelearnException::check(source_neuron_id.get_neuron_id() < number_neurons,
+                    "ForwardConnector::process_responses: The source neuron id was too large: {} vs {}", source_neuron_id.get_neuron_id(), number_neurons);
 
                 RelearnException::check(axons->get_free_elements(source_neuron_id) > 0, 
                     "ForwardConnector::process_responses: The source neuron did not have a vacant element: {}", source_neuron_id);
@@ -210,7 +216,8 @@ public:
         const auto my_rank = MPIWrapper::get_my_rank();
         const auto number_ranks = MPIWrapper::get_num_ranks();
 
-        CommunicationMap<SynapseCreationResponse> responses(number_ranks);
+        const auto size_hint = creation_requests.size();
+        CommunicationMap<SynapseCreationResponse> responses(number_ranks, size_hint);
         if (creation_requests.empty()) {
             return { responses, {} };
         }
@@ -242,8 +249,8 @@ public:
         for (const auto& [source_rank, request_index] : indices) {
             const auto& [target_neuron_id, source_neuron_id, axon_type_needed] = creation_requests.get_request(source_rank, request_index);
 
-            RelearnException::check(target_neuron_id.get_local_id() < number_neurons, "ForwardConnector::process_requests: target_neuron_id exceeds my neurons");
-            RelearnException::check(signal_types[target_neuron_id.get_local_id()] == axon_type_needed, "ForwardConnector::process_requests: Request had the wrong signal type");
+            RelearnException::check(target_neuron_id.get_neuron_id() < number_neurons, "ForwardConnector::process_requests: target_neuron_id exceeds my neurons");
+            RelearnException::check(signal_types[target_neuron_id.get_neuron_id()] == axon_type_needed, "ForwardConnector::process_requests: Request had the wrong signal type");
 
             const auto weight = (SignalType::Inhibitory == axon_type_needed) ? -1 : 1;
             const auto number_free_elements = axons->get_free_elements(target_neuron_id);
@@ -317,8 +324,8 @@ public:
 
                 const auto& dendrites = (SignalType::Inhibitory == axon_type_needed) ? inhibitory_dendrites : excitatory_dendrites;
 
-                RelearnException::check(source_neuron_id.get_local_id() < number_neurons,
-                    "ForwardConnector::process_responses: The source neuron id was too large: {} vs {}", source_neuron_id.get_local_id(), number_neurons);
+                RelearnException::check(source_neuron_id.get_neuron_id() < number_neurons,
+                    "ForwardConnector::process_responses: The source neuron id was too large: {} vs {}", source_neuron_id.get_neuron_id(), number_neurons);
 
                 // Increment number of connected axons
                 dendrites->update_connected_elements(source_neuron_id, 1);

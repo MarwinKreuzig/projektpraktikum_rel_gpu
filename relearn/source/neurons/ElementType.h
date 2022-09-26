@@ -29,7 +29,7 @@ enum class ElementType { Axon,
 inline std::ostream& operator<<(std::ostream& out, const ElementType& element_type) {
     if (element_type == ElementType::Axon) {
         return out << "Axon";
-    } 
+    }
 
     if (element_type == ElementType::Dendrite) {
         return out << "Dendrite";

@@ -10,8 +10,28 @@
  *
  */
 
+#include <ostream>
+
 /**
-  * An instance of this enum signals if a neuron should be updated or not.
-  */
+ * An instance of this enum signals if a neuron should be updated or not.
+ */
 enum class UpdateStatus : char { Disabled = 0,
-    Enabled = 1};
+    Enabled = 1 };
+
+/**
+ * @brief Pretty-prints the update status to the chosen stream
+ * @param out The stream to which to print the signal type
+ * @param update_status The update status to print
+ * @return The argument out, now altered with the update status
+ */
+inline std::ostream& operator<<(std::ostream& out, const UpdateStatus& update_status) {
+    if (update_status == UpdateStatus::Disabled) {
+        return out << "Disabled";
+    }
+
+    if (update_status == UpdateStatus::Enabled) {
+        return out << "Enabled";
+    }
+
+    return out;
+}

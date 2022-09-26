@@ -37,7 +37,6 @@ TEST_F(ProbabilityKernelTest, testGaussianGetterSetterExceptions) {
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
 
     const auto sigma = -get_random_gaussian_sigma();
-    const auto mu = get_random_gaussian_mu();
 
     ASSERT_THROW(GaussianDistributionKernel::set_sigma(0.0), RelearnException);
 
@@ -106,7 +105,6 @@ TEST_F(ProbabilityKernelTest, testGaussianVariableSigma) {
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
 
     const auto number_elements = get_random_integer<unsigned int>(0, 10000);
-    const auto converted_double = static_cast<double>(number_elements);
 
     const auto& source_position = get_random_position();
     const auto& target_position = get_random_position();
@@ -142,7 +140,6 @@ TEST_F(ProbabilityKernelTest, testGaussianVariablePosition) {
     const auto& source_position = get_random_position();
 
     const auto number_elements = get_random_integer<unsigned int>(0, 10000);
-    const auto converted_double = static_cast<double>(number_elements);
 
     std::vector<Vec3d> positions{};
     for (auto i = 0; i < 100; i++) {
@@ -276,10 +273,10 @@ TEST_F(KernelTest, testGaussianKernelIntegration) {
     const auto& target_excitatory_dendrite_position = get_random_position();
     const auto& target_inhibitory_dendrite_position = get_random_position();
 
-    const auto& number_vacant_excitatory_axons = get_random_synaptic_element_count();
-    const auto& number_vacant_inhibitory_axons = get_random_synaptic_element_count();
-    const auto& number_vacant_excitatory_dendrites = get_random_synaptic_element_count();
-    const auto& number_vacant_inhibitory_dendrites = get_random_synaptic_element_count();
+    const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+    const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+    const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+    const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
 
     OctreeNode<FastMultipoleMethodsCell> node{};
     node.set_cell_neuron_id(neuron_id_1);

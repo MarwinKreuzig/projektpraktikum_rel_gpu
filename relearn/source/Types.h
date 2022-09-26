@@ -10,11 +10,8 @@
  *
  */
 
-#include "algorithm/AlgorithmEnum.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/Synapse.h"
-#include "util/StatisticalMeasures.h"
-#include "util/TaggedID.h"
 #include "util/Vec3.h"
 
 #include <vector>

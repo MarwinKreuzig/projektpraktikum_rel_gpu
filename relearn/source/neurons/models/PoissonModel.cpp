@@ -16,24 +16,19 @@
 using models::PoissonModel;
 
 PoissonModel::PoissonModel(
-    const double k,
-    const double tau_C,
-    const double beta,
     const unsigned int h,
-    const double base_background_activity,
-    const double background_activity_mean,
-    const double background_activity_stddev,
+    std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
     const double x_0,
     const double tau_x,
     const unsigned int refrac_time)
-    : NeuronModel{ k, tau_C, beta, h, base_background_activity, background_activity_mean, background_activity_stddev }
+    : NeuronModel{ h, std::move(synaptic_input_calculator) }
     , x_0{ x_0 }
     , tau_x{ tau_x }
     , refrac_time{ refrac_time } {
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> PoissonModel::clone() const {
-    return std::make_unique<PoissonModel>(get_k(), get_tau_C(), get_beta(), get_h(), get_base_background_activity(), get_background_activity_mean(), get_background_activity_stddev(), x_0, tau_x, refrac_time);
+    return std::make_unique<PoissonModel>(get_h(), get_synaptic_input_calculator()->clone(), x_0, tau_x, refrac_time);
 }
 
 [[nodiscard]] std::vector<ModelParameter> PoissonModel::get_parameter() {
@@ -51,7 +46,6 @@ PoissonModel::PoissonModel(
 void PoissonModel::init(const size_t number_neurons) {
     NeuronModel::init(number_neurons);
     refrac.resize(number_neurons, 0);
-    theta_values.resize(number_neurons, 0.0);
     init_neurons(0, number_neurons);
 }
 
@@ -59,7 +53,6 @@ void PoissonModel::create_neurons(const size_t creation_count) {
     const auto old_size = NeuronModel::get_number_neurons();
     NeuronModel::create_neurons(creation_count);
     refrac.resize(old_size + creation_count, 0);
-    theta_values.resize(old_size + creation_count, 0.0);
     init_neurons(old_size, creation_count);
 }
 
@@ -77,11 +70,12 @@ void PoissonModel::update_activity(const NeuronID& neuron_id) {
         x += iter_x(x, input) / h;
     }
 
-    const auto local_neuron_id = neuron_id.get_local_id();
+    const auto local_neuron_id = neuron_id.get_neuron_id();
 
     // Neuron ready to fire again
     if (refrac[local_neuron_id] == 0) {
-        const bool f = x >= theta_values[local_neuron_id];
+        const auto threshold = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
+        const bool f = x >= threshold;
         if (f) {
             set_fired(neuron_id, FiredStatus::Fired);
             refrac[local_neuron_id] = refrac_time;
@@ -100,20 +94,4 @@ void PoissonModel::update_activity(const NeuronID& neuron_id) {
 
 void PoissonModel::init_neurons(const size_t start_id, const size_t end_id) {
 
-}
-
-void PoissonModel::update_electrical_activity_serial_initialize(const std::vector<UpdateStatus>& disable_flags) {
-    Timers::start(TimerRegion::CALC_SERIAL_ACTIVITY);
-
-#pragma omp parallel for shared(disable_flags) default(none) // NOLINTNEXTLINE
-    for (int neuron_id = 0; neuron_id < theta_values.size(); neuron_id++) {
-        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
-            continue;
-        }
-
-        const double threshold = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
-        theta_values[neuron_id] = threshold;
-    }
-
-    Timers::stop_and_add(TimerRegion::CALC_SERIAL_ACTIVITY);
 }

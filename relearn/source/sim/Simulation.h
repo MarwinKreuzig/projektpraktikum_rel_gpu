@@ -12,6 +12,8 @@
 
 #include "Config.h"
 #include "Types.h"
+#include "algorithm/AlgorithmEnum.h"
+#include "util/StatisticalMeasures.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -25,8 +27,8 @@
 #include <vector>
 
 class Algorithm;
+class CalciumCalculator;
 class NetworkGraph;
-class NeuronIdTranslator;
 class NeuronModel;
 class NeuronMonitor;
 class NeuronToSubdomainAssignment;
@@ -69,6 +71,12 @@ public:
     void set_neuron_model(std::unique_ptr<NeuronModel>&& nm) noexcept;
 
     /**
+     * @brief Sets the calcium calculator used for the simulation
+     * @param calculator The calcium calculator
+     */
+    void set_calcium_calculator(std::unique_ptr<CalciumCalculator>&& calculator) noexcept;
+
+    /**
      * @brief Sets the synaptic elements model for the axons
      * @param se The synaptic elements model
      */
@@ -85,18 +93,6 @@ public:
      * @param se The synaptic elements model
      */
     void set_dendrites_in(std::shared_ptr<SynapticElements>&& se) noexcept;
-
-    /**
-     * @brief Sets the function that is used to determine the target calcium value of the neurons
-     * @param calculator The function that maps neuron id to target calcium value
-     */
-    void set_target_calcium_calculator(std::function<double(NeuronID::value_type)> calculator) noexcept;
-
-    /**
-     * @brief Sets the function that is used to determine the initial calcium value of the neurons
-     * @param calculator The function that maps neuron id to initial calcium value
-     */
-    void set_initial_calcium_calculator(std::function<double(NeuronID::value_type)> initiator) noexcept;
 
     /**
      * @brief Sets the enable interrupts during the simulation.
@@ -231,13 +227,13 @@ private:
     std::shared_ptr<Partition> partition{};
 
     std::unique_ptr<NeuronToSubdomainAssignment> neuron_to_subdomain_assignment{};
-    std::shared_ptr<NeuronIdTranslator> neuron_id_translator{};
 
     std::shared_ptr<SynapticElements> axons{};
     std::shared_ptr<SynapticElements> dendrites_ex{};
     std::shared_ptr<SynapticElements> dendrites_in{};
 
     std::unique_ptr<NeuronModel> neuron_models{};
+    std::unique_ptr<CalciumCalculator> calcium_calculator{};
     std::shared_ptr<Neurons> neurons{};
 
     std::shared_ptr<Algorithm> algorithm{};
@@ -253,8 +249,8 @@ private:
 
     std::map<NeuronAttribute, std::vector<StatisticalMeasures>> statistics{};
 
-    std::function<double(NeuronID::value_type)> target_calcium_calculator{};
-    std::function<double(NeuronID::value_type)> initial_calcium_initiator{};
+    std::function<double(int, NeuronID::value_type)> target_calcium_calculator{};
+    std::function<double(int, NeuronID::value_type)> initial_calcium_initiator{};
 
     double accept_criterion{ 0.0 };
 

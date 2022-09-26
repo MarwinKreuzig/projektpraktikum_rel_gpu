@@ -27,10 +27,13 @@ struct StatisticalMeasures {
  */
 enum class NeuronAttribute {
     Calcium,
+    TargetCalcium,
     X,
+    SecondaryVariable,
     Fired,
+    FiredFraction,
     SynapticInput,
-    Background,
+    BackgroundActivity,
     Axons,
     AxonsConnected,
     DendritesExcitatory,

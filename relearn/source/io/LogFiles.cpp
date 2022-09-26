@@ -16,8 +16,6 @@
 #include <filesystem>
 #include <iostream>
 
-bool LogFiles::disable = false;
-
 bool LogFiles::do_i_print(const int rank) {
     if (disable) {
         return false;
@@ -39,6 +37,14 @@ void LogFiles::init() {
         if (!std::filesystem::exists(output_path)) {
             std::filesystem::create_directory(output_path);
         }
+
+        if (!std::filesystem::exists(output_path / "positions")) {
+            std::filesystem::create_directory(output_path / "positions");
+        }
+
+        if (!std::filesystem::exists(output_path / "network")) {
+            std::filesystem::create_directory(output_path / "network");
+        }
     }
 
     // Wait until directory is created before any rank proceeds
@@ -46,16 +52,18 @@ void LogFiles::init() {
 
     // Create log file for neurons overview on rank 0
     LogFiles::add_logfile(EventType::NeuronsOverview, "neurons_overview", 0);
-    LogFiles::add_logfile(EventType::NeuronsOverviewCSV, "neurons_overview_csv", 0, ".csv");
+    // LogFiles::add_logfile(EventType::NeuronsOverviewCSV, "neurons_overview_csv", 0, ".csv");
 
     // Create log file for sums on rank 0
     LogFiles::add_logfile(EventType::Sums, "sums", 0);
 
     // Create log file for network on all ranks
-    LogFiles::add_logfile(EventType::Network, "network", -1);
+    // LogFiles::add_logfile(EventType::Network, "network", -1);
+    LogFiles::add_logfile(EventType::InNetwork, "in_network", -1, ".txt", "network/");
+    LogFiles::add_logfile(EventType::OutNetwork, "out_network", -1, ".txt", "network/");
 
     // Create log file for positions on all ranks
-    LogFiles::add_logfile(EventType::Positions, "positions", -1);
+    LogFiles::add_logfile(EventType::Positions, "positions", -1, ".txt", "positions/");
 
     // Create log file for std::cout
     LogFiles::add_logfile(EventType::Cout, "stdcout", -1);
@@ -68,14 +76,14 @@ void LogFiles::init() {
 
     // Create log file for the synapse creation and deletion
     LogFiles::add_logfile(EventType::PlasticityUpdate, "plasticity_changes", 0);
-    LogFiles::add_logfile(EventType::PlasticityUpdateCSV, "plasticity_changes_csv", 0, ".csv");
+    // LogFiles::add_logfile(EventType::PlasticityUpdateCSV, "plasticity_changes_csv", 0, ".csv");
 
     // Create log file for the local synapse creation and deletion
     LogFiles::add_logfile(EventType::PlasticityUpdateLocal, "plasticity_changes_local", -1);
 
-    LogFiles::add_logfile(EventType::NetworkInInhibitoryHistogramLocal, "network_in_inhibitory_histogram_local", -1);
-    LogFiles::add_logfile(EventType::NetworkInExcitatoryHistogramLocal, "network_in_excitatory_histogram_local", -1);
-    LogFiles::add_logfile(EventType::NetworkOutHistogramLocal, "network_out_histogram_local", -1);
+    // LogFiles::add_logfile(EventType::NetworkInInhibitoryHistogramLocal, "network_in_inhibitory_histogram_local", -1);
+    // LogFiles::add_logfile(EventType::NetworkInExcitatoryHistogramLocal, "network_in_excitatory_histogram_local", -1);
+    // LogFiles::add_logfile(EventType::NetworkOutHistogramLocal, "network_out_histogram_local", -1);
 
     // Create log file for the essentials of the simulation
     LogFiles::add_logfile(EventType::Essentials, "essentials", 0);
@@ -83,8 +91,8 @@ void LogFiles::init() {
     // Create log file for all calcium values
     LogFiles::add_logfile(EventType::CalciumValues, "calcium_values", -1);
 
-    // Create log file for the euclidean distance
-    LogFiles::add_logfile(EventType::LocalEuclideanDistance, "euclidean_distance", -1);
+    // Create log file for all synaptic inputs
+    LogFiles::add_logfile(EventType::SynapticInput, "synaptic_inputs", -1);
 }
 
 std::string LogFiles::get_specific_file_prefix() {
@@ -95,7 +103,7 @@ void LogFiles::save_and_open_new(EventType type, const std::string& new_file_nam
     const auto iterator = log_files.find(type);
     RelearnException::check(iterator != log_files.end(), "The LogFiles don't contain the requested type");
 
-    auto complete_path = output_path + general_prefix + get_specific_file_prefix() + "_" + new_file_name + ".txt";
+    auto complete_path = output_path.string() + general_prefix + get_specific_file_prefix() + "_" + new_file_name + ".txt";
 
     iterator->second->flush();
 
@@ -106,13 +114,13 @@ void LogFiles::save_and_open_new(EventType type, const std::string& new_file_nam
     iterator->second = std::move(new_logger);
 }
 
-void LogFiles::add_logfile(const EventType type, const std::string& file_name, const int rank, const std::string& file_ending) {
+void LogFiles::add_logfile(const EventType type, const std::string& file_name, const int rank, const std::string& file_ending, const std::string& directory_prefix) {
     if (disable) {
         return;
     }
 
     if (do_i_print(rank)) {
-        auto complete_path = output_path + general_prefix + get_specific_file_prefix() + "_" + file_name + file_ending;
+        auto complete_path = output_path.string() + directory_prefix + general_prefix + get_specific_file_prefix() + "_" + file_name + file_ending;
         auto logger = spdlog::basic_logger_mt(file_name, complete_path);
         logger->set_pattern("%v");
         log_files.emplace(type, std::move(logger));

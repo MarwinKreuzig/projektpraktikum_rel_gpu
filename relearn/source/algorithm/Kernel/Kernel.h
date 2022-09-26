@@ -40,6 +40,12 @@ enum class KernelType {
     Weibull
 };
 
+/**
+ * @brief Pretty-prints the kernel type to the chosen stream
+ * @param out The stream to which to print the kernel type
+ * @param kernel_type The kernel type to print
+ * @return The argument out, now altered with the kernel type
+ */
 inline std::ostream& operator<<(std::ostream& out, const KernelType& kernel_type) {
     switch (kernel_type) {
     case KernelType::Gamma:
@@ -97,7 +103,7 @@ public:
     [[nodiscard]] static double calculate_attractiveness_to_connect(const NeuronID& source_neuron_id, const position_type& source_position,
         const OctreeNode<AdditionalCellAttributes>* target_node, const ElementType element_type, const SignalType signal_type) {
         // A neuron must not form an autapse, i.e., a synapse to itself
-        if (target_node->is_child() && source_neuron_id == target_node->get_cell_neuron_id()) {
+        if (target_node->is_leaf() && source_neuron_id == target_node->get_cell_neuron_id()) {
             return 0.0;
         }
 

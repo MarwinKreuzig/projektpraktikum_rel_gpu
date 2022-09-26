@@ -13,24 +13,19 @@
 using models::FitzHughNagumoModel;
 
 FitzHughNagumoModel::FitzHughNagumoModel(
-    const double k,
-    const double tau_C,
-    const double beta,
     const unsigned int h,
-    const double base_background_activity,
-    const double background_activity_mean,
-    const double background_activity_stddev,
+    std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
     const double a,
     const double b,
     const double phi)
-    : NeuronModel{ k, tau_C, beta, h, base_background_activity, background_activity_mean, background_activity_stddev }
+    : NeuronModel{ h, std::move(synaptic_input_calculator) }
     , a{ a }
     , b{ b }
     , phi{ phi } {
 }
 
 std::unique_ptr<NeuronModel> FitzHughNagumoModel::clone() const {
-    return std::make_unique<FitzHughNagumoModel>(get_k(), get_tau_C(), get_beta(), get_h(), get_base_background_activity(), get_background_activity_mean(), get_background_activity_stddev(), a, b, phi);
+    return std::make_unique<FitzHughNagumoModel>(get_h(), get_synaptic_input_calculator()->clone(), a, b, phi);
 }
 
 std::vector<ModelParameter> FitzHughNagumoModel::get_parameter() {
@@ -67,7 +62,7 @@ void FitzHughNagumoModel::update_activity(const NeuronID& neuron_id) {
 
     auto x = get_x(neuron_id);
 
-    const auto local_neuron_id = neuron_id.get_local_id();
+    const auto local_neuron_id = neuron_id.get_neuron_id();
 
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
         x += iter_x(x, w[local_neuron_id], input) / h;

@@ -10,6 +10,7 @@
  *
  */
 
+#include "neurons/CalciumCalculator.h"
 #include "neurons/Neurons.h"
 #include "neurons/models/NeuronModels.h"
 
@@ -21,26 +22,14 @@
  * It stores all necessary superficial informations as a plain-old-data class.
  */
 class NeuronInformation {
-    double calcium{};
-    double x{};
-    bool fired{};
-    double secondary{};
-    double synaptic_input{};
-    double background_activity{};
-
-    double axons{};
-    double axons_connected{};
-    double dendrites_exc{};
-    double dendrites_exc_connected{};
-    double dendrites_inh{};
-    double dendrites_inh_connected{};
-
 public:
     /**
      * @brief Constructs a NeuronInformation that holds the arguments in one class
      * @param c The current calcium concentration
+     * @param tc The current calcium target
      * @param x The current membrane potential
      * @param f The current fire status
+     * @param ff The fraction of spikes in during the last period
      * @param s The current secondary variable of the model
      * @param i The current synaptic input
      * @param b The current background activity
@@ -51,20 +40,22 @@ public:
      * @param di The current number of inhibitory dendritic elements
      * @param di_c The current number of connected inhibitory dendritic elements
      */
-    NeuronInformation(const double c, const double x, const bool f, const double s, const double i, const double b,
+    NeuronInformation(const double c, const double tc, const double x, const bool f, const double ff, const double s, const double i, const double b,
         const double ax, const double ax_c, const double de, const double de_c, const double di, const double di_c) noexcept
         : calcium(c)
+        , target_calcium(tc)
         , x(x)
         , fired(f)
+        , fired_fraction(ff)
         , secondary(s)
         , synaptic_input(i)
         , background_activity(b)
-        , axons(ax)
+        , axons_grown(ax)
         , axons_connected(ax_c)
-        , dendrites_exc(de)
-        , dendrites_exc_connected(de_c)
-        , dendrites_inh(di)
-        , dendrites_inh_connected(di_c) {
+        , excitatory_dendrites_grown(de)
+        , excitatory_dendrites_connected(de_c)
+        , inhibitory_dendrites_grown(di)
+        , inhibitory_dendrites_connected(di_c) {
     }
 
     /**
@@ -73,6 +64,14 @@ public:
      */
     [[nodiscard]] double get_calcium() const noexcept {
         return calcium;
+    }
+
+    /**
+     * @brief Returns the stored calcium target
+     * @return The stored calcium target
+     */
+    [[nodiscard]] double get_target_calcium() const noexcept {
+        return target_calcium;
     }
 
     /**
@@ -89,6 +88,14 @@ public:
      */
     [[nodiscard]] bool get_fired() const noexcept {
         return fired;
+    }
+
+    /**
+     * @brief Returns the fraction of spikes during the last recording period
+     * @return The fraction of spikes
+     */
+    [[nodiscard]] double get_fraction_fired() const noexcept {
+        return fired_fraction;
     }
 
     /**
@@ -120,7 +127,7 @@ public:
      * @return The stored number of axonal elements
      */
     [[nodiscard]] double get_axons() const noexcept {
-        return axons;
+        return axons_grown;
     }
 
     /**
@@ -135,33 +142,50 @@ public:
      * @brief Returns the stored number of excitatory dendritic elements
      * @return The stored number of excitatory dendritic elements
      */
-    [[nodiscard]] double get_dendrites_exc() const noexcept {
-        return dendrites_exc;
+    [[nodiscard]] double get_excitatory_dendrites_grown() const noexcept {
+        return excitatory_dendrites_grown;
     }
 
     /**
      * @brief Returns the stored number of connected excitatory dendritic elements
      * @return The stored number of connected excitatory dendritic elements
      */
-    [[nodiscard]] double get_dendrites_exc_connected() const noexcept {
-        return dendrites_exc_connected;
+    [[nodiscard]] double get_excitatory_dendrites_connected() const noexcept {
+        return excitatory_dendrites_connected;
     }
 
     /**
      * @brief Returns the stored number of inhibitory dendritic elements
      * @return The stored number of inhibitory dendritic elements
      */
-    [[nodiscard]] double get_dendrites_inh() const noexcept {
-        return dendrites_inh;
+    [[nodiscard]] double get_inhibitory_dendrites_grown() const noexcept {
+        return inhibitory_dendrites_grown;
     }
 
     /**
      * @brief Returns the stored number of connected inhibitory dendritic elements
      * @return The stored number of connected inhibitory dendritic elements
      */
-    [[nodiscard]] double get_dendrites_inh_connected() const noexcept {
-        return dendrites_inh_connected;
+    [[nodiscard]] double get_inhibitory_dendrites_connected() const noexcept {
+        return inhibitory_dendrites_connected;
     }
+
+private:
+    double calcium{};
+    double target_calcium{};
+    double x{};
+    bool fired{};
+    double fired_fraction{};
+    double secondary{};
+    double synaptic_input{};
+    double background_activity{};
+
+    double axons_grown{};
+    double axons_connected{};
+    double excitatory_dendrites_grown{};
+    double excitatory_dendrites_connected{};
+    double inhibitory_dendrites_grown{};
+    double inhibitory_dendrites_connected{};
 };
 
 /**
@@ -172,10 +196,6 @@ public:
  * neurons_to_monitor - an std::shared_ptr to the neurons to monitor. Has to be set before a call to record_data()
  */
 class NeuronMonitor {
-    NeuronID target_neuron_id{ NeuronID::uninitialized_id() };
-
-    std::vector<NeuronInformation> informations{};
-
 public:
     static inline std::shared_ptr<Neurons> neurons_to_monitor{};
 
@@ -209,25 +229,27 @@ public:
      */
     void record_data() {
         RelearnException::check(neurons_to_monitor.operator bool(), "NeuronMonitor::record_data: The shared pointer is empty");
-        
-        const auto local_neuron_id = target_neuron_id.get_local_id();
+
+        const auto local_neuron_id = target_neuron_id.get_neuron_id();
         RelearnException::check(local_neuron_id < neurons_to_monitor->number_neurons, "NeuronMonitor::record_data: The target id is too large for the neurons class");
 
-        const double& calcium = neurons_to_monitor->calcium[local_neuron_id];
-        const double& x = neurons_to_monitor->neuron_model->x[local_neuron_id];
-        const bool& fired = neurons_to_monitor->neuron_model->fired[local_neuron_id] == FiredStatus::Fired;
-        const double& secondary = neurons_to_monitor->neuron_model->get_secondary_variable(target_neuron_id);
-        const double& synaptic_input = neurons_to_monitor->neuron_model->synaptic_input[local_neuron_id];
-        const double& background_activity = neurons_to_monitor->neuron_model->synaptic_input[local_neuron_id];
+        const auto calcium = neurons_to_monitor->calcium_calculator->calcium[local_neuron_id];
+        const auto target_calcium = neurons_to_monitor->calcium_calculator->target_calcium[local_neuron_id];
+        const auto x = neurons_to_monitor->neuron_model->x[local_neuron_id];
+        const auto fired = neurons_to_monitor->neuron_model->fired[local_neuron_id] == FiredStatus::Fired;
+        const auto fired_fraction = static_cast<double>(neurons_to_monitor->neuron_model->fired_recorder[local_neuron_id]) / static_cast<double>(Config::monitor_step);
+        const auto secondary = neurons_to_monitor->neuron_model->get_secondary_variable(target_neuron_id);
+        const auto synaptic_input = neurons_to_monitor->neuron_model->input_calculator->synaptic_input[local_neuron_id];
+        const auto background_activity = neurons_to_monitor->neuron_model->input_calculator->background_activity[local_neuron_id];
 
-        const double& axons = neurons_to_monitor->axons->grown_elements[local_neuron_id];
-        const unsigned int& axons_connected = neurons_to_monitor->axons->connected_elements[local_neuron_id];
-        const double& dendrites_exc = neurons_to_monitor->dendrites_exc->grown_elements[local_neuron_id];
-        const unsigned int& dendrites_exc_connected = neurons_to_monitor->dendrites_exc->connected_elements[local_neuron_id];
-        const double& dendrites_inh = neurons_to_monitor->dendrites_inh->grown_elements[local_neuron_id];
-        const unsigned int& dendrites_inh_connected = neurons_to_monitor->dendrites_inh->connected_elements[local_neuron_id];
+        const auto axons = neurons_to_monitor->axons->grown_elements[local_neuron_id];
+        const auto axons_connected = neurons_to_monitor->axons->connected_elements[local_neuron_id];
+        const auto excitatory_dendrites_grown = neurons_to_monitor->dendrites_exc->grown_elements[local_neuron_id];
+        const auto excitatory_dendrites_connected = neurons_to_monitor->dendrites_exc->connected_elements[local_neuron_id];
+        const auto inhibitory_dendrites_grown = neurons_to_monitor->dendrites_inh->grown_elements[local_neuron_id];
+        const auto inhibitory_dendrites_connected = neurons_to_monitor->dendrites_inh->connected_elements[local_neuron_id];
 
-        informations.emplace_back(calcium, x, fired, secondary, synaptic_input, background_activity, axons, axons_connected, dendrites_exc, dendrites_exc_connected, dendrites_inh, dendrites_inh_connected);
+        informations.emplace_back(calcium, target_calcium, x, fired, fired_fraction, secondary, synaptic_input, background_activity, axons, axons_connected, excitatory_dendrites_grown, excitatory_dendrites_connected, inhibitory_dendrites_grown, inhibitory_dendrites_connected);
     }
 
     /**
@@ -252,4 +274,9 @@ public:
     [[nodiscard]] const std::vector<NeuronInformation>& get_informations() const noexcept {
         return informations;
     }
+
+private:
+    NeuronID target_neuron_id{ NeuronID::uninitialized_id() };
+
+    std::vector<NeuronInformation> informations{};
 };

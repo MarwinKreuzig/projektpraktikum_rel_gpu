@@ -22,7 +22,7 @@
 #include <type_traits>
 #include <vector>
 
-template<typename U>
+template <typename U>
 class TaggedIDTest;
 
 namespace detail {
@@ -63,10 +63,10 @@ struct TaggedIDNumericalLimits : public std::conditional_t<
 /**
  * @brief ID class to represent a tagged id value.
  *
- * Flag members include is_global, is_virtual and is_initialized.
+ * Flag members include is_virtual and is_initialized.
  * The limits type can be used to query the range of id values the tagged id can represent.
  *
- * The flags is_virtual and is_global are false by default and can only be specified in the constructor.
+ * The flag is_virtual is false by default and can only be specified in the constructor.
  * The is_initialized flag is true when the id was explicitly initialized with an id value,
  * or the id object gets an id assigned.
  *
@@ -79,7 +79,7 @@ class TaggedID {
 
 public:
     using value_type = T;
-    static constexpr auto num_flags = 3;
+    static constexpr auto num_flags = 2;
     static constexpr auto id_bit_count = sizeof(value_type) * 8 - num_flags;
     using limits = detail::TaggedIDNumericalLimits<value_type, id_bit_count>;
 
@@ -92,10 +92,17 @@ public:
 
     /**
      * @brief Get a virtual id (is initialized, but virtual)
-     *
+     * @param id The offset in the RMA window
      * @return constexpr TaggedID virtual id
      */
-    [[nodiscard]] static constexpr TaggedID virtual_id() noexcept { return TaggedID{ false, true, 0 }; }
+    [[nodiscard]] static constexpr TaggedID virtual_id() noexcept { return TaggedID{ true, 0 }; }
+
+    /**
+     * @brief Get a virtual id (is initialized, but virtual)
+     * @param id The offset in the RMA window
+     * @return constexpr TaggedID virtual id
+     */
+    [[nodiscard]] static constexpr TaggedID virtual_id(std::integral auto offset) noexcept { return TaggedID{ true, offset }; }
 
     /**
      * @brief Create a vector of local TaggedIDs within the range [0, size)
@@ -105,16 +112,6 @@ public:
      */
     [[nodiscard]] static constexpr auto range(size_t size) {
         return range(0, size);
-    }
-
-    /**
-     * @brief Create a vector of global TaggedIDs within the range [0, size)
-     *
-     * @param size size of the vector
-     * @return constexpr auto vector of TaggedIDs
-     */
-    [[nodiscard]] static constexpr auto global_range(size_t size) {
-        return range_global(0, size);
     }
 
     /**
@@ -128,22 +125,6 @@ public:
         std::vector<TaggedID<T>> ids;
         for (auto i = begin; i < end; i++) {
             ids.emplace_back(i);
-        }
-
-        return ids;
-    }
-
-    /**
-     * @brief Create a vector of global TaggedIDs within the range [begin, end)
-     *
-     * @param begin begin of the vector
-     * @param end end of the vector
-     * @return constexpr auto vector of TaggedIDs
-     */
-    [[nodiscard]] static constexpr auto range_global(size_t begin, size_t end) {
-        std::vector<TaggedID<T>> ids;
-        for (auto i = begin; i < end; i++) {
-            ids.emplace_back(true, false, i);
         }
 
         return ids;
@@ -167,23 +148,21 @@ public:
     /**
      * @brief Construct a new initialized TaggedID object with the given flags and id
      *
-     * @param is_global flag if the id should be marked global
      * @param is_virtual flag if the id should be marked virtual
      * @param id the id value
      */
-    constexpr explicit TaggedID(bool is_global, bool is_virtual, std::integral auto id) noexcept
+    constexpr explicit TaggedID(bool is_virtual, std::integral auto id) noexcept
         : is_initialized_{ true }
         , is_virtual_{ is_virtual }
-        , is_global_{ is_global }
         , id_{ static_cast<value_type>(id) } { }
 
-    TaggedID(const TaggedID&) noexcept = default;
-    TaggedID& operator=(const TaggedID&) noexcept = default;
+    constexpr TaggedID(const TaggedID&) noexcept = default;
+    constexpr TaggedID& operator=(const TaggedID&) noexcept = default;
 
-    TaggedID(TaggedID&&) noexcept = default;
-    TaggedID& operator=(TaggedID&&) noexcept = default;
+    constexpr TaggedID(TaggedID&&) noexcept = default;
+    constexpr TaggedID& operator=(TaggedID&&) noexcept = default;
 
-    ~TaggedID() = default;
+    constexpr ~TaggedID() = default;
 
     /**
      * @brief Get the id
@@ -205,26 +184,25 @@ public:
     }
 
     /**
-     * @brief Get the global id
+     * @brief Get the neuron id
      *
-     * @exception RelearnException if the id is not global
+     * @exception RelearnException if the id is not initialized or is virtual
      * @return constexpr value_type id
      */
-    [[nodiscard]] constexpr value_type get_global_id() const {
-        RelearnException::check(is_global(), "TaggedID::get_global_id is not global {:s}", *this);
-        RelearnException::check(!is_virtual(), "TaggedID::get_global_id is virtual {:s}", *this);
+    [[nodiscard]] constexpr value_type get_neuron_id() const {
+        RelearnException::check(is_initialized(), "TaggedID::get_neuron_id: Is not initialized {:s}", *this);
+        RelearnException::check(!is_virtual(), "TaggedID::get_neuron_id: Is virtual {:s}", *this);
         return id_;
     }
 
     /**
-     * @brief Get the local id
-     *
-     * @exception RelearnException if the id is not local
-     * @return constexpr value_type id
+     * @brief Get the offset in the RMA window. The neuron id must be virtual
+     * @exception RelearnException if the id is not initialized or is not virtual
+     * @return constexpr value_type The virtual id
      */
-    [[nodiscard]] constexpr value_type get_local_id() const {
-        RelearnException::check(is_local(), "TaggedID::get_local_id is not local {:s}", *this);
-        RelearnException::check(!is_virtual(), "TaggedID::get_global_id is virtual {:s}", *this);
+    [[nodiscard]] constexpr value_type get_rma_offset() const {
+        RelearnException::check(is_initialized(), "TaggedID::get_rma_offset: Is not initialized {:s}", *this);
+        RelearnException::check(is_virtual(), "TaggedID::get_rma_offset: Is not virtual {:s}", *this);
         return id_;
     }
 
@@ -243,18 +221,11 @@ public:
     [[nodiscard]] constexpr bool is_virtual() const noexcept { return is_virtual_; }
 
     /**
-     * @brief Check if the id is global
-     *
-     * @return true iff the id is global
-     */
-    [[nodiscard]] constexpr bool is_global() const noexcept { return is_global_ && is_initialized_ && !is_virtual_; }
-
-    /**
      * @brief Check if the id is local
      *
      * @return true iff the id is local
      */
-    [[nodiscard]] constexpr bool is_local() const noexcept { return !is_global_ && is_initialized_ && !is_virtual_; }
+    [[nodiscard]] constexpr bool is_local() const noexcept { return is_initialized_ && !is_virtual_; }
 
     /**
      * @brief Compare two TaggedIDs
@@ -262,14 +233,13 @@ public:
      * Compares the members in order of declaration
      * @return std::strong_ordering ordering
      */
-    [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const TaggedID& first, const TaggedID& second) noexcept = default;
+    [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const TaggedID& first, const TaggedID& second) noexcept = default; // NOLINT(hicpp-use-nullptr,modernize-use-nullptr)
 
 private:
     // the ordering of members is important for the defaulted <=> comparison
 
     bool is_initialized_ : 1 = false;
     bool is_virtual_ : 1 = false;
-    bool is_global_ : 1 = false;
     value_type id_ : id_bit_count = 0;
 };
 
@@ -277,14 +247,14 @@ private:
  * @brief Formatter for TaggedID
  *
  * TaggedID is represented as follows:
- * is_initialized is_global is_virtual : id
+ * is_initialized is_virtual : id
  * printing the flags is optional
  *
  * Formatting options are:
  * - i (default): id only   -> 123456
  * - s: small               -> 000:123456
  * - m: medium              -> i0g0v0:123456
- * - l: large               -> initialized: bool, global: bool, virtual: bool:123456
+ * - l: large               -> initialized: bool, virtual: bool:123456
  *
  * The id can be formatted with the appropriate
  * formatting for its type.
@@ -314,22 +284,22 @@ public:
         case 'i':
             break;
         case 's':
-            format_to(
+            fmt::format_to(
                 ctx.out(),
-                "{:1b}{:1b}{:1b}:",
-                id.is_initialized(), id.is_global(), id.is_virtual());
+                "{:1b}{:1b}:",
+                id.is_initialized(), id.is_virtual());
             break;
         case 'm':
-            format_to(
+            fmt::format_to(
                 ctx.out(),
-                "i{:1b}g{:1b}v{:1b}:",
-                id.is_initialized(), id.is_global(), id.is_virtual());
+                "i{:1b}v{:1b}:",
+                id.is_initialized(), id.is_virtual());
             break;
         case 'l':
-            format_to(
+            fmt::format_to(
                 ctx.out(),
-                "initialized: {:5}, global: {:5}, virtual: {:5}, id: ",
-                id.is_initialized(), id.is_global(), id.is_virtual());
+                "initialized: {:5}, virtual: {:5}, id: ",
+                id.is_initialized(), id.is_virtual());
             break;
         default:
             throw format_error("unrecognized format for TaggedID<T>");
@@ -344,9 +314,7 @@ public:
         } else if (id.is_virtual()) {
             id_ = std::numeric_limits<type>::max() - 1;
         } else if (id.is_local()) {
-            id_ = id.get_local_id();
-        } else if (id.is_global()) {
-            id_ = id.get_global_id();
+            id_ = id.get_neuron_id();
         } else {
             RelearnException::fail("Format of neuron id failed!");
         }
@@ -365,3 +333,33 @@ std::ostream& operator<<(std::ostream& os, const TaggedID<T>& id) {
 }
 
 using NeuronID = TaggedID<std::uint64_t>;
+
+namespace std {
+template <typename value_type>
+struct hash<TaggedID<value_type>> {
+    using argument_type = TaggedID<value_type>;
+    using result_type = std::size_t;
+
+    result_type operator()(const argument_type& neuron_id) const {
+        // The size of the stored value inside TaggedID<value_type> has two bits less than value_type
+
+        constexpr auto max = std::numeric_limits<result_type>::max();
+        if (!neuron_id.is_initialized()) {
+            // All bits are set
+            return max;
+        }
+
+        if (neuron_id.is_virtual()) {
+            // Shift the RMA offset by +1 and subtract from max by using XOR
+            // The highest bit is set, but some others are not
+            const auto offset = neuron_id.get_rma_offset();
+            const auto hash = max ^ result_type(offset + 1);
+            return hash;
+        }
+
+        // The highest bit is cleared, but some are set
+        const auto id = neuron_id.get_neuron_id();
+        return result_type(id);
+    }
+};
+} // namespace std

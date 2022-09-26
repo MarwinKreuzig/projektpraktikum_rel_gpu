@@ -10,8 +10,8 @@
 
 #include "NeuronsExtraInfo.h"
 
-#include "../mpi/MPIWrapper.h"
-#include "../util/Random.h"
+#include "mpi/MPIWrapper.h"
+#include "util/Random.h"
 
 void NeuronsExtraInfo::create_neurons(const size_t creation_count) {
     RelearnException::check(creation_count != 0, "Cannot add 0 neurons");

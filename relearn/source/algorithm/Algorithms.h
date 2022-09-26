@@ -13,5 +13,6 @@
 #include "Algorithm.h"
 #include "BarnesHutInternal/BarnesHut.h"
 #include "BarnesHutInternal/BarnesHutInverted.h"
+#include "BarnesHutInternal/BarnesHutLocationAware.h"
 #include "FMMInternal/FastMultipoleMethods.h"
 #include "NaiveInternal/Naive.h"

@@ -13,6 +13,8 @@ Command | Shortcut | Effect | Notes
 `--log-prefix <str>` | `-p <str>` | Prefixes all log files with the given prefix |
 `--num-neurons <size_t>` | `-n <size_t>` | Starts a simulation with approximately the given number of neurons | Excludes `--file` and `--num-neurons-per-rank` |
 `--num-neurons-per-rank <size_t>` |  | Starts a simulation with the specified number of neurons per rank | Excludes `--file` and `--num-neurons` |
+`--fraction-excitatory-neurons <double>` |  | The fraction of excitatory neurons when placing neurons randomly | Default is `1.0`, must be from `[0, 100]`. Only affects `--num-neurons` and `--num-neurons-per-rank` |
+`--um-per-neuron <double>` |  | The expected distance between neurons in one dimension | Default is `1.0`, must be from `[0, $\infty$)`. Only affects `--num-neurons` and `--num-neurons-per-rank` |
 `--file <file-path>`| `-f <file-path>` | Starts a simulation with the neurons from the specified file | Excludes `--num-neurons` and `--num-neurons-per-rank`
 `--graph <file-path>` | `-g <file-path>` | Starts a simulation with an initial connectivity from the specified file | Requires `--file`
 `--enable-interrupts <file-path>` | | Specifies the enable interrupts for a simulation | 
@@ -34,12 +36,14 @@ Command | Shortcut | Effect | Notes
 `--base-background-stddev <double>` | | Specifies the standard deviation of the background activity by which all neurons are excited | Must be non-negative. The background activity is calculated as *base + N(mean, stddev)*
 `--synapse_conductance <double>`| | The activity that is transfered when a connected neuron spikes. | Default is `0.03`
 `--calcium-decay <double>` | | The decay constant of the intercellular calcium. | Default is `10000`
-`--target-ca <double>` | | Sets the target calcium for all neurons | Must be from [0, 100]. Default is `0.7`
-`--initial-ca <double>`| | Sets the initial calcium for all neurons. | Default is `0.0`
+`--target-ca <double>` | | Sets the target calcium for all neurons | Must be from `[0, 100]`. Default is `0.7`. Excludes `--file-calcium`
+`--initial-ca <double>`| | Sets the initial calcium for all neurons. | Default is `0.0`. Excludes `--file-calcium`
+`--file-calcium <file-path>`| | Sets the file for the initial and target calcium values. | Excludes `--initial-ca` and `--target-ca`
 `--beta <double>` | | Specifies the amount of calcium ions that are gathered whenever a neuron spikes |
+`--integration-step-size <uint32>` | | Specifies the numerical integration steps that are used for calculating the electrical activity | Default is `10`
 `--retract-ratio <double>`| | The ratio by which vacant synapses retract. | Default is `0.0`
-`--synaptic-elements-lower-bound <double>` | | Sets the lower bound of initial synaptic elements | Must be from [0, $\infty$)
-`--synaptic-elements-upper-bound <double>` | | Sets the upper bound of initial synaptic elements | Must be from [0, $\infty$) and not less than the lower bound
+`--synaptic-elements-lower-bound <double>` | | Sets the lower bound of initial synaptic elements | Must be from `[0, $\infty$)`
+`--synaptic-elements-upper-bound <double>` | | Sets the upper bound of initial synaptic elements | Must be from `[0, $\infty$)` and not less than the lower bound
 `--growth-rate <double>` | | Specifies the growth rate of the synaptic elements | Must be from [0, 1]
 `--min-calcium-axons <double>` | | Specified the minimum intercellular calcium for axons to grow. | Default is `0.4`
 `--min-calcium-excitatory-dendrites <double>` | | Specified the minimum intercellular calcium for excitatory dendrites to grow. | Default is `0.1`

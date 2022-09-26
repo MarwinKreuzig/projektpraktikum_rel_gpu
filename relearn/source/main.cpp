@@ -11,23 +11,31 @@
 #include "Config.h"
 #include "Types.h"
 #include "algorithm/Algorithms.h"
+#include "io/CalciumIO.h"
 #include "io/InteractiveNeuronIO.h"
 #include "io/LogFiles.h"
 #include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
+#include "neurons/CalciumCalculator.h"
 #include "neurons/ElementType.h"
 #include "neurons/helper/NeuronMonitor.h"
+#include "neurons/models/SynapticInputCalculators.h"
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
+#include "neurons/models/SynapticInputCalculator.h"
 #include "sim/NeuronToSubdomainAssignment.h"
 #include "sim/Simulation.h"
 #include "sim/file/SubdomainFromFile.h"
 #include "sim/random/SubdomainFromNeuronDensity.h"
 #include "sim/random/SubdomainFromNeuronPerRank.h"
+#include "structure/BaseCell.h"
+#include "structure/NodeCache.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
+#include "util/MonitorParser.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
+#include "util/StepParser.h"
 #include "util/Timers.h"
 
 #include "spdlog/spdlog.h"
@@ -45,6 +53,7 @@ void omp_set_num_threads(int num) { }
 #include <array>
 #include <bitset>
 #include <cerrno>
+#include <climits>
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
@@ -56,42 +65,56 @@ void omp_set_num_threads(int num) { }
 #include <locale>
 #include <memory>
 
+struct empty_t {
+    using position_type = VirtualPlasticityElement::position_type;
+    using counter_type = VirtualPlasticityElement::counter_type;
+
+    constexpr static bool has_excitatory_dendrite = false;
+    constexpr static bool has_inhibitory_dendrite = false;
+    constexpr static bool has_excitatory_axon = false;
+    constexpr static bool has_inhibitory_axon = false;
+};
+
 void print_sizes() {
-    struct empty_t {
-        using position_type = VirtualPlasticityElement::position_type;
-        using counter_type = VirtualPlasticityElement::counter_type;
-    };
+    constexpr auto number_bits_in_byte = CHAR_BIT;
 
-    const auto sizeof_vec3_double = sizeof(Vec3d);
-    const auto sizeof_vec3_size_t = sizeof(Vec3s);
+    constexpr auto sizeof_vec3_double = sizeof(Vec3d);
+    constexpr auto sizeof_vec3_size_t = sizeof(Vec3s);
 
-    const auto sizeof_virtual_plasticity_element = sizeof(VirtualPlasticityElement);
+    constexpr auto sizeof_virtual_plasticity_element = sizeof(VirtualPlasticityElement);
 
-    const auto sizeof_empty_t = sizeof(empty_t);
-    const auto sizeof_fmm_cell_attributes = sizeof(FastMultipoleMethodsCell);
-    const auto sizeof_bh_cell_attributes = sizeof(BarnesHutCell);
-    const auto sizeof_bh_naive_attributes = sizeof(NaiveCell);
+    constexpr auto sizeof_empty_t = sizeof(empty_t);
+    constexpr auto sizeof_fmm_cell_attributes = sizeof(FastMultipoleMethodsCell);
+    constexpr auto sizeof_bh_cell_attributes = sizeof(BarnesHutCell);
+    constexpr auto sizeof_bh_naive_attributes = sizeof(NaiveCell);
 
-    const auto sizeof_empty_cell = sizeof(Cell<empty_t>);
-    const auto sizeof_fmm_cell = sizeof(Cell<FastMultipoleMethodsCell>);
-    const auto sizeof_bh_cell = sizeof(Cell<BarnesHutCell>);
-    const auto sizeof_naive_cell = sizeof(Cell<NaiveCell>);
+    constexpr auto sizeof_empty_cell = sizeof(Cell<empty_t>);
+    constexpr auto sizeof_fmm_cell = sizeof(Cell<FastMultipoleMethodsCell>);
+    constexpr auto sizeof_bh_cell = sizeof(Cell<BarnesHutCell>);
+    constexpr auto sizeof_naive_cell = sizeof(Cell<NaiveCell>);
 
-    const auto sizeof_octreenode = sizeof(OctreeNode<empty_t>);
-    const auto sizeof_fmm_octreenode = sizeof(OctreeNode<FastMultipoleMethodsCell>);
-    const auto sizeof_bh_octreenode = sizeof(OctreeNode<BarnesHutCell>);
-    const auto sizeof_naive_octreenode = sizeof(OctreeNode<NaiveCell>);
+    constexpr auto sizeof_octreenode = sizeof(OctreeNode<empty_t>);
+    constexpr auto sizeof_fmm_octreenode = sizeof(OctreeNode<FastMultipoleMethodsCell>);
+    constexpr auto sizeof_bh_octreenode = sizeof(OctreeNode<BarnesHutCell>);
+    constexpr auto sizeof_naive_octreenode = sizeof(OctreeNode<NaiveCell>);
 
-    const auto sizeof_neuron_id = sizeof(NeuronID);
-    const auto sizeof_rank_neuron_id = sizeof(RankNeuronId);
+    constexpr auto sizeof_neuron_id = sizeof(NeuronID);
+    constexpr auto sizeof_rank_neuron_id = sizeof(RankNeuronId);
 
-    const auto sizeof_local_synapse = sizeof(LocalSynapse);
-    const auto sizeof_distant_in_synapse = sizeof(DistantInSynapse);
-    const auto sizeof_distant_out_synapse = sizeof(DistantOutSynapse);
+    constexpr auto sizeof_local_synapse = sizeof(LocalSynapse);
+    constexpr auto sizeof_distant_in_synapse = sizeof(DistantInSynapse);
+    constexpr auto sizeof_distant_out_synapse = sizeof(DistantOutSynapse);
+
+    constexpr auto sizeof_empty_base_cell = sizeof(BaseCell<false, false, false, false>);
+    constexpr auto sizeof_full_base_cell = sizeof(BaseCell<true, true, true, true>);
+    constexpr auto sizeof_dendrites_base_cell = sizeof(BaseCell<true, true, false, false>);
+    constexpr auto sizeof_axons_base_cell = sizeof(BaseCell<false, false, true, true>);
 
     std::stringstream ss{};
 
     ss << '\n';
+
+    ss << "Number of bits in a byte: " << number_bits_in_byte << '\n';
 
     ss << "Size of Vec3d: " << sizeof_vec3_double << '\n';
     ss << "Size of Vec3s: " << sizeof_vec3_size_t << '\n';
@@ -120,6 +143,11 @@ void print_sizes() {
     ss << "Size of DistantInSynapse: " << sizeof_distant_in_synapse << '\n';
     ss << "Size of DistantOutSynapse: " << sizeof_distant_out_synapse << "\n";
 
+    ss << "Size of BaseCell<false, false, false, false>: " << sizeof_empty_base_cell << '\n';
+    ss << "Size of BaseCell<true, true, true, true>: " << sizeof_full_base_cell << '\n';
+    ss << "Size of BaseCell<true, true, false, false>: " << sizeof_dendrites_base_cell << '\n';
+    ss << "Size of BaseCell<false, false, true, true>: " << sizeof_axons_base_cell << '\n';
+
     LogFiles::print_message_rank(0, ss.str());
 }
 
@@ -143,9 +171,9 @@ int main(int argc, char** argv) {
     print_sizes();
 
     if constexpr (Config::do_debug_checks) {
-        std::cout << "I'm performing Debug Checks\n";
+        LogFiles::print_message_rank(0, "I'm performing Debug Checks");
     } else {
-        std::cout << "I'm skipping Debug Checks\n";
+        LogFiles::print_message_rank(0, "I'm skipping Debug Checks");
     }
 
     const auto my_rank = MPIWrapper::get_my_rank();
@@ -159,6 +187,7 @@ int main(int argc, char** argv) {
         { "naive", AlgorithmEnum::Naive },
         { "barnes-hut", AlgorithmEnum::BarnesHut },
         { "barnes-hut-inverted", AlgorithmEnum::BarnesHutInverted },
+        { "barnes-hut-location-aware", AlgorithmEnum::BarnesHutLocationAware },
         { "fast-multipole-methods", AlgorithmEnum::FastMultipoleMethods }
     };
 
@@ -178,13 +207,38 @@ int main(int argc, char** argv) {
         { "weibull", KernelType::Weibull }
     };
 
+    TargetCalciumDecay target_calcium_decay_type = TargetCalciumDecay::None;
+    std::map<std::string, TargetCalciumDecay> cli_parse_decay_type{
+        { "none", TargetCalciumDecay::None },
+        { "relative", TargetCalciumDecay::Relative },
+        { "absolute", TargetCalciumDecay::Absolute }
+    };
+
+    NodeCacheType chosen_cache_type = NodeCacheType::Combined;
+    std::map<std::string, NodeCacheType> cli_parse_cache_type{
+        { "combined", NodeCacheType::Combined },
+        { "separate", NodeCacheType::Separate },
+    };
+
+    SynapticInputCalculatorType chosen_synapse_input_calculator_type = SynapticInputCalculatorType::Linear;
+    std::map<std::string, SynapticInputCalculatorType> cli_parse_synapse_input_calculator_type{
+        { "linear", SynapticInputCalculatorType::Linear },
+        { "logarithmic", SynapticInputCalculatorType::Logarithmic },
+    };
+
     size_t simulation_steps{};
     app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms.")->required();
 
     size_t first_plasticity_step{ Config::first_plasticity_update };
     app.add_option("--first-plasticity-step", first_plasticity_step, "The first step in which the plasticity is updated.");
 
-    auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
+    size_t calcium_log_step{ Config::calcium_log_step };
+    app.add_option("--calcium-log-step", calcium_log_step, "Sets the interval for logging all calcium values.");
+
+    size_t synaptic_input_log_step{ Config::synaptic_input_log_step };
+    app.add_option("--synaptic-input-log-step", synaptic_input_log_step, "Sets the interval for logging all synaptic inputs.");
+
+    const auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
 
     unsigned int random_seed{ 0 };
     app.add_option("-r,--random-seed", random_seed, "Random seed. Default: 0.");
@@ -192,40 +246,53 @@ int main(int argc, char** argv) {
     int openmp_threads{ 1 };
     app.add_option("--openmp", openmp_threads, "Number of OpenMP Threads.");
 
-    std::string log_path{};
-    auto* opt_log_path = app.add_option("-l,--log-path", log_path, "Path for log files.");
+    std::filesystem::path log_path{};
+    auto* const opt_log_path = app.add_option("-l,--log-path", log_path, "Path for log files.");
 
     std::string log_prefix{};
-    auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
+    const auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
+
+    const auto* flag_disable_positions = app.add_flag("--no-print-positions", "Disables printing the positions to a file.");
+    const auto* flag_disable_network = app.add_flag("--no-print-network", "Disables printing the network to a file.");
+    const auto* flag_disable_plasticity = app.add_flag("--no-print-plasticity", "Disables printing the plasticity changes to a file.");
 
     size_t number_neurons{};
-    auto* opt_num_neurons = app.add_option("-n,--num-neurons", number_neurons, "Number of neurons. This option is only advised when using one MPI rank!");
+    auto* const opt_num_neurons = app.add_option("-n,--num-neurons", number_neurons, "Number of neurons. This option only works with one MPI rank!");
 
     size_t number_neurons_per_rank{};
-    auto* opt_num_neurons_per_rank = app.add_option("--num-neurons-per-rank", number_neurons_per_rank, "Number neurons per MPI rank.");
+    auto* const opt_num_neurons_per_rank = app.add_option("--num-neurons-per-rank", number_neurons_per_rank, "Number neurons per MPI rank.");
 
-    std::string file_positions{};
-    auto* opt_file_positions = app.add_option("-f,--file", file_positions, "File with neuron positions.");
+    double fraction_excitatory_neurons{ 1.0 };
+    app.add_option("--fraction-excitatory-neurons", fraction_excitatory_neurons, "The fraction of excitatory neurons, must be from [0.0, 1.0]. Required --num-neurons or --num-neurons-per-rank to take effect.");
 
-    std::string file_network{};
-    auto* opt_file_network = app.add_option("-g,--graph", file_network, "File with neuron connections.");
+    double um_per_neuron{ 1.0 };
+    app.add_option("--um-per-neuron", um_per_neuron, "The micrometer per neuron in one dimension, must be from (0.0, \\inf). Required --num-neurons or --num-neurons-per-rank to take effect.");
 
-    std::string file_enable_interrupts{};
-    auto* opt_file_enable_interrupts = app.add_option("--enable-interrupts", file_enable_interrupts, "File with the enable interrupts.");
+    std::filesystem::path file_positions{};
+    auto* const opt_file_positions = app.add_option("-f,--file", file_positions, "File with neuron positions. This option only works with one MPI rank!");
 
-    std::string file_disable_interrupts{};
-    auto* opt_file_disable_interrupts = app.add_option("--disable-interrupts", file_disable_interrupts, "File with the disable interrupts.");
+    std::filesystem::path file_network{};
+    auto* const opt_file_network = app.add_option("-g,--graph", file_network, "File with neuron connections. This option only works with one MPI rank!");
 
-    std::string file_creation_interrupts{};
-    auto* opt_file_creation_interrups = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
+    std::filesystem::path file_enable_interrupts{};
+    auto* const opt_file_enable_interrupts = app.add_option("--enable-interrupts", file_enable_interrupts, "File with the enable interrupts.");
 
-    auto* opt_algorithm = app.add_option("-a,--algorithm", chosen_algorithm, "The algorithm that is used for finding the targets");
+    std::filesystem::path file_disable_interrupts{};
+    auto* const opt_file_disable_interrupts = app.add_option("--disable-interrupts", file_disable_interrupts, "File with the disable interrupts.");
+
+    std::filesystem::path file_creation_interrupts{};
+    auto* const opt_file_creation_interrups = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
+
+    auto* const opt_algorithm = app.add_option("-a,--algorithm", chosen_algorithm, "The algorithm that is used for finding the targets");
     opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_algorithm, CLI::ignore_case));
 
-    double accept_criterion{ BarnesHut::default_theta };
-    auto* opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Requires Barnes-Hut or inverted Barnes-Hut.");
+    auto* const opt_node_cache_type = app.add_option("--node-cache-type", chosen_cache_type, "The type of cache for the nodes of other ranks.");
+    opt_node_cache_type->transform(CLI::CheckedTransformer(cli_parse_cache_type, CLI::ignore_case));
 
-    auto* opt_kernel_type = app.add_option("--kernel-type", chosen_kernel_type, "The probability kernel type, cannot be set for the fast multipole methods.");
+    double accept_criterion{ BarnesHut::default_theta };
+    const auto* const opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Requires Barnes-Hut or inverted Barnes-Hut.");
+
+    auto* const opt_kernel_type = app.add_option("--kernel-type", chosen_kernel_type, "The probability kernel type, cannot be set for the fast multipole methods.");
     opt_kernel_type->transform(CLI::CheckedTransformer(cli_parse_kernel_type, CLI::ignore_case));
 
     double gamma_k{ GammaDistributionKernel::default_k };
@@ -249,32 +316,50 @@ int main(int argc, char** argv) {
     double weibull_b{ WeibullDistributionKernel::default_b };
     app.add_option("--weibull-b", weibull_b, "Scale parameter for the weibull probability kernel.");
 
-    auto* opt_neuron_model = app.add_option("--neuron-model", chosen_neuron_model, "The neuron model");
+    auto* const opt_neuron_model = app.add_option("--neuron-model", chosen_neuron_model, "The neuron model");
     opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_neuron_model, CLI::ignore_case));
 
-    double base_background_activity{ NeuronModel::default_base_background_activity };
+    double base_background_activity{ SynapticInputCalculator::default_base_background_activity };
     app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
 
-    double background_activity_mean{ NeuronModel::default_background_activity_mean };
+    double background_activity_mean{ SynapticInputCalculator::default_background_activity_mean };
     app.add_option("--background-activity-mean", background_activity_mean, "The mean background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
 
-    double background_activity_stddev{ NeuronModel::default_background_activity_stddev };
+    double background_activity_stddev{ SynapticInputCalculator::default_background_activity_stddev };
     app.add_option("--background-activity-stddev", background_activity_stddev, "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
 
-    double synapse_conductance{ NeuronModel::default_k };
+    double synapse_conductance{ SynapticInputCalculator::default_k };
     app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transfered to its neighbors when a neuron spikes. Default is 0.03");
 
-    double calcium_decay{ NeuronModel::default_tau_C };
+    auto* const opt_synapse_input_calculator_type = app.add_option("--synapse-input-calculator-type", chosen_synapse_input_calculator_type, "The type calculator that transforms the synapse input.");
+    opt_synapse_input_calculator_type->transform(CLI::CheckedTransformer(cli_parse_synapse_input_calculator_type, CLI::ignore_case));
+
+    double calcium_decay{ CalciumCalculator::default_tau_C };
     app.add_option("--calcium-decay", calcium_decay, "The decay constant for the intercellular calcium. Must be greater than 0.0");
 
-    double target_calcium{ SynapticElements::default_C_target };
-    app.add_option("--target-ca", target_calcium, "The target Ca2+ ions in each neuron. Default is 0.7.");
+    size_t target_calcium_decay_step{ 0 };
+    app.add_option("--target-calcium-decay", target_calcium_decay_step, "The decay step for the target calcium values.");
+
+    double target_calcium_decay_amount{ 0.0 };
+    app.add_option("--target-calcum-amount", target_calcium_decay_amount, "The decay amount for the target calcium values.");
+
+    auto* const opt_decay_type = app.add_option("--decay-type", target_calcium_decay_type, "The decay type for the target calcium values.");
+    opt_decay_type->transform(CLI::CheckedTransformer(cli_parse_decay_type, CLI::ignore_case));
+
+    double target_calcium{ CalciumCalculator::default_C_target };
+    auto* const opt_target_calcium = app.add_option("--target-ca", target_calcium, "The target Ca2+ ions in each neuron. Default is 0.7.");
 
     double initial_calcium{ 0.0 };
-    app.add_option("--initial-ca", initial_calcium, "The initial Ca2+ ions in each neuron. Default is 0.0.");
+    auto* const opt_initial_calcium = app.add_option("--initial-ca", initial_calcium, "The initial Ca2+ ions in each neuron. Default is 0.0.");
 
-    double beta{ NeuronModel::default_beta };
-    app.add_option("--beta", beta, "The amount of calcium ions gathered when a neuron fires. Default is 0.001");
+    std::string file_calcium{};
+    auto* const opt_file_calcium = app.add_option("--file-calcium", file_calcium, "File with calcium values.");
+
+    double beta{ CalciumCalculator::default_beta };
+    app.add_option("--beta", beta, "The amount of calcium ions gathered when a neuron fires. Default is 0.001.");
+
+    size_t h{ NeuronModel::default_h };
+    app.add_option("--integration-step-size", h, "The step size for the numerical integration of the electrical acticity. Default is 10.");
 
     double retract_ratio{ SynapticElements::default_vacant_retract_ratio };
     app.add_option("--retract-ratio", retract_ratio, "The ratio by which vacant synapses retract.");
@@ -297,6 +382,9 @@ int main(int argc, char** argv) {
     double min_calcium_inhibitory_dendrites{ SynapticElements::default_eta_Dendrites_inh };
     app.add_option("--min-calcium-inhibitory-dendrites", min_calcium_inhibitory_dendrites, "The minimum intercellular calcium for inhibitory dendrites to grow. Default is 0.0");
 
+    std::string neuron_monitors_description{};
+    app.add_option("--neuron-monitors", neuron_monitors_description, "The description which neurons to monitor. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;... where <mpi_rank> can be -1 to indicate \"on every rank\"");
+
     opt_num_neurons->excludes(opt_file_positions);
     opt_num_neurons->excludes(opt_file_network);
     opt_num_neurons->excludes(opt_num_neurons_per_rank);
@@ -315,6 +403,13 @@ int main(int argc, char** argv) {
     opt_file_positions->check(CLI::ExistingFile);
     opt_file_network->check(CLI::ExistingFile);
 
+    opt_file_calcium->excludes(opt_initial_calcium);
+    opt_file_calcium->excludes(opt_target_calcium);
+    opt_initial_calcium->excludes(opt_file_calcium);
+    opt_target_calcium->excludes(opt_file_calcium);
+
+    opt_file_calcium->check(CLI::ExistingFile);
+
     opt_file_enable_interrupts->check(CLI::ExistingFile);
     opt_file_disable_interrupts->check(CLI::ExistingFile);
     opt_file_creation_interrups->check(CLI::ExistingFile);
@@ -329,6 +424,17 @@ int main(int argc, char** argv) {
         RelearnException::check(accept_criterion > 0.0, "Acceptance criterion must be larger than 0.0");
     }
 
+    if (static_cast<bool>(*opt_num_neurons)) {
+        RelearnException::check(num_ranks == 1, "The option --num-neurons can only be used for one MPI rank. There are {} ranks.", num_ranks);
+    }
+
+    if (static_cast<bool>(*opt_file_positions)) {
+        RelearnException::check(num_ranks == 1, "The option --file can only be used for one MPI rank. There are {} ranks.", num_ranks);
+    }
+
+    RelearnException::check(fraction_excitatory_neurons >= 0.0 && fraction_excitatory_neurons <= 1.0, "The fraction of excitatory neurons must be from [0.0, 1.0]");
+    RelearnException::check(um_per_neuron > 0.0, "The micrometer per neuron must be greater than 0.0.");
+
     RelearnException::check(synaptic_elements_init_lb >= 0.0, "The minimum number of vacant synaptic elements must not be negative");
     RelearnException::check(synaptic_elements_init_ub >= synaptic_elements_init_lb, "The minimum number of vacant synaptic elements must not be larger than the maximum number");
     RelearnException::check(static_cast<bool>(*opt_num_neurons) || static_cast<bool>(*opt_file_positions) || static_cast<bool>(*opt_num_neurons_per_rank),
@@ -336,13 +442,28 @@ int main(int argc, char** argv) {
     RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
     RelearnException::check(calcium_decay > 0.0, "The calcium decay constant must be greater than 0.");
 
-    RelearnException::check(target_calcium >= SynapticElements::min_C_target, "Target calcium is smaller than {}", SynapticElements::min_C_target);
-    RelearnException::check(target_calcium <= SynapticElements::max_C_target, "Target calcium is larger than {}", SynapticElements::max_C_target);
+    if (static_cast<bool>(*opt_target_calcium)) {
+        RelearnException::check(target_calcium >= SynapticElements::min_C_target, "Target calcium is smaller than {}", SynapticElements::min_C_target);
+        RelearnException::check(target_calcium <= SynapticElements::max_C_target, "Target calcium is larger than {}", SynapticElements::max_C_target);
+    }
+
+    if (target_calcium_decay_type == TargetCalciumDecay::Relative) {
+        RelearnException::check(target_calcium_decay_step > 0, "The target calcium decay step is 0 but must be larger than 0.");
+        RelearnException::check(target_calcium_decay_amount < 1.0, "The target calcium decay amount must be smaller than 1.0 for relative decay.");
+        RelearnException::check(target_calcium_decay_amount >= 0.0, "The target calcium decay amount must be larger than or equal to 0.0 for relative decay.");
+    }
+
+    if (target_calcium_decay_type == TargetCalciumDecay::Absolute) {
+        RelearnException::check(target_calcium_decay_step > 0, "The target calcium decay step is 0 but must be larger than 0.");
+        RelearnException::check(target_calcium_decay_amount > 0.0, "The target calcium decay amount must be larger than 0.0 for absolute decay.");
+    }
 
     RelearnException::check(growth_rate >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
     RelearnException::check(growth_rate <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
 
     Config::first_plasticity_update = first_plasticity_step;
+    Config::calcium_log_step = calcium_log_step;
+    Config::synaptic_input_log_step = synaptic_input_log_step;
 
     omp_set_num_threads(openmp_threads);
 
@@ -354,6 +475,23 @@ int main(int argc, char** argv) {
     }
     if (static_cast<bool>(*opt_log_prefix)) {
         LogFiles::set_general_prefix(log_prefix);
+    }
+
+    if (static_cast<bool>(*flag_disable_positions)) {
+        LogFiles::set_log_status(LogFiles::EventType::Positions, true);
+    }
+    if (static_cast<bool>(*flag_disable_network)) {
+        LogFiles::set_log_status(LogFiles::EventType::InNetwork, true);
+        LogFiles::set_log_status(LogFiles::EventType::OutNetwork, true);
+        LogFiles::set_log_status(LogFiles::EventType::Network, true);
+        LogFiles::set_log_status(LogFiles::EventType::NetworkInExcitatoryHistogramLocal, true);
+        LogFiles::set_log_status(LogFiles::EventType::NetworkInInhibitoryHistogramLocal, true);
+        LogFiles::set_log_status(LogFiles::EventType::NetworkOutHistogramLocal, true);
+    }
+    if (static_cast<bool>(*flag_disable_plasticity)) {
+        LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdate, true);
+        LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdateCSV, true);
+        LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdateLocal, true);
     }
 
     LogFiles::init();
@@ -372,6 +510,7 @@ int main(int argc, char** argv) {
             "Chosen upper bound for vacant synaptic elements: {}\n"
             "Chosen target calcium value: {}\n"
             "Chosen beta value: {}\n"
+            "Chosen calcium decay: {}\n"
             "Chosen growth_rate value: {}\n"
             "Chosen retract ratio: {}\n"
             "Chosen synapse conductance: {}\n"
@@ -385,6 +524,7 @@ int main(int argc, char** argv) {
             synaptic_elements_init_ub,
             target_calcium,
             beta,
+            calcium_decay,
             growth_rate,
             retract_ratio,
             synapse_conductance,
@@ -425,18 +565,22 @@ int main(int argc, char** argv) {
     Timers::start(TimerRegion::INITIALIZATION);
 
     // Set the correct kernel and initalize the MPIWrapper to return the correct type
-    if (chosen_algorithm == AlgorithmEnum::BarnesHut) {
+    if (chosen_algorithm == AlgorithmEnum::BarnesHut || chosen_algorithm == AlgorithmEnum::BarnesHutLocationAware) {
         Kernel<BarnesHutCell>::set_kernel_type(chosen_kernel_type);
+        NodeCache<BarnesHutCell>::set_cache_type(chosen_cache_type);
         MPIWrapper::init_buffer_octree<BarnesHutCell>();
     } else if (chosen_algorithm == AlgorithmEnum::BarnesHutInverted) {
         Kernel<BarnesHutInvertedCell>::set_kernel_type(chosen_kernel_type);
+        NodeCache<BarnesHutInvertedCell>::set_cache_type(chosen_cache_type);
         MPIWrapper::init_buffer_octree<BarnesHutInvertedCell>();
     } else if (chosen_algorithm == AlgorithmEnum::FastMultipoleMethods) {
         Kernel<FastMultipoleMethodsCell>::set_kernel_type(chosen_kernel_type);
+        NodeCache<FastMultipoleMethodsCell>::set_cache_type(chosen_cache_type);
         MPIWrapper::init_buffer_octree<FastMultipoleMethodsCell>();
     } else {
         RelearnException::check(chosen_algorithm == AlgorithmEnum::Naive, "An algorithm was chosen that is not supported");
         Kernel<NaiveCell>::set_kernel_type(chosen_kernel_type);
+        NodeCache<NaiveCell>::set_cache_type(chosen_cache_type);
         MPIWrapper::init_buffer_octree<NaiveCell>();
     }
 
@@ -444,27 +588,48 @@ int main(int argc, char** argv) {
         RelearnException::check(chosen_kernel_type == KernelType::Gaussian, "Setting the probability kernel type is not supported for the fast multipole methods!");
     }
 
+    std::unique_ptr<SynapticInputCalculator> input_calculator{};
+    if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
+        input_calculator = std::make_unique<LinearSynapticInputCalculator>(synapse_conductance, base_background_activity, background_activity_mean, background_activity_stddev);
+    } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic) {
+        input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, base_background_activity, background_activity_mean, background_activity_stddev);
+    }
+
     std::unique_ptr<NeuronModel> neuron_model{};
     if (chosen_neuron_model == NeuronModelEnum::Poisson) {
-        neuron_model = std::make_unique<models::PoissonModel>(synapse_conductance, NeuronModel::default_tau_C, beta, NeuronModel::default_h,
-            base_background_activity, background_activity_mean, background_activity_stddev,
+        neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator),
             models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
     } else if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
-        neuron_model = std::make_unique<models::IzhikevichModel>(synapse_conductance, NeuronModel::default_tau_C, beta, NeuronModel::default_h,
-            base_background_activity, background_activity_mean, background_activity_stddev,
+        neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator),
             models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
             models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
             models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
     } else if (chosen_neuron_model == NeuronModelEnum::FitzHughNagumo) {
-        neuron_model = std::make_unique<models::FitzHughNagumoModel>(synapse_conductance, NeuronModel::default_tau_C, NeuronModel::default_beta, NeuronModel::default_h,
-            base_background_activity, background_activity_mean, background_activity_stddev,
+        neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator),
             models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
     } else if (chosen_neuron_model == NeuronModelEnum::AEIF) {
-        neuron_model = std::make_unique<models::AEIFModel>(synapse_conductance, NeuronModel::default_tau_C, NeuronModel::default_beta, NeuronModel::default_h,
-            base_background_activity, background_activity_mean, background_activity_stddev,
+        neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator),
             models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
             models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
             models::AEIFModel::default_V_spike);
+    }
+
+    auto calcium_calculator = std::make_unique<CalciumCalculator>(target_calcium_decay_type, target_calcium_decay_amount, target_calcium_decay_step);
+    calcium_calculator->set_beta(beta);
+    calcium_calculator->set_tau_C(calcium_decay);
+    calcium_calculator->set_h(h);
+
+    if (*opt_file_calcium) {
+        auto [initial_calcium_calculator, target_calcium_calculator] = CalciumIO::load_initial_and_target_function(file_calcium);
+
+        calcium_calculator->set_initial_calcium_calculator(std::move(initial_calcium_calculator));
+        calcium_calculator->set_target_calcium_calculator(std::move(target_calcium_calculator));
+    } else {
+        auto initial_calcium_calculator = [inital = initial_calcium](int /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return inital; };
+        calcium_calculator->set_initial_calcium_calculator(std::move(initial_calcium_calculator));
+
+        auto target_calcium_calculator = [target = target_calcium](int /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return target; };
+        calcium_calculator->set_target_calcium_calculator(std::move(target_calcium_calculator));
     }
 
     auto axons_model = std::make_shared<SynapticElements>(ElementType::Axon, min_calcium_axons,
@@ -483,6 +648,7 @@ int main(int argc, char** argv) {
 
     Simulation sim(partition);
     sim.set_neuron_model(std::move(neuron_model));
+    sim.set_calcium_calculator(std::move(calcium_calculator));
     sim.set_axons(std::move(axons_model));
     sim.set_dendrites_ex(std::move(excitatory_dendrites_model));
     sim.set_dendrites_in(std::move(inhibitory_dendrites_model));
@@ -506,10 +672,10 @@ int main(int argc, char** argv) {
     sim.set_algorithm(chosen_algorithm);
 
     if (static_cast<bool>(*opt_num_neurons)) {
-        auto sfnd = std::make_unique<SubdomainFromNeuronDensity>(number_neurons, 0.8, SubdomainFromNeuronDensity::default_um_per_neuron, partition);
+        auto sfnd = std::make_unique<SubdomainFromNeuronDensity>(number_neurons, fraction_excitatory_neurons, um_per_neuron, partition);
         sim.set_subdomain_assignment(std::move(sfnd));
     } else if (static_cast<bool>(*opt_num_neurons_per_rank)) {
-        auto sfdpr = std::make_unique<SubdomainFromNeuronPerRank>(number_neurons_per_rank, 0.8, SubdomainFromNeuronPerRank::default_um_per_neuron, partition);
+        auto sfdpr = std::make_unique<SubdomainFromNeuronPerRank>(number_neurons_per_rank, fraction_excitatory_neurons, um_per_neuron, partition);
         sim.set_subdomain_assignment(std::move(sfdpr));
     } else {
         std::optional<std::filesystem::path> path_to_network{};
@@ -536,12 +702,6 @@ int main(int argc, char** argv) {
         sim.set_creation_interrupts(std::move(creation_interrups));
     }
 
-    auto target_calcium_calculator = [target = target_calcium](NeuronID::value_type /*neuron_id*/) { return target; };
-    sim.set_target_calcium_calculator(std::move(target_calcium_calculator));
-
-    auto initial_calcium_calculator = [inital = initial_calcium](NeuronID::value_type /*neuron_id*/) { return inital; };
-    sim.set_initial_calcium_calculator(std::move(initial_calcium_calculator));
-
     const auto steps_per_simulation = simulation_steps / Config::monitor_step;
     sim.increase_monitoring_capacity(steps_per_simulation);
 
@@ -557,16 +717,18 @@ int main(int argc, char** argv) {
 
     sim.initialize();
 
+    const auto& my_neuron_ids_to_monitor = MonitorParser::parse_my_ids(neuron_monitors_description, my_rank, my_rank);
+
+    for (const auto& neuron_id : my_neuron_ids_to_monitor) {
+        sim.register_neuron_monitor(neuron_id);
+    }
+
     // Unlock local RMA memory and make local stores visible in public window copy
     MPIWrapper::unlock_window(my_rank);
 
     Timers::stop_and_add(TimerRegion::INITIALIZATION);
 
-    sim.register_neuron_monitor(NeuronID{ 6 });
-    sim.register_neuron_monitor(NeuronID{ 1164 });
-    sim.register_neuron_monitor(NeuronID{ 28001 });
-
-    auto simulate = [&]() {
+    auto simulate = [&sim, &simulation_steps]() {
         sim.simulate(simulation_steps);
 
         Timers::print();
@@ -596,6 +758,8 @@ int main(int argc, char** argv) {
             }
         }
     }
+
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "number of bytes send: {}, number of bytes received: {}, number of bytes accessed remotely: {}", MPIWrapper::get_number_bytes_sent(), MPIWrapper::get_number_bytes_received(), MPIWrapper::get_number_bytes_remote_accessed());
 
     MPIWrapper::finalize();
 

@@ -11,32 +11,25 @@
  */
 
 #include "Config.h"
-#include "OctreeNode.h"
-#include "SpaceFillingCurve.h"
 #include "Types.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
-#include "neurons/Neurons.h"
-#include "neurons/SignalType.h"
-#include "neurons/helper/RankNeuronId.h"
-#include "neurons/models/SynapticElements.h"
-#include "util/Random.h"
+#include "structure/OctreeNode.h"
+#include "structure/SpaceFillingCurve.h"
 #include "util/RelearnException.h"
+#include "util/Stack.h"
 #include "util/Timers.h"
 #include "util/Vec3.h"
 
+#include <climits>
+#include <cstdint>
 #include <functional>
-#include <map>
-#include <optional>
+#include <span>
 #include <sstream>
-#include <stack>
 #include <utility>
-#include <variant>
 #include <vector>
 
-class Neurons;
 class Partition;
-class SynapticElements;
 
 /**
  * This type represents the interface of the (spatial) Octree.
@@ -57,7 +50,7 @@ public:
      * @param level_of_branch_nodes The level at which the branch nodes (that are exchanged via MPI) are
      * @exception Throws a RelearnException if xyz_min is not componentwise smaller than xyz_max
      */
-    Octree(const box_size_type& xyz_min, const box_size_type& xyz_max, const size_t level_of_branch_nodes)
+    Octree(const box_size_type& xyz_min, const box_size_type& xyz_max, const std::uint16_t level_of_branch_nodes)
         : level_of_branch_nodes(level_of_branch_nodes) {
         set_size(xyz_min, xyz_max);
     }
@@ -96,43 +89,22 @@ public:
      * @brief Returns the level at which the branch nodes (that are exchanged via MPI) are
      * @return The level at which the branch nodes (that are exchanged via MPI) are
      */
-    [[nodiscard]] size_t get_level_of_branch_nodes() const noexcept {
+    [[nodiscard]] std::uint16_t get_level_of_branch_nodes() const noexcept {
         return level_of_branch_nodes;
     }
 
     /**
-     * @brief Inserts a neuron with the specified id and the specified MPI rank into the octree.
-     *      If there are no other nodes in this tree, the node becomes the root
+     * @brief Inserts a neuron with the specified id and the specified position into the octree.
      * @param position The position of the new neuron
      * @param neuron_id The id of the new neuron, < Constants::uninitialized (only use for actual neurons, virtual neurons are inserted automatically)
-     * @param rank The MPI rank of the new neuron, >= 0
      * @exception Throws a RelearnException if one of the following happens:
      *      (a) The position is not within the octree's boundaries
-     *      (b) rank is < 0
-     *      (c) neuron_id >= Constants::uninitialized
-     *      (d) Allocating a new object in the shared memory window fails
-     *      (e) Something went wrong within the insertion
+     *      (b) neuron_id >= Constants::uninitialized
+     *      (c) Allocating a new object in the shared memory window fails
+     *      (d) Something went wrong within the insertion
      * @return A pointer to the newly created and inserted node
      */
-    virtual void insert(const box_size_type& position, const NeuronID& neuron_id, int rank) = 0;
-
-    /**
-     * @brief This function updates the Octree starting from max_level. Is is required that it only visits inner nodes
-     * @param max_level The maximum level (inclusive) on which the nodes should be updated
-     * @exception Throws a RelearnException if the functor throws
-     */
-    virtual void update_from_level(size_t max_level) = 0;
-
-    /**
-     * @brief Updates all local (!) branch nodes and their induced subtrees.
-     * @exception Throws a RelearnException if the functor throws
-     */
-    virtual void update_local_trees() = 0;
-
-    /**
-     * @brief Synchronizes all (locally) updated branch nodes with all other MPI ranks
-     */
-    virtual void synchronize_local_trees() = 0;
+    virtual void insert(const box_size_type& position, const NeuronID& neuron_id) = 0;
 
     /**
      * @brief Gathers all leaf nodes and makes them available via get_leaf_nodes
@@ -159,85 +131,17 @@ private:
     box_size_type xyz_min{ 0 };
     box_size_type xyz_max{ 0 };
 
-    size_t level_of_branch_nodes{ Constants::uninitialized };
+    std::uint16_t level_of_branch_nodes{ std::numeric_limits<std::uint16_t>::max() };
 };
 
 /**
  * This type represents the (spatial) Octree in which the neurons are organised.
  * It offers general informations about the structure, the functionality to insert new neurons,
  * update from the bottom up, and synchronize parts with MPI.
- * It is templated by the algorithm with which it is used. The type must provide
- * Algorithm::AdditionalCellAttributes - will be used to template the Cell
- * void Algorithm::update_functor(OctreeNode<Algorithm::AdditionalCellAttributes>*)
+ * It is templated by the additional cell attributes that the algorithm will need the cell to have.
  */
-template <typename Algorithm>
+template <typename AdditionalCellAttributes>
 class OctreeImplementation : public Octree {
-public:
-    using AdditionalCellAttributes = typename Algorithm::AdditionalCellAttributes;
-
-protected:
-    /**
-     * Type for stack used in postorder tree walk
-     */
-    struct StackElement {
-    private:
-        OctreeNode<AdditionalCellAttributes>* ptr{ nullptr };
-
-        // True if node has been on stack already
-        // twice and can be visited now
-        bool already_visited{ false };
-
-        // Node's depth in the tree
-        size_t depth{ Constants::uninitialized };
-
-    public:
-        /**
-         * @brief Constructs a new object that holds the given node with a specific depth, which is marked as not already visited
-         * @param octree_node The node that should be visited, not nullptr
-         * @param depth_in_tree The depth of the current node
-         * @exception Throws a RelearnException if octree_node is nullptr or depth_in_tree is larger than Cosntants::unitialized
-         */
-        StackElement(OctreeNode<AdditionalCellAttributes>* octree_node, const size_t depth_in_tree)
-            : ptr(octree_node)
-            , depth(depth_in_tree) {
-            RelearnException::check(octree_node != nullptr, "StackElement::StackElement: octree_node was nullptr");
-            RelearnException::check(depth_in_tree < Constants::uninitialized, "StackElement::StackElement: depth_in_tree was too large: {}", depth_in_tree);
-        }
-
-        /**
-         * @brief Returns the node
-         * @return The node
-         */
-        [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_octree_node() const noexcept {
-            return ptr;
-        }
-
-        /**
-         * @brief Sets the flag that indicated if this node was already visited
-         * @exception Throws a RelearnException if this node was already visited before
-         */
-        void set_visited() {
-            RelearnException::check(!already_visited, "StackElement::set_visited: element is already visited");
-            already_visited = true;
-        }
-
-        /**
-         * @brief Returns the flag indicating if this node was already visited
-         * @return True iff the node was already visited
-         */
-        [[nodiscard]] bool get_visited() const noexcept {
-            return already_visited;
-        }
-
-        /**
-         * @brief Returns the node
-         * @return The node
-         */
-        [[nodiscard]] size_t get_depth_in_tree() const noexcept {
-            return depth;
-        }
-    };
-
 public:
     /**
      * @brief Constructs a new OctreeImplementation with the the given size and constructs the "internal" part up to and including the level_of_branch_nodes
@@ -246,10 +150,10 @@ public:
      * @param level_of_branch_nodes The level at which the branch nodes (that are exchanged via MPI) are
      * @exception Throws a RelearnException if xyz_min is not componentwise smaller than xyz_max
      */
-    OctreeImplementation(const box_size_type& xyz_min, const box_size_type& xyz_max, const size_t level_of_branch_nodes)
+    OctreeImplementation(const box_size_type& xyz_min, const box_size_type& xyz_max, const std::uint16_t level_of_branch_nodes)
         : Octree(xyz_min, xyz_max, level_of_branch_nodes) {
 
-        const auto num_local_trees = 1ULL << (3 * level_of_branch_nodes);
+        const auto num_local_trees = 1ULL << (3U * level_of_branch_nodes);
         branch_nodes.resize(num_local_trees, nullptr);
 
         construct_global_tree_part();
@@ -285,10 +189,12 @@ public:
 
     /**
      * @brief Get all local branch nodes
-     * @return a vector the local branch nodes
+     * @return All local branch nodes
      */
     [[nodiscard]] std::vector<const OctreeNode<AdditionalCellAttributes>*> get_local_branch_nodes() const {
         std::vector<const OctreeNode<AdditionalCellAttributes>*> result{};
+        result.reserve(4);
+
         for (const auto* node : branch_nodes) {
             if (!node->is_local()) {
                 continue;
@@ -301,10 +207,12 @@ public:
 
     /**
      * @brief Get all local branch nodes
-     * @return a vector the local branch nodes
+     * @return All local branch nodes
      */
     [[nodiscard]] std::vector<OctreeNode<AdditionalCellAttributes>*> get_local_branch_nodes() {
         std::vector<OctreeNode<AdditionalCellAttributes>*> result{};
+        result.reserve(4);
+
         for (auto* node : branch_nodes) {
             if (!node->is_local()) {
                 continue;
@@ -316,59 +224,36 @@ public:
     }
 
     /**
-     * @brief This function updates the Octree starting from max_level. Is is required that it only visits inner nodes
-     * @param max_level The maximum level (inclusive) on which the nodes should be updated
-     * @exception Throws a RelearnException if the functor throws
-     */
-    void update_from_level(const size_t max_level) override {
-        tree_walk_postorder(Algorithm::update_functor, root, max_level);
-    }
-
-    /**
-     * @brief Updates all local (!) branch nodes and their induced subtrees.
-     * @exception Throws a RelearnException if the functor throws
-     */
-    void update_local_trees() override {
-        for (auto* local_tree : branch_nodes) {
-            if (!local_tree->is_local()) {
-                continue;
-            }
-
-            tree_walk_postorder(Algorithm::update_functor, local_tree);
-        }
-    }
-
-    /**
      * @brief Gathers all leaf nodes and makes them available via get_leaf_nodes
      * @param num_neurons The number of neurons
      */
     void initializes_leaf_nodes(const size_t num_neurons) override {
         std::vector<OctreeNode<AdditionalCellAttributes>*> leaf_nodes(num_neurons);
 
-        std::stack<OctreeNode<AdditionalCellAttributes>*> stack;
-        stack.emplace(root);
+        Stack<OctreeNode<AdditionalCellAttributes>*> stack{ num_neurons };
+        stack.emplace_back(root);
 
         while (!stack.empty()) {
-            OctreeNode<AdditionalCellAttributes>* node = stack.top();
-            stack.pop();
+            OctreeNode<AdditionalCellAttributes>* node = stack.pop_back();
 
-            if (node->is_parent()) {
-                for (auto* child : node->get_children()) {
-
-                    if (child == nullptr) {
-                        continue;
-                    }
-
-                    if (const auto neuron_id = child->get_cell_neuron_id(); !child->is_parent() && (neuron_id.is_virtual() || !neuron_id.is_initialized())) {
-                        continue;
-                    }
-
-                    stack.emplace(child);
-                }
-            } else {
+            if (node->is_leaf()) {
                 const auto neuron_id = node->get_cell_neuron_id();
-                RelearnException::check(neuron_id.get_local_id() < leaf_nodes.size(), "Octree::initializes_leaf_nodes: Neuron id was too large for leaf nodes: {}", neuron_id);
-                leaf_nodes[neuron_id.get_local_id()] = node;
+                RelearnException::check(neuron_id.get_neuron_id() < leaf_nodes.size(), "Octree::initializes_leaf_nodes: Neuron id was too large for leaf nodes: {}", neuron_id);
+
+                leaf_nodes[neuron_id.get_neuron_id()] = node;
+                continue;
+            }
+
+            for (auto* child : node->get_children()) {
+                if (child == nullptr) {
+                    continue;
+                }
+
+                if (const auto neuron_id = child->get_cell_neuron_id(); !child->is_parent() && (neuron_id.is_virtual() || !neuron_id.is_initialized())) {
+                    continue;
+                }
+
+                stack.emplace_back(child);
             }
         }
 
@@ -376,49 +261,14 @@ public:
     }
 
     /**
-     * @brief Synchronizes all (locally) updated branch nodes with all other MPI ranks
+     * @brief Synchronizes the octree with all MPI ranks
      */
-    void synchronize_local_trees() override {
-        /**
-         * Exchange branch nodes
-         */
-        Timers::start(TimerRegion::EXCHANGE_BRANCH_NODES);
-        const size_t num_rma_buffer_branch_nodes = branch_nodes.size();
-        // Copy local trees' root nodes to correct positions in receive buffer
+    void synchronize_tree() {
+        // Update my local trees bottom-up
+        update_local_trees();
 
-        std::vector<OctreeNode<AdditionalCellAttributes>> exchange_branch_nodes(num_rma_buffer_branch_nodes);
-
-        const size_t num_local_trees = num_rma_buffer_branch_nodes / MPIWrapper::get_num_ranks();
-        for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
-            exchange_branch_nodes[i] = *branch_nodes[i];
-        }
-
-        // Allgather in-place branch nodes from every rank
-        RelearnException::check(num_local_trees < static_cast<size_t>(std::numeric_limits<int>::max()),
-            "Octree::synchronize_local_trees: Too many branch nodes: {}", num_local_trees);
-        MPIWrapper::all_gather_inline(std::span{ exchange_branch_nodes.data(), num_local_trees });
-
-        Timers::stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
-
-        // Insert only received branch nodes into global tree
-        // The local ones are already in the global tree
-        Timers::start(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
-        for (size_t i = 0; i < num_rma_buffer_branch_nodes; i++) {
-            *branch_nodes[i] = exchange_branch_nodes[i];
-        }
-        Timers::stop_and_add(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
-
-        // Update global tree
-        Timers::start(TimerRegion::UPDATE_GLOBAL_TREE);
-
-        const auto level_of_branch_nodes = get_level_of_branch_nodes();
-
-        // Only update whenever there are other branches to update
-        if (level_of_branch_nodes > 0) {
-            update_from_level(level_of_branch_nodes - 1);
-        }
-
-        Timers::stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
+        // Exchange the local trees
+        synchronize_local_trees();
     }
 
     /**
@@ -444,12 +294,26 @@ public:
     }
 
     /**
-     * @brief Inserts a neuron at the specified position with the neuron id and the rank
+     * @brief Returns the branch node with the (global) index, cast to a void*
+     * @param index The global index of the requested branch node
+     * @exception Throws a RelearnException if index is larger than or equal to the number of branch nodes
+     * @return The requested branch node
+     */
+    [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_branch_node_pointer(size_t index) {
+        RelearnException::check(index >= branch_nodes.size(), "OctreeImplementation::get_branch_node_pointer(): index ({}) is larger than or equal to the number of branch nodes ({}).", index, branch_nodes.size());
+        return branch_nodes[index];
+    }
+
+    /**
+     * @brief Inserts a neuron at the specified position with the neuron id and the position
      * @param position The position of the neuron
      * @param neuron_id The local neuron id
-     * @param rank The MPI rank that the neuron belongs to
+     * @exception Throws a RelearnException if the root is nullptr, the position is not in the box,
+     *      neuron_id is uninitialized, or OctreeNode::insert throws a RelearnException
      */
-    void insert(const box_size_type& position, const NeuronID& neuron_id, const int rank) override {
+    void insert(const box_size_type& position, const NeuronID& neuron_id) override {
+        RelearnException::check(root != nullptr, "Octree::insert: root was nullptr");
+
         const auto& xyz_min = get_xyz_min();
         const auto& xyz_max = get_xyz_max();
 
@@ -461,126 +325,43 @@ public:
         RelearnException::check(min_y <= pos_y && pos_y <= max_y, "Octree::insert: y was not in range: {} vs [{}, {}]", pos_y, min_y, max_y);
         RelearnException::check(min_z <= pos_z && pos_z <= max_z, "Octree::insert: z was not in range: {} vs [{}, {}]", pos_z, min_z, max_z);
 
-        RelearnException::check(rank >= 0, "Octree::insert: rank was smaller than 0 ({})", rank);
         RelearnException::check(neuron_id.is_initialized(), "Octree::insert: neuron_id {} was uninitialized", neuron_id);
 
-        // Tree is empty
-        if (nullptr == root) {
-            // Create new tree node for the neuron
-            OctreeNode<AdditionalCellAttributes>* new_node_to_insert = OctreeNode<AdditionalCellAttributes>::create();
-            RelearnException::check(new_node_to_insert != nullptr, "new_node_to_insert is nullptr");
+        auto* res = root->insert(position, neuron_id, get_level_of_branch_nodes());
+        RelearnException::check(res != nullptr, "Octree::insert: res was nullptr");
 
-            // Init cell size with simulation box size
-            new_node_to_insert->set_cell_size(xyz_min, xyz_max);
-            new_node_to_insert->set_cell_neuron_position({ position });
-            new_node_to_insert->set_cell_neuron_id(neuron_id);
-            new_node_to_insert->set_rank(rank);
+        // LogFiles::print_message_rank(-1, "Inserted {:X} into the octree", reinterpret_cast<unsigned long long int>(res));
+    }
 
-            root = new_node_to_insert;
+    void print() {
+        std::stringstream ss{};
 
-            return;
+        ss << "I'm rank " << MPIWrapper::get_my_rank() << '\n';
+        ss << "root: " << root << '\n';
+
+        for (auto* child : root->get_children()) {
+            ss << "\tchild: " << child << '\n';
+            for (auto* grandchild : child->get_children()) {
+                ss << "\t\tgrandchild: " << grandchild << '\n';
+            }
         }
 
-        auto* res = root->insert(position, neuron_id, rank);
-        RelearnException::check(res != nullptr, "Octree::insert: res was nullptr");
+        LogFiles::print_message_rank(-1, ss.str());
     }
 
 protected:
-    void tree_walk_postorder(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function,
-        OctreeNode<AdditionalCellAttributes>* root, const size_t max_level = std::numeric_limits<size_t>::max()) {
-        RelearnException::check(root != nullptr, "Octree::tree_walk_postorder: octree was nullptr");
-
-        if (max_level > 2) {
-            tree_walk_postorder_parallel(function, root, max_level);
-            return;
-        }
-
-        walk_post_order(root, 0, max_level, function);
-    }
-
-    void tree_walk_postorder_parallel(std::function<void(OctreeNode<AdditionalCellAttributes>*)> function,
-        OctreeNode<AdditionalCellAttributes>* root, const size_t max_level = std::numeric_limits<size_t>::max()) {
-
-        std::vector<OctreeNode<AdditionalCellAttributes>*> subtrees{};
-        std::stack<OctreeNode<AdditionalCellAttributes>*> tree_upper_part{};
-
-        tree_upper_part.emplace(root);
-
-        for (const auto& root_child : root->get_children()) {
-            if (root_child == nullptr) {
-                continue;
-            }
-
-            tree_upper_part.emplace(root_child);
-
-            for (const auto& root_child_child : root_child->get_children()) {
-                if (root_child_child == nullptr) {
-                    continue;
-                }
-
-                tree_upper_part.emplace(root_child_child);
-                subtrees.emplace_back(root_child_child);
-            }
-        }
-
-#pragma omp parallel for shared(subtrees, max_level, function) default(none)
-        for (auto i = 0; i < subtrees.size(); i++) {
-            auto* local_tree_root = subtrees[i];
-
-            walk_post_order(local_tree_root, 2, max_level, function);
-        }
-
-        while (!tree_upper_part.empty()) {
-            auto* node = tree_upper_part.top();
-            tree_upper_part.pop();
-
-            function(node);
-        }
-    }
-
-    void walk_post_order(OctreeNode<AdditionalCellAttributes>* local_tree_root,
-        const size_t current_level, const size_t max_level, std::function<void(OctreeNode<AdditionalCellAttributes>*)> function) {
-        std::stack<StackElement> stack{};
-
-        // Push node onto stack
-        stack.emplace(local_tree_root, current_level);
-
-        while (!stack.empty()) {
-            // Get top-of-stack node
-            auto& current_element = stack.top();
-            const auto current_depth = current_element.get_depth_in_tree();
-            auto* current_octree_node = current_element.get_octree_node();
-
-            // Node should be visited now?
-            if (current_element.get_visited()) {
-                // Apply action to node
-                function(current_octree_node);
-
-                // Pop node from stack
-                stack.pop();
-            } else {
-                // Mark node to be visited next time
-                current_element.set_visited();
-
-                // We're at the border of where we want to update, so don't push children
-                if (current_depth >= max_level) {
-                    continue;
-                }
-
-                const auto& children = current_octree_node->get_children();
-                for (auto it = children.crbegin(); it != children.crend(); ++it) {
-                    if (*it != nullptr) {
-                        stack.emplace(*it, current_depth + 1);
-                    }
-                }
-            }
-        } /* while */
-    }
-
+    /**
+     * @brief Constructs the upper portion of the tree, i.e., all nodes at depths [0, level_of_branch_nodes].
+     */
     void construct_global_tree_part() {
         RelearnException::check(root == nullptr, "Octree::construct_global_tree_part: root was not null");
 
         const auto level_of_branch_nodes = get_level_of_branch_nodes();
+
+        const auto number_nodes_in_upper_part = (std::pow(8.0, level_of_branch_nodes + 1) - 1.0) / 7.0;
+        const auto number_nodes_cast = static_cast<size_t>(number_nodes_in_upper_part);
+
+        upper_portion_holder.reserve(number_nodes_cast);
 
         SpaceFillingCurve<Morton> space_curve{ static_cast<uint8_t>(level_of_branch_nodes) };
 
@@ -591,47 +372,49 @@ protected:
         const auto& xyz_min = get_xyz_min();
         const auto& xyz_max = get_xyz_max();
 
-        const auto& cell_length = (xyz_max - xyz_min) / static_cast<box_size_type::value_type>(num_cells_per_dimension);
-        const auto& [cell_length_x, cell_length_y, cell_length_z] = cell_length;
+        auto& root_node = upper_portion_holder.emplace_back();
+        root_node.set_cell_size(xyz_min, xyz_max);
+        root_node.set_cell_neuron_id(NeuronID::virtual_id());
+        root_node.set_cell_neuron_position(xyz_min.get_midpoint(xyz_max));
+        root_node.set_rank(my_rank);
+        root_node.set_level(0);
 
-        OctreeNode<AdditionalCellAttributes>* local_root = OctreeNode<AdditionalCellAttributes>::create();
-        RelearnException::check(local_root != nullptr, "Octree::construct_global_tree_part: local_root is nullptr");
+        Stack<OctreeNode<AdditionalCellAttributes>*> stack_upper_part{ number_nodes_cast };
+        stack_upper_part.emplace_back(&root_node);
 
-        local_root->set_cell_neuron_id(NeuronID::virtual_id());
-        local_root->set_cell_size(xyz_min, xyz_max);
-        local_root->set_rank(my_rank);
-        local_root->set_cell_neuron_position(xyz_min + (cell_length / 2));
+        while (!stack_upper_part.empty()) {
+            const auto current_node = stack_upper_part.pop_back();
+            const auto current_level = current_node->get_level();
 
-        const auto root_index1d = space_curve.map_3d_to_1d(Vec3s{ 0, 0, 0 });
-        branch_nodes[root_index1d] = local_root;
+            if (current_level == level_of_branch_nodes) {
+                continue;
+            }
 
-        root = local_root;
+            for (unsigned char child_id = 0; child_id < Constants::number_oct; child_id++) {
+                const auto& [child_min, child_max] = current_node->get_cell().get_size_for_octant(child_id);
 
-        for (size_t id_x = 0; id_x < num_cells_per_dimension; id_x++) {
-            for (size_t id_y = 0; id_y < num_cells_per_dimension; id_y++) {
-                for (size_t id_z = 0; id_z < num_cells_per_dimension; id_z++) {
-                    if (id_x == 0 && id_y == 0 && id_z == 0) {
-                        continue;
-                    }
+                auto& child_node = upper_portion_holder.emplace_back();
+                child_node.set_cell_size(child_min, child_max);
+                child_node.set_cell_neuron_id(NeuronID::virtual_id());
+                child_node.set_cell_neuron_position(child_min.get_midpoint(child_max));
+                child_node.set_rank(my_rank);
+                child_node.set_level(current_level + 1);
 
-                    const box_size_type cell_offset{ id_x * cell_length_x, id_y * cell_length_y, id_z * cell_length_z };
-                    const auto& cell_min = xyz_min + cell_offset;
-                    const auto& cell_position = cell_min + (cell_length / 2);
+                current_node->set_child(&child_node, child_id);
 
-                    auto* current_node = root->insert(cell_position, NeuronID::virtual_id(), my_rank);
-
-                    // const auto index1d = space_curve.map_3d_to_1d(Vec3s{ id_x, id_y, id_z });
-                    // branch_nodes[index1d] = current_node;
+                if (current_level + 1 < level_of_branch_nodes) {
+                    stack_upper_part.emplace_back(&child_node);
                 }
             }
         }
 
-        std::stack<std::pair<OctreeNode<AdditionalCellAttributes>*, Vec3s>> stack{};
-        stack.emplace(root, Vec3s{ 0, 0, 0 });
+        root = &root_node;
+
+        Stack<std::pair<OctreeNode<AdditionalCellAttributes>*, Vec3s>> stack{ number_nodes_cast };
+        stack.emplace_back(root, Vec3s{ 0, 0, 0 });
 
         while (!stack.empty()) {
-            const auto [ptr, index3d] = stack.top();
-            stack.pop();
+            const auto [ptr, index3d] = stack.pop_back();
 
             if (!ptr->is_parent()) {
                 const auto index1d = space_curve.map_3d_to_1d(index3d);
@@ -642,22 +425,233 @@ protected:
             for (size_t id = 0; id < Constants::number_oct; id++) {
                 auto child_node = ptr->get_child(id);
 
-                const size_t larger_x = ((id & 1ULL) == 0) ? 0ULL : 1ULL;
-                const size_t larger_y = ((id & 2ULL) == 0) ? 0ULL : 1ULL;
-                const size_t larger_z = ((id & 4ULL) == 0) ? 0ULL : 1ULL;
+                const auto larger_x = ((id & 1ULL) == 0) ? 0ULL : 1ULL;
+                const auto larger_y = ((id & 2ULL) == 0) ? 0ULL : 1ULL;
+                const auto larger_z = ((id & 4ULL) == 0) ? 0ULL : 1ULL;
 
                 const Vec3s offset{ larger_x, larger_y, larger_z };
                 const Vec3s pos = (index3d * 2) + offset;
-                stack.emplace(child_node, pos);
+                stack.emplace_back(child_node, pos);
             }
         }
+    }
+
+    /**
+     * @brief Updates all local (!) branch nodes and their induced subtrees.
+     * @exception Throws a RelearnException if the functor throws
+     */
+    void update_local_trees() {
+        Timers::start(TimerRegion::UPDATE_LOCAL_TREES);
+        for (auto* local_tree : branch_nodes) {
+            if (!local_tree->is_local()) {
+                continue;
+            }
+
+            update_tree_parallel(local_tree);
+        }
+        Timers::stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
+    }
+
+    /**
+     * @brief Synchronizes all (locally) updated branch nodes with all other MPI ranks
+     */
+    void synchronize_local_trees() {
+        Timers::start(TimerRegion::EXCHANGE_BRANCH_NODES);
+        const auto number_branch_nodes = branch_nodes.size();
+
+        // Copy local trees' root nodes to correct positions in receive buffer
+        std::vector<OctreeNode<AdditionalCellAttributes>> exchange_branch_nodes(number_branch_nodes);
+        for (size_t i = 0; i < number_branch_nodes; i++) {
+            exchange_branch_nodes[i] = *branch_nodes[i];
+        }
+
+        // Allgather in-place branch nodes from every rank
+        const auto number_local_branch_nodes = number_branch_nodes / MPIWrapper::get_num_ranks();
+        RelearnException::check(number_local_branch_nodes < static_cast<size_t>(std::numeric_limits<int>::max()),
+            "OctreeImplementation::synchronize_local_trees: Too many branch nodes: {}", number_local_branch_nodes);
+        MPIWrapper::all_gather_inline(std::span{ exchange_branch_nodes.data(), number_local_branch_nodes });
+
+        Timers::stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
+
+        Timers::start(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
+        for (size_t i = 0; i < number_branch_nodes; i++) {
+            *branch_nodes[i] = exchange_branch_nodes[i];
+        }
+        Timers::stop_and_add(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
+
+        Timers::start(TimerRegion::UPDATE_GLOBAL_TREE);
+        if (const auto level_of_branch_nodes = get_level_of_branch_nodes(); level_of_branch_nodes > 0) {
+            // Only update whenever there are other branches to update
+            // The nodes at level_of_branch_nodes are already updated (by other MPI ranks) 
+            update_tree_parallel(root, level_of_branch_nodes - 1);
+        }
+        Timers::stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
+    }
+
+    /**
+     * @brief Updates the tree induced by local_tree_root until the desired level.
+     *      Uses OctreeNode::get_level() to determine the depth. The nodes at that depth are still updated, but not their children.
+     *      Potentially updates in parallel based on the depth of the updates.
+     * @param local_tree_root The root of the tree from where to update
+     * @param max_depth The depth where the updates shall stop
+     * @exception Throws a RelearnException if local_tree_root is nullptr or if max_depth is smaller than the depth of local_tree_root
+     */
+    void update_tree_parallel(OctreeNode<AdditionalCellAttributes>* local_tree_root, const std::uint16_t max_depth = std::numeric_limits<std::uint16_t>::max()) {
+        RelearnException::check(local_tree_root != nullptr, "OctreeImplementation::update_tree_parallel: local_tree_root was nullptr");
+        RelearnException::check(local_tree_root->get_level() <= max_depth, "OctreeImplementation::update_tree_parallel: The root had a larger depth than max_depth.");
+
+        if (const auto update_height = max_depth - local_tree_root->get_level(); update_height < 3) {
+            // If the update concerns less than 3 levels, update serially
+            update_tree(local_tree_root, max_depth);
+            return;
+        }
+
+        // Gather all subtrees two levels down from the current node, update the induced trees in parallel, and then update the upper portion serially
+
+        constexpr auto maximum_number_subtrees = 64;
+        std::vector<OctreeNode<AdditionalCellAttributes>*> subtrees{};
+        subtrees.reserve(maximum_number_subtrees);
+
+        constexpr auto maximum_number_nodes = 64 + 8 + 1;
+        Stack<OctreeNode<AdditionalCellAttributes>*> tree_upper_part{ maximum_number_nodes };
+        tree_upper_part.emplace_back(local_tree_root);
+
+        for (const auto& root_child : local_tree_root->get_children()) {
+            if (root_child == nullptr) {
+                continue;
+            }
+
+            tree_upper_part.emplace_back(root_child);
+
+            for (const auto& root_child_child : root_child->get_children()) {
+                if (root_child_child == nullptr) {
+                    continue;
+                }
+
+                tree_upper_part.emplace_back(root_child_child);
+                subtrees.emplace_back(root_child_child);
+            }
+        }
+
+#pragma omp parallel for shared(subtrees, max_depth) default(none)
+        for (auto i = 0; i < subtrees.size(); i++) {
+            auto* local_tree_root = subtrees[i];
+            update_tree(local_tree_root, max_depth);
+        }
+
+        while (!tree_upper_part.empty()) {
+            auto* node = tree_upper_part.top();
+            tree_upper_part.pop();
+
+            if (node->is_parent()) {
+                node->update();
+            }
+        }
+    }
+
+    /**
+     * @brief Updates the tree induced by local_tree_root until the desired level.
+     *      Uses OctreeNode::get_level() to determine the depth. The nodes at that depth are still updated, but not their children.
+     * @param local_tree_root The root of the tree from where to update
+     * @param max_depth The depth where the updates shall stop
+     * @exception Throws a RelearnException if local_tree_root is nullptr or if max_depth is smaller than the depth of local_tree_root
+     */
+    void update_tree(OctreeNode<AdditionalCellAttributes>* local_tree_root, const std::uint16_t max_depth) {
+        struct StackElement {
+        private:
+            OctreeNode<AdditionalCellAttributes>* ptr{ nullptr };
+
+            // True if node has been on stack already
+            // twice and can be visited now
+            bool already_visited{ false };
+
+        public:
+            /**
+             * @brief Constructs a new object that holds the given node, which is marked as not already visited
+             * @param octree_node The node that should be visited, not nullptr
+             * @exception Throws a RelearnException if octree_node is nullptr
+             */
+            explicit StackElement(OctreeNode<AdditionalCellAttributes>* octree_node)
+                : ptr(octree_node) {
+                RelearnException::check(octree_node != nullptr, "StackElement::StackElement: octree_node was nullptr");
+            }
+
+            /**
+             * @brief Returns the node
+             * @return The node
+             */
+            [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_octree_node() const noexcept {
+                return ptr;
+            }
+
+            /**
+             * @brief Sets the flag that indicated if this node was already visited
+             * @exception Throws a RelearnException if this node was already visited before
+             */
+            void set_visited() {
+                RelearnException::check(!already_visited, "StackElement::set_visited: element is already visited");
+                already_visited = true;
+            }
+
+            /**
+             * @brief Returns the flag indicating if this node was already visited
+             * @return True iff the node was already visited
+             */
+            [[nodiscard]] bool was_already_visited() const noexcept {
+                return already_visited;
+            }
+        };
+
+        RelearnException::check(local_tree_root != nullptr, "OctreeImplementation::update_tree: local_tree_root is nullptr.");
+        RelearnException::check(local_tree_root->get_level() <= max_depth, "OctreeImplementation::update_tree: The root had a larger depth than max_depth.");
+
+        Stack<StackElement> stack{};
+        stack.emplace_back(local_tree_root);
+
+        while (!stack.empty()) {
+            auto& current_element = stack.top();
+            auto* current_octree_node = current_element.get_octree_node();
+
+            if (current_element.was_already_visited()) {
+                // Make sure that the element was visited before, i.e., its children are processed
+                if (current_octree_node->is_parent()) {
+                    // Don't update leaf nodes, they were updated before
+                    current_octree_node->update();
+                }
+
+                stack.pop();
+                continue;
+            }
+
+            // Mark node to be visited next time now, because it's a reference and will change once we push the other elements
+            current_element.set_visited();
+
+            const auto current_depth = current_octree_node->get_level();
+            if (current_depth >= max_depth) {
+                // We're at the border of where we want to update, so don't push children
+                if (current_octree_node->is_parent()) {
+                    // Don't update leaf nodes, they were updated before
+                    current_octree_node->update();
+                }
+
+                stack.pop();
+                continue;
+            }
+
+            for (auto* child : current_octree_node->get_children()) {
+                if (child == nullptr) {
+                    continue;
+                }
+                stack.emplace_back(child);
+            }
+        } /* while */
     }
 
 private:
     // Root of the tree
     OctreeNode<AdditionalCellAttributes>* root{ nullptr };
 
+    std::vector<OctreeNode<AdditionalCellAttributes>> upper_portion_holder{};
     std::vector<OctreeNode<AdditionalCellAttributes>*> branch_nodes{};
-
     std::vector<OctreeNode<AdditionalCellAttributes>*> all_leaf_nodes{};
 };

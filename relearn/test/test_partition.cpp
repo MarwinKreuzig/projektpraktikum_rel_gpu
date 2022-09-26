@@ -1,5 +1,6 @@
 #include "../googletest/include/gtest/gtest.h"
 
+#include <cstddef>
 #include <numeric>
 
 #include "RelearnTest.hpp"
@@ -97,12 +98,12 @@ TEST_F(PartitionTest, testPartitionNumberNeurons) {
 
         for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
             if (my_subdomain > 0) {
-                const auto local_start = local_ids_ends[static_cast<size_t>(my_subdomain) - 1].get_local_id() + 1;
-                local_ids_start[my_subdomain] = NeuronID(false, false, local_start);
+                const auto local_start = local_ids_ends[static_cast<size_t>(my_subdomain) - 1].get_neuron_id() + 1;
+                local_ids_start[my_subdomain] = NeuronID(false, local_start);
             }
 
-            const auto local_end = local_ids_start[my_subdomain].get_local_id() + local_neurons[my_subdomain] - 1;
-            local_ids_ends[my_subdomain] = NeuronID(false, false, local_end);
+            const auto local_end = local_ids_start[my_subdomain].get_neuron_id() + local_neurons[my_subdomain] - 1;
+            local_ids_ends[my_subdomain] = NeuronID(false, local_end);
         }
 
         Partition partition(num_ranks, my_rank);
@@ -111,15 +112,10 @@ TEST_F(PartitionTest, testPartitionNumberNeurons) {
         partition.set_total_number_neurons(number_total_neurons);
         ASSERT_EQ(partition.get_total_number_neurons(), number_total_neurons);
 
-        partition.set_subdomain_number_neurons(local_neurons);
-        const auto num_local_neurons = std::reduce(local_neurons.begin(), local_neurons.end(), size_t(0));
+        const auto num_local_neurons = std::reduce(local_neurons.begin(), local_neurons.end(), size_t{ 0 });
+        partition.set_number_local_neurons(num_local_neurons);
 
         ASSERT_EQ(partition.get_number_local_neurons(), num_local_neurons);
-
-        for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
-            ASSERT_EQ(partition.get_local_subdomain_local_neuron_id_start(my_subdomain), local_ids_start[my_subdomain]);
-            ASSERT_EQ(partition.get_local_subdomain_local_neuron_id_end(my_subdomain), local_ids_ends[my_subdomain]);
-        }
     }
 }
 

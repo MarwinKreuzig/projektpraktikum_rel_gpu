@@ -10,91 +10,104 @@
  *
  */
 
-#include "RelearnException.h"
+#include "util/RelearnException.h"
 
-#include <array>
 #include <chrono>
-#include <sstream>
+#include <iosfwd>
 #include <string>
 #include <vector>
 
 /**
  * This type allows type-safe specification of a specific timer
  */
-enum class TimerRegion : int {
+enum class TimerRegion : unsigned int {
     INITIALIZATION = 0,
-    SIMULATION_LOOP = 1,
-    UPDATE_ELECTRICAL_ACTIVITY = 2,
-    PREPARE_SENDING_SPIKES = 3,
-    EXCHANGE_NEURON_IDS = 4,
-    CALC_SYNAPTIC_BACKGROUND = 8,
-    CALC_SERIAL_ACTIVITY = 9,
-    CALC_SYNAPTIC_INPUT = 10,
-    CALC_ACTIVITY = 11,
-    UPDATE_SYNAPTIC_ELEMENTS_DELTA = 12,
-    UPDATE_CONNECTIVITY = 13,
-    UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES = 14,
-    UPDATE_LOCAL_TREES = 15,
-    EXCHANGE_BRANCH_NODES = 16,
-    INSERT_BRANCH_NODES_INTO_GLOBAL_TREE = 17,
-    UPDATE_GLOBAL_TREE = 18,
-    FIND_TARGET_NEURONS = 19,
-    EMPTY_REMOTE_NODES_CACHE = 20,
-    CREATE_SYNAPSES = 21,
-    UPDATE_LEAF_NODES = 22,
-    CALC_TAYLOR_COEFFICIENTS = 23,
-    CALC_HERMITE_COEFFICIENTS = 24,
-    LOAD_SYNAPSES = 25,
-    TRANSLATE_GLOBAL_IDS = 26,
-    INITIALIZE_NETWORK_GRAPH = 27,
-    ADD_SYNAPSES_TO_NETWORKGRAPH = 28,
-    DELETE_SYNAPSES_ALL_TO_ALL = 29,
-    FIND_SYNAPSES_TO_DELETE = 7,
-    PROCESS_DELETE_REQUESTS = 6,
-    COMMIT_NUM_SYNAPTIC_ELEMENTS = 5,
-    CREATE_SYNAPSES_EXCHANGE_REQUESTS = 30,
-    CREATE_SYNAPSES_EXCHANGE_RESPONSES = 31,
-    CREATE_SYNAPSES_PROCESS_REQUESTS = 32,
-    CREATE_SYNAPSES_PROCESS_RESPONSES = 33,
+    LOAD_SYNAPSES,
+    TRANSLATE_GLOBAL_IDS,
+    INITIALIZE_NETWORK_GRAPH,
+
+    SIMULATION_LOOP,
+    UPDATE_ELECTRICAL_ACTIVITY,
+    PREPARE_SENDING_SPIKES,
+    EXCHANGE_NEURON_IDS,
+    CALC_SERIAL_ACTIVITY,
+    CALC_SYNAPTIC_BACKGROUND,
+    CALC_SYNAPTIC_INPUT,
+    CALC_ACTIVITY,
+
+    UPDATE_CALCIUM,
+    UPDATE_TARGET_CALCIUM,
+
+    UPDATE_SYNAPTIC_ELEMENTS_DELTA,
+
+    UPDATE_CONNECTIVITY,
+
+    UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES,
+    COMMIT_NUM_SYNAPTIC_ELEMENTS,
+    FIND_SYNAPSES_TO_DELETE,
+    DELETE_SYNAPSES_ALL_TO_ALL,
+    PROCESS_DELETE_REQUESTS,
+
+    UPDATE_LEAF_NODES,
+    UPDATE_LOCAL_TREES,
+    EXCHANGE_BRANCH_NODES,
+    INSERT_BRANCH_NODES_INTO_GLOBAL_TREE,
+    UPDATE_GLOBAL_TREE,
+
+    FIND_TARGET_NEURONS,
+    CALC_TAYLOR_COEFFICIENTS,
+    CALC_HERMITE_COEFFICIENTS,
+
+    EMPTY_REMOTE_NODES_CACHE,
+
+    CREATE_SYNAPSES,
+    CREATE_SYNAPSES_EXCHANGE_REQUESTS,
+    CREATE_SYNAPSES_PROCESS_REQUESTS,
+    CREATE_SYNAPSES_EXCHANGE_RESPONSES,
+    CREATE_SYNAPSES_PROCESS_RESPONSES,
+
+    ADD_SYNAPSES_TO_NETWORKGRAPH,
 };
 
 /**
  * This number is used as a shortcut to count the number of values valid for TimerRegion
  */
-constexpr size_t NUM_TIMERS = 34;
+constexpr size_t NUMBER_TIMERS = 36;
 
 /**
  * This class is used to collect all sorts of different timers (see TimerRegion).
  * It provides an interface to start, stop, and print the timers
  */
 class Timers {
+    using time_point = std::chrono::high_resolution_clock::time_point;
+
 public:
     /**
      * @brief Starts the respective timer
      * @param timer The timer to start
-     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUM_TIMERS
+     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUMBER_TIMERS
      */
     static void start(const TimerRegion timer) {
         const auto timer_id = static_cast<size_t>(timer);
-        RelearnException::check(timer_id < NUM_TIMERS, "Timers::start: timer_id was {}", timer_id);
+        RelearnException::check(timer_id < NUMBER_TIMERS, "Timers::start: timer_id was {}", timer_id);
         time_start[timer_id] = std::chrono::high_resolution_clock::now();
     }
 
     /**
      * @brief Stops the respective timer
      * @param timer The timer to stops
-     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUM_TIMERS
+     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUMBER_TIMERS
      */
     static void stop(const TimerRegion timer) {
         const auto timer_id = static_cast<size_t>(timer);
-        RelearnException::check(timer_id < NUM_TIMERS, "Timers::stop: timer_id was: {}", timer_id);
+        RelearnException::check(timer_id < NUMBER_TIMERS, "Timers::stop: timer_id was: {}", timer_id);
         time_stop[timer_id] = std::chrono::high_resolution_clock::now();
     }
 
     /**
      * @brief Stops the respective timer and adds the elapsed time
      * @param timer The timer to stops
-     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUM_TIMERS
+     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUMBER_TIMERS
      */
     static void stop_and_add(const TimerRegion timer) {
         stop(timer);
@@ -104,35 +117,23 @@ public:
     /**
      * @brief Adds the difference between the current start and stop time points to the elapsed time
      * @param timer The timer for which to add the difference
-     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUM_TIMERS
+     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUMBER_TIMERS
      */
     static void add_start_stop_diff_to_elapsed(const TimerRegion timer) {
         const auto timer_id = static_cast<size_t>(timer);
-        RelearnException::check(timer_id < NUM_TIMERS, "Timers::add_start_stop_diff_to_elapsed: timer_id was: {}", timer_id);
-        time_elapsed[timer_id] += std::chrono::duration_cast<std::chrono::duration<double>>(time_stop[timer_id] - time_start[timer_id]);
+        RelearnException::check(timer_id < NUMBER_TIMERS, "Timers::add_start_stop_diff_to_elapsed: timer_id was: {}", timer_id);
+        time_elapsed[timer_id] += (time_stop[timer_id] - time_start[timer_id]);
     }
 
     /**
      * @brief Resets the elapsed time for the timer
      * @param timer The timer for which to reset the elapsed time
-     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUM_TIMERS
+     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUMBER_TIMERS
      */
     static void reset_elapsed(const TimerRegion timer) {
         const auto timer_id = static_cast<size_t>(timer);
-        RelearnException::check(timer_id < NUM_TIMERS, "Timers::reset_elapsed: timer_id was: {}", timer_id);
-        time_elapsed[timer_id] = std::chrono::duration<double>::zero();
-    }
-
-    /**
-     * @brief Returns the elapsed time for the respecive timer
-     * @param timer The timer for which to return the elapsed time
-     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUM_TIMERS
-     * @return The elapsed time
-     */
-    [[nodiscard]] static double get_elapsed(const TimerRegion timer) {
-        const auto timer_id = static_cast<size_t>(timer);
-        RelearnException::check(timer_id < NUM_TIMERS, "Timers::get_elapsed: timer_id was: {}", timer_id);
-        return time_elapsed[timer_id].count();
+        RelearnException::check(timer_id < NUMBER_TIMERS, "Timers::reset_elapsed: timer_id was: {}", timer_id);
+        time_elapsed[timer_id] = std::chrono::nanoseconds(0);
     }
 
     /**
@@ -145,45 +146,26 @@ public:
      * @brief Returns the current time as a string
      * @return The current time as a string
      */
-    [[nodiscard]] static std::string wall_clock_time() {
-#ifdef __linux__
-        time_t rawtime = 0;
-        time(&rawtime);
-        // NOLINTNEXTLINE
-        struct tm* timeinfo = localtime(&rawtime);
-        // NOLINTNEXTLINE
-        char* string = asctime(timeinfo);
-
-        // Remove linebreak in string
-        // NOLINTNEXTLINE
-        string[24] = '\0';
-
-        return std::string(string);
-#else
-        time_t rawtime = 0;
-        struct tm timeinfo;
-        char char_buff[30];
-
-        time(&rawtime);
-        localtime_s(&timeinfo, &rawtime);
-        asctime_s(char_buff, &timeinfo);
-
-        // Remove linebreak in string
-        // NOLINTNEXTLINE
-        char_buff[24] = '\0';
-
-        return std::string(char_buff);
-#endif
-    }
+    [[nodiscard]] static std::string wall_clock_time();
 
 private:
-    static void print_timer(std::stringstream& sstream, TimerRegion timer_index, const std::array<double, size_t(3) * NUM_TIMERS>& timers);
+    /**
+     * @brief Returns the elapsed time for the respecive timer
+     * @param timer The timer for which to return the elapsed time
+     * @exception Throws a RelearnException if the timer casts to a size_t that is >= NUMBER_TIMERS
+     * @return The elapsed time
+     */
+    [[nodiscard]] static std::chrono::nanoseconds get_elapsed(const TimerRegion timer) {
+        const auto timer_id = static_cast<size_t>(timer);
+        RelearnException::check(timer_id < NUMBER_TIMERS, "Timers::get_elapsed: timer_id was: {}", timer_id);
+        return time_elapsed[timer_id];
+    }
 
     // NOLINTNEXTLINE
-    static inline std::vector<std::chrono::high_resolution_clock::time_point> time_start{ NUM_TIMERS };
+    static inline std::vector<time_point> time_start{ NUMBER_TIMERS };
     // NOLINTNEXTLINE
-    static inline std::vector<std::chrono::high_resolution_clock::time_point> time_stop{ NUM_TIMERS };
+    static inline std::vector<time_point> time_stop{ NUMBER_TIMERS };
 
     // NOLINTNEXTLINE
-    static inline std::vector<std::chrono::duration<double>> time_elapsed{ NUM_TIMERS };
+    static inline std::vector<std::chrono::nanoseconds> time_elapsed{ NUMBER_TIMERS };
 };

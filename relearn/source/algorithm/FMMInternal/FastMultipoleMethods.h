@@ -14,8 +14,7 @@
 #include "FastMultipoleMethodsCell.h"
 #include "FastMultipoleMethodsBase.h"
 #include "Types.h"
-#include "algorithm/Connector.h"
-#include "algorithm/ExchangingAlgorithm.h"
+#include "algorithm/Internal/ExchangingAlgorithm.h"
 #include "neurons/UpdateStatus.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "structure/OctreeNode.h"
@@ -53,142 +52,8 @@ public:
      * @param octree The octree on which the algorithm is to be performed, not null
      * @exception Throws a RelearnException if octree is nullptr
      */
-    explicit FastMultipoleMethods(const std::shared_ptr<OctreeImplementation<FastMultipoleMethods>>& octree)
-        : global_tree(octree) {
-        RelearnException::check(octree != nullptr, "FastMultipoleMethods::FastMultipoleMethods: octree was null");
-    }
-
-    /**
-     * @brief Updates all leaf nodes in the octree by the algorithm
-     * @param disable_flags Flags that indicate if a neuron id disabled (0) or enabled (otherwise)
-     * @param axons The model for the axons
-     * @param excitatory_dendrites The model for the excitatory dendrites
-     * @param inhibitory_dendrites The model for the inhibitory dendrites
-     * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
-     */
-    void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) override;
-
-    /**
-     * @brief Updates the passed node with the values of its children according to the algorithm
-     * @param node The node to update, must not be nullptr
-     * @exception Throws a RelearnException if node is nullptr
-     */
-    static void update_functor(OctreeNode<FastMultipoleMethodsCell>* node) {
-        RelearnException::check(node != nullptr, "FastMultipoleMethods::update_functor: node is nullptr");
-
-        // NOLINTNEXTLINE
-        if (node->is_child()) {
-            return;
-        }
-
-        using position_type = FastMultipoleMethodsCell::position_type;
-        using counter_type = FastMultipoleMethodsCell::counter_type;
-
-        // I'm inner node, i.e., I have a super neuron
-        position_type my_position_dendrites_excitatory = { 0., 0., 0. };
-        position_type my_position_dendrites_inhibitory = { 0., 0., 0. };
-
-        position_type my_position_axons_excitatory = { 0., 0., 0. };
-        position_type my_position_axons_inhibitory = { 0., 0., 0. };
-
-        // Sum of number of dendrites of all my children
-        counter_type my_number_dendrites_excitatory = 0;
-        counter_type my_number_dendrites_inhibitory = 0;
-
-        counter_type my_number_axons_excitatory = 0;
-        counter_type my_number_axons_inhibitory = 0;
-
-        // For all my children
-        for (const auto& child : node->get_children()) {
-            if (child == nullptr) {
-                continue;
-            }
-
-            // Sum up number of dendrites
-            const auto child_number_dendrites_excitatory = child->get_cell().get_number_excitatory_dendrites();
-            const auto child_number_dendrites_inhibitory = child->get_cell().get_number_inhibitory_dendrites();
-
-            const auto child_number_axons_excitatory = child->get_cell().get_number_excitatory_axons();
-            const auto child_number_axons_inhibitory = child->get_cell().get_number_inhibitory_axons();
-
-            my_number_dendrites_excitatory += child_number_dendrites_excitatory;
-            my_number_dendrites_inhibitory += child_number_dendrites_inhibitory;
-
-            my_number_axons_excitatory += child_number_axons_excitatory;
-            my_number_axons_inhibitory += child_number_axons_inhibitory;
-
-            // Average the position by using the number of dendrites as weights
-            std::optional<position_type> child_position_dendrites_excitatory = child->get_cell().get_excitatory_dendrites_position();
-            std::optional<position_type> child_position_dendrites_inhibitory = child->get_cell().get_inhibitory_dendrites_position();
-
-            std::optional<position_type> child_position_axons_excitatory = child->get_cell().get_excitatory_axons_position();
-            std::optional<position_type> child_position_axons_inhibitory = child->get_cell().get_inhibitory_axons_position();
-
-            /**
-             * We can use position if it's valid or if corresponding num of dendrites is 0
-             */
-            RelearnException::check(child_position_dendrites_excitatory.has_value() || (0 == child_number_dendrites_excitatory), "FastMultipoleMethods::update_functor: The child had excitatory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
-            RelearnException::check(child_position_dendrites_inhibitory.has_value() || (0 == child_number_dendrites_inhibitory), "FastMultipoleMethods::update_functor: The child had inhibitory dendrites, but no position. ID: {}", child->get_cell_neuron_id());
-
-            RelearnException::check(child_position_axons_excitatory.has_value() || (0 == child_number_axons_excitatory), "FastMultipoleMethods::update_functor: The child had excitatory axons, but no position. ID: {}", child->get_cell_neuron_id());
-            RelearnException::check(child_position_axons_inhibitory.has_value() || (0 == child_number_axons_inhibitory), "FastMultipoleMethods::update_functor: The child had inhibitory axons, but no position. ID: {}", child->get_cell_neuron_id());
-
-            if (child_position_dendrites_excitatory.has_value()) {
-                const auto scaled_position = child_position_dendrites_excitatory.value() * static_cast<double>(child_number_dendrites_excitatory);
-                my_position_dendrites_excitatory += scaled_position;
-            }
-
-            if (child_position_dendrites_inhibitory.has_value()) {
-                const auto scaled_position = child_position_dendrites_inhibitory.value() * static_cast<double>(child_number_dendrites_inhibitory);
-                my_position_dendrites_inhibitory += scaled_position;
-            }
-
-            if (child_position_axons_excitatory.has_value()) {
-                const auto scaled_position = child_position_axons_excitatory.value() * static_cast<double>(child_number_axons_excitatory);
-                my_position_axons_excitatory += scaled_position;
-            }
-
-            if (child_position_axons_inhibitory.has_value()) {
-                const auto scaled_position = child_position_axons_inhibitory.value() * static_cast<double>(child_number_axons_inhibitory);
-                my_position_axons_inhibitory += scaled_position;
-            }
-        }
-
-        node->set_cell_number_dendrites(my_number_dendrites_excitatory, my_number_dendrites_inhibitory);
-        node->set_cell_number_axons(my_number_axons_excitatory, my_number_axons_inhibitory);
-
-        /**
-         * For calculating the new weighted position, make sure that we don't
-         * divide by 0. This happens if the my number of dendrites is 0.
-         */
-        if (0 == my_number_dendrites_excitatory) {
-            node->set_cell_excitatory_dendrites_position({});
-        } else {
-            const auto scaled_position = my_position_dendrites_excitatory / my_number_dendrites_excitatory;
-            node->set_cell_excitatory_dendrites_position(std::optional<position_type>{ scaled_position });
-        }
-
-        if (0 == my_number_dendrites_inhibitory) {
-            node->set_cell_inhibitory_dendrites_position({});
-        } else {
-            const auto scaled_position = my_position_dendrites_inhibitory / my_number_dendrites_inhibitory;
-            node->set_cell_inhibitory_dendrites_position(std::optional<position_type>{ scaled_position });
-        }
-
-        if (0 == my_number_axons_excitatory) {
-            node->set_cell_excitatory_axons_position({});
-        } else {
-            const auto scaled_position = my_position_axons_excitatory / my_number_axons_excitatory;
-            node->set_cell_excitatory_axons_position(std::optional<position_type>{ scaled_position });
-        }
-
-        if (0 == my_number_axons_inhibitory) {
-            node->set_cell_inhibitory_axons_position({});
-        } else {
-            const auto scaled_position = my_position_axons_inhibitory / my_number_axons_inhibitory;
-            node->set_cell_inhibitory_axons_position(std::optional<position_type>{ scaled_position });
-        }
-    }
+    explicit FastMultipoleMethods(const std::shared_ptr<OctreeImplementation<FastMultipoleMethodsCell>>& octree)
+        : ForwardAlgorithm(octree) { }
 
 protected:
     /**
@@ -219,9 +84,7 @@ protected:
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank
      */
     [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
-    process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) override {
-        return ForwardConnector::process_requests(creation_requests, excitatory_dendrites, inhibitory_dendrites);
-    }
+    process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) override;
 
     /**
      * @brief Processes all incoming responses from the MPI ranks locally
@@ -231,9 +94,7 @@ protected:
      * @return All synapses from this MPI rank to other MPI ranks
      */
     [[nodiscard]] DistantOutSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
-        const CommunicationMap<SynapseCreationResponse>& creation_responses) override {
-        return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
-    }
+        const CommunicationMap<SynapseCreationResponse>& creation_responses) override;
 
 private:
     /**

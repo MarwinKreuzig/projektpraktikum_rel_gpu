@@ -11,8 +11,8 @@
  */
 
 #include "Config.h"
-#include "SpaceFillingCurve.h"
 #include "Types.h"
+#include "structure/SpaceFillingCurve.h"
 #include "util/RelearnException.h"
 
 #include <functional>
@@ -215,59 +215,11 @@ public:
     }
 
     /**
-     * @brief Returns the first local neuron id of the subdomain
-     * @param local_subdomain_index The local subdomain index
-     * @exception Throws a RelearnException if local_subdomain_index is larger or equal to the number of local subdomains
-     * @return The first local neuron id of the subdomain
+     * @brief Sets the number of local neurons (i.e., on this MPI rank)
+     * @param number_neurons The number of local neurons
      */
-    [[nodiscard]] NeuronID get_local_subdomain_local_neuron_id_start(const size_t local_subdomain_index) const {
-        RelearnException::check(local_subdomain_index < local_subdomains.size(),
-            "Partition::get_local_subdomain_local_neuron_id_start: index ({}) was too large for the number of local subdomains ({})", local_subdomain_index, local_subdomains.size());
-        return local_subdomains[local_subdomain_index].neuron_local_id_start;
-    }
-
-    /**
-     * @brief Returns the last local neuron id of the subdomain
-     * @param local_subdomain_index The local subdomain index
-     * @exception Throws a RelearnException if local_subdomain_index is larger or equal to the number of local subdomains
-     * @return The last local neuron id of the subdomain
-     */
-    [[nodiscard]] NeuronID get_local_subdomain_local_neuron_id_end(const size_t local_subdomain_index) const {
-        RelearnException::check(local_subdomain_index < local_subdomains.size(),
-            "Partition::get_local_subdomain_local_neuron_id_start: index ({}) was too large for the number of local subdomains ({})", local_subdomain_index, local_subdomains.size());
-        return local_subdomains[local_subdomain_index].neuron_local_id_end;
-    }
-
-    /**
-     * @brief Sets the number of neurons in all subdomains, and updates the dependent values
-     * @param number_local_neurons_in_subdomains The number of neurons in each local subdomain
-     * @exception Throws a RelearnException if number_local_neurons_in_subdomains has a size unequal to the number of local subdomains
-     */
-    void set_subdomain_number_neurons(const std::vector<size_t>& number_local_neurons_in_subdomains) {
-        RelearnException::check(number_local_neurons_in_subdomains.size() == local_subdomains.size(),
-            "Partition::set_subdomain_number_neurons: number_local_neurons_in_subdomains had a different size ({}) then the number of local subdomains ({})", number_local_neurons_in_subdomains.size(), local_subdomains.size());
-
-        number_local_neurons = 0;
-        for (auto subdomain_index = 0; subdomain_index < number_local_neurons_in_subdomains.size(); subdomain_index++) {
-            Subdomain& current_subdomain = local_subdomains[subdomain_index];
-
-            current_subdomain.number_neurons = number_local_neurons_in_subdomains[subdomain_index];
-
-            // Add subdomain's number of neurons to rank's number of neurons
-            number_local_neurons += current_subdomain.number_neurons;
-
-            // Set start and end of local neuron ids
-            // 0-th subdomain starts with neuron id 0
-            if (subdomain_index == 0) {
-                current_subdomain.neuron_local_id_start = NeuronID(false, false, 0);
-            } else {
-                const auto& last_subdomain_end = local_subdomains[subdomain_index - 1].neuron_local_id_end;
-                current_subdomain.neuron_local_id_start = NeuronID(false, false, last_subdomain_end.get_local_id() + 1);
-            }
-
-            const auto local_end = current_subdomain.neuron_local_id_start.get_local_id() + current_subdomain.number_neurons - 1;
-            current_subdomain.neuron_local_id_end = NeuronID(false, false, local_end);
-        }
+    void set_number_local_neurons(const size_t number_neurons) noexcept {
+        number_local_neurons = number_neurons;
     }
 
     /**

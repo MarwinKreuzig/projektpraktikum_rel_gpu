@@ -15,53 +15,92 @@
 #include "mpi/MPIWrapper.h"
 
 #include <array>
+#include <ctime>
 #include <iomanip>
+#include <sstream>
 
-void Timers::print_timer(std::stringstream& sstream, const TimerRegion timer_index, const std::array<double, size_t(3) * NUM_TIMERS>& timers) {
-    sstream
-        << std::setw(Constants::print_width) << timers[3 * static_cast<size_t>(timer_index)] << " | "
-        << std::setw(Constants::print_width) << timers[3 * static_cast<size_t>(timer_index) + 1] << " | "
-        << std::setw(Constants::print_width) << timers[3 * static_cast<size_t>(timer_index) + 2] << "\n";
+std::string Timers::wall_clock_time() {
+    // The time is printed with 24 interesting characters followed by '\n'
+    constexpr auto size_of_date_string = 24;
+
+#ifdef __linux__
+    time_t rawtime = 0;
+    time(&rawtime);
+    // NOLINTNEXTLINE
+    struct tm* timeinfo = localtime(&rawtime);
+    // NOLINTNEXTLINE
+    char* string = asctime(timeinfo);
+
+    // Avoid '\n'
+    return std::string(string, size_of_date_string);
+#else
+    time_t rawtime = 0;
+    struct tm timeinfo;
+
+    // Need some more space for '\n' and other checks
+    char char_buff[size_of_date_string + 3];
+
+    time(&rawtime);
+    localtime_s(&timeinfo, &rawtime);
+    asctime_s(char_buff, &timeinfo);
+
+    // Avoid '\n'
+    return std::string(char_buff, size_of_date_string);
+#endif
 }
 
 void Timers::print() {
     /**
      * Print timers and memory usage
      */
-    constexpr size_t expected_num_timers = size_t(3) * NUM_TIMERS;
+    constexpr size_t expected_num_timers = size_t(3) * NUMBER_TIMERS;
 
     std::array<double, expected_num_timers> timers_local{};
 
     std::stringstream local_timer_output{};
 
-    for (size_t i = 0; i < NUM_TIMERS; ++i) {
+    for (size_t i = 0; i < NUMBER_TIMERS; ++i) {
         const auto timer = static_cast<TimerRegion>(i);
-        const double elapsed = get_elapsed(timer);
+        const auto elapsed = get_elapsed(timer);
 
-        local_timer_output << elapsed << '\n';
+        local_timer_output << elapsed.count() << '\n';
 
-        for (int j = 0; j < 3; ++j) {
-            const size_t idx = 3 * i + j;
+        for (auto j = 0U; j < 3; ++j) {
+            const auto idx = 3 * i + j;
+            const auto counted = elapsed.count();
+            const auto seconds = static_cast<double>(counted) * 1e-9;
+
             // NOLINTNEXTLINE
-            timers_local[idx] = elapsed;
+            timers_local[idx] = seconds;
         }
     }
 
     LogFiles::write_to_file(LogFiles::EventType::TimersLocal, false, local_timer_output.str());
 
-    std::array<double, expected_num_timers> timers_global = MPIWrapper::reduce(timers_local, MPIWrapper::ReduceFunction::MinSumMax, 0);
+    auto timers_global = MPIWrapper::reduce(timers_local, MPIWrapper::ReduceFunction::MinSumMax, 0);
+    if (0 != MPIWrapper::get_my_rank()) {
+        return;
+    }
+
     std::stringstream sstring{};
+
+    auto print_timer = [&timers_global, &sstring](auto message, const TimerRegion timer_index) {
+        const auto min_time = timers_global[3 * static_cast<size_t>(timer_index)];
+        const auto avg_time = timers_global[3 * static_cast<size_t>(timer_index) + 1];
+        const auto max_time = timers_global[3 * static_cast<size_t>(timer_index) + 2];
+
+        sstring << message
+                << std::setw(Constants::print_width) << min_time << " | "
+                << std::setw(Constants::print_width) << avg_time << " | "
+                << std::setw(Constants::print_width) << max_time << '\n';
+    };
 
     // Divide second entry of (min, sum, max), i.e., sum, by the number of ranks
     // so that sum becomes average
-    for (size_t i = 0; i < NUM_TIMERS; i++) {
+    for (size_t i = 0; i < NUMBER_TIMERS; i++) {
         const size_t idx = 3 * i + 1;
         // NOLINTNEXTLINE
         timers_global[idx] /= MPIWrapper::get_num_ranks();
-    }
-
-    if (0 != MPIWrapper::get_my_rank()) {
-        return;
     }
 
     // Set precision for aligned double output
@@ -77,113 +116,47 @@ void Timers::print() {
             << ") sec.\n";
     sstring << "TIMERS: main()\n";
 
-    sstring << "  Initialization                               : ";
-    print_timer(sstring, TimerRegion::INITIALIZATION, timers_global);
-
-    sstring << "    Load Synapses                              : ";
-    print_timer(sstring, TimerRegion::LOAD_SYNAPSES, timers_global);
-
-    sstring << "    Translate Global IDs                       : ";
-    print_timer(sstring, TimerRegion::TRANSLATE_GLOBAL_IDS, timers_global);
-
-    sstring << "    Initialize Network Graph                   : ";
-    print_timer(sstring, TimerRegion::INITIALIZE_NETWORK_GRAPH, timers_global);
-
-    sstring << "  Simulation loop                              : ";
-    print_timer(sstring, TimerRegion::SIMULATION_LOOP, timers_global);
-
-    sstring << "    Update electrical activity                 : ";
-    print_timer(sstring, TimerRegion::UPDATE_ELECTRICAL_ACTIVITY, timers_global);
-
-    sstring << "      Prepare sending spikes                   : ";
-    print_timer(sstring, TimerRegion::PREPARE_SENDING_SPIKES, timers_global);
-
-    sstring << "      Exchange neuron ids                      : ";
-    print_timer(sstring, TimerRegion::EXCHANGE_NEURON_IDS, timers_global);
-
-    sstring << "      Calculate serial activity setup          : ";
-    print_timer(sstring, TimerRegion::CALC_SERIAL_ACTIVITY, timers_global);
-
-    sstring << "      Calculate synaptic background            : ";
-    print_timer(sstring, TimerRegion::CALC_SYNAPTIC_BACKGROUND, timers_global);
-
-    sstring << "      Calculate synaptic input                 : ";
-    print_timer(sstring, TimerRegion::CALC_SYNAPTIC_INPUT, timers_global);
-
-    sstring << "      Calculate activity                       : ";
-    print_timer(sstring, TimerRegion::CALC_ACTIVITY, timers_global);
-
-    sstring << "    Update #synaptic elements delta            : ";
-    print_timer(sstring, TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA, timers_global);
-
-    sstring << "    Connectivity update                        : ";
-    print_timer(sstring, TimerRegion::UPDATE_CONNECTIVITY, timers_global);
-
-    sstring << "      Delete synapses                          : ";
-    print_timer(sstring, TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES, timers_global);
-
-    sstring << "        Commit #synaptic elements              : ";
-    print_timer(sstring, TimerRegion::COMMIT_NUM_SYNAPTIC_ELEMENTS, timers_global);
-
-    sstring << "        Find synapses to delete                : ";
-    print_timer(sstring, TimerRegion::FIND_SYNAPSES_TO_DELETE, timers_global);
-
-    sstring << "        Exchange deletions (w/ alltoall)       : ";
-    print_timer(sstring, TimerRegion::PROCESS_DELETE_REQUESTS, timers_global);
-
-    sstring << "        Process deletion requests              : ";
-    print_timer(sstring, TimerRegion::PROCESS_DELETE_REQUESTS, timers_global);
-
-    sstring << "      Update leaf nodes                        : ";
-    print_timer(sstring, TimerRegion::UPDATE_LEAF_NODES, timers_global);
-
-    sstring << "      Update local trees                       : ";
-    print_timer(sstring, TimerRegion::UPDATE_LOCAL_TREES, timers_global);
-
-    sstring << "      Exchange branch nodes (w/ Allgather)     : ";
-    print_timer(sstring, TimerRegion::EXCHANGE_BRANCH_NODES, timers_global);
-
-    sstring << "      Insert branch nodes into global tree     : ";
-    print_timer(sstring, TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE, timers_global);
-
-    sstring << "      Update global tree                       : ";
-    print_timer(sstring, TimerRegion::UPDATE_GLOBAL_TREE, timers_global);
-
-    sstring << "      Find target neurons (w/ RMA)             : ";
-    print_timer(sstring, TimerRegion::FIND_TARGET_NEURONS, timers_global);
-
-    sstring << "        FMM: Calculate Taylor Coefficients     : ";
-    print_timer(sstring, TimerRegion::CALC_TAYLOR_COEFFICIENTS, timers_global);
-
-    sstring << "        FMM: Calculate Hermite Coefficients    : ";
-    print_timer(sstring, TimerRegion::CALC_HERMITE_COEFFICIENTS, timers_global);
-
-    sstring << "      Empty remote nodes cache                 : ";
-    print_timer(sstring, TimerRegion::EMPTY_REMOTE_NODES_CACHE, timers_global);
-
-    sstring << "      Create synapses                          : ";
-    print_timer(sstring, TimerRegion::CREATE_SYNAPSES, timers_global);
-
-    sstring << "        Create synapses Exchange Requests      : ";
-    print_timer(sstring, TimerRegion::CREATE_SYNAPSES_EXCHANGE_REQUESTS, timers_global);
-
-    sstring << "        Create synapses Process Requests       : ";
-    print_timer(sstring, TimerRegion::CREATE_SYNAPSES_PROCESS_REQUESTS, timers_global);
-
-    sstring << "        Create synapses Exchange Responses     : ";
-    print_timer(sstring, TimerRegion::CREATE_SYNAPSES_EXCHANGE_RESPONSES, timers_global);
-
-    sstring << "        Create synapses Process Responses      : ";
-    print_timer(sstring, TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES, timers_global);
-
-    sstring << "      Add synapses in local network graphs     : ";
-    print_timer(sstring, TimerRegion::ADD_SYNAPSES_TO_NETWORKGRAPH, timers_global);
+    print_timer("  Initialization                               : ", TimerRegion::INITIALIZATION);
+    print_timer("    Load Synapses                              : ", TimerRegion::LOAD_SYNAPSES);
+    print_timer("    Translate Global IDs                       : ", TimerRegion::TRANSLATE_GLOBAL_IDS);
+    print_timer("    Initialize Network Graph                   : ", TimerRegion::INITIALIZE_NETWORK_GRAPH);
+    print_timer("  Simulation loop                              : ", TimerRegion::SIMULATION_LOOP);
+    print_timer("    Update electrical activity                 : ", TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
+    print_timer("      Prepare sending spikes                   : ", TimerRegion::PREPARE_SENDING_SPIKES);
+    print_timer("      Exchange neuron ids                      : ", TimerRegion::EXCHANGE_NEURON_IDS);
+    print_timer("      Calculate serial activity setup          : ", TimerRegion::CALC_SERIAL_ACTIVITY);
+    print_timer("      Calculate synaptic background            : ", TimerRegion::CALC_SYNAPTIC_BACKGROUND);
+    print_timer("      Calculate synaptic input                 : ", TimerRegion::CALC_SYNAPTIC_INPUT);
+    print_timer("      Calculate activity                       : ", TimerRegion::CALC_ACTIVITY);
+    print_timer("      Calculate calcium                        : ", TimerRegion::UPDATE_CALCIUM);
+    print_timer("      Calculate target calcium                 : ", TimerRegion::UPDATE_TARGET_CALCIUM);
+    print_timer("    Update #synaptic elements delta            : ", TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
+    print_timer("    Connectivity update                        : ", TimerRegion::UPDATE_CONNECTIVITY);
+    print_timer("      Delete synapses                          : ", TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
+    print_timer("        Commit #synaptic elements              : ", TimerRegion::COMMIT_NUM_SYNAPTIC_ELEMENTS);
+    print_timer("        Find synapses to delete                : ", TimerRegion::FIND_SYNAPSES_TO_DELETE);
+    print_timer("        Exchange deletions (w/ alltoall)       : ", TimerRegion::DELETE_SYNAPSES_ALL_TO_ALL);
+    print_timer("        Process deletion requests              : ", TimerRegion::PROCESS_DELETE_REQUESTS);
+    print_timer("      Update leaf nodes                        : ", TimerRegion::UPDATE_LEAF_NODES);
+    print_timer("      Update local trees                       : ", TimerRegion::UPDATE_LOCAL_TREES);
+    print_timer("      Exchange branch nodes (w/ Allgather)     : ", TimerRegion::EXCHANGE_BRANCH_NODES);
+    print_timer("      Insert branch nodes into global tree     : ", TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
+    print_timer("      Update global tree                       : ", TimerRegion::UPDATE_GLOBAL_TREE);
+    print_timer("      Find target neurons (w/ RMA)             : ", TimerRegion::FIND_TARGET_NEURONS);
+    print_timer("        FMM: Calculate Taylor Coefficients     : ", TimerRegion::CALC_TAYLOR_COEFFICIENTS);
+    print_timer("        FMM: Calculate Hermite Coefficients    : ", TimerRegion::CALC_HERMITE_COEFFICIENTS);
+    print_timer("      Empty remote nodes cache                 : ", TimerRegion::EMPTY_REMOTE_NODES_CACHE);
+    print_timer("      Create synapses                          : ", TimerRegion::CREATE_SYNAPSES);
+    print_timer("        Create synapses Exchange Requests      : ", TimerRegion::CREATE_SYNAPSES_EXCHANGE_REQUESTS);
+    print_timer("        Create synapses Process Requests       : ", TimerRegion::CREATE_SYNAPSES_PROCESS_REQUESTS);
+    print_timer("        Create synapses Exchange Responses     : ", TimerRegion::CREATE_SYNAPSES_EXCHANGE_RESPONSES);
+    print_timer("        Create synapses Process Responses      : ", TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES);
+    print_timer("      Add synapses in local network graphs     : ", TimerRegion::ADD_SYNAPSES_TO_NETWORKGRAPH);
 
     sstring << "\n\n";
 
     LogFiles::write_to_file(LogFiles::EventType::Timers, true, sstring.str());
 
-    const auto avg_time = timers_global[3 * static_cast<size_t>(TimerRegion::SIMULATION_LOOP) + 1];
-
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Simulation time [sec]: {}", avg_time);
+    const auto average_simulation_time = timers_global[3 * static_cast<size_t>(TimerRegion::SIMULATION_LOOP) + 1];
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Simulation time [sec]: {}", average_simulation_time);
 }

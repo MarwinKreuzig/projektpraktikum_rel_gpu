@@ -10,24 +10,25 @@
 
 #include "NetworkGraph.h"
 
-#include "../io/LogFiles.h"
-#include "../sim/NeuronIdTranslator.h"
-#include "Neurons.h"
+#include "io/LogFiles.h"
+#include "neurons/Neurons.h"
 
 #include "spdlog/spdlog.h"
 
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <set>
 #include <sstream>
 #include <string>
 
-bool NetworkGraph::check_edges_from_file(const std::filesystem::path& path_synapses, const std::vector<size_t>& neuron_ids) {
+bool NetworkGraph::check_edges_from_file(const std::filesystem::path& path_synapses, const std::vector<NeuronID::value_type>& neuron_ids) {
     std::ifstream file_synapses(path_synapses, std::ios::binary | std::ios::in);
 
-    std::set<size_t> ids_in_file{};
+    std::set<NeuronID::value_type> ids_in_file{};
 
     for (std::string line{}; std::getline(file_synapses, line);) {
         // Skip line with comments
@@ -35,9 +36,9 @@ bool NetworkGraph::check_edges_from_file(const std::filesystem::path& path_synap
             continue;
         }
 
-        size_t source_id = 0;
-        size_t target_id = 0;
-        int weight = 0;
+        NeuronID::value_type source_id = 0;
+        NeuronID::value_type target_id = 0;
+        RelearnTypes::synapse_weight weight = 0;
 
         std::stringstream sstream(line);
         const bool success = (sstream >> source_id) && (sstream >> target_id) && (sstream >> weight);
@@ -54,16 +55,9 @@ bool NetworkGraph::check_edges_from_file(const std::filesystem::path& path_synap
         ids_in_file.insert(target_id);
     }
 
-    bool found_everything = true;
-
-    std::for_each(ids_in_file.begin(), ids_in_file.end(), [&neuron_ids, &found_everything](size_t val) {
-        const auto found = std::binary_search(neuron_ids.begin(), neuron_ids.end(), val);
-        if (!found) {
-            found_everything = false;
-        }
+    return std::ranges::all_of(ids_in_file, [&neuron_ids](NeuronID::value_type val) {
+        return std::ranges::binary_search(neuron_ids, val);
     });
-
-    return found_everything;
 }
 
 void NetworkGraph::debug_check() const {
@@ -76,9 +70,8 @@ void NetworkGraph::debug_check() const {
     // Golden map that stores all local edges
     std::map<std::pair<NeuronID, NeuronID>, RelearnTypes::synapse_weight> edges{};
 
-    for (auto neuron_id : NeuronID::range(number_local_neurons)) {
+    for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
         const auto& local_out_edges = get_local_out_edges(neuron_id);
-        const auto& distant_out_edges = get_distant_out_edges(neuron_id);
 
         for (const auto& [target_neuron_id, edge_val] : local_out_edges) {
             RelearnException::check(edge_val != 0, "NetworkGraph::debug_check: Value is zero (out)");
@@ -86,9 +79,9 @@ void NetworkGraph::debug_check() const {
         }
     }
 
-    for (auto id : NeuronID::range(number_local_neurons)) {
-        const auto local_in_edges = get_local_in_edges(id);
-        const auto distant_in_edges = get_distant_in_edges(id);
+    for (const auto& id : NeuronID::range(number_local_neurons)) {
+        const auto& local_in_edges = get_local_in_edges(id);
+        const auto& distant_in_edges = get_distant_in_edges(id);
 
         for (const auto& [source_neuron_id, edge_val] : local_in_edges) {
             RelearnException::check(edge_val != 0, "NetworkGraph::debug_check: Value is zero (out)");
@@ -112,105 +105,40 @@ void NetworkGraph::debug_check() const {
     RelearnException::check(edges.empty(), "NetworkGraph::debug_check: Edges is not empty");
 }
 
-void NetworkGraph::print(std::ostream& os, const std::shared_ptr<NeuronIdTranslator>& translator) const {
-    const auto num_ranks = MPIWrapper::get_num_ranks();
-
-    std::map<int, std::set<size_t>> required_ids{};
-
-    for (size_t target_neuron_id = 0; target_neuron_id < number_local_neurons; target_neuron_id++) {
-        const auto& in_edges = neuron_distant_in_neighborhood[target_neuron_id];
-
-        for (const auto& [distand_neuron_id, weight] : in_edges) {
-            const auto& [rank, local_neuron_id] = distand_neuron_id;
-            required_ids[rank].emplace(local_neuron_id);
-        }
-    }
-
-    std::vector<std::vector<size_t>> exchange_id_my_requests(num_ranks);
-
-    for (const auto& [rank, local_neuron_ids] : required_ids) {
-        auto& requests_vector = exchange_id_my_requests[rank];
-        const auto& requests_set = required_ids[rank];
-
-        requests_vector.insert(requests_vector.cend(), requests_set.begin(), requests_set.end());
-    }
-
-    const auto& exchange_ids_others_requests = MPIWrapper::exchange_values(exchange_id_my_requests);
-
-    std::vector<std::vector<size_t>> exchange_id_my_responses(num_ranks);
-    for (auto rank : MPIWrapper::get_ranks()) {
-        for (const auto& local_id : exchange_ids_others_requests[rank]) {
-            const auto& global_id = translator->get_global_id(NeuronID{ local_id });
-            exchange_id_my_responses[rank].emplace_back(global_id);
-        }
-    }
-
-    const auto& exchange_ids_other_responses = MPIWrapper::exchange_values(exchange_id_my_responses);
-
-    // For my neurons
-    for (const auto& target_neuron_id : NeuronID::range(number_local_neurons)) {
-        const auto global_target_id = translator->get_global_id(target_neuron_id);
-
-        for (const auto& [local_source_id, edge_val] : neuron_local_in_neighborhood[target_neuron_id.get_local_id()]) {
-            const auto global_source_id = translator->get_global_id(local_source_id);
-
-            os << (global_target_id.get_global_id() + 1) << "\t"
-               << (global_source_id.get_global_id() + 1) << "\t"
-               << edge_val << "\n";
-        }
-
-        for (const auto& [distant_neuron_id, edge_val] : neuron_distant_in_neighborhood[target_neuron_id.get_local_id()]) {
-            const auto& [distant_rank, distant_local_neuron_id] = distant_neuron_id;
-
-            const auto& request_iterator = std::find(exchange_id_my_requests[distant_rank].begin(),
-                exchange_id_my_requests[distant_rank].end(), distant_local_neuron_id.get_local_id());
-
-            const auto& distance = std::distance(exchange_id_my_requests[distant_rank].begin(), request_iterator);
-
-            const auto global_source_id = exchange_ids_other_responses[distant_rank][distance];
-
-            // <target neuron id>  <source neuron id>  <weight>
-            os << (global_target_id.get_global_id() + 1) << "\t"
-               << (global_source_id + 1) << "\t"
-               << edge_val << "\n";
-        }
-    }
-}
-
-void NetworkGraph::print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges) const noexcept {
+void NetworkGraph::print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges) const {
     const auto my_rank = mpi_rank;
 
     for (const auto& source_id : NeuronID::range(number_local_neurons)) {
-        const auto& source_local_id = source_id.get_local_id();
+        const auto& source_local_id = source_id.get_neuron_id();
 
         for (const auto& [target_id, weight] : neuron_local_out_neighborhood[source_local_id]) {
-            const auto& target_local_id = target_id.get_local_id();
+            const auto& target_local_id = target_id.get_neuron_id();
 
-            os_out_edges << my_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << source_local_id << '\t' << weight << '\n';
+            os_out_edges << my_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\n';
         }
 
         for (const auto& [target_neuron, weight] : neuron_distant_out_neighborhood[source_local_id]) {
             const auto& [target_rank, target_id] = target_neuron;
-            const auto& target_local_id = source_id.get_local_id();
+            const auto& target_local_id = source_id.get_neuron_id();
 
-            os_out_edges << target_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << source_local_id << '\t' << weight << '\n';
+            os_out_edges << target_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\n';
         }
     }
 
     for (const auto& target_id : NeuronID::range(number_local_neurons)) {
-        const auto& target_local_id = target_id.get_local_id();
+        const auto& target_local_id = target_id.get_neuron_id();
 
         for (const auto& [source_id, weight] : neuron_local_in_neighborhood[target_local_id]) {
-            const auto& source_local_id = source_id.get_local_id();
+            const auto& source_local_id = source_id.get_neuron_id();
 
-            os_in_edges << my_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << source_local_id << '\t' << weight << '\n';
+            os_in_edges << my_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\n';
         }
 
         for (const auto& [source_neuron, weight] : neuron_distant_in_neighborhood[target_local_id]) {
             const auto& [source_rank, source_id] = source_neuron;
-            const auto& source_local_id = source_id.get_local_id();
+            const auto& source_local_id = source_id.get_neuron_id();
 
-            os_in_edges << my_rank << ' ' << (target_local_id + 1) << '\t' << source_rank << ' ' << source_local_id << '\t' << weight << '\n';
+            os_in_edges << my_rank << ' ' << (target_local_id + 1) << '\t' << source_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\n';
         }
     }
 }

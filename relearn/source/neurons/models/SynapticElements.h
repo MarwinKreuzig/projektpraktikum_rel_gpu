@@ -10,10 +10,10 @@
  *
  */
 
-#include "ModelParameter.h"
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
 #include "neurons/UpdateStatus.h"
+#include "neurons/models/ModelParameter.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
@@ -49,7 +49,7 @@ inline double gaussian_growth_curve(const double current, const double eta, cons
     const auto quotient = difference / zeta;
     const auto product = quotient * quotient;
 
-    const auto dz = growth_rate * (2 * exp(-product) - 1);
+    const auto dz = growth_rate * (2 * std::exp(-product) - 1);
     return dz;
 }
 
@@ -106,7 +106,7 @@ public:
         if (initial_vacant_elements_lower_bound < initial_vacant_elements_upper_bound) {
             RandomHolder::fill(RandomHolderKey::SynapticElements, grown_elements.begin(), grown_elements.end(), initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
         } else if (initial_vacant_elements_lower_bound == initial_vacant_elements_upper_bound) {
-            std::fill(grown_elements.begin(), grown_elements.end(), initial_vacant_elements_lower_bound);
+            std::ranges::fill(grown_elements, initial_vacant_elements_lower_bound);
         } else {
             RelearnException::fail("SynapticElements::init: Should initialize synaptic elements with values between in the wrong order (lower is larger than upper)");
         }
@@ -157,7 +157,7 @@ public:
      * @return A vector with all significant instances
      */
     [[nodiscard]] static std::vector<std::shared_ptr<SynapticElements>> get_elements() {
-        std::vector<std::shared_ptr<SynapticElements>> res;
+        std::vector<std::shared_ptr<SynapticElements>> res{};
         res.emplace_back(std::make_shared<SynapticElements>(ElementType::Axon, SynapticElements::default_eta_Axons));
         res.emplace_back(std::make_shared<SynapticElements>(ElementType::Dendrite, SynapticElements::default_eta_Dendrites_exc));
         res.emplace_back(std::make_shared<SynapticElements>(ElementType::Dendrite, SynapticElements::default_eta_Dendrites_inh));
@@ -218,7 +218,7 @@ public:
      * @exception Throws a RelearnException if (a) neuron_id is too large, (b) the counts for the neuron are negative afterwards
      */
     void update_grown_elements(const NeuronID& neuron_id, const double delta) {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < grown_elements.size(), "SynapticElements::update_grown_elements: neuron_id is too large: {}", neuron_id);
         grown_elements[local_neuron_id] += delta;
@@ -232,7 +232,7 @@ public:
      * @exception Throws a RelearnException if (a) neuron_id is too large, (b) the counts for the neuron are negative afterwards
      */
     void update_connected_elements(const NeuronID& neuron_id, const int delta) {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < connected_elements.size(), "SynapticElements::update_connected_elements: neuron_id is too large: {}", neuron_id);
         if (delta < 0) {
@@ -255,7 +255,7 @@ public:
      * @exception Throws a RelearnException if neuron_id is too large
      */
     void set_signal_type(const NeuronID& neuron_id, const SignalType type) {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < signal_types.size(), "SynapticElements::set_signal_type: neuron_id is too large: {}", neuron_id);
         signal_types[local_neuron_id] = type;
@@ -293,7 +293,7 @@ public:
         }
 
         for (const auto& neuron_id : disabled_neuron_ids) {
-            const auto local_neuron_id = neuron_id.get_local_id();
+            const auto local_neuron_id = neuron_id.get_neuron_id();
 
             RelearnException::check(local_neuron_id < size, "SynapticElements::update_after_deletion: Cannot disable a neuron with a too large id");
             connected_elements[local_neuron_id] = 0;
@@ -309,7 +309,7 @@ public:
      * @return The number of grown elements
      */
     [[nodiscard]] double get_grown_elements(const NeuronID& neuron_id) const {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < grown_elements.size(), "SynapticElements::get_grown_elements: neuron_id is too large: {}", neuron_id);
         return grown_elements[local_neuron_id];
@@ -322,7 +322,7 @@ public:
      * @return The number of connected elements
      */
     [[nodiscard]] unsigned int get_connected_elements(const NeuronID& neuron_id) const {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < connected_elements.size(), "SynapticElements::get_connected_elements: neuron_id is too large: {}", neuron_id);
         return connected_elements[local_neuron_id];
@@ -335,11 +335,11 @@ public:
      * @return The number of free elements
      */
     [[nodiscard]] unsigned int get_free_elements(const NeuronID& neuron_id) const {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < connected_elements.size(), "SynapticElements::get_free_elements: neuron_id is too large: {}", neuron_id);
         RelearnException::check(connected_elements[local_neuron_id] <= grown_elements[local_neuron_id], "SynapticElements::get_free_elements: More elements were connected then free: {}, {} vs {}", neuron_id, connected_elements[local_neuron_id], grown_elements[local_neuron_id]);
-        
+
         return static_cast<unsigned int>(grown_elements[local_neuron_id] - connected_elements[local_neuron_id]);
     }
 
@@ -351,7 +351,7 @@ public:
      * @return The number of free elements for the signal type
      */
     [[nodiscard]] unsigned int get_free_elements(const NeuronID& neuron_id, const SignalType signal_type) const {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < signal_types.size(), "SynapticElements::get_free_elements: neuron_id is too large for the signal types: {}", neuron_id);
 
@@ -361,7 +361,7 @@ public:
 
         RelearnException::check(local_neuron_id < connected_elements.size(), "SynapticElements::get_free_elements: neuron_id is too large: {}", neuron_id);
         RelearnException::check(connected_elements[local_neuron_id] <= grown_elements[local_neuron_id], "SynapticElements::get_free_elements: More elements were connected then free: {}, {} vs {}", neuron_id, connected_elements[local_neuron_id], grown_elements[local_neuron_id]);
-        
+
         return static_cast<unsigned int>(grown_elements[local_neuron_id] - connected_elements[local_neuron_id]);
     }
 
@@ -372,7 +372,7 @@ public:
      * @return The accumulated delta
      */
     [[nodiscard]] double get_delta(const NeuronID& neuron_id) const {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < deltas_since_last_update.size(), "SynapticElements::get_delta: neuron_id is too large: {}", neuron_id);
         return deltas_since_last_update[local_neuron_id];
@@ -385,7 +385,7 @@ public:
      * @return The signal type
      */
     [[nodiscard]] SignalType get_signal_type(const NeuronID& neuron_id) const {
-        const auto local_neuron_id = neuron_id.get_local_id();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < signal_types.size(), "SynapticElements::get_signal_type: neuron_id is too large: {}", neuron_id);
         return signal_types[local_neuron_id];
@@ -460,7 +460,10 @@ public:
 
             const auto target_calcium_value = target_calcium[neuron_id];
             const auto current_calcium_value = calcium[neuron_id];
-            const auto inc = gaussian_growth_curve(current_calcium_value, min_C_level_to_grow, target_calcium_value, nu);
+
+            const auto clamped_target = std::max(target_calcium_value, min_C_level_to_grow);
+
+            const auto inc = gaussian_growth_curve(current_calcium_value, min_C_level_to_grow, clamped_target, nu);
 
             deltas_since_last_update[neuron_id] += inc;
         }
@@ -506,7 +509,6 @@ private:
     [[nodiscard]] unsigned int update_number_elements(const NeuronID& neuron_id);
 
 public:
-    static constexpr double default_C_target{ 0.7 }; // In Sebastians work: 0.5
     static constexpr double default_eta_Axons{ 0.4 }; // In Sebastians work: 0.0
     static constexpr double default_eta_Dendrites_exc{ 0.1 }; // In Sebastians work: 0.0
     static constexpr double default_eta_Dendrites_inh{ 0.0 }; // In Sebastians work: 0.0

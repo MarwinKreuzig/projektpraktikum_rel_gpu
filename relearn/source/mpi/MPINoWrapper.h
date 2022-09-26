@@ -4,8 +4,8 @@
 
 #if !RELEARN_MPI_FOUND
 
-#include "CommunicationMap.h"
 #include "io/LogFiles.h"
+#include "mpi/CommunicationMap.h"
 #include "util/MemoryHolder.h"
 #include "util/RelearnException.h"
 
@@ -44,26 +44,6 @@ public:
 
     using AsyncToken = MPI_Request;
 
-private:
-    MPINoWrapper() = default;
-
-    static inline const int num_ranks{ 1 }; // Number of ranks in MPI_COMM_WORLD
-    static inline const int my_rank{ 0 }; // My rank in MPI_COMM_WORLD
-
-    static inline size_t num_neurons{}; // Total number of neurons
-
-    template <typename AdditionalCellAttributes>
-    static inline std::vector<OctreeNode<AdditionalCellAttributes>> base_ptr{ 0 }; // Start address of MPI-allocated memory
-
-    static inline int64_t base_pointers{}; // RMA window base pointers of all procs
-
-    static inline std::string my_rank_str{ '0' };
-
-    static void all_gather(const void* own_data, void* buffer, int size);
-
-    static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank);
-
-public:
     static void init(int argc, char** argv);
 
     template <typename AdditionalCellAttributes>
@@ -79,7 +59,8 @@ public:
         // NOLINTNEXTLINE
         auto cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(base_ptr<AdditionalCellAttributes>.data());
 
-        MemoryHolder<AdditionalCellAttributes>::init(cast, max_num_objects);
+        std::span<OctreeNode<AdditionalCellAttributes>> span{ cast, max_num_objects };
+        MemoryHolder<AdditionalCellAttributes>::init(span);
 
         LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
     }
@@ -121,8 +102,15 @@ public:
     }
 
     template <typename AdditionalCellAttributes>
-    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, [[maybe_unused]] int target_rank, const OctreeNode<AdditionalCellAttributes>* src) {
-        *dst = *src;
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const OctreeNode<AdditionalCellAttributes>* src, const int number_elements) {
+        for (auto i = 0; i < number_elements; i++) {
+            dst[i] = src[i];
+        }
+    }
+
+    template <typename AdditionalCellAttributes>
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const uint64_t offset, const int number_elements) {
+        RelearnException::fail("MPINoWrapper::download_octree_node: Cannot perform the offset version without MPI.");
     }
 
     [[nodiscard]] static int64_t get_base_pointers() noexcept {
@@ -171,6 +159,25 @@ public:
     }
 
     static void finalize();
+
+private:
+    MPINoWrapper() = default;
+
+    static inline const int num_ranks{ 1 }; // Number of ranks in MPI_COMM_WORLD
+    static inline const int my_rank{ 0 }; // My rank in MPI_COMM_WORLD
+
+    static inline size_t num_neurons{}; // Total number of neurons
+
+    template <typename AdditionalCellAttributes>
+    static inline std::vector<OctreeNode<AdditionalCellAttributes>> base_ptr{ 0 }; // Start address of MPI-allocated memory
+
+    static inline int64_t base_pointers{}; // RMA window base pointers of all procs
+
+    static inline std::string my_rank_str{ '0' };
+
+    static void all_gather(const void* own_data, void* buffer, int size);
+
+    static void reduce(const void* src, void* dst, int size, ReduceFunction function, int root_rank);
 };
 
 #endif
