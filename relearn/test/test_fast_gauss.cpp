@@ -939,6 +939,17 @@ TEST_F(FMMTest, unpack_nodes) {
     EXPECT_EQ(v.unpacked, true);
     EXPECT_TRUE(stack.empty());
 
+    //already unpacked
+    p.unpacked = true;
+    stack.emplace_back(p);
+    unpack_node_pair(fmm, stack);
+    v = stack.pop_back();
+    EXPECT_EQ(p.source, v.source);
+    EXPECT_EQ(p.target, v.target);
+    EXPECT_EQ(p.unpacked, true);
+    EXPECT_EQ(v.unpacked, true);
+    EXPECT_TRUE(stack.empty());
+
     // normal
     if (leaf_level > 3) {
 
