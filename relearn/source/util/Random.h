@@ -50,6 +50,7 @@ enum class RandomHolderKey : char {
     SynapticElements = 6,
     NeuronsExtraInformation = 7,
     Connector = 8,
+    BackgroundActivity = 9,
 };
 
 constexpr size_t NUMBER_RANDOM_HOLDER_KEYS = 9;

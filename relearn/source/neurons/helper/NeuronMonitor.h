@@ -240,7 +240,7 @@ public:
         const auto fired_fraction = static_cast<double>(neurons_to_monitor->neuron_model->fired_recorder[local_neuron_id]) / static_cast<double>(Config::monitor_step);
         const auto secondary = neurons_to_monitor->neuron_model->get_secondary_variable(target_neuron_id);
         const auto synaptic_input = neurons_to_monitor->neuron_model->input_calculator->synaptic_input[local_neuron_id];
-        const auto background_activity = neurons_to_monitor->neuron_model->input_calculator->background_activity[local_neuron_id];
+        const auto background_activity = neurons_to_monitor->neuron_model->background_calculator->background_activity[local_neuron_id];
 
         const auto axons = neurons_to_monitor->axons->grown_elements[local_neuron_id];
         const auto axons_connected = neurons_to_monitor->axons->connected_elements[local_neuron_id];

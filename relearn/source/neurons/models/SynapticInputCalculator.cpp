@@ -13,8 +13,6 @@
 #include "mpi/MPIWrapper.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/models/FiredStatusCommunicationMap.h"
-#include "util/Random.h"
-#include "util/Timers.h"
 
 #include <algorithm>
 
@@ -22,9 +20,7 @@ void SynapticInputCalculator::init(const size_t number_neurons) {
     RelearnException::check(number_neurons > 0, "SynapticInputCalculator::init: number_neurons was 0");
 
     number_local_neurons = number_neurons;
-
     synaptic_input.resize(number_neurons, 0.0);
-    background_activity.resize(number_neurons, 0.0);
 
     fired_status_comm = std::make_unique<FiredStatusCommunicationMap>(MPIWrapper::get_num_ranks(), number_neurons);
 }
@@ -35,20 +31,15 @@ void SynapticInputCalculator::create_neurons(const size_t creation_count) {
 
     const auto current_size = number_local_neurons;
     const auto new_size = current_size + creation_count;
-    number_local_neurons = new_size;
 
+    number_local_neurons = new_size;
     synaptic_input.resize(new_size, 0.0);
-    background_activity.resize(new_size, 0.0);
 
     fired_status_comm = std::make_unique<FiredStatusCommunicationMap>(MPIWrapper::get_num_ranks(), new_size);
 }
 
 void SynapticInputCalculator::set_synaptic_input(const double value) noexcept {
     std::ranges::fill(synaptic_input, value);
-}
-
-void SynapticInputCalculator::set_background_activity(const double value) noexcept {
-    std::ranges::fill(background_activity, value);
 }
 
 double SynapticInputCalculator::get_local_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus> fired, const NeuronID& neuron_id) {
@@ -82,32 +73,4 @@ double SynapticInputCalculator::get_distant_synaptic_input(const NetworkGraph& n
     }
 
     return distant_input;
-}
-
-void SynapticInputCalculator::update_background_activity(const std::vector<UpdateStatus>& disable_flags) {
-    Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
-
-    const auto background_activity_stddev = get_background_activity_stddev();
-    const auto background_activity_mean = get_background_activity_mean();
-    const auto base_background_activity = get_base_background_activity();
-
-    const auto number_local_neurons = get_number_neurons();
-
-    // There might be background activity
-    if (background_activity_stddev > 0.0) {
-        for (size_t neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
-            if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
-                continue;
-            }
-
-            const double rnd = RandomHolder::get_random_normal_double(RandomHolderKey::NeuronModel, background_activity_mean, background_activity_stddev);
-            const double input = base_background_activity + rnd;
-
-            set_background_activity(neuron_id, input);
-        }
-    } else {
-        set_background_activity(base_background_activity);
-    }
-
-    Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
 }

@@ -18,17 +18,19 @@ using models::PoissonModel;
 PoissonModel::PoissonModel(
     const unsigned int h,
     std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
+    std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
     const double x_0,
     const double tau_x,
     const unsigned int refrac_time)
-    : NeuronModel{ h, std::move(synaptic_input_calculator) }
+    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator) }
     , x_0{ x_0 }
     , tau_x{ tau_x }
     , refrac_time{ refrac_time } {
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> PoissonModel::clone() const {
-    return std::make_unique<PoissonModel>(get_h(), get_synaptic_input_calculator()->clone(), x_0, tau_x, refrac_time);
+    return std::make_unique<PoissonModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(),
+        x_0, tau_x, refrac_time);
 }
 
 [[nodiscard]] std::vector<ModelParameter> PoissonModel::get_parameter() {

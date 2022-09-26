@@ -13,6 +13,7 @@
 #include "mpi/CommunicationMap.h"
 #include "neurons/FiredStatus.h"
 #include "neurons/UpdateStatus.h"
+#include "neurons/models/BackgroundActivityCalculator.h"
 #include "neurons/models/ModelParameter.h"
 #include "neurons/models/SynapticInputCalculator.h"
 #include "util/RelearnException.h"
@@ -47,10 +48,12 @@ public:
      * @brief Construcs a new instance of type NeuronModel with 0 neurons.
      * @param h The step size for the numerical integration
      * @param synaptic_input_calculator The object that is resonsible for calculating the synaptic input
+     * @param background_activity_calculator The object that is resonsible for calculating the background activity
      */
-    NeuronModel(unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator)
+    NeuronModel(unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator, std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator)
         : h(h)
-        , input_calculator(std::move(synaptic_input_calculator)) { }
+        , input_calculator(std::move(synaptic_input_calculator))
+        , background_calculator(std::move(background_activity_calculator)) { }
 
     virtual ~NeuronModel() = default;
 
@@ -142,7 +145,7 @@ public:
     }
 
     [[nodiscard]] const std::vector<double>& get_background_activity() const noexcept {
-        return input_calculator->get_background_activity();
+        return background_calculator->get_background_activity();
     }
 
     /**
@@ -274,11 +277,15 @@ protected:
     }
 
     [[nodiscard]] double get_background_activity(const NeuronID& neuron_id) const {
-        return input_calculator->get_background_activity(neuron_id);
+        return background_calculator->get_background_activity(neuron_id);
     }
 
     [[nodiscard]] const std::unique_ptr<SynapticInputCalculator>& get_synaptic_input_calculator() const noexcept {
         return input_calculator;
+    }
+
+    [[nodiscard]] const std::unique_ptr<BackgroundActivityCalculator>& get_background_activity_calculator() const noexcept {
+        return background_calculator;
     }
 
 private:
@@ -294,6 +301,7 @@ private:
     std::vector<FiredStatus> fired{}; // If the neuron fired in the current update step
 
     std::unique_ptr<SynapticInputCalculator> input_calculator{};
+    std::unique_ptr<BackgroundActivityCalculator> background_calculator{};
 };
 
 namespace models {
@@ -312,6 +320,7 @@ public:
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
      * @param h See NeuronModel(...)
      * @param synaptic_input_calculator See NeuronModel(...)
+     * @param background_activity_calculator See NeuronModel(...)
      * @param x_0 The resting membrane potential
      * @param tau_x The dampening factor by which the membrane potential decreases
      * @param refrac_time The number of steps a neuron doesn't spike after spiking
@@ -319,6 +328,7 @@ public:
     PoissonModel(
         unsigned int h,
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
+        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
         double x_0,
         double tau_x,
         unsigned int refrac_time);
@@ -439,6 +449,7 @@ public:
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
      * @param h See NeuronModel(...)
      * @param synaptic_input_calculator See NeuronModel(...)
+     * @param background_activity_calculator See NeuronModel(...)
      * @param a The dampening factor for u(t)
      * @param b The dampening factor for v(t) inside the equation for d/dt u(t)
      * @param c The reset activity
@@ -451,6 +462,7 @@ public:
     IzhikevichModel(
         unsigned int h,
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
+        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
         double a,
         double b,
         double c,
@@ -636,6 +648,7 @@ public:
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
      * @param h See NeuronModel(...)
      * @param synaptic_input_calculator See NeuronModel(...)
+     * @param background_activity_calculator See NeuronModel(...)
      * @param a The constant inside the equation for d/dt w(t)
      * @param b The dampening factor for w(t) inside the equation for d/dt w(t)
      * @param phi The dampening factor for w(t)
@@ -643,6 +656,7 @@ public:
     FitzHughNagumoModel(
         unsigned int h, 
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
+        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
         double a,
         double b,
         double phi);
@@ -767,6 +781,7 @@ public:
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
      * @param h See NeuronModel(...)
      * @param synaptic_input_calculator See NeuronModel(...)
+     * @param background_activity_calculator See NeuronModel(...)
      * @param C The dampening factor for v(t) (membrane capacitance)
      * @param g_T The leak conductance
      * @param E_L The reset membrane potential (leak reversal potential)
@@ -780,6 +795,7 @@ public:
     AEIFModel(
         unsigned int h,
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
+        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
         double C,
         double g_L,
         double E_L,

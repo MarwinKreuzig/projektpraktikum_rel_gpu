@@ -19,10 +19,12 @@
 #include "neurons/CalciumCalculator.h"
 #include "neurons/ElementType.h"
 #include "neurons/helper/NeuronMonitor.h"
-#include "neurons/models/SynapticInputCalculators.h"
+#include "neurons/models/BackgroundActivityCalculator.h"
+#include "neurons/models/BackgroundActivityCalculators.h"
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
 #include "neurons/models/SynapticInputCalculator.h"
+#include "neurons/models/SynapticInputCalculators.h"
 #include "sim/NeuronToSubdomainAssignment.h"
 #include "sim/Simulation.h"
 #include "sim/file/SubdomainFromFile.h"
@@ -226,6 +228,13 @@ int main(int argc, char** argv) {
         { "logarithmic", SynapticInputCalculatorType::Logarithmic },
     };
 
+    BackgroundActivityCalculatorType chosen_background_activity_calculator_type = BackgroundActivityCalculatorType::Null;
+    std::map<std::string, BackgroundActivityCalculatorType> cli_parse_background_activity_calculator_type{
+        { "null", BackgroundActivityCalculatorType::Null },
+        { "constant", BackgroundActivityCalculatorType::Constant },
+        { "normal", BackgroundActivityCalculatorType::Normal },
+    };
+
     size_t simulation_steps{};
     app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms.")->required();
 
@@ -319,14 +328,20 @@ int main(int argc, char** argv) {
     auto* const opt_neuron_model = app.add_option("--neuron-model", chosen_neuron_model, "The neuron model");
     opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_neuron_model, CLI::ignore_case));
 
-    double base_background_activity{ SynapticInputCalculator::default_base_background_activity };
-    app.add_option("--base-background-activity", base_background_activity, "The base background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
+    auto* const opt_background_activity = app.add_option("--background-activity", chosen_background_activity_calculator_type, "The type of background activity");
+    opt_background_activity->transform(CLI::CheckedTransformer(cli_parse_background_activity_calculator_type, CLI::ignore_case));
 
-    double background_activity_mean{ SynapticInputCalculator::default_background_activity_mean };
-    app.add_option("--background-activity-mean", background_activity_mean, "The mean background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
+    double base_background_activity{ BackgroundActivityCalculator::default_base_background_activity };
+    auto* const opt_base_background_activity = app.add_option("--base-background-activity", base_background_activity,
+        "The base background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
 
-    double background_activity_stddev{ SynapticInputCalculator::default_background_activity_stddev };
-    app.add_option("--background-activity-stddev", background_activity_stddev, "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
+    double background_activity_mean{ BackgroundActivityCalculator::default_background_activity_mean };
+    auto* const opt_mean_background_activity = app.add_option("--background-activity-mean", background_activity_mean,
+        "The mean background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
+
+    double background_activity_stddev{ BackgroundActivityCalculator::default_background_activity_stddev };
+    auto* const opt_stddev_background_activity = app.add_option("--background-activity-stddev", background_activity_stddev,
+        "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
 
     double synapse_conductance{ SynapticInputCalculator::default_k };
     app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transfered to its neighbors when a neuron spikes. Default is 0.03");
@@ -456,6 +471,26 @@ int main(int argc, char** argv) {
     if (target_calcium_decay_type == TargetCalciumDecay::Absolute) {
         RelearnException::check(target_calcium_decay_step > 0, "The target calcium decay step is 0 but must be larger than 0.");
         RelearnException::check(target_calcium_decay_amount > 0.0, "The target calcium decay amount must be larger than 0.0 for absolute decay.");
+    }
+
+    std::unique_ptr<BackgroundActivityCalculator> background_activity_calculator{};
+    if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Null) {
+        RelearnException::check(!static_cast<bool>(*opt_base_background_activity), "Setting the base background activity is not valid when choosing the null-background calculator (or not setting it at all).");
+        RelearnException::check(!static_cast<bool>(*opt_mean_background_activity), "Setting the mean background activity is not valid when choosing the null-background calculator (or not setting it at all).");
+        RelearnException::check(!static_cast<bool>(*opt_stddev_background_activity), "Setting the stddev background activity is not valid when choosing the null-background calculator (or not setting it at all).");
+
+        background_activity_calculator = std::make_unique<NullBackgroundActivityCalculator>();
+    } else if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Constant) {
+        RelearnException::check(!static_cast<bool>(*opt_mean_background_activity), "Setting the mean background activity is not valid when choosing the constant-background calculator.");
+        RelearnException::check(!static_cast<bool>(*opt_stddev_background_activity), "Setting the stddev background activity is not valid when choosing the constant-background calculator.");
+
+        background_activity_calculator = std::make_unique<ConstantBackgroundActivityCalculator>(base_background_activity);    
+    } else if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Normal) {
+        RelearnException::check(background_activity_stddev > 0.0, "When choosing the normal-background calculator, the standard deviation must be set to > 0.0.");
+
+        background_activity_calculator = std::make_unique<NormalBackgroundActivityCalculator>(base_background_activity, background_activity_mean, background_activity_stddev);
+    } else {
+        RelearnException::fail("Chose a background activity calculator that is not implemented");
     }
 
     RelearnException::check(growth_rate >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
@@ -590,28 +625,32 @@ int main(int argc, char** argv) {
 
     std::unique_ptr<SynapticInputCalculator> input_calculator{};
     if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
-        input_calculator = std::make_unique<LinearSynapticInputCalculator>(synapse_conductance, base_background_activity, background_activity_mean, background_activity_stddev);
+        input_calculator = std::make_unique<LinearSynapticInputCalculator>(synapse_conductance);
     } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic) {
-        input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, base_background_activity, background_activity_mean, background_activity_stddev);
+        input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance);
+    } else {
+        RelearnException::fail("Chose a synaptic input calculator that is not implemented");
     }
 
     std::unique_ptr<NeuronModel> neuron_model{};
     if (chosen_neuron_model == NeuronModelEnum::Poisson) {
-        neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator),
+        neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
             models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
     } else if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
-        neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator),
+        neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
             models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
             models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
             models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
     } else if (chosen_neuron_model == NeuronModelEnum::FitzHughNagumo) {
-        neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator),
+        neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
             models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
     } else if (chosen_neuron_model == NeuronModelEnum::AEIF) {
-        neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator),
+        neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
             models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
             models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
             models::AEIFModel::default_V_spike);
+    } else {
+        RelearnException::fail("Chose a neuron model that is not implemented");
     }
 
     auto calcium_calculator = std::make_unique<CalciumCalculator>(target_calcium_decay_type, target_calcium_decay_amount, target_calcium_decay_step);

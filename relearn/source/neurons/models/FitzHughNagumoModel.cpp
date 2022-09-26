@@ -15,17 +15,19 @@ using models::FitzHughNagumoModel;
 FitzHughNagumoModel::FitzHughNagumoModel(
     const unsigned int h,
     std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
+    std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
     const double a,
     const double b,
     const double phi)
-    : NeuronModel{ h, std::move(synaptic_input_calculator) }
+    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator) }
     , a{ a }
     , b{ b }
     , phi{ phi } {
 }
 
 std::unique_ptr<NeuronModel> FitzHughNagumoModel::clone() const {
-    return std::make_unique<FitzHughNagumoModel>(get_h(), get_synaptic_input_calculator()->clone(), a, b, phi);
+    return std::make_unique<FitzHughNagumoModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(),
+        a, b, phi);
 }
 
 std::vector<ModelParameter> FitzHughNagumoModel::get_parameter() {

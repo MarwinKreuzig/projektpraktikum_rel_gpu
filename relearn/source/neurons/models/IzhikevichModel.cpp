@@ -15,6 +15,7 @@ using models::IzhikevichModel;
 IzhikevichModel::IzhikevichModel(
     const unsigned int h,
     std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
+    std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
     const double a,
     const double b,
     const double c,
@@ -23,7 +24,7 @@ IzhikevichModel::IzhikevichModel(
     const double k1,
     const double k2,
     const double k3)
-    : NeuronModel{ h, std::move(synaptic_input_calculator) }
+    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator) }
     , a{ a }
     , b{ b }
     , c{ c }
@@ -35,7 +36,8 @@ IzhikevichModel::IzhikevichModel(
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> IzhikevichModel::clone() const {
-    return std::make_unique<IzhikevichModel>(get_h(), get_synaptic_input_calculator()->clone(), a, b, c, d, V_spike, k1, k2, k3);
+    return std::make_unique<IzhikevichModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(),
+        a, b, c, d, V_spike, k1, k2, k3);
 }
 
 [[nodiscard]] std::vector<ModelParameter> IzhikevichModel::get_parameter() {
