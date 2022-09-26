@@ -373,7 +373,7 @@ int main(int argc, char** argv) {
     double beta{ CalciumCalculator::default_beta };
     app.add_option("--beta", beta, "The amount of calcium ions gathered when a neuron fires. Default is 0.001.");
 
-    size_t h{ NeuronModel::default_h };
+    unsigned int h{ NeuronModel::default_h };
     app.add_option("--integration-step-size", h, "The step size for the numerical integration of the electrical acticity. Default is 10.");
 
     double retract_ratio{ SynapticElements::default_vacant_retract_ratio };

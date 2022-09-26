@@ -12,6 +12,7 @@
 
 #include "util/RelearnException.h"
 
+#include <functional>
 #include <string>
 #include <variant>
 
@@ -44,6 +45,12 @@ public:
         RelearnException::check(min <= max, "Parameter::Parameter: min was larger than max: {} vs {}", min, max);
     }
 
+    Parameter(const Parameter& other) = default;
+    Parameter(Parameter& other) = default;
+
+    Parameter& operator=(const Parameter& other) = default;
+    Parameter& operator=(Parameter&& other) = default;
+
     /**
      * @brief Returns the name for the parameter
      * @return The name
@@ -61,7 +68,7 @@ public:
         RelearnException::check(min_ <= val, "Parameter::set_value: val was smaller than min_");
         RelearnException::check(val <= max_, "Parameter::set_value: val was larger than max_");
 
-        value_ = val;
+        value_.get() = val;
     }
 
     /**
@@ -69,7 +76,7 @@ public:
      * @return The value
      */
     [[nodiscard]] const value_type& value() const noexcept {
-        return value_;
+        return value_.get();
     }
 
     /**
@@ -89,10 +96,10 @@ public:
     }
 
 private:
-    const std::string name_{}; // name of the parameter
-    T& value_{}; // value of the parameter
-    const T min_{}; // minimum value of the parameter
-    const T max_{}; // maximum value of the parameter
+    std::string name_{}; // name of the parameter
+    std::reference_wrapper<T> value_{}; // value of the parameter
+    T min_{}; // minimum value of the parameter
+    T max_{}; // maximum value of the parameter
 };
 
 /**

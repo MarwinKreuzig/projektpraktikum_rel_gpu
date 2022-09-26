@@ -106,11 +106,11 @@ TEST_F(MonitorParserTest, testParseDescriptionsFixed) {
 
 TEST_F(MonitorParserTest, testParseDescriptionsException) {
     constexpr auto description = "2:100;5:6;0:122;2:100;1674:0;89512:6;0:0;0:0";
-    ASSERT_THROW(MonitorParser::parse_multiple_description(description, -2), RelearnException);
-    ASSERT_THROW(MonitorParser::parse_multiple_description(description, -3), RelearnException);
-    ASSERT_THROW(MonitorParser::parse_multiple_description(description, -543), RelearnException);
-    ASSERT_THROW(MonitorParser::parse_multiple_description(description, -78923), RelearnException);
-    ASSERT_THROW(MonitorParser::parse_multiple_description(description, -2104927063), RelearnException);
+    ASSERT_THROW(auto val = MonitorParser::parse_multiple_description(description, -2), RelearnException);
+    ASSERT_THROW(auto val = MonitorParser::parse_multiple_description(description, -3), RelearnException);
+    ASSERT_THROW(auto val = MonitorParser::parse_multiple_description(description, -543), RelearnException);
+    ASSERT_THROW(auto val = MonitorParser::parse_multiple_description(description, -78923), RelearnException);
+    ASSERT_THROW(auto val = MonitorParser::parse_multiple_description(description, -2104927063), RelearnException);
 }
 
 TEST_F(MonitorParserTest, testExtractNeuronIDs) {
@@ -212,7 +212,7 @@ TEST_F(MonitorParserTest, testParseIds) {
     std::vector<RankNeuronId> rank_neuron_ids{};
     rank_neuron_ids.reserve(number_ranks * upper_bound_num_neurons);
 
-    auto my_number_neurons = 0;
+    size_t my_number_neurons = 0;
 
     for (auto rank = 0; rank < number_ranks; rank++) {
         const auto number_neurons = get_random_number_neurons();

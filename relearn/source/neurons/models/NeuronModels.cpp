@@ -25,6 +25,7 @@ void NeuronModel::init(size_t number_neurons) {
     fired_recorder.resize(number_neurons, 0);
 
     input_calculator->init(number_neurons);
+    background_calculator->init(number_neurons);
 }
 
 void NeuronModel::create_neurons(size_t creation_count) {
@@ -37,10 +38,12 @@ void NeuronModel::create_neurons(size_t creation_count) {
     fired_recorder.resize(new_size, 0);
 
     input_calculator->create_neurons(creation_count);
+    background_calculator->create_neurons(creation_count);
 }
 
 void NeuronModel::update_electrical_activity(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
     input_calculator->update_input(network_graph, fired, disable_flags);
+    background_calculator->update_input(disable_flags);
 
     Timers::start(TimerRegion::CALC_ACTIVITY);
 
@@ -69,6 +72,9 @@ std::vector<std::unique_ptr<NeuronModel>> NeuronModel::get_models() {
 
 std::vector<ModelParameter> NeuronModel::get_parameter() {
     auto parameters = input_calculator->get_parameter();
+    auto other_parameters = background_calculator->get_parameter();
+
+    parameters.insert(parameters.end(), other_parameters.begin(), other_parameters.end());
     parameters.emplace_back(Parameter<unsigned int>{ "Number integration steps", h, NeuronModel::min_h, NeuronModel::max_h });
 
     return parameters;
