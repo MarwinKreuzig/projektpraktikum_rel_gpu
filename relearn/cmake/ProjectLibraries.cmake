@@ -39,11 +39,11 @@ if(WIN32)
     add_subdirectory(${boostorg_SOURCE_DIR} ${boostorg_BINARY_DIR})
   endif()
 
-  # include_directories(${boostorg_SOURCE_DIR})
-  target_link_libraries(project_libraries INTERFACE boostorg::random)
+  include_directories(${boostorg_SOURCE_DIR})
+  #target_link_libraries(project_libraries INTERFACE boostorg::random)
 else()
   find_package(Boost REQUIRED COMPONENTS RANDOM)
-  target_link_libraries(project_options INTERFACE Boost::random)
+  #target_link_libraries(project_options INTERFACE Boost::random)
 endif()
 
 # declaration
@@ -75,6 +75,8 @@ get_target_property(spdlog_includes spdlog INTERFACE_INCLUDE_DIRECTORIES)
 set_target_properties(spdlog PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
                                         "${spdlog_includes}")
 target_link_libraries(project_libraries INTERFACE spdlog)
+
+target_link_libraries(project_options INTERFACE Boost::random)
 
 # set compile commands back to on
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

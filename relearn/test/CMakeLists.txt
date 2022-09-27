@@ -41,17 +41,19 @@ add_executable(relearn_tests ${SRC_TST})
 target_sources(
   relearn_tests
   PRIVATE test_barnes_hut.cpp
+		  test_calcium_calculator.cpp
           test_cell.cpp
           test_connector.cpp
           test_fast_gauss.cpp
+          test_kernel.cpp
+          test_kernel_gamma.cpp
           test_kernel_gaussian.cpp
           test_kernel_linear.cpp
           test_kernel_weibull.cpp
-          test_kernel.cpp
+          test_monitor_parser.cpp
           test_network_graph.cpp
           test_neuron_assignment.cpp
           test_neuron_extra_info.cpp
-          test_neuron_id_translator.cpp
           test_neuron_io.cpp
           test_neuron_models.cpp
           test_neurons.cpp
@@ -63,7 +65,6 @@ target_sources(
           test_synaptic_elements.cpp
           test_tagged_id.cpp
           test_vector.cpp
-          test_kernel_gamma.cpp
           ${CMAKE_BINARY_DIR}/test_get_relearn_path.cpp
           RelearnTest.cpp)
 target_link_libraries(relearn_tests PRIVATE project_options project_libraries)

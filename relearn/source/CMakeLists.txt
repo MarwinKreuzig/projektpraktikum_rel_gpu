@@ -17,12 +17,15 @@ target_sources(
           mpi/MPIWrapper.cpp
           # neurons
           neurons/models/AEIFModel.cpp
-          neurons/models/FitzHughNagumoModel.cpp
           neurons/models/FiredStatusCommunicationMap.cpp
+          neurons/models/FitzHughNagumoModel.cpp
           neurons/models/IzhikevichModel.cpp
           neurons/models/NeuronModels.cpp
           neurons/models/PoissonModel.cpp
           neurons/models/SynapticElements.cpp
+          neurons/models/SynapticInputCalculator.cpp
+          neurons/models/SynapticInputCalculators.cpp
+          neurons/CalciumCalculator.cpp
           neurons/NetworkGraph.cpp
           neurons/Neurons.cpp
           neurons/NeuronsExtraInfo.cpp
@@ -31,11 +34,11 @@ target_sources(
           sim/file/MultipleFilesSynapseLoader.cpp
           sim/file/MultipleSubdomainsFromFile.cpp
           sim/file/SubdomainFromFile.cpp
-          sim/NeuronToSubdomainAssignment.cpp
           sim/random/BoxBasedRandomSubdomainAssignment.cpp
           sim/random/RandomSynapseLoader.cpp
           sim/random/SubdomainFromNeuronDensity.cpp
           sim/random/SubdomainFromNeuronPerRank.cpp
+          sim/NeuronToSubdomainAssignment.cpp
           sim/Simulation.cpp
           sim/SynapseLoader.cpp
           # structure

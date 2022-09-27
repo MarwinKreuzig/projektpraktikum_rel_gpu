@@ -3,12 +3,12 @@ set(BENCHMARK_ENABLE_TESTING
     OFF
     CACHE INTERNAL "")
 FetchContent_Declare(
-  benchmark
+  googlebenchmark
   GIT_REPOSITORY https://github.com/google/benchmark
   GIT_TAG v1.7.0)
 
 # benchmark
-FetchContent_MakeAvailable(benchmark)
+FetchContent_MakeAvailable(googlebenchmark)
 
 add_executable(relearn_benchmarks)
 
