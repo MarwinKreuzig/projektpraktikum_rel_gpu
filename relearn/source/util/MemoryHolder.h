@@ -13,6 +13,7 @@
 #include "Config.h"
 #include "util/RelearnException.h"
 
+#include <memory>
 #include <span>
 #include <unordered_map>
 
@@ -39,6 +40,7 @@ public:
      */
     static void init(std::span<OctreeNode<AdditionalCellAttributes>> memory) noexcept {
         memory_holder = memory;
+        std::ranges::uninitialized_default_construct(memory_holder);
     }
 
     /**
@@ -53,7 +55,7 @@ public:
         RelearnException::check(parent != nullptr, "MemoryHolder::get_available: parent is nullptr");
         RelearnException::check(octant < Constants::number_oct, "MemoryHolder::get_available: octant is too large: {} vs {}", octant, Constants::number_oct);
 
-        if (parent_to_offset.find(parent) == parent_to_offset.end()) {
+        if (!parent_to_offset.contains(parent)) {
             parent_to_offset[parent] = current_filling;
             current_filling += Constants::number_oct;
         }

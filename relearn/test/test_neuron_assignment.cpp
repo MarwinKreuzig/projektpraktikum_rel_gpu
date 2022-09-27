@@ -603,13 +603,8 @@ TEST_F(NeuronAssignmentTest, testFileLoadNetworkSingleSubdomain) {
 }
 
 TEST_F(NeuronAssignmentTest, testFileRoi14SingleSubdomainONCE) {
-#ifdef _WIN32
-    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-4/new_positions.txt" };
-    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-4/new_synapses.txt" };
-#else
-    std::filesystem::path path_to_neurons{ "../input/roi_split/1-4/new_positions.txt" };
-    std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-4/new_synapses.txt" };
-#endif
+    auto path_to_neurons = get_relearn_path() / "input/roi_split/1-4/new_positions.txt";
+    auto path_to_synapses = get_relearn_path() / "input/roi_split/1-4/new_synapses.txt";
 
     const auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
@@ -645,13 +640,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi14SingleSubdomainONCE) {
 }
 
 TEST_F(NeuronAssignmentTest, testFileRoi15SingleSubdomainONCE) {
-#ifdef _WIN32
-    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-5/new_positions.txt" };
-    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-5/new_synapses.txt" };
-#else
-    std::filesystem::path path_to_neurons{ "../input/roi_split/1-5/new_positions.txt" };
-    std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-5/new_synapses.txt" };
-#endif
+    auto path_to_neurons = get_relearn_path() / "input/roi_split/1-5/new_positions.txt";
+    auto path_to_synapses = get_relearn_path() / "input/roi_split/1-5/new_synapses.txt";
 
     const auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
@@ -687,13 +677,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi15SingleSubdomainONCE) {
 }
 
 TEST_F(NeuronAssignmentTest, testFileRoi16SingleSubdomainONCE) {
-#ifdef _WIN32
-    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-6/new_positions.txt" };
-    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-6/new_synapses.txt" };
-#else
-    std::filesystem::path path_to_neurons{ "../input/roi_split/1-6/new_positions.txt" };
-    std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-6/new_synapses.txt" };
-#endif
+    auto path_to_neurons = get_relearn_path() / "input/roi_split/1-6/new_positions.txt";
+    auto path_to_synapses = get_relearn_path() / "input/roi_split/1-6/new_synapses.txt";
 
     const auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
@@ -729,13 +714,8 @@ TEST_F(NeuronAssignmentTest, testFileRoi16SingleSubdomainONCE) {
 }
 
 TEST_F(NeuronAssignmentTest, testFileRoi17SingleSubdomainONCE) {
-#ifdef _WIN32
-    std::filesystem::path path_to_neurons{ "../../input/roi_split/1-7/new_positions.txt" };
-    std::optional<std::filesystem::path> path_to_synapses{ "../../input/roi_split/1-7/new_synapses.txt" };
-#else
-    std::filesystem::path path_to_neurons{ "../input/roi_split/1-7/new_positions.txt" };
-    std::optional<std::filesystem::path> path_to_synapses{ "../input/roi_split/1-7/new_synapses.txt" };
-#endif
+    auto path_to_neurons = get_relearn_path() / "input/roi_split/1-7/new_positions.txt";
+    auto path_to_synapses = get_relearn_path() / "input/roi_split/1-7/new_synapses.txt";
 
     const auto part = std::make_shared<Partition>(1, 0);
     SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
@@ -784,7 +764,7 @@ TEST_F(NeuronAssignmentTest, testMultipleFilesNonExistentPositionPath) {
 
     for (auto rank = 0; rank < golden_number_ranks; rank++) {
         auto partition = std::make_shared<Partition>(golden_number_ranks, rank);
-        ASSERT_THROW(MultipleSubdomainsFromFile msff(std::filesystem::path("./asfhasdfböaslidhsdjfnasd"), {}, partition);, RelearnException);
+        ASSERT_THROW(MultipleSubdomainsFromFile msff(std::filesystem::path("./asfhasdfbï¿½aslidhsdjfnasd"), {}, partition);, RelearnException);
     }
 }
 
