@@ -43,6 +43,9 @@ include(cmake/StaticAnalyzers.cmake)
 
 include(cmake/VisualStudio.cmake)
 
+# utilities
+include(cmake/Utils.cmake)
+
 add_subdirectory(source)
 
 if(NOT ENABLE_SCOREP)

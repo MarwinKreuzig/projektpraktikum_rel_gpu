@@ -20,6 +20,14 @@ add_custom_target(
     ${CMAKE_CTEST_COMMAND} ${check_args}
   USES_TERMINAL)
 
+if(${COVERAGE_REPORT_AVAILABLE})
+  add_custom_target(
+    check-coverage
+    DEPENDS check
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target
+            coverage-report)
+endif()
+
 # # googletest
 FetchContent_Declare(
   googletest
@@ -41,7 +49,7 @@ add_executable(relearn_tests ${SRC_TST})
 target_sources(
   relearn_tests
   PRIVATE test_barnes_hut.cpp
-		  test_calcium_calculator.cpp
+          test_calcium_calculator.cpp
           test_cell.cpp
           test_connector.cpp
           test_fast_gauss.cpp
