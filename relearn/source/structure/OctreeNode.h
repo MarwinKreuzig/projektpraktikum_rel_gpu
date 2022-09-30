@@ -512,7 +512,6 @@ private:
 
     std::uint16_t level{ std::numeric_limits<std::uint16_t>::max() };
     bool parent{ false };
-    uint16_t level{0};
 
     int rank{ -1 }; // MPI rank who owns this octree node
 

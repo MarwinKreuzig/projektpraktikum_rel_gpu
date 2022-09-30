@@ -196,7 +196,7 @@ TEST_F(FMMTest, testOctreeUpdateLocalTreesNumberDendritesFMM) {
 
     std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::Enabled);
 
-    const auto max_vacant_elements = uid_max_vacant(mt);
+    const auto max_vacant_elements = get_random_synaptic_element_count();
 
     auto elements = create_synaptic_elements(num_neurons, mt, max_vacant_elements);
 
@@ -246,7 +246,7 @@ TEST_F(FMMTest, testOctreeUpdateLocalTreesNumberDendritesFMM) {
 
 TEST_F(FMMTest, testOctreeUpdateLocalTreesPositionDendritesFMM) {
     const auto my_rank = MPIWrapper::get_my_rank();
-
+    const auto& [min, max] = get_random_simulation_box_size();
     auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
     auto& octree = *octree_ptr;
 
@@ -809,23 +809,23 @@ TEST_F(FMMTest, test_init_stack) {
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons);
 
-    auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(min, max, 0);
+    auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
 
     std::map<int, Vec3d> positions{};
     for (const auto& [position, id] : neurons_to_place) {
-        octree->insert(position, id, 0);
-        positions[id.get_local_id()] = position;
+        octree->insert(position, id);
+        positions[id.get_neuron_id()] = position;
     }
 
     octree->initializes_leaf_nodes(number_neurons);
 
     FastMultipoleMethods fmm(octree);
+
     fmm.set_synaptic_elements(axons, excitatory_dendrites, inhibitory_dendrites);
 
     const auto update_status = get_update_status(number_neurons);
 
-    ASSERT_NO_THROW(fmm.update_leaf_nodes(update_status));
-    ASSERT_NO_THROW(octree->update_local_trees());
+    ASSERT_NO_THROW(fmm.update_octree(update_status));
 
     // start testing
     Stack<FastMultipoleMethods::stack_entry> stack = init_stack(fmm, SignalType::Excitatory);
@@ -859,23 +859,23 @@ TEST_F(FMMTest, unpack_nodes) {
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons);
 
-    auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(min, max, 0);
+    auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
 
     std::map<int, Vec3d> positions{};
     for (const auto& [position, id] : neurons_to_place) {
-        octree->insert(position, id, 0);
-        positions[id.get_local_id()] = position;
+        octree->insert(position, id);
+        positions[id.get_neuron_id()] = position;
     }
 
     octree->initializes_leaf_nodes(number_neurons);
 
     FastMultipoleMethods fmm(octree);
+
     fmm.set_synaptic_elements(axons, excitatory_dendrites, inhibitory_dendrites);
 
     const auto update_status = get_update_status(number_neurons);
 
-    ASSERT_NO_THROW(fmm.update_leaf_nodes(update_status));
-    ASSERT_NO_THROW(octree->update_local_trees());
+    ASSERT_NO_THROW(fmm.update_octree(update_status));
 
     // start testing
     auto& leaf_nodes = octree->get_leaf_nodes();
@@ -952,23 +952,23 @@ TEST_F(FMMTest, align_interaction_list) {
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons);
 
-    auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(min, max, 0);
+     auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
 
     std::map<int, Vec3d> positions{};
     for (const auto& [position, id] : neurons_to_place) {
-        octree->insert(position, id, 0);
-        positions[id.get_local_id()] = position;
+        octree->insert(position, id);
+        positions[id.get_neuron_id()] = position;
     }
 
     octree->initializes_leaf_nodes(number_neurons);
 
     FastMultipoleMethods fmm(octree);
+
     fmm.set_synaptic_elements(axons, excitatory_dendrites, inhibitory_dendrites);
 
     const auto update_status = get_update_status(number_neurons);
 
-    ASSERT_NO_THROW(fmm.update_leaf_nodes(update_status));
-    ASSERT_NO_THROW(octree->update_local_trees());
+    ASSERT_NO_THROW(fmm.update_octree(update_status));
 
     // start testing
     auto& leaf_nodes = octree->get_leaf_nodes();

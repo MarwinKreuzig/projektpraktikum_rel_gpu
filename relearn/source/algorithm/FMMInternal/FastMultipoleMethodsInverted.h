@@ -15,7 +15,7 @@
 #include "FastMultipoleMethodsBase.h"
 #include "Types.h"
 #include "algorithm/Connector.h"
-#include "algorithm/ExchangingAlgorithm.h"
+#include "algorithm/Internal/ExchangingAlgorithm.h"
 #include "neurons/UpdateStatus.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "structure/OctreeNode.h"
@@ -35,13 +35,10 @@ class OctreeImplementation;
 class SynapticElements;
 
 /**
- * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
+ * This class represents the implementation and adaptation of the FastMultipoleMethodsInverted algorithm. The parameters can be set on the fly.
  * It is strongly tied to Octree, which might perform MPI communication via NodeCache::download_children()
  */
-class FastMultipoleMethodsInverted : public BackwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
-
-private:
-    std::shared_ptr<OctreeImplementation<FastMultipoleMethodsInverted>> global_tree{};
+class FastMultipoleMethodsInverted : public BackwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, FastMultipoleMethodsCell> {
 
 public:
     using AdditionalCellAttributes = FastMultipoleMethodsCell;
@@ -56,20 +53,8 @@ public:
      * @param octree The octree on which the algorithm is to be performed, not null
      * @exception Throws a RelearnException if octree is nullptr
      */
-    explicit FastMultipoleMethodsInverted(const std::shared_ptr<OctreeImplementation<FastMultipoleMethodsInverted>>& octree)
-        : global_tree(octree) {
-        RelearnException::check(octree != nullptr, "FastMultipoleMethodsInverted::FastMultipoleMethodsInverted: octree was null");
-    }
-
-    /**
-     * @brief Updates all leaf nodes in the octree by the algorithm
-     * @param disable_flags Flags that indicate if a neuron id disabled (0) or enabled (otherwise)
-     * @param axons The model for the axons
-     * @param excitatory_dendrites The model for the excitatory dendrites
-     * @param inhibitory_dendrites The model for the inhibitory dendrites
-     * @exception Throws a RelearnException if the vectors have different sizes or the leaf nodes are not in order of their neuron id
-     */
-    void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) override;
+    explicit FastMultipoleMethodsInverted(const std::shared_ptr<OctreeImplementation<FastMultipoleMethodsCell>>& octree)
+        : BackwardAlgorithm(octree) { }
 
     /**
      * @brief Updates the passed node with the values of its children according to the algorithm
@@ -77,10 +62,10 @@ public:
      * @exception Throws a RelearnException if node is nullptr
      */
     static void update_functor(OctreeNode<FastMultipoleMethodsCell>* node) {
-        RelearnException::check(node != nullptr, "FastMultipoleMethods::update_functor: node is nullptr");
+        RelearnException::check(node != nullptr, "FastMultipoleMethodsInverted::update_functor: node is nullptr");
 
         // NOLINTNEXTLINE
-        if (node->is_child()) {
+        if (!node->is_parent()) {
             return;
         }
 
@@ -248,7 +233,7 @@ private:
 
     /**
      * @brief Creates a list of possible targets for a source node, which is a leaf,
-     * such that the number of axons in source is at least as large as the number of all dendrites in the targets.
+     * such that the number of dendrites in source is at least as large as the number of all axons in the targets.
      * @param source Node with vacant dendrites. Must be a leaf node.
      * @param interaction_list List of all possible targets.
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).

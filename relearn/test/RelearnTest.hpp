@@ -916,7 +916,7 @@ protected:
 
 class FMMTest : public RelearnTest {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestSuite() {
         SetUpTestCaseTemplate<FastMultipoleMethodsCell>();
     }
 

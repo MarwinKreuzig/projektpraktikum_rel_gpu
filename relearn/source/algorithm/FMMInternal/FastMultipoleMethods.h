@@ -15,6 +15,7 @@
 #include "FastMultipoleMethodsBase.h"
 #include "Types.h"
 #include "algorithm/Internal/ExchangingAlgorithm.h"
+#include "mpi/CommunicationMap.h"
 #include "neurons/UpdateStatus.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "structure/OctreeNode.h"
@@ -36,9 +37,8 @@ class OctreeImplementation;
  * This class represents the implementation and adaptation of fast multipole methods. The parameters can be set on the fly.
  * It is strongly tied to Octree, and might perform MPI communication via NodeCache::download_children()
  */
-class FastMultipoleMethods : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse> {
+class FastMultipoleMethods : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, FastMultipoleMethodsCell> {
     friend class FMMTest;
-    std::shared_ptr<OctreeImplementation<FastMultipoleMethods>> global_tree{};
 
 public:
     using AdditionalCellAttributes = FastMultipoleMethodsCell;

@@ -576,7 +576,7 @@ TYPED_TEST(OctreeTest, testOctreeInsertLocalTree) {
 }
 
 TYPED_TEST(OctreeTest, testOctreeLevel) {
-    using AdditionalCellAttributes = TypeParam::AdditionalCellAttributes;
+    using AdditionalCellAttributes = TypeParam;
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
