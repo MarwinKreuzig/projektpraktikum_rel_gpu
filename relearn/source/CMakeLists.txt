@@ -46,7 +46,9 @@ target_sources(
           structure/SpaceFillingCurve.cpp
           # util
           util/RelearnException.cpp
-          util/Timers.cpp)
+          util/Timers.cpp
+		  
+		  ${relearn_lib_additional_files})
 
 target_include_directories(relearn_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(relearn_lib PROPERTIES ENABLE_EXPORTS 1)
@@ -72,3 +74,6 @@ target_sources(relearn_analysis
 target_link_libraries(relearn_analysis PRIVATE relearn_lib)
 target_link_libraries(relearn_analysis PRIVATE CLI11::CLI11)
 set_target_properties(relearn_analysis PROPERTIES ENABLE_EXPORTS 1)
+
+get_target_property(relearn_lib_sources relearn_lib SOURCES)
+source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${relearn_lib_sources})
