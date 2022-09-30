@@ -4,20 +4,17 @@ set(BENCHMARK_ENABLE_TESTING
     CACHE INTERNAL "")
 FetchContent_Declare(
   googlebenchmark
-  GIT_REPOSITORY https://github.com/google/benchmark
-  GIT_TAG v1.7.0)
+  GIT_REPOSITORY https://github.com/google/benchmark.git
+  GIT_TAG v1.6.1)
 
-# benchmark
 FetchContent_MakeAvailable(googlebenchmark)
 
-add_executable(relearn_benchmarks)
-
-target_sources(
+add_executable(
   relearn_benchmarks
-  PRIVATE main.cpp
-          benchmark_kernel.cpp
-          benchmark_network_graph.cpp
-          benchmark_neuron_model.cpp)
+  main.cpp
+  benchmark_kernel.cpp
+  benchmark_network_graph.cpp
+  benchmark_neuron_model.cpp)
 
 target_link_libraries(relearn_benchmarks PRIVATE project_options
                                                  project_libraries)
