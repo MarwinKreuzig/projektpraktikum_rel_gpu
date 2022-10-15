@@ -100,10 +100,11 @@ public:
 
     /**
      * @brief Updates the background activity based on which neurons to update
+     * @param step The current update step
      * @param disable_flags Which neurons are disabled
      * @exception Throws a RelearnException if the number of local neurons didn't match the sizes of the arguments
      */
-    virtual void update_input(const std::vector<UpdateStatus>& disable_flags) = 0;
+    virtual void update_input([[maybe_unused]] const size_t step, const std::vector<UpdateStatus>& disable_flags) = 0;
 
     /**
      * @brief Returns the calculated background activity for the given neuron. Changes after calls to update_input(...)

@@ -1022,6 +1022,20 @@ protected:
     }
 };
 
+class SynapticInputTest : public RelearnTest {
+protected:
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
+class BackgroundActivityTest : public RelearnTest {
+protected:
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
 class StepParserTest : public RelearnTest {
 protected:
     using Interval = StepParser::Interval;

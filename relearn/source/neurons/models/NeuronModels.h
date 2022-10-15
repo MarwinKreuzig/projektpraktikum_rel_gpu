@@ -176,10 +176,11 @@ public:
     /**
      * @brief Performs one step of simulating the electrical activity for all neurons.
      *      This method performs communication via MPI.
+     * @param step The current update step
      * @param network_graph The network graph that specifies which neurons are connected. Is used to determine which spikes effect the local portion.
      * @param disable_flags A vector of flags that specify which neurons should be left alone during the update
      */
-    void update_electrical_activity(const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags);
+    void update_electrical_activity(size_t step, const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags);
 
     /**
      * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned

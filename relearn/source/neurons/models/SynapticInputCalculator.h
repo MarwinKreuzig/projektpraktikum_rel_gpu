@@ -84,12 +84,13 @@ public:
 
     /**
      * @brief Updates the synaptic input and the background activity based on the current network graph, whether the local neurons spikes, and which neuron to update
+     * @param step The current update step
      * @param network_graph The current network graph
      * @param fired Which local neuron fired
      * @param disable_flags Which neurons are disabled
      * @exception Throws a RelearnException if the number of local neurons didn't match the sizes of the arguments
      */
-    void update_input(const NetworkGraph& network_graph, const std::vector<FiredStatus> fired, const std::vector<UpdateStatus>& disable_flags) {
+    void update_input([[maybe_unused]] const size_t step, const NetworkGraph& network_graph, const std::vector<FiredStatus>& fired, const std::vector<UpdateStatus>& disable_flags) {
         RelearnException::check(number_local_neurons > 0, "SynapticInputCalculator::update_input: There were no local neurons.");
         RelearnException::check(fired.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of fired did not match number of local neurons: {} vs {}", fired.size(), number_local_neurons);
         RelearnException::check(disable_flags.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of disable_flags did not match number of local neurons: {} vs {}", disable_flags.size(), number_local_neurons);
@@ -167,7 +168,7 @@ protected:
      * @param fired If the local neurons fired
      * @param disable_flags Which local neurons are disabled
      */
-    virtual void update_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus> fired, const std::vector<UpdateStatus>& disable_flags) = 0;
+    virtual void update_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus>& fired, const std::vector<UpdateStatus>& disable_flags) = 0;
 
     /**
      * @brief Sets the synaptic input for the given neuron
@@ -186,9 +187,9 @@ protected:
      */
     void set_synaptic_input(const double value) noexcept;
 
-    [[nodiscard]] double get_local_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus> fired, const NeuronID& neuron_id);
+    [[nodiscard]] double get_local_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus>& fired, const NeuronID& neuron_id);
 
-    [[nodiscard]] double get_distant_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus> fired, const NeuronID& neuron_id);
+    [[nodiscard]] double get_distant_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus>& fired, const NeuronID& neuron_id);
 
 private:
     size_t number_local_neurons{};

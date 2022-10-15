@@ -29,9 +29,10 @@ public:
 
     /**
      * @brief This activity calculator does not provide any input
+     * @param step The current update step
      * @param disable_flags Unused
      */
-    void update_input([[maybe_unused]] const std::vector<UpdateStatus>& disable_flags) override {
+    void update_input([[maybe_unused]] const size_t step, [[maybe_unused]] const std::vector<UpdateStatus>& disable_flags) override {
     }
 
     /**
@@ -61,9 +62,10 @@ public:
 
     /**
      * @brief This activity calculator does not provide any input
+     * @param step The current update step
      * @param disable_flags Unused
      */
-    void update_input(const std::vector<UpdateStatus>& disable_flags) override {
+    void update_input([[maybe_unused]] const size_t step, const std::vector<UpdateStatus>& disable_flags) override {
         const auto number_neurons = get_number_neurons();
         RelearnException::check(disable_flags.size() == number_neurons,
             "ConstantBackgroundActivityCalculator::update_input: Size of disable flags doesn't match number of local neurons: {} vs {}", disable_flags.size(), number_neurons);
@@ -124,9 +126,10 @@ public:
 
     /**
      * @brief This activity calculator does not provide any input
+     * @param step The current update step
      * @param disable_flags Unused
      */
-    void update_input(const std::vector<UpdateStatus>& disable_flags) override {
+    void update_input([[maybe_unused]] const size_t step, const std::vector<UpdateStatus>& disable_flags) override {
         const auto number_neurons = get_number_neurons();
         RelearnException::check(disable_flags.size() == number_neurons,
             "NormalBackgroundActivityCalculator::update_input: Size of disable flags doesn't match number of local neurons: {} vs {}", disable_flags.size(), number_neurons);

@@ -48,7 +48,8 @@ file(
 add_executable(relearn_tests ${SRC_TST})
 target_sources(
   relearn_tests
-  PRIVATE test_barnes_hut.cpp
+  PRIVATE test_background_activity.cpp
+          test_barnes_hut.cpp
           test_calcium_calculator.cpp
           test_cell.cpp
           test_connector.cpp
@@ -71,6 +72,7 @@ target_sources(
           test_space_filling_curve.cpp
           test_step_parser.cpp
           test_synaptic_elements.cpp
+          test_synaptic_input.cpp
           test_tagged_id.cpp
           test_vector.cpp
           ${CMAKE_BINARY_DIR}/test_get_relearn_path.cpp

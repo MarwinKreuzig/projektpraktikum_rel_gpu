@@ -231,7 +231,7 @@ void Neurons::create_neurons(const size_t creation_count) {
 }
 
 void Neurons::update_electrical_activity(const size_t step) {
-    neuron_model->update_electrical_activity(*network_graph, disable_flags);
+    neuron_model->update_electrical_activity(step, *network_graph, disable_flags);
 
     const auto& fired = neuron_model->get_fired();
     calcium_calculator->update_calcium(step, disable_flags, fired);

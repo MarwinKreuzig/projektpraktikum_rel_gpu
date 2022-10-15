@@ -13,7 +13,7 @@
 #include "neurons/NetworkGraph.h"
 #include "util/Timers.h"
 
-void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus> fired, const std::vector<UpdateStatus>& disable_flags) {
+void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus>& fired, const std::vector<UpdateStatus>& disable_flags) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
     const auto number_local_neurons = get_number_neurons();
@@ -36,7 +36,7 @@ void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& ne
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
 }
 
-void LogarithmicSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus> fired, const std::vector<UpdateStatus>& disable_flags) {
+void LogarithmicSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus>& fired, const std::vector<UpdateStatus>& disable_flags) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
     const auto number_local_neurons = get_number_neurons();
