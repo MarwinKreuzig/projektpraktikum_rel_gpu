@@ -53,7 +53,7 @@ enum class RandomHolderKey : char {
     BackgroundActivity = 9,
 };
 
-constexpr size_t NUMBER_RANDOM_HOLDER_KEYS = 9;
+constexpr size_t NUMBER_RANDOM_HOLDER_KEYS = 10;
 
 /**
  * This type provides a static thread-safe interface for generating random numbers.
