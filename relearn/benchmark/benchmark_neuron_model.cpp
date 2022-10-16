@@ -236,37 +236,37 @@ static void BM_NeuronModel_UpdateActivity(benchmark::State& state) {
     }
 }
 
-BENCHMARK(BM_NeuronModel_SerialInitialize<models::PoissonModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-BENCHMARK(BM_NeuronModel_SerialInitialize<models::IzhikevichModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-BENCHMARK(BM_NeuronModel_SerialInitialize<models::FitzHughNagumoModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-BENCHMARK(BM_NeuronModel_SerialInitialize<models::AEIFModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_SerialInitialize<models::PoissonModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_SerialInitialize<models::IzhikevichModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_SerialInitialize<models::FitzHughNagumoModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_SerialInitialize<models::AEIFModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
 
-BENCHMARK(BM_NeuronModel_BackgroundActivity0<models::PoissonModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-// BENCHMARK(BM_NeuronModel_BackgroundActivity0<models::IzhikevichModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-// BENCHMARK(BM_NeuronModel_BackgroundActivity0<models::FitzHughNagumoModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-// BENCHMARK(BM_NeuronModel_BackgroundActivity0<models::AEIFModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_BackgroundActivity0<models::PoissonModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_BackgroundActivity0<models::IzhikevichModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_BackgroundActivity0<models::FitzHughNagumoModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_BackgroundActivity0<models::AEIFModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
 
-BENCHMARK(BM_NeuronModel_BackgroundActivityConstant<models::PoissonModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-// BENCHMARK(BM_NeuronModel_BackgroundActivityConstant<models::IzhikevichModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-// BENCHMARK(BM_NeuronModel_BackgroundActivityConstant<models::FitzHughNagumoModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-// BENCHMARK(BM_NeuronModel_BackgroundActivityConstant<models::AEIFModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_BackgroundActivityConstant<models::PoissonModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_BackgroundActivityConstant<models::IzhikevichModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_BackgroundActivityConstant<models::FitzHughNagumoModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_BackgroundActivityConstant<models::AEIFModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
 
-BENCHMARK(BM_NeuronModel_BackgroundActivityVariable<models::PoissonModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-// BENCHMARK(BM_NeuronModel_BackgroundActivityVariable<models::IzhikevichModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-// BENCHMARK(BM_NeuronModel_BackgroundActivityVariable<models::FitzHughNagumoModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-// BENCHMARK(BM_NeuronModel_BackgroundActivityVariable<models::AEIFModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_BackgroundActivityVariable<models::PoissonModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_BackgroundActivityVariable<models::IzhikevichModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_BackgroundActivityVariable<models::FitzHughNagumoModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_BackgroundActivityVariable<models::AEIFModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
 
-BENCHMARK(BM_NeuronModel_LocalInputNoFired<models::PoissonModel>)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons / 100, static_number_synapses });
-// BENCHMARK(BM_NeuronModel_LocalInputNoFired<models::IzhikevichModel>)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons, static_number_synapses });
-// BENCHMARK(BM_NeuronModel_LocalInputNoFired<models::FitzHughNagumoModel>)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons, static_number_synapses });
-// BENCHMARK(BM_NeuronModel_LocalInputNoFired<models::AEIFModel>)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons, static_number_synapses });
+//BENCHMARK(BM_NeuronModel_LocalInputNoFired<models::PoissonModel>)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons / 100, static_number_synapses });
+//BENCHMARK(BM_NeuronModel_LocalInputNoFired<models::IzhikevichModel>)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons, static_number_synapses });
+//BENCHMARK(BM_NeuronModel_LocalInputNoFired<models::FitzHughNagumoModel>)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons, static_number_synapses });
+//BENCHMARK(BM_NeuronModel_LocalInputNoFired<models::AEIFModel>)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons, static_number_synapses });
 
-BENCHMARK(BM_NeuronModel_LocalInputFired<models::PoissonModel>)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons / 100, static_number_synapses });
-// BENCHMARK(BM_NeuronModel_LocalInputFired<models::IzhikevichModel>)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons, static_number_synapses });
-// BENCHMARK(BM_NeuronModel_LocalInputFired<models::FitzHughNagumoModel>)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons, static_number_synapses });
-// BENCHMARK(BM_NeuronModel_LocalInputFired<models::AEIFModel>)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons, static_number_synapses });
+//BENCHMARK(BM_NeuronModel_LocalInputFired<models::PoissonModel>)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons / 100, static_number_synapses });
+//BENCHMARK(BM_NeuronModel_LocalInputFired<models::IzhikevichModel>)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons, static_number_synapses });
+//BENCHMARK(BM_NeuronModel_LocalInputFired<models::FitzHughNagumoModel>)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons, static_number_synapses });
+//BENCHMARK(BM_NeuronModel_LocalInputFired<models::AEIFModel>)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons, static_number_synapses });
 
-BENCHMARK(BM_NeuronModel_UpdateActivity<models::PoissonModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-BENCHMARK(BM_NeuronModel_UpdateActivity<models::IzhikevichModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-BENCHMARK(BM_NeuronModel_UpdateActivity<models::FitzHughNagumoModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-BENCHMARK(BM_NeuronModel_UpdateActivity<models::AEIFModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_UpdateActivity<models::PoissonModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_UpdateActivity<models::IzhikevichModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_UpdateActivity<models::FitzHughNagumoModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_NeuronModel_UpdateActivity<models::AEIFModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
