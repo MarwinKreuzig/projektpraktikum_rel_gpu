@@ -318,6 +318,10 @@ void Simulation::simulate(const size_t number_steps) {
             neurons->print_synaptic_inputs_to_file(step);
         }
 
+        if (Config::network_log_step > 0 && step % Config::network_log_step == 0) {
+            neurons->print_network_graph_to_log_file(step);
+        }
+
         if (step % Config::statistics_step == 0) {
             neurons->print_neurons_overview_to_log_file_on_rank_0(step);
 
@@ -348,7 +352,6 @@ void Simulation::simulate(const size_t number_steps) {
     print_neuron_monitors();
 
     neurons->print_positions_to_log_file();
-    neurons->print_network_graph_to_log_file();
 }
 
 void Simulation::finalize() const {
@@ -445,9 +448,9 @@ void Simulation::snapshot_monitors() {
 void Simulation::save_network_graph(size_t current_steps) {
     // Check wether there are multiple runs or not
     if (current_steps == 0) {
-        neurons->print_network_graph_to_log_file();
+        neurons->print_network_graph_to_log_file(current_steps);
     } else {
         LogFiles::save_and_open_new(LogFiles::EventType::Network, "network_" + std::to_string(current_steps));
-        neurons->print_network_graph_to_log_file();
+        neurons->print_network_graph_to_log_file(current_steps);
     }
 }

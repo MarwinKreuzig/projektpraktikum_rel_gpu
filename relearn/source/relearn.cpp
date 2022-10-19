@@ -121,17 +121,17 @@ void print_sizes() {
     ss << "Size of Vec3d: " << sizeof_vec3_double << '\n';
     ss << "Size of Vec3s: " << sizeof_vec3_size_t << '\n';
 
-    ss << "Size of VirtualPlasticityElement: " << sizeof_virtual_plasticity_element << "\n";
+    ss << "Size of VirtualPlasticityElement: " << sizeof_virtual_plasticity_element << '\n';
     ss << "Size of FastMultipoleMethodsCell: " << sizeof_fmm_cell_attributes << '\n';
 
     ss << "Size of empty_t: " << sizeof_empty_t << '\n';
     ss << "Size of BarnesHutCell: " << sizeof_bh_cell_attributes << '\n';
-    ss << "Size of NaiveCell: " << sizeof_bh_naive_attributes << "\n";
+    ss << "Size of NaiveCell: " << sizeof_bh_naive_attributes << '\n';
 
     ss << "Size of Cell<empty_t>: " << sizeof_empty_cell << '\n';
     ss << "Size of Cell<FastMultipoleMethodsCell>: " << sizeof_fmm_cell << '\n';
     ss << "Size of Cell<BarnesHutCell>: " << sizeof_bh_cell << '\n';
-    ss << "Size of Cell<NaiveCell>: " << sizeof_naive_cell << "\n";
+    ss << "Size of Cell<NaiveCell>: " << sizeof_naive_cell << '\n';
 
     ss << "Size of OctreeNode<empty_t>: " << sizeof_octreenode << '\n';
     ss << "Size of OctreeNode<FastMultipoleMethodsCell>: " << sizeof_fmm_octreenode << '\n';
@@ -143,7 +143,7 @@ void print_sizes() {
 
     ss << "Size of LocalSynapse: " << sizeof_local_synapse << '\n';
     ss << "Size of DistantInSynapse: " << sizeof_distant_in_synapse << '\n';
-    ss << "Size of DistantOutSynapse: " << sizeof_distant_out_synapse << "\n";
+    ss << "Size of DistantOutSynapse: " << sizeof_distant_out_synapse << '\n';
 
     ss << "Size of BaseCell<false, false, false, false>: " << sizeof_empty_base_cell << '\n';
     ss << "Size of BaseCell<true, true, true, true>: " << sizeof_full_base_cell << '\n';
@@ -755,6 +755,7 @@ int main(int argc, char** argv) {
     MPIWrapper::lock_window(my_rank, MPI_Locktype::Exclusive);
 
     sim.initialize();
+    sim.save_network_graph(0);
 
     const auto& my_neuron_ids_to_monitor = MonitorParser::parse_my_ids(neuron_monitors_description, my_rank, my_rank);
 

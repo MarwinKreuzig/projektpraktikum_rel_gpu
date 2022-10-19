@@ -70,6 +70,9 @@ public:
     // Capture the calcium values every <calcium_log_step> ms
     inline static size_t calcium_log_step = 1000000; // NOLINT
 
+    // Capture the network every <network_log_step> ms
+    inline static size_t network_log_step = 100; // NOLINT
+
     // Capture the syanptic input every <synaptic_input_log_step> ms
     inline static size_t synaptic_input_log_step = 10000; // NOLINT
 

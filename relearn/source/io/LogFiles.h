@@ -97,7 +97,7 @@ public:
      * @param new_file_name The new file name
      * @exception Throws a RelearnException if the specified event type didn't have a file associated with it
      */
-    static void save_and_open_new(EventType type, const std::string& new_file_name);
+    static void save_and_open_new(EventType type, const std::string& new_file_name, const std::string& directory_prefix = "");
 
     /**
      * @brief Clears all log files to create new files in future runs

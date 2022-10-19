@@ -306,8 +306,9 @@ public:
 
     /**
      * @brief Prints the network graph to LogFiles::EventType::Network
+     * @param step The current simulation step
      */
-    void print_network_graph_to_log_file();
+    void print_network_graph_to_log_file(size_t step) const;
 
     /**
      * @brief Prints the neuron positions to LogFiles::EventType::Positions

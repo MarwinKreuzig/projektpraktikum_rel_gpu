@@ -113,10 +113,7 @@ deploy-single:
 
 deploy-create:    
   rules:
-  - if: '$TEST_DEPLOY == "FALSE"'
-    when: never
   - if: '$TEST_DEPLOY == "TRUE"'
-    when: always
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -129,10 +126,7 @@ deploy-create:
 
 deploy-disable:    
   rules:
-  - if: '$TEST_DEPLOY == "FALSE"'
-    when: never
   - if: '$TEST_DEPLOY == "TRUE"'
-    when: always
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -145,10 +139,7 @@ deploy-disable:
 
 deploy-enable:    
   rules:
-  - if: '$TEST_DEPLOY == "FALSE"'
-    when: never
   - if: '$TEST_DEPLOY == "TRUE"'
-    when: always
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -161,10 +152,7 @@ deploy-enable:
   
 deploy-single-nompi:    
   rules:
-  - if: '$TEST_DEPLOY == "FALSE"'
-    when: never
   - if: '$TEST_DEPLOY == "TRUE"'
-    when: always
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -177,10 +165,7 @@ deploy-single-nompi:
       
 deploy-create-nompi:    
   rules:
-  - if: '$TEST_DEPLOY == "FALSE"'
-    when: never
   - if: '$TEST_DEPLOY == "TRUE"'
-    when: always
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -191,12 +176,9 @@ deploy-create-nompi:
     paths:
       - relearn/build-docker-nompi     
 
-deploy-disable-nompi:    
+deploy-disable-nompi:   
   rules:
-  - if: '$TEST_DEPLOY == "FALSE"'
-    when: never
   - if: '$TEST_DEPLOY == "TRUE"'
-    when: always
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -209,10 +191,7 @@ deploy-disable-nompi:
 
 deploy-enable-nompi:    
   rules:
-  - if: '$TEST_DEPLOY == "FALSE"'
-    when: never
   - if: '$TEST_DEPLOY == "TRUE"'
-    when: always
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -221,15 +200,11 @@ deploy-enable-nompi:
     - test-nompi-multiple
   artifacts:
     paths:
-      - relearn/build-docker-nompi    
-      
+      - relearn/build-docker-nompi     
    
 deploy-mpi-1:    
   rules:
-  - if: '$TEST_DEPLOY == "FALSE"'
-    when: never
   - if: '$TEST_DEPLOY == "TRUE"'
-    when: always
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -238,15 +213,11 @@ deploy-mpi-1:
     - test-mpi-multiple
   artifacts:
     paths:
-      - relearn/build-docker 
-      
+      - relearn/build-docker  
    
 deploy-mpi-2:    
   rules:
-  - if: '$TEST_DEPLOY == "FALSE"'
-    when: never
   - if: '$TEST_DEPLOY == "TRUE"'
-    when: always
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -257,13 +228,9 @@ deploy-mpi-2:
     paths:
       - relearn/build-docker 
       
-   
 deploy-mpi-4:    
   rules:
-  - if: '$TEST_DEPLOY == "FALSE"'
-    when: never
   - if: '$TEST_DEPLOY == "TRUE"'
-    when: always
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -274,7 +241,6 @@ deploy-mpi-4:
     paths:
       - relearn/build-docker 
       
-   
 deploy-mpi-8:  
   rules:
   - if: '$CLANG_TIDY == null'
@@ -287,3 +253,11 @@ deploy-mpi-8:
   artifacts:
     paths:
       - relearn/build-docker 
+
+benchmark-hhlr:
+  rules:
+  - if: '$TEST_HHLR == "TRUE"'
+  image: relearn-ci-redirect
+  stage: deploy 
+  script:
+    - sshpass -p $HHLR_PW ssh -o StrictHostKeyChecking=no da03robo@lcluster18.hrz.tu-darmstadt.de "./gitlab-script.sh"

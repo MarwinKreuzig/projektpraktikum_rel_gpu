@@ -261,7 +261,7 @@ StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_
     /**
      * Calc variance
      */
-    double my_var = 0;
+    double my_var = 0.0;
     for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
@@ -875,19 +875,24 @@ void Neurons::print_calcium_statistics_to_essentials() {
         calcium_statistics.max);
 }
 
-void Neurons::print_network_graph_to_log_file() {
+void Neurons::print_network_graph_to_log_file(const size_t step) const {
+    LogFiles::save_and_open_new(LogFiles::EventType::InNetwork, "step_" + std::to_string(step) + "_in_network", "network/");
+    LogFiles::save_and_open_new(LogFiles::EventType::OutNetwork, "step_" + std::to_string(step) + "_out_network", "network/");
+
     std::stringstream ss_in_network{};
 
-    ss_in_network << "# Total number neurons: " << partition->get_total_number_neurons() << "\n";
-    ss_in_network << "# Local number neurons: " << partition->get_number_local_neurons() << "\n";
-    ss_in_network << "# Number MPI ranks: " << partition->get_number_mpi_ranks() << "\n";
+    ss_in_network << "# Total number neurons: " << partition->get_total_number_neurons() << '\n';
+    ss_in_network << "# Local number neurons: " << partition->get_number_local_neurons() << '\n';
+    ss_in_network << "# Number MPI ranks: " << partition->get_number_mpi_ranks() << '\n';
+    ss_in_network << "# Current simulation step: " << step << '\n';
     ss_in_network << "# <target_rank> <target_id>\t<source_rank> <source_id>\t<weight> \n";
 
     std::stringstream ss_out_network{};
 
-    ss_out_network << "# Total number neurons: " << partition->get_total_number_neurons() << "\n";
-    ss_out_network << "# Local number neurons: " << partition->get_number_local_neurons() << "\n";
-    ss_out_network << "# Number MPI ranks: " << partition->get_number_mpi_ranks() << "\n";
+    ss_out_network << "# Total number neurons: " << partition->get_total_number_neurons() << '\n';
+    ss_out_network << "# Local number neurons: " << partition->get_number_local_neurons() << '\n';
+    ss_out_network << "# Number MPI ranks: " << partition->get_number_mpi_ranks() << '\n';
+    ss_out_network << "# Current simulation step: " << step << '\n';
     ss_out_network << "# <target_rank> <target_id>\t<source_rank> <source_id>\t<weight> \n";
 
     network_graph->print_with_ranks(ss_out_network, ss_in_network);
@@ -1001,7 +1006,7 @@ void Neurons::print_info_for_algorithm() {
         my_string = std::to_string(dendrites_inh_cnts[local_neuron_id]) + "|" + std::to_string(dendrites_inh_connected_cnts[local_neuron_id]);
         ss << std::setw(cwidth_big) << my_string;
 
-        ss << "\n";
+        ss << '\n';
     }
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());

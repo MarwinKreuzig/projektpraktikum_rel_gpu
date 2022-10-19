@@ -99,11 +99,11 @@ std::string LogFiles::get_specific_file_prefix() {
     return MPIWrapper::get_my_rank_str();
 }
 
-void LogFiles::save_and_open_new(EventType type, const std::string& new_file_name) {
+void LogFiles::save_and_open_new(EventType type, const std::string& new_file_name, const std::string& directory_prefix) {
     const auto iterator = log_files.find(type);
     RelearnException::check(iterator != log_files.end(), "The LogFiles don't contain the requested type");
 
-    auto complete_path = output_path.string() + general_prefix + get_specific_file_prefix() + "_" + new_file_name + ".txt";
+    auto complete_path = output_path.string() + directory_prefix + general_prefix + get_specific_file_prefix() + "_" + new_file_name + ".txt";
 
     iterator->second->flush();
 
