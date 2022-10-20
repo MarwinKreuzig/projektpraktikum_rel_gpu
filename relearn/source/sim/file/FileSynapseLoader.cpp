@@ -14,6 +14,8 @@
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
 
+#include <filesystem>
+
 FileSynapseLoader::FileSynapseLoader(std::shared_ptr<Partition> partition, std::optional<std::filesystem::path> path_to_synapses)
     : SynapseLoader(std::move(partition))
     , optional_path_to_file(std::move(path_to_synapses)) {
@@ -23,14 +25,18 @@ FileSynapseLoader::FileSynapseLoader(std::shared_ptr<Partition> partition, std::
 
 FileSynapseLoader::synapses_tuple_type FileSynapseLoader::internal_load_synapses() {
     if (!optional_path_to_file.has_value()) {
-        return {};
+        return synapses_tuple_type{};
     }
 
-    const auto total_number_neurons = partition->get_total_number_neurons();
+    const auto& actual_path = optional_path_to_file.value();
 
-    const auto& path_to_file = optional_path_to_file.value();
-    auto local_synapses = NeuronIO::read_local_synapses(path_to_file, total_number_neurons);
+    const auto expected_in_name = "rank_0_in_network.txt";
+    const auto expected_out_name = "rank_0_out_network.txt";
 
-    auto return_synapses = std::make_tuple(std::move(local_synapses), DistantInSynapses{}, DistantOutSynapses{});
-    return return_synapses;
+    const auto number_local_neurons = partition->get_number_local_neurons();
+
+    auto [read_local_in_synapses, read_distant_in_synapses] = NeuronIO::read_in_synapses(actual_path / expected_in_name, number_local_neurons, 0, 1);
+    auto [read_local_out_synapses, read_distant_out_synapses] = NeuronIO::read_out_synapses(actual_path / expected_out_name, number_local_neurons, 0, 1);
+
+    return { std::move(read_local_in_synapses), std::move(read_distant_in_synapses), std::move(read_distant_out_synapses) };
 }

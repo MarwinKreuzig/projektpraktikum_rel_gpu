@@ -119,7 +119,7 @@ void NetworkGraph::print_with_ranks(std::ostream& os_out_edges, std::ostream& os
 
         for (const auto& [target_neuron, weight] : neuron_distant_out_neighborhood[source_local_id]) {
             const auto& [target_rank, target_id] = target_neuron;
-            const auto& target_local_id = source_id.get_neuron_id();
+            const auto& target_local_id = target_id.get_neuron_id();
 
             os_out_edges << target_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\n';
         }

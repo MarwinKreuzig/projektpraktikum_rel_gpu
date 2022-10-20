@@ -28,6 +28,7 @@
 #include "sim/NeuronToSubdomainAssignment.h"
 #include "sim/Simulation.h"
 #include "sim/file/SubdomainFromFile.h"
+#include "sim/file/MultipleSubdomainsFromFile.h"
 #include "sim/random/SubdomainFromNeuronDensity.h"
 #include "sim/random/SubdomainFromNeuronPerRank.h"
 #include "structure/BaseCell.h"
@@ -281,7 +282,7 @@ int main(int argc, char** argv) {
     auto* const opt_file_positions = app.add_option("-f,--file", file_positions, "File with neuron positions. This option only works with one MPI rank!");
 
     std::filesystem::path file_network{};
-    auto* const opt_file_network = app.add_option("-g,--graph", file_network, "File with neuron connections. This option only works with one MPI rank!");
+    auto* const opt_file_network = app.add_option("-g,--graph", file_network, "Foldet that contains the files with the networks. The network files must be names rank_0_in_network.txt and rank_0_out_network.txt. This option only works with one MPI rank!");
 
     std::filesystem::path file_enable_interrupts{};
     auto* const opt_file_enable_interrupts = app.add_option("--enable-interrupts", file_enable_interrupts, "File with the enable interrupts.");
@@ -416,7 +417,7 @@ int main(int argc, char** argv) {
     opt_file_network->needs(opt_file_positions);
 
     opt_file_positions->check(CLI::ExistingFile);
-    opt_file_network->check(CLI::ExistingFile);
+    opt_file_network->check(CLI::ExistingDirectory);
 
     opt_file_calcium->excludes(opt_initial_calcium);
     opt_file_calcium->excludes(opt_target_calcium);
@@ -484,7 +485,7 @@ int main(int argc, char** argv) {
         RelearnException::check(!static_cast<bool>(*opt_mean_background_activity), "Setting the mean background activity is not valid when choosing the constant-background calculator.");
         RelearnException::check(!static_cast<bool>(*opt_stddev_background_activity), "Setting the stddev background activity is not valid when choosing the constant-background calculator.");
 
-        background_activity_calculator = std::make_unique<ConstantBackgroundActivityCalculator>(base_background_activity);    
+        background_activity_calculator = std::make_unique<ConstantBackgroundActivityCalculator>(base_background_activity);
     } else if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Normal) {
         RelearnException::check(background_activity_stddev > 0.0, "When choosing the normal-background calculator, the standard deviation must be set to > 0.0.");
 
@@ -722,8 +723,13 @@ int main(int argc, char** argv) {
             path_to_network = file_network;
         }
 
-        auto sff = std::make_unique<SubdomainFromFile>(file_positions, std::move(path_to_network), partition);
-        sim.set_subdomain_assignment(std::move(sff));
+        if (MPIWrapper::get_num_ranks() == 1) {
+            auto sff = std::make_unique<SubdomainFromFile>(file_positions, std::move(path_to_network), partition);
+            sim.set_subdomain_assignment(std::move(sff));
+        } else {
+            auto msff = std::make_unique<MultipleSubdomainsFromFile>(file_positions, std::move(path_to_network), partition);
+            sim.set_subdomain_assignment(std::move(msff));
+        }
     }
 
     if (*opt_file_enable_interrupts) {
