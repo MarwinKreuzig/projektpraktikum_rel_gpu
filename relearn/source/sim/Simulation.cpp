@@ -230,11 +230,13 @@ void Simulation::simulate(const size_t number_steps) {
         if (step % Config::monitor_step == 0) {
             const auto number_neurons = neurons->get_number_neurons();
 
+            Timers::start(TimerRegion::CAPTURE_MONITORS);
             for (auto& mn : *monitors) {
                 if (mn.get_target_id().get_neuron_id() < number_neurons) {
                     mn.record_data();
                 }
             }
+            Timers::stop_and_add(TimerRegion::CAPTURE_MONITORS);
 
             neurons->get_neuron_model()->reset_fired_recorder();
         }
@@ -269,13 +271,13 @@ void Simulation::simulate(const size_t number_steps) {
         // Calc how many synaptic elements grow/retract
         // Apply the change in number of elements during connectivity update
 
-        if (step >= Config::first_plasticity_update) {
+        if (step >= Config::first_plasticity_update && step <= Config::last_plascitiy_update) {
             Timers::start(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
             neurons->update_number_synaptic_elements_delta();
             Timers::stop_and_add(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
         }
 
-        if (step % Config::plasticity_update_step == 0) {
+        if (step % Config::plasticity_update_step == 0 && step >= Config::first_plasticity_update && step <= Config::last_plascitiy_update) {
             Timers::start(TimerRegion::UPDATE_CONNECTIVITY);
 
             const auto& [num_axons_deleted, num_dendrites_deleted, num_synapses_created] = neurons->update_connectivity();
@@ -437,9 +439,11 @@ void Simulation::increase_monitoring_capacity(const size_t size) {
 void Simulation::snapshot_monitors() {
     if (!monitors->empty()) {
         // record data at step 0
+        Timers::start(TimerRegion::CAPTURE_MONITORS);
         for (auto& m : *monitors) {
             m.record_data();
         }
+        Timers::stop_and_add(TimerRegion::CAPTURE_MONITORS);
 
         neurons->get_neuron_model()->reset_fired_recorder();
     }

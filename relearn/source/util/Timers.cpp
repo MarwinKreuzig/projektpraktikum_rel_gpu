@@ -152,6 +152,7 @@ void Timers::print() {
     print_timer("        Create synapses Exchange Responses     : ", TimerRegion::CREATE_SYNAPSES_EXCHANGE_RESPONSES);
     print_timer("        Create synapses Process Responses      : ", TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES);
     print_timer("      Add synapses in local network graphs     : ", TimerRegion::ADD_SYNAPSES_TO_NETWORKGRAPH);
+    print_timer("    Capture all neuron monitors                : ", TimerRegion::CAPTURE_MONITORS);    
 
     sstring << "\n\n";
 

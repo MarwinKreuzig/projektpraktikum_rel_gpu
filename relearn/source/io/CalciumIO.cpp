@@ -36,7 +36,7 @@ CalciumIO::load_initial_and_target_function(const std::filesystem::path& path_to
     const bool file_is_good = file.good();
     const bool file_is_not_good = file.fail() || file.eof();
 
-    RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_enable_interrups: Opening the file was not successful");
+    RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_enable_interrupts: Opening the file was not successful");
 
     std::optional<double> default_initial_calcium{};
     std::optional<double> default_target_calcium{};

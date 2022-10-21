@@ -30,6 +30,7 @@
 #include "structure/Partition.h"
 #include "structure/Octree.h"
 #include "structure/OctreeNode.h"
+#include "util/Interval.h"
 #include "util/MemoryHolder.h"
 #include "util/RelearnException.h"
 #include "util/StepParser.h"
@@ -1038,8 +1039,6 @@ protected:
 
 class StepParserTest : public RelearnTest {
 protected:
-    using Interval = StepParser::Interval;
-
     static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }

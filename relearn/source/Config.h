@@ -55,6 +55,9 @@ public:
     // Update connectivity starting at <first_plasticity_update> ms
     inline static size_t first_plasticity_update = 0; // NOLINT
 
+    // End the connectivity updates at <first_plasticity_update> ms
+    inline static size_t last_plascitiy_update = -1; // NOLINT
+
     // Print details every <logfile_update_step> ms
     inline static size_t logfile_update_step = 100; // NOLINT
 

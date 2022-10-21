@@ -11,6 +11,7 @@
 #include "InteractiveNeuronIO.h"
 
 #include "util/RelearnException.h"
+#include "util/StimulusParser.h"
 
 #include "spdlog/spdlog.h"
 
@@ -19,13 +20,13 @@
 #include <sstream>
 #include <string>
 
-std::vector<std::pair<size_t, std::vector<NeuronID>>> InteractiveNeuronIO::load_enable_interrups(const std::filesystem::path& path_to_file) {
+std::vector<std::pair<size_t, std::vector<NeuronID>>> InteractiveNeuronIO::load_enable_interrupts(const std::filesystem::path& path_to_file) {
     std::ifstream file{ path_to_file };
 
     const bool file_is_good = file.good();
     const bool file_is_not_good = file.fail() || file.eof();
 
-    RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_enable_interrups: Opening the file was not successful");
+    RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_enable_interrupts: Opening the file was not successful");
 
     std::vector<std::pair<size_t, std::vector<NeuronID>>> return_value{};
 
@@ -66,13 +67,13 @@ std::vector<std::pair<size_t, std::vector<NeuronID>>> InteractiveNeuronIO::load_
     return return_value;
 }
 
-std::vector<std::pair<size_t, std::vector<NeuronID>>> InteractiveNeuronIO::load_disable_interrups(const std::filesystem::path& path_to_file) {
+std::vector<std::pair<size_t, std::vector<NeuronID>>> InteractiveNeuronIO::load_disable_interrupts(const std::filesystem::path& path_to_file) {
     std::ifstream file{ path_to_file };
 
     const bool file_is_good = file.good();
     const bool file_is_not_good = file.fail() || file.eof();
 
-    RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_disable_interrups: Opening the file was not successful");
+    RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_disable_interrupts: Opening the file was not successful");
 
     std::vector<std::pair<size_t, std::vector<NeuronID>>> return_value{};
 
@@ -113,15 +114,15 @@ std::vector<std::pair<size_t, std::vector<NeuronID>>> InteractiveNeuronIO::load_
     return return_value;
 }
 
-std::vector<std::pair<size_t, size_t>> InteractiveNeuronIO::load_creation_interrups(const std::filesystem::path& path_to_file) {
+std::vector<std::pair<size_t, size_t>> InteractiveNeuronIO::load_creation_interrupts(const std::filesystem::path& path_to_file) {
     std::ifstream file{ path_to_file };
 
     const bool file_is_good = file.good();
     const bool file_is_not_good = file.fail() || file.eof();
 
-    RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_creation_interrups: Opening the file was not successful");
+    RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_creation_interrupts: Opening the file was not successful");
 
-    std::vector<std::pair<size_t, size_t>> return_value;
+    std::vector<std::pair<size_t, size_t>> return_value{};
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
@@ -153,4 +154,29 @@ std::vector<std::pair<size_t, size_t>> InteractiveNeuronIO::load_creation_interr
     }
 
     return return_value;
+}
+
+std::function<double(std::uint64_t, NeuronID::value_type)> InteractiveNeuronIO::load_stimulus_interrupts(const std::filesystem::path& path_to_file) {
+    std::ifstream file{ path_to_file };
+
+    const bool file_is_good = file.good();
+    const bool file_is_not_good = file.fail() || file.eof();
+
+    RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_stimulus_interrupts: Opening the file was not successful");
+
+    std::vector<Stimulus> stimuli{};
+
+    for (std::string line{}; std::getline(file, line);) {
+        // Skip line with comments
+        if (line.empty() || '#' == line[0]) {
+            continue;
+        }
+
+        auto stimulus = StimulusParser::parse_line(line);
+        if (stimulus.has_value()) {
+            stimuli.emplace_back(std::move(stimulus.value()));
+        }
+    }
+
+    return StimulusParser::generate_stimulus_function(std::move(stimuli));
 }

@@ -12,7 +12,9 @@
 
 #include "util/TaggedID.h"
 
+#include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -35,7 +37,7 @@ public:
      * @exception Throws a RelearnException if opening the file fails
      * @return A collection of pairs: (<simulation step>, <all neurons that should be enabled in the simulation step>)
      */
-    static std::vector<std::pair<size_t, std::vector<NeuronID>>> load_enable_interrups(const std::filesystem::path& path_to_file);
+    [[nodiscard]] static std::vector<std::pair<size_t, std::vector<NeuronID>>> load_enable_interrupts(const std::filesystem::path& path_to_file);
 
     /**
      * @brief Reads the file specified by the path and extracts all disable-interrupts.
@@ -49,7 +51,7 @@ public:
      * @exception Throws a RelearnException if opening the file fails
      * @return A collection of pairs: (<simulation step>, <all neurons that should be disabled in the simulation step>)
      */
-    static std::vector<std::pair<size_t, std::vector<NeuronID>>> load_disable_interrups(const std::filesystem::path& path_to_file);
+    [[nodiscard]] static std::vector<std::pair<size_t, std::vector<NeuronID>>> load_disable_interrupts(const std::filesystem::path& path_to_file);
 
     /**
      * @brief Reads the file specified by the path and extracts all creation-interrupts.
@@ -58,10 +60,23 @@ public:
      *      # <some comment>
      *      or
      *      {e, d, c} creation_count
-     *      Only lines starting with d are processed
+     *      Only lines starting with c are processed
      * @param path_to_file The path to the interrupts file
      * @exception Throws a RelearnException if opening the file fails
      * @return A collection of pairs: (<simulation step>, <number of neurons to be created>)
      */
-    static std::vector<std::pair<size_t, size_t>> load_creation_interrups(const std::filesystem::path& path_to_file);
+    [[nodiscard]] static std::vector<std::pair<size_t, size_t>> load_creation_interrupts(const std::filesystem::path& path_to_file);
+
+    /**
+     * @brief Reads the file specified by the path and extracts als stimulus-interrupts. 
+     *      A stimulus-interrupt should provide additional background activity to a neuron in a stimulation step.
+     *      The format of the file should be for each line:
+     *      # <some comment>
+     *      or
+     *      <interval_description> <stimulus intensity> <neuron_id>*
+     * @param path_to_file The path to the stimulus interrupts file
+     * @exception Throws a RelearnException if opening the file fails
+     * @return A function that specified for a given simulation step and a given neuron id, how much background it receives
+     */
+    [[nodiscard]] static std::function<double(std::uint64_t, NeuronID::value_type)> load_stimulus_interrupts(const std::filesystem::path& path_to_file);
 };

@@ -234,6 +234,7 @@ int main(int argc, char** argv) {
         { "null", BackgroundActivityCalculatorType::Null },
         { "constant", BackgroundActivityCalculatorType::Constant },
         { "normal", BackgroundActivityCalculatorType::Normal },
+        { "stimulus", BackgroundActivityCalculatorType::Stimulus },
     };
 
     size_t simulation_steps{};
@@ -241,6 +242,9 @@ int main(int argc, char** argv) {
 
     size_t first_plasticity_step{ Config::first_plasticity_update };
     app.add_option("--first-plasticity-step", first_plasticity_step, "The first step in which the plasticity is updated.");
+
+    size_t last_plasticity_step{ Config::last_plascitiy_update };
+    app.add_option("--last-plasticity-step", last_plasticity_step, "The last step in which the plasticity is updated.");
 
     size_t calcium_log_step{ Config::calcium_log_step };
     app.add_option("--calcium-log-step", calcium_log_step, "Sets the interval for logging all calcium values.");
@@ -291,7 +295,10 @@ int main(int argc, char** argv) {
     auto* const opt_file_disable_interrupts = app.add_option("--disable-interrupts", file_disable_interrupts, "File with the disable interrupts.");
 
     std::filesystem::path file_creation_interrupts{};
-    auto* const opt_file_creation_interrups = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
+    auto* const opt_file_creation_interrupts = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
+
+    std::string file_external_stimulations{};
+    auto* opt_file_external_stimulations = app.add_option("--external_stimulations", file_external_stimulations, "File with the external stimulations.");
 
     auto* const opt_algorithm = app.add_option("-a,--algorithm", chosen_algorithm, "The algorithm that is used for finding the targets");
     opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_algorithm, CLI::ignore_case));
@@ -399,7 +406,12 @@ int main(int argc, char** argv) {
     app.add_option("--min-calcium-inhibitory-dendrites", min_calcium_inhibitory_dendrites, "The minimum intercellular calcium for inhibitory dendrites to grow. Default is 0.0");
 
     std::string neuron_monitors_description{};
-    app.add_option("--neuron-monitors", neuron_monitors_description, "The description which neurons to monitor. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;... where <mpi_rank> can be -1 to indicate \"on every rank\"");
+    auto* const monitor_option = app.add_option("--neuron-monitors", neuron_monitors_description, "The description which neurons to monitor. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;... where <mpi_rank> can be -1 to indicate \"on every rank\"");
+
+    auto* flag_monitor_all = app.add_flag("--neuron-monitors-all", "Monitors all neurons.");
+
+    monitor_option->excludes(flag_monitor_all);
+    flag_monitor_all->excludes(monitor_option);
 
     opt_num_neurons->excludes(opt_file_positions);
     opt_num_neurons->excludes(opt_file_network);
@@ -428,9 +440,11 @@ int main(int argc, char** argv) {
 
     opt_file_enable_interrupts->check(CLI::ExistingFile);
     opt_file_disable_interrupts->check(CLI::ExistingFile);
-    opt_file_creation_interrups->check(CLI::ExistingFile);
+    opt_file_creation_interrupts->check(CLI::ExistingFile);
 
     opt_log_path->check(CLI::ExistingDirectory);
+
+    opt_file_external_stimulations->check(CLI::ExistingFile);
 
     CLI11_PARSE(app, argc, argv);
 
@@ -490,6 +504,11 @@ int main(int argc, char** argv) {
         RelearnException::check(background_activity_stddev > 0.0, "When choosing the normal-background calculator, the standard deviation must be set to > 0.0.");
 
         background_activity_calculator = std::make_unique<NormalBackgroundActivityCalculator>(base_background_activity, background_activity_mean, background_activity_stddev);
+    } else if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Stimulus) {
+        RelearnException::check(static_cast<bool>(*opt_file_external_stimulations), "Setting the background activity to stimulus but not providing a file is not supported.");
+        RelearnException::check(background_activity_stddev >= 0.0, "When choosing the stimulus-background calculator, the standard deviation must be set to >= 0.0.");
+
+        background_activity_calculator = std::make_unique<StimulusBackgroundActivityCalculator>(file_external_stimulations, std::optional{ std::pair{ background_activity_mean, background_activity_stddev } });
     } else {
         RelearnException::fail("Chose a background activity calculator that is not implemented");
     }
@@ -498,6 +517,7 @@ int main(int argc, char** argv) {
     RelearnException::check(growth_rate <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
 
     Config::first_plasticity_update = first_plasticity_step;
+    Config::last_plascitiy_update = last_plasticity_step;
     Config::calcium_log_step = calcium_log_step;
     Config::synaptic_input_log_step = synaptic_input_log_step;
 
@@ -733,18 +753,18 @@ int main(int argc, char** argv) {
     }
 
     if (*opt_file_enable_interrupts) {
-        auto enable_interrupts = InteractiveNeuronIO::load_enable_interrups(file_enable_interrupts);
+        auto enable_interrupts = InteractiveNeuronIO::load_enable_interrupts(file_enable_interrupts);
         sim.set_enable_interrupts(std::move(enable_interrupts));
     }
 
     if (*opt_file_disable_interrupts) {
-        auto disable_interrupts = InteractiveNeuronIO::load_disable_interrups(file_disable_interrupts);
+        auto disable_interrupts = InteractiveNeuronIO::load_disable_interrupts(file_disable_interrupts);
         sim.set_disable_interrupts(std::move(disable_interrupts));
     }
 
-    if (*opt_file_creation_interrups) {
-        auto creation_interrups = InteractiveNeuronIO::load_creation_interrups(file_creation_interrupts);
-        sim.set_creation_interrupts(std::move(creation_interrups));
+    if (*opt_file_creation_interrupts) {
+        auto creation_interrupts = InteractiveNeuronIO::load_creation_interrupts(file_creation_interrupts);
+        sim.set_creation_interrupts(std::move(creation_interrupts));
     }
 
     const auto steps_per_simulation = simulation_steps / Config::monitor_step;
@@ -763,10 +783,16 @@ int main(int argc, char** argv) {
     sim.initialize();
     sim.save_network_graph(0);
 
-    const auto& my_neuron_ids_to_monitor = MonitorParser::parse_my_ids(neuron_monitors_description, my_rank, my_rank);
-
-    for (const auto& neuron_id : my_neuron_ids_to_monitor) {
-        sim.register_neuron_monitor(neuron_id);
+    if (static_cast<bool>(*flag_monitor_all)) {
+        const auto number_local_neurons = partition->get_number_local_neurons();
+        for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
+            sim.register_neuron_monitor(neuron_id);
+        }
+    } else {
+        const auto& my_neuron_ids_to_monitor = MonitorParser::parse_my_ids(neuron_monitors_description, my_rank, my_rank);
+        for (const auto& neuron_id : my_neuron_ids_to_monitor) {
+            sim.register_neuron_monitor(neuron_id);
+        }
     }
 
     // Unlock local RMA memory and make local stores visible in public window copy
