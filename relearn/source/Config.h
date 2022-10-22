@@ -81,4 +81,7 @@ public:
 
     // Capture the average local euclidean distance every <distance_step> ms
     inline static size_t distance_step = 10000; // NOLINT
+
+    // Flush the neuron monitors every <flush_monitor_step> ms
+    inline static size_t flush_monitor_step = 30000; // NOLINT
 };

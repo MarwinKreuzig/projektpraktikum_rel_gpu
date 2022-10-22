@@ -494,12 +494,12 @@ public:
         for (const auto* const child : octree_node.get_children()) {
             output_stream << child << " ";
         }
-        output_stream << "\n";
+        output_stream << '\n';
 
         output_stream << "  is_parent  : " << octree_node.is_parent() << "\n\n";
         output_stream << "  rank       : " << octree_node.get_rank() << "\n\n";
         output_stream << octree_node.get_cell();
-        output_stream << "\n";
+        output_stream << '\n';
 
         return output_stream;
     }

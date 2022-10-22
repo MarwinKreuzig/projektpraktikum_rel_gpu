@@ -275,6 +275,10 @@ public:
         return informations;
     }
 
+    void init_print_file();
+
+    void flush_current_contents();
+
 private:
     NeuronID target_neuron_id{ NeuronID::uninitialized_id() };
 

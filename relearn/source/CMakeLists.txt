@@ -16,6 +16,7 @@ target_sources(
           mpi/MPINoWrapper.cpp
           mpi/MPIWrapper.cpp
           # neurons
+          neurons/helper/NeuonMonitor.cpp
           neurons/models/AEIFModel.cpp
           neurons/models/FiredStatusCommunicationMap.cpp
           neurons/models/FitzHughNagumoModel.cpp

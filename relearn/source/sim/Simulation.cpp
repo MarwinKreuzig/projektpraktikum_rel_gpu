@@ -211,6 +211,10 @@ void Simulation::initialize() {
     neurons->debug_check_counts();
     neurons->print_neurons_overview_to_log_file_on_rank_0(0);
     neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, 0, 0, 0);
+
+    for (auto& monitor : *monitors) {
+        monitor.init_print_file();
+    }
 }
 
 void Simulation::simulate(const size_t number_steps) {
@@ -332,6 +336,12 @@ void Simulation::simulate(const size_t number_steps) {
             }
         }
 
+        if (step % Config::flush_monitor_step == 0) {
+            for (auto& monitor : *monitors) {
+                monitor.flush_current_contents();
+            }
+        }
+
         if (step % Config::console_update_step == 0) {
             if (my_rank != 0) {
                 continue;
@@ -351,7 +361,9 @@ void Simulation::simulate(const size_t number_steps) {
     // Stop timing simulation loop
     Timers::stop_and_add(TimerRegion::SIMULATION_LOOP);
 
-    print_neuron_monitors();
+    for (auto& monitor : *monitors) {
+        monitor.flush_current_contents();
+    }
 
     neurons->print_positions_to_log_file();
 }
@@ -420,7 +432,7 @@ void Simulation::print_neuron_monitors() {
             outfile << info.get_excitatory_dendrites_grown() << filler;
             outfile << info.get_excitatory_dendrites_connected() << filler;
             outfile << info.get_inhibitory_dendrites_grown() << filler;
-            outfile << info.get_inhibitory_dendrites_connected() << "\n";
+            outfile << info.get_inhibitory_dendrites_connected() << '\n';
 
             current_step += Config::monitor_step;
         }

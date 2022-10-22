@@ -68,7 +68,7 @@ public:
      * @return The argument os to allow chaining
      */
     friend std::ostream& operator<<(std::ostream& os, const RankNeuronId& rni) {
-        os << "Rank: " << rni.get_rank() << "\t id: " << rni.get_neuron_id() << "\n";
+        os << "Rank: " << rni.get_rank() << "\t id: " << rni.get_neuron_id() << '\n';
         return os;
     }
 

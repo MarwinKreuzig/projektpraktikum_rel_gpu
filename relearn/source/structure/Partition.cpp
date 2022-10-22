@@ -86,32 +86,32 @@ Partition::Partition(const size_t num_ranks, const size_t my_rank)
 void Partition::print_my_subdomains_info_rank(const int  /*rank*/) {
     std::stringstream sstream{};
 
-    sstream << "My number of neurons   : " << number_local_neurons << "\n";
-    sstream << "My number of local_subdomains: " << number_local_subdomains << "\n";
+    sstream << "My number of neurons   : " << number_local_neurons << '\n';
+    sstream << "My number of local_subdomains: " << number_local_subdomains << '\n';
     sstream << "My subdomain ids       : [ " << local_subdomain_id_start
             << " , "
             << local_subdomain_id_end
             << " ]"
-            << "\n";
+            << '\n';
 
     for (size_t i = 0; i < number_local_subdomains; i++) {
-        sstream << "Subdomain: " << i << "\n";
-        sstream << "    number_neurons: " << local_subdomains[i].number_neurons << "\n";
-        sstream << "    index_1d   : " << local_subdomains[i].index_1d << "\n";
+        sstream << "Subdomain: " << i << '\n';
+        sstream << "    number_neurons: " << local_subdomains[i].number_neurons << '\n';
+        sstream << "    index_1d   : " << local_subdomains[i].index_1d << '\n';
 
         sstream << "    index_3d   : "
                 << "( " << local_subdomains[i].index_3d.get_x()
                 << " , " << local_subdomains[i].index_3d.get_y()
                 << " , " << local_subdomains[i].index_3d.get_z()
                 << " )"
-                << "\n";
+                << '\n';
 
         sstream << "    minimum_position    : "
                 << "( " << local_subdomains[i].minimum_position.get_x()
                 << " , " << local_subdomains[i].minimum_position.get_y()
                 << " , " << local_subdomains[i].minimum_position.get_z()
                 << " )"
-                << "\n";
+                << '\n';
 
         sstream << "    maximum_position    : "
                 << "( " << local_subdomains[i].maximum_position.get_x()
