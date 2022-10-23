@@ -12,6 +12,7 @@
 
 #include "neurons/models/BackgroundActivityCalculator.h"
 
+#include "io/InteractiveNeuronIO.h"
 #include "util/Random.h"
 #include "util/Timers.h"
 
@@ -191,6 +192,9 @@ public:
             mean_input = mean;
             stddev_input = stddev;
         }
+
+        auto function = InteractiveNeuronIO::load_stimulus_interrupts(stimulus_file);
+        stimulus_function = std::move(function);
     }
 
     virtual ~StimulusBackgroundActivityCalculator() = default;
