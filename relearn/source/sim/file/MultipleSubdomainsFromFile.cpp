@@ -13,11 +13,14 @@
 #include "Config.h"
 #include "io/LogFiles.h"
 #include "io/NeuronIO.h"
+#include "mpi/MPIWrapper.h"
 #include "sim/file/MultipleFilesSynapseLoader.h"
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
 
 #include "spdlog/spdlog.h"
+
+#include <string>
 
 MultipleSubdomainsFromFile::MultipleSubdomainsFromFile(const std::filesystem::path& path_to_neurons, 
 	std::optional<std::filesystem::path> path_to_synapses, std::shared_ptr<Partition> partition) 

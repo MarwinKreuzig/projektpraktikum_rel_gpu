@@ -15,6 +15,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <optional>
 
 class Partition;
 

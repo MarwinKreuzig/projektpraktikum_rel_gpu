@@ -14,7 +14,7 @@
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
 
-#include <filesystem>
+#include <string>
 
 MultipleFilesSynapseLoader::MultipleFilesSynapseLoader(std::shared_ptr<Partition> partition, std::optional<std::filesystem::path> path_to_synapses)
     : SynapseLoader(std::move(partition))

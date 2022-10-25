@@ -21,7 +21,7 @@ template <typename T>
 class OctreeNode;
 
 /**
- * This class manages a portion of memory of a specified size and can hand out OctreeNodes as long as there is space left.
+ * This class manages a portion of memory and can hand out OctreeNodes as long as there is space left.
  * Hands out pointers via get_available(), which have to be reclaimed with make_all_available() later on.
  * get_available() makes sure that memory is really handled in portions, and all children are next to each other.
  *
@@ -33,10 +33,8 @@ template <typename AdditionalCellAttributes>
 class MemoryHolder {
 public:
     /**
-     * @brief Initializes the class to hold the specified pointer.
-     *      Does not transfer ownership
-     * @param ptr The pointer to the memory location in which objects should be created and deleted
-     * @param length The number of objects that fit into the memory
+     * @brief Initializes the class to hold the specified span of memory.
+     * @param memory The span of memory, the elements are constructed to ensure memory correctness
      */
     static void init(std::span<OctreeNode<AdditionalCellAttributes>> memory) noexcept {
         memory_holder = memory;
@@ -71,7 +69,7 @@ public:
      * @brief Destroys all objects that were handed out via get_available. All pointers are invalidated.
      */
     static void make_all_available() noexcept {
-        for (size_t i = 0; i < memory_holder.size(); i++) {
+        for (std::span<OctreeNode<AdditionalCellAttributes>>::size_type i = 0; i < memory_holder.size(); i++) {
             memory_holder[i].reset();
         }
 
@@ -83,7 +81,7 @@ public:
      * @brief Returns the number of objects that fit into the memory portion
      * @return The number of objects that fit into the memory portion
      */
-    [[nodiscard]] static size_t get_size() noexcept {
+    [[nodiscard]] static std::span<OctreeNode<AdditionalCellAttributes>>::size_type get_size() noexcept {
         return memory_holder.size();
     }
 
@@ -117,7 +115,7 @@ public:
 private:
     // NOLINTNEXTLINE
     static inline std::span<OctreeNode<AdditionalCellAttributes>> memory_holder{};
-    static inline size_t current_filling{ 0 };
+    static inline std::uint64_t current_filling{ 0 };
 
-    static inline std::unordered_map<OctreeNode<AdditionalCellAttributes>*, size_t> parent_to_offset{};
+    static inline std::unordered_map<OctreeNode<AdditionalCellAttributes>*, std::uint64_t> parent_to_offset{};
 };
