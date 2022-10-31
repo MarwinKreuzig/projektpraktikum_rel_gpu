@@ -41,11 +41,11 @@ public:
     // Constants for Fast Gauss
     constexpr static unsigned int p = 4;
     constexpr static unsigned int p3 = p * p * p;
-    constexpr static unsigned int max_neurons_in_target = 70; //cutoff for target box
-    constexpr static unsigned int max_neurons_in_source = 70; //cutoff for source box
-    
-    constexpr static unsigned int unpacking = 0; //indicates how many levels a node is unpacked to give the synaptic elements more choice to connect
-    //only used when FMM is selected. When unpacking == 0 normal FMM is used.
+    constexpr static unsigned int max_neurons_in_target = 70; // cutoff for target box
+    constexpr static unsigned int max_neurons_in_source = 70; // cutoff for source box
+
+    constexpr static unsigned int unpacking = 0; // indicates how many levels a node is unpacked to give the synaptic elements more choice to connect
+    // only used when FMM is selected. When unpacking == 0 normal FMM is used.
 };
 
 class Config {
@@ -77,7 +77,7 @@ public:
     inline static size_t calcium_log_step = 1000000; // NOLINT
 
     // Capture the network every <network_log_step> ms
-    inline static size_t network_log_step = 100; // NOLINT
+    inline static size_t network_log_step = 10000; // NOLINT
 
     // Capture the syanptic input every <synaptic_input_log_step> ms
     inline static size_t synaptic_input_log_step = 10000; // NOLINT

@@ -216,7 +216,7 @@ public:
         new_node_to_insert->set_cell_neuron_position({ position });
         new_node_to_insert->set_cell_neuron_id(neuron_id);
         new_node_to_insert->set_rank(rank);
-        new_node_to_insert->set_level(parent_level+1);
+        new_node_to_insert->set_level(parent_level + 1);
 
         return new_node_to_insert;
     }
@@ -480,7 +480,6 @@ public:
         level = -1;
         parent = false;
         rank = -1;
-        level = 0;
     }
 
     /**
