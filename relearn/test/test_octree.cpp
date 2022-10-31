@@ -582,9 +582,10 @@ TYPED_TEST(OctreeTest, testOctreeLevel) {
 
     const auto& [min, max] = this->get_random_simulation_box_size();
     const auto& own_position = this->get_random_position_in_box(min, max);
-    size_t level = this->get_small_refinement_level();
+    std::uint16_t level = this->get_small_refinement_level();
 
     OctreeNode<AdditionalCellAttributes> node{};
+    node.set_level(level);
     node.set_rank(my_rank);
     node.set_cell_size(min, max);
     node.set_cell_neuron_id(NeuronID::virtual_id());
