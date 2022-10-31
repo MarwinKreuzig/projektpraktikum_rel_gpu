@@ -21,6 +21,19 @@ enum class ElementType { Axon,
     Dendrite };
 
 /**
+ * @brief Returns the other element type, i.e., Axon for Dendrite and vice versa
+ * @param The current element type
+ * @return The other element type
+ */
+[[nodiscard]] inline constexpr ElementType get_other_element_type(const ElementType type) noexcept {
+    if (type == ElementType::Axon) {
+        return ElementType::Dendrite;
+    }
+
+    return ElementType::Axon;
+}
+
+/**
  * @brief Pretty-prints the element type to the chosen stream
  * @param out The stream to which to print the element type
  * @param element_type The element type to print

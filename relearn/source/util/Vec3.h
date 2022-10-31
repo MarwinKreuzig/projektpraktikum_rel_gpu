@@ -12,11 +12,13 @@
 
 #include "Config.h"
 #include "util/RelearnException.h"
+#include "util/Utility.h"
 
 #include <spdlog/fmt/bundled/ostream.h>
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <numeric>
 #include <ostream>
 #include <type_traits>
@@ -307,7 +309,7 @@ public:
     }
 
     /**
-     * @brief Calculated the p norm of the (absolute value of the) current obejct
+     * @brief Calculates the p norm of the (absolute value of the) current obejct
      * @param p The exponent of the norm, must be >= 1.0
      * @exception Throws a RelearnException if p < 1.0
      * @return The calculated norm
@@ -322,6 +324,25 @@ public:
         const auto sum = xx + yy + zz;
         const auto norm = std::pow(sum, 1.0 / p);
         return norm;
+    }
+
+    /**
+     * @brief Calcualtes the 1-norm of the vector (the sum of absolutes)
+     * @return The calculated 1-norm
+     */
+    [[nodiscard]] T calculate_1_norm() const noexcept {
+        // Visual studio reports multiple defined symbols for T=unsigned int if this is not included
+        if constexpr (std::is_unsigned_v<T>) {
+            const auto sum = x + y + z;
+            return sum;
+        } else {
+            const auto abs_x = std::abs(x);
+            const auto abs_y = std::abs(y);
+            const auto abs_z = std::abs(z);
+
+            const auto sum = abs_x + abs_y + abs_z;
+            return sum;        
+        }
     }
 
     /**
@@ -397,6 +418,35 @@ public:
      */
     [[nodiscard]] constexpr T get_minimum() const noexcept {
         return std::min({ x, y, z });
+    }
+
+    /**
+     * @brief Calculates the factorial of each component and multiplies them
+     * @return Returns the product of the factorials
+     */
+    [[nodiscard]] constexpr size_t get_componentwise_factorial() const noexcept {
+        static_assert(std::is_integral_v<T>);
+
+        const auto fac_x = Util::factorial(x);
+        const auto fac_y = Util::factorial(y);
+        const auto fac_z = Util::factorial(z);
+
+        const auto product = fac_x * fac_y * fac_z;
+        return product;
+    }
+
+    /**
+     * @brief Calculates this^exponent componentwise and returns the product
+     * @param exponent The exponents for this
+     * @return The product of the componentwise power
+     */
+    [[nodiscard]] double get_componentwise_power(const Vec3<unsigned int>& exponent) const {
+        const auto pow_x = std::pow(x, exponent.get_x());
+        const auto pow_y = std::pow(y, exponent.get_y());
+        const auto pow_z = std::pow(z, exponent.get_z());
+
+        const auto product = pow_x * pow_y * pow_z;
+        return product;
     }
 
     /**
@@ -543,3 +593,4 @@ struct tuple_element<2, ::Vec3<T>> {
 
 using Vec3d = Vec3<double>;
 using Vec3s = Vec3<size_t>;
+using Vec3u = Vec3<unsigned int>;

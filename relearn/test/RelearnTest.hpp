@@ -928,11 +928,11 @@ protected:
         SetUpTestCaseTemplate<FastMultipoleMethodsCell>();
     }
 
-    Stack<FastMultipoleMethods::stack_entry> init_stack(FastMultipoleMethods fmm, const SignalType signal_type_needed) { return fmm.init_stack(signal_type_needed); }
+ /*   Stack<FastMultipoleMethodsBase::stack_entry> init_stack(FastMultipoleMethods fmm, const SignalType signal_type_needed) { return FastMultipoleMethodsBase::init_stack(signal_type_needed); }
 
-    void unpack_node_pair(FastMultipoleMethods fmm, Stack<FastMultipoleMethods::stack_entry>& stack) { return fmm.unpack_node_pair(stack); }
+    void unpack_node_pair(FastMultipoleMethods fmm, Stack<FastMultipoleMethodsBase::stack_entry>& stack) { return FastMultipoleMethodsBase::unpack_node_pair(stack); }
 
-    FastMultipoleMethods::interaction_list_type align_interaction_list(FastMultipoleMethods fmm, OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>* source_node, OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>* target_parent, const SignalType signal_type) { return fmm.align_interaction_list(source_node, target_parent, signal_type); }
+    FastMultipoleMethodsBase::interaction_list_type align_interaction_list(FastMultipoleMethods fmm, OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>* source_node, OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>* target_parent, const SignalType signal_type) { return fmm.align_interaction_list(source_node, target_parent, signal_type); }*/
 
     // std::array<double, Constants::p3> calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, double sigma, SignalType signal_type_needed) { return FastMultipoleMethods::calc_hermite_coefficients(source, sigma, signal_type_needed); }
     // CalculationType check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::check_calculation_requirements(source, target, sigma, signal_type_needed);}

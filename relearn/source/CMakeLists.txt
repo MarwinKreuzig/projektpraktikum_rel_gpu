@@ -6,6 +6,7 @@ target_sources(
           algorithm/BarnesHutInternal/BarnesHutInverted.cpp
           algorithm/BarnesHutInternal/BarnesHutLocationAware.cpp
           algorithm/FMMInternal/FastMultipoleMethods.cpp
+          algorithm/FMMInternal/FastMultipoleMethodsInverted.cpp
           algorithm/NaiveInternal/Naive.cpp
           # io
           io/CalciumIO.cpp

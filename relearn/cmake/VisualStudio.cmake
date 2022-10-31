@@ -23,7 +23,9 @@ if(WIN32)
 	
 	# FMMInternal
 	list(APPEND relearn_lib_additional_files "algorithm/FMMInternal/FastMultipoleMethods.h")
+	list(APPEND relearn_lib_additional_files "algorithm/FMMInternal/FastMultipoleMethodsBase.h")
 	list(APPEND relearn_lib_additional_files "algorithm/FMMInternal/FastMultipoleMethodsCell.h")
+	list(APPEND relearn_lib_additional_files "algorithm/FMMInternal/FastMultipoleMethodsInverted.h")
 	
 	# Internal
 	list(APPEND relearn_lib_additional_files "algorithm/Internal/AlgorithmImpl.h")

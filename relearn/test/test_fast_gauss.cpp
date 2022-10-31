@@ -590,7 +590,7 @@ OctreeNode<AdditionalCellAttributes>* get_random_node_on_level(OctreeNode<Additi
 //    make_mpi_mem_available<AdditionalCellAttributes>();
 //}
 //
-///* TEST_F(FMMTest, testAccuracyFMM) {
+// TEST_F(FMMTest, testAccuracyFMM) {
 //
 //    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
 //    std::uniform_int_distribution<size_t> uid(0, 10000);
@@ -704,7 +704,7 @@ OctreeNode<AdditionalCellAttributes>* get_random_node_on_level(OctreeNode<Additi
 //
 //        make_mpi_mem_available<AdditionalCellAttributes>();
 //    }
-//} */
+//} 
 //
 //TEST_F(FMMTest, test_static_functions) {
 //
@@ -843,88 +843,88 @@ OctreeNode<AdditionalCellAttributes>* get_random_node_on_level(OctreeNode<Additi
 //    }
 //}
 //
-////TEST_F(FMMTest, unpack_nodes) {
-////    const auto number_neurons = get_random_number_neurons();
-////    const auto& [min, max] = get_random_simulation_box_size();
-////
-////    const auto& axons = create_axons(number_neurons);
-////    const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
-////    const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Inhibitory);
-////
-////    const auto& neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons);
-////
-////    auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
-////
-////    std::map<NeuronID::value_type, Vec3d> positions{};
-////    for (const auto& [position, id] : neurons_to_place) {
-////        octree->insert(position, id);
-////        positions[id.get_neuron_id()] = position;
-////    }
-////
-////    octree->initializes_leaf_nodes(number_neurons);
-////
-////    FastMultipoleMethods fmm(octree);
-////    fmm.set_synaptic_elements(axons, excitatory_dendrites, inhibitory_dendrites);
-////
-////    const auto update_status = get_update_status(number_neurons);
-////    ASSERT_NO_THROW(fmm.update_octree(update_status));
-////
-////    // start testing
-////    auto& leaf_nodes = octree->get_leaf_nodes();
-////    const auto leaf_level = leaf_nodes[0]->get_level();
-////    std::uniform_int_distribution<size_t> urd_level(2, leaf_level - 1);
-////    Stack<FastMultipoleMethods::stack_entry> stack{};
-////    // TODO nulltesting
-////
-////    // source leaf
-////    //auto source_node = leaf_nodes[0];
-////    //auto target_parent = get_random_node_on_level(octree->get_root(), leaf_level - 1, mt);
-////    //FastMultipoleMethods::stack_entry p = { source_node, target_parent, false };
-////    //stack.emplace_back(p);
-////    //unpack_node_pair(fmm, stack);
-////    //FastMultipoleMethods::stack_entry v = stack.pop_back();
-////    //EXPECT_EQ(p.source, v.source);
-////    //EXPECT_EQ(p.target, v.target);
-////    //EXPECT_EQ(p.unpacked, false);
-////    //EXPECT_EQ(v.unpacked, true);
-////    //EXPECT_TRUE(stack.empty());
-////
-////    ////already unpacked
-////    //p.unpacked = true;
-////    //stack.emplace_back(p);
-////    //unpack_node_pair(fmm, stack);
-////    //v = stack.pop_back();
-////    //EXPECT_EQ(p.source, v.source);
-////    //EXPECT_EQ(p.target, v.target);
-////    //EXPECT_EQ(p.unpacked, true);
-////    //EXPECT_EQ(v.unpacked, true);
-////    //EXPECT_TRUE(stack.empty());
-////
-////    // normal
-////    //if (leaf_level > 3) {
-////
-////    //    do {
-////    //        size_t level = urd_level(mt);
-////    //        source_node = get_random_node_on_level(octree->get_root(), level, mt);
-////    //    } while (!source_node->is_parent());
-////    //    target_parent = get_random_node_on_level(octree->get_root(), source_node->get_level() - 2, mt);
-////
-////    //    p = { source_node, target_parent };
-////    //    stack.emplace_back(p);
-////    //    unpack_node_pair(fmm, stack);
-////
-////    //    while (!stack.empty()) {
-////    //        const auto& new_p = stack.pop_back();
-////    //        auto* new_source = new_p.source;
-////    //        auto* new_target = new_p.target;
-////
-////    //        EXPECT_EQ(target_parent, new_target);
-////    //        EXPECT_EQ(new_p.unpacked, true);
-////    //        EXPECT_GE(new_source->get_level(), source_node->get_level() + 1);
-////    //        EXPECT_LE(new_source->get_level(), source_node->get_level() + Constants::unpacking);
-////    //    }
-////    //}
-////}
+//TEST_F(FMMTest, unpack_nodes) {
+//    const auto number_neurons = get_random_number_neurons();
+//    const auto& [min, max] = get_random_simulation_box_size();
+//
+//    const auto& axons = create_axons(number_neurons);
+//    const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
+//    const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Inhibitory);
+//
+//    const auto& neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons);
+//
+//    auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
+//
+//    std::map<NeuronID::value_type, Vec3d> positions{};
+//    for (const auto& [position, id] : neurons_to_place) {
+//        octree->insert(position, id);
+//        positions[id.get_neuron_id()] = position;
+//    }
+//
+//    octree->initializes_leaf_nodes(number_neurons);
+//
+//    FastMultipoleMethods fmm(octree);
+//    fmm.set_synaptic_elements(axons, excitatory_dendrites, inhibitory_dendrites);
+//
+//    const auto update_status = get_update_status(number_neurons);
+//    ASSERT_NO_THROW(fmm.update_octree(update_status));
+//
+//    // start testing
+//    auto& leaf_nodes = octree->get_leaf_nodes();
+//    const auto leaf_level = leaf_nodes[0]->get_level();
+//    std::uniform_int_distribution<size_t> urd_level(2, leaf_level - 1);
+//    Stack<FastMultipoleMethods::stack_entry> stack{};
+//    // TODO nulltesting
+//
+//    // source leaf
+//    //auto source_node = leaf_nodes[0];
+//    //auto target_parent = get_random_node_on_level(octree->get_root(), leaf_level - 1, mt);
+//    //FastMultipoleMethods::stack_entry p = { source_node, target_parent, false };
+//    //stack.emplace_back(p);
+//    //unpack_node_pair(fmm, stack);
+//    //FastMultipoleMethods::stack_entry v = stack.pop_back();
+//    //EXPECT_EQ(p.source, v.source);
+//    //EXPECT_EQ(p.target, v.target);
+//    //EXPECT_EQ(p.unpacked, false);
+//    //EXPECT_EQ(v.unpacked, true);
+//    //EXPECT_TRUE(stack.empty());
+//
+//    ////already unpacked
+//    //p.unpacked = true;
+//    //stack.emplace_back(p);
+//    //unpack_node_pair(fmm, stack);
+//    //v = stack.pop_back();
+//    //EXPECT_EQ(p.source, v.source);
+//    //EXPECT_EQ(p.target, v.target);
+//    //EXPECT_EQ(p.unpacked, true);
+//    //EXPECT_EQ(v.unpacked, true);
+//    //EXPECT_TRUE(stack.empty());
+//
+//    // normal
+//    //if (leaf_level > 3) {
+//
+//    //    do {
+//    //        size_t level = urd_level(mt);
+//    //        source_node = get_random_node_on_level(octree->get_root(), level, mt);
+//    //    } while (!source_node->is_parent());
+//    //    target_parent = get_random_node_on_level(octree->get_root(), source_node->get_level() - 2, mt);
+//
+//    //    p = { source_node, target_parent };
+//    //    stack.emplace_back(p);
+//    //    unpack_node_pair(fmm, stack);
+//
+//    //    while (!stack.empty()) {
+//    //        const auto& new_p = stack.pop_back();
+//    //        auto* new_source = new_p.source;
+//    //        auto* new_target = new_p.target;
+//
+//    //        EXPECT_EQ(target_parent, new_target);
+//    //        EXPECT_EQ(new_p.unpacked, true);
+//    //        EXPECT_GE(new_source->get_level(), source_node->get_level() + 1);
+//    //        EXPECT_LE(new_source->get_level(), source_node->get_level() + Constants::unpacking);
+//    //    }
+//    //}
+//}
 //
 //TEST_F(FMMTest, align_interaction_list) {
 //    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
