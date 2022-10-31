@@ -209,13 +209,14 @@ public:
         RelearnException::check(new_node_to_insert != nullptr, "OctreeNode::insert: new_node_to_insert is nullptr");
 
         parent_node->set_child(new_node_to_insert, new_position_octant);
+        const auto parent_level = parent_node->get_level();
 
         const auto& [minimum_position, maximum_position] = parent_node->get_cell().get_size_for_octant(new_position_octant);
         new_node_to_insert->set_cell_size(minimum_position, maximum_position);
         new_node_to_insert->set_cell_neuron_position({ position });
         new_node_to_insert->set_cell_neuron_id(neuron_id);
         new_node_to_insert->set_rank(rank);
-        new_node_to_insert->set_level(parent_node->get_level() + 1);
+        new_node_to_insert->set_level(parent_level+1);
 
         return new_node_to_insert;
     }
@@ -479,6 +480,7 @@ public:
         level = -1;
         parent = false;
         rank = -1;
+        level = 0;
     }
 
     /**

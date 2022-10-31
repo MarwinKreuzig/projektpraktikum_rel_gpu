@@ -325,6 +325,17 @@ public:
     }
 
     /**
+     * @brief Makes all coordinates positive
+     */
+    [[nodiscard]] Vec3<T>& positive_vector(){
+        x = std::abs(x);
+        y = std::abs(y);
+        z = std::abs(z);
+
+        return *this;
+    }
+
+    /**
      * @brief Calculates the 2-norm of the vector
      * @return The calculated 2-norm
      */

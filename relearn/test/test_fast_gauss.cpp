@@ -155,12 +155,27 @@ SynapticElements create_axons(size_t size, mt19937& mt, double max_free) {
     return se;
 }
 
-TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
-    uniform_int_distribution<size_t> uid_lvl(0, 6);
-    uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    uniform_real_distribution<double> urd_theta(0.0, 1.0);
+OctreeNode<AdditionalCellAttributes>* get_random_node_on_level(OctreeNode<AdditionalCellAttributes>* root, size_t level, std::mt19937& mt) {
+    auto* current_node = root;
+    std::uniform_real_distribution<double> urd(0, 8);
+    size_t count = 0;
+    size_t tries = 1000;
 
-    uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
+    while (count < level && tries > 1) {
+        current_node = current_node->get_child(urd(mt));
+        if (current_node == nullptr || !current_node->is_parent()) {
+            tries--;
+            current_node = root;
+            count = 0;
+            continue;
+        }
+        count++;
+    }
+    return current_node;
+}
+
+TEST_F(FMMTest, testOctreeUpdateLocalTreesNumberDendritesFMM) {
+    const auto my_rank = MPIWrapper::get_my_rank();
 
     const auto& [min, max] = get_random_simulation_box_size_FMM(mt);
 
@@ -181,7 +196,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
 
     std::vector<UpdateStatus> disable_flags(num_neurons, UpdateStatus::Enabled);
 
-    const auto max_vacant_elements = uid_max_vacant(mt);
+    const auto max_vacant_elements = get_random_synaptic_element_count();
 
     auto elements = create_synaptic_elements(num_neurons, mt, max_vacant_elements);
 
@@ -229,13 +244,9 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberDendritesFMM) {
     make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
-TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
-    uniform_int_distribution<size_t> uid_lvl(0, 6);
-    uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    uniform_real_distribution<double> urd_theta(0.0, 1.0);
-
-    const auto& [min, max] = get_random_simulation_box_size_FMM(mt);
-
+TEST_F(FMMTest, testOctreeUpdateLocalTreesPositionDendritesFMM) {
+    const auto my_rank = MPIWrapper::get_my_rank();
+    const auto& [min, max] = get_random_simulation_box_size();
     auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
     auto& octree = *octree_ptr;
 
@@ -366,9 +377,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionDendritesFMM) {
     make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
-TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
-    uniform_int_distribution<size_t> uid_lvl(0, 6);
-    uniform_real_distribution<double> urd_sigma(1, 10000.0);
+TEST_F(FMMTest, testOctreeUpdateLocalTreesNumberAxonsFMM) {
 
     uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
 
@@ -447,10 +456,7 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesNumberAxonsFMM) {
     make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
-TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
-    uniform_int_distribution<size_t> uid_lvl(0, 6);
-    uniform_real_distribution<double> urd_sigma(1, 10000.0);
-    uniform_real_distribution<double> urd_theta(0.0, 1.0);
+TEST_F(FMMTest, testOctreeUpdateLocalTreesPositionAxonsFMM) {
 
     const auto& [min, max] = get_random_simulation_box_size_FMM(mt);
 
@@ -584,149 +590,162 @@ TEST_F(OctreeTestFMM, testOctreeUpdateLocalTreesPositionAxonsFMM) {
     make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
-// TEST_F(OctreeTestFMM, testOctreeSeriesExpansionsFMM) {
+/* TEST_F(FMMTest, testAccuracyFMM) {
 
-//     const auto my_rank = MPIWrapper::get_my_rank();
+    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
+    std::uniform_int_distribution<size_t> uid(0, 10000);
+    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
 
-//     uniform_int_distribution<size_t> uid_lvl(0, 6);
-//     uniform_real_distribution<double> urd_sigma(1, 10000.0);
-//     uniform_real_distribution<double> uid_max_vacant(1.0, 100.0);
+    for (auto i = 0; i < 1; i++) {
+        const auto number_neurons = get_random_number_neurons();
+        const auto& [min, max] = get_random_simulation_box_size();
 
-//     for (auto i = 0; i < iterations; i++) {
-//          const auto& [min, max] = get_random_simulation_box_size_FMM(mt);
+        const auto& axons = create_axons(number_neurons);
+        const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
+        const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Inhibitory);
 
-//         auto octree_ptr = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
+        std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons);
 
-//         auto& octree = *octree_ptr;
+        auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethods>>(min, max, 0);
 
-//         const size_t num_neurons = get_random_number_neurons();
+        std::map<int, Vec3d> positions{};
+        for (const auto& [position, id] : neurons_to_place) {
+            octree->insert(position, id, 0);
+            positions[id.get_local_id()] = position;
+        }
 
-//         const std::vector<std::tuple<Vec3d, size_t>> neurons_to_place = generate_random_neurons_FMM(min, max, num_neurons, num_neurons, mt);
+        octree->initializes_leaf_nodes(number_neurons);
 
-//         for (const auto& [position, id] : neurons_to_place) {
-//             octree.insert(position, id, my_rank);
-//         }
+        FastMultipoleMethods fmm(octree);
+        fmm.set_synaptic_elements(axons, excitatory_dendrites, inhibitory_dendrites);
 
-//         octree.initializes_leaf_nodes(num_neurons);
+        const auto update_status = get_update_status(number_neurons);
 
-//         const auto max_vacant_elements = uid_max_vacant(mt);
+        ASSERT_NO_THROW(fmm.update_leaf_nodes(update_status));
+        ASSERT_NO_THROW(octree->update_local_trees());
 
-//         auto elements = create_synaptic_elements(num_neurons, mt, max_vacant_elements);
+        const auto cur_sigma = urd_sigma(mt);
 
-//         auto unique_ax = std::make_unique<SynapticElements>(std::move(elements[0]));
-//         auto unique_dend_exc = std::make_unique<SynapticElements>(std::move(elements[1]));
-//         auto unique_dend_inh = std::make_unique<SynapticElements>(std::move(elements[2]));
+        OctreeNode<AdditionalCellAttributes>* root = octree->get_root();
+        unsigned int num_ax = root->get_cell().get_number_axons_for(SignalType::Inhibitory);
+        unsigned int num_dend = root->get_cell().get_number_dendrites_for(SignalType::Inhibitory);
+        printf("Axons: %i    Dendrites: %i \n", num_ax, num_dend);
+        auto const children = root->get_children();
 
-//         FastMultipoleMethods fmm{ octree_ptr };
+        std::vector<double> direct_arr;
+        direct_arr.reserve(56);
+        std::vector<double> hermite_arr;
+        hermite_arr.reserve(56);
+        std::vector<double> taylor_arr;
+        taylor_arr.reserve(56);
+        std::vector<double> distance;
+        distance.reserve(56);
+        std::vector<CalculationType> types;
+        types.reserve(56);
 
-//         std::vector<char> disable_flags(num_neurons, 1);
+        for (auto i = 0; i < Constants::number_oct; i++) {
 
-//         fmm.update_leaf_nodes(disable_flags, unique_ax, unique_dend_exc, unique_dend_inh);
-//         octree.update_local_trees();
+            const auto source = children[i];
+            if (source == nullptr) {
+                continue;
+            }
 
-//         const auto cur_sigma = urd_sigma(mt);
+            auto const num_ax_ex = source->get_cell().get_number_excitatory_axons();
+            if (num_ax_ex == 0 || !source->is_parent()) {
+                continue;
+            }
 
-//         OctreeNode<AdditionalCellAttributes>* root = octree.get_root();
-//         auto const children = root->get_children();
+            auto const coef = calc_hermite_coefficients(source, cur_sigma, SignalType::Excitatory);
 
-//         for (auto i = 0; i < Constants::number_oct; i++) {
-//             const auto source = children[i];
-//             if (source != nullptr) {
-//                 auto const num_ax_ex = source->get_cell().get_number_excitatory_axons();
-//                 if (num_ax_ex > 0) {
-//                     auto const coef = fmm.calc_hermite_coefficients(source, cur_sigma, SignalType::Excitatory);
-//                     for (auto j = 0; j < Constants::number_oct; j++) {
-//                         auto const target = children[j];
-//                         if (i != j && target != nullptr && target->get_cell().get_number_excitatory_dendrites() > 0) {
-//                             CalculationType current_calculation = fmm.check_calculation_requirements(source, target, SignalType::Excitatory);
+            const auto box_length = std::sqrt(2 * cur_sigma * cur_sigma);
 
-//                             auto const direct = fmm.calc_direct_gauss(fmm.get_all_axon_positions_for(source, SignalType::Excitatory),
-//                                 fmm.get_all_dendrite_positions_for(target, SignalType::Excitatory), cur_sigma);
-//                             const auto eps = direct * 0.10;
+            for (auto j = 0; j < Constants::number_oct; j++) {
+                auto const target = children[j];
 
-//                             switch (current_calculation) {
-//                             case CalculationType::HERMITE: {
-//                                 auto const hermite = fmm.calc_hermite(source, target, coef, cur_sigma, SignalType::Excitatory);
-//                                 ASSERT_NEAR(direct, hermite, eps);
-//                             }
-//                             case CalculationType::TAYLOR: {
-//                                 auto const taylor = fmm.calc_taylor(source, target, cur_sigma, SignalType::Excitatory);
-//                                 ASSERT_NEAR(direct, taylor, eps);
-//                             }
-//                             case CalculationType::DIRECT: {
-//                             }
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-//         make_mpi_mem_available<AdditionalCellAttributes>();
-//     }
-// }
+                if (i == j || target == nullptr) {
+                    continue;
+                }
 
-class FMMPrivateFunctionTest : public ::testing::Test {
+                auto num_dend_ex = target->get_cell().get_number_excitatory_dendrites();
+                if (num_dend_ex == 0 || !target->is_parent()) {
+                    continue;
+                }
 
-protected:
-    double function_derivative(double t, unsigned int derivative_order) { return FastMultipoleMethods::Utilities::function_derivative(t, derivative_order); }
-    double kernel(const Vec3d& a, const Vec3d& b, double sigma) { return FastMultipoleMethods::Utilities::kernel(a, b, sigma); }
-    unsigned int get_number_of_indices() { return FastMultipoleMethods::Multiindex::get_number_of_indices(); }
-    std::array<std::array<unsigned int, 3>, Constants::p3> get_indices() { return FastMultipoleMethods::Multiindex::get_indices(); }
-    size_t fac_multiindex(const std::array<unsigned int, 3>& x) { return FastMultipoleMethods::Utilities::fac_multiindex(x); }
-    size_t abs_multiindex(const std::array<unsigned int, 3>& x) { return FastMultipoleMethods::Utilities::abs_multiindex(x); }
-    double pow_multiindex(const Vec3d& base_vector, const std::array<unsigned int, 3>& exponent) { return FastMultipoleMethods::Utilities::pow_multiindex(base_vector, exponent); }
-};
+                CalculationType current_calculation = check_calculation_requirements(source, target, cur_sigma, SignalType::Excitatory);
+                types.push_back(current_calculation);
 
-TEST_F(FMMPrivateFunctionTest, test_static_functions) {
-    // function_derivative test
-    double result[] = {
-        0.74, 0, -0.74,
-        0.74, -2, 0.74,
-        -1.47, 0, 1.47,
-        -7.36, 12, -7.36,
-        -2.94, 0, 2.94,
-        67.69, -120, 67.69,
-        170.7, 0, -170.7,
-        -606.27, 1680, -606.27,
-        -3943.67, 0, 3943.67,
-        3025.44, -30240, 3025.44,
-        84924.23, 0, -84924.23,
-        103288.77, 665280, 103288.77,
-        -1831604.05, 0, 1831604.05,
-        -6348716.24, -17297280, -6348716.24,
-        38587480.85, 0, -38587480.85,
-        267636449.02, 518918400, 267636449.02
-    };
+                auto const direct = calc_direct_gauss(source, target, cur_sigma, SignalType::Excitatory);
+                direct_arr.push_back(direct);
 
-    for (int i = 0; i < 16; i++) {
-        const auto res0 = result[(i * 3) + 0];
-        const auto res1 = result[(i * 3) + 1];
-        const auto res2 = result[(i * 3) + 2];
+                const auto source_pos = source->get_cell().get_axons_position_for(SignalType::Excitatory);
+                const auto dend_pos = target->get_cell().get_dendrites_position_for(SignalType::Excitatory);
+                const auto d = source_pos.value() - dend_pos.value();
+                distance.push_back(d.calculate_2_norm());
 
-        const auto val_new0 = function_derivative(-1, i + 1);
-        const auto val_new1 = function_derivative(0, i + 1);
-        const auto val_new2 = function_derivative(1, i + 1);
+                auto const hermite = calc_hermite(source, target, coef, cur_sigma, SignalType::Excitatory);
+                hermite_arr.push_back(hermite);
+                auto const taylor = calc_taylor(source, target, cur_sigma, SignalType::Excitatory);
+                taylor_arr.push_back(taylor);
+            }
+        }
 
-        EXPECT_NEAR(val_new0, res0, 0.01) << i;
-        EXPECT_NEAR(val_new1, res1, 0.01) << i;
-        EXPECT_NEAR(val_new2, res2, 0.01) << i;
+        for (size_t l = 0; l < direct_arr.size(); l++) {
+            if (types[l] == CalculationType::Direct)
+                continue;
+
+            // calc relative error
+            double val1 = (std::abs(direct_arr[l] - hermite_arr[l]) * 100) / direct_arr[l];
+            double val2 = (std::abs(direct_arr[l] - taylor_arr[l]) * 100) / direct_arr[l];
+
+            EXPECT_LE(val1, 0);
+            EXPECT_LE(val2, 0);
+        }
+
+        make_mpi_mem_available<AdditionalCellAttributes>();
     }
+} */
+
+TEST_F(FMMTest, test_static_functions) {
+
+    FastMultipoleMethodsBase<AdditionalCellAttributes> fmm;
 
     // kernel test
     Vec3d a = { 0, 0, 0 };
     Vec3d b = { 0, 1, 0 };
-    EXPECT_NEAR(kernel(a, b, sigma), 0.999956, 0.0001);
+    EXPECT_NEAR(fmm.kernel(a, b, sigma), 0.999956, 0.0001);
     Vec3d c = { 0, 0, -1 };
-    EXPECT_EQ(kernel(a, a, sigma), 1);
+    EXPECT_EQ(fmm.kernel(a, a, sigma), 1);
     Vec3d e = { 6, 4.5, -3.4 };
     Vec3d f = { 0, -8.3, 2 };
-    EXPECT_NEAR(kernel(e, f, sigma), 0.9898, 0.01);
+    EXPECT_NEAR(fmm.kernel(e, f, sigma), 0.9898, 0.01);
+
+    // h-functions test
+    std::uniform_real_distribution<double> urd_x(-20, 20);
+    for (size_t i = 0; i < iterations; i++) {
+        double x = urd_x(mt);
+        double fac = exp(-(x * x));
+
+        // for n=0
+        EXPECT_NEAR(fac * std::hermite(0, x), fmm.h(0, x), 0.001);
+
+        // for n=1
+        EXPECT_NEAR(fac * std::hermite(1, x), fmm.h(1, x), 0.001);
+
+        // for n=2
+        EXPECT_NEAR(fac * std::hermite(2, x), fmm.h(2, x), 0.001);
+
+        // for n=3
+        EXPECT_NEAR(fac * std::hermite(3, x), fmm.h(3, x), 0.001);
+    }
 }
 
-TEST_F(FMMPrivateFunctionTest, test_multiIndex) {
-    EXPECT_EQ(get_number_of_indices(), Constants::p3);
+TEST_F(FMMTest, test_multiIndex) {
+    Multiindex m;
 
-    const auto& indices = get_indices();
+    EXPECT_EQ(m.get_number_of_indices(), Constants::p3);
+
+    const auto& indices = m.get_indices();
 
     const std::array<unsigned int, 3> temp = indices[1];
     EXPECT_EQ(temp.at(0), 0);
@@ -739,35 +758,244 @@ TEST_F(FMMPrivateFunctionTest, test_multiIndex) {
     EXPECT_EQ(temp1.at(2), Constants::p - 1);
 }
 
-TEST_F(FMMPrivateFunctionTest, test_static_multiindex_functions) {
+TEST_F(FMMTest, test_static_multiindex_functions) {
     const std::array<unsigned int, 3> test_index1 = { 0, 0, 0 };
     const std::array<unsigned int, 3> test_index2 = { 1, 2, 3 };
     const std::array<unsigned int, 3> test_index3 = { 3, 3, 3 };
 
+    FastMultipoleMethodsBase<AdditionalCellAttributes> fmm;
+
     // factorial
-    EXPECT_EQ(fac_multiindex(test_index1), 1);
-    EXPECT_EQ(fac_multiindex(test_index2), 12);
-    EXPECT_EQ(fac_multiindex(test_index3), 216);
+    EXPECT_EQ(fmm.fac_multiindex(test_index1), 1);
+    EXPECT_EQ(fmm.fac_multiindex(test_index2), 12);
+    EXPECT_EQ(fmm.fac_multiindex(test_index3), 216);
 
     // abs
-    EXPECT_EQ(abs_multiindex(test_index1), 0);
-    EXPECT_EQ(abs_multiindex(test_index2), 6);
-    EXPECT_EQ(abs_multiindex(test_index3), 9);
+    EXPECT_EQ(fmm.abs_multiindex(test_index1), 0);
+    EXPECT_EQ(fmm.abs_multiindex(test_index2), 6);
+    EXPECT_EQ(fmm.abs_multiindex(test_index3), 9);
 
     // pow
     Vec3d test_vector1 = Vec3d(0, 0, 0);
     Vec3d test_vector2 = Vec3d(3.12, 5.7, -3.14);
     Vec3d test_vector3 = Vec3d(-6.98, -4.77, 2.94);
 
-    EXPECT_EQ(pow_multiindex(test_vector1, test_index1), 1);
-    EXPECT_EQ(pow_multiindex(test_vector1, test_index2), 0);
-    EXPECT_EQ(pow_multiindex(test_vector1, test_index3), 0);
+    EXPECT_EQ(fmm.pow_multiindex(test_vector1, test_index1), 1);
+    EXPECT_EQ(fmm.pow_multiindex(test_vector1, test_index2), 0);
+    EXPECT_EQ(fmm.pow_multiindex(test_vector1, test_index3), 0);
 
-    EXPECT_EQ(pow_multiindex(test_vector2, test_index1), 1);
-    EXPECT_NEAR(pow_multiindex(test_vector2, test_index2), -3138.29, 0.01);
-    EXPECT_NEAR(pow_multiindex(test_vector2, test_index3), -174131.48, 0.01);
+    EXPECT_EQ(fmm.pow_multiindex(test_vector2, test_index1), 1);
+    EXPECT_NEAR(fmm.pow_multiindex(test_vector2, test_index2), -3138.29, 0.01);
+    EXPECT_NEAR(fmm.pow_multiindex(test_vector2, test_index3), -174131.48, 0.01);
 
-    EXPECT_EQ(pow_multiindex(test_vector3, test_index1), 1);
-    EXPECT_NEAR(pow_multiindex(test_vector3, test_index2), -4035.84, 0.01);
-    EXPECT_NEAR(pow_multiindex(test_vector3, test_index3), 937914.81, 0.01);
+    EXPECT_EQ(fmm.pow_multiindex(test_vector3, test_index1), 1);
+    EXPECT_NEAR(fmm.pow_multiindex(test_vector3, test_index2), -4035.84, 0.01);
+    EXPECT_NEAR(fmm.pow_multiindex(test_vector3, test_index3), 937914.81, 0.01);
+}
+
+TEST_F(FMMTest, test_init_stack) {
+    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
+    std::uniform_int_distribution<size_t> uid(0, 10000);
+    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+
+    // make test tree
+    const auto number_neurons = get_random_number_neurons();
+    const auto& [min, max] = get_random_simulation_box_size();
+
+    const auto& axons = create_axons(number_neurons);
+    const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
+    const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Inhibitory);
+
+    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons);
+
+    auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
+
+    std::map<int, Vec3d> positions{};
+    for (const auto& [position, id] : neurons_to_place) {
+        octree->insert(position, id);
+        positions[id.get_neuron_id()] = position;
+    }
+
+    octree->initializes_leaf_nodes(number_neurons);
+
+    FastMultipoleMethods fmm(octree);
+
+    fmm.set_synaptic_elements(axons, excitatory_dendrites, inhibitory_dendrites);
+
+    const auto update_status = get_update_status(number_neurons);
+
+    ASSERT_NO_THROW(fmm.update_octree(update_status));
+
+    // start testing
+    Stack<FastMultipoleMethods::stack_entry> stack = init_stack(fmm, SignalType::Excitatory);
+    while (!stack.empty()) {
+        const auto& p = stack.pop_back();
+        auto* source_node = p.source;
+        auto* target_parent = p.target;
+
+        EXPECT_NE(source_node, nullptr);
+        EXPECT_NE(target_parent, nullptr);
+        EXPECT_GT(source_node->get_cell().get_number_axons_for(SignalType::Excitatory), 0);
+        EXPECT_GT(target_parent->get_cell().get_number_dendrites_for(SignalType::Excitatory), 0);
+        EXPECT_EQ(source_node->get_level(), target_parent->get_level() + 1);
+        EXPECT_EQ(p.unpacked, false);
+    }
+}
+
+TEST_F(FMMTest, unpack_nodes) {
+    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
+    std::uniform_int_distribution<size_t> uid(0, 10000);
+    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+
+    // make test tree
+    const auto number_neurons = get_random_number_neurons();
+    const auto& [min, max] = get_random_simulation_box_size();
+
+    const auto& axons = create_axons(number_neurons);
+    const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
+    const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Inhibitory);
+
+    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons);
+
+    auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
+
+    std::map<int, Vec3d> positions{};
+    for (const auto& [position, id] : neurons_to_place) {
+        octree->insert(position, id);
+        positions[id.get_neuron_id()] = position;
+    }
+
+    octree->initializes_leaf_nodes(number_neurons);
+
+    FastMultipoleMethods fmm(octree);
+
+    fmm.set_synaptic_elements(axons, excitatory_dendrites, inhibitory_dendrites);
+
+    const auto update_status = get_update_status(number_neurons);
+
+    ASSERT_NO_THROW(fmm.update_octree(update_status));
+
+    // start testing
+    auto& leaf_nodes = octree->get_leaf_nodes();
+    const auto leaf_level = leaf_nodes[0]->get_level();
+    std::uniform_int_distribution<size_t> urd_level(2, leaf_level - 1);
+    OctreeNode<AdditionalCellAttributes>* source_node = nullptr;
+    OctreeNode<AdditionalCellAttributes>* target_parent = nullptr;
+    Stack<FastMultipoleMethods::stack_entry> stack{};
+    // TODO nulltesting
+
+    // source leaf
+    source_node = leaf_nodes[0];
+    target_parent = get_random_node_on_level(octree->get_root(), leaf_level - 1, mt);
+    FastMultipoleMethods::stack_entry p = { source_node, target_parent, false };
+    stack.emplace_back(p);
+    unpack_node_pair(fmm, stack);
+    FastMultipoleMethods::stack_entry v = stack.pop_back();
+    EXPECT_EQ(p.source, v.source);
+    EXPECT_EQ(p.target, v.target);
+    EXPECT_EQ(p.unpacked, false);
+    EXPECT_EQ(v.unpacked, true);
+    EXPECT_TRUE(stack.empty());
+
+    //already unpacked
+    p.unpacked = true;
+    stack.emplace_back(p);
+    unpack_node_pair(fmm, stack);
+    v = stack.pop_back();
+    EXPECT_EQ(p.source, v.source);
+    EXPECT_EQ(p.target, v.target);
+    EXPECT_EQ(p.unpacked, true);
+    EXPECT_EQ(v.unpacked, true);
+    EXPECT_TRUE(stack.empty());
+
+    // normal
+    if (leaf_level > 3) {
+
+        do {
+            size_t level = urd_level(mt);
+            source_node = get_random_node_on_level(octree->get_root(), level, mt);
+        } while (!source_node->is_parent());
+        target_parent = get_random_node_on_level(octree->get_root(), source_node->get_level() - 2, mt);
+
+        p = { source_node, target_parent };
+        stack.emplace_back(p);
+        unpack_node_pair(fmm, stack);
+
+        while (!stack.empty()) {
+            const auto& new_p = stack.pop_back();
+            auto* new_source = new_p.source;
+            auto* new_target = new_p.target;
+
+            EXPECT_EQ(target_parent, new_target);
+            EXPECT_EQ(new_p.unpacked, true);
+            EXPECT_GE(new_source->get_level(), source_node->get_level() + 1);
+            EXPECT_LE(new_source->get_level(), source_node->get_level() + Constants::unpacking);
+        }
+    }
+}
+
+TEST_F(FMMTest, align_interaction_list) {
+    std::uniform_int_distribution<size_t> uid_lvl(0, 6);
+    std::uniform_int_distribution<size_t> uid(0, 10000);
+    std::uniform_real_distribution<double> urd_sigma(1, 10000.0);
+    std::uniform_real_distribution<double> urd_theta(0.0, 1.0);
+
+    // make test tree
+    const auto number_neurons = get_random_number_neurons();
+    const auto& [min, max] = get_random_simulation_box_size();
+
+    const auto& axons = create_axons(number_neurons);
+    const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
+    const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Inhibitory);
+
+    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons);
+
+     auto octree = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(min, max, 0);
+
+    std::map<int, Vec3d> positions{};
+    for (const auto& [position, id] : neurons_to_place) {
+        octree->insert(position, id);
+        positions[id.get_neuron_id()] = position;
+    }
+
+    octree->initializes_leaf_nodes(number_neurons);
+
+    FastMultipoleMethods fmm(octree);
+
+    fmm.set_synaptic_elements(axons, excitatory_dendrites, inhibitory_dendrites);
+
+    const auto update_status = get_update_status(number_neurons);
+
+    ASSERT_NO_THROW(fmm.update_octree(update_status));
+
+    // start testing
+    auto& leaf_nodes = octree->get_leaf_nodes();
+    auto* root = octree->get_root();
+    const auto leaf_level = leaf_nodes[0]->get_level();
+    std::uniform_int_distribution<size_t> urd_level(1, leaf_level);
+    OctreeNode<AdditionalCellAttributes>* source_node = nullptr;
+    OctreeNode<AdditionalCellAttributes>* target_parent = nullptr;
+
+    // TODO nulltesting
+
+    const auto source_level = urd_level(mt);
+    source_node = get_random_node_on_level(root, source_level, mt);
+    std::uniform_int_distribution<size_t> urd_target_level(0, source_level);
+    const auto target_level = urd_target_level(mt);
+    target_parent = get_random_node_on_level(root, target_level, mt);
+    size_t level_diff = source_level - target_level;
+    const auto result = align_interaction_list(fmm, source_node, target_parent, SignalType::Excitatory);
+    EXPECT_GE(result.size(), 1);
+    EXPECT_LE(result.size(), pow(8, level_diff));
+    for (auto* node : result) {
+        const auto node_level = node->get_level();
+        if (node->is_parent()) {
+            EXPECT_EQ(node_level, source_level);
+        } else {
+            EXPECT_GE(node_level, target_level);
+            EXPECT_LE(node_level, source_level);
+        }
+    }
 }

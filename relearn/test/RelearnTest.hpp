@@ -11,6 +11,8 @@
 
 #include "algorithm/BarnesHutInternal/BarnesHutCell.h"
 #include "algorithm/FMMInternal/FastMultipoleMethodsCell.h"
+#include "algorithm/FMMInternal/FastMultipoleMethods.h"
+#include "algorithm/FMMInternal/FastMultipoleMethodsBase.h"
 #include "algorithm/Kernel/Gamma.h"
 #include "algorithm/Kernel/Gaussian.h"
 #include "algorithm/Kernel/Kernel.h"
@@ -519,7 +521,7 @@ protected:
         dendrites.init(number_elements);
 
         for (const auto& neuron_id : NeuronID::range(number_elements)) {
-            const auto number_grown_elements = get_random_synaptic_element_count();
+            const auto number_grown_elements = 1;//get_random_synaptic_element_count();
 
             dendrites.update_grown_elements(neuron_id, number_grown_elements);
             dendrites.update_connected_elements(neuron_id, 0);
@@ -913,18 +915,35 @@ protected:
     }
 };
 
-class OctreeTestFMM : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate<FastMultipoleMethodsCell>();
-    }
-};
-
 class BarnesHutTest : public RelearnTest {
 protected:
     static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
     }
+};
+
+class FMMTest : public RelearnTest {
+protected:
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<FastMultipoleMethodsCell>();
+    }
+
+    Stack<FastMultipoleMethods::stack_entry> init_stack(FastMultipoleMethods fmm, const SignalType signal_type_needed)
+        {return fmm.init_stack(signal_type_needed);}
+
+    void unpack_node_pair(FastMultipoleMethods fmm, Stack<FastMultipoleMethods::stack_entry> &stack){return fmm.unpack_node_pair(stack);}
+    
+    FastMultipoleMethods::interaction_list_type align_interaction_list
+        (FastMultipoleMethods fmm, OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>* source_node, OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>* target_parent, const SignalType signal_type)
+        {return fmm.align_interaction_list(source_node, target_parent, signal_type);}
+    
+    // std::array<double, Constants::p3> calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, double sigma, SignalType signal_type_needed) { return FastMultipoleMethods::calc_hermite_coefficients(source, sigma, signal_type_needed); }
+    // CalculationType check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::check_calculation_requirements(source, target, sigma, signal_type_needed);}
+    // const std::vector<std::pair<FastMultipoleMethods::position_type, FastMultipoleMethods::counter_type>> get_all_positions_for(OctreeNode<FastMultipoleMethodsCell>* node, const ElementType type, const SignalType signal_type_needed){return FastMultipoleMethodsBase<FastMultipoleMethodsCell>::get_all_positions_for(node, type, signal_type_needed);}
+    // double calc_taylor(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_taylor(source, target, sigma, signal_type_needed);}
+    // double calc_direct_gauss(OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_direct_gauss(source, target, sigma, signal_type_needed);}
+    // double calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_hermite(source, target, coefficients_buffer, sigma, signal_type_needed);}
+
 };
 
 class PartitionTest : public RelearnTest {
