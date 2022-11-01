@@ -525,36 +525,52 @@ public:
 
     /**
      * @brief Sets the number of free excitatory and inhibitory dendrites in the associated cell
-     * @param num_ex The number of free excitatory dendrites
-     * @param num_in The number of free inhibitory dendrites
+     * @param number_excitatory_dendrites The number of free excitatory dendrites
+     * @param number_inhibitory_dendrites The number of free inhibitory dendrites
      */
-    constexpr void set_cell_number_dendrites(const counter_type num_ex, const counter_type num_in) noexcept {
-        cell.set_number_excitatory_dendrites(num_ex);
-        cell.set_number_inhibitory_dendrites(num_in);
+    constexpr void set_cell_number_dendrites(const counter_type number_excitatory_dendrites, const counter_type number_inhibitory_dendrites) noexcept {
+        cell.set_number_excitatory_dendrites(number_excitatory_dendrites);
+        cell.set_number_inhibitory_dendrites(number_inhibitory_dendrites);
     }
 
     /**
      * @brief Sets the number of free excitatory and inhibitory axons in the associated cell
-     * @param num_ex The number of free excitatory axons
-     * @param num_in The number of free inhibitory axons
+     * @param number_excitatory_axons The number of free excitatory axons
+     * @param number_inhibitory_axons The number of free inhibitory axons
      */
-    constexpr void set_cell_number_axons(const counter_type num_ex, const counter_type num_in) noexcept {
-        cell.set_number_excitatory_axons(num_ex);
-        cell.set_number_inhibitory_axons(num_in);
+    constexpr void set_cell_number_axons(const counter_type number_excitatory_axons, const counter_type number_inhibitory_axons) noexcept {
+        cell.set_number_excitatory_axons(number_excitatory_axons);
+        cell.set_number_inhibitory_axons(number_inhibitory_axons);
     }
 
+    /**
+     * @brief Sets the number of free excitatory dendrites int he associated cell
+     * @param number_dendrites The number of free excitatory dendrites
+     */
     constexpr void set_cell_number_excitatory_dendrites(const counter_type number_dendrites) noexcept {
         cell.set_number_excitatory_dendrites(number_dendrites);
     }
 
+    /**
+     * @brief Sets the number of free excitatory axons int he associated cell
+     * @param number_axons The number of free excitatory axons
+     */
     constexpr void set_cell_number_excitatory_axons(const counter_type number_axons) noexcept {
         cell.set_number_excitatory_axons(number_axons);
     }
 
+    /**
+     * @brief Sets the number of free inhibitory dendrites int he associated cell
+     * @param number_dendrites The number of free inhibitory dendrites
+     */
     constexpr void set_cell_number_inhibitory_dendrites(const counter_type number_dendrites) noexcept {
         cell.set_number_inhibitory_dendrites(number_dendrites);
     }
 
+    /**
+     * @brief Sets the number of free inhibitory axons int he associated cell
+     * @param number_axons The number of free inhibitory axons
+     */
     constexpr void set_cell_number_inhibitory_axons(const counter_type number_axons) noexcept {
         cell.set_number_inhibitory_axons(number_axons);
     }
@@ -595,7 +611,7 @@ public:
      * @brief Returns the neuron id for the associated cell
      * @return The neuron id
      */
-    [[nodiscard]] constexpr NeuronID get_cell_neuron_id() const noexcept {
+    [[nodiscard]] constexpr const NeuronID& get_cell_neuron_id() const noexcept {
         return cell.get_neuron_id();
     }
 
@@ -614,7 +630,7 @@ public:
      * @param max The maximum boundary of the cell
      * @exception Might throw a RelearnException
      */
-    void set_cell_size(const box_size_type& min, const box_size_type& max) {
+    constexpr void set_cell_size(const box_size_type& min, const box_size_type& max) {
         cell.set_size(min, max);
     }
 

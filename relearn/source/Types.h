@@ -14,6 +14,7 @@
 #include "neurons/helper/Synapse.h"
 #include "util/Vec3.h"
 
+#include <cstdint>
 #include <vector>
 
 enum class NeuronModelEnum {
@@ -31,6 +32,9 @@ using position_type = Vec3d;
 using synapse_weight = int;
 
 using counter_type = unsigned int;
+
+using step_type = std::uint32_t;
+using number_neurons_type = std::uint64_t;
 
 } // namespace RelearnTypes
 

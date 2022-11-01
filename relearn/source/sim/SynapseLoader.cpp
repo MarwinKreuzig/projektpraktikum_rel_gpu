@@ -10,6 +10,7 @@
 
 #include "SynapseLoader.h"
 
+#include "io/LogFiles.h"
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
 #include "util/Timers.h"

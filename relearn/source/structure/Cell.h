@@ -39,7 +39,7 @@ public:
     constexpr static bool has_inhibitory_axon = AdditionalCellAttributes::has_inhibitory_axon;
 
     /**
-     * @brief Sets the neuron id for the associated cell
+     * @brief Sets the neuron id
      * @param neuron_id The neuron id
      * @exception Throws a RelearnException if the neuron_id is not initialized
      */
@@ -49,20 +49,20 @@ public:
     }
 
     /**
-     * @brief Returns the neuron id for the associated cell. Is Constants::uninitialized to indicate a virtual neuron aka an inner node in the Octree
+     * @brief Returns the neuron id
      * @return The neuron id
      */
-    [[nodiscard]] constexpr NeuronID get_neuron_id() const noexcept {
+    [[nodiscard]] constexpr const NeuronID& get_neuron_id() const noexcept {
         return neuron_id;
     }
 
     /**
      * @brief Sets the size of this cell
-     * @param min The minimum index, y, and z of the sell
-     * @param max The maximum index, y, and z of the sell
+     * @param min The minimum index, y, and z of the cell
+     * @param max The maximum index, y, and z of the cell
      * @exception Throws a RelearnException if one component of min is larger than the respective component of max
      */
-    void set_size(const box_size_type& min, const box_size_type& max) {
+    constexpr void set_size(const box_size_type& min, const box_size_type& max) {
         const auto& [min_x, min_y, min_z] = min;
         const auto& [max_x, max_y, max_z] = max;
 
@@ -355,7 +355,7 @@ public:
             return pos_ex;
         }
 
-        RelearnException::fail("In Cell, one pos was valid and one was not");
+        RelearnException::fail("Cell::get_dendrites_positions: one pos was valid and one was not");
 
         return {};
     }
@@ -492,7 +492,7 @@ public:
             return pos_ex;
         }
 
-        RelearnException::fail("In Cell, one pos was valid and one was not");
+        RelearnException::fail("Cell::get_axons_position: one pos was valid and one was not");
 
         return {};
     }
@@ -543,3 +543,5 @@ public:
         return additional_cell_attributes.get_position_for(element_type, signal_type);
     }
 };
+
+#undef RELEARN_NUA

@@ -11,7 +11,6 @@
  */
 
 #include "Config.h"
-#include "mpi/MPIWrapper.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 

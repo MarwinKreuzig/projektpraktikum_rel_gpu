@@ -10,6 +10,7 @@
  *
  */
 
+#include "Types.h"
 #include "util/TaggedID.h"
 
 #include <cstdint>
@@ -25,6 +26,9 @@
  */
 class InteractiveNeuronIO {
 public:
+    using step_type = RelearnTypes::step_type;
+    using number_neurons_type = RelearnTypes::number_neurons_type;
+
     /**
      * @brief Reads the file specified by the path and extracts all enable-interrupts.
      *      An enable-interrupt should enable a neuron during the simulation.
@@ -37,7 +41,7 @@ public:
      * @exception Throws a RelearnException if opening the file fails
      * @return A collection of pairs: (<simulation step>, <all neurons that should be enabled in the simulation step>)
      */
-    [[nodiscard]] static std::vector<std::pair<size_t, std::vector<NeuronID>>> load_enable_interrupts(const std::filesystem::path& path_to_file);
+    [[nodiscard]] static std::vector<std::pair<step_type, std::vector<NeuronID>>> load_enable_interrupts(const std::filesystem::path& path_to_file);
 
     /**
      * @brief Reads the file specified by the path and extracts all disable-interrupts.
@@ -51,7 +55,7 @@ public:
      * @exception Throws a RelearnException if opening the file fails
      * @return A collection of pairs: (<simulation step>, <all neurons that should be disabled in the simulation step>)
      */
-    [[nodiscard]] static std::vector<std::pair<size_t, std::vector<NeuronID>>> load_disable_interrupts(const std::filesystem::path& path_to_file);
+    [[nodiscard]] static std::vector<std::pair<step_type, std::vector<NeuronID>>> load_disable_interrupts(const std::filesystem::path& path_to_file);
 
     /**
      * @brief Reads the file specified by the path and extracts all creation-interrupts.
@@ -65,7 +69,7 @@ public:
      * @exception Throws a RelearnException if opening the file fails
      * @return A collection of pairs: (<simulation step>, <number of neurons to be created>)
      */
-    [[nodiscard]] static std::vector<std::pair<size_t, size_t>> load_creation_interrupts(const std::filesystem::path& path_to_file);
+    [[nodiscard]] static std::vector<std::pair<step_type, number_neurons_type>> load_creation_interrupts(const std::filesystem::path& path_to_file);
 
     /**
      * @brief Reads the file specified by the path and extracts als stimulus-interrupts. 
@@ -78,5 +82,5 @@ public:
      * @exception Throws a RelearnException if opening the file fails
      * @return A function that specified for a given simulation step and a given neuron id, how much background it receives
      */
-    [[nodiscard]] static std::function<double(std::uint64_t, NeuronID::value_type)> load_stimulus_interrupts(const std::filesystem::path& path_to_file);
+    [[nodiscard]] static std::function<double(step_type, NeuronID::value_type)> load_stimulus_interrupts(const std::filesystem::path& path_to_file);
 };

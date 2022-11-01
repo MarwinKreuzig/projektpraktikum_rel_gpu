@@ -53,13 +53,13 @@ void Timers::print() {
     /**
      * Print timers and memory usage
      */
-    constexpr size_t expected_num_timers = size_t(3) * NUMBER_TIMERS;
+    constexpr auto expected_num_timers = size_t(3) * NUMBER_TIMERS;
 
     std::array<double, expected_num_timers> timers_local{};
 
     std::stringstream local_timer_output{};
 
-    for (size_t i = 0; i < NUMBER_TIMERS; ++i) {
+    for (auto i = 0U; i < NUMBER_TIMERS; ++i) {
         const auto timer = static_cast<TimerRegion>(i);
         const auto elapsed = get_elapsed(timer);
 
@@ -84,10 +84,11 @@ void Timers::print() {
 
     std::stringstream sstring{};
 
-    auto print_timer = [&timers_global, &sstring](auto message, const TimerRegion timer_index) {
-        const auto min_time = timers_global[3 * static_cast<size_t>(timer_index)];
-        const auto avg_time = timers_global[3 * static_cast<size_t>(timer_index) + 1];
-        const auto max_time = timers_global[3 * static_cast<size_t>(timer_index) + 2];
+    auto print_timer = [&timers_global, &sstring](auto message, const TimerRegion timer) {
+        const auto timer_index = get_timer_index(timer);
+        const auto min_time = timers_global[3 * timer_index];
+        const auto avg_time = timers_global[3 * timer_index + 1];
+        const auto max_time = timers_global[3 * timer_index + 2];
 
         sstring << message
                 << std::setw(Constants::print_width) << min_time << " | "
@@ -97,8 +98,8 @@ void Timers::print() {
 
     // Divide second entry of (min, sum, max), i.e., sum, by the number of ranks
     // so that sum becomes average
-    for (size_t i = 0; i < NUMBER_TIMERS; i++) {
-        const size_t idx = 3 * i + 1;
+    for (auto i = index_type(0); i < NUMBER_TIMERS; i++) {
+        const index_type idx = 3 * i + 1U;
         // NOLINTNEXTLINE
         timers_global[idx] /= MPIWrapper::get_num_ranks();
     }
@@ -108,12 +109,9 @@ void Timers::print() {
 
     sstring << "\n======== TIMERS GLOBAL OVER ALL RANKS ========\n";
     sstring << "                                                ("
-            << std::setw(Constants::print_width) << " min"
-            << " | "
-            << std::setw(Constants::print_width) << " avg"
-            << " | "
-            << std::setw(Constants::print_width) << " max"
-            << ") sec.\n";
+            << std::setw(Constants::print_width) << " min" << " | "
+            << std::setw(Constants::print_width) << " avg" << " | "
+            << std::setw(Constants::print_width) << " max" << ") sec.\n";
     sstring << "TIMERS: main()\n";
 
     print_timer("  Initialization                               : ", TimerRegion::INITIALIZATION);
@@ -158,6 +156,6 @@ void Timers::print() {
 
     LogFiles::write_to_file(LogFiles::EventType::Timers, true, sstring.str());
 
-    const auto average_simulation_time = timers_global[3 * static_cast<size_t>(TimerRegion::SIMULATION_LOOP) + 1];
+    const auto average_simulation_time = timers_global[3 * get_timer_index(TimerRegion::SIMULATION_LOOP) + 1];
     LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Simulation time [sec]: {}", average_simulation_time);
 }

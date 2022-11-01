@@ -28,6 +28,8 @@ public:
     using position_type = RelearnTypes::position_type;
     using box_size_type = RelearnTypes::box_size_type;
 
+    using number_neurons_type = RelearnTypes::number_neurons_type;
+
     /**
      * Subdomain is a type that represents one part of the octree at the level of the branching nodes.
      * It's composed of the min and max positions of the subdomain, the number of neurons in this subdomain,
@@ -37,7 +39,7 @@ public:
         box_size_type minimum_position{ Constants::uninitialized };
         box_size_type maximum_position{ Constants::uninitialized };
 
-        size_t number_neurons{ Constants::uninitialized };
+        number_neurons_type number_neurons{ Constants::uninitialized };
 
         NeuronID neuron_local_id_start{ NeuronID::uninitialized_id() };
         NeuronID neuron_local_id_end{ NeuronID::uninitialized_id() };
@@ -81,7 +83,7 @@ public:
      * @exception Throws a RelearnException if the number has not been set previously
      * @return The total number of neurons
      */
-    [[nodiscard]] size_t get_total_number_neurons() const {
+    [[nodiscard]] number_neurons_type get_total_number_neurons() const {
         RelearnException::check(total_number_neurons < Constants::uninitialized, "Partition::get_total_number_neurons: total_number_neurons was not set");
         return total_number_neurons;
     }
@@ -91,7 +93,7 @@ public:
      * @exception Throws a RelearnException if the calculate_local_ids has not been called
      * @return The number of local neurons
      */
-    [[nodiscard]] size_t get_number_local_neurons() const {
+    [[nodiscard]] number_neurons_type get_number_local_neurons() const {
         RelearnException::check(number_local_neurons < Constants::uninitialized, "Partition::get_number_local_neurons: Neurons are not loaded yet");
         return number_local_neurons;
     }
@@ -218,7 +220,7 @@ public:
      * @brief Sets the number of local neurons (i.e., on this MPI rank)
      * @param number_neurons The number of local neurons
      */
-    void set_number_local_neurons(const size_t number_neurons) noexcept {
+    void set_number_local_neurons(const number_neurons_type number_neurons) noexcept {
         number_local_neurons = number_neurons;
     }
 
@@ -324,8 +326,8 @@ private:
     size_t my_mpi_rank{ Constants::uninitialized };
     size_t number_mpi_ranks{ Constants::uninitialized };
 
-    size_t total_number_neurons{ Constants::uninitialized };
-    size_t number_local_neurons{ Constants::uninitialized };
+    number_neurons_type total_number_neurons{ Constants::uninitialized };
+    number_neurons_type number_local_neurons{ Constants::uninitialized };
 
     size_t total_number_subdomains{ Constants::uninitialized };
     size_t number_subdomains_per_dimension{ Constants::uninitialized };

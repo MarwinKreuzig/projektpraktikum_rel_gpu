@@ -23,7 +23,7 @@ namespace Util {
  * @brief Calculates the minimum, maximum, and sum over all values in the vector, for which the disable flags are not set
  * @tparam T Must be a arithmetic (floating point or integral)
  * @param values The values that should be reduced
- * @param disable_flags The flags that indicate which values to skip (skips values[i] if disable_flags[i] == 0)
+ * @param disable_flags The flags that indicate which values to skip
  * @exception Throws a RelearnException if (a) values.empty(), (b) values.size() != disable_flags.size(), (c) all values are disabled
  * @return Returns a tuple with (1) minimum and (2) maximum value from values, (3) the sum of all enabled values and (4) the number of enabled values
  */
@@ -93,12 +93,12 @@ constexpr unsigned int num_digits(T val) noexcept {
 /**
  * @brief Calculates the faculty.
  * @param value
- * @tparam T Type of which a faculty should be calculated (should be unsigned int).
+ * @tparam T Type of which a faculty should be calculated. Must fullfill std::is_unsigned_v<T>
  * @return Returns the faculty of the paramter value.
  */
 template <typename T>
 static constexpr T factorial(T value) noexcept {
-    static_assert(std::is_same<T, unsigned int>::value, "bad T");
+    static_assert(std::is_unsigned_v<T>, "bad T");
     if (value < 2) {
         return 1;
     }

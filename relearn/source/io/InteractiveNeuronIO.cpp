@@ -20,7 +20,7 @@
 #include <sstream>
 #include <string>
 
-std::vector<std::pair<size_t, std::vector<NeuronID>>> InteractiveNeuronIO::load_enable_interrupts(const std::filesystem::path& path_to_file) {
+std::vector<std::pair<InteractiveNeuronIO::step_type, std::vector<NeuronID>>> InteractiveNeuronIO::load_enable_interrupts(const std::filesystem::path& path_to_file) {
     std::ifstream file{ path_to_file };
 
     const bool file_is_good = file.good();
@@ -28,7 +28,7 @@ std::vector<std::pair<size_t, std::vector<NeuronID>>> InteractiveNeuronIO::load_
 
     RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_enable_interrupts: Opening the file was not successful");
 
-    std::vector<std::pair<size_t, std::vector<NeuronID>>> return_value{};
+    std::vector<std::pair<step_type, std::vector<NeuronID>>> return_value{};
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
@@ -38,7 +38,7 @@ std::vector<std::pair<size_t, std::vector<NeuronID>>> InteractiveNeuronIO::load_
 
         std::stringstream sstream(line);
 
-        size_t step{};
+        step_type step{};
         char delim{};
 
         bool success = (sstream >> step) && (sstream >> delim);
@@ -67,7 +67,7 @@ std::vector<std::pair<size_t, std::vector<NeuronID>>> InteractiveNeuronIO::load_
     return return_value;
 }
 
-std::vector<std::pair<size_t, std::vector<NeuronID>>> InteractiveNeuronIO::load_disable_interrupts(const std::filesystem::path& path_to_file) {
+std::vector<std::pair<InteractiveNeuronIO::step_type, std::vector<NeuronID>>> InteractiveNeuronIO::load_disable_interrupts(const std::filesystem::path& path_to_file) {
     std::ifstream file{ path_to_file };
 
     const bool file_is_good = file.good();
@@ -75,7 +75,7 @@ std::vector<std::pair<size_t, std::vector<NeuronID>>> InteractiveNeuronIO::load_
 
     RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_disable_interrupts: Opening the file was not successful");
 
-    std::vector<std::pair<size_t, std::vector<NeuronID>>> return_value{};
+    std::vector<std::pair<step_type, std::vector<NeuronID>>> return_value{};
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
@@ -85,7 +85,7 @@ std::vector<std::pair<size_t, std::vector<NeuronID>>> InteractiveNeuronIO::load_
 
         std::stringstream sstream(line);
 
-        size_t step{};
+        step_type step{};
         char delim{};
 
         bool success = (sstream >> step) && (sstream >> delim);
@@ -114,7 +114,7 @@ std::vector<std::pair<size_t, std::vector<NeuronID>>> InteractiveNeuronIO::load_
     return return_value;
 }
 
-std::vector<std::pair<size_t, size_t>> InteractiveNeuronIO::load_creation_interrupts(const std::filesystem::path& path_to_file) {
+std::vector<std::pair<InteractiveNeuronIO::step_type, InteractiveNeuronIO::number_neurons_type>> InteractiveNeuronIO::load_creation_interrupts(const std::filesystem::path& path_to_file) {
     std::ifstream file{ path_to_file };
 
     const bool file_is_good = file.good();
@@ -122,7 +122,7 @@ std::vector<std::pair<size_t, size_t>> InteractiveNeuronIO::load_creation_interr
 
     RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_creation_interrupts: Opening the file was not successful");
 
-    std::vector<std::pair<size_t, size_t>> return_value{};
+    std::vector<std::pair<step_type, number_neurons_type>> return_value{};
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
@@ -132,9 +132,9 @@ std::vector<std::pair<size_t, size_t>> InteractiveNeuronIO::load_creation_interr
 
         std::stringstream sstream(line);
 
-        size_t step{};
+        step_type step{};
         char delim{};
-        size_t count{};
+        number_neurons_type count{};
 
         bool success = (sstream >> step) && (sstream >> delim) && (sstream >> count);
 
@@ -156,7 +156,7 @@ std::vector<std::pair<size_t, size_t>> InteractiveNeuronIO::load_creation_interr
     return return_value;
 }
 
-std::function<double(std::uint64_t, NeuronID::value_type)> InteractiveNeuronIO::load_stimulus_interrupts(const std::filesystem::path& path_to_file) {
+std::function<double(InteractiveNeuronIO::step_type, NeuronID::value_type)> InteractiveNeuronIO::load_stimulus_interrupts(const std::filesystem::path& path_to_file) {
     std::ifstream file{ path_to_file };
 
     const bool file_is_good = file.good();

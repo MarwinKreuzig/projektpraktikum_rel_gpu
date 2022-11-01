@@ -67,7 +67,7 @@ void Simulation::set_dendrites_in(std::shared_ptr<SynapticElements>&& se) noexce
     dendrites_in = std::move(se);
 }
 
-void Simulation::set_enable_interrupts(std::vector<std::pair<size_t, std::vector<NeuronID>>> interrupts) {
+void Simulation::set_enable_interrupts(std::vector<std::pair<step_type, std::vector<NeuronID>>> interrupts) {
     enable_interrupts = std::move(interrupts);
 
     for (auto& [step, ids] : enable_interrupts) {
@@ -75,7 +75,7 @@ void Simulation::set_enable_interrupts(std::vector<std::pair<size_t, std::vector
     }
 }
 
-void Simulation::set_disable_interrupts(std::vector<std::pair<size_t, std::vector<NeuronID>>> interrupts) {
+void Simulation::set_disable_interrupts(std::vector<std::pair<step_type, std::vector<NeuronID>>> interrupts) {
     disable_interrupts = std::move(interrupts);
 
     for (auto& [step, ids] : disable_interrupts) {
@@ -83,7 +83,7 @@ void Simulation::set_disable_interrupts(std::vector<std::pair<size_t, std::vecto
     }
 }
 
-void Simulation::set_creation_interrupts(std::vector<std::pair<size_t, size_t>> interrupts) noexcept {
+void Simulation::set_creation_interrupts(std::vector<std::pair<step_type, number_neurons_type>> interrupts) noexcept {
     creation_interrupts = std::move(interrupts);
 }
 
@@ -217,7 +217,7 @@ void Simulation::initialize() {
     }
 }
 
-void Simulation::simulate(const size_t number_steps) {
+void Simulation::simulate(const step_type number_steps) {
     RelearnException::check(number_steps > 0, "Simulation::simulate: number_steps must be greater than 0");
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -461,7 +461,7 @@ void Simulation::snapshot_monitors() {
     }
 }
 
-void Simulation::save_network_graph(size_t current_steps) {
+void Simulation::save_network_graph(step_type current_steps) {
     // Check wether there are multiple runs or not
     if (current_steps == 0) {
         neurons->print_network_graph_to_log_file(current_steps);

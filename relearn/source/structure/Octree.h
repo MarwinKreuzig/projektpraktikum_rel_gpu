@@ -110,7 +110,7 @@ public:
      * @brief Gathers all leaf nodes and makes them available via get_leaf_nodes
      * @param num_neurons The number of neurons
      */
-    virtual void initializes_leaf_nodes(size_t num_neurons) = 0;
+    virtual void initializes_leaf_nodes(RelearnTypes::number_neurons_type num_neurons) = 0;
 
 protected:
     // Set simulation box size of the tree
@@ -227,7 +227,7 @@ public:
      * @brief Gathers all leaf nodes and makes them available via get_leaf_nodes
      * @param num_neurons The number of neurons
      */
-    void initializes_leaf_nodes(const size_t num_neurons) override {
+    void initializes_leaf_nodes(const RelearnTypes::number_neurons_type num_neurons) override {
         std::vector<OctreeNode<AdditionalCellAttributes>*> leaf_nodes(num_neurons);
 
         Stack<OctreeNode<AdditionalCellAttributes>*> stack{ num_neurons };

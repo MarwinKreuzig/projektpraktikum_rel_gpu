@@ -10,6 +10,7 @@
  *
  */
 
+#include "Types.h"
 #include "io/LogFiles.h"
 
 #include <charconv>
@@ -24,7 +25,7 @@
  * begin, begin + frequency, begin + 2*frequency, ...
  */
 struct Interval {
-    using step_type = std::uint64_t;
+    using step_type = RelearnTypes::step_type;
 
     step_type begin{};
     step_type end{};
@@ -96,13 +97,13 @@ struct Interval {
         const auto& end_string = description.substr(hyphen_position + 1, colon_position - hyphen_position - 1);
         const auto& frequency_string = description.substr(colon_position + 1, description.size() - colon_position);
 
-        std::uint64_t begin{};
+        step_type begin{};
         const auto& [begin_ptr, begin_err] = std::from_chars(begin_string.data(), begin_string.data() + begin_string.size(), begin);
 
-        std::uint64_t end{};
+        step_type end{};
         const auto& [end_ptr, end_err] = std::from_chars(end_string.data(), end_string.data() + end_string.size(), end);
 
-        std::uint64_t frequency{};
+        step_type frequency{};
         const auto& [frequency_ptr, frequency_err] = std::from_chars(frequency_string.data(), frequency_string.data() + frequency_string.size(), frequency);
 
         const auto begin_ok = (begin_err == std::errc{}) && (begin_ptr == begin_string.data() + begin_string.size());

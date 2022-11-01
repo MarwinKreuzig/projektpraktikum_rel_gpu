@@ -45,7 +45,6 @@ target_sources(
           sim/SynapseLoader.cpp
           # structure
           structure/Partition.cpp
-          structure/SpaceFillingCurve.cpp
           # util
           util/RelearnException.cpp
           util/Timers.cpp

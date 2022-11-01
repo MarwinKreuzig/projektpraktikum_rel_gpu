@@ -44,6 +44,9 @@ class SynapticElements;
  */
 class Simulation {
 public:
+    using step_type = RelearnTypes::step_type;
+    using number_neurons_type = RelearnTypes::number_neurons_type;
+
     /**
      * @brief Constructs a new object with the given partition.
      * @param partition The partition for this simulation
@@ -99,21 +102,21 @@ public:
      *      An enable interrupt is a pair of (1) the simulation set (2) all local ids that should be enabled
      * @param interrupts The enable interrupts
      */
-    void set_enable_interrupts(std::vector<std::pair<size_t, std::vector<NeuronID>>> interrupts);
+    void set_enable_interrupts(std::vector<std::pair<step_type, std::vector<NeuronID>>> interrupts);
 
     /**
      * @brief Sets the disable interrupts during the simulation.
      *      An disable interrupt is a pair of (1) the simulation set (2) all local ids that should be disabled
      * @param interrupts The disable interrupts
      */
-    void set_disable_interrupts(std::vector<std::pair<size_t, std::vector<NeuronID>>> interrupts);
+    void set_disable_interrupts(std::vector<std::pair<step_type, std::vector<NeuronID>>> interrupts);
 
     /**
      * @brief Sets the creation interrupts during the simulation.
      *      An creation interrupt is a pair of (1) the simulation set (2) the number of neurons to create
      * @param interrupts The creation interrupts
      */
-    void set_creation_interrupts(std::vector<std::pair<size_t, size_t>> interrupts) noexcept;
+    void set_creation_interrupts(std::vector<std::pair<step_type, number_neurons_type>> interrupts) noexcept;
 
     /**
      * @brief Sets the algorithm that is used for finding target neurons.
@@ -138,7 +141,7 @@ public:
      * @param number_steps The number of simulation steps, must be > 0
      * @exception Throws a RelearnException if number_steps == 0
      */
-    void simulate(size_t number_steps);
+    void simulate(step_type number_steps);
 
     /**
      * @brief Finalizes the simulation in the sense that it prints the final statistics.
@@ -219,7 +222,7 @@ public:
      * @brief Prints the current network graph with the attached number of steps to the file
      * @param current_steps The current number of steps that will appear in the file name
      */
-    void save_network_graph(size_t current_steps);
+    void save_network_graph(step_type current_steps);
 
 private:
     void print_neuron_monitors();
@@ -243,9 +246,9 @@ private:
 
     std::shared_ptr<std::vector<NeuronMonitor>> monitors{};
 
-    std::vector<std::pair<size_t, std::vector<NeuronID>>> enable_interrupts{};
-    std::vector<std::pair<size_t, std::vector<NeuronID>>> disable_interrupts{};
-    std::vector<std::pair<size_t, size_t>> creation_interrupts{};
+    std::vector<std::pair<step_type, std::vector<NeuronID>>> enable_interrupts{};
+    std::vector<std::pair<step_type, std::vector<NeuronID>>> disable_interrupts{};
+    std::vector<std::pair<step_type, number_neurons_type>> creation_interrupts{};
 
     std::map<NeuronAttribute, std::vector<StatisticalMeasures>> statistics{};
 
@@ -262,5 +265,5 @@ private:
     int64_t delta_synapse_creations{ 0 };
     int64_t delta_synapse_deletions{ 0 };
 
-    size_t step{ 1 };
+    step_type step{ 1 };
 };

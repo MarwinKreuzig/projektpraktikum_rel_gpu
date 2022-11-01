@@ -10,6 +10,7 @@
  *
  */
 
+#include "Types.h"
 #include "io/LogFiles.h"
 #include "util/Interval.h"
 
@@ -31,7 +32,7 @@ public:
      * @param description The description of the intervals
      * @return The function indicating if the event shall occur
      */
-    [[nodiscard]] static std::function<bool(std::uint64_t)> generate_step_check_function(const std::string& description) {
+    [[nodiscard]] static std::function<bool(RelearnTypes::step_type)> generate_step_check_function(const std::string& description) {
         auto intervals = Interval::parse_description_as_intervals(description);
         auto function = generate_step_check_function(std::move(intervals));
         return function;
@@ -43,7 +44,7 @@ public:
      * @param intervals The intervals that specify if an event shall occur
      * @return A std::function object that maps the current step to true or false, indicating if the event shall occur
      */
-    [[nodiscard]] static std::function<bool(std::uint64_t)> generate_step_check_function(std::vector<Interval> intervals) noexcept {
+    [[nodiscard]] static std::function<bool(RelearnTypes::step_type)> generate_step_check_function(std::vector<Interval> intervals) noexcept {
         const auto intervals_intersect = Interval::check_intervals_for_intersection(intervals);
         if (intervals_intersect) {
             LogFiles::print_message_rank(0, "The intervals for the step parser intersected, discarding all.");
@@ -56,7 +57,7 @@ public:
 
         std::ranges::sort(intervals, comparison);
 
-        auto step_check_function = [intervals = std::move(intervals)](std::uint64_t step) noexcept -> bool {
+        auto step_check_function = [intervals = std::move(intervals)](RelearnTypes::step_type step) noexcept -> bool {
             return std::ranges::any_of(intervals, [step](const Interval& interval) { return interval.hits_step(step); });
         };
 

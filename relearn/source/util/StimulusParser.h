@@ -11,6 +11,7 @@
  */
 
 #include "Config.h"
+#include "Types.h"
 #include "util/Interval.h"
 #include "util/TaggedID.h"
 
@@ -31,6 +32,8 @@ struct Stimulus {
 
 class StimulusParser {
 public:
+    using step_type = RelearnTypes::step_type;
+
     /**
      * @brief Parses one line into a stimulus. The line must have the format:
      *      <interval_description> <stimulus intensity> <neuron_id>*
@@ -94,7 +97,7 @@ public:
      * @param stimuli The given stimuli, should not intersect.
      * @return The check function. Empty if the stimuli intersect
      */
-    [[nodiscard]] static std::function<double(std::uint64_t, NeuronID::value_type)> generate_stimulus_function(std::vector<Stimulus> stimuli) {
+    [[nodiscard]] static std::function<double(step_type, NeuronID::value_type)> generate_stimulus_function(std::vector<Stimulus> stimuli) {
         std::vector<Interval> intervals{};
         intervals.reserve(stimuli.size());
 

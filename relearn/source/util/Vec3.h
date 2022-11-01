@@ -118,7 +118,7 @@ public:
     /**
      * @brief Casts to current object to an object of type Vec3<K>. Uses static_cast<K> componentwise
      * @tparam K The new type of the components
-     * @return A castet version of the current object
+     * @return A casted version of the current object
      */
     template <typename K>
     [[nodiscard]] constexpr explicit operator Vec3<K>() const noexcept {
@@ -309,10 +309,10 @@ public:
     }
 
     /**
-     * @brief Calculates the p norm of the (absolute value of the) current obejct
+     * @brief Calculates the p-norm of the (absolute value of the) current obejct
      * @param p The exponent of the norm, must be >= 1.0
      * @exception Throws a RelearnException if p < 1.0
-     * @return The calculated norm
+     * @return The calculated p-norm
      */
     [[nodiscard]] double calculate_p_norm(const double p) const {
         RelearnException::check(p >= 1.0, "Vec3::calculate_p_norm: p-norm is only valid for p >= 1.0, but it was: {}", p);
@@ -341,7 +341,7 @@ public:
             const auto abs_z = std::abs(z);
 
             const auto sum = abs_x + abs_y + abs_z;
-            return sum;        
+            return sum;
         }
     }
 
@@ -421,29 +421,33 @@ public:
     }
 
     /**
-     * @brief Calculates the factorial of each component and multiplies them
+     * @brief Calculates the factorial of each component and multiplies them.
+     *      Is only available if std::is_integral_v<T>. Casts to the unsigned version of T first
      * @return Returns the product of the factorials
      */
-    [[nodiscard]] constexpr size_t get_componentwise_factorial() const noexcept {
+    [[nodiscard]] constexpr auto get_componentwise_factorial() const noexcept {
         static_assert(std::is_integral_v<T>);
 
-        const auto fac_x = Util::factorial(x);
-        const auto fac_y = Util::factorial(y);
-        const auto fac_z = Util::factorial(z);
+        using unsigned_type_T = std::make_unsigned_t<T>;
+
+        const auto fac_x = Util::factorial(static_cast<unsigned_type_T>(x));
+        const auto fac_y = Util::factorial(static_cast<unsigned_type_T>(y));
+        const auto fac_z = Util::factorial(static_cast<unsigned_type_T>(z));
 
         const auto product = fac_x * fac_y * fac_z;
         return product;
     }
 
     /**
-     * @brief Calculates this^exponent componentwise and returns the product
+     * @brief Calculates this^exponent componentwise and returns the product.
+     *      Casts the components to double first
      * @param exponent The exponents for this
      * @return The product of the componentwise power
      */
     [[nodiscard]] double get_componentwise_power(const Vec3<unsigned int>& exponent) const {
-        const auto pow_x = std::pow(x, exponent.get_x());
-        const auto pow_y = std::pow(y, exponent.get_y());
-        const auto pow_z = std::pow(z, exponent.get_z());
+        const auto pow_x = std::pow(static_cast<double>(x), exponent.get_x());
+        const auto pow_y = std::pow(static_cast<double>(y), exponent.get_y());
+        const auto pow_z = std::pow(static_cast<double>(z), exponent.get_z());
 
         const auto product = pow_x * pow_y * pow_z;
         return product;
