@@ -10,6 +10,7 @@
  *
  */
 
+#include "Types.h"
 #include "neurons/FiredStatus.h"
 #include "neurons/TargetCalciumDecay.h"
 #include "neurons/UpdateStatus.h"
@@ -30,6 +31,9 @@ class CalciumCalculator {
     friend class NeuronMonitor;
 
 public:
+    using number_neurons_type = RelearnTypes::number_neurons_type;
+    using step_type = RelearnTypes::step_type;
+
     /**
      * @brief Constructs a new object with the given parameters
      * @param decay_type The type of decay (abolute, relative, none)
@@ -39,7 +43,7 @@ public:
      *      (a) The decay_type is Relative, but the amount is not from [0, 1) and the step is not larger than 0
      *      (b) The decay_type is Absolute, but the amount is not from (0, inf) and the step is not larger than 0
      */
-    explicit CalciumCalculator(const TargetCalciumDecay decay_type = TargetCalciumDecay::None, const double decay_amount = 0.1, const size_t decay_step = 1000)
+    explicit CalciumCalculator(const TargetCalciumDecay decay_type = TargetCalciumDecay::None, const double decay_amount = 0.1, const step_type decay_step = 1000)
         : decay_type(decay_type)
         , decay_amount(decay_amount)
         , decay_step(decay_step) {
@@ -73,7 +77,7 @@ public:
      * @brief Returns the steps of target value decay
      * @return The new decay steps
      */
-    [[nodiscard]] constexpr size_t get_decay_step() const noexcept {
+    [[nodiscard]] constexpr step_type get_decay_step() const noexcept {
         return decay_step;
     }
 
@@ -173,14 +177,14 @@ public:
      * @param number_neurons The number of neurons, must be > 0
      * @exception Throws a RelearnException if any of the functions is empty or number_neurons == 0
      */
-    void init(size_t number_neurons);
+    void init(number_neurons_type number_neurons);
 
     /**
      * @brief Creates the given number of neurons, uses the previously passed functions to determine the initial and target values
      * @param number_neurons The number of neurons, must be > 0
      * @exception Throws a RelearnException if any of the functions is empty or number_neurons == 0
      */
-    void create_neurons(size_t number_neurons);
+    void create_neurons(number_neurons_type number_neurons);
 
     /**
      * @brief Updates the calcium values for each neuron
@@ -189,7 +193,7 @@ public:
      * @param fired_status Indicates if a neuron fired
      * @exception Throws a RelearnException if the size of the vectors doesn't match the size of the stored vectors
      */
-    void update_calcium(size_t step, const std::vector<UpdateStatus>& disable_flags, const std::vector<FiredStatus>& fired_status);
+    void update_calcium(step_type step, const std::vector<UpdateStatus>& disable_flags, const std::vector<FiredStatus>& fired_status);
 
     static constexpr double default_C_target{ 0.7 }; // In Sebastians work: 0.5
 
@@ -208,7 +212,7 @@ public:
 private:
     void update_current_calcium(const std::vector<UpdateStatus>& disable_flags, const std::vector<FiredStatus>& fired_status) noexcept;
 
-    void update_target_calcium(size_t step, const std::vector<UpdateStatus>& disable_flags) noexcept;
+    void update_target_calcium(step_type step, const std::vector<UpdateStatus>& disable_flags) noexcept;
 
     std::function<double(int, NeuronID::value_type)> initial_calcium_initiator{};
     std::function<double(int, NeuronID::value_type)> target_calcium_calculator{};
@@ -222,5 +226,5 @@ private:
 
     TargetCalciumDecay decay_type{ TargetCalciumDecay::None };
     double decay_amount{ 0.0 };
-    size_t decay_step{ 1000 };
+    step_type decay_step{ 1000 };
 };

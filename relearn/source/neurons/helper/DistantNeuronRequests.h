@@ -36,7 +36,7 @@ public:
         VirtualNode = 2
     };
 
-    DistantNeuronRequest() = default;
+    constexpr DistantNeuronRequest() = default;
 
     /**
      * @brief Constructs a new request with the arguments. A request can be built for three different use cases:
@@ -49,7 +49,8 @@ public:
      * @param target_neuron_type The type of the target node
      * @param signal_type The signal type
      */
-    DistantNeuronRequest(NeuronID source_id, RelearnTypes::position_type source_position, std::uint32_t target_neuron_identifier, TargetNeuronType target_neuron_type, SignalType signal_type) noexcept
+    constexpr DistantNeuronRequest(const NeuronID& source_id, const RelearnTypes::position_type& source_position, 
+        const NeuronID::value_type target_neuron_identifier, const TargetNeuronType target_neuron_type, const SignalType signal_type) noexcept
         : source_id(source_id)
         , source_position(source_position)
         , target_neuron_identifier(target_neuron_identifier)
@@ -60,7 +61,7 @@ public:
      * @brief Returns the source of the request
      * @return The source
      */
-    [[nodiscard]] NeuronID get_source_id() const noexcept {
+    [[nodiscard]] constexpr const NeuronID& get_source_id() const noexcept {
         return source_id;
     }
 
@@ -68,7 +69,7 @@ public:
      * @brief Returns the position of the source of the request
      * @return The source position
      */
-    [[nodiscard]] RelearnTypes::position_type get_source_position() const noexcept {
+    [[nodiscard]] constexpr RelearnTypes::position_type get_source_position() const noexcept {
         return source_position;
     }
 
@@ -77,7 +78,7 @@ public:
      * @exception Throws a RelearnException if the target node type is not TargetNeuronType::BranchNode
      * @return The branch node id
      */
-    [[nodiscard]] std::uint32_t get_branch_node_id() const {
+    [[nodiscard]] constexpr NeuronID::value_type get_branch_node_id() const {
         RelearnException::check(target_neuron_type == TargetNeuronType::BranchNode, "");
         return target_neuron_identifier;
     }
@@ -87,7 +88,7 @@ public:
      * @exception Throws a RelearnException if the target node type is not TargetNeuronType::Leaf
      * @return The leaf node id
      */
-    [[nodiscard]] std::uint32_t get_leaf_node_id() const {
+    [[nodiscard]] constexpr NeuronID::value_type get_leaf_node_id() const {
         RelearnException::check(target_neuron_type == TargetNeuronType::Leaf, "");
         return target_neuron_identifier;
     }
@@ -97,12 +98,16 @@ public:
      * @exception Throws a RelearnException if the target node type is not TargetNeuronType::VirtualNode
      * @return The RMA offset
      */
-    [[nodiscard]] std::uint32_t get_rma_offset() const {
+    [[nodiscard]] constexpr NeuronID::value_type get_rma_offset() const {
         RelearnException::check(target_neuron_type == TargetNeuronType::VirtualNode, "");
         return target_neuron_identifier;
     }
 
-    [[nodiscard]] TargetNeuronType get_target_neuron_type() const noexcept {
+    /**
+     * @brief Returns the type of target neuron
+     * @return The type of the target neuron
+     */
+    [[nodiscard]] constexpr TargetNeuronType get_target_neuron_type() const noexcept {
         return target_neuron_type;
     }
 
@@ -110,14 +115,14 @@ public:
      * @brief Returns the signal type of the request
      * @return The signal type
      */
-    [[nodiscard]] SignalType get_signal_type() const noexcept {
+    [[nodiscard]] constexpr SignalType get_signal_type() const noexcept {
         return signal_type;
     }
 
 private:
     NeuronID source_id{};
     RelearnTypes::position_type source_position{};
-    std::uint32_t target_neuron_identifier{};
+    NeuronID::value_type target_neuron_identifier{};
     TargetNeuronType target_neuron_type{};
     SignalType signal_type{};
 };
@@ -127,14 +132,14 @@ private:
  */
 class DistantNeuronResponse {
 public:
-    DistantNeuronResponse() = default;
+    constexpr DistantNeuronResponse() = default;
 
     /**
      * @brief Constructs a new response with the arguments
      * @param source The RankNeuronId of the source
      * @param creation_response The response if a synapse was succesfully created
      */
-    DistantNeuronResponse(NeuronID source_id, SynapseCreationResponse creation_response)
+    constexpr DistantNeuronResponse(const NeuronID& source_id, const SynapseCreationResponse creation_response)
         : source_id(source_id)
         , creation_response(creation_response) { }
 
@@ -142,7 +147,7 @@ public:
      * @brief Returns the source of the response
      * @return The source
      */
-    [[nodiscard]] NeuronID get_source_id() const noexcept {
+    [[nodiscard]] constexpr const NeuronID& get_source_id() const noexcept {
         return source_id;
     }
 
@@ -150,7 +155,7 @@ public:
      * @brief Returns the creation response
      * @return The creation response
      */
-    [[nodiscard]] SynapseCreationResponse get_creation_response() const noexcept {
+    [[nodiscard]] constexpr SynapseCreationResponse get_creation_response() const noexcept {
         return creation_response;
     }
 

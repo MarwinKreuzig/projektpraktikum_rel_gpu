@@ -62,13 +62,13 @@ AEIFModel::AEIFModel(
     return "AEIFModel";
 }
 
-void AEIFModel::init(const size_t number_neurons) {
+void AEIFModel::init(const number_neurons_type number_neurons) {
     NeuronModel::init(number_neurons);
     w.resize(number_neurons);
     init_neurons(0, number_neurons);
 }
 
-void AEIFModel::create_neurons(const size_t creation_count) {
+void AEIFModel::create_neurons(const number_neurons_type creation_count) {
     const auto old_size = NeuronModel::get_number_neurons();
     NeuronModel::create_neurons(creation_count);
     w.resize(old_size + creation_count);
@@ -104,8 +104,8 @@ void AEIFModel::update_activity(const NeuronID& neuron_id) {
     set_x(neuron_id, x);
 }
 
-void AEIFModel::init_neurons(const size_t start_id, const size_t end_id) {
-    for (size_t neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
+void AEIFModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {
+    for (auto neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
         const auto id = NeuronID{ neuron_id };
 
         w[neuron_id] = 0.0;

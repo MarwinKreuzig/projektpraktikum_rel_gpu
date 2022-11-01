@@ -17,7 +17,7 @@
 #include "util/Random.h"
 #include "util/Timers.h"
 
-void NeuronModel::init(size_t number_neurons) {
+void NeuronModel::init(number_neurons_type number_neurons) {
     number_local_neurons = number_neurons;
 
     x.resize(number_neurons, 0.0);
@@ -28,7 +28,7 @@ void NeuronModel::init(size_t number_neurons) {
     background_calculator->init(number_neurons);
 }
 
-void NeuronModel::create_neurons(size_t creation_count) {
+void NeuronModel::create_neurons(number_neurons_type creation_count) {
     const auto current_size = number_local_neurons;
     const auto new_size = current_size + creation_count;
     number_local_neurons = new_size;
@@ -41,7 +41,7 @@ void NeuronModel::create_neurons(size_t creation_count) {
     background_calculator->create_neurons(creation_count);
 }
 
-void NeuronModel::update_electrical_activity(const size_t step, const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
+void NeuronModel::update_electrical_activity(const step_type step, const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
     input_calculator->update_input(step, network_graph, fired, disable_flags);
     background_calculator->update_input(step, disable_flags);
 

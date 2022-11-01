@@ -15,7 +15,7 @@
 #include "util/Random.h"
 #include "util/RelearnException.h"
 
-SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const size_t number_neurons, const double fraction_excitatory_neurons, const double um_per_neuron, std::shared_ptr<Partition> partition)
+SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const SubdomainFromNeuronDensity::number_neurons_type number_neurons, const double fraction_excitatory_neurons, const double um_per_neuron, std::shared_ptr<Partition> partition)
     : BoxBasedRandomSubdomainAssignment(partition, fraction_excitatory_neurons, um_per_neuron) {
 
     RelearnException::check(partition->get_my_mpi_rank() == 0 && partition->get_number_mpi_ranks() == 1, "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: Can only be used for 1 MPI rank.");

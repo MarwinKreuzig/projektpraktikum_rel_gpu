@@ -28,7 +28,7 @@ public:
     /**
      * Creates a new object
      */
-    SynapseDeletionRequest() = default;
+    constexpr SynapseDeletionRequest() = default;
 
     /**
      * @brief Creates a new deletion request with the passed arguments
@@ -38,7 +38,8 @@ public:
      * @param signal_type The signal type of the synapse
      * @exception Throws a RelearnException if any neuron id is invalid
      */
-    SynapseDeletionRequest(const NeuronID initiator_neuron, const NeuronID affected_neuron, const ElementType element_type, const SignalType signal_type)
+    constexpr SynapseDeletionRequest(const NeuronID& initiator_neuron, const NeuronID& affected_neuron, 
+        const ElementType element_type, const SignalType signal_type)
         : initiator_neuron_id(initiator_neuron)
         , affected_neuron_id(affected_neuron)
         , initiator_element_type(element_type)
@@ -47,19 +48,19 @@ public:
         RelearnException::check(affected_neuron.is_local(), "SynapseDeletionRequest::SynapseDeletionRequest(): affected_neuron is not local: {}", affected_neuron);
     }
 
-    SynapseDeletionRequest(const SynapseDeletionRequest& other) = default;
-    SynapseDeletionRequest(SynapseDeletionRequest&& other) = default;
+    constexpr SynapseDeletionRequest(const SynapseDeletionRequest& other) = default;
+    constexpr SynapseDeletionRequest(SynapseDeletionRequest&& other) = default;
 
-    SynapseDeletionRequest& operator=(const SynapseDeletionRequest& other) = default;
-    SynapseDeletionRequest& operator=(SynapseDeletionRequest&& other) = default;
+    constexpr SynapseDeletionRequest& operator=(const SynapseDeletionRequest& other) = default;
+    constexpr SynapseDeletionRequest& operator=(SynapseDeletionRequest&& other) = default;
 
-    ~SynapseDeletionRequest() = default;
+    constexpr ~SynapseDeletionRequest() = default;
 
     /**
      * @brief Returns the initiator neuron id, i.e., the neuron which started the deletion
      * @return The source neuron id
      */
-    [[nodiscard]] NeuronID get_initiator_neuron_id() const noexcept {
+    [[nodiscard]] constexpr const NeuronID& get_initiator_neuron_id() const noexcept {
         return initiator_neuron_id;
     }
 
@@ -67,7 +68,7 @@ public:
      * @brief Returns the affected neuron id, i.e., the neuron that must be notified
      * @return The target neuron id
      */
-    [[nodiscard]] NeuronID get_affected_neuron_id() const noexcept {
+    [[nodiscard]] constexpr const NeuronID& get_affected_neuron_id() const noexcept {
         return affected_neuron_id;
     }
 
@@ -75,7 +76,7 @@ public:
      * @brief Returns the initiator element type
      * @return The affected element type
      */
-    [[nodiscard]] ElementType get_initiator_element_type() const noexcept {
+    [[nodiscard]] constexpr ElementType get_initiator_element_type() const noexcept {
         return initiator_element_type;
     }
 
@@ -83,7 +84,7 @@ public:
      * @brief Returns the synapses signal type
      * @return The signal type
      */
-    [[nodiscard]] SignalType get_signal_type() const noexcept {
+    [[nodiscard]] constexpr SignalType get_signal_type() const noexcept {
         return signal_type;
     }
 

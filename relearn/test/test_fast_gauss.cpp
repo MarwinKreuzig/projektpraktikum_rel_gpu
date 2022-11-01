@@ -157,12 +157,12 @@ SynapticElements create_axons(size_t size, mt19937& mt, double max_free) {
 
 OctreeNode<AdditionalCellAttributes>* get_random_node_on_level(OctreeNode<AdditionalCellAttributes>* root, size_t level, std::mt19937& mt) {
     auto* current_node = root;
-    std::uniform_real_distribution<double> urd(0, 8);
+    uniform_int_distribution<size_t> child_distribution(0, 7);
     size_t count = 0;
     size_t tries = 1000;
 
     while (count < level && tries > 1) {
-        current_node = current_node->get_child(urd(mt));
+        current_node = current_node->get_child(child_distribution(mt));
         if (current_node == nullptr || !current_node->is_parent()) {
             tries--;
             current_node = root;

@@ -25,6 +25,8 @@ class Partition;
  */
 class SubdomainFromNeuronPerRank : public BoxBasedRandomSubdomainAssignment {
 public:
+    using number_neurons_type = RelearnTypes::number_neurons_type;
+
     /**
      * @brief Constructs a new object with the specified parameters
      * @param number_neurons_per_rank The number of neurons per MPI rank, must be > 0
@@ -33,7 +35,7 @@ public:
      * @param partition The partition that stores all information for the subdomain calculations
      * @exception Throws a RelearnException if number_neurons_per_rank == 0, fraction_excitatory_neurons is not from [0.0, 1.0], or um_per_neuron <= 0.0
      */
-    SubdomainFromNeuronPerRank(size_t number_neurons_per_rank, double fraction_excitatory_neurons, double um_per_neuron, std::shared_ptr<Partition> partition);
+    SubdomainFromNeuronPerRank(number_neurons_type number_neurons_per_rank, double fraction_excitatory_neurons, double um_per_neuron, std::shared_ptr<Partition> partition);
 
     SubdomainFromNeuronPerRank(const SubdomainFromNeuronPerRank& other) = delete;
     SubdomainFromNeuronPerRank(SubdomainFromNeuronPerRank&& other) = delete;
@@ -47,5 +49,5 @@ protected:
     void fill_all_subdomains() override;
 
 private:
-    size_t number_neurons_per_rank{ Constants::uninitialized };
+    number_neurons_type number_neurons_per_rank{ Constants::uninitialized };
 };

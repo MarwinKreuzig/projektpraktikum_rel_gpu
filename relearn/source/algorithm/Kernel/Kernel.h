@@ -77,7 +77,7 @@ public:
      * @brief Sets the type of kernel that shall be used for calculations
      * @param kernel_type The kernel type that from now on shall be used
      */
-    static void set_kernel_type(KernelType kernel_type) noexcept {
+    static void set_kernel_type(const KernelType kernel_type) noexcept {
         currently_used_kernel = kernel_type;
     }
 

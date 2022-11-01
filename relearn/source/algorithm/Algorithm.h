@@ -27,6 +27,8 @@ class SynapticElements;
  */
 class Algorithm {
 public:
+    using number_neurons_type = RelearnTypes::number_neurons_type;
+
     /**
      * @brief Registeres the synaptic elements with the algorithm
      * @param axons The model for the axons
@@ -57,7 +59,7 @@ public:
      * @exception Can throw a RelearnException
      * @return A tuple with the created synapses that must be committed to the network graph
      */
-    [[nodiscard]] virtual std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
+    [[nodiscard]] virtual std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos) = 0;
 
     /**

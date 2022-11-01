@@ -61,12 +61,12 @@ std::optional<RankNeuronId> Naive::find_target_neuron(const NeuronID& src_neuron
     return rank_neuron_id;
 }
 
-CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
+CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
-    const auto size_hint = std::min(size_t(number_ranks), number_neurons);
+    const auto size_hint = std::min(number_neurons_type(number_ranks), number_neurons);
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks, size_hint);
 
     const std::vector<double>& axons_cnts = axons->get_grown_elements();

@@ -38,7 +38,7 @@ public:
      * @param step The current update step
      * @param disable_flags Unused
      */
-    void update_input([[maybe_unused]] const size_t step, [[maybe_unused]] const std::vector<UpdateStatus>& disable_flags) override {
+    void update_input([[maybe_unused]] const step_type step, [[maybe_unused]] const std::vector<UpdateStatus>& disable_flags) override {
     }
 
     /**
@@ -71,13 +71,13 @@ public:
      * @param step The current update step
      * @param disable_flags Unused
      */
-    void update_input([[maybe_unused]] const size_t step, const std::vector<UpdateStatus>& disable_flags) override {
+    void update_input([[maybe_unused]] const step_type step, const std::vector<UpdateStatus>& disable_flags) override {
         const auto number_neurons = get_number_neurons();
         RelearnException::check(disable_flags.size() == number_neurons,
             "ConstantBackgroundActivityCalculator::update_input: Size of disable flags doesn't match number of local neurons: {} vs {}", disable_flags.size(), number_neurons);
 
         Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
-        for (size_t neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
+        for (number_neurons_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
             const auto input = disable_flags[neuron_id] == UpdateStatus::Disabled ? 0.0 : base_input;
             set_background_activity(neuron_id, input);
         }
@@ -135,13 +135,13 @@ public:
      * @param step The current update step
      * @param disable_flags Unused
      */
-    void update_input([[maybe_unused]] const size_t step, const std::vector<UpdateStatus>& disable_flags) override {
+    void update_input([[maybe_unused]] const step_type step, const std::vector<UpdateStatus>& disable_flags) override {
         const auto number_neurons = get_number_neurons();
         RelearnException::check(disable_flags.size() == number_neurons,
             "NormalBackgroundActivityCalculator::update_input: Size of disable flags doesn't match number of local neurons: {} vs {}", disable_flags.size(), number_neurons);
 
         Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
-        for (size_t neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
+        for (number_neurons_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
             const auto input = disable_flags[neuron_id] == UpdateStatus::Disabled ? 0.0 : base_input + RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
             set_background_activity(neuron_id, input);
         }
@@ -204,13 +204,13 @@ public:
      * @param step The current update step
      * @param disable_flags Unused
      */
-    void update_input(const size_t step, const std::vector<UpdateStatus>& disable_flags) override {
+    void update_input(const step_type step, const std::vector<UpdateStatus>& disable_flags) override {
         const auto number_neurons = get_number_neurons();
         RelearnException::check(disable_flags.size() == number_neurons,
             "StimulusBackgroundActivityCalculator::update_input: Size of disable flags doesn't match number of local neurons: {} vs {}", disable_flags.size(), number_neurons);
 
         Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
-        for (size_t neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
+        for (number_neurons_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
             const auto noise = stddev_input == 0.0 ? mean_input : RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
             const auto stimulus = stimulus_function(step, neuron_id);
             const auto input = noise + stimulus;
@@ -241,7 +241,7 @@ public:
 
 private:
     std::filesystem::path file{};
-    std::function<double(std::uint64_t, NeuronID::value_type)> stimulus_function{};
+    std::function<double(step_type, NeuronID::value_type)> stimulus_function{};
     double mean_input{ default_background_activity_mean };
     double stddev_input{ default_background_activity_stddev };
 };

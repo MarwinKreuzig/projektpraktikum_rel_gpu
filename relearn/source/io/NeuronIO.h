@@ -26,6 +26,7 @@
  */
 class NeuronIO {
 public:
+    using number_neurons_type = RelearnTypes::number_neurons_type;
     using position_type = RelearnTypes::position_type;
 
     /**
@@ -98,7 +99,7 @@ public:
      * @exception Throws a RelearnException if opening the file failed, the weight of one synapse is 0, or a loaded id is not from [1, number_local_neurons].
      * @return All local synapses
      */
-    [[nodiscard]] static LocalSynapses read_local_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons);
+    [[nodiscard]] static LocalSynapses read_local_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons);
 
     /**
      * @brief Write all local synapses to the specified file
@@ -124,7 +125,7 @@ public:
      *      (6) or a target id is not from [0, number_local_neurons)
      * @return All distant in-synapses
      */
-    static DistantInSynapses read_distant_in_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons, int my_rank, int number_mpi_ranks);
+    static DistantInSynapses read_distant_in_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons, int my_rank, int number_mpi_ranks);
 
     /**
      * @brief Writes all distant in-synapses to the specified file
@@ -151,7 +152,7 @@ public:
      *      (6) or a source id is not from [0, number_local_neurons)
      * @return All distant out-synapses
      */
-    static DistantOutSynapses read_distant_out_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons, int my_rank, int number_mpi_ranks);
+    static DistantOutSynapses read_distant_out_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons, int my_rank, int number_mpi_ranks);
 
     /**
      * @brief Writes all distant out-synapses to the specified file
@@ -177,7 +178,7 @@ public:
      *      (5) or a target id is not from [0, number_local_neurons)
      * @return All in-synapses as a tuple: (1) The local ones and (2) the distant ones
      */
-    static std::tuple<LocalSynapses, DistantInSynapses> read_in_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons, int my_rank, int number_mpi_ranks);
+    static std::tuple<LocalSynapses, DistantInSynapses> read_in_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons, int my_rank, int number_mpi_ranks);
 
     /**
      * @brief Writes all in-synapses to the specified file
@@ -204,7 +205,7 @@ public:
      *      (5) or a source id is not from [0, number_local_neurons)
      * @return All out-synapses as a tuple: (1) The local ones and (2) the distant ones
      */
-    static std::tuple<LocalSynapses, DistantOutSynapses> read_out_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons, int my_rank, int number_mpi_ranks);
+    static std::tuple<LocalSynapses, DistantOutSynapses> read_out_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons, int my_rank, int number_mpi_ranks);
 
     /**
      * @brief Writes all out-synapses to the specified file

@@ -282,7 +282,7 @@ TEST_F(StepParserTest, testGenerateFunction1) {
 
     auto function = StepParser::generate_step_check_function(std::vector<Interval>{});
 
-    for (std::uint64_t step = 0; step < 10000; step++) {
+    for (RelearnTypes::step_type step = 0; step < 10000; step++) {
         const auto result_1 = function(step);
         ASSERT_FALSE(result_1) << step;
 
@@ -302,7 +302,7 @@ TEST_F(StepParserTest, testGenerateFunction2) {
 
     auto function = StepParser::generate_step_check_function({ i });
 
-    for (std::uint64_t step = 0; step < 10000; step++) {
+    for (RelearnTypes::step_type step = 0; step < 10000; step++) {
         const auto result_1 = function(step);
         ASSERT_TRUE(result_1) << step;
 
@@ -325,7 +325,7 @@ TEST_F(StepParserTest, testGenerateFunction3) {
 
     auto function = StepParser::generate_step_check_function({ i1, i2, i3, i4 });
 
-    for (std::uint64_t step = 0; step < 20000; step++) {
+    for (RelearnTypes::step_type step = 0; step < 20000; step++) {
         const auto result_1 = function(step);
         ASSERT_EQ(result_1, (step <= 10000 && step % 10 == 0)) << step;
 
@@ -360,7 +360,7 @@ TEST_F(StepParserTest, testGenerateFunction4) {
     auto function_1 = StepParser::generate_step_check_function({ i1, i2, i3, i4, i5 });
     auto function_2 = StepParser::generate_step_check_function(ss.str());
 
-    for (std::uint64_t step = 0; step < 90000; step++) {
+    for (RelearnTypes::step_type step = 0; step < 90000; step++) {
         const auto result_1 = function_1(step);
         const auto result_2 = function_2(step);
         ASSERT_EQ(result_1, result_2) << step;

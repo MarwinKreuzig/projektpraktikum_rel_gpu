@@ -32,6 +32,7 @@ class NeuronToSubdomainAssignment {
 public:
     using position_type = RelearnTypes::position_type;
     using box_size_type = RelearnTypes::box_size_type;
+    using number_neurons_type = RelearnTypes::number_neurons_type;
 
     /**
      * @brief Constructs a new object with the given partition
@@ -78,7 +79,7 @@ public:
      * @brief Returns the total number of neurons that should be placed
      * @return The total number of neurons that should be placed
      */
-    [[nodiscard]] size_t get_requested_number_neurons() const noexcept {
+    [[nodiscard]] number_neurons_type get_requested_number_neurons() const noexcept {
         return requested_number_neurons;
     }
 
@@ -86,7 +87,7 @@ public:
      * @brief Returns the current number of placed neurons on this MPI rank
      * @return The current number of placed neurons
      */
-    [[nodiscard]] size_t get_number_placed_neurons() const noexcept {
+    [[nodiscard]] number_neurons_type get_number_placed_neurons() const noexcept {
         return number_placed_neurons;
     }
 
@@ -94,7 +95,7 @@ public:
      * @brief Returns the total number of placed neurons across all MPI ranks
      * @return The total number of placed neurons across all MPI ranks
      */
-    [[nodiscard]] size_t get_total_number_placed_neurons() const {
+    [[nodiscard]] number_neurons_type get_total_number_placed_neurons() const {
         return total_number_neurons;
     }
 
@@ -118,7 +119,7 @@ public:
      * @brief Returns the total number of neurons in the local subdomains
      * @return The total number of neurons in the local subdomains
      */
-    [[nodiscard]] size_t get_number_neurons_in_subdomains() const {
+    [[nodiscard]] number_neurons_type get_number_neurons_in_subdomains() const {
         const auto total_number_neurons_in_subdomains = loaded_neurons.size();
         return total_number_neurons_in_subdomains;
     }
@@ -214,10 +215,10 @@ private:
     std::vector<LoadedNeuron> loaded_neurons{};
 
     double requested_ratio_excitatory_neurons{ 0.0 };
-    size_t requested_number_neurons{ 0 };
+    number_neurons_type requested_number_neurons{ 0 };
 
     double ratio_placed_excitatory_neurons{ 0.0 };
-    size_t number_placed_neurons{ 0 };
+    number_neurons_type number_placed_neurons{ 0 };
 
-    mutable size_t total_number_neurons{ Constants::uninitialized };
+    mutable number_neurons_type total_number_neurons{ Constants::uninitialized };
 };

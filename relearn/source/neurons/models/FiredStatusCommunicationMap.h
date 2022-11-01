@@ -12,6 +12,7 @@
 
 #include "FiredStatusCommunicator.h"
 
+#include "Types.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/FiredStatus.h"
 #include "neurons/UpdateStatus.h"
@@ -35,10 +36,10 @@ public:
      * @param number_neurons The number of local neurons
      * @exception Throws a RelearnException if number_ranks <= 0
      */
-    FiredStatusCommunicationMap(int number_ranks, size_t number_neurons)
+    FiredStatusCommunicationMap(int number_ranks, number_neurons_type number_neurons)
         : FiredStatusCommunicator(number_ranks, number_neurons)
-        , outgoing_ids(number_ranks, std::min(size_t(number_ranks), number_neurons))
-        , incoming_ids(number_ranks, std::min(size_t(number_ranks), number_neurons)) {
+        , outgoing_ids(number_ranks, std::min(number_neurons_type(number_ranks), number_neurons))
+        , incoming_ids(number_ranks, std::min(number_neurons_type(number_ranks), number_neurons)) {
         RelearnException::check(number_ranks > 0, "FiredStatusCommunicationMap::FiredStatusCommunicationMap: number_ranks is too small: {}", number_ranks);
     }
 

@@ -45,13 +45,13 @@ PoissonModel::PoissonModel(
     return "PoissonModel";
 }
 
-void PoissonModel::init(const size_t number_neurons) {
+void PoissonModel::init(const number_neurons_type number_neurons) {
     NeuronModel::init(number_neurons);
     refrac.resize(number_neurons, 0);
     init_neurons(0, number_neurons);
 }
 
-void PoissonModel::create_neurons(const size_t creation_count) {
+void PoissonModel::create_neurons(const number_neurons_type creation_count) {
     const auto old_size = NeuronModel::get_number_neurons();
     NeuronModel::create_neurons(creation_count);
     refrac.resize(old_size + creation_count, 0);
@@ -94,6 +94,6 @@ void PoissonModel::update_activity(const NeuronID& neuron_id) {
     set_x(neuron_id, x);
 }
 
-void PoissonModel::init_neurons(const size_t start_id, const size_t end_id) {
+void PoissonModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {
 
 }

@@ -62,7 +62,7 @@ std::tuple<std::vector<LoadedNeuron>, LoadedNeuronsInfo> NeuronIO::read_neurons(
 
     std::vector<LoadedNeuron> nodes{};
 
-    NeuronID::value_type expected_id = 0;
+    number_neurons_type expected_id = 0;
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
@@ -304,7 +304,7 @@ std::optional<std::vector<NeuronID>> NeuronIO::read_neuron_ids(const std::filesy
     return ids;
 }
 
-LocalSynapses NeuronIO::read_local_synapses(const std::filesystem::path& file_path, const NeuronID::value_type number_local_neurons) {
+LocalSynapses NeuronIO::read_local_synapses(const std::filesystem::path& file_path, const number_neurons_type number_local_neurons) {
     LocalSynapses local_synapses{};
 
     std::ifstream file_synapses(file_path, std::ios::binary | std::ios::in);
@@ -359,7 +359,7 @@ void NeuronIO::write_local_synapses(const LocalSynapses& local_synapses, const s
     }
 }
 
-DistantInSynapses NeuronIO::read_distant_in_synapses(const std::filesystem::path& file_path, const NeuronID::value_type number_local_neurons, const int my_rank, const int number_mpi_ranks) {
+DistantInSynapses NeuronIO::read_distant_in_synapses(const std::filesystem::path& file_path, const number_neurons_type number_local_neurons, const int my_rank, const int number_mpi_ranks) {
     DistantInSynapses distant_in_synapses{};
 
     std::ifstream file_synapses(file_path, std::ios::binary | std::ios::in);
@@ -433,7 +433,7 @@ void NeuronIO::write_distant_in_synapses(const DistantInSynapses& distant_in_syn
     }
 }
 
-DistantOutSynapses NeuronIO::read_distant_out_synapses(const std::filesystem::path& file_path, const NeuronID::value_type number_local_neurons, const int my_rank, const int number_mpi_ranks) {
+DistantOutSynapses NeuronIO::read_distant_out_synapses(const std::filesystem::path& file_path, const number_neurons_type number_local_neurons, const int my_rank, const int number_mpi_ranks) {
     DistantOutSynapses distant_out_synapses{};
 
     std::ifstream file_synapses(file_path, std::ios::binary | std::ios::in);
@@ -507,7 +507,7 @@ void NeuronIO::write_distant_out_synapses(const DistantOutSynapses& distant_out_
     }
 }
 
-std::tuple<LocalSynapses, DistantInSynapses> NeuronIO::read_in_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons, int my_rank, int number_mpi_ranks) {
+std::tuple<LocalSynapses, DistantInSynapses> NeuronIO::read_in_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons, int my_rank, int number_mpi_ranks) {
     LocalSynapses local_in_synapses{};
     DistantInSynapses distant_in_synapses{};
 
@@ -594,7 +594,7 @@ void NeuronIO::write_in_synapses(const LocalSynapses& local_in_synapses, const D
 
 }
 
-std::tuple<LocalSynapses, DistantOutSynapses> NeuronIO::read_out_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons, int my_rank, int number_mpi_ranks) {
+std::tuple<LocalSynapses, DistantOutSynapses> NeuronIO::read_out_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons, int my_rank, int number_mpi_ranks) {
     LocalSynapses local_out_synapses{};
     DistantOutSynapses distant_out_synapses{};
 

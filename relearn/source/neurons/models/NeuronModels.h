@@ -10,6 +10,7 @@
  *
  */
 
+#include "Types.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/FiredStatus.h"
 #include "neurons/UpdateStatus.h"
@@ -39,6 +40,9 @@ class NeuronModel {
     friend class NeuronMonitor;
 
 public:
+    using number_neurons_type = RelearnTypes::number_neurons_type;
+    using step_type = RelearnTypes::step_type;
+
     /**
      * @brief Construcs a new instance of type NeuronModel with 0 neurons and default values for all parameters
      */
@@ -50,7 +54,8 @@ public:
      * @param synaptic_input_calculator The object that is resonsible for calculating the synaptic input
      * @param background_activity_calculator The object that is resonsible for calculating the background activity
      */
-    NeuronModel(unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator, std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator)
+    NeuronModel(unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator, 
+        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator)
         : h(h)
         , input_calculator(std::move(synaptic_input_calculator))
         , background_calculator(std::move(background_activity_calculator)) { }
@@ -160,7 +165,7 @@ public:
      * @brief Returns the number of neurons that are stored in the object
      * @return The number of neurons that are stored in the object
      */
-    [[nodiscard]] size_t get_number_neurons() const noexcept {
+    [[nodiscard]] number_neurons_type get_number_neurons() const noexcept {
         return number_local_neurons;
     }
 
@@ -180,7 +185,7 @@ public:
      * @param network_graph The network graph that specifies which neurons are connected. Is used to determine which spikes effect the local portion.
      * @param disable_flags A vector of flags that specify which neurons should be left alone during the update
      */
-    void update_electrical_activity(size_t step, const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags);
+    void update_electrical_activity(step_type step, const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags);
 
     /**
      * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned
@@ -199,13 +204,13 @@ public:
      *      Sets the initial membrane potential and initial synaptic inputs to 0.0 and fired to false
      * @param number_neurons The number of local neurons to store in this class
      */
-    virtual void init(size_t number_neurons);
+    virtual void init(number_neurons_type number_neurons);
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
      * @param creation_count The number of local neurons that should be added
      */
-    virtual void create_neurons(size_t creation_count);
+    virtual void create_neurons(number_neurons_type creation_count);
 
     /**
      * @brief Returns the name of the current model
@@ -247,7 +252,7 @@ protected:
      * @param start_id The first local neuron id to initialize
      * @param end_id The next to last local neuron id to initialize
      */
-    virtual void init_neurons(size_t start_id, size_t end_id) = 0;
+    virtual void init_neurons(number_neurons_type start_id, number_neurons_type end_id) = 0;
 
     /**
      * @brief Sets the membrane potential for the specified neuron. Does not perform bound-checking
@@ -291,7 +296,7 @@ protected:
 
 private:
     // My local number of neurons
-    size_t number_local_neurons{ 0 };
+    number_neurons_type number_local_neurons{ 0 };
 
     // Model parameters for all neurons
     unsigned int h{ default_h }; // Precision for Euler integration
@@ -392,13 +397,13 @@ public:
      *      Sets the initial refrac counter to 0
      * @param number_neurons The number of local neurons to store in this class
      */
-    void init(size_t number_neurons) final;
+    void init(number_neurons_type number_neurons) final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
      * @param creation_count The number of local neurons that should be added
      */
-    void create_neurons(size_t creation_count) final;
+    void create_neurons(number_neurons_type creation_count) final;
 
     static constexpr double default_x_0{ 0.05 };
     static constexpr double default_tau_x{ 5.0 };
@@ -415,7 +420,7 @@ public:
 protected:
     void update_activity(const NeuronID& neuron_id) final;
 
-    void init_neurons(size_t start_id, size_t end_id) final;
+    void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
 
 private:
     [[nodiscard]] double iter_x(const double x, const double input) const noexcept {
@@ -570,13 +575,13 @@ public:
      * @brief Initializes the model to include number_neurons many local neurons.
      * @param number_neurons The number of local neurons to store in this class
      */
-    void init(size_t number_neurons) final;
+    void init(number_neurons_type number_neurons) final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
      * @param creation_count The number of local neurons that should be added
      */
-    void create_neurons(size_t creation_count) final;
+    void create_neurons(number_neurons_type creation_count) final;
 
     static constexpr double default_a{ 0.1 };
     static constexpr double default_b{ 0.2 };
@@ -608,7 +613,7 @@ public:
 protected:
     void update_activity(const NeuronID& neuron_id) final;
 
-    void init_neurons(size_t start_id, size_t end_id) final;
+    void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
 
 private:
     [[nodiscard]] double iter_x(double x, double u, double input) const noexcept;
@@ -719,13 +724,13 @@ public:
      * @brief Initializes the model to include number_neurons many local neurons.
      * @param number_neurons The number of local neurons to store in this class
      */
-    void init(size_t number_neurons) final;
+    void init(number_neurons_type number_neurons) final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
      * @param creation_count The number of local neurons that should be added
      */
-    void create_neurons(size_t creation_count) final;
+    void create_neurons(number_neurons_type creation_count) final;
 
     static constexpr double default_a{ 0.7 };
     static constexpr double default_b{ 0.8 };
@@ -745,7 +750,7 @@ public:
 protected:
     void update_activity(const NeuronID& neuron_id) final;
 
-    void init_neurons(size_t start_id, size_t end_id) final;
+    void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
 
 private:
     [[nodiscard]] static double iter_x(double x, double w, double input) noexcept;
@@ -912,13 +917,13 @@ public:
      * @brief Initializes the model to include number_neurons many local neurons.
      * @param number_neurons The number of local neurons to store in this class
      */
-    void init(size_t number_neurons) final;
+    void init(number_neurons_type number_neurons) final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
      * @param creation_count The number of local neurons that should be added
      */
-    void create_neurons(size_t creation_count) final;
+    void create_neurons(number_neurons_type creation_count) final;
 
     static constexpr double default_C{ 281.0 };
     static constexpr double default_g_L{ 30.0 };
@@ -953,7 +958,7 @@ public:
 protected:
     void update_activity(const NeuronID& neuron_id) final;
 
-    void init_neurons(size_t start_id, size_t end_id) final;
+    void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
 
 private:
     [[nodiscard]] double f(double x) const noexcept;

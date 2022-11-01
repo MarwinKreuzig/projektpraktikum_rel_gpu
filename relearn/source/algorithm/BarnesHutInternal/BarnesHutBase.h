@@ -291,7 +291,7 @@ protected:
      *      If the algorithm found a matching neuron, its RankNeuronId is returned
      */
     [[nodiscard]] std::optional<std::pair<int, DistantNeuronRequest>> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
-        const ElementType element_type, const SignalType signal_type, size_t level_of_branch_nodes) const {
+        const ElementType element_type, const SignalType signal_type, const std::uint16_t level_of_branch_nodes) const {
         RelearnException::check(root != nullptr, "BarnesHutLocationAwareBase::find_target_neuron: root was nullptr");
 
         for (auto root_of_subtree = root; true;) {

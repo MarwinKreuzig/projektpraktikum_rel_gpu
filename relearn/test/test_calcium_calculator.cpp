@@ -6,7 +6,7 @@
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorNone) {
     uniform_real_distribution<double> amount_distr(-10000.0, 10000.0);
-    uniform_int_distribution<size_t> step_distr(0, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(0, 10000000);
 
     const auto decay_amount = amount_distr(mt);
     const auto decay_step = step_distr(mt);
@@ -19,7 +19,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorNone) {
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorRelative) {
     uniform_real_distribution<double> amount_distr(std::nextafter(0.0, 1.0), 1.0);
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     const auto decay_amount = amount_distr(mt);
     const auto decay_step = step_distr(mt);
@@ -32,7 +32,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorRelative) {
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorAbsolute) {
     uniform_real_distribution<double> amount_distr(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     const auto decay_amount = amount_distr(mt);
     const auto decay_step = step_distr(mt);
@@ -69,7 +69,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorAbsoluteException)
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructurGetter) {
     uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     const auto decay_amount_relative = amount_distr_relative(mt);
     const auto decay_amount_absolute = amount_distr_absolute(mt);
@@ -99,7 +99,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructurGetter) {
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorGetterSetter) {
     uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     const auto decay_amount_relative = amount_distr_relative(mt);
     const auto decay_amount_absolute = amount_distr_absolute(mt);
@@ -197,7 +197,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorGetterSetter) {
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorGetterSetterException) {
     uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     const auto decay_amount_relative = amount_distr_relative(mt);
     const auto decay_amount_absolute = amount_distr_absolute(mt);
@@ -313,7 +313,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorInitialTargetCalcium) {
 
     uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     const auto decay_amount_relative = amount_distr_relative(mt);
     const auto decay_amount_absolute = amount_distr_absolute(mt);
@@ -431,7 +431,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorCreate) {
 
     uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     const auto decay_amount_relative = amount_distr_relative(mt);
     const auto decay_amount_absolute = amount_distr_absolute(mt);
@@ -551,7 +551,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorZeroNeurons) {
 
     uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     const auto decay_amount_relative = amount_distr_relative(mt);
     const auto decay_amount_absolute = amount_distr_absolute(mt);
@@ -617,7 +617,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorEmptyFunctions) {
 
     uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     const auto decay_amount_relative = amount_distr_relative(mt);
     const auto decay_amount_absolute = amount_distr_absolute(mt);
@@ -697,7 +697,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateException) {
 
     uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     const auto decay_amount_relative = amount_distr_relative(mt);
     const auto decay_amount_absolute = amount_distr_absolute(mt);
@@ -775,7 +775,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
     uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
     uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     CalciumCalculator cc(TargetCalciumDecay::None, 0.0, 0);
 
@@ -917,7 +917,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNone) {
     uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
     uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     CalciumCalculator cc(TargetCalciumDecay::None, 0.0, 0);
 
@@ -979,7 +979,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
     };
 
     uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     const auto decay_amount_relative = amount_distr_relative(mt);
     const auto decay_step = step_distr(mt);
@@ -1064,7 +1064,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeStep0) {
     };
 
     uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     const auto decay_amount_relative = amount_distr_relative(mt);
     const auto decay_step = step_distr(mt);
@@ -1132,7 +1132,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelative) {
     };
 
     uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     const auto decay_amount_relative = amount_distr_relative(mt);
     const auto decay_step = step_distr(mt);
@@ -1213,7 +1213,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
     };
 
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     const auto decay_amount_absolute = amount_distr_absolute(mt);
     const auto decay_step = step_distr(mt);
@@ -1298,7 +1298,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteStep0) {
     };
 
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     const auto decay_amount_absolute = amount_distr_absolute(mt);
     const auto decay_step = step_distr(mt);
@@ -1366,7 +1366,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsolute) {
     };
 
     uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<size_t> step_distr(1, 10000000);
+    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
     const auto decay_amount_absolute = amount_distr_absolute(mt);
     const auto decay_step = step_distr(mt);

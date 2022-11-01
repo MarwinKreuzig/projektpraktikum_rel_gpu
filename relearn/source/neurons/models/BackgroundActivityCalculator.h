@@ -10,6 +10,7 @@
  *
  */
 
+#include "Types.h"
 #include "neurons/UpdateStatus.h"
 #include "neurons/models/ModelParameter.h"
 #include "util/RelearnException.h"
@@ -62,6 +63,9 @@ class BackgroundActivityCalculator {
     friend class NeuronMonitor;
 
 public:
+    using number_neurons_type = RelearnTypes::number_neurons_type;
+    using step_type = RelearnTypes::step_type;
+
     /**
      * @brief Construcs a new instance of type SynapticInputCalculator with 0 neurons.
      */
@@ -80,7 +84,7 @@ public:
      * @param number_neurons The number of neurons for this instance, must be > 0
      * @exception Throws a RelearnException if number_neurons == 0
      */
-    virtual void init(size_t number_neurons) {
+    virtual void init(number_neurons_type number_neurons) {
         RelearnException::check(number_neurons > 0, "BackgroundActivityCalculator::init: number_neurons was 0");
 
         number_local_neurons = number_neurons;
@@ -92,7 +96,7 @@ public:
      * @param creation_count The number of neurons to create, must be > 0
      * @exception Throws a RelearnException if creation_count == 0 or if init(...) was not called before
      */
-    virtual void create_neurons(size_t creation_count) {
+    virtual void create_neurons(number_neurons_type creation_count) {
         RelearnException::check(number_local_neurons > 0, "BackgroundActivityCalculator::create_neurons: number_local_neurons was 0");
         RelearnException::check(creation_count > 0, "BackgroundActivityCalculator::create_neurons: creation_count was 0");
 
@@ -109,7 +113,7 @@ public:
      * @param disable_flags Which neurons are disabled
      * @exception Throws a RelearnException if the number of local neurons didn't match the sizes of the arguments
      */
-    virtual void update_input([[maybe_unused]] const size_t step, const std::vector<UpdateStatus>& disable_flags) = 0;
+    virtual void update_input([[maybe_unused]] const step_type step, const std::vector<UpdateStatus>& disable_flags) = 0;
 
     /**
      * @brief Returns the calculated background activity for the given neuron. Changes after calls to update_input(...)
@@ -136,7 +140,7 @@ public:
      * @brief Returns the number of neurons that are stored in the object
      * @return The number of neurons that are stored in the object
      */
-    [[nodiscard]] size_t get_number_neurons() const noexcept {
+    [[nodiscard]] number_neurons_type get_number_neurons() const noexcept {
         return number_local_neurons;
     }
 
@@ -167,13 +171,13 @@ protected:
      * @param value The new background activity
      * @exception Throws a RelearnException if the neuron_id is to large
      */
-    void set_background_activity(const size_t neuron_id, const double value) {
+    void set_background_activity(const number_neurons_type neuron_id, const double value) {
         RelearnException::check(neuron_id < number_local_neurons, "SynapticInputCalculator::set_background_activity: neuron_id was too large: {} vs {}", neuron_id, number_local_neurons);
         background_activity[neuron_id] = value;
     }
 
 private:
-    size_t number_local_neurons{};
+    number_neurons_type number_local_neurons{};
 
     std::vector<double> background_activity{};
 };

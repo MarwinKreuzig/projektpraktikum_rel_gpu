@@ -46,6 +46,8 @@ public:
     using NeuronLocalInNeighborhood = std::vector<LocalEdges>;
     using NeuronLocalOutNeighborhood = std::vector<LocalEdges>;
 
+    using number_neurons_type = RelearnTypes::number_neurons_type;
+
     enum class EdgeDirection {
         In,
         Out
@@ -58,7 +60,7 @@ public:
      * @exception Throws an exception if the allocation of memory fails
      *      Throws a RelearnException if mpi_rank < 0
      */
-    NetworkGraph(const size_t number_neurons, const int mpi_rank)
+    NetworkGraph(const number_neurons_type number_neurons, const int mpi_rank)
         : neuron_distant_in_neighborhood(number_neurons)
         , neuron_distant_out_neighborhood(number_neurons)
         , neuron_local_in_neighborhood(number_neurons)
@@ -74,7 +76,7 @@ public:
      * @param creation_count The number of additional neurons the network graph should handle
      * @exception Throws an exception if the allocation of memory fails
      */
-    void create_neurons(const size_t creation_count) {
+    void create_neurons(const number_neurons_type creation_count) {
         const auto old_size = number_local_neurons;
         const auto new_size = old_size + creation_count;
 
@@ -585,6 +587,6 @@ private:
     NeuronLocalInNeighborhood neuron_local_in_neighborhood{};
     NeuronLocalOutNeighborhood neuron_local_out_neighborhood{};
 
-    size_t number_local_neurons{ Constants::uninitialized }; // My number of neurons
+    number_neurons_type number_local_neurons{ Constants::uninitialized }; // My number of neurons
     int mpi_rank{ -1 };
 };

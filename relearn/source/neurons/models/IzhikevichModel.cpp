@@ -57,13 +57,13 @@ IzhikevichModel::IzhikevichModel(
     return "IzhikevichModel";
 }
 
-void IzhikevichModel::init(const size_t number_neurons) {
+void IzhikevichModel::init(const number_neurons_type number_neurons) {
     NeuronModel::init(number_neurons);
     u.resize(number_neurons);
     init_neurons(0, number_neurons);
 }
 
-void IzhikevichModel::create_neurons(const size_t creation_count) {
+void IzhikevichModel::create_neurons(const number_neurons_type creation_count) {
     const auto old_size = NeuronModel::get_number_neurons();
     NeuronModel::create_neurons(creation_count);
     u.resize(old_size + creation_count);
@@ -99,8 +99,8 @@ void IzhikevichModel::update_activity(const NeuronID& neuron_id) {
     set_x(neuron_id, x);
 }
 
-void IzhikevichModel::init_neurons(const size_t start_id, const size_t end_id) {
-    for (size_t neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
+void IzhikevichModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {
+    for (auto neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
         const auto id = NeuronID{ neuron_id };
         u[neuron_id] = iter_refrac(b * c, c);
         set_x(id, c);

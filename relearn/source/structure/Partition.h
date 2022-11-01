@@ -118,7 +118,7 @@ public:
      * @brief Returns the level in the octree on which the local_subdomains start
      * @return The level in the octree on which the local_subdomains start
      */
-    [[nodiscard]] size_t get_level_of_subdomain_trees() const noexcept {
+    [[nodiscard]] std::uint16_t get_level_of_subdomain_trees() const noexcept {
         return level_of_subdomain_trees;
     }
 
@@ -331,7 +331,7 @@ private:
 
     size_t total_number_subdomains{ Constants::uninitialized };
     size_t number_subdomains_per_dimension{ Constants::uninitialized };
-    size_t level_of_subdomain_trees{ Constants::uninitialized };
+    std::uint16_t level_of_subdomain_trees{ std::numeric_limits<std::uint16_t>::max() };
 
     size_t number_local_subdomains{ Constants::uninitialized };
     size_t local_subdomain_id_start{ Constants::uninitialized };

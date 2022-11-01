@@ -116,7 +116,7 @@ public:
 
         std::ranges::sort(stimuli, comparison);
 
-        auto step_checker_function = [stimuli = std::move(stimuli)](std::uint64_t current_step, NeuronID::value_type neuron_id) noexcept -> double {
+        auto step_checker_function = [stimuli = std::move(stimuli)](step_type current_step, NeuronID::value_type neuron_id) noexcept -> double {
             for (const auto& [interval, intensity, ids] : stimuli) {
                 if (interval.hits_step(current_step) && ids.contains(neuron_id)) {
                     return intensity;

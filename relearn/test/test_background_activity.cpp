@@ -167,7 +167,7 @@ TEST_F(BackgroundActivityTest, testNullBackgroundActivityUpdate) {
         }
     }
 
-    const auto step = get_random_integer<size_t>(0, 1000000);
+    const auto step = get_random_integer<RelearnTypes::step_type>(0, 1000000);
     background_calculator->update_input(step, update_status);
 
     test_background_equality(background_calculator);
@@ -192,7 +192,7 @@ TEST_F(BackgroundActivityTest, testConstantBackgroundActivityUpdate) {
         }
     }
 
-    const auto step = get_random_integer<size_t>(0, 1000000);
+    const auto step = get_random_integer<RelearnTypes::step_type>(0, 1000000);
     background_calculator->update_input(step, update_status);
 
     test_background_equality(background_calculator);
@@ -224,7 +224,7 @@ TEST_F(BackgroundActivityTest, testNormalBackgroundActivityUpdate) {
         }
     }
 
-    const auto step = get_random_integer<size_t>(0, 1000000);
+    const auto step = get_random_integer<RelearnTypes::step_type>(0, 1000000);
     background_calculator->update_input(step, update_status);
 
     test_background_equality(background_calculator);

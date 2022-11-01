@@ -10,6 +10,7 @@
  *
  */
 
+#include "Types.h"
 #include "neurons/FiredStatus.h"
 #include "neurons/UpdateStatus.h"
 #include "util/RelearnException.h"
@@ -24,13 +25,15 @@ class NetworkGraph;
  */
 class FiredStatusCommunicator {
 public:
+    using number_neurons_type = RelearnTypes::number_neurons_type;
+
     /**
      * @brief Constructs a new object with the given number of ranks and local neurons (mainly used for preallocating memory)
      * @param number_ranks The number of MPI ranks
      * @param number_neurons The number of local neurons
      * @exception Throws a RelearnException if number_ranks <= 0
      */
-    FiredStatusCommunicator(int number_ranks, size_t number_local_neurons)
+    FiredStatusCommunicator(int number_ranks, number_neurons_type number_local_neurons)
         : number_ranks(number_ranks)
         , number_local_neurons(number_local_neurons) {
         RelearnException::check(number_ranks > 0, "FiredStatusCommunicator::FiredStatusCommunicator: number_ranks is too small: {}", number_ranks);
@@ -73,7 +76,7 @@ public:
      * @brief Returns the number of local neurons
      * @return The number of local neurons
      */
-    [[nodiscard]] size_t get_number_local_neurons() const noexcept {
+    [[nodiscard]] number_neurons_type get_number_local_neurons() const noexcept {
         return number_local_neurons;
     }
 
@@ -81,5 +84,5 @@ public:
 
 private:
     int number_ranks{ -1 };
-    size_t number_local_neurons{ 0 };
+    number_neurons_type number_local_neurons{ 0 };
 };

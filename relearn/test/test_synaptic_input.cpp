@@ -173,7 +173,7 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdate) {
         }
     }
 
-    const auto step = get_random_integer<size_t>(0, 1000000);
+    const auto step = get_random_integer<RelearnTypes::step_type>(0, 1000000);
 
     input_calculator->update_input(step, ng, fired_status, update_status);
 
@@ -266,7 +266,7 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate) {
         }
     }
 
-    const auto step = get_random_integer<size_t>(0, 1000000);
+    const auto step = get_random_integer<RelearnTypes::step_type>(0, 1000000);
 
     input_calculator->update_input(step, ng, fired_status, update_status);
 

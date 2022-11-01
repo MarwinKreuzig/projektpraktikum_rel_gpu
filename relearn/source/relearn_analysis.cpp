@@ -50,7 +50,7 @@ void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, 
     std::vector<size_t> counts(number_bins, 0);
 
     const auto start_id = my_rank * number_neurons_per_rank;
-    const auto end_id = (my_rank + 1 == number_ranks) ? number_neurons : (my_rank + 1) * number_neurons_per_rank;
+    const auto end_id = (my_rank + 1 == number_ranks) ? number_neurons : (my_rank + 1ULL) * number_neurons_per_rank;
 
     for (auto i = start_id; i < end_id; i++) {
         const auto& source_position = positions[i];
@@ -78,7 +78,7 @@ void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, 
     }
 
     std::ofstream file("histogram_" + std::to_string(my_rank) + ".txt");
-    for (auto i = 1; i < number_bins; i++) {
+    for (auto i = 1U; i < number_bins; i++) {
         fmt::print(file, "[{:.6}, {:.6}): {}\n", upper_borders[i - 1], upper_borders[i], counts[i - 1]);
     }
 }

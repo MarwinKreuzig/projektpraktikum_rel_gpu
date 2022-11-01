@@ -17,8 +17,8 @@
 #include <cstdint>
 #include <limits>
 
-std::pair<std::vector<LoadedNeuron>, NeuronID::value_type> 
-BoxBasedRandomSubdomainAssignment::place_neurons_in_box(const box_size_type& offset, const box_size_type& length_of_box, const NeuronID::value_type number_neurons, NeuronID::value_type first_id) {
+std::pair<std::vector<LoadedNeuron>, BoxBasedRandomSubdomainAssignment::number_neurons_type>
+BoxBasedRandomSubdomainAssignment::place_neurons_in_box(const box_size_type& offset, const box_size_type& length_of_box, const number_neurons_type number_neurons, NeuronID::value_type first_id) {
     const auto& [min, max] = partition->get_simulation_box_size();
     const auto& simulation_box_length_ = (max - min).get_maximum();
 
@@ -41,7 +41,7 @@ BoxBasedRandomSubdomainAssignment::place_neurons_in_box(const box_size_type& off
 
     const auto desired_ex = get_requested_ratio_excitatory_neurons();
 
-    const auto expected_number_in = number_neurons - static_cast<size_t>(std::ceil(static_cast<double>(number_neurons) * desired_ex));
+    const auto expected_number_in = number_neurons - static_cast<number_neurons_type>(std::ceil(static_cast<double>(number_neurons) * desired_ex));
     const auto expected_number_ex = number_neurons - expected_number_in;
 
     size_t random_counter = 0;
@@ -72,7 +72,7 @@ BoxBasedRandomSubdomainAssignment::place_neurons_in_box(const box_size_type& off
     std::vector<LoadedNeuron> nodes{};
     nodes.reserve(number_neurons);
 
-    for (size_t i = 0; i < number_neurons; i++) {
+    for (NeuronID::value_type i = 0; i < number_neurons; i++) {
         const size_t pos_bitmask = positions[i];
         const size_t x_it = (pos_bitmask >> 32U) & max_short;
         const size_t y_it = (pos_bitmask >> 16U) & max_short;

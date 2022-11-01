@@ -10,6 +10,7 @@
  *
  */
 
+#include "Types.h"
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
 #include "neurons/UpdateStatus.h"
@@ -61,6 +62,8 @@ class SynapticElements {
     friend class NeuronMonitor;
 
 public:
+    using number_neurons_type = RelearnTypes::number_neurons_type;
+
     /**
      * @brief Creates a new object with the given parameters. Does not initialize the vectors
      * @param type The type (axon or dendrite) of the elements stored in this object
@@ -98,7 +101,7 @@ public:
      * @param number_neurons The number of that should be stored
      * @exception Throws a RelearnException if initial_vacant_elements_ub < initial_vacant_elements_lb
      */
-    void init(const size_t number_neurons) {
+    void init(const number_neurons_type number_neurons) {
         size = number_neurons;
 
         grown_elements.resize(size);
@@ -124,7 +127,7 @@ public:
      * @param number_neurons The number of that should be created
      * @exception Throws a RelearnException if initial_vacant_elements_ub < initial_vacant_elements_lb
      */
-    void create_neurons(const size_t creation_count) {
+    void create_neurons(const number_neurons_type creation_count) {
         const auto current_size = size;
         const auto new_size = current_size + creation_count;
 
@@ -403,7 +406,7 @@ public:
      * @brief Returns the size
      * @return The size
      */
-    [[nodiscard]] size_t get_size() const noexcept {
+    [[nodiscard]] number_neurons_type get_size() const noexcept {
         return size;
     }
 
@@ -484,7 +487,7 @@ public:
 
         std::map<std::pair<unsigned int, unsigned int>, uint64_t> result{};
 
-        for (size_t i = 0; i < size; i++) {
+        for (number_neurons_type i = 0; i < size; i++) {
             const auto number_connected_elements = connected_elements[i];
             const auto number_grown_elements = static_cast<unsigned int>(grown_elements[i]);
 
@@ -531,7 +534,7 @@ public:
 
 private:
     ElementType type{}; // Denotes the type of all synaptic elements, which is Axon or Dendrite
-    size_t size{ 0 };
+    number_neurons_type size{ 0 };
     std::vector<double> grown_elements{};
     std::vector<double> deltas_since_last_update{}; // Keeps track of changes in number of elements until those changes are applied in next connectivity update
     std::vector<unsigned int> connected_elements{};

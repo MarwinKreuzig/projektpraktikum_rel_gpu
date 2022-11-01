@@ -12,6 +12,7 @@
 
 #include "AlgorithmImpl.h"
 
+#include "Types.h"
 #include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/UpdateStatus.h"
@@ -34,6 +35,8 @@ class NeuronsExtraInfo;
 template <typename RequestType, typename ResponseType, typename AdditionalCellAttributes>
 class ForwardAlgorithm : public AlgorithmImpl<AdditionalCellAttributes> {
 public:
+    using number_neurons_type = RelearnTypes::number_neurons_type;
+
     explicit ForwardAlgorithm(const std::shared_ptr<OctreeImplementation<AdditionalCellAttributes>>& octree)
         : AlgorithmImpl<AdditionalCellAttributes>(octree) { }
 
@@ -46,7 +49,7 @@ public:
      * @exception Can throw a RelearnException
      * @return A tuple with the created synapses that must be committed to the network graph
      */
-    [[nodiscard]] std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
+    [[nodiscard]] std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos) override {
 
         Timers::start(TimerRegion::CREATE_SYNAPSES);
@@ -88,7 +91,7 @@ protected:
      * @exception Can throw a RelearnException
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
-    [[nodiscard]] virtual CommunicationMap<RequestType> find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
+    [[nodiscard]] virtual CommunicationMap<RequestType> find_target_neurons(number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos)
         = 0;
 
@@ -120,6 +123,8 @@ protected:
 template <typename RequestType, typename ResponseType, typename AdditionalCellAttributes>
 class BackwardAlgorithm : public AlgorithmImpl<AdditionalCellAttributes> {
 public:
+    using number_neurons_type = RelearnTypes::number_neurons_type;
+
     explicit BackwardAlgorithm(const std::shared_ptr<OctreeImplementation<AdditionalCellAttributes>>& octree)
         : AlgorithmImpl<AdditionalCellAttributes>(octree) { }
 
@@ -132,7 +137,7 @@ public:
      * @exception Can throw a RelearnException
      * @return A tuple with the created synapses that must be committed to the network graph
      */
-    [[nodiscard]] std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
+    [[nodiscard]] std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos) override {
 
         Timers::start(TimerRegion::CREATE_SYNAPSES);
@@ -174,7 +179,7 @@ protected:
      * @exception Can throw a RelearnException
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
-    [[nodiscard]] virtual CommunicationMap<RequestType> find_target_neurons(size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
+    [[nodiscard]] virtual CommunicationMap<RequestType> find_target_neurons(number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
         const std::unique_ptr<NeuronsExtraInfo>& extra_infos)
         = 0;
 

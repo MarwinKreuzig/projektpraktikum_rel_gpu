@@ -572,7 +572,7 @@ TEST_F(IOTest, testNeuronIOReadIDs) {
 }
 
 TEST_F(IOTest, testNeuronIOReadIDsEmpty1) {
-    const auto number_neurons = get_random_integer(2, upper_bound_num_neurons);
+    const auto number_neurons = get_random_integer<NeuronID::value_type>(2, upper_bound_num_neurons);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -733,7 +733,7 @@ TEST_F(IOTest, testReadInSynapses) {
     ofstream.flush();
     ofstream.close();
 
-    auto [read_local_synapses, read_distant_synapses] = NeuronIO::read_in_synapses(path, number_neurons, my_rank, number_ranks);
+    auto [read_local_synapses, read_distant_synapses] = NeuronIO::read_in_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
 
     std::ranges::sort(preliminary_local_synapses);
     std::ranges::sort(preliminary_distant_synapses);
@@ -783,7 +783,7 @@ TEST_F(IOTest, testReadOutSynapses) {
     ofstream.flush();
     ofstream.close();
 
-    auto [read_local_synapses, read_distant_synapses] = NeuronIO::read_out_synapses(path, number_neurons, my_rank, number_ranks);
+    auto [read_local_synapses, read_distant_synapses] = NeuronIO::read_out_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
 
     std::ranges::sort(preliminary_local_synapses);
     std::ranges::sort(preliminary_distant_synapses);
@@ -829,7 +829,7 @@ TEST_F(IOTest, testWriteInSynapses) {
 
     NeuronIO::write_in_synapses(preliminary_local_synapses, preliminary_distant_synapses, my_rank, path);
 
-    auto [read_local_synapses, read_distant_synapses] = NeuronIO::read_in_synapses(path, number_neurons, my_rank, number_ranks);
+    auto [read_local_synapses, read_distant_synapses] = NeuronIO::read_in_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
 
     std::ranges::sort(preliminary_local_synapses);
     std::ranges::sort(preliminary_distant_synapses);
@@ -875,7 +875,7 @@ TEST_F(IOTest, testWriteOutSynapses) {
 
     NeuronIO::write_out_synapses(preliminary_local_synapses, preliminary_distant_synapses, my_rank, path);
 
-    auto [read_local_synapses, read_distant_synapses] = NeuronIO::read_out_synapses(path, number_neurons, my_rank, number_ranks);
+    auto [read_local_synapses, read_distant_synapses] = NeuronIO::read_out_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
 
     std::ranges::sort(preliminary_local_synapses);
     std::ranges::sort(preliminary_distant_synapses);
@@ -972,8 +972,8 @@ TEST_F(IOTest, testReadSynapsesInteractionNetworkGraph) {
     out_ofstream.flush();
     out_ofstream.close();
 
-    auto [read_local_in_synapses, read_distant_in_synapses] = NeuronIO::read_in_synapses(in_path, number_neurons, my_rank, number_ranks);
-    auto [read_local_out_synapses, read_distant_out_synapses] = NeuronIO::read_out_synapses(out_path, number_neurons, my_rank, number_ranks);
+    auto [read_local_in_synapses, read_distant_in_synapses] = NeuronIO::read_in_synapses(in_path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [read_local_out_synapses, read_distant_out_synapses] = NeuronIO::read_out_synapses(out_path, number_neurons, my_rank, static_cast<int>(number_ranks));
        
     std::ranges::sort(read_local_in_synapses);
     std::ranges::sort(read_distant_in_synapses);

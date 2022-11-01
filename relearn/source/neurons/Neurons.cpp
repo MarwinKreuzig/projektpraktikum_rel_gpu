@@ -29,7 +29,7 @@
 #include <ranges>
 #include <sstream>
 
-void Neurons::init(const size_t number_neurons) {
+void Neurons::init(const number_neurons_type number_neurons) {
     RelearnException::check(number_neurons > 0, "Neurons::init: number_neurons was 0");
 
     this->number_neurons = number_neurons;
@@ -80,7 +80,7 @@ void Neurons::init_synaptic_elements() {
     }
 }
 
-size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
+Neurons::number_neurons_type Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
     neuron_model->disable_neurons(neuron_ids);
 
     std::vector<unsigned int> deleted_axon_connections(number_neurons, 0);
@@ -99,7 +99,7 @@ size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
     size_t weight_deleted_out_exc_edges_to_outside = 0;
     size_t weight_deleted_out_inh_edges_to_outside = 0;
 
-    for (const auto neuron_id : neuron_ids) {
+    for (const auto& neuron_id : neuron_ids) {
         const auto local_out_edges = network_graph->get_local_out_edges(neuron_id);
         const auto distant_out_edges = network_graph->get_distant_out_edges(neuron_id);
 
@@ -138,7 +138,7 @@ size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
     size_t number_deleted_in_edges_from_outside = 0;
     size_t weight_deleted_in_edges_from_outside = 0;
 
-    for (const auto neuron_id : neuron_ids) {
+    for (const auto& neuron_id : neuron_ids) {
         RelearnException::check(neuron_id.get_neuron_id() < number_neurons, "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
         disable_flags[neuron_id.get_neuron_id()] = UpdateStatus::Disabled;
 
@@ -197,7 +197,7 @@ void Neurons::enable_neurons(const std::vector<NeuronID>& neuron_ids) {
     }
 }
 
-void Neurons::create_neurons(const size_t creation_count) {
+void Neurons::create_neurons(const number_neurons_type creation_count) {
     const auto current_size = number_neurons;
     const auto new_size = current_size + creation_count;
 
@@ -211,18 +211,15 @@ void Neurons::create_neurons(const size_t creation_count) {
     dendrites_exc->create_neurons(creation_count);
     dendrites_inh->create_neurons(creation_count);
 
-    for (size_t i = current_size; i < new_size; i++) {
-        const auto id = NeuronID{ i };
-        dendrites_exc->set_signal_type(id, SignalType::Excitatory);
-        dendrites_inh->set_signal_type(id, SignalType::Inhibitory);
-    }
-
     disable_flags.resize(new_size, UpdateStatus::Enabled);
 
-    for (size_t i = current_size; i < new_size; i++) {
-        auto id = NeuronID{ i };
-        const auto& pos = extra_info->get_position(id);
-        global_tree->insert(pos, id);
+    for (const auto& neuron_id : NeuronID::range(current_size, new_size)) {
+        dendrites_exc->set_signal_type(neuron_id, SignalType::Excitatory);
+        dendrites_inh->set_signal_type(neuron_id, SignalType::Inhibitory);
+
+        const auto& pos = extra_info->get_position(neuron_id);
+        global_tree->insert(pos, neuron_id);
+
     }
 
     global_tree->initializes_leaf_nodes(new_size);
@@ -230,7 +227,7 @@ void Neurons::create_neurons(const size_t creation_count) {
     number_neurons = new_size;
 }
 
-void Neurons::update_electrical_activity(const size_t step) {
+void Neurons::update_electrical_activity(const step_type step) {
     neuron_model->update_electrical_activity(step, *network_graph, disable_flags);
 
     const auto& fired = neuron_model->get_fired();
@@ -327,8 +324,10 @@ CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(
 
     const auto element_type = synaptic_elements.get_element_type();
 
-    for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
+    for (const auto& neuron_id : NeuronID::range(number_neurons)) {
+        const auto local_neuron_id = neuron_id.get_neuron_id();
+
+        if (disable_flags[local_neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
 
@@ -336,17 +335,16 @@ CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(
          * Create and delete synaptic elements as required.
          * This function only deletes elements (bound and unbound), no synapses.
          */
-        const auto num_synapses_to_delete = number_deletions[neuron_id];
+        const auto num_synapses_to_delete = number_deletions[local_neuron_id];
         if (num_synapses_to_delete == 0) {
             continue;
         }
 
-        const auto id = NeuronID{ neuron_id };
-        const auto signal_type = synaptic_elements.get_signal_type(id);
-        const auto affected_neuron_ids = delete_synapses_find_synapses_on_neuron(id, element_type, signal_type, num_synapses_to_delete);
+        const auto signal_type = synaptic_elements.get_signal_type(neuron_id);
+        const auto affected_neuron_ids = delete_synapses_find_synapses_on_neuron(neuron_id, element_type, signal_type, num_synapses_to_delete);
 
         for (const auto& [rank, other_neuron_id] : affected_neuron_ids) {
-            SynapseDeletionRequest psd(id, other_neuron_id, element_type, signal_type);
+            SynapseDeletionRequest psd(neuron_id, other_neuron_id, element_type, signal_type);
             deletion_requests.append(rank, psd);
 
             if (my_rank == rank) {
@@ -355,9 +353,9 @@ CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(
 
             const auto weight = (SignalType::Excitatory == signal_type) ? -1 : 1;
             if (ElementType::Axon == element_type) {
-                network_graph->add_synapse(DistantOutSynapse(RankNeuronId(rank, other_neuron_id), id, weight));
+                network_graph->add_synapse(DistantOutSynapse(RankNeuronId(rank, other_neuron_id), neuron_id, weight));
             } else {
-                network_graph->add_synapse(DistantInSynapse(id, RankNeuronId(rank, other_neuron_id), weight));
+                network_graph->add_synapse(DistantInSynapse(neuron_id, RankNeuronId(rank, other_neuron_id), weight));
             }
         }
     }
@@ -366,10 +364,10 @@ CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(
 }
 
 std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
-    NeuronID neuron_id,
-    ElementType element_type,
-    SignalType signal_type,
-    unsigned int num_synapses_to_delete) {
+    const NeuronID neuron_id,
+    const ElementType element_type,
+    const SignalType signal_type,
+    const unsigned int num_synapses_to_delete) {
 
     // Only do something if necessary
     if (0 == num_synapses_to_delete) {
@@ -522,7 +520,7 @@ void Neurons::debug_check_counts() {
     const auto& grown_inhibitory_dendrites = dendrites_inh->get_grown_elements();
     const auto& connected_inhibitory_dendrites = dendrites_inh->get_connected_elements();
 
-    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (auto neuron_id = number_neurons_type{ 0 }; neuron_id < number_neurons; neuron_id++) {
         const auto vacant_axons = grown_axons[neuron_id] - connected_axons[neuron_id];
         const auto vacant_excitatory_dendrites = grown_excitatory_dendrites[neuron_id] - connected_excitatory_dendrites[neuron_id];
         const auto vacant_inhibitory_dendrites = grown_inhibitory_dendrites[neuron_id] - connected_inhibitory_dendrites[neuron_id];
@@ -532,7 +530,7 @@ void Neurons::debug_check_counts() {
         RelearnException::check(vacant_inhibitory_dendrites >= 0.0, "Neurons::debug_check_counts: {} has a weird number of vacant inhibitory dendrites: {}", neuron_id, vacant_inhibitory_dendrites);
     }
 
-    for (const auto neuron_id : NeuronID::range(number_neurons)) {
+    for (const auto& neuron_id : NeuronID::range(number_neurons)) {
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
         const double connected_axons_neuron = connected_axons[local_neuron_id];
@@ -558,7 +556,7 @@ void Neurons::debug_check_counts() {
     }
 }
 
-StatisticalMeasures Neurons::get_statistics(NeuronAttribute attribute) const {
+StatisticalMeasures Neurons::get_statistics(const NeuronAttribute attribute) const {
     switch (attribute) {
     case NeuronAttribute::Calcium:
         return global_statistics(calcium_calculator->get_calcium(), 0, disable_flags);
@@ -616,7 +614,8 @@ std::tuple<uint64_t, uint64_t, uint64_t> Neurons::update_connectivity() {
     return { num_axons_deleted, num_dendrites_deleted, num_synapses_created };
 }
 
-void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, uint64_t sum_axon_deleted, uint64_t sum_dendrites_deleted, uint64_t sum_synapses_created) {
+void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const step_type step, 
+    const uint64_t sum_axon_deleted, const uint64_t sum_dendrites_deleted, const uint64_t sum_synapses_created) {
     int64_t sum_axons_excitatory_counts = 0;
     int64_t sum_axons_excitatory_connected_counts = 0;
     int64_t sum_axons_inhibitory_counts = 0;
@@ -705,7 +704,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t s
     }
 }
 
-void Neurons::print_neurons_overview_to_log_file_on_rank_0(const size_t step) const {
+void Neurons::print_neurons_overview_to_log_file_on_rank_0(const step_type step) const {
     const StatisticalMeasures& calcium_statistics = get_statistics(NeuronAttribute::Calcium);
     const StatisticalMeasures& axons_statistics = get_statistics(NeuronAttribute::Axons);
     const StatisticalMeasures& axons_connected_statistics = get_statistics(NeuronAttribute::AxonsConnected);
@@ -875,7 +874,7 @@ void Neurons::print_calcium_statistics_to_essentials() {
         calcium_statistics.max);
 }
 
-void Neurons::print_network_graph_to_log_file(const size_t step) const {
+void Neurons::print_network_graph_to_log_file(const step_type step) const {
     LogFiles::save_and_open_new(LogFiles::EventType::InNetwork, "step_" + std::to_string(step) + "_in_network", "network/");
     LogFiles::save_and_open_new(LogFiles::EventType::OutNetwork, "step_" + std::to_string(step) + "_out_network", "network/");
 
@@ -955,10 +954,13 @@ void Neurons::print() {
     LogFiles::write_to_file(LogFiles::EventType::Cout, true, "{2:<{1}}{3:<{0}}{4:<{0}}{5:<{0}}{6:<{0}}{7:<{0}}{8:<{0}}{9:<{0}}", cwidth, cwidth_left, "gid", "x", "AP", "refrac", "C", "A", "D_ex", "D_in");
 
     // Values
-    for (size_t i = 0; i < number_neurons; i++) {
-        const auto id = NeuronID{ i };
-        LogFiles::write_to_file(LogFiles::EventType::Cout, true, "{3:<{1}}{4:<{0}.{2}f}{5:<{0}}{6:<{0}.{2}f}{7:<{0}.{2}f}{8:<{0}.{2}f}{9:<{0}.{2}f}{10:<{0}.{2}f}", cwidth, cwidth_left, Constants::print_precision, i, neuron_model->get_x(id), neuron_model->get_fired(id),
-            neuron_model->get_secondary_variable(id), calcium[i], axons->get_grown_elements(id), dendrites_exc->get_grown_elements(id), dendrites_inh->get_grown_elements(id));
+    for (const auto& neuron_id : NeuronID::range(number_neurons)) {
+        const auto local_neuron_id = neuron_id.get_neuron_id();
+
+        LogFiles::write_to_file(LogFiles::EventType::Cout, true, "{3:<{1}}{4:<{0}.{2}f}{5:<{0}}{6:<{0}.{2}f}{7:<{0}.{2}f}{8:<{0}.{2}f}{9:<{0}.{2}f}{10:<{0}.{2}f}",
+            cwidth, cwidth_left, Constants::print_precision, local_neuron_id, neuron_model->get_x(neuron_id), neuron_model->get_fired(neuron_id),
+            neuron_model->get_secondary_variable(neuron_id), calcium[local_neuron_id], axons->get_grown_elements(neuron_id),
+            dendrites_exc->get_grown_elements(neuron_id), dendrites_inh->get_grown_elements(neuron_id));
     }
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
@@ -1012,7 +1014,7 @@ void Neurons::print_info_for_algorithm() {
     LogFiles::write_to_file(LogFiles::EventType::Cout, true, ss.str());
 }
 
-void Neurons::print_local_network_histogram(const size_t current_step) {
+void Neurons::print_local_network_histogram(const step_type current_step) {
     const auto& out_histogram = axons->get_historgram();
     const auto& in_inhibitory_histogram = dendrites_inh->get_historgram();
     const auto& in_excitatory_histogram = dendrites_exc->get_historgram();
@@ -1033,7 +1035,7 @@ void Neurons::print_local_network_histogram(const size_t current_step) {
     LogFiles::write_to_file(LogFiles::EventType::NetworkInExcitatoryHistogramLocal, false, print_histogram(in_excitatory_histogram));
 }
 
-void Neurons::print_calcium_values_to_file(const size_t current_step) {
+void Neurons::print_calcium_values_to_file(const step_type current_step) {
     const auto& calcium = calcium_calculator->get_calcium();
 
     std::stringstream ss{};
@@ -1046,7 +1048,7 @@ void Neurons::print_calcium_values_to_file(const size_t current_step) {
     LogFiles::write_to_file(LogFiles::EventType::CalciumValues, false, ss.str());
 }
 
-void Neurons::print_synaptic_inputs_to_file(const size_t current_step) {
+void Neurons::print_synaptic_inputs_to_file(const step_type current_step) {
     const auto& synaptic_input = neuron_model->get_synaptic_input();
 
     std::stringstream ss{};

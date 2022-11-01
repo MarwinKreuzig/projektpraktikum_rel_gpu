@@ -11,6 +11,7 @@
  */
 
 #include "Config.h"
+#include "Types.h"
 #include "algorithm/Algorithm.h"
 #include "models/NeuronModels.h"
 #include "models/SynapticElements.h"
@@ -43,6 +44,9 @@ class Neurons {
     friend class NeuronMonitor;
 
 public:
+    using step_type = RelearnTypes::step_type;
+    using number_neurons_type = RelearnTypes::number_neurons_type;
+
     using Axons = SynapticElements;
     using DendritesExcitatory = SynapticElements;
     using DendritesInhibitory = SynapticElements;
@@ -94,7 +98,7 @@ public:
      * @param initial_calcium_values The initial calcium values for the local neurons
      * @exception Throws a RelearnException if something unexpected happened
      */
-    void init(size_t number_neurons);
+    void init(number_neurons_type number_neurons);
 
     /**
      * @brief Sets the octree in which the neurons are stored
@@ -142,7 +146,7 @@ public:
      * @brief Returns the number of neurons in this object
      * @return The number of neurons in this object
      */
-    [[nodiscard]] size_t get_number_neurons() const noexcept {
+    [[nodiscard]] number_neurons_type get_number_neurons() const noexcept {
         return number_neurons;
     }
 
@@ -237,7 +241,7 @@ public:
      *      Otherwise, also deletes all synapses from the disabled neurons
      * @exception Throws RelearnExceptions if something unexpected happens
      */
-    size_t disable_neurons(const std::vector<NeuronID>& neuron_ids);
+    number_neurons_type disable_neurons(const std::vector<NeuronID>& neuron_ids);
 
     /**
      * @brief Enables all neurons with specified ids
@@ -257,14 +261,14 @@ public:
      * @param creation_count The number of newly created neurons
      * @exception Throws a RelearnException if something unexpected happens
      */
-    void create_neurons(size_t creation_count);
+    void create_neurons(number_neurons_type creation_count);
 
     /**
      * @brief Calls update_electrical_activity from the electrical model with the stored network graph,
      *      and updates the calcium values afterwards
      * @exception Throws a RelearnException if something unexpected happens
      */
-    void update_electrical_activity(size_t step);
+    void update_electrical_activity(step_type step);
 
     /**
      * @brief Updates the delta of the synaptic elements for (1) axons, (2) excitatory dendrites, (3) inhibitory dendrites
@@ -289,14 +293,14 @@ public:
      * @param sum_synapses_deleted The number of deleted synapses (locally)
      * @param sum_synapses_created The number of created synapses (locally)
      */
-    void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(size_t step, uint64_t sum_axon_deleted, uint64_t sum_dendrites_deleted, uint64_t sum_synapses_created);
+    void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step_type step, uint64_t sum_axon_deleted, uint64_t sum_dendrites_deleted, uint64_t sum_synapses_created);
 
     /**
      * @brief Prints the overview of the neurons to LogFiles::EventType::NeuronsOverview
      *      Performs communication with MPI
      * @param step The current simulation step
      */
-    void print_neurons_overview_to_log_file_on_rank_0(size_t step) const;
+    void print_neurons_overview_to_log_file_on_rank_0(step_type step) const;
 
     /**
      * @brief Prints the calcium statistics to LogFiles::EventType::Essentials
@@ -308,7 +312,7 @@ public:
      * @brief Prints the network graph to LogFiles::EventType::Network
      * @param step The current simulation step
      */
-    void print_network_graph_to_log_file(size_t step) const;
+    void print_network_graph_to_log_file(step_type step) const;
 
     /**
      * @brief Prints the neuron positions to LogFiles::EventType::Positions
@@ -329,19 +333,19 @@ public:
      * @brief Prints the histogram of in edges for the local neurons at the current simulation step
      * @param current_step The current simulation step
      */
-    void print_local_network_histogram(size_t current_step);
+    void print_local_network_histogram(step_type current_step);
 
     /**
      * @brief Prints the calcium values for the local neurons at the current simulation step
      * @param current_step The current simulation step
      */
-    void print_calcium_values_to_file(size_t current_step);
+    void print_calcium_values_to_file(step_type current_step);
 
     /**
      * @brief Prints the synaptic inputs for the local neurons at the current simulation step
      * @param current_step The current simulation step
      */
-    void print_synaptic_inputs_to_file(size_t current_step);
+    void print_synaptic_inputs_to_file(step_type current_step);
 
     /**
      * @brief Performs debug checks on the synaptic element models if Config::do_debug_checks
@@ -382,7 +386,7 @@ private:
 
     [[nodiscard]] size_t create_synapses();
 
-    size_t number_neurons = 0;
+    number_neurons_type number_neurons = 0;
 
     std::shared_ptr<Partition> partition{};
 

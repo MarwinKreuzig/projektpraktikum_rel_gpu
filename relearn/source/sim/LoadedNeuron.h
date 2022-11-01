@@ -40,6 +40,6 @@ struct LoadedNeuron {
 struct LoadedNeuronsInfo {
     RelearnTypes::position_type minimum{};
     RelearnTypes::position_type maximum{};
-    std::uint64_t number_excitatory_neurons{};
-    std::uint64_t number_inhibitory_neurons{};
+    RelearnTypes::number_neurons_type number_excitatory_neurons{};
+    RelearnTypes::number_neurons_type number_inhibitory_neurons{};
 };

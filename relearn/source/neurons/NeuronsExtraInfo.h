@@ -27,6 +27,7 @@
 class NeuronsExtraInfo {
 public:
     using position_type = RelearnTypes::position_type;
+    using number_neurons_type = RelearnTypes::number_neurons_type;
 
     /**
      * @brief Initializes a NeuronsExtraInfo that holds at most the given number of neurons.
@@ -34,7 +35,7 @@ public:
      * @param number_neurons The number of neurons, greater than 0
      * @exception Throws an RelearnAxception if number_neurons is 0 or if called multiple times.
      */
-    void init(size_t number_neurons) {
+    void init(number_neurons_type number_neurons) {
         RelearnException::check(size == 0, "NeuronsExtraInfo::init: NeuronsExtraInfo initialized two times");
         size = number_neurons;
     }
@@ -44,7 +45,7 @@ public:
      * @param creation_count The number of new neuorns, greater than 0
      * @exception Throws an RelearnAxception if creation_count is 0, if x_dims, y_dims, or z_dims are empty, or if more than one MPI rank computes
      */
-    void create_neurons(size_t creation_count);
+    void create_neurons(number_neurons_type creation_count);
 
     /**
      * @brief Overwrites the current area names with the supplied ones
@@ -108,7 +109,7 @@ public:
     }
 
 private:
-    size_t size{ 0 };
+    number_neurons_type size{ 0 };
 
     std::vector<std::string> area_names{};
     std::vector<position_type> positions{};

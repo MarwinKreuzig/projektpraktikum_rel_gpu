@@ -20,12 +20,12 @@
 
 #include <algorithm>
 
-CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(const size_t number_neurons, const std::vector<UpdateStatus>& disable_flags,
+CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(const number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
 
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
-    const auto size_hint = std::min(number_neurons, size_t(number_ranks));
+    const auto size_hint = std::min(number_neurons, number_neurons_type(number_ranks));
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks, size_hint);
 
     auto* const root = get_octree_root();

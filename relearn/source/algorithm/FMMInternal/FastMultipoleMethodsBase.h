@@ -660,7 +660,8 @@ public:
         RelearnException::check(target_parent != nullptr, "FastMultipoleMethodsBase::align_interaction_list: target_parent was null!");
 
         interaction_list_type result{};
-        result.reserve(std::pow(Constants::number_oct, Constants::unpacking + 1));
+        const auto expected_number_nodes = static_cast<size_t>(std::pow(Constants::number_oct, Constants::unpacking + 1));
+        result.reserve(expected_number_nodes);
         if (target_parent->is_leaf()) {
             result.emplace_back(target_parent);
             return result;

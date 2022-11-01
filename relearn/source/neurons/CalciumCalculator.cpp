@@ -13,7 +13,7 @@
 #include "mpi/MPIWrapper.h"
 #include "util/Timers.h"
 
-void CalciumCalculator::init(size_t number_neurons) {
+void CalciumCalculator::init(number_neurons_type number_neurons) {
     RelearnException::check(number_neurons > 0, "CalciumCalculator::init: number_neurons was 0");
     RelearnException::check(initial_calcium_initiator.operator bool(), "CalciumCalculator::init: initial_calcium_initiator is empty");
     RelearnException::check(target_calcium_calculator.operator bool(), "CalciumCalculator::init: target_calcium_calculator is empty");
@@ -23,13 +23,13 @@ void CalciumCalculator::init(size_t number_neurons) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (number_neurons_type neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         calcium[neuron_id] = initial_calcium_initiator(my_rank, neuron_id);
         target_calcium[neuron_id] = target_calcium_calculator(my_rank, neuron_id);
     }
 }
 
-void CalciumCalculator::create_neurons(size_t number_neurons) {
+void CalciumCalculator::create_neurons(number_neurons_type number_neurons) {
     RelearnException::check(number_neurons > 0, "CalciumCalculator::create_neurons: number_neurons was 0");
     RelearnException::check(initial_calcium_initiator.operator bool(), "CalciumCalculator::create_neurons: initial_calcium_initiator is empty");
     RelearnException::check(target_calcium_calculator.operator bool(), "CalciumCalculator::create_neurons: target_calcium_calculator is empty");
@@ -42,13 +42,13 @@ void CalciumCalculator::create_neurons(size_t number_neurons) {
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    for (size_t neuron_id = old_size; neuron_id < new_size; neuron_id++) {
+    for (number_neurons_type neuron_id = old_size; neuron_id < new_size; neuron_id++) {
         calcium[neuron_id] = initial_calcium_initiator(my_rank, neuron_id);
         target_calcium[neuron_id] = target_calcium_calculator(my_rank, neuron_id);
     }
 }
 
-void CalciumCalculator::update_calcium(size_t step, const std::vector<UpdateStatus>& disable_flags, const std::vector<FiredStatus>& fired_status) {
+void CalciumCalculator::update_calcium(step_type step, const std::vector<UpdateStatus>& disable_flags, const std::vector<FiredStatus>& fired_status) {
     const auto disable_size = disable_flags.size();
     const auto fired_size = fired_status.size();
     const auto calcium_size = calcium.size();
@@ -90,7 +90,7 @@ void CalciumCalculator::update_current_calcium(const std::vector<UpdateStatus>& 
     }
 }
 
-void CalciumCalculator::update_target_calcium(const size_t step, const std::vector<UpdateStatus>& disable_flags) noexcept {
+void CalciumCalculator::update_target_calcium(const step_type step, const std::vector<UpdateStatus>& disable_flags) noexcept {
     if (decay_type == TargetCalciumDecay::None) {
         return;
     }

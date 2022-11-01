@@ -32,8 +32,8 @@ MultipleFilesSynapseLoader::synapses_tuple_type MultipleFilesSynapseLoader::inte
     }
 
     const auto number_local_neurons = partition->get_number_local_neurons();
-    const auto my_rank = partition->get_my_mpi_rank();
-    const auto number_ranks = partition->get_number_mpi_ranks();
+    const auto my_rank = static_cast<int>(partition->get_my_mpi_rank());
+    const auto number_ranks = static_cast<int>(partition->get_number_mpi_ranks());
 
     const auto& actual_path = optional_path_to_file.value();
 

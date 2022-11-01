@@ -12,6 +12,8 @@
 
 #include "sim/random/BoxBasedRandomSubdomainAssignment.h"
 
+#include "Types.h"
+
 #include <memory>
 
 class Partition;
@@ -22,6 +24,8 @@ class Partition;
  */
 class SubdomainFromNeuronDensity : public BoxBasedRandomSubdomainAssignment {
 public:
+    using number_neurons_type = RelearnTypes::number_neurons_type;
+
     /**
      * @brief Constructs a new object with the specified parameters
      * @param number_neurons_per_rank The number of neurons must be > 0
@@ -30,7 +34,7 @@ public:
      * @param partition The partition that stores all information for the subdomain calculations
      * @exception Throws a RelearnException if number_neurons_per_rank == 0, fraction_excitatory_neurons is not from [0.0, 1.0], um_per_neuron <= 0.0, or there is more than 1 MPI rank active
      */
-    SubdomainFromNeuronDensity(size_t number_neurons, double fraction_excitatory_neurons, double um_per_neuron, std::shared_ptr<Partition> partition);
+    SubdomainFromNeuronDensity(number_neurons_type number_neurons, double fraction_excitatory_neurons, double um_per_neuron, std::shared_ptr<Partition> partition);
 
     SubdomainFromNeuronDensity(const SubdomainFromNeuronDensity& other) = delete;
     SubdomainFromNeuronDensity(SubdomainFromNeuronDensity&& other) = delete;

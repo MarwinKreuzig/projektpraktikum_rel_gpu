@@ -21,7 +21,7 @@
  */
 class SynapseCreationRequest {
 public:
-    SynapseCreationRequest() = default;
+    constexpr SynapseCreationRequest() = default;
 
     /**
      * @brief Constructs a new reqest with the arguments
@@ -29,7 +29,7 @@ public:
      * @param source The neuron source id of the request
      * @param signal_type The signal type
      */
-    SynapseCreationRequest(const NeuronID target, const NeuronID source, const SignalType signal_type)
+    constexpr SynapseCreationRequest(const NeuronID& target, const NeuronID& source, const SignalType signal_type)
         : target(target)
         , source(source)
         , signal_type(signal_type) {
@@ -41,7 +41,7 @@ public:
      * @brief Returns the target of the request
      * @return The target
      */
-    [[nodiscard]] NeuronID get_target() const noexcept {
+    [[nodiscard]] constexpr const NeuronID& get_target() const noexcept {
         return target;
     }
 
@@ -49,7 +49,7 @@ public:
      * @brief Returns the source of the request
      * @return The source
      */
-    [[nodiscard]] NeuronID get_source() const noexcept {
+    [[nodiscard]] constexpr const NeuronID& get_source() const noexcept {
         return source;
     }
 
@@ -57,7 +57,7 @@ public:
      * @brief Returns the neuron type of the request
      * @return The neuron type
      */
-    [[nodiscard]] SignalType get_signal_type() const noexcept {
+    [[nodiscard]] constexpr SignalType get_signal_type() const noexcept {
         return signal_type;
     }
 
