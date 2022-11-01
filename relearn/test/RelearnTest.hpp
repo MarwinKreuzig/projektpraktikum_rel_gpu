@@ -10,9 +10,9 @@
 #include "gtest/gtest.h"
 
 #include "algorithm/BarnesHutInternal/BarnesHutCell.h"
-#include "algorithm/FMMInternal/FastMultipoleMethodsCell.h"
 #include "algorithm/FMMInternal/FastMultipoleMethods.h"
 #include "algorithm/FMMInternal/FastMultipoleMethodsBase.h"
+#include "algorithm/FMMInternal/FastMultipoleMethodsCell.h"
 #include "algorithm/Kernel/Gamma.h"
 #include "algorithm/Kernel/Gaussian.h"
 #include "algorithm/Kernel/Kernel.h"

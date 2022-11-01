@@ -178,8 +178,8 @@ void Simulation::initialize() {
         algorithm = std::move(algorithm_barnes_hut_location_aware);
     } else if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
         auto cast = std::static_pointer_cast<OctreeImplementation<FastMultipoleMethodsCell>>(global_tree);
-        auto algorithm_barnes_hut = std::make_shared<FastMultipoleMethods>(std::move(cast));
-        algorithm = std::move(algorithm_barnes_hut);
+        auto algorithm_fmm = std::make_shared<FastMultipoleMethods>(std::move(cast));
+        algorithm = std::move(algorithm_fmm);
     } else {
         RelearnException::fail("Simulation::initialize: AlgorithmEnum {} not yet implemented!", static_cast<int>(algorithm_enum));
     }
