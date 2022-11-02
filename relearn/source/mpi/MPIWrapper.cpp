@@ -116,13 +116,13 @@ size_t MPIWrapper::init_window(const size_t size_requested, const size_t octree_
 
     // NOLINTNEXTLINE
     const int error_code_2 = MPI_Win_create(base_ptr, max_size, 1, MPI_INFO_NULL, MPI_COMM_WORLD, mpi_window.get());
-    RelearnException::check(error_code_2 == 0, "MPI_RMA_MemAllocator::init: Error code received: {}", error_code_2);
+    RelearnException::check(error_code_2 == MPI_SUCCESS, "MPI_RMA_MemAllocator::init: Error code received: {}", error_code_2);
 
     // Vector must have space for one pointer from each rank
     base_pointers.resize(num_ranks);
 
     const int error_code_3 = MPI_Allgather(&base_ptr, 1, MPI_AINT, base_pointers.data(), 1, MPI_AINT, MPI_COMM_WORLD);
-    RelearnException::check(error_code_3 == 0, "MPI_RMA_MemAllocator::init: Error code received: {}", error_code_3);
+    RelearnException::check(error_code_3 == MPI_SUCCESS, "MPI_RMA_MemAllocator::init: Error code received: {}", error_code_3);
 
     return max_num_objects;
 }

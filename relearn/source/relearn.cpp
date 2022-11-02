@@ -538,6 +538,7 @@ int main(int argc, char** argv) {
     // Rank 0 prints start time of simulation
     MPIWrapper::barrier();
     if (0 == my_rank) {
+        LogFiles::write_to_file(LogFiles::EventType::Essentials, true, "Number of ranks: {}", num_ranks);
         LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
             "START OF SIMULATION: {}\n"
             "Number of steps: {}\n"
