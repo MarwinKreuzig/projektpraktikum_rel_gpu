@@ -376,7 +376,7 @@ std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
         return {};
     }
 
-    auto register_edges = [](const std::vector<std::pair<RankNeuronId, int>>& edges) {
+    auto register_edges = [](const std::vector<std::pair<RankNeuronId, RelearnTypes::synapse_weight>>& edges) {
         std::vector<RankNeuronId> neuron_ids{};
         neuron_ids.reserve(edges.size());
 

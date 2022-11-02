@@ -241,6 +241,13 @@ int main(int argc, char** argv) {
     size_t first_plasticity_step{ Config::first_plasticity_update };
     app.add_option("--first-plasticity-step", first_plasticity_step, "The first step in which the plasticity is updated.");
 
+    size_t last_plasticity_step{ Config::last_plasticity_update };
+    auto* opt_last_plasticity_update_step = app.add_option("--last-plasticity-step", last_plasticity_step, "The last step in which the plasticity is updated.");
+
+    size_t plasticity_update_step{ Config::plasticity_update_step };
+    auto* opt_plasticity_update_step = app.add_option("--plasticity-update-step", plasticity_update_step, "The interval of steps between a plasticity update.");
+
+
     size_t calcium_log_step{ Config::calcium_log_step };
     app.add_option("--calcium-log-step", calcium_log_step, "Sets the interval for logging all calcium values.");
 
@@ -248,6 +255,19 @@ int main(int argc, char** argv) {
     app.add_option("--synaptic-input-log-step", synaptic_input_log_step, "Sets the interval for logging all synaptic inputs.");
 
     const auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
+
+    std::string disable_logging{};
+    auto* opt_disable_logging = app.add_option("--disable_logging", disable_logging, "List of neuron ids which are ignored for calculating the statistics (comma separated)");
+
+    unsigned long monitor_steps{Config::monitor_step};
+    auto* opt_monitor_steps = app.add_option("--monitor-steps", monitor_steps, "Every time the neuron state is captured");
+
+    unsigned long monitor_ensemble_steps{Config::monitor_ensemble_step};
+    auto* opt_monitor_ensemble_steps = app.add_option("--monitor-ensemble-steps", monitor_ensemble_steps, "Every time the ensemble information are captured");
+
+    std::vector<std::string> ensemble_file_paths{};
+    auto* opt_ensemble_file_paths = app.add_option("--ensemble", ensemble_file_paths, "One or multiple file which each include an ensemble");
+
 
     unsigned int random_seed{ 0 };
     app.add_option("-r,--random-seed", random_seed, "Random seed. Default: 0.");
@@ -328,6 +348,13 @@ int main(int argc, char** argv) {
     auto* const opt_neuron_model = app.add_option("--neuron-model", chosen_neuron_model, "The neuron model");
     opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_neuron_model, CLI::ignore_case));
 
+    std::string non_plasticity_neurons_str{};
+    auto* opt_non_plasticity_neurons = app.add_option("--non_plasticity_neurons", non_plasticity_neurons_str, "File with neurons without plasticity.");
+
+    std::string file_external_stimulations{};
+    auto* opt_file_external_stimulations = app.add_option("--external_stimulations", file_external_stimulations, "File with the external stimulations.");
+
+
     auto* const opt_background_activity = app.add_option("--background-activity", chosen_background_activity_calculator_type, "The type of background activity");
     opt_background_activity->transform(CLI::CheckedTransformer(cli_parse_background_activity_calculator_type, CLI::ignore_case));
 
@@ -385,8 +412,12 @@ int main(int argc, char** argv) {
     double synaptic_elements_init_ub{ 0.0 };
     app.add_option("--synaptic-elements-upper-bound", synaptic_elements_init_ub, "The maximum number of vacant synaptic elements per neuron. Must be larger or equal to synaptic-elements-lower-bound.");
 
-    double growth_rate{ SynapticElements::default_nu };
-    app.add_option("--growth-rate", growth_rate, "The growth rate for the synaptic elements. Default is 1e-5");
+    double nu_axon{ SynapticElements::default_nu };
+    app.add_option("--growth-rate-axon", nu_axon, "The growth rate for the axons. Default is 1e-5");
+
+    double nu_dend{ SynapticElements::default_nu };
+    app.add_option("--growth-rate-dendrite", nu_dend, "The growth rate for the dendrites. Default is 1e-5");
+
 
     double min_calcium_axons{ SynapticElements::default_eta_Axons };
     app.add_option("--min-calcium-axons", min_calcium_axons, "The minimum intercellular calcium for axons to grow. Default is 0.4");
@@ -428,6 +459,11 @@ int main(int argc, char** argv) {
     opt_file_enable_interrupts->check(CLI::ExistingFile);
     opt_file_disable_interrupts->check(CLI::ExistingFile);
     opt_file_creation_interrups->check(CLI::ExistingFile);
+
+    opt_file_external_stimulations->check(CLI::ExistingFile);
+
+    opt_ensemble_file_paths->check(CLI::ExistingFile);
+
 
     opt_log_path->check(CLI::ExistingDirectory);
 
@@ -493,10 +529,16 @@ int main(int argc, char** argv) {
         RelearnException::fail("Chose a background activity calculator that is not implemented");
     }
 
-    RelearnException::check(growth_rate >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
-    RelearnException::check(growth_rate <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
+    RelearnException::check(nu_axon >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
+    RelearnException::check(nu_axon <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
+    RelearnException::check(nu_dend >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
+    RelearnException::check(nu_dend <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
+
 
     Config::first_plasticity_update = first_plasticity_step;
+    Config::last_plasticity_update = last_plasticity_step;
+    RelearnException::check(plasticity_update_step > 0, "update-plasticity-step must be greater than 0");
+    Config::plasticity_update_step = plasticity_update_step;
     Config::calcium_log_step = calcium_log_step;
     Config::synaptic_input_log_step = synaptic_input_log_step;
 
@@ -547,7 +589,8 @@ int main(int argc, char** argv) {
             "Chosen target calcium value: {}\n"
             "Chosen beta value: {}\n"
             "Chosen calcium decay: {}\n"
-            "Chosen growth_rate value: {}\n"
+            "Chosen nu value axons: {}\n"
+            "Chosen nu value dendrites: {}\n"
             "Chosen retract ratio: {}\n"
             "Chosen synapse conductance: {}\n"
             "Chosen background activity base: {}\n"
@@ -561,7 +604,8 @@ int main(int argc, char** argv) {
             target_calcium,
             beta,
             calcium_decay,
-            growth_rate,
+            nu_axon,
+            nu_dend,
             retract_ratio,
             synapse_conductance,
             base_background_activity,
@@ -673,13 +717,13 @@ int main(int argc, char** argv) {
     }
 
     auto axons_model = std::make_shared<SynapticElements>(ElementType::Axon, min_calcium_axons,
-        growth_rate, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
+        nu_axon, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     auto excitatory_dendrites_model = std::make_shared<SynapticElements>(ElementType::Dendrite, min_calcium_excitatory_dendrites,
-        growth_rate, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
+        nu_dend, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     auto inhibitory_dendrites_model = std::make_shared<SynapticElements>(ElementType::Dendrite, min_calcium_inhibitory_dendrites,
-        growth_rate, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
+        nu_dend, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     /**
      * Calculate what my partition of the domain consist of
@@ -741,6 +785,10 @@ int main(int argc, char** argv) {
         auto creation_interrups = InteractiveNeuronIO::load_creation_interrups(file_creation_interrupts);
         sim.set_creation_interrupts(std::move(creation_interrups));
     }
+
+    Config::monitor_step = monitor_steps;
+    Config::monitor_ensemble_step = monitor_ensemble_steps;
+
 
     const auto steps_per_simulation = simulation_steps / Config::monitor_step;
     sim.increase_monitoring_capacity(steps_per_simulation);
