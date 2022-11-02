@@ -1,6 +1,6 @@
 build-mpi:
   rules:
-  - if: '$CLANG_TIDY == null'
+  - if: $CLANG_TIDY == null && $TEST_HHLR == null
   image: relearn-ci-gcc-11
   stage: build
   before_script:
@@ -13,7 +13,7 @@ build-mpi:
 
 build-clang-tidy:
   rules:
-  - if: '$CLANG_TIDY == "TRUE"'
+  - if: $CLANG_TIDY == "TRUE"
   image: relearn-ci-gcc-11
   stage: build
   before_script:
@@ -24,7 +24,7 @@ build-clang-tidy:
 # run tests using the binary built before
 test-mpi-once:
   rules:
-  - if: '$CLANG_TIDY == null'
+  - if: $CLANG_TIDY == null && $TEST_HHLR == null
   image: relearn-ci-gcc-11
   stage: test
   before_script:
@@ -40,7 +40,7 @@ test-mpi-once:
 # run tests using the binary built before
 test-mpi-multiple:
   rules:
-  - if: '$CLANG_TIDY == null'
+  - if: $CLANG_TIDY == null && $TEST_HHLR == null
   image: relearn-ci-gcc-11
   stage: test
   before_script:
@@ -55,7 +55,7 @@ test-mpi-multiple:
 
 build-nompi:
   rules:
-  - if: '$CLANG_TIDY == null'
+  - if: $CLANG_TIDY == null && $TEST_HHLR == null
   image: relearn-ci-gcc-11
   stage: build
   before_script:
@@ -69,7 +69,7 @@ build-nompi:
 # run tests using the binary built before
 test-nompi-once:
   rules:
-  - if: '$CLANG_TIDY == null'
+  - if: $CLANG_TIDY == null && $TEST_HHLR == null
   image: relearn-ci-gcc-11
   stage: test
   before_script:
@@ -85,7 +85,7 @@ test-nompi-once:
 # run tests using the binary built before
 test-nompi-multiple:
   rules:
-  - if: '$CLANG_TIDY == null'
+  - if: $CLANG_TIDY == null && $TEST_HHLR == null
   image: relearn-ci-gcc-11
   stage: test
   before_script:
@@ -100,7 +100,7 @@ test-nompi-multiple:
    
 deploy-single:
   rules:
-  - if: '$CLANG_TIDY == null'
+  - if: $CLANG_TIDY == null && $TEST_HHLR == null
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -113,7 +113,7 @@ deploy-single:
 
 deploy-create:    
   rules:
-  - if: '$TEST_DEPLOY == "TRUE"'
+  - if: $TEST_DEPLOY == "TRUE"
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -126,7 +126,7 @@ deploy-create:
 
 deploy-disable:    
   rules:
-  - if: '$TEST_DEPLOY == "TRUE"'
+  - if: $TEST_DEPLOY == "TRUE"
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -139,7 +139,7 @@ deploy-disable:
 
 deploy-enable:    
   rules:
-  - if: '$TEST_DEPLOY == "TRUE"'
+  - if: $TEST_DEPLOY == "TRUE"
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -152,7 +152,7 @@ deploy-enable:
   
 deploy-single-nompi:    
   rules:
-  - if: '$TEST_DEPLOY == "TRUE"'
+  - if: $TEST_DEPLOY == "TRUE"
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -165,7 +165,7 @@ deploy-single-nompi:
       
 deploy-create-nompi:    
   rules:
-  - if: '$TEST_DEPLOY == "TRUE"'
+  - if: $TEST_DEPLOY == "TRUE"
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -178,7 +178,7 @@ deploy-create-nompi:
 
 deploy-disable-nompi:   
   rules:
-  - if: '$TEST_DEPLOY == "TRUE"'
+  - if: $TEST_DEPLOY == "TRUE"
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -191,7 +191,7 @@ deploy-disable-nompi:
 
 deploy-enable-nompi:    
   rules:
-  - if: '$TEST_DEPLOY == "TRUE"'
+  - if: $TEST_DEPLOY == "TRUE"
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -204,7 +204,7 @@ deploy-enable-nompi:
    
 deploy-mpi-1:    
   rules:
-  - if: '$TEST_DEPLOY == "TRUE"'
+  - if: $TEST_DEPLOY == "TRUE"
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -217,7 +217,7 @@ deploy-mpi-1:
    
 deploy-mpi-2:    
   rules:
-  - if: '$TEST_DEPLOY == "TRUE"'
+  - if: $TEST_DEPLOY == "TRUE"
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -230,7 +230,7 @@ deploy-mpi-2:
       
 deploy-mpi-4:    
   rules:
-  - if: '$TEST_DEPLOY == "TRUE"'
+  - if: $TEST_DEPLOY == "TRUE"
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -243,7 +243,7 @@ deploy-mpi-4:
       
 deploy-mpi-8:  
   rules:
-  - if: '$CLANG_TIDY == null'
+  - if: $CLANG_TIDY == null && $TEST_HHLR == null
   image: relearn-ci-gcc-11
   stage: deploy
   script:
@@ -256,7 +256,7 @@ deploy-mpi-8:
 
 benchmark-hhlr:
   rules:
-  - if: '$TEST_HHLR == "TRUE"'
+  - if: $TEST_HHLR == "TRUE"
   image: relearn-ci-redirect
   stage: deploy 
   script:
