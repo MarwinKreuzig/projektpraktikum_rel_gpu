@@ -67,8 +67,8 @@ public:
     // Capture individual neuron informations ever <monitor_step> ms
     inline static size_t monitor_step = 100; // NOLINT
 
-    // Capture ensemble informations ever <monitor_ensemble_step> ms
-    inline static size_t monitor_ensemble_step = 100; // NOLINT
+    // Capture ensemble informations ever <monitor_area_step> ms
+    inline static size_t monitor_area_step = 100; // NOLINT
 
 
     // Capture the global statistics every <statistics_step> ms

@@ -180,6 +180,10 @@ public:
         return neuron_model;
     }
 
+    [[nodiscard]] double get_calcium(const NeuronID & neuron_id) const {
+        return calcium_calculator->get_calcium()[neuron_id.get_neuron_id()];
+    }
+
     /**
      * @brief Sets the signal types in the extra infos
      * @param names The signal types

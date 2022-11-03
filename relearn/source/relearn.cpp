@@ -262,7 +262,7 @@ int main(int argc, char** argv) {
     unsigned long monitor_steps{Config::monitor_step};
     auto* opt_monitor_steps = app.add_option("--monitor-steps", monitor_steps, "Every time the neuron state is captured");
 
-    unsigned long monitor_ensemble_steps{Config::monitor_ensemble_step};
+    unsigned long monitor_ensemble_steps{Config::monitor_area_step};
     auto* opt_monitor_ensemble_steps = app.add_option("--monitor-ensemble-steps", monitor_ensemble_steps, "Every time the ensemble information are captured");
 
     std::vector<std::string> ensemble_file_paths{};
@@ -787,7 +787,7 @@ int main(int argc, char** argv) {
     }
 
     Config::monitor_step = monitor_steps;
-    Config::monitor_ensemble_step = monitor_ensemble_steps;
+    Config::monitor_area_step = monitor_ensemble_steps;
 
 
     const auto steps_per_simulation = simulation_steps / Config::monitor_step;

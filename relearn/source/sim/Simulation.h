@@ -14,6 +14,7 @@
 #include "Types.h"
 #include "algorithm/AlgorithmEnum.h"
 #include "util/StatisticalMeasures.h"
+#include "neurons/helper/AreaMonitor.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -27,6 +28,7 @@
 #include <vector>
 
 class Algorithm;
+class AreaMonitor;
 class CalciumCalculator;
 class NetworkGraph;
 class NeuronModel;
@@ -242,6 +244,7 @@ private:
     std::shared_ptr<NetworkGraph> network_graph{};
 
     std::shared_ptr<std::vector<NeuronMonitor>> monitors{};
+    std::shared_ptr<std::vector<AreaMonitor>> area_monitors{};
 
     std::vector<std::pair<size_t, std::vector<NeuronID>>> enable_interrupts{};
     std::vector<std::pair<size_t, std::vector<NeuronID>>> disable_interrupts{};

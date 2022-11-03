@@ -544,6 +544,8 @@ public:
      */
     void print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges) const;
 
+    void print(std::ostream& os_out) const;
+
     /**
      * @brief Returns directly if !Config::do_debug_checks
      *      Performs a debug check on the local portion of the network graph

@@ -32,6 +32,7 @@ Simulation::Simulation(std::shared_ptr<Partition> partition)
     : partition(std::move(partition)) {
 
     monitors = std::make_shared<std::vector<NeuronMonitor>>();
+    area_monitors = std::make_shared<std::vector<AreaMonitor>>();
 }
 
 void Simulation::register_neuron_monitor(const NeuronID& neuron_id) {
@@ -196,6 +197,10 @@ void Simulation::initialize() {
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 
+    for(const auto& area_name : neurons->get_extra_info()->get_unique_area_names()) {
+        area_monitors->emplace_back(this, area_name, neurons->get_extra_info()->get_nr_neurons_in_area(area_name));
+    }
+
     auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
 
     auto [local_synapses, in_synapses, out_synapses] = synapse_loader->load_synapses();
@@ -237,6 +242,20 @@ void Simulation::simulate(const size_t number_steps) {
             }
 
             neurons->get_neuron_model()->reset_fired_recorder();
+        }
+
+        if ( step % Config::monitor_area_step == 0) {
+            for(auto& area_monitor : *area_monitors) {
+                area_monitor.prepare_recording();
+            }
+            for(RelearnTypes::neuron_id neuron_id = 0; neuron_id < neurons->get_number_neurons(); neuron_id++) {
+                for(auto& area_monitor : *area_monitors) {
+                    area_monitor.record_data(NeuronID(neuron_id));
+                }
+            }
+            for(auto& area_monitor : *area_monitors) {
+                area_monitor.finish_recording();
+            }
         }
 
         for (const auto& [disable_step, disable_ids] : disable_interrupts) {
@@ -346,6 +365,11 @@ void Simulation::simulate(const size_t number_steps) {
     Timers::stop_and_add(TimerRegion::SIMULATION_LOOP);
 
     print_neuron_monitors();
+
+    for(auto& area_monitor : *area_monitors) {
+        std::string path = LogFiles::get_output_path() / (MPIWrapper::get_my_rank_str() + "_area_" + area_monitor.get_area_name() + ".csv");
+        area_monitor.write_data_to_file(path);
+    }
 
     neurons->print_positions_to_log_file();
     neurons->print_network_graph_to_log_file();

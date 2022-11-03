@@ -45,5 +45,3 @@ using DistantInSynapses = std::vector<DistantInSynapse>;
 using DistantOutSynapses = std::vector<DistantOutSynapse>;
 using DistantSynapses = std::vector<DistantSynapse>;
 
-using EnsembleId = int;
-//using ConnectionInfo = int;

@@ -894,6 +894,14 @@ void Neurons::print_network_graph_to_log_file() {
 
     LogFiles::write_to_file(LogFiles::EventType::InNetwork, false, ss_in_network.str());
     LogFiles::write_to_file(LogFiles::EventType::OutNetwork, false, ss_out_network.str());
+
+    if(MPIWrapper::get_num_ranks() == 1) {
+        std::stringstream ss{};
+        ss << "# Total number neurons: " << partition->get_total_number_neurons() << "\n";
+        ss << "# <target_id>\t<source_id>\t<weight> \n";
+        network_graph->print(ss);
+        LogFiles::write_to_file(LogFiles::EventType::Network, false, ss.str());
+    }
 }
 
 void Neurons::print_positions_to_log_file() {
