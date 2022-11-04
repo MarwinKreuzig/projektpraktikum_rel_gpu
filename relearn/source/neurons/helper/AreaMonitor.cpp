@@ -67,11 +67,13 @@ void AreaMonitor::write_data_to_file(std::string file_path) {
     for(const auto& area : area_names) {
         out << "Ensemble " << area << " - Axons;" <<  "Ensemble " << area << " - Den ex;" <<  "Ensemble " << area << " - Den inh;";
     }
-    out << "Axons grown;Axons conn;Den ex grown;Den ex conn;Den inh grown;Den inh conn;Calcium;";
+    out << "Step;Axons grown;Axons conn;Den ex grown;Den ex conn;Den inh grown;Den inh conn;Calcium;";
     out << std::endl;
 
     //Data
+    size_t step = 0;
     for(const auto& tup : data) {
+        out << step << ";";
         auto monitor_data = std::get<0>(tup);
         for( const auto & area : area_names) {
             const auto& connections = monitor_data[area];
@@ -88,6 +90,7 @@ void AreaMonitor::write_data_to_file(std::string file_path) {
         out << std::to_string(std::get<7>(tup)) << ";";
 
         out << std::endl;
+        step += Config::monitor_area_step;
     }
     out.close();
 }
