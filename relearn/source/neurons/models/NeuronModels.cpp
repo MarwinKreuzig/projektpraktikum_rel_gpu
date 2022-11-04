@@ -26,6 +26,7 @@ void NeuronModel::init(size_t number_neurons) {
 
     input_calculator->init(number_neurons);
     background_calculator->init(number_neurons);
+    external_stimulus->init(number_neurons);
 }
 
 void NeuronModel::create_neurons(size_t creation_count) {
@@ -39,11 +40,13 @@ void NeuronModel::create_neurons(size_t creation_count) {
 
     input_calculator->create_neurons(creation_count);
     background_calculator->create_neurons(creation_count);
+    external_stimulus->create_neurons(creation_count);
 }
 
 void NeuronModel::update_electrical_activity(const size_t step, const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
     input_calculator->update_input(step, network_graph, fired, disable_flags);
     background_calculator->update_input(step, disable_flags);
+    external_stimulus->update_input(step, disable_flags);
 
     Timers::start(TimerRegion::CALC_ACTIVITY);
 

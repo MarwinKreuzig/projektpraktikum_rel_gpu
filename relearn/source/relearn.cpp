@@ -41,6 +41,8 @@
 #include "util/Timers.h"
 
 #include "spdlog/spdlog.h"
+#include "util/FileLoader.h"
+#include "neurons/models/ExternalStimulusCalculators.h"
 
 #include <CLI/App.hpp>
 #include <CLI/Config.hpp>
@@ -349,11 +351,10 @@ int main(int argc, char** argv) {
     opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_neuron_model, CLI::ignore_case));
 
     std::string non_plasticity_neurons_str{};
-    auto* opt_non_plasticity_neurons = app.add_option("--non_plasticity_neurons", non_plasticity_neurons_str, "File with neurons without plasticity.");
+    auto* opt_non_plasticity_neurons = app.add_option("--non-plasticity-neurons", non_plasticity_neurons_str, "File with neurons without plasticity.");
 
     std::string file_external_stimulations{};
-    auto* opt_file_external_stimulations = app.add_option("--external_stimulations", file_external_stimulations, "File with the external stimulations.");
-
+    auto* opt_file_external_stimulations = app.add_option("--external-stimulation", file_external_stimulations, "File with the external stimulation.");
 
     auto* const opt_background_activity = app.add_option("--background-activity", chosen_background_activity_calculator_type, "The type of background activity");
     opt_background_activity->transform(CLI::CheckedTransformer(cli_parse_background_activity_calculator_type, CLI::ignore_case));
@@ -677,20 +678,28 @@ int main(int argc, char** argv) {
         RelearnException::fail("Chose a synaptic input calculator that is not implemented");
     }
 
+    std::unique_ptr<ExternalStimulusCalculator> external_stimulus;
+    if(static_cast<bool>(*opt_file_external_stimulations)) {
+        external_stimulus = std::make_unique<FunctionExternalStimulusCalculator>(std::make_unique<ExternalStimulusFunction>(FileLoader::load_external_stimulus(file_external_stimulations)));
+    }
+    else {
+        external_stimulus = std::make_unique<NullExternalStimulusCalculator>();
+    }
+
     std::unique_ptr<NeuronModel> neuron_model{};
     if (chosen_neuron_model == NeuronModelEnum::Poisson) {
-        neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
+        neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(external_stimulus),
             models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
     } else if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
-        neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
+        neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(external_stimulus),
             models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
             models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
             models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
     } else if (chosen_neuron_model == NeuronModelEnum::FitzHughNagumo) {
-        neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
+        neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(external_stimulus),
             models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
     } else if (chosen_neuron_model == NeuronModelEnum::AEIF) {
-        neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
+        neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(external_stimulus),
             models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
             models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
             models::AEIFModel::default_V_spike);

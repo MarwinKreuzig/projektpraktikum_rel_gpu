@@ -46,6 +46,7 @@ target_sources(
           structure/Partition.cpp
           structure/SpaceFillingCurve.cpp
           # util
+		  util/FileLoader.cpp
           util/RelearnException.cpp
           util/Timers.cpp
 		  

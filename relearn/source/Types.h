@@ -45,3 +45,4 @@ using DistantInSynapses = std::vector<DistantInSynapse>;
 using DistantOutSynapses = std::vector<DistantOutSynapse>;
 using DistantSynapses = std::vector<DistantSynapse>;
 
+using ExternalStimulusFunction = std::function<std::vector<std::pair<size_t,double>>(size_t)>;
