@@ -14,6 +14,6 @@ MultipleFilesSynapseLoader::MultipleFilesSynapseLoader(std::shared_ptr<Partition
     : SynapseLoader(std::move(partition)) {
 }
 
-MultipleFilesSynapseLoader::synapses_tuple_type MultipleFilesSynapseLoader::internal_load_synapses() {
-    return synapses_tuple_type();
+MultipleFilesSynapseLoader::synapses_pair_type MultipleFilesSynapseLoader::internal_load_synapses() {
+    return synapses_pair_type();
 }

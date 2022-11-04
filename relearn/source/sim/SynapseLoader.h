@@ -26,6 +26,7 @@ class Partition;
 class SynapseLoader {
 protected:
     using synapses_tuple_type = std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>;
+    using synapses_pair_type = std::pair<synapses_tuple_type , synapses_tuple_type>;
 
 public:
     /**
@@ -33,7 +34,7 @@ public:
      * @param partition The partition to use
      */
     explicit SynapseLoader(std::shared_ptr<Partition> partition)
-        : partition(std::move(partition)) { }
+            : partition(std::move(partition)) { }
 
     virtual ~SynapseLoader() = default;
 
@@ -50,10 +51,10 @@ public:
      *      (3) out synpases (local neuron to non-local neuron)
      * @return A tuple of (local, in, out) synapes
      */
-    std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> load_synapses();
+    synapses_pair_type load_synapses();
 
 protected:
     std::shared_ptr<Partition> partition{};
 
-    virtual synapses_tuple_type internal_load_synapses() = 0;
+    virtual synapses_pair_type internal_load_synapses() = 0;
 };

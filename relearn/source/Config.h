@@ -65,7 +65,7 @@ public:
     inline static size_t console_update_step = 100; // NOLINT
 
     // Capture individual neuron informations ever <monitor_step> ms
-    inline static size_t monitor_step = 100; // NOLINT
+    inline static size_t monitor_step = 1; // NOLINT
 
     // Capture ensemble informations ever <monitor_area_step> ms
     inline static size_t monitor_area_step = 100; // NOLINT

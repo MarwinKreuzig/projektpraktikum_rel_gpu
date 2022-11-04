@@ -59,7 +59,7 @@ public:
 
         for (auto [neuron_id, voltage] : external_stimulus_vector) {
             const auto input = disable_flags[neuron_id] == UpdateStatus::Disabled ? 0.0 : voltage ;
-            set_external_stimulus(neuron_id, voltage);
+            set_external_stimulus(neuron_id, input);
         }
         Timers::stop_and_add(TimerRegion::CALC_EXTERNAL_STIMULUS);
     }

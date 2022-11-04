@@ -204,19 +204,9 @@ void Simulation::initialize() {
 
     auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
 
-    auto [local_synapses, in_synapses, out_synapses] = synapse_loader->load_synapses();
-
-
-    auto filter_synapses = []<typename T,typename U,typename V, typename W>(const std::vector<Synapse<T,U,V,W>>& synapses, std::vector<Synapse<T,U,V,W>>& filteredTrue, std::vector<Synapse<T,U,V,W>>& filteredFalse) {
-        std::copy_if(synapses.begin(), synapses.end(), std::back_inserter(filteredTrue), [](const Synapse<T,U,V,W>& synapse) {return synapse.get_extra_info();});
-        std::copy_if(synapses.begin(), synapses.end(), std::back_inserter(filteredFalse), [](const Synapse<T,U,V,W>& synapse) {return !synapse.get_extra_info();});
-    };
-    LocalSynapses local_synapses_plastic,local_synapses_static;
-    DistantInSynapses in_synapses_plastic,in_synapses_static;
-    DistantOutSynapses out_synapses_plastic, out_synapses_static;
-    filter_synapses(local_synapses, local_synapses_plastic, local_synapses_static);
-    filter_synapses(in_synapses,  in_synapses_plastic, in_synapses_static);
-    filter_synapses(out_synapses, out_synapses_plastic, out_synapses_static);
+    const auto& [synapses_static, synapses_plastic] = synapse_loader->load_synapses();
+    const auto& [local_synapses_static, in_synapses_static, out_synapses_static] = synapses_static;
+    const auto& [local_synapses_plastic, in_synapses_plastic, out_synapses_plastic] = synapses_plastic;
 
     Timers::start(TimerRegion::INITIALIZE_NETWORK_GRAPH);
     network_graph_plastic->add_edges(local_synapses_plastic, in_synapses_plastic, out_synapses_plastic);

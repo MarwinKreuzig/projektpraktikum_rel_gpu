@@ -98,7 +98,7 @@ public:
      * @exception Throws a RelearnException if opening the file failed, the weight of one synapse is 0, or a loaded id is not from [1, number_local_neurons].
      * @return All local synapses
      */
-    [[nodiscard]] static LocalSynapses read_local_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons);
+    [[nodiscard]] static std::pair<LocalSynapses,LocalSynapses> read_local_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons);
 
     /**
      * @brief Write all local synapses to the specified file
@@ -123,7 +123,7 @@ public:
      *      (5) or a target id is not from [0, number_local_neurons)
      * @return All distant in-synapses
      */
-    static DistantInSynapses read_distant_in_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons, int my_rank, int number_mpi_ranks);
+    static std::pair<DistantInSynapses, DistantInSynapses> read_distant_in_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons, int my_rank, int number_mpi_ranks);
 
     /**
      * @brief Writes all distant in-synapses to the specified file
@@ -149,7 +149,7 @@ public:
      *      (5) or a source id is not from [0, number_local_neurons)
      * @return All distant out-synapses
      */
-    static DistantOutSynapses read_distant_out_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons, int my_rank, int number_mpi_ranks);
+    static std::pair<DistantOutSynapses, DistantOutSynapses> read_distant_out_synapses(const std::filesystem::path& file_path, NeuronID::value_type number_local_neurons, int my_rank, int number_mpi_ranks);
 
     /**
      * @brief Writes all distant out-synapses to the specified file

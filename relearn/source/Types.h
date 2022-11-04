@@ -30,16 +30,15 @@ using position_type = Vec3d;
 
 using synapse_weight = double;
 using neuron_id = size_t;
-using plastic_flag = bool;
 
 using counter_type = unsigned int;
 
 } // namespace RelearnTypes
 
-using LocalSynapse = Synapse<NeuronID, NeuronID, RelearnTypes::synapse_weight, RelearnTypes::plastic_flag>;
-using DistantInSynapse = Synapse<NeuronID, RankNeuronId, RelearnTypes::synapse_weight, RelearnTypes::plastic_flag>;
-using DistantOutSynapse = Synapse<RankNeuronId, NeuronID, RelearnTypes::synapse_weight, RelearnTypes::plastic_flag>;
-using DistantSynapse = Synapse<RankNeuronId, RankNeuronId, RelearnTypes::synapse_weight, RelearnTypes::plastic_flag>;
+using LocalSynapse = Synapse<NeuronID, NeuronID, RelearnTypes::synapse_weight>;
+using DistantInSynapse = Synapse<NeuronID, RankNeuronId, RelearnTypes::synapse_weight>;
+using DistantOutSynapse = Synapse<RankNeuronId, NeuronID, RelearnTypes::synapse_weight>;
+using DistantSynapse = Synapse<RankNeuronId, RankNeuronId, RelearnTypes::synapse_weight>;
 
 using LocalSynapses = std::vector<LocalSynapse>;
 using DistantInSynapses = std::vector<DistantInSynapse>;

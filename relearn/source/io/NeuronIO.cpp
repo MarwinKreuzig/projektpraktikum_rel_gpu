@@ -304,8 +304,9 @@ std::optional<std::vector<NeuronID>> NeuronIO::read_neuron_ids(const std::filesy
     return ids;
 }
 
-LocalSynapses NeuronIO::read_local_synapses(const std::filesystem::path& file_path, const NeuronID::value_type number_local_neurons) {
-    LocalSynapses local_synapses{};
+std::pair<LocalSynapses,LocalSynapses> NeuronIO::read_local_synapses(const std::filesystem::path& file_path, const NeuronID::value_type number_local_neurons) {
+    LocalSynapses local_synapses_static{};
+    LocalSynapses local_synapses_plastic{};
 
     std::ifstream file_synapses(file_path, std::ios::binary | std::ios::in);
 
@@ -339,10 +340,13 @@ LocalSynapses NeuronIO::read_local_synapses(const std::filesystem::path& file_pa
         auto source_id = NeuronID{ false, read_source_id };
         auto target_id = NeuronID{ false, read_target_id };
 
-        local_synapses.emplace_back(target_id, source_id, weight, plastic);
+        if(plastic)
+            local_synapses_plastic.emplace_back(target_id, source_id, weight);
+        else
+            local_synapses_static.emplace_back(target_id,source_id,weight);
     }
 
-    return local_synapses;
+    return std::make_pair(local_synapses_static, local_synapses_plastic);
 }
 
 void NeuronIO::write_local_synapses(const LocalSynapses& local_synapses, const std::filesystem::path& file_path) {
@@ -355,12 +359,12 @@ void NeuronIO::write_local_synapses(const LocalSynapses& local_synapses, const s
 
     file_synapses << "# target_id source_id weight\n";
 
-    for (const auto& [target_id, source_id, weight, plastic] : local_synapses) {
-        file_synapses << (target_id.get_neuron_id() + 1) << ' ' << (source_id.get_neuron_id() + 1) << ' ' << weight << ' ' << plastic << '\n';
+    for (const auto& [target_id, source_id, weight] : local_synapses) {
+        file_synapses << (target_id.get_neuron_id() + 1) << ' ' << (source_id.get_neuron_id() + 1) << ' ' << weight << '\n';
     }
 }
 
-DistantInSynapses NeuronIO::read_distant_in_synapses(const std::filesystem::path& file_path, const NeuronID::value_type number_local_neurons, const int my_rank, const int number_mpi_ranks) {
+std::pair<DistantInSynapses, DistantInSynapses> NeuronIO::read_distant_in_synapses(const std::filesystem::path& file_path, const NeuronID::value_type number_local_neurons, const int my_rank, const int number_mpi_ranks) {
     DistantInSynapses distant_in_synapses{};
 
     std::ifstream file_synapses(file_path, std::ios::binary | std::ios::in);
@@ -404,10 +408,10 @@ DistantInSynapses NeuronIO::read_distant_in_synapses(const std::filesystem::path
         auto source_id = NeuronID{ false, read_source_id };
         auto target_id = NeuronID{ false, read_target_id };
 
-        distant_in_synapses.emplace_back(target_id, RankNeuronId{ read_source_rank, source_id }, weight, true);
+        distant_in_synapses.emplace_back(target_id, RankNeuronId{ read_source_rank, source_id }, weight);
     }
 
-    return distant_in_synapses;
+    return std::make_pair(DistantInSynapses{},distant_in_synapses);
 }
 
 void NeuronIO::write_distant_in_synapses(const DistantInSynapses& distant_in_synapses, const int target_rank, const std::filesystem::path& file_path) {
@@ -421,7 +425,7 @@ void NeuronIO::write_distant_in_synapses(const DistantInSynapses& distant_in_syn
     file_synapses << "# " << distant_in_synapses.size() << '\n';
     file_synapses << "# <target rank> <target neuron id>\t<source rank> <source neuron id>\t<weight>\n";
 
-    for (const auto& [target_id, source_rni, weight, plastic] : distant_in_synapses) {
+    for (const auto& [target_id, source_rni, weight] : distant_in_synapses) {
         const auto target_neuron_id = target_id.get_neuron_id();
 
         const auto& [source_rank, source_id] = source_rni;
@@ -431,7 +435,7 @@ void NeuronIO::write_distant_in_synapses(const DistantInSynapses& distant_in_syn
     }
 }
 
-DistantOutSynapses NeuronIO::read_distant_out_synapses(const std::filesystem::path& file_path, const NeuronID::value_type number_local_neurons, const int my_rank, const int number_mpi_ranks) {
+std::pair<DistantOutSynapses, DistantOutSynapses> NeuronIO::read_distant_out_synapses(const std::filesystem::path& file_path, const NeuronID::value_type number_local_neurons, const int my_rank, const int number_mpi_ranks) {
     DistantOutSynapses distant_out_synapses{};
 
     std::ifstream file_synapses(file_path, std::ios::binary | std::ios::in);
@@ -475,10 +479,10 @@ DistantOutSynapses NeuronIO::read_distant_out_synapses(const std::filesystem::pa
         auto source_id = NeuronID{ false, read_source_id };
         auto target_id = NeuronID{ false, read_target_id };
 
-        distant_out_synapses.emplace_back(RankNeuronId{ read_target_rank, target_id }, source_id, weight, true);
+        distant_out_synapses.emplace_back(RankNeuronId{ read_target_rank, target_id }, source_id, weight);
     }
 
-    return distant_out_synapses;
+    return std::make_pair(DistantOutSynapses{}, distant_out_synapses);
 }
 
 void NeuronIO::write_distant_out_synapses(const DistantOutSynapses& distant_out_synapses, const int source_rank, const std::filesystem::path& file_path) {
@@ -492,7 +496,7 @@ void NeuronIO::write_distant_out_synapses(const DistantOutSynapses& distant_out_
     file_synapses << "# " << distant_out_synapses.size() << '\n';
     file_synapses << "# <target rank> <target neuron id>\t<source rank> <source neuron id>\t<weight>\n";
 
-    for (const auto& [target_rni, source_id, weight, plastic] : distant_out_synapses) {
+    for (const auto& [target_rni, source_id, weight] : distant_out_synapses) {
         const auto& [target_rank, target_id] = target_rni;
         const auto target_neuron_id = target_id.get_neuron_id();
 
