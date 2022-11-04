@@ -43,8 +43,8 @@ void NeuronModel::create_neurons(size_t creation_count) {
     external_stimulus->create_neurons(creation_count);
 }
 
-void NeuronModel::update_electrical_activity(const size_t step, const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags) {
-    input_calculator->update_input(step, network_graph, fired, disable_flags);
+void NeuronModel::update_electrical_activity(const size_t step, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::vector<UpdateStatus>& disable_flags) {
+    input_calculator->update_input(step, network_graph_static, network_graph_plastic, fired, disable_flags);
     background_calculator->update_input(step, disable_flags);
     external_stimulus->update_input(step, disable_flags);
 

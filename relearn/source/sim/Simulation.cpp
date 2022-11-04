@@ -185,7 +185,8 @@ void Simulation::initialize() {
         RelearnException::fail("Simulation::initialize: AlgorithmEnum {} not yet implemented!", static_cast<int>(algorithm_enum));
     }
 
-    network_graph = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
+    network_graph_static = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
+    network_graph_plastic = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
 
     algorithm->set_synaptic_elements(axons, dendrites_ex, dendrites_in);
 
@@ -193,7 +194,7 @@ void Simulation::initialize() {
     neurons->set_signal_types(std::move(signal_types));
     neurons->set_positions(std::move(neuron_positions));
 
-    neurons->set_network_graph(network_graph);
+    neurons->set_network_graph(network_graph_static, network_graph_plastic);
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 
@@ -205,8 +206,21 @@ void Simulation::initialize() {
 
     auto [local_synapses, in_synapses, out_synapses] = synapse_loader->load_synapses();
 
+
+    auto filter_synapses = []<typename T,typename U,typename V, typename W>(const std::vector<Synapse<T,U,V,W>>& synapses, std::vector<Synapse<T,U,V,W>>& filteredTrue, std::vector<Synapse<T,U,V,W>>& filteredFalse) {
+        std::copy_if(synapses.begin(), synapses.end(), std::back_inserter(filteredTrue), [](const Synapse<T,U,V,W>& synapse) {return synapse.get_extra_info();});
+        std::copy_if(synapses.begin(), synapses.end(), std::back_inserter(filteredFalse), [](const Synapse<T,U,V,W>& synapse) {return !synapse.get_extra_info();});
+    };
+    LocalSynapses local_synapses_plastic,local_synapses_static;
+    DistantInSynapses in_synapses_plastic,in_synapses_static;
+    DistantOutSynapses out_synapses_plastic, out_synapses_static;
+    filter_synapses(local_synapses, local_synapses_plastic, local_synapses_static);
+    filter_synapses(in_synapses,  in_synapses_plastic, in_synapses_static);
+    filter_synapses(out_synapses, out_synapses_plastic, out_synapses_static);
+
     Timers::start(TimerRegion::INITIALIZE_NETWORK_GRAPH);
-    network_graph->add_edges(local_synapses, in_synapses, out_synapses);
+    network_graph_plastic->add_edges(local_synapses_plastic, in_synapses_plastic, out_synapses_plastic);
+    network_graph_static->add_edges(local_synapses_static, in_synapses_static, out_synapses_static);
     Timers::stop_and_add(TimerRegion::INITIALIZE_NETWORK_GRAPH);
 
     LogFiles::print_message_rank(0, "Network graph created");
@@ -322,7 +336,7 @@ void Simulation::simulate(const size_t number_steps) {
 
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_axons_deleted, num_dendrites_deleted, num_synapses_created);
 
-            network_graph->debug_check();
+            network_graph_plastic->debug_check();
         }
 
         if (Config::logfile_update_step > 0 && step % Config::logfile_update_step == 0) {

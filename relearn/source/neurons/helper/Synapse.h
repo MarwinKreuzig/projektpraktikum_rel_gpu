@@ -20,7 +20,7 @@
  * @tparam Source The type of the source
  * @tparam Weight The type of the weight
  */
-template <typename Target, typename Source, typename Weight>
+template <typename Target, typename Source, typename Weight, typename ExtraInfo>
 class Synapse {
 public:
     /**
@@ -29,10 +29,11 @@ public:
      * @param source The source of the synapse
      * @param weight The weight of the synapse
      */
-    Synapse(const Target target, const Source source, const Weight weight)
+    Synapse(const Target target, const Source source, const Weight weight, const ExtraInfo extra_info)
         : target(target)
         , source(source)
-        , weight(weight) { }
+        , weight(weight)
+        , extra_info(extra_info){ }
 
     /**
      * @brief Returns the target of the synapse
@@ -58,6 +59,10 @@ public:
         return weight;
     }
 
+    [[nodiscard]] const ExtraInfo& get_extra_info() const noexcept {
+        return extra_info;
+    }
+
     [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const Synapse& first, const Synapse& second) noexcept = default;
 
     template <std::size_t Index>
@@ -70,6 +75,9 @@ public:
         }
         if constexpr (Index == 2) {
             return weight;
+        }
+        if constexpr (Index == 3) {
+            return extra_info;
         }
     }
 
@@ -84,6 +92,9 @@ public:
         if constexpr (Index == 2) {
             return weight;
         }
+        if constexpr (Index == 3) {
+            return extra_info;
+        }
     }
 
     template <std::size_t Index>
@@ -97,33 +108,42 @@ public:
         if constexpr (Index == 2) {
             return std::move(weight);
         }
+        if constexpr (Index == 3) {
+            return std::move(extra_info);
+        }
     }
 
 private:
     Target target{};
     Source source{};
     Weight weight{};
+    ExtraInfo extra_info{};
 };
 
 namespace std {
-template <typename Target, typename Source, typename Weight>
-struct tuple_size<::Synapse<Target, Source, Weight>> {
-    static constexpr size_t value = 3;
+template <typename Target, typename Source, typename Weight, typename ExtraInfo>
+struct tuple_size<::Synapse<Target, Source, Weight, ExtraInfo>> {
+    static constexpr size_t value = 4;
 };
 
-template <typename Target, typename Source, typename Weight>
-struct tuple_element<0, ::Synapse<Target, Source, Weight>> {
+template <typename Target, typename Source, typename Weight, typename ExtraInfo>
+struct tuple_element<0, ::Synapse<Target, Source, Weight, ExtraInfo>> {
     using type = Target;
 };
 
-template <typename Target, typename Source, typename Weight>
-struct tuple_element<1, ::Synapse<Target, Source, Weight>> {
+template <typename Target, typename Source, typename Weight, typename ExtraInfo>
+struct tuple_element<1, ::Synapse<Target, Source, Weight, ExtraInfo>> {
     using type = Source;
 };
 
-template <typename Target, typename Source, typename Weight>
-struct tuple_element<2, ::Synapse<Target, Source, Weight>> {
+template <typename Target, typename Source, typename Weight, typename ExtraInfo>
+struct tuple_element<2, ::Synapse<Target, Source, Weight, ExtraInfo>> {
     using type = Weight;
+};
+
+template <typename Target, typename Source, typename Weight, typename ExtraInfo>
+struct tuple_element<3, ::Synapse<Target, Source, Weight, ExtraInfo>> {
+    using type = ExtraInfo;
 };
 
 } // namespace std

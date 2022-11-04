@@ -318,9 +318,10 @@ LocalSynapses NeuronIO::read_local_synapses(const std::filesystem::path& file_pa
         NeuronID::value_type read_target_id = 0;
         NeuronID::value_type read_source_id = 0;
         RelearnTypes::synapse_weight weight = 0;
+        bool plastic = true;
 
         std::stringstream sstream(line);
-        const bool success = (sstream >> read_target_id) && (sstream >> read_source_id) && (sstream >> weight);
+        const bool success = (sstream >> read_target_id) && (sstream >> read_source_id) && (sstream >> weight) && (sstream >> plastic);
 
         if (!success) {
             spdlog::info("Skipping line: {}", line);
@@ -338,7 +339,7 @@ LocalSynapses NeuronIO::read_local_synapses(const std::filesystem::path& file_pa
         auto source_id = NeuronID{ false, read_source_id };
         auto target_id = NeuronID{ false, read_target_id };
 
-        local_synapses.emplace_back(target_id, source_id, weight);
+        local_synapses.emplace_back(target_id, source_id, weight, plastic);
     }
 
     return local_synapses;
@@ -354,8 +355,8 @@ void NeuronIO::write_local_synapses(const LocalSynapses& local_synapses, const s
 
     file_synapses << "# target_id source_id weight\n";
 
-    for (const auto& [target_id, source_id, weight] : local_synapses) {
-        file_synapses << (target_id.get_neuron_id() + 1) << ' ' << (source_id.get_neuron_id() + 1) << ' ' << weight << '\n';
+    for (const auto& [target_id, source_id, weight, plastic] : local_synapses) {
+        file_synapses << (target_id.get_neuron_id() + 1) << ' ' << (source_id.get_neuron_id() + 1) << ' ' << weight << ' ' << plastic << '\n';
     }
 }
 
@@ -403,7 +404,7 @@ DistantInSynapses NeuronIO::read_distant_in_synapses(const std::filesystem::path
         auto source_id = NeuronID{ false, read_source_id };
         auto target_id = NeuronID{ false, read_target_id };
 
-        distant_in_synapses.emplace_back(target_id, RankNeuronId{ read_source_rank, source_id }, weight);
+        distant_in_synapses.emplace_back(target_id, RankNeuronId{ read_source_rank, source_id }, weight, true);
     }
 
     return distant_in_synapses;
@@ -420,7 +421,7 @@ void NeuronIO::write_distant_in_synapses(const DistantInSynapses& distant_in_syn
     file_synapses << "# " << distant_in_synapses.size() << '\n';
     file_synapses << "# <target rank> <target neuron id>\t<source rank> <source neuron id>\t<weight>\n";
 
-    for (const auto& [target_id, source_rni, weight] : distant_in_synapses) {
+    for (const auto& [target_id, source_rni, weight, plastic] : distant_in_synapses) {
         const auto target_neuron_id = target_id.get_neuron_id();
 
         const auto& [source_rank, source_id] = source_rni;
@@ -474,7 +475,7 @@ DistantOutSynapses NeuronIO::read_distant_out_synapses(const std::filesystem::pa
         auto source_id = NeuronID{ false, read_source_id };
         auto target_id = NeuronID{ false, read_target_id };
 
-        distant_out_synapses.emplace_back(RankNeuronId{ read_target_rank, target_id }, source_id, weight);
+        distant_out_synapses.emplace_back(RankNeuronId{ read_target_rank, target_id }, source_id, weight, true);
     }
 
     return distant_out_synapses;
@@ -491,7 +492,7 @@ void NeuronIO::write_distant_out_synapses(const DistantOutSynapses& distant_out_
     file_synapses << "# " << distant_out_synapses.size() << '\n';
     file_synapses << "# <target rank> <target neuron id>\t<source rank> <source neuron id>\t<weight>\n";
 
-    for (const auto& [target_rni, source_id, weight] : distant_out_synapses) {
+    for (const auto& [target_rni, source_id, weight, plastic] : distant_out_synapses) {
         const auto& [target_rank, target_id] = target_rni;
         const auto target_neuron_id = target_id.get_neuron_id();
 

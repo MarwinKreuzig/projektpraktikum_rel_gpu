@@ -174,7 +174,7 @@ public:
      * @return The network graph
      */
     std::shared_ptr<NetworkGraph> get_network_graph() noexcept {
-        return network_graph;
+        return network_graph_plastic;
     }
 
     /**
@@ -241,7 +241,8 @@ private:
     std::shared_ptr<Algorithm> algorithm{};
     std::shared_ptr<Octree> global_tree{};
 
-    std::shared_ptr<NetworkGraph> network_graph{};
+    std::shared_ptr<NetworkGraph> network_graph_plastic{};
+    std::shared_ptr<NetworkGraph> network_graph_static{};
 
     std::shared_ptr<std::vector<NeuronMonitor>> monitors{};
     std::shared_ptr<std::vector<AreaMonitor>> area_monitors{};

@@ -36,7 +36,7 @@ public:
     }
 
 protected:
-    void update_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus>& fired, const std::vector<UpdateStatus>& disable_flags) override;
+    void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::vector<FiredStatus>& fired, const std::vector<UpdateStatus>& disable_flags) override;
 };
 
 /**
@@ -61,5 +61,5 @@ public:
     }
 
 protected:
-    void update_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus>& fired, const std::vector<UpdateStatus>& disable_flags) override;
+    void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::vector<FiredStatus>& fired, const std::vector<UpdateStatus>& disable_flags) override;
 };

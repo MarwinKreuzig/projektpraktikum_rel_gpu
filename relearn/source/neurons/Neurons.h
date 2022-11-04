@@ -116,8 +116,9 @@ public:
      * @brief Sets the network graph in which the synapses for the neurons are stored
      * @param octree The network graph
      */
-    void set_network_graph(std::shared_ptr<NetworkGraph> network) noexcept {
-        network_graph = std::move(network);
+    void set_network_graph(std::shared_ptr<NetworkGraph> network_static, std::shared_ptr<NetworkGraph> network_plastic) noexcept {
+        network_graph_static = std::move(network_static);
+        network_graph_plastic = std::move(network_plastic);
     }
 
     /**
@@ -392,7 +393,8 @@ private:
     std::shared_ptr<Octree> global_tree{};
     std::shared_ptr<Algorithm> algorithm{};
 
-    std::shared_ptr<NetworkGraph> network_graph{};
+    std::shared_ptr<NetworkGraph> network_graph_plastic{};
+    std::shared_ptr<NetworkGraph> network_graph_static{};
 
     std::unique_ptr<NeuronModel> neuron_model{};
     std::unique_ptr<CalciumCalculator> calcium_calculator{};
@@ -404,4 +406,5 @@ private:
     std::vector<UpdateStatus> disable_flags{};
 
     std::unique_ptr<NeuronsExtraInfo> extra_info{ std::make_unique<NeuronsExtraInfo>() };
+
 };

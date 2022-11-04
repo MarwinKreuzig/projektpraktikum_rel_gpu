@@ -377,7 +377,7 @@ public:
      *      (c) The weight is equal to 0
      */
     void add_synapse(const LocalSynapse& synapse) {
-        const auto& [target, source, weight] = synapse;
+        const auto& [target, source, weight, _] = synapse;
 
         const auto local_target_id = target.get_neuron_id();
         const auto local_source_id = source.get_neuron_id();
@@ -402,7 +402,7 @@ public:
      *      (c) The distant rank is the same as the local one
      */
     void add_synapse(const DistantInSynapse& synapse) {
-        const auto& [target, source_rni, weight] = synapse;
+        const auto& [target, source_rni, weight, _] = synapse;
         const auto local_target_id = target.get_neuron_id();
 
         const auto& [source_rank, source_id] = source_rni;
@@ -424,7 +424,7 @@ public:
      *      (c) The distant rank is the same as the local one
      */
     void add_synapse(const DistantOutSynapse& synapse) {
-        const auto& [target_rni, source, weight] = synapse;
+        const auto& [target_rni, source, weight, _] = synapse;
         const auto local_source_id = source.get_neuron_id();
 
         const auto& [target_rank, target_id] = target_rni;
@@ -444,7 +444,7 @@ public:
      * @param out_edges All edges that have a source on the current MPI rank and a target from another rank
      */
     void add_edges(const LocalSynapses& local_edges, const DistantInSynapses& in_edges, const DistantOutSynapses& out_edges) {
-        for (const auto& [target_id, source_id, weight] : local_edges) {
+        for (const auto& [target_id, source_id, weight, _] : local_edges) {
             const auto local_target_id = target_id.get_neuron_id();
             const auto local_source_id = source_id.get_neuron_id();
 
@@ -460,7 +460,7 @@ public:
             add_edge<LocalEdges, NeuronID>(out_edges, target_id, weight);
         }
 
-        for (const auto& [target_id, source_rni, weight] : in_edges) {
+        for (const auto& [target_id, source_rni, weight, plastic] : in_edges) {
             const auto local_target_id = target_id.get_neuron_id();
 
             RelearnException::check(local_target_id < neuron_distant_in_neighborhood.size(),
@@ -470,7 +470,7 @@ public:
             add_edge<DistantEdges, DistantEdgesKey>(distant_in_edges, source_rni, weight);
         }
 
-        for (const auto& [target_rni, source_id, weight] : out_edges) {
+        for (const auto& [target_rni, source_id, weight, plastic] : out_edges) {
             const auto local_source_id = source_id.get_neuron_id();
 
             RelearnException::check(local_source_id < neuron_distant_out_neighborhood.size(),
@@ -541,10 +541,11 @@ public:
      *      <target_rank> <target_id>\t<source_rank> <source_id>\tweight
      * @param os_out_edges The out-stream to which the out-connections are printed
      * @param os_in_edges The out-stream to which the in-connections are printed
+     * @param flag Character which will be printed at the end of the line of each connection
      */
-    void print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges) const;
+    void print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges, char flag) const;
 
-    void print(std::ostream& os_out) const;
+    void print(std::ostream& os_out, char flag) const;
 
     /**
      * @brief Returns directly if !Config::do_debug_checks

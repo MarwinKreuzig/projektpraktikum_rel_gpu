@@ -105,7 +105,7 @@ void NetworkGraph::debug_check() const {
     RelearnException::check(edges.empty(), "NetworkGraph::debug_check: Edges is not empty");
 }
 
-void NetworkGraph::print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges) const {
+void NetworkGraph::print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges, char flag) const {
     const auto my_rank = mpi_rank;
 
     for (const auto& source_id : NeuronID::range(number_local_neurons)) {
@@ -114,14 +114,14 @@ void NetworkGraph::print_with_ranks(std::ostream& os_out_edges, std::ostream& os
         for (const auto& [target_id, weight] : neuron_local_out_neighborhood[source_local_id]) {
             const auto& target_local_id = target_id.get_neuron_id();
 
-            os_out_edges << my_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\n';
+            os_out_edges << my_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
         }
 
         for (const auto& [target_neuron, weight] : neuron_distant_out_neighborhood[source_local_id]) {
             const auto& [target_rank, target_id] = target_neuron;
             const auto& target_local_id = source_id.get_neuron_id();
 
-            os_out_edges << target_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\n';
+            os_out_edges << target_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
         }
     }
 
@@ -143,7 +143,7 @@ void NetworkGraph::print_with_ranks(std::ostream& os_out_edges, std::ostream& os
     }
 }
 
-void NetworkGraph::print(std::ostream& os_out) const {
+void NetworkGraph::print(std::ostream& os_out, char flag) const {
     const auto my_rank = mpi_rank;
 
     for (const auto& source_id : NeuronID::range(number_local_neurons)) {
@@ -152,14 +152,14 @@ void NetworkGraph::print(std::ostream& os_out) const {
         for (const auto& [target_id, weight] : neuron_local_out_neighborhood[source_local_id]) {
             const auto& target_local_id = target_id.get_neuron_id();
 
-            os_out << (target_local_id + 1) << '\t' << (source_local_id + 1) << '\t' << weight << '\n';
+            os_out << (target_local_id + 1) << '\t' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
         }
 
         for (const auto& [target_neuron, weight] : neuron_distant_out_neighborhood[source_local_id]) {
             const auto& [target_rank, target_id] = target_neuron;
             const auto& target_local_id = source_id.get_neuron_id();
 
-            os_out << (target_local_id + 1) << '\t' << (source_local_id + 1) << '\t' << weight << '\n';
+            os_out << (target_local_id + 1) << '\t' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
         }
     }
 }
