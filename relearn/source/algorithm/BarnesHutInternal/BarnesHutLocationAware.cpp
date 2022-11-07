@@ -34,7 +34,7 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
     // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
 #pragma omp parallel for default(none) shared(root, number_neurons, extra_infos, disable_flags, neuron_requests_outgoing)
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
+        if (disable_flags[neuron_id] != UpdateStatus::Enabled) {
             continue;
         }
 

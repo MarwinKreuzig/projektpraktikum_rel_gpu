@@ -27,6 +27,7 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+#include <utility>
 
 Simulation::Simulation(std::shared_ptr<Partition> partition)
     : partition(std::move(partition)) {
@@ -211,6 +212,7 @@ void Simulation::initialize() {
     Timers::start(TimerRegion::INITIALIZE_NETWORK_GRAPH);
     network_graph_plastic->add_edges(local_synapses_plastic, in_synapses_plastic, out_synapses_plastic);
     network_graph_static->add_edges(local_synapses_static, in_synapses_static, out_synapses_static);
+    neurons->set_static_neurons(static_neurons);
     Timers::stop_and_add(TimerRegion::INITIALIZE_NETWORK_GRAPH);
 
     LogFiles::print_message_rank(0, "Network graph created");
@@ -478,4 +480,8 @@ void Simulation::save_network_graph(size_t current_steps) {
         LogFiles::save_and_open_new(LogFiles::EventType::Network, "network_" + std::to_string(current_steps));
         neurons->print_network_graph_to_log_file();
     }
+}
+
+void Simulation::set_static_neurons(std::vector<NeuronID> static_neurons) {
+    this->static_neurons = std::move(static_neurons);
 }

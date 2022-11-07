@@ -129,6 +129,8 @@ public:
      */
     void set_subdomain_assignment(std::unique_ptr<NeuronToSubdomainAssignment>&& subdomain_assignment) noexcept;
 
+    void set_static_neurons(std::vector<NeuronID> static_neurons);
+
     /**
      * @brief Initializes the simulation and all other objects.
      * @exception Throws a RelearnException if one object is missing or something went wrong otherwise
@@ -233,6 +235,8 @@ private:
     std::shared_ptr<SynapticElements> axons{};
     std::shared_ptr<SynapticElements> dendrites_ex{};
     std::shared_ptr<SynapticElements> dendrites_in{};
+
+    std::vector<NeuronID> static_neurons{};
 
     std::unique_ptr<NeuronModel> neuron_models{};
     std::unique_ptr<CalciumCalculator> calcium_calculator{};

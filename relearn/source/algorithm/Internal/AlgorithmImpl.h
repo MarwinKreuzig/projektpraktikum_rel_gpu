@@ -124,7 +124,7 @@ private:
             const auto other_neuron_id = cell.get_neuron_id();
             RelearnException::check(neuron_id == other_neuron_id, "AlgorithmImpl::update_leaf_nodes: The nodes are not in order");
 
-            if (disable_flags[local_neuron_id] == UpdateStatus::Disabled) {
+            if (disable_flags[local_neuron_id] != UpdateStatus::Enabled) {
                 if constexpr (AdditionalCellAttributes::has_excitatory_dendrite) {
                     node->set_cell_number_excitatory_dendrites(0);
                 }

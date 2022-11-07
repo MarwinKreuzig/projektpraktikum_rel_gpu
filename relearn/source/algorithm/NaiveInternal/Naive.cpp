@@ -74,7 +74,7 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const size_t
 
     // For my neurons
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
+        if (disable_flags[neuron_id] != UpdateStatus::Enabled) {
             continue;
         }
 

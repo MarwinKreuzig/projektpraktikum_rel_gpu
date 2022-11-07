@@ -100,6 +100,7 @@ size_t Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
     size_t weight_deleted_out_inh_edges_to_outside = 0;
 
     for (const auto neuron_id : neuron_ids) {
+        RelearnException::check(disable_flags[neuron_id.get_neuron_id()] != UpdateStatus::STATIC, "Neurons::disable_neurons:: You cannot disable a static neuron");
         const auto local_out_edges = network_graph_plastic->get_local_out_edges(neuron_id);
         const auto distant_out_edges = network_graph_plastic->get_distant_out_edges(neuron_id);
 

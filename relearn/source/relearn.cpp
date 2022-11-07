@@ -350,8 +350,8 @@ int main(int argc, char** argv) {
     auto* const opt_neuron_model = app.add_option("--neuron-model", chosen_neuron_model, "The neuron model");
     opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_neuron_model, CLI::ignore_case));
 
-    std::string non_plasticity_neurons_str{};
-    auto* opt_non_plasticity_neurons = app.add_option("--non-plasticity-neurons", non_plasticity_neurons_str, "File with neurons without plasticity.");
+    std::string static_neurons_str{};
+    auto* opt_static_neurons = app.add_option("--static-neurons", static_neurons_str, "File with neuron ids for static neurons");
 
     std::string file_external_stimulations{};
     auto* opt_file_external_stimulations = app.add_option("--external-stimulation", file_external_stimulations, "File with the external stimulation.");
@@ -746,6 +746,15 @@ int main(int argc, char** argv) {
     sim.set_dendrites_ex(std::move(excitatory_dendrites_model));
     sim.set_dendrites_in(std::move(inhibitory_dendrites_model));
 
+    if (*opt_static_neurons) {
+        std::vector<NeuronID> static_neurons;
+        auto static_neurons_list= FileLoader::split_string(static_neurons_str, ',');
+        std::transform(static_neurons_list.begin(), static_neurons_list.end(), std::back_inserter(static_neurons), [&](std::string s) {
+            return NeuronID (stoi(s)-1);
+        });
+        sim.set_static_neurons(static_neurons);
+    }
+
     // Set the parameters for all kernel types, even though only one is used later one
     GammaDistributionKernel::set_k(gamma_k);
     GammaDistributionKernel::set_theta(gamma_theta);
@@ -763,6 +772,8 @@ int main(int argc, char** argv) {
     }
 
     sim.set_algorithm(chosen_algorithm);
+
+
 
     if (static_cast<bool>(*opt_num_neurons)) {
         auto sfnd = std::make_unique<SubdomainFromNeuronDensity>(number_neurons, fraction_excitatory_neurons, um_per_neuron, partition);
