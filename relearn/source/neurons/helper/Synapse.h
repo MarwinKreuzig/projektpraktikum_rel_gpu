@@ -58,7 +58,7 @@ public:
         return weight;
     }
 
-    [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const Synapse& first, const Synapse& second) noexcept = default;
+    [[nodiscard]] friend constexpr std::partial_ordering operator<=>(const Synapse& first, const Synapse& second) noexcept = default;
 
     template <std::size_t Index>
     [[nodiscard]] auto& get() & {

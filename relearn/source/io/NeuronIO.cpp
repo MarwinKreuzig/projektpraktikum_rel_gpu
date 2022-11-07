@@ -19,6 +19,7 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+#include <iostream>
 
 std::vector<std::string> NeuronIO::read_comments(const std::filesystem::path& file_path) {
     std::ifstream file(file_path);
@@ -322,12 +323,13 @@ std::pair<LocalSynapses,LocalSynapses> NeuronIO::read_local_synapses(const std::
         bool plastic = true;
 
         std::stringstream sstream(line);
-        const bool success = (sstream >> read_target_id) && (sstream >> read_source_id) && (sstream >> weight) && (sstream >> plastic);
+        const bool success = (sstream >> read_target_id) && (sstream >> read_source_id) && (sstream >> weight);
 
         if (!success) {
             spdlog::info("Skipping line: {}", line);
             continue;
         }
+        sstream >> plastic;
 
         RelearnException::check(read_target_id > 0 && read_target_id <= number_local_neurons, "NeuronIO::read_local_synapses: target_id was not from [1, {}]: {}", number_local_neurons, read_target_id);
         RelearnException::check(read_source_id > 0 && read_source_id <= number_local_neurons, "NeuronIO::read_local_synapses: source_id was not from [1, {}]: {}", number_local_neurons, read_source_id);

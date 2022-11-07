@@ -309,8 +309,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
 
     NetworkGraph ng(number_neurons, 0);
 
-    std::map<size_t, std::map<RankNeuronId, int>> in_edges;
-    std::map<size_t, std::map<RankNeuronId, int>> out_edges;
+    std::map<size_t, std::map<RankNeuronId, double>> in_edges;
+    std::map<size_t, std::map<RankNeuronId, double>> out_edges;
 
     for (size_t edge_id = 0; edge_id < number_synapses; edge_id++) {
         const int other_rank = static_cast<int>(get_random_number_ranks());
@@ -604,8 +604,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
 
     NetworkGraph ng(number_neurons, 0);
 
-    std::map<RankNeuronId, std::map<RankNeuronId, int>> in_edges;
-    std::map<RankNeuronId, std::map<RankNeuronId, int>> out_edges;
+    std::map<RankNeuronId, std::map<RankNeuronId, double>> in_edges;
+    std::map<RankNeuronId, std::map<RankNeuronId, double>> out_edges;
 
     for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
         const int other_rank = static_cast<int>(get_random_number_ranks());
