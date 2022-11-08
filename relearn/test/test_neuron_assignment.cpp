@@ -584,7 +584,9 @@ TEST_F(NeuronAssignmentTest, testFileLoadNetworkSingleSubdomain) {
 
     const auto loader = sff.get_synapse_loader();
 
-    const auto& [local_synapses, in_synapses, out_synapses] = loader->load_synapses();
+    const auto& [static_synapses, plastic_synapses] = loader->load_synapses();
+
+    const auto& [local_synapses, in_synapses, out_synapses] = plastic_synapses;
 
     ASSERT_TRUE(in_synapses.empty());
     ASSERT_TRUE(out_synapses.empty());
@@ -619,7 +621,9 @@ TEST_F(NeuronAssignmentTest, testFileGivenInputONCE) {
 
     const auto sl = sff.get_synapse_loader();
 
-    const auto& [local_synapses, in_synapses, out_synapses] = sl->load_synapses();
+    const auto& [ static_synapses, plastic_synapses] = sl->load_synapses();
+
+    const auto& [local_synapses, in_synapses, out_synapses] = plastic_synapses;
 
     ASSERT_TRUE(in_synapses.empty());
     ASSERT_TRUE(out_synapses.empty());

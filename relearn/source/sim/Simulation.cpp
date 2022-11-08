@@ -27,11 +27,13 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+#include <utility>
 
 Simulation::Simulation(std::shared_ptr<Partition> partition)
     : partition(std::move(partition)) {
 
     monitors = std::make_shared<std::vector<NeuronMonitor>>();
+    area_monitors = std::make_shared<std::vector<AreaMonitor>>();
 }
 
 void Simulation::register_neuron_monitor(const NeuronID& neuron_id) {
@@ -184,7 +186,8 @@ void Simulation::initialize() {
         RelearnException::fail("Simulation::initialize: AlgorithmEnum {} not yet implemented!", static_cast<int>(algorithm_enum));
     }
 
-    network_graph = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
+    network_graph_static = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
+    network_graph_plastic = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
 
     algorithm->set_synaptic_elements(axons, dendrites_ex, dendrites_in);
 
@@ -192,16 +195,24 @@ void Simulation::initialize() {
     neurons->set_signal_types(std::move(signal_types));
     neurons->set_positions(std::move(neuron_positions));
 
-    neurons->set_network_graph(network_graph);
+    neurons->set_network_graph(network_graph_static, network_graph_plastic);
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 
+    for(const auto& area_name : neurons->get_extra_info()->get_unique_area_names()) {
+        area_monitors->emplace_back(this, area_name, neurons->get_extra_info()->get_nr_neurons_in_area(area_name));
+    }
+
     auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
 
-    auto [local_synapses, in_synapses, out_synapses] = synapse_loader->load_synapses();
+    const auto& [synapses_static, synapses_plastic] = synapse_loader->load_synapses();
+    const auto& [local_synapses_static, in_synapses_static, out_synapses_static] = synapses_static;
+    const auto& [local_synapses_plastic, in_synapses_plastic, out_synapses_plastic] = synapses_plastic;
 
     Timers::start(TimerRegion::INITIALIZE_NETWORK_GRAPH);
-    network_graph->add_edges(local_synapses, in_synapses, out_synapses);
+    network_graph_plastic->add_edges(local_synapses_plastic, in_synapses_plastic, out_synapses_plastic);
+    network_graph_static->add_edges(local_synapses_static, in_synapses_static, out_synapses_static);
+    neurons->set_static_neurons(static_neurons);
     Timers::stop_and_add(TimerRegion::INITIALIZE_NETWORK_GRAPH);
 
     LogFiles::print_message_rank(0, "Network graph created");
@@ -243,6 +254,20 @@ void Simulation::simulate(const step_type number_steps) {
             Timers::stop_and_add(TimerRegion::CAPTURE_MONITORS);
 
             neurons->get_neuron_model()->reset_fired_recorder();
+        }
+
+        if ( step % Config::monitor_area_step == 0) {
+            for(auto& area_monitor : *area_monitors) {
+                area_monitor.prepare_recording();
+            }
+            for(RelearnTypes::neuron_id neuron_id = 0; neuron_id < neurons->get_number_neurons(); neuron_id++) {
+                for(auto& area_monitor : *area_monitors) {
+                    area_monitor.record_data(NeuronID(neuron_id));
+                }
+            }
+            for(auto& area_monitor : *area_monitors) {
+                area_monitor.finish_recording();
+            }
         }
 
         for (const auto& [disable_step, disable_ids] : disable_interrupts) {
@@ -309,7 +334,7 @@ void Simulation::simulate(const step_type number_steps) {
 
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_axons_deleted, num_dendrites_deleted, num_synapses_created);
 
-            network_graph->debug_check();
+            network_graph_plastic->debug_check();
         }
 
         if (Config::logfile_update_step > 0 && step % Config::logfile_update_step == 0) {
@@ -363,6 +388,11 @@ void Simulation::simulate(const step_type number_steps) {
 
     for (auto& monitor : *monitors) {
         monitor.flush_current_contents();
+    }
+
+    for(auto& area_monitor : *area_monitors) {
+        std::string path = LogFiles::get_output_path() / (MPIWrapper::get_my_rank_str() + "_area_" + area_monitor.get_area_name() + ".csv");
+        area_monitor.write_data_to_file(path);
     }
 
     neurons->print_positions_to_log_file();
@@ -469,4 +499,8 @@ void Simulation::save_network_graph(step_type current_steps) {
         LogFiles::save_and_open_new(LogFiles::EventType::Network, "network_" + std::to_string(current_steps));
         neurons->print_network_graph_to_log_file(current_steps);
     }
+}
+
+void Simulation::set_static_neurons(std::vector<NeuronID> static_neurons) {
+    this->static_neurons = std::move(static_neurons);
 }

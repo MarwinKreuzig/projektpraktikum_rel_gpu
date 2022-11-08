@@ -58,7 +58,7 @@ void LogFiles::init() {
     LogFiles::add_logfile(EventType::Sums, "sums", 0);
 
     // Create log file for network on all ranks
-    // LogFiles::add_logfile(EventType::Network, "network", -1);
+    LogFiles::add_logfile(EventType::Network, "network", -1);
     LogFiles::add_logfile(EventType::InNetwork, "in_network", -1, ".txt", "network/");
     LogFiles::add_logfile(EventType::OutNetwork, "out_network", -1, ".txt", "network/");
 

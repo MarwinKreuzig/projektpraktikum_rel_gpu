@@ -14,6 +14,7 @@
 #include "Types.h"
 #include "algorithm/AlgorithmEnum.h"
 #include "util/StatisticalMeasures.h"
+#include "neurons/helper/AreaMonitor.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -27,6 +28,7 @@
 #include <vector>
 
 class Algorithm;
+class AreaMonitor;
 class CalciumCalculator;
 class NetworkGraph;
 class NeuronModel;
@@ -130,6 +132,8 @@ public:
      */
     void set_subdomain_assignment(std::unique_ptr<NeuronToSubdomainAssignment>&& subdomain_assignment) noexcept;
 
+    void set_static_neurons(std::vector<NeuronID> static_neurons);
+
     /**
      * @brief Initializes the simulation and all other objects.
      * @exception Throws a RelearnException if one object is missing or something went wrong otherwise
@@ -175,7 +179,7 @@ public:
      * @return The network graph
      */
     std::shared_ptr<NetworkGraph> get_network_graph() noexcept {
-        return network_graph;
+        return network_graph_plastic;
     }
 
     /**
@@ -235,6 +239,8 @@ private:
     std::shared_ptr<SynapticElements> dendrites_ex{};
     std::shared_ptr<SynapticElements> dendrites_in{};
 
+    std::vector<NeuronID> static_neurons{};
+
     std::unique_ptr<NeuronModel> neuron_models{};
     std::unique_ptr<CalciumCalculator> calcium_calculator{};
     std::shared_ptr<Neurons> neurons{};
@@ -242,9 +248,11 @@ private:
     std::shared_ptr<Algorithm> algorithm{};
     std::shared_ptr<Octree> global_tree{};
 
-    std::shared_ptr<NetworkGraph> network_graph{};
+    std::shared_ptr<NetworkGraph> network_graph_plastic{};
+    std::shared_ptr<NetworkGraph> network_graph_static{};
 
     std::shared_ptr<std::vector<NeuronMonitor>> monitors{};
+    std::shared_ptr<std::vector<AreaMonitor>> area_monitors{};
 
     std::vector<std::pair<step_type, std::vector<NeuronID>>> enable_interrupts{};
     std::vector<std::pair<step_type, std::vector<NeuronID>>> disable_interrupts{};

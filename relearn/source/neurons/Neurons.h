@@ -18,6 +18,7 @@
 #include "mpi/CommunicationMap.h"
 #include "neurons/CalciumCalculator.h"
 #include "neurons/ElementType.h"
+#include "neurons/NetworkGraph.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "neurons/SignalType.h"
 #include "neurons/UpdateStatus.h"
@@ -120,8 +121,27 @@ public:
      * @brief Sets the network graph in which the synapses for the neurons are stored
      * @param octree The network graph
      */
-    void set_network_graph(std::shared_ptr<NetworkGraph> network) noexcept {
-        network_graph = std::move(network);
+    void set_network_graph(std::shared_ptr<NetworkGraph> network_static, std::shared_ptr<NetworkGraph> network_plastic) {
+        network_graph_static = std::move(network_static);
+        network_graph_plastic = std::move(network_plastic);
+    }
+
+    void set_static_neurons(const std::vector<NeuronID>& static_neurons) {
+        for(const auto & neuronId : static_neurons) {
+            disable_flags[neuronId.get_neuron_id()] = UpdateStatus::STATIC;
+        }
+
+        for(NeuronID neuron_id : NeuronID::range(0,number_neurons)) {
+            const auto source = neuron_id.get_neuron_id();
+            NetworkGraph::DistantEdges edges = network_graph_plastic->get_all_out_edges(neuron_id);
+            //Check for forbidden plastic connection from or to a static neuron
+            for(const auto & edge : edges) {
+                const RelearnTypes::neuron_id target = edge.first.get_neuron_id().get_neuron_id();
+                RelearnException::check(disable_flags[source] != UpdateStatus::STATIC, "Plastic connection from a static neuron is forbidden. {} (static)  -> {}", source, target);
+                RelearnException::check(disable_flags[target] != UpdateStatus::STATIC, "Plastic connection to a static neuron is forbidden. {} -> {}(static)", source, target);
+            }
+
+        }
     }
 
     /**
@@ -182,6 +202,10 @@ public:
      */
     [[nodiscard]] const std::unique_ptr<NeuronModel>& get_neuron_model() const noexcept {
         return neuron_model;
+    }
+
+    [[nodiscard]] double get_calcium(const NeuronID & neuron_id) const {
+        return calcium_calculator->get_calcium()[neuron_id.get_neuron_id()];
     }
 
     /**
@@ -393,7 +417,8 @@ private:
     std::shared_ptr<Octree> global_tree{};
     std::shared_ptr<Algorithm> algorithm{};
 
-    std::shared_ptr<NetworkGraph> network_graph{};
+    std::shared_ptr<NetworkGraph> network_graph_plastic{};
+    std::shared_ptr<NetworkGraph> network_graph_static{};
 
     std::unique_ptr<NeuronModel> neuron_model{};
     std::unique_ptr<CalciumCalculator> calcium_calculator{};
@@ -405,4 +430,5 @@ private:
     std::vector<UpdateStatus> disable_flags{};
 
     std::unique_ptr<NeuronsExtraInfo> extra_info{ std::make_unique<NeuronsExtraInfo>() };
+
 };

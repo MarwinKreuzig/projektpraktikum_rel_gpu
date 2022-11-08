@@ -19,10 +19,13 @@
 #include "neurons/models/SynapticInputCalculator.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
+#include "Types.h"
+#include "ExternalStimulusCalculator.h"
 
 #include <algorithm>
 #include <memory>
 #include <span>
+#include <utility>
 #include <vector>
 
 class AdapterNeuronModel;
@@ -58,7 +61,8 @@ public:
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator)
         : h(h)
         , input_calculator(std::move(synaptic_input_calculator))
-        , background_calculator(std::move(background_activity_calculator)) { }
+        , background_calculator(std::move(background_activity_calculator))
+        , external_stimulus(std::move(external_stimulus)) { }
 
     virtual ~NeuronModel() = default;
 
@@ -185,7 +189,7 @@ public:
      * @param network_graph The network graph that specifies which neurons are connected. Is used to determine which spikes effect the local portion.
      * @param disable_flags A vector of flags that specify which neurons should be left alone during the update
      */
-    void update_electrical_activity(step_type step, const NetworkGraph& network_graph, const std::vector<UpdateStatus>& disable_flags);
+    void update_electrical_activity(step_type step,const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::vector<UpdateStatus>& disable_flags);
 
     /**
      * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned
@@ -286,12 +290,20 @@ protected:
         return background_calculator->get_background_activity(neuron_id);
     }
 
+    [[nodiscard]] double get_external_stimulus(const NeuronID& neuron_id) const {
+        return external_stimulus->get_external_stimulus(neuron_id);
+    }
+
     [[nodiscard]] const std::unique_ptr<SynapticInputCalculator>& get_synaptic_input_calculator() const noexcept {
         return input_calculator;
     }
 
     [[nodiscard]] const std::unique_ptr<BackgroundActivityCalculator>& get_background_activity_calculator() const noexcept {
         return background_calculator;
+    }
+
+    [[nodiscard]] const std::unique_ptr<ExternalStimulusCalculator>& get_external_stimulus_calculator() const noexcept {
+        return external_stimulus;
     }
 
 private:
@@ -308,6 +320,7 @@ private:
 
     std::unique_ptr<SynapticInputCalculator> input_calculator{};
     std::unique_ptr<BackgroundActivityCalculator> background_calculator{};
+    std::unique_ptr<ExternalStimulusCalculator> external_stimulus{};
 };
 
 namespace models {
@@ -335,6 +348,7 @@ public:
         unsigned int h,
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
+        std::unique_ptr<ExternalStimulusCalculator>&& external_stimulus,
         double x_0,
         double tau_x,
         unsigned int refrac_time);
@@ -469,6 +483,7 @@ public:
         unsigned int h,
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
+        std::unique_ptr<ExternalStimulusCalculator>&& external_stimulus,
         double a,
         double b,
         double c,
@@ -663,6 +678,7 @@ public:
         unsigned int h, 
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
+        std::unique_ptr<ExternalStimulusCalculator>&& external_stimulus,
         double a,
         double b,
         double phi);
@@ -802,6 +818,7 @@ public:
         unsigned int h,
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
+        std::unique_ptr<ExternalStimulusCalculator>&& external_stimulus,
         double C,
         double g_L,
         double E_L,

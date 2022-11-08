@@ -30,6 +30,7 @@ using box_size_type = Vec3d;
 using position_type = Vec3d;
 
 using synapse_weight = double;
+using neuron_id = size_t;
 
 using counter_type = unsigned int;
 
@@ -47,3 +48,5 @@ using LocalSynapses = std::vector<LocalSynapse>;
 using DistantInSynapses = std::vector<DistantInSynapse>;
 using DistantOutSynapses = std::vector<DistantOutSynapse>;
 using DistantSynapses = std::vector<DistantSynapse>;
+
+using ExternalStimulusFunction = std::function<std::vector<std::pair<size_t,double>>(size_t)>;

@@ -130,4 +130,5 @@ struct tuple_element<2, ::Synapse<Target, Source, Weight>> {
     using type = Weight;
 };
 
+
 } // namespace std

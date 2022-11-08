@@ -16,7 +16,8 @@
  * An instance of this enum signals if a neuron should be updated or not.
  */
 enum class UpdateStatus : char { Disabled = 0,
-    Enabled = 1 };
+    Enabled = 1,
+    STATIC = 2};
 
 /**
  * @brief Pretty-prints the update status to the chosen stream
@@ -31,6 +32,10 @@ inline std::ostream& operator<<(std::ostream& out, const UpdateStatus& update_st
 
     if (update_status == UpdateStatus::Enabled) {
         return out << "Enabled";
+    }
+
+    if (update_status == UpdateStatus::STATIC) {
+        return out << "Static";
     }
 
     return out;

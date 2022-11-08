@@ -16,7 +16,7 @@
 
 #include <ranges>
 
-void FiredStatusCommunicationMap::set_local_fired_status(const std::vector<FiredStatus>& fired_status, const std::vector<UpdateStatus>& disable_flags, const NetworkGraph& network_graph) {
+void FiredStatusCommunicationMap::set_local_fired_status(const std::vector<FiredStatus>& fired_status, const std::vector<UpdateStatus>& disable_flags, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic) {
     outgoing_ids.clear();
 
     if (const auto number_ranks = get_number_ranks(); number_ranks == 1) {
@@ -45,17 +45,24 @@ void FiredStatusCommunicationMap::set_local_fired_status(const std::vector<Fired
         const auto id = NeuronID{ neuron_id };
 
         // Don't send firing neuron id to myself as I already have this info
-        const NetworkGraph::DistantEdges& distant_out_edges = network_graph.get_distant_out_edges(id);
+        const NetworkGraph::DistantEdges& distant_out_edges_static = network_graph_static.get_distant_out_edges(id);
+        const NetworkGraph::DistantEdges& distant_out_edges_plastic = network_graph_plastic.get_distant_out_edges(id);
 
         // Find all target neurons which should receive the signal fired.
         // That is, neurons which connect axons from neuron "neuron_id"
-        for (const auto& [edge_key, _] : distant_out_edges) {
-            const auto target_rank = edge_key.get_rank();
+        auto send_fired_neurons = [this, id](const NetworkGraph::DistantEdges& distant_out_edges) {
+            for (const auto& [edge_key, _] : distant_out_edges) {
+                const auto target_rank = edge_key.get_rank();
 
-            // Function expects to insert neuron ids in sorted order
-            // Append if it is not already in
-            outgoing_ids.append(target_rank, id);
-        }
+                // Function expects to insert neuron ids in sorted order
+                // Append if it is not already in
+                outgoing_ids.append(target_rank, id);
+            }
+        };
+
+        send_fired_neurons(distant_out_edges_static);
+        send_fired_neurons(distant_out_edges_plastic);
+
     } // For my neurons
     Timers::stop_and_add(TimerRegion::PREPARE_SENDING_SPIKES);
 }

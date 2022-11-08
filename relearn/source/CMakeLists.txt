@@ -17,6 +17,7 @@ target_sources(
           mpi/MPINoWrapper.cpp
           mpi/MPIWrapper.cpp
           # neurons
+		  neurons/helper/AreaMonitor.cpp
           neurons/helper/NeuronMonitor.cpp
           neurons/models/AEIFModel.cpp
           neurons/models/FiredStatusCommunicationMap.cpp
@@ -46,6 +47,7 @@ target_sources(
           # structure
           structure/Partition.cpp
           # util
+		  util/FileLoader.cpp
           util/RelearnException.cpp
           util/Timers.cpp
 		  

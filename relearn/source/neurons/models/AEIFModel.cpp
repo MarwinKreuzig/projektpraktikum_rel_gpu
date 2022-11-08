@@ -18,6 +18,7 @@ AEIFModel::AEIFModel(
     const unsigned int h,
     std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
     std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
+    std::unique_ptr<ExternalStimulusCalculator>&&  external_stimulus,
     const double C,
     const double g_L,
     const double E_L,
@@ -27,7 +28,7 @@ AEIFModel::AEIFModel(
     const double a,
     const double b,
     const double V_spike)
-    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator) }
+    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(external_stimulus) }
     , C{ C }
     , g_L{ g_L }
     , E_L{ E_L }
@@ -40,7 +41,7 @@ AEIFModel::AEIFModel(
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> AEIFModel::clone() const {
-    return std::make_unique<AEIFModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(),
+    return std::make_unique<AEIFModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(), get_external_stimulus_calculator()->clone(),
         C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike);
 }
 
@@ -80,7 +81,8 @@ void AEIFModel::update_activity(const NeuronID& neuron_id) {
 
     const auto synaptic_input = get_synaptic_input(neuron_id);
     const auto background = get_background_activity(neuron_id);
-    const auto input = synaptic_input + background;
+    const auto external = get_external_stimulus(neuron_id);
+    const auto input = synaptic_input + background + external;
 
     auto x = get_x(neuron_id);
 

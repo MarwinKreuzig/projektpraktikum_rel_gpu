@@ -535,6 +535,7 @@ public:
      *      <target_rank> <target_id>\t<source_rank> <source_id>\tweight
      * @param os_out_edges The out-stream to which the out-connections are printed
      * @param os_in_edges The out-stream to which the in-connections are printed
+     * @param flag Character which will be printed at the end of the line of each connection
      */
     void print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges) const {
         for (const auto& source_id : NeuronID::range(number_local_neurons)) {

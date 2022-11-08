@@ -17,6 +17,7 @@
 
 #include <string>
 #include <vector>
+#include <set>
 
 /**
  * An object of type NeuronsExtraInfo additional informations of neurons.
@@ -65,6 +66,22 @@ public:
     [[nodiscard]] const std::vector<std::string>& get_area_names() const noexcept {
         return area_names;
     }
+
+    /**
+     * @brief A set containing all used area names
+     * @return The currently stored unique area names
+     */
+     [[nodiscard]] std::set<std::string> get_unique_area_names() const noexcept {
+         return {area_names.begin(), area_names.end()};
+     }
+
+     /**
+      * @brief Number of neurons placed with a certain area name
+      * @return Number of neurons currently stored under the given area name
+      */
+     [[nodiscard]] unsigned int get_nr_neurons_in_area(const std::string& area_name) const {
+         return std::count(area_names.begin(), area_names.end(), area_name);
+     }
 
     /**
      * @brief Overwrites the current positions with the supplied ones

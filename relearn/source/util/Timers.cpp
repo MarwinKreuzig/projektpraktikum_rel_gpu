@@ -125,6 +125,7 @@ void Timers::print() {
     print_timer("      Calculate serial activity setup          : ", TimerRegion::CALC_SERIAL_ACTIVITY);
     print_timer("      Calculate synaptic background            : ", TimerRegion::CALC_SYNAPTIC_BACKGROUND);
     print_timer("      Calculate synaptic input                 : ", TimerRegion::CALC_SYNAPTIC_INPUT);
+    print_timer("      Calculate synaptic external stimulus     : ", TimerRegion::CALC_EXTERNAL_STIMULUS);
     print_timer("      Calculate activity                       : ", TimerRegion::CALC_ACTIVITY);
     print_timer("      Calculate calcium                        : ", TimerRegion::UPDATE_CALCIUM);
     print_timer("      Calculate target calcium                 : ", TimerRegion::UPDATE_TARGET_CALCIUM);

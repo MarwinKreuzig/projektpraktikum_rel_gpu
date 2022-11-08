@@ -20,7 +20,7 @@
 namespace Util {
 
 /**
- * @brief Calculates the minimum, maximum, and sum over all values in the vector, for which the disable flags are not set
+ * @brief Calculates the minimum, maximum, and sum over all values in the vector, for which the disable flags are not enabled
  * @tparam T Must be a arithmetic (floating point or integral)
  * @param values The values that should be reduced
  * @param disable_flags The flags that indicate which values to skip
@@ -36,7 +36,7 @@ std::tuple<T, T, T, size_t> min_max_acc(const std::vector<T>& values, const std:
 
     size_t first_index = 0;
 
-    while (disable_flags[first_index] == UpdateStatus::Disabled) {
+    while (disable_flags[first_index] != UpdateStatus::Enabled) {
         first_index++;
     }
 
@@ -49,7 +49,7 @@ std::tuple<T, T, T, size_t> min_max_acc(const std::vector<T>& values, const std:
     size_t num_values = 1;
 
     for (auto i = first_index + 1; i < values.size(); i++) {
-        if (disable_flags[i] == UpdateStatus::Disabled) {
+        if (disable_flags[i] != UpdateStatus::Enabled) {
             continue;
         }
 

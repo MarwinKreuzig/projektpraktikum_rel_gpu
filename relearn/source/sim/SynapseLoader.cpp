@@ -21,10 +21,11 @@
 #include <sstream>
 #include <string>
 
-std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> SynapseLoader::load_synapses() {
+std::pair<std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>,std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>> SynapseLoader::load_synapses() {
     Timers::start(TimerRegion::LOAD_SYNAPSES);
-    const auto& synapses = internal_load_synapses();
-    const auto& [local_synapses, in_synapses, out_synapses] = synapses;
+    const auto& synapses_pair = internal_load_synapses();
+    const auto& [synapses_static, synapses_plastic] = synapses_pair;
+    const auto& [local_synapses, in_synapses, out_synapses] = synapses_plastic;
     Timers::stop_and_add(TimerRegion::LOAD_SYNAPSES);
 
     RelearnTypes::synapse_weight total_local_weight = 0;
@@ -49,5 +50,5 @@ std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> SynapseLoader::
     LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded out synapses: {}", out_synapses.size());
     LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "The out synapses had a weight of: {}", total_out_weight);
 
-    return synapses;
+    return synapses_pair;
 }

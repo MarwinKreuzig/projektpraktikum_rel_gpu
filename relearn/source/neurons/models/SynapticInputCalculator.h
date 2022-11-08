@@ -94,15 +94,15 @@ public:
      * @param disable_flags Which neurons are disabled
      * @exception Throws a RelearnException if the number of local neurons didn't match the sizes of the arguments
      */
-    void update_input([[maybe_unused]] const step_type step, const NetworkGraph& network_graph, const std::vector<FiredStatus>& fired, const std::vector<UpdateStatus>& disable_flags) {
+    void update_input([[maybe_unused]] const step_type step, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::vector<FiredStatus>& fired, const std::vector<UpdateStatus>& disable_flags) {
         RelearnException::check(number_local_neurons > 0, "SynapticInputCalculator::update_input: There were no local neurons.");
         RelearnException::check(fired.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of fired did not match number of local neurons: {} vs {}", fired.size(), number_local_neurons);
         RelearnException::check(disable_flags.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of disable_flags did not match number of local neurons: {} vs {}", disable_flags.size(), number_local_neurons);
 
-        fired_status_comm->set_local_fired_status(fired, disable_flags, network_graph);
+        fired_status_comm->set_local_fired_status(fired, disable_flags, network_graph_static, network_graph_plastic);
         fired_status_comm->exchange_fired_status();
 
-        update_synaptic_input(network_graph, fired, disable_flags);
+        update_synaptic_input(network_graph_static, network_graph_plastic, fired, disable_flags);
     }
 
     /**
@@ -172,7 +172,7 @@ protected:
      * @param fired If the local neurons fired
      * @param disable_flags Which local neurons are disabled
      */
-    virtual void update_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus>& fired, const std::vector<UpdateStatus>& disable_flags) = 0;
+    virtual void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::vector<FiredStatus>& fired, const std::vector<UpdateStatus>& disable_flags) = 0;
 
     /**
      * @brief Sets the synaptic input for the given neuron

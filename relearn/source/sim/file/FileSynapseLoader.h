@@ -29,7 +29,7 @@ public:
     FileSynapseLoader(std::shared_ptr<Partition> partition, std::optional<std::filesystem::path> path_to_synapses);
 
 protected:
-    synapses_tuple_type internal_load_synapses() override;
+    synapses_pair_type internal_load_synapses() override;
 
 private:
     std::optional<std::filesystem::path> optional_path_to_file{};

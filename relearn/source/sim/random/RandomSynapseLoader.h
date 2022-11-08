@@ -29,7 +29,7 @@ public:
         : SynapseLoader(std::move(partition)) { }
 
 protected:
-    synapses_tuple_type internal_load_synapses() override {
-        return synapses_tuple_type{};
+    synapses_pair_type internal_load_synapses() override {
+        return synapses_pair_type{};
     }
 };

@@ -50,7 +50,7 @@ public:
      * @param disable_flags The current disable flags for the neurons
      * @param network_graph The network graph that is currently being used
      */
-    void set_local_fired_status(const std::vector<FiredStatus>& fired_status, const std::vector<UpdateStatus>& disable_flags, const NetworkGraph& network_graph) override;
+    void set_local_fired_status(const std::vector<FiredStatus>& fired_status, const std::vector<UpdateStatus>& disable_flags, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic) override;
 
     /**
      * @brief Exchanges the fired status with all MPI ranks
