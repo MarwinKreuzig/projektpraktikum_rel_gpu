@@ -44,6 +44,7 @@ if(WIN32)
 	
 	# io
 	list(APPEND relearn_lib_additional_files "io/CalciumIO.h")
+	list(APPEND relearn_lib_additional_files "io/FileValidator.h")
 	list(APPEND relearn_lib_additional_files "io/InteractiveNeuronIO.h")
 	list(APPEND relearn_lib_additional_files "io/LogFiles.h")
 	list(APPEND relearn_lib_additional_files "io/NeuronIO.h")

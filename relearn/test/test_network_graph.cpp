@@ -309,15 +309,15 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
 
     NetworkGraph ng(number_neurons, 0);
 
-    std::map<size_t, std::map<RankNeuronId, int>> in_edges;
-    std::map<size_t, std::map<RankNeuronId, int>> out_edges;
+    std::map<size_t, std::map<RankNeuronId, RelearnTypes::synapse_weight>> in_edges{};
+    std::map<size_t, std::map<RankNeuronId, RelearnTypes::synapse_weight>> out_edges{};
 
     for (size_t edge_id = 0; edge_id < number_synapses; edge_id++) {
         const int other_rank = static_cast<int>(get_random_number_ranks());
         const auto my_neuron_id = get_random_neuron_id(number_neurons);
         const auto other_neuron_id = get_random_neuron_id(number_neurons);
 
-        const auto weight = get_random_synapse_weight();
+        const RelearnTypes::synapse_weight weight = get_random_synapse_weight();
         const auto is_in_synapse = weight < 0;
 
         RankNeuronId my_id{ 0, my_neuron_id };
@@ -604,8 +604,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
 
     NetworkGraph ng(number_neurons, 0);
 
-    std::map<RankNeuronId, std::map<RankNeuronId, int>> in_edges;
-    std::map<RankNeuronId, std::map<RankNeuronId, int>> out_edges;
+    std::map<RankNeuronId, std::map<RankNeuronId, RelearnTypes::synapse_weight>> in_edges;
+    std::map<RankNeuronId, std::map<RankNeuronId, RelearnTypes::synapse_weight>> out_edges;
 
     for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
         const int other_rank = static_cast<int>(get_random_number_ranks());

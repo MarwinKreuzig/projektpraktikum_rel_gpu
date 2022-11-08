@@ -589,7 +589,7 @@ TEST_F(NeuronAssignmentTest, testFileLoadNetworkSingleSubdomain) {
     ASSERT_TRUE(in_synapses.empty());
     ASSERT_TRUE(out_synapses.empty());
 
-    std::map<std::pair<NeuronID, NeuronID>, int> synapse_map{};
+    std::map<std::pair<NeuronID, NeuronID>, RelearnTypes::synapse_weight> synapse_map{};
 
     for (const auto& [target, source, weight] : local_synapses) {
         synapse_map[{ target, source }] += weight;

@@ -10,6 +10,7 @@
 
 #include "SynapseLoader.h"
 
+#include "Types.h"
 #include "io/LogFiles.h"
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
@@ -26,17 +27,17 @@ std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> SynapseLoader::
     const auto& [local_synapses, in_synapses, out_synapses] = synapses;
     Timers::stop_and_add(TimerRegion::LOAD_SYNAPSES);
 
-    auto total_local_weight = 0;
+    RelearnTypes::synapse_weight total_local_weight = 0;
     for (const auto& [_1, _2, weight] : local_synapses) {
         total_local_weight += weight;
     }
 
-    auto total_in_weight = 0;
+    RelearnTypes::synapse_weight total_in_weight = 0;
     for (const auto& [_1, _2, weight] : in_synapses) {
         total_in_weight += weight;
     }
 
-    auto total_out_weight = 0;
+    RelearnTypes::synapse_weight total_out_weight = 0;
     for (const auto& [_1, _2, weight] : out_synapses) {
         total_out_weight += weight;
     }

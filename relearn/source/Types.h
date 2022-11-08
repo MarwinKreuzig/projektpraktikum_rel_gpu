@@ -29,7 +29,7 @@ namespace RelearnTypes {
 using box_size_type = Vec3d;
 using position_type = Vec3d;
 
-using synapse_weight = int;
+using synapse_weight = double;
 
 using counter_type = unsigned int;
 

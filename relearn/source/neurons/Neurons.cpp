@@ -60,9 +60,9 @@ void Neurons::init_synaptic_elements() {
     const std::vector<double>& dendrites_exc_cnts = dendrites_exc->get_grown_elements();
 
     for (const auto& id : NeuronID::range(number_neurons)) {
-        const size_t axon_connections = network_graph->get_number_out_edges(id);
-        const size_t dendrites_ex_connections = network_graph->get_number_excitatory_in_edges(id);
-        const size_t dendrites_in_connections = network_graph->get_number_inhibitory_in_edges(id);
+        const auto axon_connections = network_graph->get_number_out_edges(id);
+        const auto dendrites_ex_connections = network_graph->get_number_excitatory_in_edges(id);
+        const auto dendrites_in_connections = network_graph->get_number_inhibitory_in_edges(id);
 
         axons->update_grown_elements(id, static_cast<double>(axon_connections));
         dendrites_exc->update_grown_elements(id, static_cast<double>(dendrites_ex_connections));
@@ -90,14 +90,14 @@ Neurons::number_neurons_type Neurons::disable_neurons(const std::vector<NeuronID
     size_t number_deleted_out_inh_edges_within = 0;
     size_t number_deleted_out_exc_edges_within = 0;
 
-    size_t weight_deleted_out_exc_edges_within = 0;
-    size_t weight_deleted_out_inh_edges_within = 0;
+    RelearnTypes::synapse_weight weight_deleted_out_exc_edges_within = 0;
+    RelearnTypes::synapse_weight weight_deleted_out_inh_edges_within = 0;
 
     size_t number_deleted_out_inh_edges_to_outside = 0;
     size_t number_deleted_out_exc_edges_to_outside = 0;
 
-    size_t weight_deleted_out_exc_edges_to_outside = 0;
-    size_t weight_deleted_out_inh_edges_to_outside = 0;
+    RelearnTypes::synapse_weight weight_deleted_out_exc_edges_to_outside = 0;
+    RelearnTypes::synapse_weight weight_deleted_out_inh_edges_to_outside = 0;
 
     for (const auto& neuron_id : neuron_ids) {
         const auto local_out_edges = network_graph->get_local_out_edges(neuron_id);
@@ -113,21 +113,21 @@ Neurons::number_neurons_type Neurons::disable_neurons(const std::vector<NeuronID
 
             if (is_within) {
                 if (weight > 0) {
-                    deleted_dend_ex_connections[local_target_neuron_id] += weight;
+                    deleted_dend_ex_connections[local_target_neuron_id] += static_cast<unsigned int>(weight);
                     number_deleted_out_exc_edges_within++;
                     weight_deleted_out_exc_edges_within += weight;
                 } else {
-                    deleted_dend_in_connections[local_target_neuron_id] -= weight;
+                    deleted_dend_in_connections[local_target_neuron_id] += static_cast<unsigned int>(std::abs(weight));
                     number_deleted_out_inh_edges_within++;
                     weight_deleted_out_inh_edges_within += std::abs(weight);
                 }
             } else {
                 if (weight > 0) {
-                    deleted_dend_ex_connections[local_target_neuron_id] += weight;
+                    deleted_dend_ex_connections[local_target_neuron_id] += static_cast<unsigned int>(weight);
                     number_deleted_out_exc_edges_to_outside++;
                     weight_deleted_out_exc_edges_to_outside += weight;
                 } else {
-                    deleted_dend_in_connections[local_target_neuron_id] -= weight;
+                    deleted_dend_in_connections[local_target_neuron_id] += static_cast<unsigned int>(std::abs(weight));
                     number_deleted_out_inh_edges_to_outside++;
                     weight_deleted_out_inh_edges_to_outside += std::abs(weight);
                 }
@@ -149,7 +149,7 @@ Neurons::number_neurons_type Neurons::disable_neurons(const std::vector<NeuronID
         for (const auto& [source_neuron_id, weight] : local_in_edges) {
             network_graph->add_synapse(LocalSynapse(neuron_id, source_neuron_id, -weight));
 
-            deleted_axon_connections[source_neuron_id.get_neuron_id()] += std::abs(weight);
+            deleted_axon_connections[source_neuron_id.get_neuron_id()] += static_cast<unsigned int>(std::abs(weight));
 
             bool is_within = std::ranges::binary_search(neuron_ids, source_neuron_id);
 
@@ -374,7 +374,7 @@ std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
         return {};
     }
 
-    auto register_edges = [](const std::vector<std::pair<RankNeuronId, int>>& edges) {
+    auto register_edges = [](const std::vector<std::pair<RankNeuronId, RelearnTypes::synapse_weight>>& edges) {
         std::vector<RankNeuronId> neuron_ids{};
         neuron_ids.reserve(edges.size());
 
@@ -533,26 +533,22 @@ void Neurons::debug_check_counts() {
     for (const auto& neuron_id : NeuronID::range(number_neurons)) {
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
-        const double connected_axons_neuron = connected_axons[local_neuron_id];
-        const double connected_excitatory_dendrites_neuron = connected_excitatory_dendrites[local_neuron_id];
-        const double connected_inhibitory_dendrites_neuron = connected_inhibitory_dendrites[local_neuron_id];
+        const auto connected_axons_neuron = connected_axons[local_neuron_id];
+        const auto connected_excitatory_dendrites_neuron = connected_excitatory_dendrites[local_neuron_id];
+        const auto connected_inhibitory_dendrites_neuron = connected_inhibitory_dendrites[local_neuron_id];
 
-        const auto number_connected_axons = static_cast<size_t>(connected_axons_neuron);
-        const auto number_connected_excitatory_dendrites = static_cast<size_t>(connected_excitatory_dendrites_neuron);
-        const auto number_connected_inhibitory_dendrites = static_cast<size_t>(connected_inhibitory_dendrites_neuron);
+        const auto number_out_edges = network_graph->get_number_out_edges(neuron_id);
+        const auto number_excitatory_in_edges = network_graph->get_number_excitatory_in_edges(neuron_id);
+        const auto number_inhibitory_in_edges = network_graph->get_number_inhibitory_in_edges(neuron_id);
 
-        const size_t number_out_edges = network_graph->get_number_out_edges(neuron_id);
-        const size_t number_excitatory_in_edges = network_graph->get_number_excitatory_in_edges(neuron_id);
-        const size_t number_inhibitory_in_edges = network_graph->get_number_inhibitory_in_edges(neuron_id);
+        RelearnException::check(connected_axons_neuron == number_out_edges,
+            "Neurons::debug_check_counts: Neuron {} has {} axons but {} out edges (rank {})", neuron_id, connected_axons_neuron, number_out_edges, my_rank);
 
-        RelearnException::check(number_connected_axons == number_out_edges,
-            "Neurons::debug_check_counts: Neuron {} has {} axons but {} out edges (rank {})", neuron_id, number_connected_axons, number_out_edges, my_rank);
+        RelearnException::check(connected_excitatory_dendrites_neuron == number_excitatory_in_edges,
+            "Neurons::debug_check_counts: Neuron {} has {} excitatory dendrites but {} excitatory in edges (rank {})", neuron_id, connected_excitatory_dendrites_neuron, number_excitatory_in_edges, my_rank);
 
-        RelearnException::check(number_connected_excitatory_dendrites == number_excitatory_in_edges,
-            "Neurons::debug_check_counts: Neuron {} has {} excitatory dendrites but {} excitatory in edges (rank {})", neuron_id, number_connected_excitatory_dendrites, number_excitatory_in_edges, my_rank);
-
-        RelearnException::check(number_connected_inhibitory_dendrites == number_inhibitory_in_edges,
-            "Neurons::debug_check_counts: Neuron {} has {} inhibitory dendrites but {} inhibitory in edges (rank {})", neuron_id, number_connected_inhibitory_dendrites, number_inhibitory_in_edges, my_rank);
+        RelearnException::check(connected_inhibitory_dendrites_neuron == number_inhibitory_in_edges,
+            "Neurons::debug_check_counts: Neuron {} has {} inhibitory dendrites but {} inhibitory in edges (rank {})", neuron_id, connected_inhibitory_dendrites_neuron, number_inhibitory_in_edges, my_rank);
     }
 }
 

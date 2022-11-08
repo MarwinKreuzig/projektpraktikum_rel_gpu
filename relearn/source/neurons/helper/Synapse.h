@@ -58,7 +58,11 @@ public:
         return weight;
     }
 
-    [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const Synapse& first, const Synapse& second) noexcept = default;
+    /**
+     * @brief Provides a standard ordering on this class based on its components.
+
+     */
+    [[nodiscard]] friend constexpr auto operator<=>(const Synapse& first, const Synapse& second) noexcept = default;
 
     template <std::size_t Index>
     [[nodiscard]] auto& get() & {
