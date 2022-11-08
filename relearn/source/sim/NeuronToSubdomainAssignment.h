@@ -115,7 +115,7 @@ public:
         return ratio_placed_excitatory_neurons;
     }
 
-    /** 
+    /**
      * @brief Returns the total number of neurons in the local subdomains
      * @return The total number of neurons in the local subdomains
      */

@@ -21,7 +21,7 @@
 #include <sstream>
 #include <string>
 
-std::pair<std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>,std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>> SynapseLoader::load_synapses() {
+std::pair<std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>, std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>> SynapseLoader::load_synapses() {
     Timers::start(TimerRegion::LOAD_SYNAPSES);
     const auto& synapses_pair = internal_load_synapses();
     const auto& [synapses_static, synapses_plastic] = synapses_pair;

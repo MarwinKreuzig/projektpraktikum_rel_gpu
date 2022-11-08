@@ -57,4 +57,3 @@ DistantOutSynapses FastMultipoleMethods::process_responses(const CommunicationMa
     const CommunicationMap<SynapseCreationResponse>& creation_responses) {
     return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
 }
-

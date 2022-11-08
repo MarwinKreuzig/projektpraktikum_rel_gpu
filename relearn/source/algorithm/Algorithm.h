@@ -60,7 +60,8 @@ public:
      * @return A tuple with the created synapses that must be committed to the network graph
      */
     [[nodiscard]] virtual std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
-        const std::unique_ptr<NeuronsExtraInfo>& extra_infos) = 0;
+        const std::unique_ptr<NeuronsExtraInfo>& extra_infos)
+        = 0;
 
     /**
      * @brief Updates the octree according to the necessities of the algorithm.

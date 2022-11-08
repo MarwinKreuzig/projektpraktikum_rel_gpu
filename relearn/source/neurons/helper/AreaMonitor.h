@@ -1,22 +1,22 @@
 #pragma once
 
+#include "Types.h"
+#include "util/TaggedID.h"
+
+#include <filesystem>
+#include <map>
+#include <string>
+#include <tuple>
 #include <vector>
-#include "../../sim/Simulation.h"
-#include "../NetworkGraph.h"
-#include "../Neurons.h"
-
-
 
 class Simulation;
-class NetworkGraph;
-class Neurons;
 
 /**
  * Monitors the number of connections between ensembles
  */
 class AreaMonitor {
 private:
-    Simulation * sim;
+    Simulation* sim;
 
     /**
      * Id of the ensemble which is monitored by this instance
@@ -28,18 +28,18 @@ private:
      */
     struct ConnectionCount {
         int axons = 0;
-        int den_ex =0;
-        int den_inh =0;
+        int den_ex = 0;
+        int den_inh = 0;
     };
 
-    double axons_grown =0;
-    double den_ex_grown =0;
-    double den_inh_grown =0;
+    double axons_grown = 0;
+    double den_ex_grown = 0;
+    double den_inh_grown = 0;
     int axons_conn = 0;
     int den_ex_conn = 0;
     int den_inh_conn = 0;
     double calcium = 0;
-    using EnsembleConnections = std::map<std::string ,ConnectionCount>;
+    using EnsembleConnections = std::map<std::string, ConnectionCount>;
 
     unsigned int nr_neurons_in_area;
 
@@ -51,8 +51,7 @@ private:
     /**
      * Complete data of all earlier logging steps
      */
-    std::vector<std::tuple<EnsembleConnections,double,double,double,double,double,double,double>> data;
-
+    std::vector<std::tuple<EnsembleConnections, double, double, double, double, double, double, double>> data;
 
 public:
     /**
@@ -60,7 +59,7 @@ public:
      * @param simulation
      * @param ensembleId Id of the current ensemble
      */
-    AreaMonitor(Simulation * simulation, std::string area_name, unsigned int nr_neurons_in_area) ;
+    AreaMonitor(Simulation* simulation, std::string area_name, RelearnTypes::number_neurons_type nr_neurons_in_area);
 
     /**
      * Prepares the monitor for a new logging step. Call this method before each logging step.
@@ -84,12 +83,9 @@ public:
      * Write all recorded data to a csv file
      * @param file_path Path to new csv file
      */
-    void write_data_to_file(std::string file_path);
+    void write_data_to_file(std::filesystem::path file_path);
 
-    [[nodiscard]] const std::string & get_area_name() const noexcept {
+    [[nodiscard]] const std::string& get_area_name() const noexcept {
         return area_name;
     }
-
-
-
 };

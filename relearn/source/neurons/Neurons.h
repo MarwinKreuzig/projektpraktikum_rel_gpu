@@ -127,20 +127,19 @@ public:
     }
 
     void set_static_neurons(const std::vector<NeuronID>& static_neurons) {
-        for(const auto & neuronId : static_neurons) {
+        for (const auto& neuronId : static_neurons) {
             disable_flags[neuronId.get_neuron_id()] = UpdateStatus::STATIC;
         }
 
-        for(NeuronID neuron_id : NeuronID::range(0,number_neurons)) {
+        for (NeuronID neuron_id : NeuronID::range(0, number_neurons)) {
             const auto source = neuron_id.get_neuron_id();
             NetworkGraph::DistantEdges edges = network_graph_plastic->get_all_out_edges(neuron_id);
-            //Check for forbidden plastic connection from or to a static neuron
-            for(const auto & edge : edges) {
+            // Check for forbidden plastic connection from or to a static neuron
+            for (const auto& edge : edges) {
                 const RelearnTypes::neuron_id target = edge.first.get_neuron_id().get_neuron_id();
                 RelearnException::check(disable_flags[source] != UpdateStatus::STATIC, "Plastic connection from a static neuron is forbidden. {} (static)  -> {}", source, target);
                 RelearnException::check(disable_flags[target] != UpdateStatus::STATIC, "Plastic connection to a static neuron is forbidden. {} -> {}(static)", source, target);
             }
-
         }
     }
 
@@ -204,7 +203,7 @@ public:
         return neuron_model;
     }
 
-    [[nodiscard]] double get_calcium(const NeuronID & neuron_id) const {
+    [[nodiscard]] double get_calcium(const NeuronID& neuron_id) const {
         return calcium_calculator->get_calcium()[neuron_id.get_neuron_id()];
     }
 
@@ -430,5 +429,4 @@ private:
     std::vector<UpdateStatus> disable_flags{};
 
     std::unique_ptr<NeuronsExtraInfo> extra_info{ std::make_unique<NeuronsExtraInfo>() };
-
 };

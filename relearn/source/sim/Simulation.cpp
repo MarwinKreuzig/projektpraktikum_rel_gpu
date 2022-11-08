@@ -13,6 +13,7 @@
 #include "algorithm/Algorithms.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
+#include "neurons/helper/AreaMonitor.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/Neurons.h"
 #include "neurons/helper/NeuronMonitor.h"
@@ -199,7 +200,7 @@ void Simulation::initialize() {
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 
-    for(const auto& area_name : neurons->get_extra_info()->get_unique_area_names()) {
+    for (const auto& area_name : neurons->get_extra_info()->get_unique_area_names()) {
         area_monitors->emplace_back(this, area_name, neurons->get_extra_info()->get_nr_neurons_in_area(area_name));
     }
 
@@ -256,16 +257,16 @@ void Simulation::simulate(const step_type number_steps) {
             neurons->get_neuron_model()->reset_fired_recorder();
         }
 
-        if ( step % Config::monitor_area_step == 0) {
-            for(auto& area_monitor : *area_monitors) {
+        if (step % Config::monitor_area_step == 0) {
+            for (auto& area_monitor : *area_monitors) {
                 area_monitor.prepare_recording();
             }
-            for(RelearnTypes::neuron_id neuron_id = 0; neuron_id < neurons->get_number_neurons(); neuron_id++) {
-                for(auto& area_monitor : *area_monitors) {
+            for (RelearnTypes::neuron_id neuron_id = 0; neuron_id < neurons->get_number_neurons(); neuron_id++) {
+                for (auto& area_monitor : *area_monitors) {
                     area_monitor.record_data(NeuronID(neuron_id));
                 }
             }
-            for(auto& area_monitor : *area_monitors) {
+            for (auto& area_monitor : *area_monitors) {
                 area_monitor.finish_recording();
             }
         }
@@ -300,13 +301,13 @@ void Simulation::simulate(const step_type number_steps) {
         // Calc how many synaptic elements grow/retract
         // Apply the change in number of elements during connectivity update
 
-        if (step >= Config::first_plasticity_update && step <= Config::last_plascitiy_update) {
+        if (step >= Config::first_plasticity_update && step <= Config::last_plasticity_update) {
             Timers::start(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
             neurons->update_number_synaptic_elements_delta();
             Timers::stop_and_add(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
         }
 
-        if (step % Config::plasticity_update_step == 0 && step >= Config::first_plasticity_update && step <= Config::last_plascitiy_update) {
+        if (step % Config::plasticity_update_step == 0 && step >= Config::first_plasticity_update && step <= Config::last_plasticity_update) {
             Timers::start(TimerRegion::UPDATE_CONNECTIVITY);
 
             const auto& [num_axons_deleted, num_dendrites_deleted, num_synapses_created] = neurons->update_connectivity();
@@ -390,9 +391,9 @@ void Simulation::simulate(const step_type number_steps) {
         monitor.flush_current_contents();
     }
 
-    for(auto& area_monitor : *area_monitors) {
-        std::string path = LogFiles::get_output_path() / (MPIWrapper::get_my_rank_str() + "_area_" + area_monitor.get_area_name() + ".csv");
-        area_monitor.write_data_to_file(path);
+    for (auto& area_monitor : *area_monitors) {
+        auto path = LogFiles::get_output_path() / (MPIWrapper::get_my_rank_str() + "_area_" + area_monitor.get_area_name() + ".csv");
+        area_monitor.write_data_to_file(std::move(path));
     }
 
     neurons->print_positions_to_log_file();

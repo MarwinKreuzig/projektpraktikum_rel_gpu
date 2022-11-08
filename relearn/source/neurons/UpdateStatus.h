@@ -17,7 +17,7 @@
  */
 enum class UpdateStatus : char { Disabled = 0,
     Enabled = 1,
-    STATIC = 2};
+    STATIC = 2 };
 
 /**
  * @brief Pretty-prints the update status to the chosen stream

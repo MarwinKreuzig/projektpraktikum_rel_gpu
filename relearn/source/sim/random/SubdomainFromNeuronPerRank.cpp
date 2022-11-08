@@ -86,4 +86,3 @@ void SubdomainFromNeuronPerRank::fill_all_subdomains() {
     const auto fraction_excitatory_neurons = static_cast<double>(currently_placed_excitatory_neurons) / static_cast<double>(currently_placed_neurons);
     set_ratio_placed_excitatory_neurons(fraction_excitatory_neurons);
 }
-

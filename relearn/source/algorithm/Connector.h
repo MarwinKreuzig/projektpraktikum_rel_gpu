@@ -50,7 +50,7 @@ public:
         const auto number_neurons = excitatory_dendrites->get_size();
         const auto number_neurons_2 = inhibitory_dendrites->get_size();
 
-        RelearnException::check(number_neurons == number_neurons_2, 
+        RelearnException::check(number_neurons == number_neurons_2,
             "ForwardConnector::process_requests: The sizes of the synaptic elements don't match: {} and {}", number_neurons, number_neurons_2);
 
         const auto my_rank = MPIWrapper::get_my_rank();
@@ -139,7 +139,7 @@ public:
         const auto axons_empty = axons.operator bool();
         RelearnException::check(axons_empty, "ForwardConnector::process_responses: The axons are empty");
 
-        RelearnException::check(creation_requests.size() == creation_responses.size(), 
+        RelearnException::check(creation_requests.size() == creation_responses.size(),
             "ForwardConnector::process_responses: Requests and Responses had different sizes");
 
         for (auto rank = 0; rank < creation_requests.size(); rank++) {
@@ -171,7 +171,7 @@ public:
                 RelearnException::check(source_neuron_id.get_neuron_id() < number_neurons,
                     "ForwardConnector::process_responses: The source neuron id was too large: {} vs {}", source_neuron_id.get_neuron_id(), number_neurons);
 
-                RelearnException::check(axons->get_free_elements(source_neuron_id) > 0, 
+                RelearnException::check(axons->get_free_elements(source_neuron_id) > 0,
                     "ForwardConnector::process_responses: The source neuron did not have a vacant element: {}", source_neuron_id);
 
                 // Increment number of connected axons

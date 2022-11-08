@@ -57,8 +57,8 @@ public:
      * @param synaptic_input_calculator The object that is resonsible for calculating the synaptic input
      * @param background_activity_calculator The object that is resonsible for calculating the background activity
      */
-    NeuronModel(unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator, 
-        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator)
+    NeuronModel(unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
+        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<ExternalStimulusCalculator>&& external_stimulus)
         : h(h)
         , input_calculator(std::move(synaptic_input_calculator))
         , background_calculator(std::move(background_activity_calculator))
@@ -189,7 +189,7 @@ public:
      * @param network_graph The network graph that specifies which neurons are connected. Is used to determine which spikes effect the local portion.
      * @param disable_flags A vector of flags that specify which neurons should be left alone during the update
      */
-    void update_electrical_activity(step_type step,const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::vector<UpdateStatus>& disable_flags);
+    void update_electrical_activity(step_type step, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::vector<UpdateStatus>& disable_flags);
 
     /**
      * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned
@@ -675,7 +675,7 @@ public:
      * @param phi The dampening factor for w(t)
      */
     FitzHughNagumoModel(
-        unsigned int h, 
+        unsigned int h,
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
         std::unique_ptr<ExternalStimulusCalculator>&& external_stimulus,

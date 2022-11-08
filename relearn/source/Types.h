@@ -15,6 +15,7 @@
 #include "util/Vec3.h"
 
 #include <cstdint>
+#include <functional>
 #include <vector>
 
 enum class NeuronModelEnum {
@@ -49,4 +50,4 @@ using DistantInSynapses = std::vector<DistantInSynapse>;
 using DistantOutSynapses = std::vector<DistantOutSynapse>;
 using DistantSynapses = std::vector<DistantSynapse>;
 
-using ExternalStimulusFunction = std::function<std::vector<std::pair<size_t,double>>(size_t)>;
+using ExternalStimulusFunction = std::function<std::vector<std::pair<size_t, double>>(size_t)>;

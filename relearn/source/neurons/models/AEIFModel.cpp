@@ -18,7 +18,7 @@ AEIFModel::AEIFModel(
     const unsigned int h,
     std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
     std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
-    std::unique_ptr<ExternalStimulusCalculator>&&  external_stimulus,
+    std::unique_ptr<ExternalStimulusCalculator>&& external_stimulus,
     const double C,
     const double g_L,
     const double E_L,

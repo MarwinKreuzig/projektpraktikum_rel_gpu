@@ -973,7 +973,7 @@ public:
         }
     }
 
-    static void print_calculation(std::ostream& out_stream, OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, 
+    static void print_calculation(std::ostream& out_stream, OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target,
         const ElementType element_type, const SignalType needed) {
 
         const auto other_element_type = get_other_element_type(element_type);

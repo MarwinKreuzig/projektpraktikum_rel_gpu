@@ -348,9 +348,9 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
         const auto& in_edges_ng = ng.get_all_in_edges(neuron_id);
         const auto& out_edges_ng = ng.get_all_out_edges(neuron_id);
 
-        size_t exc_in_edges_count_meta = 0;
-        size_t inh_in_edges_count_meta = 0;
-        size_t out_edges_count_meta = 0;
+        auto exc_in_edges_count_meta = 0.0;
+        auto inh_in_edges_count_meta = 0.0;
+        auto out_edges_count_meta = 0.0;
 
         for (const auto& it : in_edges[neuron_id.get_neuron_id()]) {
             if (it.second > 0) {
@@ -663,9 +663,9 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
         const auto& in_edges_ng = ng.get_all_in_edges(neuron_id);
         const auto& out_edges_ng = ng.get_all_out_edges(neuron_id);
 
-        size_t exc_in_edges_count_meta = 0;
-        size_t inh_in_edges_count_meta = 0;
-        size_t out_edges_count_meta = 0;
+        auto exc_in_edges_count_meta = 0.0;
+        auto inh_in_edges_count_meta = 0.0;
+        auto out_edges_count_meta = 0.0;
 
         for (const auto& it : in_edges[{ 0, neuron_id }]) {
             if (it.second > 0) {

@@ -80,7 +80,7 @@ public:
      * @param file_path The path to the file
      * @exception Throws a RelearnException if the vectors don't all have the same length, or opening the file failed
      */
-    static void write_neurons_componentwise(const std::vector<NeuronID>& ids, const std::vector<position_type>& positions, 
+    static void write_neurons_componentwise(const std::vector<NeuronID>& ids, const std::vector<position_type>& positions,
         const std::vector<std::string>& area_names, const std::vector<SignalType>& signal_types, const std::filesystem::path& file_path);
 
     /**
@@ -99,7 +99,7 @@ public:
      * @exception Throws a RelearnException if opening the file failed, the weight of one synapse is 0, or a loaded id is not from [1, number_local_neurons].
      * @return All local synapses
      */
-    [[nodiscard]] static std::pair<LocalSynapses,LocalSynapses> read_local_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons);
+    [[nodiscard]] static std::pair<LocalSynapses, LocalSynapses> read_local_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons);
 
     /**
      * @brief Write all local synapses to the specified file

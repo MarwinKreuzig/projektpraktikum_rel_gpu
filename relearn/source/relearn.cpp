@@ -21,6 +21,7 @@
 #include "neurons/helper/NeuronMonitor.h"
 #include "neurons/models/BackgroundActivityCalculator.h"
 #include "neurons/models/BackgroundActivityCalculators.h"
+#include "neurons/models/ExternalStimulusCalculators.h"
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
 #include "neurons/models/SynapticInputCalculator.h"
@@ -35,6 +36,7 @@
 #include "structure/NodeCache.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
+#include "util/FileLoader.h"
 #include "util/MonitorParser.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
@@ -42,8 +44,6 @@
 #include "util/Timers.h"
 
 #include "spdlog/spdlog.h"
-#include "util/FileLoader.h"
-#include "neurons/models/ExternalStimulusCalculators.h"
 
 #include <CLI/App.hpp>
 #include <CLI/Config.hpp>
@@ -251,7 +251,6 @@ int main(int argc, char** argv) {
     size_t plasticity_update_step{ Config::plasticity_update_step };
     auto* opt_plasticity_update_step = app.add_option("--plasticity-update-step", plasticity_update_step, "The interval of steps between a plasticity update.");
 
-
     size_t calcium_log_step{ Config::calcium_log_step };
     app.add_option("--calcium-log-step", calcium_log_step, "Sets the interval for logging all calcium values.");
 
@@ -263,15 +262,14 @@ int main(int argc, char** argv) {
     std::string disable_logging{};
     auto* opt_disable_logging = app.add_option("--disable_logging", disable_logging, "List of neuron ids which are ignored for calculating the statistics (comma separated)");
 
-    unsigned long monitor_steps{Config::monitor_step};
+    size_t monitor_steps{ Config::monitor_step };
     auto* opt_monitor_steps = app.add_option("--monitor-steps", monitor_steps, "Every time the neuron state is captured");
 
-    unsigned long monitor_ensemble_steps{Config::monitor_area_step};
+    size_t monitor_ensemble_steps{ Config::monitor_area_step };
     auto* opt_monitor_ensemble_steps = app.add_option("--monitor-ensemble-steps", monitor_ensemble_steps, "Every time the ensemble information are captured");
 
     std::vector<std::string> ensemble_file_paths{};
     auto* opt_ensemble_file_paths = app.add_option("--ensemble", ensemble_file_paths, "One or multiple file which each include an ensemble");
-
 
     unsigned int random_seed{ 0 };
     app.add_option("-r,--random-seed", random_seed, "Random seed. Default: 0.");
@@ -315,9 +313,6 @@ int main(int argc, char** argv) {
 
     std::filesystem::path file_creation_interrupts{};
     auto* const opt_file_creation_interrupts = app.add_option("--creation-interrupts", file_creation_interrupts, "File with the creation interrupts.");
-
-    std::string file_external_stimulations{};
-    auto* opt_file_external_stimulations = app.add_option("--external_stimulations", file_external_stimulations, "File with the external stimulations.");
 
     auto* const opt_algorithm = app.add_option("-a,--algorithm", chosen_algorithm, "The algorithm that is used for finding the targets");
     opt_algorithm->required()->transform(CLI::CheckedTransformer(cli_parse_algorithm, CLI::ignore_case));
@@ -424,7 +419,6 @@ int main(int argc, char** argv) {
     double nu_dend{ SynapticElements::default_nu };
     app.add_option("--growth-rate-dendrite", nu_dend, "The growth rate for the dendrites. Default is 1e-5");
 
-
     double min_calcium_axons{ SynapticElements::default_eta_Axons };
     app.add_option("--min-calcium-axons", min_calcium_axons, "The minimum intercellular calcium for axons to grow. Default is 0.4");
 
@@ -474,7 +468,6 @@ int main(int argc, char** argv) {
     opt_file_external_stimulations->check(CLI::ExistingFile);
 
     opt_ensemble_file_paths->check(CLI::ExistingFile);
-
 
     opt_log_path->check(CLI::ExistingDirectory);
 
@@ -551,7 +544,6 @@ int main(int argc, char** argv) {
     RelearnException::check(nu_axon <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
     RelearnException::check(nu_dend >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
     RelearnException::check(nu_dend <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
-
 
     Config::first_plasticity_update = first_plasticity_step;
     Config::last_plasticity_update = last_plasticity_step;
@@ -696,10 +688,9 @@ int main(int argc, char** argv) {
     }
 
     std::unique_ptr<ExternalStimulusCalculator> external_stimulus;
-    if(static_cast<bool>(*opt_file_external_stimulations)) {
+    if (static_cast<bool>(*opt_file_external_stimulations)) {
         external_stimulus = std::make_unique<FunctionExternalStimulusCalculator>(std::make_unique<ExternalStimulusFunction>(FileLoader::load_external_stimulus(file_external_stimulations)));
-    }
-    else {
+    } else {
         external_stimulus = std::make_unique<NullExternalStimulusCalculator>();
     }
 
@@ -765,9 +756,9 @@ int main(int argc, char** argv) {
 
     if (*opt_static_neurons) {
         std::vector<NeuronID> static_neurons;
-        auto static_neurons_list= FileLoader::split_string(static_neurons_str, ',');
+        auto static_neurons_list = FileLoader::split_string(static_neurons_str, ',');
         std::transform(static_neurons_list.begin(), static_neurons_list.end(), std::back_inserter(static_neurons), [&](std::string s) {
-            return NeuronID (stoi(s)-1);
+            return NeuronID(stoi(s) - 1);
         });
         sim.set_static_neurons(static_neurons);
     }
@@ -789,8 +780,6 @@ int main(int argc, char** argv) {
     }
 
     sim.set_algorithm(chosen_algorithm);
-
-
 
     if (static_cast<bool>(*opt_num_neurons)) {
         auto sfnd = std::make_unique<SubdomainFromNeuronDensity>(number_neurons, fraction_excitatory_neurons, um_per_neuron, partition);
@@ -830,7 +819,6 @@ int main(int argc, char** argv) {
 
     Config::monitor_step = monitor_steps;
     Config::monitor_area_step = monitor_ensemble_steps;
-
 
     const auto steps_per_simulation = simulation_steps / Config::monitor_step;
     sim.increase_monitoring_capacity(steps_per_simulation);

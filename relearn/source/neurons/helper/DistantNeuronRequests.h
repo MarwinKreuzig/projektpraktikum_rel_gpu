@@ -49,7 +49,7 @@ public:
      * @param target_neuron_type The type of the target node
      * @param signal_type The signal type
      */
-    constexpr DistantNeuronRequest(const NeuronID& source_id, const RelearnTypes::position_type& source_position, 
+    constexpr DistantNeuronRequest(const NeuronID& source_id, const RelearnTypes::position_type& source_position,
         const NeuronID::value_type target_neuron_identifier, const TargetNeuronType target_neuron_type, const SignalType signal_type) noexcept
         : source_id(source_id)
         , source_position(source_position)

@@ -61,7 +61,7 @@ void PoissonModel::create_neurons(const number_neurons_type creation_count) {
 
 void PoissonModel::update_activity(const NeuronID& neuron_id) {
     const auto h = get_h();
-    
+
     const auto synaptic_input = get_synaptic_input(neuron_id);
     const auto background = get_background_activity(neuron_id);
     const auto external = get_external_stimulus(neuron_id);
@@ -97,5 +97,4 @@ void PoissonModel::update_activity(const NeuronID& neuron_id) {
 }
 
 void PoissonModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {
-
 }

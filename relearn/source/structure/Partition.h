@@ -264,7 +264,7 @@ public:
         const auto& simulation_box_length = (sim_box_max - sim_box_min);
 
         const auto& subdomain_length = simulation_box_length / static_cast<box_size_type::value_type>(number_subdomains_per_dimension);
-        
+
         const auto& [subdomain_length_x, subdomain_length_y, subdomain_length_z] = subdomain_length;
 
         box_size_type min{

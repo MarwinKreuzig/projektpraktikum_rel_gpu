@@ -20,7 +20,7 @@
 class Partition;
 
 /**
- * This class inherits form NeuronToSubdomainAssignment. 
+ * This class inherits form NeuronToSubdomainAssignment.
  * It implements reading multiple files on different MPI ranks. Those files need to fulfill their header requirements.
  */
 class MultipleSubdomainsFromFile : public NeuronToSubdomainAssignment {

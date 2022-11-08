@@ -244,7 +244,7 @@ protected:
             root_of_subtree = node_selected;
         }
     }
-    
+
     /**
      * @brief Finds target neurons for a specified source neuron
      * @param source_neuron_id The source neuron's id

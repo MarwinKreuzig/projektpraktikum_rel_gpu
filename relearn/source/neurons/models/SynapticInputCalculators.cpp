@@ -25,7 +25,7 @@ void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& ne
         }
 
         NeuronID id{ neuron_id };
-        
+
         const auto local_input = get_local_synaptic_input(network_graph_static, fired, id) + get_local_synaptic_input(network_graph_plastic, fired, id);
         const auto distant_input = get_distant_synaptic_input(network_graph_static, fired, id) + get_distant_synaptic_input(network_graph_plastic, fired, id);
         const auto total_input = local_input + distant_input;

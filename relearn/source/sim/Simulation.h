@@ -14,7 +14,6 @@
 #include "Types.h"
 #include "algorithm/AlgorithmEnum.h"
 #include "util/StatisticalMeasures.h"
-#include "neurons/helper/AreaMonitor.h"
 
 #include <cstddef>
 #include <cstdint>

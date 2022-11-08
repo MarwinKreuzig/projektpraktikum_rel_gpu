@@ -59,7 +59,7 @@ public:
     inline static size_t first_plasticity_update = 0; // NOLINT
 
     // End the connectivity updates at <last_plascitiy_update> ms
-    inline static size_t last_plascitiy_update = -1; // NOLINT
+    inline static size_t last_plasticity_update = -1; // NOLINT
 
     // Print details every <logfile_update_step> ms
     inline static size_t logfile_update_step = 100; // NOLINT
@@ -68,11 +68,10 @@ public:
     inline static size_t console_update_step = 100; // NOLINT
 
     // Capture individual neuron informations ever <monitor_step> ms
-    inline static size_t monitor_step = 1; // NOLINT
+    inline static size_t monitor_step = 100; // NOLINT
 
     // Capture ensemble informations ever <monitor_area_step> ms
     inline static size_t monitor_area_step = 100; // NOLINT
-
 
     // Capture the global statistics every <statistics_step> ms
     inline static size_t statistics_step = 100; // NOLINT

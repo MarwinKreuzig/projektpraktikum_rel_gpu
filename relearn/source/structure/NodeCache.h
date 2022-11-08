@@ -214,7 +214,6 @@ public:
         return local_children;
     }
 
-
 private:
     static inline SemiStableVector<node_type> memory{}; // NOLINT
     static inline NodesCache remote_nodes_cache{};

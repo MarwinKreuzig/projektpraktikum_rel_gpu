@@ -964,7 +964,7 @@ TEST_F(IOTest, testReadSynapsesInteractionNetworkGraph) {
     std::ofstream in_ofstream{ in_path };
     std::ofstream out_ofstream{ out_path };
 
-    ng.print_with_ranks(out_ofstream, in_ofstream);
+    ng.print_with_ranks(out_ofstream, in_ofstream, '1');
 
     in_ofstream.flush();
     in_ofstream.close();

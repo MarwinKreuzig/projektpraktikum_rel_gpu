@@ -109,9 +109,12 @@ void Timers::print() {
 
     sstring << "\n======== TIMERS GLOBAL OVER ALL RANKS ========\n";
     sstring << "                                                ("
-            << std::setw(Constants::print_width) << " min" << " | "
-            << std::setw(Constants::print_width) << " avg" << " | "
-            << std::setw(Constants::print_width) << " max" << ") sec.\n";
+            << std::setw(Constants::print_width) << " min"
+            << " | "
+            << std::setw(Constants::print_width) << " avg"
+            << " | "
+            << std::setw(Constants::print_width) << " max"
+            << ") sec.\n";
     sstring << "TIMERS: main()\n";
 
     print_timer("  Initialization                               : ", TimerRegion::INITIALIZATION);
@@ -151,7 +154,7 @@ void Timers::print() {
     print_timer("        Create synapses Exchange Responses     : ", TimerRegion::CREATE_SYNAPSES_EXCHANGE_RESPONSES);
     print_timer("        Create synapses Process Responses      : ", TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES);
     print_timer("      Add synapses in local network graphs     : ", TimerRegion::ADD_SYNAPSES_TO_NETWORKGRAPH);
-    print_timer("    Capture all neuron monitors                : ", TimerRegion::CAPTURE_MONITORS);    
+    print_timer("    Capture all neuron monitors                : ", TimerRegion::CAPTURE_MONITORS);
 
     sstring << "\n\n";
 

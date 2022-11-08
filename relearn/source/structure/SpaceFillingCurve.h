@@ -48,7 +48,7 @@ public:
 
             return current_value;
         };
-        
+
         // The index has structure: ...... z2 y2 x2 z1 y1 x1 z0 y0 x0
         const auto x_value = extract_coordinate(0);
         const auto y_value = extract_coordinate(1);

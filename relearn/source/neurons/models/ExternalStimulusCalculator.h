@@ -17,16 +17,17 @@
 
 #include <memory>
 #include <vector>
+
 enum class ExternalStimulusCalculatorType : char {
     Null,
     Function
 };
 
 /**
- * @brief Pretty-prints the background activity calculator type to the chosen stream
- * @param out The stream to which to print the background activity
- * @param element_type The background activity to print
- * @return The argument out, now altered with the background activity
+ * @brief Pretty-prints the external stimulus calculator type to the chosen stream
+ * @param out The stream to which to print the external stimulus calculator
+ * @param calculator_type The external stimulus calculator to print
+ * @return The argument out, now altered with the external stimulus calculator
  */
 inline std::ostream& operator<<(std::ostream& out, const ExternalStimulusCalculatorType& calculator_type) {
     if (calculator_type == ExternalStimulusCalculatorType::Null) {
@@ -125,7 +126,6 @@ public:
     [[nodiscard]] virtual std::vector<ModelParameter> get_parameter() {
         return {};
     }
-
 
 protected:
     /**

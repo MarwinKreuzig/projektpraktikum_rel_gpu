@@ -72,7 +72,7 @@ public:
     [[nodiscard]] static std::vector<std::pair<step_type, number_neurons_type>> load_creation_interrupts(const std::filesystem::path& path_to_file);
 
     /**
-     * @brief Reads the file specified by the path and extracts als stimulus-interrupts. 
+     * @brief Reads the file specified by the path and extracts als stimulus-interrupts.
      *      A stimulus-interrupt should provide additional background activity to a neuron in a stimulation step.
      *      The format of the file should be for each line:
      *      # <some comment>

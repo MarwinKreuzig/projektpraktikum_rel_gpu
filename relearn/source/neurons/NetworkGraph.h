@@ -537,7 +537,7 @@ public:
      * @param os_in_edges The out-stream to which the in-connections are printed
      * @param flag Character which will be printed at the end of the line of each connection
      */
-    void print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges) const {
+    void print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges, char c) const {
         for (const auto& source_id : NeuronID::range(number_local_neurons)) {
             const auto& source_local_id = source_id.get_neuron_id();
 

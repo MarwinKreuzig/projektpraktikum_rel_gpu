@@ -482,7 +482,7 @@ protected:
         Timers::start(TimerRegion::UPDATE_GLOBAL_TREE);
         if (const auto level_of_branch_nodes = get_level_of_branch_nodes(); level_of_branch_nodes > 0) {
             // Only update whenever there are other branches to update
-            // The nodes at level_of_branch_nodes are already updated (by other MPI ranks) 
+            // The nodes at level_of_branch_nodes are already updated (by other MPI ranks)
             update_tree_parallel(root, level_of_branch_nodes - 1);
         }
         Timers::stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);

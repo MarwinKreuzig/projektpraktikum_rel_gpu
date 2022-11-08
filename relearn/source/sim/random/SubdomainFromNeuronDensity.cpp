@@ -47,7 +47,7 @@ void SubdomainFromNeuronDensity::fill_all_subdomains() {
 
     set_number_placed_neurons(requested_number_neurons);
     set_total_number_placed_neurons(requested_number_neurons);
-    
+
     const auto fraction_excitatory_neurons = static_cast<double>(number_excitatory_neurons) / static_cast<double>(requested_number_neurons);
     set_ratio_placed_excitatory_neurons(fraction_excitatory_neurons);
 

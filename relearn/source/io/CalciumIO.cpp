@@ -30,7 +30,7 @@ CalciumIO::target_value_calculator CalciumIO::load_target_function(const std::fi
 }
 
 std::pair<CalciumIO::initial_value_calculator, CalciumIO::target_value_calculator>
-CalciumIO::load_initial_and_target_function(const std::filesystem::path& path_to_file) {     
+CalciumIO::load_initial_and_target_function(const std::filesystem::path& path_to_file) {
     std::ifstream file{ path_to_file };
 
     const bool file_is_good = file.good();

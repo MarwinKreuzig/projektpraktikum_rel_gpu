@@ -55,7 +55,7 @@ public:
      */
     virtual void exchange_fired_status() = 0;
 
-    /** 
+    /**
      * @brief Checks if the communicator contains the specified neuron of the rank,
      *      i.e., whether that neuron fired in the last update step.
      * @param rank The MPI rank that owns the neuron

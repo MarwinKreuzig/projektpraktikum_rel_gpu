@@ -26,7 +26,7 @@ class Partition;
 class SynapseLoader {
 protected:
     using synapses_tuple_type = std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>;
-    using synapses_pair_type = std::pair<synapses_tuple_type , synapses_tuple_type>;
+    using synapses_pair_type = std::pair<synapses_tuple_type, synapses_tuple_type>;
 
 public:
     /**
@@ -34,7 +34,7 @@ public:
      * @param partition The partition to use
      */
     explicit SynapseLoader(std::shared_ptr<Partition> partition)
-            : partition(std::move(partition)) { }
+        : partition(std::move(partition)) { }
 
     virtual ~SynapseLoader() = default;
 

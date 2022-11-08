@@ -71,7 +71,7 @@ public:
     }
 
     /**
-     * @brief Parses multiple RankNeuronIds from a description. Format is: 
+     * @brief Parses multiple RankNeuronIds from a description. Format is:
      *      <mpi_rank>:<neuron_id> with ; separating the RankNeuronIds
      *      with a non-negative MPI rank. However, if -1 is parsed as the MPI rank, default_rank is used instead.
      * @param description The description of the RankNeuronIds
@@ -160,7 +160,7 @@ public:
     }
 
     /**
-     * @brief Extracts all to be monitored NeuronIDs that belong to the current rank. Format is: 
+     * @brief Extracts all to be monitored NeuronIDs that belong to the current rank. Format is:
      *      <mpi_rank>:<neuron_id> with ; separating the RankNeuronIds
      *      with a non-negative MPI rank. However, if -1 is parsed as the MPI rank, default_rank is used instead.
      * @param description The description of the RankNeuronIds

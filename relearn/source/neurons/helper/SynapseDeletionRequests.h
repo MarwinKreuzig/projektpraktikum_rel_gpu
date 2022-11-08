@@ -38,7 +38,7 @@ public:
      * @param signal_type The signal type of the synapse
      * @exception Throws a RelearnException if any neuron id is invalid
      */
-    constexpr SynapseDeletionRequest(const NeuronID& initiator_neuron, const NeuronID& affected_neuron, 
+    constexpr SynapseDeletionRequest(const NeuronID& initiator_neuron, const NeuronID& affected_neuron,
         const ElementType element_type, const SignalType signal_type)
         : initiator_neuron_id(initiator_neuron)
         , affected_neuron_id(affected_neuron)

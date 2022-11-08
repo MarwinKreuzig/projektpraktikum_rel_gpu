@@ -30,7 +30,7 @@
 #include <vector>
 
 /**
- * This enum reflects the different probabilty kernels, it must 
+ * This enum reflects the different probabilty kernels, it must
  * be kept in sync with the classes to allow a seemless integration
  */
 enum class KernelType {

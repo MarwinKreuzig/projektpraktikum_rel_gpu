@@ -26,9 +26,9 @@ MultipleFilesSynapseLoader::MultipleFilesSynapseLoader(std::shared_ptr<Partition
     }
 }
 
-MultipleFilesSynapseLoader::synapses_tuple_type MultipleFilesSynapseLoader::internal_load_synapses() {
+MultipleFilesSynapseLoader::synapses_pair_type MultipleFilesSynapseLoader::internal_load_synapses() {
     if (!optional_path_to_file.has_value()) {
-        return synapses_tuple_type{};
+        return synapses_pair_type{};
     }
 
     const auto number_local_neurons = partition->get_number_local_neurons();
@@ -43,5 +43,6 @@ MultipleFilesSynapseLoader::synapses_tuple_type MultipleFilesSynapseLoader::inte
     auto [read_local_in_synapses, read_distant_in_synapses] = NeuronIO::read_in_synapses(actual_path / expected_in_name, number_local_neurons, my_rank, number_ranks);
     auto [read_local_out_synapses, read_distant_out_synapses] = NeuronIO::read_out_synapses(actual_path / expected_out_name, number_local_neurons, my_rank, number_ranks);
 
-    return { std::move(read_local_in_synapses), std::move(read_distant_in_synapses), std::move(read_distant_out_synapses) };
+    auto return_synapses_plastic = std::make_tuple(std::move(read_local_in_synapses), std::move(read_distant_in_synapses), std::move(read_distant_out_synapses));
+    return synapses_pair_type({}, std::move(return_synapses_plastic));
 }
