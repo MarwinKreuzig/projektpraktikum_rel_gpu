@@ -532,26 +532,26 @@ public:
 
     /**
      * @brief Prints all stored connections to the streams. Does not perform communication via MPI. Uses the local neuron ids and starts with 1. The formats are:
-     *      <target_rank> <target_id>\t<source_rank> <source_id>\tweight
+     *      <target_rank> <target_id>\t<source_rank> <source_id>\t<weight>\t<flag>
      * @param os_out_edges The out-stream to which the out-connections are printed
      * @param os_in_edges The out-stream to which the in-connections are printed
-     * @param flag Character which will be printed at the end of the line of each connection
+     * @param flag Character flag which will be printed at the end of the line of each connection. Usually indicates the plasticity
      */
-    void print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges, char c) const {
+    void print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges, char flag) const {
         for (const auto& source_id : NeuronID::range(number_local_neurons)) {
             const auto& source_local_id = source_id.get_neuron_id();
 
             for (const auto& [target_id, weight] : neuron_local_out_neighborhood[source_local_id]) {
                 const auto& target_local_id = target_id.get_neuron_id();
 
-                os_out_edges << mpi_rank << ' ' << (target_local_id + 1) << '\t' << mpi_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\n';
+                os_out_edges << mpi_rank << ' ' << (target_local_id + 1) << '\t' << mpi_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
             }
 
             for (const auto& [target_neuron, weight] : neuron_distant_out_neighborhood[source_local_id]) {
                 const auto& [target_rank, target_id] = target_neuron;
                 const auto& target_local_id = target_id.get_neuron_id();
 
-                os_out_edges << target_rank << ' ' << (target_local_id + 1) << '\t' << mpi_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\n';
+                os_out_edges << target_rank << ' ' << (target_local_id + 1) << '\t' << mpi_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
             }
         }
 
@@ -561,14 +561,14 @@ public:
             for (const auto& [source_id, weight] : neuron_local_in_neighborhood[target_local_id]) {
                 const auto& source_local_id = source_id.get_neuron_id();
 
-                os_in_edges << mpi_rank << ' ' << (target_local_id + 1) << '\t' << mpi_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\n';
+                os_in_edges << mpi_rank << ' ' << (target_local_id + 1) << '\t' << mpi_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
             }
 
             for (const auto& [source_neuron, weight] : neuron_distant_in_neighborhood[target_local_id]) {
                 const auto& [source_rank, source_id] = source_neuron;
                 const auto& source_local_id = source_id.get_neuron_id();
 
-                os_in_edges << mpi_rank << ' ' << (target_local_id + 1) << '\t' << source_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\n';
+                os_in_edges << mpi_rank << ' ' << (target_local_id + 1) << '\t' << source_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
             }
         }
     }

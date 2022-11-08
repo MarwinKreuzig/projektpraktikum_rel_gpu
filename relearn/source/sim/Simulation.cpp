@@ -418,6 +418,9 @@ void Simulation::finalize() const {
         total_synapse_creations,
         total_synapse_deletions,
         netto_creations);
+
+    // Print final network graph
+    neurons->print_network_graph_to_log_file();
 }
 
 std::vector<std::unique_ptr<NeuronModel>> Simulation::get_models() {

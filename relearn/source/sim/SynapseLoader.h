@@ -26,6 +26,9 @@ class Partition;
 class SynapseLoader {
 protected:
     using synapses_tuple_type = std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>;
+    /*
+     * <Static synapses, plastic synapses>
+     */
     using synapses_pair_type = std::pair<synapses_tuple_type, synapses_tuple_type>;
 
 public:
