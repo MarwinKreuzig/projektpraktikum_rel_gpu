@@ -1,9 +1,9 @@
-#include "../googletest/include/gtest/gtest.h"
+#include "gtest/gtest.h"
 
 #include "RelearnTest.hpp"
 
-#include "../source/neurons/models/SynapticElements.h"
-#include "../source/neurons/UpdateStatus.h"
+#include "neurons/models/SynapticElements.h"
+#include "neurons/UpdateStatus.h"
 
 #include <numeric>
 #include <sstream>
