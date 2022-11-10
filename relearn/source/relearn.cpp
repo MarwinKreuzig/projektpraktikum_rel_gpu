@@ -353,6 +353,9 @@ int main(int argc, char** argv) {
     std::string file_external_stimulation{};
     auto* opt_file_external_stimulation = app.add_option("--external-stimulation", file_external_stimulation, "File with the external stimulation.");
 
+    size_t network_log_step = Config::network_log_step;
+    auto* const opt_network_log_step = app.add_option("--network-log-step", network_log_step, "Steps between saving the network graph");
+
     auto* const opt_background_activity = app.add_option("--background-activity", chosen_background_activity_calculator_type, "The type of background activity");
     opt_background_activity->transform(CLI::CheckedTransformer(cli_parse_background_activity_calculator_type, CLI::ignore_case));
 
@@ -548,6 +551,7 @@ int main(int argc, char** argv) {
     Config::plasticity_update_step = plasticity_update_step;
     Config::calcium_log_step = calcium_log_step;
     Config::synaptic_input_log_step = synaptic_input_log_step;
+    Config::network_log_step = network_log_step;
 
     omp_set_num_threads(openmp_threads);
 
