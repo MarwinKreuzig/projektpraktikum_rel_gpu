@@ -16,17 +16,19 @@
 #include "mpi/MPIWrapper.h"
 #include "sim/file/MultipleFilesSynapseLoader.h"
 #include "structure/Partition.h"
+#include "util/FileLoader.h"
 #include "util/RelearnException.h"
 
 #include "spdlog/spdlog.h"
 
 #include <string>
+#include <iostream>
 
 MultipleSubdomainsFromFile::MultipleSubdomainsFromFile(const std::filesystem::path& path_to_neurons,
     std::optional<std::filesystem::path> path_to_synapses, std::shared_ptr<Partition> partition)
     : NeuronToSubdomainAssignment(partition) {
     RelearnException::check(partition->get_number_mpi_ranks() > 1, "MultipleSubdomainsFromFile::MultipleSubdomainsFromFile: There was only one MPI rank.");
-    const auto my_position_filename = "rank_" + std::to_string(partition->get_my_mpi_rank()) + "_positions.txt";
+    const auto my_position_filename = "rank_" + FileLoader::format_int_with_leading_zeros(static_cast<int>(partition->get_my_mpi_rank()), 2) + "_positions.txt";
     const auto& path_to_file = path_to_neurons / my_position_filename;
 
     RelearnException::check(std::filesystem::exists(path_to_file), "MultipleSubdomainsFromFile::MultipleSubdomainsFromFile: position file {} does not exist.", path_to_file.string());
@@ -58,8 +60,7 @@ void MultipleSubdomainsFromFile::read_neurons_from_file(const std::filesystem::p
     auto check = [](double value) -> bool {
         const auto min = MPIWrapper::reduce(value, MPIWrapper::ReduceFunction::Min, 0);
         const auto max = MPIWrapper::reduce(value, MPIWrapper::ReduceFunction::Max, 0);
-
-        return min != max;
+        return min == max;
     };
 
     const auto min_x = search("# Minimum x:");
@@ -76,12 +77,12 @@ void MultipleSubdomainsFromFile::read_neurons_from_file(const std::filesystem::p
     const auto all_same_max_y = check(max_y);
     const auto all_same_max_z = check(max_z);
 
-    RelearnException::check(all_same_min_x, "MultipleSubdomainsFromFile::read_neurons_from_file: min_x is different across the ranks!");
-    RelearnException::check(all_same_min_y, "MultipleSubdomainsFromFile::read_neurons_from_file: min_y is different across the ranks!");
-    RelearnException::check(all_same_min_z, "MultipleSubdomainsFromFile::read_neurons_from_file: min_z is different across the ranks!");
-    RelearnException::check(all_same_max_x, "MultipleSubdomainsFromFile::read_neurons_from_file: max_x is different across the ranks!");
-    RelearnException::check(all_same_max_y, "MultipleSubdomainsFromFile::read_neurons_from_file: max_y is different across the ranks!");
-    RelearnException::check(all_same_max_z, "MultipleSubdomainsFromFile::read_neurons_from_file: max_z is different across the ranks!");
+    RelearnException::check(all_same_min_x, "MultipleSubdomainsFromFile::read_neurons_from_file: min_x is different across the ranks! Mine: {}", min_x);
+    RelearnException::check(all_same_min_y, "MultipleSubdomainsFromFile::read_neurons_from_file: min_y is different across the ranks! Mine: {}", min_y);
+    RelearnException::check(all_same_min_z, "MultipleSubdomainsFromFile::read_neurons_from_file: min_z is different across the ranks! Mine: {}", min_z);
+    RelearnException::check(all_same_max_x, "MultipleSubdomainsFromFile::read_neurons_from_file: max_x is different across the ranks! Mine: {}", max_x);
+    RelearnException::check(all_same_max_y, "MultipleSubdomainsFromFile::read_neurons_from_file: max_y is different across the ranks! Mine: {}", max_y);
+    RelearnException::check(all_same_max_z, "MultipleSubdomainsFromFile::read_neurons_from_file: max_z is different across the ranks! Mine: {}", max_z);
 
     RelearnTypes::box_size_type minimum{ min_x, min_y, min_z };
     RelearnTypes::box_size_type maximum{ max_x, max_y, max_z };

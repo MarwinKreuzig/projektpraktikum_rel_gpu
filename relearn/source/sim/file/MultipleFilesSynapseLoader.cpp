@@ -12,6 +12,7 @@
 
 #include "io/NeuronIO.h"
 #include "structure/Partition.h"
+#include "util/FileLoader.h"
 #include "util/RelearnException.h"
 
 #include <string>
@@ -37,8 +38,8 @@ MultipleFilesSynapseLoader::synapses_pair_type MultipleFilesSynapseLoader::inter
 
     const auto& actual_path = optional_path_to_file.value();
 
-    const auto expected_in_name = "rank_" + std::to_string(my_rank) + "_in_network.txt";
-    const auto expected_out_name = "rank_" + std::to_string(my_rank) + "_out_network.txt";
+    const auto expected_in_name = "rank_" + FileLoader::format_int_with_leading_zeros(my_rank, 2) + "_in_network.txt";
+    const auto expected_out_name = "rank_" + FileLoader::format_int_with_leading_zeros(my_rank, 2) + "_out_network.txt";
 
     auto [in_synapses_static, in_synapses_plastic] = NeuronIO::read_in_synapses(actual_path / expected_in_name, number_local_neurons, my_rank, number_ranks);
     auto [read_local_in_synapses_static, read_distant_in_synapses_static] = in_synapses_static;

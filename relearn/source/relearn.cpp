@@ -451,7 +451,7 @@ int main(int argc, char** argv) {
 
     opt_file_network->needs(opt_file_positions);
 
-    opt_file_positions->check(CLI::ExistingFile);
+    opt_file_positions->check(CLI::ExistingPath);
     opt_file_network->check(CLI::ExistingDirectory);
 
     opt_file_calcium->excludes(opt_initial_calcium);
@@ -483,10 +483,6 @@ int main(int argc, char** argv) {
 
     if (static_cast<bool>(*opt_num_neurons)) {
         RelearnException::check(num_ranks == 1, "The option --num-neurons can only be used for one MPI rank. There are {} ranks.", num_ranks);
-    }
-
-    if (static_cast<bool>(*opt_file_positions)) {
-        RelearnException::check(num_ranks == 1, "The option --file can only be used for one MPI rank. There are {} ranks.", num_ranks);
     }
 
     RelearnException::check(fraction_excitatory_neurons >= 0.0 && fraction_excitatory_neurons <= 1.0, "The fraction of excitatory neurons must be from [0.0, 1.0]");

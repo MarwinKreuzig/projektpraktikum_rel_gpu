@@ -10,11 +10,13 @@
 
 #pragma once
 
+#include <functional>
+#include <iomanip>
+#include <map>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
-#include <map>
-#include <functional>
 
 /**
  * This class provides a static interface to load interrupts from files, i.e., when during the simulation the neurons should be altered.
@@ -30,9 +32,22 @@ public:
      */
     static bool is_number(const std::string& s) {
         for (char const& ch : s) {
-            if (std::isdigit(ch) == 0)
+            if (std::isdigit(ch) == 0) {
                 return false;
+            }
         }
         return true;
+    }
+
+    /**
+     * Converts an integer to a string with leading zeros
+     * @param number The number will be converted to a string
+     * @param nr_of_digits Number of digits including the leading zeros
+     * @return string with the number and leading zeros if necessary
+     */
+    static std::string format_int_with_leading_zeros(int number, int nr_of_digits) {
+        std::stringstream ss;
+        ss << std::setw(nr_of_digits) << std::setfill('0') << number;
+        return ss.str();
     }
 };
