@@ -132,7 +132,7 @@ public:
         }
 
         const auto& neuron_id_vs_area_name = extra_info->get_area_names();
-        for (const std::string& area_name : static_areas) {
+        for (const RelearnTypes::area_name& area_name : static_areas) {
             for (const auto neuron_id : NeuronID::range(number_neurons)) {
                 if (neuron_id_vs_area_name[neuron_id.get_neuron_id()] == area_name) {
                     disable_flags[neuron_id.get_neuron_id()] = UpdateStatus::STATIC;
@@ -183,7 +183,7 @@ public:
      * @param names The area names
      * @exception Throws the same RelearnException as NeuronsExtraInfo::set_area_names
      */
-    void set_area_names(std::vector<std::string> names) {
+    void set_area_names(std::vector<RelearnTypes::area_name> names) {
         extra_info->set_area_names(std::move(names));
     }
 

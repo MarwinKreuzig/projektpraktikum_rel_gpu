@@ -59,7 +59,7 @@ public:
      *      (4) The signal types
      *      (5) additional information
      */
-    [[nodiscard]] static std::tuple<std::vector<NeuronID>, std::vector<position_type>, std::vector<std::string>, std::vector<SignalType>, LoadedNeuronsInfo>
+    [[nodiscard]] static std::tuple<std::vector<NeuronID>, std::vector<position_type>, std::vector<RelearnTypes::area_name>, std::vector<SignalType>, LoadedNeuronsInfo>
     read_neurons_componentwise(const std::filesystem::path& file_path);
 
     /**
@@ -81,7 +81,7 @@ public:
      * @exception Throws a RelearnException if the vectors don't all have the same length, or opening the file failed
      */
     static void write_neurons_componentwise(const std::vector<NeuronID>& ids, const std::vector<position_type>& positions,
-        const std::vector<std::string>& area_names, const std::vector<SignalType>& signal_types, const std::filesystem::path& file_path);
+        const std::vector<RelearnTypes::area_name>& area_names, const std::vector<SignalType>& signal_types, const std::filesystem::path& file_path);
 
     /**
      * @brief Reads all neuron ids from a file and returns those.

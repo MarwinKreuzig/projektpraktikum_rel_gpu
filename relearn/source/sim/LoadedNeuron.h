@@ -28,7 +28,7 @@ struct LoadedNeuron {
     RelearnTypes::position_type pos{ 0 };
     NeuronID id{ NeuronID::uninitialized_id() };
     SignalType signal_type{ SignalType::Excitatory };
-    std::string area_name{ "NOT SET" };
+    RelearnTypes::area_name area_name{ "NOT SET" };
 };
 
 /**

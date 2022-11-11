@@ -518,6 +518,29 @@ int main(int argc, char** argv) {
         RelearnException::check(target_calcium_decay_amount > 0.0, "The target calcium decay amount must be larger than 0.0 for absolute decay.");
     }
 
+    /**
+     * Calculate what my partition of the domain consist of
+     */
+    auto partition = std::make_shared<Partition>(num_ranks, my_rank);
+
+    std::unique_ptr<NeuronToSubdomainAssignment> subdomain;
+    if (static_cast<bool>(*opt_num_neurons)) {
+        subdomain = std::make_unique<SubdomainFromNeuronDensity>(number_neurons, fraction_excitatory_neurons, um_per_neuron, partition);
+    } else if (static_cast<bool>(*opt_num_neurons_per_rank)) {
+        subdomain = std::make_unique<SubdomainFromNeuronPerRank>(number_neurons_per_rank, fraction_excitatory_neurons, um_per_neuron, partition);
+    } else {
+        std::optional<std::filesystem::path> path_to_network{};
+        if (static_cast<bool>(*opt_file_network)) {
+            path_to_network = file_network;
+        }
+
+        if (MPIWrapper::get_num_ranks() == 1) {
+            subdomain = std::make_unique<SubdomainFromFile>(file_positions, std::move(path_to_network), partition);
+        } else {
+            subdomain = std::make_unique<MultipleSubdomainsFromFile>(file_positions, std::move(path_to_network), partition);
+        }
+    }
+
     std::unique_ptr<BackgroundActivityCalculator> background_activity_calculator{};
     if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Null) {
         RelearnException::check(!static_cast<bool>(*opt_base_background_activity), "Setting the base background activity is not valid when choosing the null-background calculator (or not setting it at all).");
@@ -538,7 +561,7 @@ int main(int argc, char** argv) {
         RelearnException::check(static_cast<bool>(*opt_file_external_stimulation), "Setting the background activity to stimulus but not providing a file is not supported.");
         RelearnException::check(background_activity_stddev >= 0.0, "When choosing the stimulus-background calculator, the standard deviation must be set to >= 0.0.");
 
-        background_activity_calculator = std::make_unique<StimulusBackgroundActivityCalculator>(file_external_stimulation, std::optional{ std::pair{ background_activity_mean, background_activity_stddev } });
+        background_activity_calculator = std::make_unique<StimulusBackgroundActivityCalculator>(file_external_stimulation, std::optional{ std::pair{ background_activity_mean, background_activity_stddev } }, my_rank, subdomain->get_neuron_area_names_in_subdomains());
     } else {
         RelearnException::fail("Chose a background activity calculator that is not implemented");
     }
@@ -740,10 +763,6 @@ int main(int argc, char** argv) {
     auto inhibitory_dendrites_model = std::make_shared<SynapticElements>(ElementType::Dendrite, min_calcium_inhibitory_dendrites,
         nu_dend, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
-    /**
-     * Calculate what my partition of the domain consist of
-     */
-    auto partition = std::make_shared<Partition>(num_ranks, my_rank);
 
     Simulation sim(partition);
     sim.set_neuron_model(std::move(neuron_model));
@@ -779,26 +798,7 @@ int main(int argc, char** argv) {
 
     sim.set_algorithm(chosen_algorithm);
 
-    if (static_cast<bool>(*opt_num_neurons)) {
-        auto sfnd = std::make_unique<SubdomainFromNeuronDensity>(number_neurons, fraction_excitatory_neurons, um_per_neuron, partition);
-        sim.set_subdomain_assignment(std::move(sfnd));
-    } else if (static_cast<bool>(*opt_num_neurons_per_rank)) {
-        auto sfdpr = std::make_unique<SubdomainFromNeuronPerRank>(number_neurons_per_rank, fraction_excitatory_neurons, um_per_neuron, partition);
-        sim.set_subdomain_assignment(std::move(sfdpr));
-    } else {
-        std::optional<std::filesystem::path> path_to_network{};
-        if (static_cast<bool>(*opt_file_network)) {
-            path_to_network = file_network;
-        }
-
-        if (MPIWrapper::get_num_ranks() == 1) {
-            auto sff = std::make_unique<SubdomainFromFile>(file_positions, std::move(path_to_network), partition);
-            sim.set_subdomain_assignment(std::move(sff));
-        } else {
-            auto msff = std::make_unique<MultipleSubdomainsFromFile>(file_positions, std::move(path_to_network), partition);
-            sim.set_subdomain_assignment(std::move(msff));
-        }
-    }
+    sim.set_subdomain_assignment(std::move(subdomain));
 
     if (*opt_file_enable_interrupts) {
         auto enable_interrupts = InteractiveNeuronIO::load_enable_interrupts(file_enable_interrupts);

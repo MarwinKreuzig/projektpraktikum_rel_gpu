@@ -156,7 +156,7 @@ std::vector<std::pair<InteractiveNeuronIO::step_type, InteractiveNeuronIO::numbe
     return return_value;
 }
 
-std::function<double(InteractiveNeuronIO::step_type, NeuronID::value_type)> InteractiveNeuronIO::load_stimulus_interrupts(const std::filesystem::path& path_to_file) {
+std::function<double(InteractiveNeuronIO::step_type, NeuronID::value_type)> InteractiveNeuronIO::load_stimulus_interrupts(const std::filesystem::path& path_to_file, const int my_rank, const std::vector<RelearnTypes::area_name>& neuron_id_vs_area_name) {
     std::ifstream file{ path_to_file };
 
     const bool file_is_good = file.good();
@@ -172,11 +172,11 @@ std::function<double(InteractiveNeuronIO::step_type, NeuronID::value_type)> Inte
             continue;
         }
 
-        auto stimulus = StimulusParser::parse_line(line);
+        auto stimulus = StimulusParser::parse_line(line, my_rank);
         if (stimulus.has_value()) {
             stimuli.emplace_back(std::move(stimulus.value()));
         }
     }
 
-    return StimulusParser::generate_stimulus_function(std::move(stimuli));
+    return StimulusParser::generate_stimulus_function(std::move(stimuli), neuron_id_vs_area_name);
 }

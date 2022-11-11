@@ -72,15 +72,18 @@ public:
     [[nodiscard]] static std::vector<std::pair<step_type, number_neurons_type>> load_creation_interrupts(const std::filesystem::path& path_to_file);
 
     /**
-     * @brief Reads the file specified by the path and extracts als stimulus-interrupts.
+     * @brief Reads the file specified by the path and extracts als stimulus-interrupts for the given mpi rank.
      *      A stimulus-interrupt should provide additional background activity to a neuron in a stimulation step.
      *      The format of the file should be for each line:
      *      # <some comment>
      *      or
      *      <interval_description> <stimulus intensity> <neuron_id>*
+     *      A neuron id must have the format: <rank>:<local_neuron_id> or must be an area name
      * @param path_to_file The path to the stimulus interrupts file
+     * @param my_rank The mpi rank of the current process
+     * @param neuron_id_vs_area_name Vector which assigns each local neuron id of the current process an area name
      * @exception Throws a RelearnException if opening the file fails
      * @return A function that specified for a given simulation step and a given neuron id, how much background it receives
      */
-    [[nodiscard]] static std::function<double(step_type, NeuronID::value_type)> load_stimulus_interrupts(const std::filesystem::path& path_to_file);
+    [[nodiscard]] static std::function<double(step_type, NeuronID::value_type)> load_stimulus_interrupts(const std::filesystem::path& path_to_file, int my_rank, const std::vector<RelearnTypes::area_name>& neuron_id_vs_area_name);
 };

@@ -183,7 +183,7 @@ public:
      * @param background Optionally a pair of the mean and standarddeviation (if the latter is 0.0, the input will be the mean)
      * @exception Throws a RelearnException if the file is not present or the second argument of background is <0.0 (if provided)
      */
-    StimulusBackgroundActivityCalculator(const std::filesystem::path& stimulus_file, std::optional<std::pair<double, double>> background)
+    StimulusBackgroundActivityCalculator(const std::filesystem::path& stimulus_file, std::optional<std::pair<double, double>> background, int mpi_rank, const std::vector<RelearnTypes::area_name>& neuron_id_vs_area_name)
         : file(stimulus_file) {
         if (background.has_value()) {
             auto [mean, stddev] = background.value();
@@ -193,8 +193,25 @@ public:
             stddev_input = stddev;
         }
 
-        auto function = InteractiveNeuronIO::load_stimulus_interrupts(stimulus_file);
+        auto function = InteractiveNeuronIO::load_stimulus_interrupts(stimulus_file, mpi_rank, neuron_id_vs_area_name);
         stimulus_function = std::move(function);
+    }
+
+    /**
+     * @brief Creates a new instance for calculating the background activity based on a stimulus function and optionally a normal distribution
+     * @param stimulus_function The path to the stimulus function
+     * @param background Optionally a pair of the mean and standarddeviation (if the latter is 0.0, the input will be the mean)
+     * @exception Throws a RelearnException if the file is not present or the second argument of background is <0.0 (if provided)
+     */
+    StimulusBackgroundActivityCalculator(std::function<double(step_type, NeuronID::value_type)> stimulus_function, std::optional<std::pair<double, double>> background)
+        : stimulus_function(std::move(stimulus_function)) {
+        if (background.has_value()) {
+            auto [mean, stddev] = background.value();
+            RelearnException::check(stddev >= 0.0, "StimulusBackgroundActivityCalculator::StimulusBackgroundActivityCalculator: The standard deviation must be larger than 0.0: {}", stddev);
+
+            mean_input = mean;
+            stddev_input = stddev;
+        }
     }
 
     virtual ~StimulusBackgroundActivityCalculator() = default;
@@ -224,7 +241,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
-        return std::make_unique<StimulusBackgroundActivityCalculator>(file, std::optional{ std::pair{ mean_input, stddev_input } });
+        return std::make_unique<StimulusBackgroundActivityCalculator>(stimulus_function, std::optional{ std::pair{ mean_input, stddev_input } });
     }
 
     /**
@@ -244,4 +261,6 @@ private:
     std::function<double(step_type, NeuronID::value_type)> stimulus_function{};
     double mean_input{ default_background_activity_mean };
     double stddev_input{ default_background_activity_stddev };
+    std::vector<RelearnTypes::area_name> neuron_id_vs_area_name;
+    int my_rank;
 };

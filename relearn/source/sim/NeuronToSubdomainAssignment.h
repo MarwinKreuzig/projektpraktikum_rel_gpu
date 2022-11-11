@@ -158,7 +158,7 @@ public:
      * @brief Returns all area names of neurons in the local subdomains, indexed by the neuron id
      * @return The all position of neurons in the local subdomains
      */
-    [[nodiscard]] std::vector<std::string> get_neuron_area_names_in_subdomains() const {
+    [[nodiscard]] std::vector<RelearnTypes::area_name> get_neuron_area_names_in_subdomains() const {
         std::vector<std::string> areas{};
         areas.reserve(loaded_neurons.size());
 

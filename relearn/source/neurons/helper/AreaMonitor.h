@@ -21,7 +21,7 @@ private:
     /**
      * Id of the ensemble which is monitored by this instance
      */
-    std::string area_name;
+    RelearnTypes::area_name area_name;
 
     /**
      * Number of connections to another ensemble in a single step
@@ -59,7 +59,7 @@ public:
      * @param simulation
      * @param ensembleId Id of the current ensemble
      */
-    AreaMonitor(Simulation* simulation, std::string area_name, RelearnTypes::number_neurons_type nr_neurons_in_area);
+    AreaMonitor(Simulation* simulation, RelearnTypes::area_name area_name, RelearnTypes::number_neurons_type nr_neurons_in_area);
 
     /**
      * Prepares the monitor for a new logging step. Call this method before each logging step.
@@ -85,7 +85,7 @@ public:
      */
     void write_data_to_file(std::filesystem::path file_path);
 
-    [[nodiscard]] const std::string& get_area_name() const noexcept {
+    [[nodiscard]] const RelearnTypes::area_name& get_area_name() const noexcept {
         return area_name;
     }
 };

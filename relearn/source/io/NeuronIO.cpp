@@ -219,7 +219,7 @@ void NeuronIO::write_neurons(const std::vector<LoadedNeuron>& neurons, const std
 }
 
 void NeuronIO::write_neurons_componentwise(const std::vector<NeuronID>& ids, const std::vector<position_type>& positions,
-    const std::vector<std::string>& area_names, const std::vector<SignalType>& signal_types, const std::filesystem::path& file_path) {
+    const std::vector<RelearnTypes::area_name>& area_names, const std::vector<SignalType>& signal_types, const std::filesystem::path& file_path) {
 
     const auto size_ids = ids.size();
     const auto size_positions = positions.size();
