@@ -348,10 +348,7 @@ int main(int argc, char** argv) {
     opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_neuron_model, CLI::ignore_case));
 
     std::string static_neurons_str{};
-    auto* opt_static_neurons = app.add_option("--static-neurons", static_neurons_str, "String with neuron ids for static neurons. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;... where <mpi_rank> can be -1 to indicate \"on every rank\"");
-
-    std::string static_areas_str{};
-    auto* opt_static_areas = app.add_option("--static-areas", static_areas_str, "String with area names that contain only static neurons. Seperated by commas");
+    auto* opt_static_neurons = app.add_option("--static-neurons", static_neurons_str, "String with neuron ids for static neurons. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;... where <mpi_rank> can be -1 to indicate \"on every rank\". Alternatively use area names instead of neuron ids");
 
     std::string file_external_stimulation{};
     auto* opt_file_external_stimulation = app.add_option("--external-stimulation", file_external_stimulation, "File with the external stimulation.");
@@ -772,12 +769,8 @@ int main(int argc, char** argv) {
     sim.set_dendrites_in(std::move(inhibitory_dendrites_model));
 
     if (*opt_static_neurons) {
-        auto static_neurons = MonitorParser::parse_my_ids(static_neurons_str, my_rank, my_rank);
+        auto static_neurons = MonitorParser::parse_my_ids(static_neurons_str, my_rank, my_rank, subdomain->get_neuron_area_names_in_subdomains());
         sim.set_static_neurons(static_neurons);
-    }
-    if (*opt_static_areas) {
-        auto static_areas = FileLoader::split_string(static_areas_str, ',');
-        sim.set_static_areas(static_areas);
     }
 
     // Set the parameters for all kernel types, even though only one is used later one
@@ -840,7 +833,7 @@ int main(int argc, char** argv) {
             sim.register_neuron_monitor(neuron_id);
         }
     } else {
-        const auto& my_neuron_ids_to_monitor = MonitorParser::parse_my_ids(neuron_monitors_description, my_rank, my_rank);
+        const auto& my_neuron_ids_to_monitor = MonitorParser::parse_my_ids(neuron_monitors_description, my_rank, my_rank, sim.get_neurons()->get_extra_info()->get_area_names());
         for (const auto& neuron_id : my_neuron_ids_to_monitor) {
             sim.register_neuron_monitor(neuron_id);
         }

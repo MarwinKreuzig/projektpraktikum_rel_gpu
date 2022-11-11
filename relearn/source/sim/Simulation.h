@@ -137,11 +137,6 @@ public:
      */
     void set_static_neurons(std::vector<NeuronID> static_neurons);
 
-    /**
-     * @brief Sets all neurons in an area into a static sate. Only static connections are allowed from and to a static neuron
-     * @param static_neurons Vector of string with area names
-     */
-    void set_static_areas(std::vector<std::string> static_neurons);
 
     /**
      * @brief Initializes the simulation and all other objects.
