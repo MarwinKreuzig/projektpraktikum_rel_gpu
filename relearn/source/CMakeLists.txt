@@ -46,8 +46,8 @@ target_sources(
           # structure
           structure/Partition.cpp
           # util
-		  util/FileLoader.cpp
-          util/RelearnException.cpp
+		  util/Helper.cpp
+        util/RelearnException.cpp
           util/Timers.cpp
 		  
 		  ${relearn_lib_additional_files})

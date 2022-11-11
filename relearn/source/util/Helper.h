@@ -21,7 +21,7 @@
 /**
  * This class provides a static interface to load interrupts from files, i.e., when during the simulation the neurons should be altered.
  */
-class FileLoader {
+class Helper {
 public:
     static std::vector<std::string> split_string(const std::string& string, char delim);
 

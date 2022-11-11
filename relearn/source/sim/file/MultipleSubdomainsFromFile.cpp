@@ -16,7 +16,7 @@
 #include "mpi/MPIWrapper.h"
 #include "sim/file/MultipleFilesSynapseLoader.h"
 #include "structure/Partition.h"
-#include "util/FileLoader.h"
+#include "util/Helper.h"
 #include "util/RelearnException.h"
 
 #include "spdlog/spdlog.h"
@@ -28,7 +28,7 @@ MultipleSubdomainsFromFile::MultipleSubdomainsFromFile(const std::filesystem::pa
     std::optional<std::filesystem::path> path_to_synapses, std::shared_ptr<Partition> partition)
     : NeuronToSubdomainAssignment(partition) {
     RelearnException::check(partition->get_number_mpi_ranks() > 1, "MultipleSubdomainsFromFile::MultipleSubdomainsFromFile: There was only one MPI rank.");
-    const auto my_position_filename = "rank_" + FileLoader::format_int_with_leading_zeros(static_cast<int>(partition->get_my_mpi_rank()), 2) + "_positions.txt";
+    const auto my_position_filename = "rank_" + Helper::format_int_with_leading_zeros(static_cast<int>(partition->get_my_mpi_rank()), 2) + "_positions.txt";
     const auto& path_to_file = path_to_neurons / my_position_filename;
 
     RelearnException::check(std::filesystem::exists(path_to_file), "MultipleSubdomainsFromFile::MultipleSubdomainsFromFile: position file {} does not exist.", path_to_file.string());
