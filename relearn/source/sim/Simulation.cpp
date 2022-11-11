@@ -213,7 +213,7 @@ void Simulation::initialize() {
     Timers::start(TimerRegion::INITIALIZE_NETWORK_GRAPH);
     network_graph_plastic->add_edges(local_synapses_plastic, in_synapses_plastic, out_synapses_plastic);
     network_graph_static->add_edges(local_synapses_static, in_synapses_static, out_synapses_static);
-    neurons->set_static_neurons(static_neurons);
+    neurons->set_static_neurons(static_neurons, static_areas);
     Timers::stop_and_add(TimerRegion::INITIALIZE_NETWORK_GRAPH);
 
     LogFiles::print_message_rank(0, "Network graph created");
@@ -507,4 +507,8 @@ void Simulation::save_network_graph(step_type current_steps) {
 
 void Simulation::set_static_neurons(std::vector<NeuronID> static_neurons) {
     this->static_neurons = std::move(static_neurons);
+}
+
+void Simulation::set_static_areas(std::vector<std::string> static_areas) {
+    this->static_areas = std::move(static_areas);
 }

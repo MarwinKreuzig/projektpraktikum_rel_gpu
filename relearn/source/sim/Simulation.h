@@ -131,7 +131,17 @@ public:
      */
     void set_subdomain_assignment(std::unique_ptr<NeuronToSubdomainAssignment>&& subdomain_assignment) noexcept;
 
+    /**
+     * @brief Sets the list of neurons into a static sate. Only static connections are allowed from and to a static neuron
+     * @param static_neurons Vector with neuron ids for the local rank
+     */
     void set_static_neurons(std::vector<NeuronID> static_neurons);
+
+    /**
+     * @brief Sets all neurons in an area into a static sate. Only static connections are allowed from and to a static neuron
+     * @param static_neurons Vector of string with area names
+     */
+    void set_static_areas(std::vector<std::string> static_neurons);
 
     /**
      * @brief Initializes the simulation and all other objects.
@@ -239,6 +249,7 @@ private:
     std::shared_ptr<SynapticElements> dendrites_in{};
 
     std::vector<NeuronID> static_neurons{};
+    std::vector<std::string> static_areas{};
 
     std::unique_ptr<NeuronModel> neuron_models{};
     std::unique_ptr<CalciumCalculator> calcium_calculator{};

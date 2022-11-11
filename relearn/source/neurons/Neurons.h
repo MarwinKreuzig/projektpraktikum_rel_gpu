@@ -126,9 +126,18 @@ public:
         network_graph_plastic = std::move(network_plastic);
     }
 
-    void set_static_neurons(const std::vector<NeuronID>& static_neurons) {
+    void set_static_neurons(const std::vector<NeuronID>& static_neurons, const std::vector<std::string>& static_areas) {
         for (const auto& neuronId : static_neurons) {
             disable_flags[neuronId.get_neuron_id()] = UpdateStatus::STATIC;
+        }
+
+        const auto& neuron_id_vs_area_name = extra_info->get_area_names();
+        for (const std::string& area_name : static_areas) {
+            for (const auto neuron_id : NeuronID::range(number_neurons)) {
+                if (neuron_id_vs_area_name[neuron_id.get_neuron_id()] == area_name) {
+                    disable_flags[neuron_id.get_neuron_id()] = UpdateStatus::STATIC;
+                }
+            }
         }
 
         for (NeuronID neuron_id : NeuronID::range(0, number_neurons)) {

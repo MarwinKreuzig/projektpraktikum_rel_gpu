@@ -348,7 +348,10 @@ int main(int argc, char** argv) {
     opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_neuron_model, CLI::ignore_case));
 
     std::string static_neurons_str{};
-    auto* opt_static_neurons = app.add_option("--static-neurons", static_neurons_str, "File with neuron ids for static neurons");
+    auto* opt_static_neurons = app.add_option("--static-neurons", static_neurons_str, "String with neuron ids for static neurons. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;... where <mpi_rank> can be -1 to indicate \"on every rank\"");
+
+    std::string static_areas_str{};
+    auto* opt_static_areas = app.add_option("--static-areas", static_areas_str, "String with area names that contain only static neurons. Seperated by commas");
 
     std::string file_external_stimulation{};
     auto* opt_file_external_stimulation = app.add_option("--external-stimulation", file_external_stimulation, "File with the external stimulation.");
@@ -750,12 +753,12 @@ int main(int argc, char** argv) {
     sim.set_dendrites_in(std::move(inhibitory_dendrites_model));
 
     if (*opt_static_neurons) {
-        std::vector<NeuronID> static_neurons;
-        auto static_neurons_list = FileLoader::split_string(static_neurons_str, ',');
-        std::transform(static_neurons_list.begin(), static_neurons_list.end(), std::back_inserter(static_neurons), [&](std::string s) {
-            return NeuronID(stoi(s) - 1);
-        });
+        auto static_neurons = MonitorParser::parse_my_ids(static_neurons_str, my_rank, my_rank);
         sim.set_static_neurons(static_neurons);
+    }
+    if (*opt_static_areas) {
+        auto static_areas = FileLoader::split_string(static_areas_str, ',');
+        sim.set_static_areas(static_areas);
     }
 
     // Set the parameters for all kernel types, even though only one is used later one
