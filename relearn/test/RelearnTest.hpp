@@ -1,3 +1,4 @@
+#pragma once
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -7,8 +8,11 @@
  * See the LICENSE file in the base directory for details.
  *
  */
+
 #include "gtest/gtest.h"
 
+#include "Config.h"
+#include "Types.h"
 #include "algorithm/BarnesHutInternal/BarnesHutCell.h"
 #include "algorithm/FMMInternal/FastMultipoleMethods.h"
 #include "algorithm/FMMInternal/FastMultipoleMethodsBase.h"
@@ -21,17 +25,17 @@
 #include "io/LogFiles.h"
 #include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
+#include "neurons/CalciumCalculator.h"
 #include "neurons/ElementType.h"
 #include "neurons/FiredStatus.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/SignalType.h"
-#include "neurons/CalciumCalculator.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "neurons/models/SynapticElements.h"
 #include "structure/Cell.h"
-#include "structure/Partition.h"
 #include "structure/Octree.h"
 #include "structure/OctreeNode.h"
+#include "structure/Partition.h"
 #include "util/Interval.h"
 #include "util/MemoryHolder.h"
 #include "util/RelearnException.h"
@@ -998,31 +1002,31 @@ protected:
     }
 };
 
-template <typename T>
-class TaggedIDTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate<BarnesHutCell>();
-    }
-
-    static bool get_initialized(const TaggedID<T>& id) {
-        return id.is_initialized_;
-    }
-
-    static bool get_virtual(const TaggedID<T>& id) {
-        return id.is_virtual_;
-    }
-
-    static bool get_global(const TaggedID<T>& id) {
-        return id.is_global_;
-    }
-
-    static typename TaggedID<T>::value_type get_id(const TaggedID<T>& id) {
-        return id.id_;
-    }
-
-    static_assert(sizeof(typename TaggedID<T>::value_type) == sizeof(T));
-};
+// template <typename T>
+// class TaggedIDTest : public RelearnTest {
+// protected:
+//     static void SetUpTestSuite() {
+//         SetUpTestCaseTemplate<BarnesHutCell>();
+//     }
+//
+//     static bool get_initialized(const TaggedID<T>& id) {
+//         return id.is_initialized_;
+//     }
+//
+//     static bool get_virtual(const TaggedID<T>& id) {
+//         return id.is_virtual_;
+//     }
+//
+//     static bool get_global(const TaggedID<T>& id) {
+//         return id.is_global_;
+//     }
+//
+//     static typename TaggedID<T>::value_type get_id(const TaggedID<T>& id) {
+//         return id.id_;
+//     }
+//
+//     static_assert(sizeof(typename TaggedID<T>::value_type) == sizeof(T));
+// };
 
 class IOTest : public RelearnTest {
 protected:

@@ -15,6 +15,8 @@
 #include "util/Helper.h"
 #include "util/RelearnException.h"
 
+#include "fmt/std.h"
+
 #include <string>
 
 MultipleFilesSynapseLoader::MultipleFilesSynapseLoader(std::shared_ptr<Partition> partition, std::optional<std::filesystem::path> path_to_synapses)

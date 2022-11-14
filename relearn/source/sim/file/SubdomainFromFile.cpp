@@ -17,7 +17,7 @@
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
 
-#include "spdlog/spdlog.h"
+#include "fmt/std.h"
 
 SubdomainFromFile::SubdomainFromFile(const std::filesystem::path& path_to_neurons, std::optional<std::filesystem::path> path_to_synapses, std::shared_ptr<Partition> partition)
     : NeuronToSubdomainAssignment(partition) {
