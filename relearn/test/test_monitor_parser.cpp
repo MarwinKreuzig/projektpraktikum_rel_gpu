@@ -1,8 +1,8 @@
-#include "gtest/gtest.h"
-
 #include "RelearnTest.hpp"
 
 #include "util/MonitorParser.h"
+
+#include "gtest/gtest.h"
 
 #include <sstream>
 

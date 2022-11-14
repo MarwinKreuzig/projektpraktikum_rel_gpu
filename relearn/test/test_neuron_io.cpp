@@ -1,8 +1,8 @@
-#include "../googletest/include/gtest/gtest.h"
-
 #include "RelearnTest.hpp"
 
 #include "io/NeuronIO.h"
+
+#include "gtest/gtest.h"
 
 TEST_F(IOTest, testNeuronIOWriteComponentwiseSizeExceptions) {
     const auto number_neurons = get_random_number_neurons();

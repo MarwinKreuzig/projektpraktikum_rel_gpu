@@ -1,12 +1,9 @@
-#include "../googletest/include/gtest/gtest.h"
+#include "RelearnTest.hpp"
+
+#include "gtest/gtest.h"
 
 #include <cstddef>
 #include <numeric>
-
-#include "RelearnTest.hpp"
-
-#include "../source/structure/Partition.h"
-#include "../source/util/RelearnException.h"
 
 bool is_power_of_two(size_t number) {
     auto counter = 0;

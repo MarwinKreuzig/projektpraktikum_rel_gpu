@@ -1,15 +1,12 @@
-#include "gtest/gtest.h"
-
 #include "RelearnTest.hpp"
 
 #include "algorithm/Algorithms.h"
 #include "algorithm/Cells.h"
-#include "neurons/models/SynapticElements.h"
 #include "structure/Cell.h"
 #include "structure/Octree.h"
-
-#include "util/RelearnException.h"
 #include "util/Vec3.h"
+
+#include "gtest/gtest.h"
 
 #include <memory>
 #include <tuple>

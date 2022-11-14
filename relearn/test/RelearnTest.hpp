@@ -1002,31 +1002,31 @@ protected:
     }
 };
 
-// template <typename T>
-// class TaggedIDTest : public RelearnTest {
-// protected:
-//     static void SetUpTestSuite() {
-//         SetUpTestCaseTemplate<BarnesHutCell>();
-//     }
-//
-//     static bool get_initialized(const TaggedID<T>& id) {
-//         return id.is_initialized_;
-//     }
-//
-//     static bool get_virtual(const TaggedID<T>& id) {
-//         return id.is_virtual_;
-//     }
-//
-//     static bool get_global(const TaggedID<T>& id) {
-//         return id.is_global_;
-//     }
-//
-//     static typename TaggedID<T>::value_type get_id(const TaggedID<T>& id) {
-//         return id.id_;
-//     }
-//
-//     static_assert(sizeof(typename TaggedID<T>::value_type) == sizeof(T));
-// };
+template <typename T>
+class TaggedIDTest : public RelearnTest {
+protected:
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+
+    static bool get_initialized(const TaggedID<T>& id) {
+        return id.is_initialized_;
+    }
+
+    static bool get_virtual(const TaggedID<T>& id) {
+        return id.is_virtual_;
+    }
+
+    static bool get_global(const TaggedID<T>& id) {
+        return id.is_global_;
+    }
+
+    static typename TaggedID<T>::value_type get_id(const TaggedID<T>& id) {
+        return id.id_;
+    }
+
+    static_assert(sizeof(typename TaggedID<T>::value_type) == sizeof(T));
+};
 
 class IOTest : public RelearnTest {
 protected:

@@ -1,16 +1,15 @@
-#include "../googletest/include/gtest/gtest.h"
-
 #include "RelearnTest.hpp"
 
-#include "../source/algorithm/Algorithms.h"
-#include "../source/algorithm/Cells.h"
-#include "../source/neurons/models/SynapticElements.h"
-#include "../source/structure/Cell.h"
-#include "../source/structure/Partition.h"
-#include "../source/structure/Octree.h"
+#include "algorithm/Algorithms.h"
+#include "algorithm/Cells.h"
+#include "neurons/models/SynapticElements.h"
+#include "structure/Cell.h"
+#include "structure/Partition.h"
+#include "structure/Octree.h"
+#include "util/RelearnException.h"
+#include "util/Vec3.h"
 
-#include "../source/util/RelearnException.h"
-#include "../source/util/Vec3.h"
+#include "gtest/gtest.h"
 
 #include <algorithm>
 #include <map>

@@ -1,13 +1,12 @@
-#include "gtest/gtest.h"
-
 #include "RelearnTest.hpp"
 
 #include "neurons/models/BackgroundActivityCalculator.h"
 #include "neurons/models/BackgroundActivityCalculators.h"
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
 #include <memory>
-#include <iostream>
 
 void test_background_equality(const std::unique_ptr<BackgroundActivityCalculator>& background_calculator) {
     const auto number_neurons = background_calculator->get_number_neurons();
@@ -244,7 +243,7 @@ TEST_F(BackgroundActivityTest, testNormalBackgroundActivityUpdate) {
     }
 
     const auto summed_background = std::reduce(background_values.begin(), background_values.end());
-    
+
     if (std::abs(summed_background) >= eps * number_enabled_neurons) {
         std::cerr << "The total variance was: " << std::abs(summed_background) << '\n';
         std::cerr << "That's more than " << eps << " * " << number_enabled_neurons << '\n';

@@ -1,8 +1,8 @@
-#include "../googletest/include/gtest/gtest.h"
-
 #include "RelearnTest.hpp"
 
-#include "../source/neurons/CalciumCalculator.h"
+#include "neurons/CalciumCalculator.h"
+
+#include "gtest/gtest.h"
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorNone) {
     uniform_real_distribution<double> amount_distr(-10000.0, 10000.0);

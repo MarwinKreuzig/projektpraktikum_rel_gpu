@@ -1,21 +1,16 @@
-#include "../googletest/include/gtest/gtest.h"
+#include "RelearnTest.hpp"
+
+#include "neurons/NetworkGraph.h"
+
+#include "gtest/gtest.h"
 
 #include <cstddef>
 #include <map>
 #include <numeric>
-#include <random>
+#include <sstream>
 #include <tuple>
 #include <utility>
 #include <vector>
-
-#include "RelearnTest.hpp"
-
-#include "../source/neurons/NetworkGraph.h"
-
-#include <map>
-#include <numeric>
-#include <sstream>
-#include <utility>
 
 TEST_F(NetworkGraphTest, testNetworkGraphConstructor) {
     const auto number_neurons = get_random_number_neurons();

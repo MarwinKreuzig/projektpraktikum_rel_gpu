@@ -1,8 +1,6 @@
-#include "../googletest/include/gtest/gtest.h"
-
 #include "RelearnTest.hpp"
 
-#include "../source/util/Vec3.h"
+#include "gtest/gtest.h"
 
 #include <sstream>
 

@@ -1,5 +1,3 @@
-#include "../googletest/include/gtest/gtest.h"
-
 #include "RelearnTest.hpp"
 
 #include "algorithm/Algorithms.h"
@@ -10,6 +8,8 @@
 #include "structure/Octree.h"
 #include "util/RelearnException.h"
 #include "util/Vec3.h"
+
+#include "gtest/gtest.h"
 
 #include <algorithm>
 #include <map>

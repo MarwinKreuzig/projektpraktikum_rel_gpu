@@ -1,10 +1,8 @@
 #include "RelearnTest.hpp"
-#include <cstdint>
-#include <functional>
-#include <gtest/gtest-typed-test.h>
+
 #include <gtest/gtest.h>
-#include <spdlog/fmt/bundled/core.h>
-#include <type_traits>
+
+#include <functional>
 
 using test_types = ::testing::Types<std::uint16_t, std::int16_t, std::uint32_t, std::int32_t, std::int64_t, std::uint64_t>;
 TYPED_TEST_SUITE(TaggedIDTest, test_types);
