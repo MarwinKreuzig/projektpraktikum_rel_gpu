@@ -110,6 +110,7 @@ private:
             && num_leaf_nodes == num_dendrites_inhibitory_counts
             && num_leaf_nodes == num_dendrites_inhibitory_connected_counts;
 
+        LogFiles::print_message_rank(MPIWrapper::get_my_rank(), "Num leaf nodes: {}", num_leaf_nodes);
         RelearnException::check(all_same_size, "AlgorithmImpl::update_leaf_nodes: The vectors were of different sizes");
 
         using counter_type = typename AdditionalCellAttributes::counter_type;
@@ -122,7 +123,7 @@ private:
 
             const auto& cell = node->get_cell();
             const auto other_neuron_id = cell.get_neuron_id();
-            RelearnException::check(neuron_id == other_neuron_id, "AlgorithmImpl::update_leaf_nodes: The nodes are not in order");
+            RelearnException::check(neuron_id == other_neuron_id, "AlgorithmImpl::update_leaf_nodes: The nodes are not in order {} != {}", neuron_id, other_neuron_id);
 
             if (disable_flags[local_neuron_id] != UpdateStatus::Enabled) {
                 if constexpr (AdditionalCellAttributes::has_excitatory_dendrite) {
