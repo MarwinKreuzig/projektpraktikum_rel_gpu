@@ -73,12 +73,13 @@ void AreaMonitor::write_data_to_file(std::filesystem::path file_path) {
 
     // Header
     out << "#Connections from ensemble " << area_name << " to ..." << std::endl;
+    out << "Step;";
     for (const auto& area : area_names) {
         out << "Ensemble " << area << " - Axons;"
             << "Ensemble " << area << " - Den ex;"
             << "Ensemble " << area << " - Den inh;";
     }
-    out << "Step;Axons grown;Axons conn;Den ex grown;Den ex conn;Den inh grown;Den inh conn;Calcium;";
+    out << "Axons grown;Axons conn;Den ex grown;Den ex conn;Den inh grown;Den inh conn;Calcium;";
     out << std::endl;
 
     // Data
