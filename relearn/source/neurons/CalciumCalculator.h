@@ -43,10 +43,13 @@ public:
      *      (a) The decay_type is Relative, but the amount is not from [0, 1) and the step is not larger than 0
      *      (b) The decay_type is Absolute, but the amount is not from (0, inf) and the step is not larger than 0
      */
-    explicit CalciumCalculator(const TargetCalciumDecay decay_type = TargetCalciumDecay::None, const double decay_amount = 0.1, const step_type decay_step = 1000)
+    explicit CalciumCalculator(const TargetCalciumDecay decay_type = TargetCalciumDecay::None, const double decay_amount = 0.1, const step_type decay_step = 1000,
+        const step_type first_target_decay_step = 0, const step_type last_target_decay_step = std::numeric_limits<step_type>::max())
         : decay_type(decay_type)
         , decay_amount(decay_amount)
-        , decay_step(decay_step) {
+        , decay_step(decay_step)
+        , first_decay_step(first_target_decay_step)
+        , last_decay_step(last_target_decay_step) {
 
         if (decay_type == TargetCalciumDecay::Absolute) {
             RelearnException::check(decay_amount > 0, "CalciumCalculator::CalciumCalculator: The decay type is absolute, but the amount was not larger than 0! {}", decay_amount);
@@ -227,4 +230,6 @@ private:
     TargetCalciumDecay decay_type{ TargetCalciumDecay::None };
     double decay_amount{ 0.0 };
     step_type decay_step{ 1000 };
+    step_type first_decay_step{ 0 };
+    step_type last_decay_step{ std::numeric_limits<step_type>::max() };
 };

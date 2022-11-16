@@ -360,8 +360,14 @@ int main(int argc, char** argv) {
     double calcium_decay{ CalciumCalculator::default_tau_C };
     app.add_option("--calcium-decay", calcium_decay, "The decay constant for the intercellular calcium. Must be greater than 0.0");
 
-    size_t target_calcium_decay_step{ 0 };
+    RelearnTypes::step_type target_calcium_decay_step{ 0 };
     app.add_option("--target-calcium-decay", target_calcium_decay_step, "The decay step for the target calcium values.");
+
+    RelearnTypes::step_type first_decay_step{ 0 };
+    app.add_option("--target-calcium-first-decay-step", first_decay_step, "The first decay step of the calcium.");
+
+    RelearnTypes::step_type last_decay_step{ std::numeric_limits<RelearnTypes::step_type>::max() };
+    app.add_option("--target-calcium-last-decay-step", last_decay_step, "The last decay step of the calcium.");
 
     double target_calcium_decay_amount{ 0.0 };
     app.add_option("--target-calcum-amount", target_calcium_decay_amount, "The decay amount for the target calcium values.");
@@ -674,7 +680,7 @@ int main(int argc, char** argv) {
         RelearnException::fail("Chose a neuron model that is not implemented");
     }
 
-    auto calcium_calculator = std::make_unique<CalciumCalculator>(target_calcium_decay_type, target_calcium_decay_amount, target_calcium_decay_step);
+    auto calcium_calculator = std::make_unique<CalciumCalculator>(target_calcium_decay_type, target_calcium_decay_amount, target_calcium_decay_step, first_decay_step, last_decay_step);
     calcium_calculator->set_beta(beta);
     calcium_calculator->set_tau_C(calcium_decay);
     calcium_calculator->set_h(h);

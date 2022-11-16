@@ -237,7 +237,7 @@ void Simulation::simulate(const step_type number_steps) {
             Timers::start(TimerRegion::CAPTURE_MONITORS);
             for (auto& mn : *monitors) {
                 if (mn.get_target_id().get_neuron_id() < number_neurons) {
-                    mn.record_data();
+                    mn.record_data(step);
                 }
             }
             Timers::stop_and_add(TimerRegion::CAPTURE_MONITORS);
@@ -393,55 +393,6 @@ std::vector<std::unique_ptr<NeuronModel>> Simulation::get_models() {
     return NeuronModel::get_models();
 }
 
-void Simulation::print_neuron_monitors() {
-    const auto& path = LogFiles::get_output_path();
-
-    for (auto& monitor : *monitors) {
-        const auto& file_path = path / (MPIWrapper::get_my_rank_str() + '_' + std::to_string(monitor.get_target_id().get_neuron_id()) + ".csv");
-        std::ofstream outfile(file_path, std::ios::trunc);
-
-        const auto file_is_good = outfile.good();
-        const auto file_is_bad = outfile.bad();
-
-        RelearnException::check(file_is_good && !file_is_bad, "Simulation::print_neuron_monitors: The file is bad: {}", file_path);
-
-        constexpr auto description = "Step;Fired;Fired Fraction;x;Secondary Variable;Calcium;Target Calcium;Synaptic Input;Background Activity;Grown Axons;Connected Axons;Grown Excitatory Dendrites;Connected Excitatory Dendrites;Grown Inhibitory Dendrites;Connected Inhibitory Dendrites\n";
-
-        constexpr auto filler = ";";
-        constexpr auto width = 6;
-
-        outfile << std::setprecision(Constants::print_precision);
-        outfile.imbue(std::locale());
-
-        outfile << description;
-
-        const auto& infos = monitor.get_informations();
-        auto current_step = static_cast<decltype(Config::monitor_step)>(0);
-        for (const auto& info : infos) {
-            outfile << current_step << filler;
-            outfile << info.get_fired() << filler;
-            outfile << info.get_fraction_fired() << filler;
-            outfile << info.get_x() << filler;
-            outfile << info.get_secondary() << filler;
-            outfile << info.get_calcium() << filler;
-            outfile << info.get_target_calcium() << filler;
-            outfile << info.get_synaptic_input() << filler;
-            outfile << info.get_background_activity() << filler;
-            outfile << info.get_axons() << filler;
-            outfile << info.get_axons_connected() << filler;
-            outfile << info.get_excitatory_dendrites_grown() << filler;
-            outfile << info.get_excitatory_dendrites_connected() << filler;
-            outfile << info.get_inhibitory_dendrites_grown() << filler;
-            outfile << info.get_inhibitory_dendrites_connected() << '\n';
-
-            current_step += Config::monitor_step;
-        }
-
-        outfile.flush();
-        outfile.close();
-    }
-}
-
 void Simulation::increase_monitoring_capacity(const size_t size) {
     for (auto& mon : *monitors) {
         mon.increase_monitoring_capacity(size);
@@ -453,7 +404,7 @@ void Simulation::snapshot_monitors() {
         // record data at step 0
         Timers::start(TimerRegion::CAPTURE_MONITORS);
         for (auto& m : *monitors) {
-            m.record_data();
+            m.record_data(0);
         }
         Timers::stop_and_add(TimerRegion::CAPTURE_MONITORS);
 
