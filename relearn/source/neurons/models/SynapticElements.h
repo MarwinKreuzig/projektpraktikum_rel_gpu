@@ -40,6 +40,14 @@ class NeuronMonitor;
  * @param growth_rate A linear scaling factor, i.e., the maximum of the function at (eta + epsilon) / 2
  */
 inline double gaussian_growth_curve(const double current, const double eta, const double epsilon, const double growth_rate) noexcept {
+    if (eta == epsilon) {
+        // This is a corner case when using decaying target calcium
+        if (current == eta) {
+            return 0.0;
+        }
+        return -growth_rate;
+    }
+    
     constexpr auto factor = 1.6651092223153955127063292897904020952611777045288814583336582344;
     // 1.6651092223153955127063292897904020952611777045288814583336582344... = (2 * sqrt(-log(0.5)))
 
