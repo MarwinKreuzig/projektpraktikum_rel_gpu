@@ -25,7 +25,7 @@ void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, 
     const auto number_ranks = MPIWrapper::get_num_ranks();
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    const auto& [ids, positions, area_names, signal_types, infos] = NeuronIO::read_neurons_componentwise(neuron_file);
+    const auto& [ids, positions, area_ids, area_names, signal_types, infos] = NeuronIO::read_neurons_componentwise(neuron_file);
     const auto number_neurons = positions.size();
     const auto number_neurons_per_rank = number_neurons / number_ranks;
 
@@ -84,7 +84,7 @@ void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, 
 }
 
 void compute_all_distances(std::filesystem::path neuron_file) {
-    const auto& [ids, positions, area_names, signal_types, infos] = NeuronIO::read_neurons_componentwise(neuron_file);
+    const auto& [ids, positions, area_ids, area_names, signal_types, infos] = NeuronIO::read_neurons_componentwise(neuron_file);
     const auto number_neurons = positions.size();
 
     std::vector<double> pairwise_distances(number_neurons * number_neurons, 0.0);
