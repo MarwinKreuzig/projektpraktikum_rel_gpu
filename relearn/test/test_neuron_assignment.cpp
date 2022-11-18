@@ -1,4 +1,13 @@
-#include "../googletest/include/gtest/gtest.h"
+#include "gtest/gtest.h"
+
+#include "RelearnTest.hpp"
+
+#include "sim/random/SubdomainFromNeuronDensity.h"
+#include "sim/random/SubdomainFromNeuronPerRank.h"
+#include "sim/file/MultipleSubdomainsFromFile.h"
+#include "sim/file/SubdomainFromFile.h"
+#include "sim/NeuronToSubdomainAssignment.h"
+#include "structure/Partition.h"
 
 #include <algorithm>
 #include <fstream>
@@ -6,15 +15,6 @@
 #include <numeric>
 #include <sstream>
 #include <string>
-
-#include "RelearnTest.hpp"
-
-#include "../source/sim/NeuronToSubdomainAssignment.h"
-#include "../source/structure/Partition.h"
-#include "../source/sim/random/SubdomainFromNeuronDensity.h"
-#include "../source/sim/random/SubdomainFromNeuronPerRank.h"
-#include "../source/sim/file/MultipleSubdomainsFromFile.h"
-#include "../source/sim/file/SubdomainFromFile.h"
 
 void NeuronAssignmentTest::generate_random_neurons(std::vector<Vec3d>& positions,
     std::vector<std::string>& area_names, std::vector<SignalType>& types) {

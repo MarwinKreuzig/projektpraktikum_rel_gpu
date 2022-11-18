@@ -1,14 +1,16 @@
-#include "../googletest/include/gtest/gtest.h"
+#include "gtest/gtest.h"
 
 #include "RelearnTest.hpp"
 
-#include "../source/neurons/models/SynapticElements.h"
-#include "../source/neurons/UpdateStatus.h"
+#include "neurons/models/SynapticElements.h"
+#include "neurons/UpdateStatus.h"
 
 #include <numeric>
 #include <sstream>
 
 TEST_F(SynapticElementsTest, testGaussianGrowthCurve) {
+    constexpr auto number_values = 100;
+
     const auto intersection_1 = get_random_double(-100.0, 100.0);
     const auto intersection_2 = get_random_double(-100.0, 100.0);
 
@@ -28,12 +30,12 @@ TEST_F(SynapticElementsTest, testGaussianGrowthCurve) {
     ASSERT_NEAR(gaussian_growth_curve(right_intersection, left_intersection, right_intersection, growth_factor), 0.0, eps) << ss.str();
     ASSERT_NEAR(gaussian_growth_curve(middle, left_intersection, right_intersection, growth_factor), growth_factor, eps) << ss.str();
 
-    std::vector<double> smaller_negatives(100);
-    std::vector<double> smaller_positives(100);
-    std::vector<double> larger_positives(100);
-    std::vector<double> larger_negatives(100);
+    std::vector<double> smaller_negatives(number_values);
+    std::vector<double> smaller_positives(number_values);
+    std::vector<double> larger_positives(number_values);
+    std::vector<double> larger_negatives(number_values);
 
-    for (auto i = 0; i < 100; i++) {
+    for (auto i = 0; i < number_values; i++) {
         smaller_negatives[i] = get_random_double(-100000.0, left_intersection);
         smaller_positives[i] = get_random_double(left_intersection, middle);
         larger_positives[i] = get_random_double(middle, right_intersection);
@@ -48,7 +50,7 @@ TEST_F(SynapticElementsTest, testGaussianGrowthCurve) {
     auto last_value = -100000.0;
     auto last_change = gaussian_growth_curve(last_value, left_intersection, right_intersection, growth_factor);
 
-    for (auto i = 0; i < 100; i++) {
+    for (auto i = 0; i < number_values; i++) {
         const auto current_value = smaller_negatives[i];
         const auto current_change = gaussian_growth_curve(current_value, left_intersection, right_intersection, growth_factor);
 
@@ -70,7 +72,7 @@ TEST_F(SynapticElementsTest, testGaussianGrowthCurve) {
     last_value = left_intersection;
     last_change = gaussian_growth_curve(last_value, left_intersection, right_intersection, growth_factor);
 
-    for (auto i = 0; i < 100; i++) {
+    for (auto i = 0; i < number_values; i++) {
         const auto current_value = smaller_positives[i];
         const auto current_change = gaussian_growth_curve(current_value, left_intersection, right_intersection, growth_factor);
 
@@ -93,7 +95,7 @@ TEST_F(SynapticElementsTest, testGaussianGrowthCurve) {
     last_value = middle;
     last_change = gaussian_growth_curve(last_value, left_intersection, right_intersection, growth_factor);
 
-    for (auto i = 0; i < 100; i++) {
+    for (auto i = 0; i < number_values; i++) {
         const auto current_value = larger_positives[i];
         const auto current_change = gaussian_growth_curve(current_value, left_intersection, right_intersection, growth_factor);
 
@@ -116,7 +118,7 @@ TEST_F(SynapticElementsTest, testGaussianGrowthCurve) {
     last_value = right_intersection;
     last_change = gaussian_growth_curve(last_value, left_intersection, right_intersection, growth_factor);
 
-    for (auto i = 0; i < 100; i++) {
+    for (auto i = 0; i < number_values; i++) {
         const auto current_value = larger_negatives[i];
         const auto current_change = gaussian_growth_curve(current_value, left_intersection, right_intersection, growth_factor);
 
@@ -133,6 +135,37 @@ TEST_F(SynapticElementsTest, testGaussianGrowthCurve) {
 
         last_value = current_value;
         last_change = current_change;
+    }
+}
+
+TEST_F(SynapticElementsTest, testGaussianGrowthCurveSameIntersections) {
+    constexpr auto number_values = 100;
+
+    const auto intersection = get_random_double(-100.0, 100.0);
+    const auto growth_factor = get_random_double(1e-6, 100.0);
+        
+    ASSERT_EQ(gaussian_growth_curve(intersection, intersection, intersection, growth_factor), 0.0);
+
+    std::vector<double> left_values(number_values);
+    std::vector<double> right_values(number_values);
+
+    for (auto i = 0; i < number_values; i++) {
+        left_values[i] = get_random_double(-100000.0, intersection);
+        right_values[i] = get_random_double(intersection, 100000.0);
+    }
+      
+    for (auto i = 0; i < number_values; i++) {
+        const auto current_val_left = left_values[i];
+        const auto current_change = gaussian_growth_curve(current_val_left, intersection, intersection, growth_factor);
+
+        ASSERT_EQ(gaussian_growth_curve(current_val_left, intersection, intersection, growth_factor), -growth_factor);
+    }
+
+    for (auto i = 0; i < number_values; i++) {
+        const auto current_val_right = right_values[i];
+        const auto current_change = gaussian_growth_curve(current_val_right, intersection, intersection, growth_factor);
+
+        ASSERT_EQ(gaussian_growth_curve(current_val_right, intersection, intersection, growth_factor), -growth_factor);
     }
 }
 

@@ -1112,3 +1112,10 @@ protected:
         return { std::move(rank_neuron_id), std::move(description) };
     }
 };
+
+class MPIRankTest : public RelearnTest {
+protected:
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};

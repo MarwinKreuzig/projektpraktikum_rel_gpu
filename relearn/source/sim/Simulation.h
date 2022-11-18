@@ -228,8 +228,6 @@ public:
     void save_network_graph(step_type current_steps);
 
 private:
-    void print_neuron_monitors();
-
     std::shared_ptr<Partition> partition{};
 
     std::unique_ptr<NeuronToSubdomainAssignment> neuron_to_subdomain_assignment{};

@@ -114,6 +114,7 @@ if(WIN32)
 	# util
 	list(APPEND relearn_lib_additional_files "util/MemoryHolder.h")
 	list(APPEND relearn_lib_additional_files "util/MonitorParser.h")
+	list(APPEND relearn_lib_additional_files "util/MPIRank.h")
 	list(APPEND relearn_lib_additional_files "util/Random.h")
 	list(APPEND relearn_lib_additional_files "util/RelearnException.h")
 	list(APPEND relearn_lib_additional_files "util/SemiStableVector.h")

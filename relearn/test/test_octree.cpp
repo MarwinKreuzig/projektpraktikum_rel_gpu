@@ -1,4 +1,4 @@
-#include "../googletest/include/gtest/gtest.h"
+#include "gtest/gtest.h"
 
 #include "RelearnTest.hpp"
 
@@ -600,7 +600,7 @@ TYPED_TEST(OctreeTest, testOctreeLevel) {
         auto tmp = node.insert(pos, id, my_rank);
     }
 
-    ASSERT_EQ(node.get_level(), 0);
+    ASSERT_EQ(node.get_level(), level);
     Stack<std::pair<const OctreeNode<AdditionalCellAttributes>*, const OctreeNode<AdditionalCellAttributes>*>> stack;
     for (const auto* child : node.get_children()) {
         if (child != nullptr) {
