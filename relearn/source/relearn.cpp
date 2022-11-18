@@ -432,6 +432,7 @@ int main(int argc, char** argv) {
     auto* const monitor_option = app.add_option("--neuron-monitors", neuron_monitors_description, "The description which neurons to monitor. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;... where <mpi_rank> can be -1 to indicate \"on every rank\"");
 
     auto* flag_monitor_all = app.add_flag("--neuron-monitors-all", "Monitors all neurons.");
+    // auto* flag_area_monitor_all = app.add_flag("--area-monitors-all", "Monitors all areas.");
 
     monitor_option->excludes(flag_monitor_all);
     flag_monitor_all->excludes(monitor_option);
@@ -554,7 +555,7 @@ int main(int argc, char** argv) {
         RelearnException::check(static_cast<bool>(*opt_file_external_stimulation), "Setting the background activity to stimulus but not providing a file is not supported.");
         RelearnException::check(background_activity_stddev >= 0.0, "When choosing the stimulus-background calculator, the standard deviation must be set to >= 0.0.");
 
-        background_activity_calculator = std::make_unique<StimulusBackgroundActivityCalculator>(file_external_stimulation, std::optional{ std::pair{ background_activity_mean, background_activity_stddev } }, my_rank, subdomain->get_neuron_area_names_in_subdomains());
+        background_activity_calculator = std::make_unique<StimulusBackgroundActivityCalculator>(file_external_stimulation, std::optional{ std::pair{ background_activity_mean, background_activity_stddev } }, my_rank, subdomain->get_neuron_id_vs_area_id(), subdomain->get_area_id_vs_area_name());
     } else {
         RelearnException::fail("Chose a background activity calculator that is not implemented");
     }
@@ -765,7 +766,7 @@ int main(int argc, char** argv) {
     sim.set_dendrites_in(std::move(inhibitory_dendrites_model));
 
     if (*opt_static_neurons) {
-        auto static_neurons = MonitorParser::parse_my_ids(static_neurons_str, my_rank, my_rank, subdomain->get_neuron_area_names_in_subdomains());
+        auto static_neurons = MonitorParser::parse_my_ids(static_neurons_str, my_rank, my_rank, subdomain->get_neuron_id_vs_area_id(), subdomain->get_area_id_vs_area_name());
         sim.set_static_neurons(static_neurons);
     }
 
@@ -829,7 +830,7 @@ int main(int argc, char** argv) {
             sim.register_neuron_monitor(neuron_id);
         }
     } else {
-        const auto& my_neuron_ids_to_monitor = MonitorParser::parse_my_ids(neuron_monitors_description, my_rank, my_rank, sim.get_neurons()->get_extra_info()->get_area_names());
+        const auto& my_neuron_ids_to_monitor = MonitorParser::parse_my_ids(neuron_monitors_description, my_rank, my_rank, sim.get_neurons()->get_extra_info()->get_neuron_id_vs_area_id(), sim.get_neurons()->get_extra_info()->get_area_id_vs_area_name());
         for (const auto& neuron_id : my_neuron_ids_to_monitor) {
             sim.register_neuron_monitor(neuron_id);
         }

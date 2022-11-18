@@ -44,6 +44,7 @@ void SubdomainFromNeuronDensity::fill_all_subdomains() {
     const auto& [min, max] = partition->get_subdomain_boundaries(0);
     const auto requested_number_neurons = get_requested_number_neurons();
     auto [neurons, number_excitatory_neurons] = place_neurons_in_box(min, max, requested_number_neurons, 0);
+    set_area_id_vs_area_name({ "random" });
 
     set_number_placed_neurons(requested_number_neurons);
     set_total_number_placed_neurons(requested_number_neurons);

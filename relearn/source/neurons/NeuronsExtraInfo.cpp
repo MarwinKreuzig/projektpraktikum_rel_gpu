@@ -25,7 +25,7 @@ void NeuronsExtraInfo::create_neurons(const number_neurons_type creation_count) 
     const auto current_size = size;
     const auto new_size = current_size + creation_count;
 
-    area_names.resize(new_size, "UNKNOWN (inserted by creation");
+    neuron_id_vs_area_id.resize(new_size, 0);
 
     positions.resize(new_size);
 

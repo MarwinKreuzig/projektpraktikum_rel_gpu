@@ -54,6 +54,7 @@ public:
         Essentials,
         CalciumValues,
         SynapticInput,
+        AreaMapping,
     };
 
     /**

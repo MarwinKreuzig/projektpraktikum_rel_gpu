@@ -112,9 +112,9 @@ public:
         return parsed_ids;
     }
 
-    [[nodiscard]] static std::vector<RelearnTypes::area_name> parse_area_names(const std::string& description) {
+    [[nodiscard]] static std::vector<RelearnTypes::area_id> parse_area_names(const std::string& description, const std::vector<RelearnTypes::area_name>& area_id_vs_area_name) {
         const auto& vector = Helper::split_string(description, ';');
-        std::vector<RelearnTypes::area_name> area_names{};
+        std::vector<RelearnTypes::area_name> area_names;
         for (const auto& desc : vector) {
             if (desc.find(':') != std::string::npos || Helper::is_number(desc)) {
                 // Description has the format of a neuron id. Skip it
@@ -122,7 +122,16 @@ public:
             }
             area_names.emplace_back(desc);
         }
-        return std::move(area_names);
+
+        std::vector<RelearnTypes::area_id> area_ids;
+        for (const auto& area_name : area_names) {
+            const auto it = std::find(area_id_vs_area_name.begin(), area_id_vs_area_name.end(), area_name);
+            if (it != area_id_vs_area_name.end()) {
+                area_ids.emplace_back(it - area_id_vs_area_name.begin());
+            }
+        }
+
+        return std::move(area_ids);
     }
 
     /**
@@ -173,10 +182,10 @@ public:
         return neuron_ids;
     }
 
-    [[nodiscard]] static std::vector<NeuronID> get_neuron_ids_in_area(const std::vector<RelearnTypes::area_name>& neuron_vs_area, const std::vector<RelearnTypes::area_name>& area_names) {
+    [[nodiscard]] static std::vector<NeuronID> get_neuron_ids_in_area(const std::vector<RelearnTypes::area_id>& neuron_id_vs_area_id, const std::vector<RelearnTypes::area_id>& my_area_ids) {
         std::vector<NeuronID> neurons_in_area{};
-        for (const auto& neuron_id : NeuronID::range(0, neuron_vs_area.size())) {
-            if (std::find(area_names.begin(), area_names.end(), neuron_vs_area[neuron_id.get_neuron_id()]) != area_names.end()) {
+        for (const auto& neuron_id : NeuronID::range(0, neuron_id_vs_area_id.size())) {
+            if (std::find(my_area_ids.begin(), my_area_ids.end(), neuron_id_vs_area_id[neuron_id.get_neuron_id()]) != my_area_ids.end()) {
                 neurons_in_area.emplace_back(neuron_id);
             }
         }
@@ -193,11 +202,11 @@ public:
      * @exception Throws a RelearnException if default_rank < 0 or my_rank < 0
      * @return A vector with all NeuronIDs that shall be monitored at the current rank, sorted and unique
      */
-    [[nodiscard]] static std::vector<NeuronID> parse_my_ids(const std::string& description, const int default_rank, const int my_rank, const std::vector<RelearnTypes::area_name>& neuron_vs_area) {
+    [[nodiscard]] static std::vector<NeuronID> parse_my_ids(const std::string& description, const int default_rank, const int my_rank, const std::vector<RelearnTypes::area_id>& neuron_id_vs_area_id, const std::vector<RelearnTypes::area_name>& area_id_vs_area_name) {
         const auto& rank_neuron_ids = parse_multiple_description(description, default_rank);
-        const auto& area_names = parse_area_names(description);
+        const auto& area_ids = parse_area_names(description, area_id_vs_area_name);
         auto neuron_ids = extract_my_ids(rank_neuron_ids, my_rank);
-        auto neurons_in_areas = get_neuron_ids_in_area(neuron_vs_area, area_names);
+        auto neurons_in_areas = get_neuron_ids_in_area(neuron_id_vs_area_id, area_ids);
         neuron_ids.insert(neuron_ids.end(), neurons_in_areas.begin(), neurons_in_areas.end());
         return remove_duplicates_and_sort(std::move(neuron_ids));
     }

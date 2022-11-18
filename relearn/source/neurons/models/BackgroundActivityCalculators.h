@@ -183,7 +183,7 @@ public:
      * @param background Optionally a pair of the mean and standarddeviation (if the latter is 0.0, the input will be the mean)
      * @exception Throws a RelearnException if the file is not present or the second argument of background is <0.0 (if provided)
      */
-    StimulusBackgroundActivityCalculator(const std::filesystem::path& stimulus_file, std::optional<std::pair<double, double>> background, int mpi_rank, const std::vector<RelearnTypes::area_name>& neuron_id_vs_area_name)
+    StimulusBackgroundActivityCalculator(const std::filesystem::path& stimulus_file, std::optional<std::pair<double, double>> background, int mpi_rank, const std::vector<RelearnTypes::area_id>& neuron_id_vs_area_id, const std::vector<RelearnTypes::area_name>& area_id_vs_area_name)
         : file(stimulus_file) {
         if (background.has_value()) {
             auto [mean, stddev] = background.value();
@@ -193,7 +193,7 @@ public:
             stddev_input = stddev;
         }
 
-        auto function = InteractiveNeuronIO::load_stimulus_interrupts(stimulus_file, mpi_rank, neuron_id_vs_area_name);
+        auto function = InteractiveNeuronIO::load_stimulus_interrupts(stimulus_file, mpi_rank, neuron_id_vs_area_id, area_id_vs_area_name);
         stimulus_function = std::move(function);
     }
 
@@ -261,6 +261,6 @@ private:
     std::function<double(step_type, NeuronID::value_type)> stimulus_function{};
     double mean_input{ default_background_activity_mean };
     double stddev_input{ default_background_activity_stddev };
-    std::vector<RelearnTypes::area_name> neuron_id_vs_area_name;
+    std::vector<RelearnTypes::area_name> neuron_id_vs_area_id;
     int my_rank;
 };

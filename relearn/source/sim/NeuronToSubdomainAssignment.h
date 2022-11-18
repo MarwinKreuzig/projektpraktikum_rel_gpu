@@ -158,15 +158,20 @@ public:
      * @brief Returns all area names of neurons in the local subdomains, indexed by the neuron id
      * @return The all position of neurons in the local subdomains
      */
-    [[nodiscard]] std::vector<RelearnTypes::area_name> get_neuron_area_names_in_subdomains() const {
-        std::vector<std::string> areas{};
-        areas.reserve(loaded_neurons.size());
+    [[nodiscard]] std::vector<RelearnTypes::area_id> get_neuron_id_vs_area_id() const {
+        std::vector<RelearnTypes::area_id> neuron_id_vs_area_name{};
+        neuron_id_vs_area_name.reserve(loaded_neurons.size());
 
         for (const auto& loaded_neuron : loaded_neurons) {
-            areas.push_back(loaded_neuron.area_name);
+            neuron_id_vs_area_name.push_back(loaded_neuron.area_id);
         }
 
-        return areas;
+        return neuron_id_vs_area_name;
+    }
+
+    [[nodiscard]] const std::vector<RelearnTypes::area_name>& get_area_id_vs_area_name() const {
+        RelearnException::check(!area_id_vs_area_name.empty(), "NeuronToSubdomainAssignment::get_area_id_vs_area_name: area_id_vs_area_name is empty");
+        return area_id_vs_area_name;
     }
 
     /**
@@ -205,6 +210,10 @@ protected:
         loaded_neurons = std::move(neurons);
     }
 
+    void set_area_id_vs_area_name(const std::vector<RelearnTypes::area_name>& area_id_vs_area_name) {
+        this->area_id_vs_area_name = std::move(area_id_vs_area_name);
+    }
+
     std::shared_ptr<Partition> partition{};
 
     std::shared_ptr<SynapseLoader> synapse_loader{};
@@ -213,6 +222,8 @@ protected:
 
 private:
     std::vector<LoadedNeuron> loaded_neurons{};
+
+    std::vector<RelearnTypes::area_name> area_id_vs_area_name{};
 
     double requested_ratio_excitatory_neurons{ 0.0 };
     number_neurons_type requested_number_neurons{ 0 };

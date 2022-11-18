@@ -232,6 +232,10 @@ public:
      */
     void save_network_graph(step_type current_steps);
 
+    const std::shared_ptr<std::map<RelearnTypes::area_id, AreaMonitor>> get_area_monitors() const noexcept {
+        return area_monitors;
+    }
+
 private:
     void print_neuron_monitors();
 
@@ -257,7 +261,7 @@ private:
     std::shared_ptr<NetworkGraph> network_graph_static{};
 
     std::shared_ptr<std::vector<NeuronMonitor>> monitors{};
-    std::shared_ptr<std::vector<AreaMonitor>> area_monitors{};
+    std::shared_ptr<std::map<RelearnTypes::area_id, AreaMonitor>> area_monitors{};
 
     std::vector<std::pair<step_type, std::vector<NeuronID>>> enable_interrupts{};
     std::vector<std::pair<step_type, std::vector<NeuronID>>> disable_interrupts{};

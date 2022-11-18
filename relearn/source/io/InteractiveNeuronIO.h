@@ -85,5 +85,5 @@ public:
      * @exception Throws a RelearnException if opening the file fails
      * @return A function that specified for a given simulation step and a given neuron id, how much background it receives
      */
-    [[nodiscard]] static std::function<double(step_type, NeuronID::value_type)> load_stimulus_interrupts(const std::filesystem::path& path_to_file, int my_rank, const std::vector<RelearnTypes::area_name>& neuron_id_vs_area_name);
+    [[nodiscard]] static std::function<double(step_type, NeuronID::value_type)> load_stimulus_interrupts(const std::filesystem::path& path_to_file, int my_rank, const std::vector<RelearnTypes::area_id>& neuron_id_vs_area_id, const std::vector<RelearnTypes::area_name>& area_id_vs_area_name);
 };

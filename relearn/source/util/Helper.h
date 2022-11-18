@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "RelearnException.h"
+
 #include <functional>
 #include <iomanip>
 #include <map>
@@ -49,5 +51,14 @@ public:
         std::stringstream ss;
         ss << std::setw(nr_of_digits) << std::setfill('0') << number;
         return ss.str();
+    }
+
+    template <typename T>
+    static void stack_vectors(std::vector<std::vector<T>>& first, const std::vector<std::vector<T>>& second) {
+        RelearnException::check(first.size() == second.size(), "Helper::stack_vectors: Cannot stack vectors with different size {} != {} ", first.size(), second.size());
+
+        for (int i = 0; i < first.size(); i++) {
+            first[i].insert(first[i].end(), second[i].begin(), second[i].end());
+        }
     }
 };

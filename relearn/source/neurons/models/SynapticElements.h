@@ -240,7 +240,7 @@ public:
         RelearnException::check(local_neuron_id < connected_elements.size(), "SynapticElements::update_connected_elements: neuron_id is too large: {}", neuron_id);
         if (delta < 0) {
             const unsigned int abs_delta = -delta;
-            RelearnException::check(connected_elements[local_neuron_id] >= abs_delta, "SynapticElements::update_connected_elements: {}: {}", neuron_id, delta);
+            RelearnException::check(connected_elements[local_neuron_id] >= abs_delta, "SynapticElements::update_connected_elements: {}: {} {}", neuron_id, delta, connected_elements[local_neuron_id]);
         }
 
         if (delta > 0) {

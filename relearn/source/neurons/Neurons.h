@@ -170,12 +170,21 @@ public:
     }
 
     /**
-     * @brief Sets the area names in the extra infos
-     * @param names The area names
-     * @exception Throws the same RelearnException as NeuronsExtraInfo::set_area_names
+     * @brief Overwrites the current assignment of area ids to area names
+     * @param names The new area names. names[i] is assigned to the area id i
+     * @exception Throws an RelearnException if names.empty() or if the number of supplied elements does not match the number of stored neurons
      */
-    void set_area_names(std::vector<RelearnTypes::area_name> names) {
-        extra_info->set_area_names(std::move(names));
+    void set_area_id_vs_area_name(std::vector<RelearnTypes::area_name> area_id_vs_area_name) {
+        extra_info->set_area_id_vs_area_name(std::move(area_id_vs_area_name));
+    }
+
+    /**
+     * @brief Overwrites the current area ids with the supplied ones
+     * @param ids The new area ids, must have the same size as neurons are stored. Neuron i is assigned to the area id ids[i]
+     * @exception Throws an RelearnException if ids.empty() or if the number of supplied elements does not match the number of stored neurons
+     */
+    void set_neuron_id_vs_area_id(std::vector<RelearnTypes::area_id> neuron_id_vs_area_id) {
+        extra_info->set_neuron_id_vs_area_id(std::move(neuron_id_vs_area_id));
     }
 
     /**
@@ -346,6 +355,8 @@ public:
      * @brief Prints the neuron positions to LogFiles::EventType::Positions
      */
     void print_positions_to_log_file();
+
+    void print_area_mapping_to_log_file();
 
     /**
      * @brief Prints some overview to LogFiles::EventType::Cout

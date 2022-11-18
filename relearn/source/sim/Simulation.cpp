@@ -11,6 +11,7 @@
 #include "Simulation.h"
 
 #include "algorithm/Algorithms.h"
+#include "util/Helper.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/helper/AreaMonitor.h"
@@ -19,14 +20,13 @@
 #include "neurons/helper/NeuronMonitor.h"
 #include "neurons/models/NeuronModels.h"
 #include "sim/NeuronToSubdomainAssignment.h"
-#include "sim/SynapseLoader.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
 #include "util/Timers.h"
 
-#include <fstream>
 #include <iomanip>
+#include <map>
 #include <sstream>
 #include <utility>
 
@@ -34,7 +34,7 @@ Simulation::Simulation(std::shared_ptr<Partition> partition)
     : partition(std::move(partition)) {
 
     monitors = std::make_shared<std::vector<NeuronMonitor>>();
-    area_monitors = std::make_shared<std::vector<AreaMonitor>>();
+    area_monitors = std::make_shared<std::map<RelearnTypes::area_id, AreaMonitor>>();
 }
 
 void Simulation::register_neuron_monitor(const NeuronID& neuron_id) {
@@ -125,11 +125,12 @@ void Simulation::initialize() {
         "Simulation::initialize: The partition and the NTSA had a disagreement about the number of local neurons");
 
     auto neuron_positions = neuron_to_subdomain_assignment->get_neuron_positions_in_subdomains();
-    auto area_names = neuron_to_subdomain_assignment->get_neuron_area_names_in_subdomains();
+    auto neuron_id_vs_area_id = neuron_to_subdomain_assignment->get_neuron_id_vs_area_id();
+    auto area_id_vs_area_name = neuron_to_subdomain_assignment->get_area_id_vs_area_name();
     auto signal_types = neuron_to_subdomain_assignment->get_neuron_types_in_subdomains();
 
     RelearnException::check(neuron_positions.size() == number_local_neurons, "Simulation::initialize: neuron_positions had the wrong size");
-    RelearnException::check(area_names.size() == number_local_neurons, "Simulation::initialize: area_names had the wrong size");
+    RelearnException::check(neuron_id_vs_area_id.size() == number_local_neurons, "Simulation::initialize: neuron_id_vs_area_id had the wrong size");
     RelearnException::check(signal_types.size() == number_local_neurons, "Simulation::initialize: signal_types had the wrong size");
 
     partition->print_my_subdomains_info_rank(-1);
@@ -192,7 +193,8 @@ void Simulation::initialize() {
 
     algorithm->set_synaptic_elements(axons, dendrites_ex, dendrites_in);
 
-    neurons->set_area_names(std::move(area_names));
+    neurons->set_area_id_vs_area_name(std::move(area_id_vs_area_name));
+    neurons->set_neuron_id_vs_area_id(std::move(neuron_id_vs_area_id));
     neurons->set_signal_types(std::move(signal_types));
     neurons->set_positions(std::move(neuron_positions));
 
@@ -200,8 +202,9 @@ void Simulation::initialize() {
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 
-    for (const auto& area_name : neurons->get_extra_info()->get_unique_area_names()) {
-        area_monitors->emplace_back(this, area_name, neurons->get_extra_info()->get_nr_neurons_in_area(area_name));
+    for (size_t area_id = 0; area_id < neurons->get_extra_info()->get_area_id_vs_area_name().size(); area_id++) {
+        const auto& area_name = neurons->get_extra_info()->get_area_id_vs_area_name()[area_id];
+        area_monitors->insert(std::make_pair(area_id, AreaMonitor(this, area_id, area_name, neurons->get_extra_info()->get_nr_neurons_in_area(area_id), my_rank)));
     }
 
     auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
@@ -257,16 +260,37 @@ void Simulation::simulate(const step_type number_steps) {
             neurons->get_neuron_model()->reset_fired_recorder();
         }
 
-        if (step % Config::monitor_area_step == 0) {
-            for (auto& area_monitor : *area_monitors) {
+        if (step % Config::monitor_area_step == 0 && !area_monitors->empty()) {
+            for (auto& [_, area_monitor] : *area_monitors) {
                 area_monitor.prepare_recording();
             }
-            for (RelearnTypes::neuron_id neuron_id = 0; neuron_id < neurons->get_number_neurons(); neuron_id++) {
-                for (auto& area_monitor : *area_monitors) {
-                    area_monitor.record_data(NeuronID(neuron_id));
+            for (NeuronID neuron_id : NeuronID::range(neurons->get_number_neurons())) {
+                const auto& area_id = neurons->get_extra_info()->get_area_id_for_neuron_id(neuron_id);
+                if (!area_monitors->contains(area_id)) {
+                    continue;
+                }
+                auto& area_monitor = area_monitors->at(area_id);
+                area_monitor.record_data(NeuronID(neuron_id));
+            }
+            std::vector<std::vector<AreaMonitor::AreaConnection>> all_exchange_data(MPIWrapper::get_num_ranks());
+            for (auto& [_, area_monitor] : *area_monitors) {
+                const auto& exchange_data_single = area_monitor.get_exchange_data();
+                Helper::stack_vectors<AreaMonitor::AreaConnection>(all_exchange_data, exchange_data_single);
+            }
+            const auto& received_data = MPIWrapper::exchange_values<AreaMonitor::AreaConnection>(all_exchange_data);
+            RelearnException::check(received_data.size() == MPIWrapper::get_num_ranks(), "Simulation::simulate: MPI Communication for area monitor failed {} != {}", received_data.size() != MPIWrapper::get_num_ranks());
+            for (int rank = 0; rank < received_data.size(); rank++) {
+                const auto& received_data_single = received_data[rank];
+                if (rank == my_rank) {
+                    RelearnException::check(received_data_single.empty(), "Simulation::simulate: Send MPI {} messages to myself", received_data_single.size());
+                }
+                for (const AreaMonitor::AreaConnection& connection : received_data_single) {
+                    const auto& area_id = neurons->get_extra_info()->get_area_id_for_neuron_id(connection.to_local_neuron_id);
+                    area_monitors->at(area_id).add_connection(connection);
                 }
             }
-            for (auto& area_monitor : *area_monitors) {
+
+            for (auto& [_, area_monitor] : *area_monitors) {
                 area_monitor.finish_recording();
             }
         }
@@ -391,12 +415,17 @@ void Simulation::simulate(const step_type number_steps) {
         monitor.flush_current_contents();
     }
 
-    for (auto& area_monitor : *area_monitors) {
-        auto path = LogFiles::get_output_path() / (MPIWrapper::get_my_rank_str() + "_area_" + area_monitor.get_area_name() + ".csv");
+    for (auto& [area_id, area_monitor] : *area_monitors) {
+        std::filesystem::path dir = LogFiles::get_output_path() / "area_monitors";
+        if (!std::filesystem::exists(dir)) {
+            std::filesystem::create_directories(dir);
+        }
+        auto path = dir / (MPIWrapper::get_my_rank_str() + "_area_" + std::to_string(area_id) + ".csv");
         area_monitor.write_data_to_file(std::move(path));
     }
 
     neurons->print_positions_to_log_file();
+    neurons->print_area_mapping_to_log_file();
 }
 
 void Simulation::finalize() const {

@@ -139,6 +139,32 @@ protected:
         return uid(mt);
     }
 
+    std::vector<RelearnTypes::area_name> get_random_area_names(size_t max_areas) {
+        int nr_areas = get_random_integer<size_t>(1, max_areas);
+        std::vector<RelearnTypes::area_name> area_names{};
+        for (int area_id = 0; area_id < nr_areas; area_id++) {
+            area_names.emplace_back(std::to_string(get_random_percentage()));
+        }
+        return std::move(area_names);
+    }
+
+    std::vector<RelearnTypes::area_id> get_random_area_ids(int num_areas, int num_neurons) {
+        std::vector<RelearnTypes::area_id> area_ids{};
+        for (const auto& neuron_id : NeuronID::range(num_neurons)) {
+            area_ids.emplace_back(get_random_integer(0, num_areas - 1));
+        }
+        return std::move(area_ids);
+    }
+
+    static std::vector<RelearnTypes::area_name> get_neuron_id_vs_area_name(const std::vector<RelearnTypes::area_id>& neuron_id_vs_area_id, const std::vector<RelearnTypes::area_name>& area_id_vs_area_name) {
+        std::vector<RelearnTypes::area_name> neuron_id_vs_area_name{};
+
+        for (auto i = 0; i < neuron_id_vs_area_id.size(); i++) {
+            neuron_id_vs_area_name.emplace_back(area_id_vs_area_name[neuron_id_vs_area_id[i]]);
+        }
+        return std::move(neuron_id_vs_area_name);
+    }
+
     std::tuple<Vec3d, Vec3d> get_random_simulation_box_size() {
         const auto rand_x_1 = get_random_double(-position_bounary, +position_bounary);
         const auto rand_x_2 = get_random_double(-position_bounary, +position_bounary);
@@ -821,7 +847,7 @@ protected:
     }
 
     void generate_random_neurons(std::vector<Vec3d>& positions,
-        std::vector<std::string>& area_names, std::vector<SignalType>& types);
+        std::vector<RelearnTypes::area_id>& neuron_id_to_area_ids, std::vector<RelearnTypes::area_name>& area_id_to_area_name, std::vector<SignalType>& types);
 };
 
 class NeuronModelsTest : public RelearnTest {
@@ -849,7 +875,7 @@ protected:
     void assert_empty(const NeuronsExtraInfo& nei, size_t number_neurons);
 
     void assert_contains(const NeuronsExtraInfo& nei, size_t number_neurons, size_t num_neurons_check,
-        const std::vector<std::string>& expected_area_names, const std::vector<Vec3d>& expected_positions);
+        const std::vector<RelearnTypes::area_id>& expected_area_ids, const std::vector<Vec3d>& expected_positions);
 };
 
 class CellTest : public RelearnTest {

@@ -15,6 +15,7 @@
 #include "models/NeuronModels.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/NetworkGraph.h"
+#include "io/NeuronIO.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
 #include "util/Random.h"
@@ -924,13 +925,14 @@ void Neurons::print_positions_to_log_file() {
     LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# <local id> <pos x> <pos y> <pos z> <area> <type>");
 
     const auto& positions = extra_info->get_positions();
-    const auto& area_names = extra_info->get_area_names();
+    const auto& area_id_vs_area_name = extra_info->get_area_id_vs_area_name();
+    const auto& neuron_id_vs_area_name = extra_info->get_neuron_id_vs_area_id();
     const auto& signal_types = axons->get_signal_types();
 
     RelearnException::check(positions.size() == number_neurons,
         "Neurons::print_positions_to_log_file: positions had size {}, but there were {} local neurons.", positions.size(), number_neurons);
-    RelearnException::check(area_names.size() == number_neurons,
-        "Neurons::print_positions_to_log_file: area_names had size {}, but there were {} local neurons.", area_names.size(), number_neurons);
+    RelearnException::check(neuron_id_vs_area_name.size() == number_neurons,
+        "Neurons::print_positions_to_log_file: neuron_id_vs_area_id had size {}, but there were {} local neurons.", neuron_id_vs_area_name.size(), number_neurons);
     RelearnException::check(signal_types.size() == number_neurons,
         "Neurons::print_positions_to_log_file: signal_types had size {}, but there were {} local neurons.", signal_types.size(), number_neurons);
 
@@ -939,11 +941,28 @@ void Neurons::print_positions_to_log_file() {
 
         const auto& [x, y, z] = positions[local_neuron_id];
         const auto& signal_type_name = (signal_types[local_neuron_id] == SignalType::Excitatory) ? "ex" : "in";
-        const auto& area_name = area_names[local_neuron_id];
+        const auto& area_name = area_id_vs_area_name[neuron_id_vs_area_name[local_neuron_id]];
 
         LogFiles::write_to_file(LogFiles::EventType::Positions, false,
             "{1:<} {2:<.{0}} {3:<.{0}} {4:<.{0}} {5:<} {6:<}",
             Constants::print_precision, (local_neuron_id + 1), x, y, z, area_name, signal_type_name);
+    }
+}
+
+void Neurons::print_area_mapping_to_log_file() {
+
+    LogFiles::write_to_file(LogFiles::EventType::AreaMapping, false, "# <area id>\t<ara_name>\t<num_neurons_in_area>");
+
+    const auto& positions = extra_info->get_positions();
+    const auto& area_id_vs_area_name = extra_info->get_area_id_vs_area_name();
+    const auto& neuron_id_vs_area_name = extra_info->get_neuron_id_vs_area_id();
+
+    for (size_t area_id = 0; area_id < area_id_vs_area_name.size(); area_id++) {
+        const auto& area_name = area_id_vs_area_name[area_id];
+
+        LogFiles::write_to_file(LogFiles::EventType::AreaMapping, false,
+            "{}\t{}\t{}",
+            area_id, area_name, extra_info->get_nr_neurons_in_area(area_id));
     }
 }
 

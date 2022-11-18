@@ -25,7 +25,10 @@ void NeuronMonitor::init_print_file() {
 }
 
 void NeuronMonitor::flush_current_contents() {
-    const auto& path = LogFiles::get_output_path();
+    std::filesystem::path path = LogFiles::get_output_path() / "neuron_monitors";
+    if (!std::filesystem::exists(path)) {
+        std::filesystem::create_directories(path);
+    }
 
     const auto& file_path = path / (MPIWrapper::get_my_rank_str() + '_' + std::to_string(target_neuron_id.get_neuron_id()) + ".csv");
     std::ofstream outfile(file_path, std::ios_base::ate | std::ios_base::app);

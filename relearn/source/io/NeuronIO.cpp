@@ -48,7 +48,7 @@ std::vector<std::string> NeuronIO::read_comments(const std::filesystem::path& fi
     return comments;
 }
 
-std::tuple<std::vector<LoadedNeuron>, LoadedNeuronsInfo> NeuronIO::read_neurons(const std::filesystem::path& file_path) {
+std::tuple<std::vector<LoadedNeuron>, std::vector<RelearnTypes::area_name>, LoadedNeuronsInfo> NeuronIO::read_neurons(const std::filesystem::path& file_path) {
     std::ifstream file(file_path);
 
     const auto file_is_good = file.good();
@@ -65,6 +65,8 @@ std::tuple<std::vector<LoadedNeuron>, LoadedNeuronsInfo> NeuronIO::read_neurons(
     std::vector<LoadedNeuron> nodes{};
 
     number_neurons_type expected_id = 0;
+
+    std::vector<RelearnTypes::area_name> area_names{};
 
     for (std::string line{}; std::getline(file, line);) {
         // Skip line with comments
@@ -102,19 +104,29 @@ std::tuple<std::vector<LoadedNeuron>, LoadedNeuronsInfo> NeuronIO::read_neurons(
         minimum.calculate_componentwise_minimum(position);
         maximum.calculate_componentwise_maximum(position);
 
+        auto area_id_it = std::find(area_names.begin(), area_names.end(), area_name);
+        RelearnTypes::area_id area_id{ 0 };
+        if (area_id_it == area_names.end()) {
+            // Area name not known
+            area_names.emplace_back(area_name);
+            area_id = area_names.size() - 1;
+        } else {
+            area_id = area_id_it - area_names.begin();
+        }
+
         if (signal_type == "in") {
             found_in_neurons++;
-            nodes.emplace_back(position, NeuronID{ false, id }, SignalType::Inhibitory, std::move(area_name));
+            nodes.emplace_back(position, NeuronID{ false, id }, SignalType::Inhibitory, area_id);
         } else {
             found_ex_neurons++;
-            nodes.emplace_back(position, NeuronID{ false, id }, SignalType::Excitatory, std::move(area_name));
+            nodes.emplace_back(position, NeuronID{ false, id }, SignalType::Excitatory, area_id);
         }
     }
 
-    return { std::move(nodes), LoadedNeuronsInfo{ minimum, maximum, found_ex_neurons, found_in_neurons } };
+    return { std::move(nodes), std::move(area_names), LoadedNeuronsInfo{ minimum, maximum, found_ex_neurons, found_in_neurons } };
 }
 
-std::tuple<std::vector<NeuronID>, std::vector<NeuronIO::position_type>, std::vector<std::string>, std::vector<SignalType>, LoadedNeuronsInfo>
+std::tuple<std::vector<NeuronID>, std::vector<NeuronIO::position_type>, std::vector<RelearnTypes::area_id>, std::vector<RelearnTypes::area_name>, std::vector<SignalType>, LoadedNeuronsInfo>
 NeuronIO::read_neurons_componentwise(const std::filesystem::path& file_path) {
 
     std::ifstream file(file_path);
@@ -132,7 +144,8 @@ NeuronIO::read_neurons_componentwise(const std::filesystem::path& file_path) {
 
     std::vector<NeuronID> ids{};
     std::vector<position_type> positions{};
-    std::vector<std::string> area_names{};
+    std::vector<RelearnTypes::area_id> area_ids{};
+    std::vector<RelearnTypes::area_name> area_names{};
     std::vector<SignalType> signal_types{};
 
     NeuronID::value_type expected_id = 0;
@@ -147,7 +160,7 @@ NeuronIO::read_neurons_componentwise(const std::filesystem::path& file_path) {
         position_type::value_type pos_x{};
         position_type::value_type pos_y{};
         position_type::value_type pos_z{};
-        std::string area_name{};
+        RelearnTypes::area_name area_name{};
         std::string signal_type{};
 
         std::stringstream sstream(line);
@@ -175,7 +188,17 @@ NeuronIO::read_neurons_componentwise(const std::filesystem::path& file_path) {
 
         ids.emplace_back(false, id);
         positions.emplace_back(position);
-        area_names.emplace_back(std::move(area_name));
+
+        auto area_id_it = std::find(area_names.begin(), area_names.end(), area_name);
+        RelearnTypes::area_id area_id{ 0 };
+        if (area_id_it == area_names.end()) {
+            // Area name not known
+            area_names.emplace_back(area_name);
+            area_id = area_names.size() - 1;
+        } else {
+            area_id = area_id_it - area_names.begin();
+        }
+        area_ids.emplace_back(area_id);
 
         if (signal_type == "in") {
             found_in_neurons++;
@@ -186,10 +209,10 @@ NeuronIO::read_neurons_componentwise(const std::filesystem::path& file_path) {
         }
     }
 
-    return { std::move(ids), std::move(positions), std::move(area_names), std::move(signal_types), LoadedNeuronsInfo{ minimum, maximum, found_ex_neurons, found_in_neurons } };
+    return { std::move(ids), std::move(positions), std::move(area_ids), std::move(area_names), std::move(signal_types), LoadedNeuronsInfo{ minimum, maximum, found_ex_neurons, found_in_neurons } };
 }
 
-void NeuronIO::write_neurons(const std::vector<LoadedNeuron>& neurons, const std::filesystem::path& file_path) {
+void NeuronIO::write_neurons(const std::vector<LoadedNeuron>& neurons, const std::filesystem::path& file_path, const std::vector<RelearnTypes::area_name>& area_names) {
     std::ofstream of(file_path, std::ios::binary | std::ios::out);
 
     const auto is_good = of.good();
@@ -204,11 +227,13 @@ void NeuronIO::write_neurons(const std::vector<LoadedNeuron>& neurons, const std
         const auto id = node.id.get_neuron_id() + 1;
         const auto& [x, y, z] = node.pos;
 
+        const auto& area_name = area_names[node.area_id];
+
         of << id << "\t"
            << x << " "
            << y << " "
            << z << "\t"
-           << node.area_name << "\t";
+           << area_name << "\t";
 
         if (node.signal_type == SignalType::Excitatory) {
             of << "ex\n";
@@ -218,8 +243,25 @@ void NeuronIO::write_neurons(const std::vector<LoadedNeuron>& neurons, const std
     }
 }
 
+void NeuronIO::write_area_names(const std::filesystem::path& file_path, const std::vector<RelearnTypes::area_name>& area_names) {
+    std::ofstream of(file_path, std::ios::binary | std::ios::out);
+
+    const auto is_good = of.good();
+    const auto is_bad = of.bad();
+
+    RelearnException::check(is_good && !is_bad, "NeuronIO::write_neurons_to_file: The ofstream failed to open");
+
+    of << std::setprecision(std::numeric_limits<double>::digits10);
+    of << "# ID area_name \n";
+
+    for (int i = 0; i < area_names.size(); i++) {
+        of << i << " " << area_names[i] << std::endl;
+    }
+    of.close();
+}
+
 void NeuronIO::write_neurons_componentwise(const std::vector<NeuronID>& ids, const std::vector<position_type>& positions,
-    const std::vector<RelearnTypes::area_name>& area_names, const std::vector<SignalType>& signal_types, const std::filesystem::path& file_path) {
+    const std::vector<RelearnTypes::area_id> area_ids, const std::vector<RelearnTypes::area_name>& area_names, const std::vector<SignalType>& signal_types, const std::filesystem::path& file_path) {
 
     const auto size_ids = ids.size();
     const auto size_positions = positions.size();
@@ -248,7 +290,7 @@ void NeuronIO::write_neurons_componentwise(const std::vector<NeuronID>& ids, con
            << x << " "
            << y << " "
            << z << "\t"
-           << area_names[i] << "\t";
+           << area_names[area_ids[i]] << "\t";
 
         if (signal_types[i] == SignalType::Excitatory) {
             of << "ex\n";
@@ -306,216 +348,6 @@ std::optional<std::vector<NeuronID>> NeuronIO::read_neuron_ids(const std::filesy
     return ids;
 }
 
-std::pair<LocalSynapses, LocalSynapses> NeuronIO::read_local_synapses(const std::filesystem::path& file_path, const number_neurons_type number_local_neurons) {
-    LocalSynapses local_synapses_static{};
-    LocalSynapses local_synapses_plastic{};
-
-    std::ifstream file_synapses(file_path, std::ios::binary | std::ios::in);
-
-    for (std::string line{}; std::getline(file_synapses, line);) {
-        // Skip line with comments
-        if (line.empty() || '#' == line[0]) {
-            continue;
-        }
-
-        NeuronID::value_type read_target_id = 0;
-        NeuronID::value_type read_source_id = 0;
-        RelearnTypes::synapse_weight weight = 0;
-        bool plastic = true;
-
-        std::stringstream sstream(line);
-        const bool success = (sstream >> read_target_id) && (sstream >> read_source_id) && (sstream >> weight);
-
-        if (!success) {
-            spdlog::info("Skipping line: {}", line);
-            continue;
-        }
-        sstream >> plastic;
-
-        RelearnException::check(read_target_id > 0 && read_target_id <= number_local_neurons, "NeuronIO::read_local_synapses: target_id was not from [1, {}]: {}", number_local_neurons, read_target_id);
-        RelearnException::check(read_source_id > 0 && read_source_id <= number_local_neurons, "NeuronIO::read_local_synapses: source_id was not from [1, {}]: {}", number_local_neurons, read_source_id);
-
-        RelearnException::check(weight != 0, "NeuronIO::read_local_synapses: weight was 0");
-
-        // The neurons start with 1
-        --read_source_id;
-        --read_target_id;
-        auto source_id = NeuronID{ false, read_source_id };
-        auto target_id = NeuronID{ false, read_target_id };
-
-        if (plastic) {
-            local_synapses_plastic.emplace_back(target_id, source_id, weight);
-        } else {
-            local_synapses_static.emplace_back(target_id, source_id, weight);
-        }
-    }
-
-    return std::make_pair(local_synapses_static, local_synapses_plastic);
-}
-
-void NeuronIO::write_local_synapses(const LocalSynapses& local_synapses, const std::filesystem::path& file_path) {
-    std::ofstream file_synapses(file_path, std::ios::binary | std::ios::out);
-
-    const auto is_good = file_synapses.good();
-    const auto is_bad = file_synapses.bad();
-
-    RelearnException::check(is_good && !is_bad, "NeuronIO::write_local_synapses: The ofstream failed to open");
-
-    file_synapses << "# target_id source_id weight\n";
-
-    for (const auto& [target_id, source_id, weight] : local_synapses) {
-        file_synapses << (target_id.get_neuron_id() + 1) << ' ' << (source_id.get_neuron_id() + 1) << ' ' << weight << '\n';
-    }
-}
-
-std::pair<DistantInSynapses, DistantInSynapses> NeuronIO::read_distant_in_synapses(const std::filesystem::path& file_path, const number_neurons_type number_local_neurons, const int my_rank, const int number_mpi_ranks) {
-    DistantInSynapses distant_in_synapses{};
-
-    std::ifstream file_synapses(file_path, std::ios::binary | std::ios::in);
-
-    const auto is_good = file_synapses.good();
-    const auto is_bad = file_synapses.bad();
-
-    RelearnException::check(is_good && !is_bad, "NeuronIO::read_distant_in_synapses: The ofstream failed to open");
-
-    for (std::string line{}; std::getline(file_synapses, line);) {
-        // Skip line with comments
-        if (line.empty() || '#' == line[0]) {
-            continue;
-        }
-
-        int read_target_rank = 0;
-        NeuronID::value_type read_target_id = 0;
-        int read_source_rank = 0;
-        NeuronID::value_type read_source_id = 0;
-        RelearnTypes::synapse_weight weight = 0;
-
-        std::stringstream sstream(line);
-        const bool success = (sstream >> read_target_rank) && (sstream >> read_target_id) && (sstream >> read_source_rank) && (sstream >> read_source_id) && (sstream >> weight);
-
-        if (!success) {
-            spdlog::info("Skipping line: {}", line);
-            continue;
-        }
-
-        RelearnException::check(read_target_rank == my_rank, "NeuronIO::read_distant_in_synapses: target_rank is not equal to my_rank: {} vs {}", read_target_rank, my_rank);
-        RelearnException::check(read_target_id > 0 && read_target_id <= number_local_neurons, "NeuronIO::read_distant_in_synapses: target_id was not from [1, {}]: {}", number_local_neurons, read_target_id);
-
-        RelearnException::check(read_source_rank < number_mpi_ranks, "NeuronIO::read_distant_in_synapses: source rank is not smaller than the number of mpi ranks: {} vs {}", read_source_rank, number_mpi_ranks);
-        RelearnException::check(read_source_rank != my_rank, "NeuronIO::read_distant_in_synapses: source rank is the same as target rank: {}", read_source_rank);
-
-        RelearnException::check(weight != 0, "NeuronIO::read_distant_in_synapses: weight was 0");
-
-        // The neurons start with 1
-        --read_source_id;
-        --read_target_id;
-
-        auto source_id = NeuronID{ false, read_source_id };
-        auto target_id = NeuronID{ false, read_target_id };
-
-        distant_in_synapses.emplace_back(target_id, RankNeuronId{ read_source_rank, source_id }, weight);
-    }
-
-    return std::make_pair(DistantInSynapses{}, distant_in_synapses);
-}
-
-void NeuronIO::write_distant_in_synapses(const DistantInSynapses& distant_in_synapses, const int my_rank, const std::filesystem::path& file_path) {
-    std::ofstream file_synapses(file_path, std::ios::binary | std::ios::out);
-
-    const auto is_good = file_synapses.good();
-    const auto is_bad = file_synapses.bad();
-
-    RelearnException::check(is_good && !is_bad, "NeuronIO::write_distant_in_synapses: The ofstream failed to open");
-
-    file_synapses << "# " << distant_in_synapses.size() << '\n';
-    file_synapses << "# <target rank> <target neuron id>\t<source rank> <source neuron id>\t<weight>\n";
-
-    for (const auto& [target_id, source_rni, weight] : distant_in_synapses) {
-        const auto target_neuron_id = target_id.get_neuron_id();
-
-        const auto& [source_rank, source_id] = source_rni;
-        const auto source_neuron_id = source_id.get_neuron_id();
-
-        RelearnException::check(source_rank != my_rank, "NeuronIO::write_distant_in_synapses: source rank was equal to my_rank: {}", my_rank);
-
-        file_synapses << my_rank << ' ' << (target_neuron_id + 1) << '\t' << source_rank << ' ' << (source_neuron_id + 1) << '\t' << weight << '\n';
-    }
-}
-
-std::pair<DistantOutSynapses, DistantOutSynapses> NeuronIO::read_distant_out_synapses(const std::filesystem::path& file_path, const number_neurons_type number_local_neurons, const int my_rank, const int number_mpi_ranks) {
-    DistantOutSynapses distant_out_synapses{};
-
-    std::ifstream file_synapses(file_path, std::ios::binary | std::ios::in);
-
-    const auto is_good = file_synapses.good();
-    const auto is_bad = file_synapses.bad();
-
-    RelearnException::check(is_good && !is_bad, "NeuronIO::read_distant_out_synapses: The ofstream failed to open");
-
-    for (std::string line{}; std::getline(file_synapses, line);) {
-        // Skip line with comments
-        if (line.empty() || '#' == line[0]) {
-            continue;
-        }
-
-        int read_target_rank = 0;
-        NeuronID::value_type read_target_id = 0;
-        int read_source_rank = 0;
-        NeuronID::value_type read_source_id = 0;
-        RelearnTypes::synapse_weight weight = 0;
-
-        std::stringstream sstream(line);
-        const bool success = (sstream >> read_target_rank) && (sstream >> read_target_id) && (sstream >> read_source_rank) && (sstream >> read_source_id) && (sstream >> weight);
-
-        if (!success) {
-            spdlog::info("Skipping line: {}", line);
-            continue;
-        }
-
-        RelearnException::check(read_source_rank == my_rank, "NeuronIO::read_distant_out_synapses: source_rank is not equal to my_rank: {} vs {}", read_target_rank, my_rank);
-        RelearnException::check(read_source_id > 0 && read_source_id <= number_local_neurons, "NeuronIO::read_distant_out_synapses: source_id was not from [1, {}]: {}", number_local_neurons, read_source_id);
-
-        RelearnException::check(read_target_rank < number_mpi_ranks, "NeuronIO::read_distant_out_synapses: target rank is not smaller than the number of mpi ranks: {} vs {}", read_source_rank, number_mpi_ranks);
-        RelearnException::check(read_target_rank != my_rank, "NeuronIO::read_distant_in_synapses: source rank is the same as target rank: {}", read_source_rank);
-
-        RelearnException::check(weight != 0, "NeuronIO::read_distant_out_synapses: weight was 0");
-
-        // The neurons start with 1
-        --read_source_id;
-        --read_target_id;
-
-        auto source_id = NeuronID{ false, read_source_id };
-        auto target_id = NeuronID{ false, read_target_id };
-
-        distant_out_synapses.emplace_back(RankNeuronId{ read_target_rank, target_id }, source_id, weight);
-    }
-
-    return std::make_pair(DistantOutSynapses{}, distant_out_synapses);
-}
-
-void NeuronIO::write_distant_out_synapses(const DistantOutSynapses& distant_out_synapses, const int my_rank, const std::filesystem::path& file_path) {
-    std::ofstream file_synapses(file_path, std::ios::binary | std::ios::out);
-
-    const auto is_good = file_synapses.good();
-    const auto is_bad = file_synapses.bad();
-
-    RelearnException::check(is_good && !is_bad, "NeuronIO::write_distant_out_synapses: The ofstream failed to open");
-
-    file_synapses << "# " << distant_out_synapses.size() << '\n';
-    file_synapses << "# <target rank> <target neuron id>\t<source rank> <source neuron id>\t<weight>\n";
-
-    for (const auto& [target_rni, source_id, weight] : distant_out_synapses) {
-        const auto& [target_rank, target_id] = target_rni;
-        const auto target_neuron_id = target_id.get_neuron_id();
-
-        const auto source_neuron_id = source_id.get_neuron_id();
-
-        RelearnException::check(target_rank != my_rank, "NeuronIO::write_distant_out_synapses: target rank was equal to my_rank: {}", my_rank);
-
-        file_synapses << target_rank << ' ' << (target_neuron_id + 1) << '\t' << my_rank << ' ' << (source_neuron_id + 1) << '\t' << weight << '\n';
-    }
-}
-
 std::pair<std::tuple<LocalSynapses, DistantInSynapses>, std::tuple<LocalSynapses, DistantInSynapses>> NeuronIO::read_in_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons, int my_rank, int number_mpi_ranks) {
     LocalSynapses local_in_synapses_static{};
     DistantInSynapses distant_in_synapses_static{};
@@ -540,19 +372,14 @@ std::pair<std::tuple<LocalSynapses, DistantInSynapses>, std::tuple<LocalSynapses
         int read_source_rank = 0;
         NeuronID::value_type read_source_id = 0;
         RelearnTypes::synapse_weight weight = 0;
-        bool plastic = true;
+        bool plastic;
 
         std::stringstream sstream(line);
-        const bool success = (sstream >> read_target_rank) && (sstream >> read_target_id) && (sstream >> read_source_rank) && (sstream >> read_source_id) && (sstream >> weight);
+        const bool success = (sstream >> read_target_rank) && (sstream >> read_target_id) && (sstream >> read_source_rank) && (sstream >> read_source_id) && (sstream >> weight) && (sstream >> plastic);
 
         if (!success) {
             spdlog::info("Skipping line: {}", line);
             continue;
-        }
-        if (sstream.good() && sstream.get() && sstream.good()) {
-            const char flag = static_cast<char>(sstream.get());
-            RelearnException::check(flag == '0' || flag == '1', "NeuronIO::read_in_synapses: Invalid plastic flag {}", flag);
-            plastic = (flag == '1');
         }
 
         RelearnException::check(read_target_rank == my_rank, "NeuronIO::read_in_synapses: target_rank is not equal to my_rank: {} vs {}", read_target_rank, my_rank);
@@ -662,18 +489,12 @@ std::pair<std::tuple<LocalSynapses, DistantOutSynapses>, std::tuple<LocalSynapse
         RelearnTypes::synapse_weight weight = 0;
 
         std::stringstream sstream(line);
-        const bool success = (sstream >> read_target_rank) && (sstream >> read_target_id) && (sstream >> read_source_rank) && (sstream >> read_source_id) && (sstream >> weight);
+        bool plastic;
+        const bool success = (sstream >> read_target_rank) && (sstream >> read_target_id) && (sstream >> read_source_rank) && (sstream >> read_source_id) && (sstream >> weight) && (sstream >> plastic);
 
         if (!success) {
             spdlog::info("Skipping line: {}", line);
             continue;
-        }
-
-        bool plastic = true;
-        if (sstream.good() && sstream.get() && sstream.good()) {
-            const char flag = static_cast<char>(sstream.get());
-            RelearnException::check(flag == '0' || flag == '1', "NeuronIO::read_in_synapses: Invalid plasticity flag {}", flag);
-            plastic = (flag == '1');
         }
 
         RelearnException::check(read_source_rank == my_rank, "NeuronIO::read_out_synapses: source_rank is not equal to my_rank: {} vs {}", read_target_rank, my_rank);

@@ -46,6 +46,7 @@ SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank(const SubdomainFromNeuron
 
     set_requested_number_neurons(number_neurons);
     set_total_number_placed_neurons(number_neurons);
+    set_area_id_vs_area_name({ "random" });
 
     set_number_placed_neurons(0);
     set_ratio_placed_excitatory_neurons(0.0);
