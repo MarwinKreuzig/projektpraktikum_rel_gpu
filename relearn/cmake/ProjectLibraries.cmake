@@ -50,15 +50,15 @@ endif()
 
 # fmt
 FetchContent_Declare(
-  fmt
-  GIT_REPOSITORY https://github.com/fmtlib/fmt
-  GIT_TAG 8.1.1)
+        fmt
+        GIT_REPOSITORY https://github.com/fmtlib/fmt
+        GIT_TAG 9.1.0)
 
 # spdlog
 FetchContent_Declare(
-  spdlog
-  GIT_REPOSITORY https://github.com/gabime/spdlog
-  GIT_TAG v1.10.0)
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog
+        GIT_TAG v1.11.0)
 
 # make available
 

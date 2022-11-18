@@ -14,7 +14,7 @@
 #include "util/RelearnException.h"
 #include "util/Utility.h"
 
-#include <spdlog/fmt/bundled/ostream.h>
+#include "fmt/ostream.h"
 
 #include <algorithm>
 #include <cmath>
@@ -571,6 +571,9 @@ private:
 
     static_assert(std::is_arithmetic_v<T>);
 };
+
+template <typename T>
+struct fmt::formatter<Vec3<T>> : ostream_formatter { };
 
 namespace std {
 template <typename T>

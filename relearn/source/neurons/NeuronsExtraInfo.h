@@ -53,7 +53,7 @@ public:
      * @param names The new area names, must have the same size as neurons are stored
      * @exception Throws an RelearnAxception if names.empty() or if the number of supplied elements does not match the number of stored neurons
      */
-    void set_area_names(std::vector<std::string> names) {
+    void set_area_names(std::vector<RelearnTypes::area_name> names) {
         RelearnException::check(!names.empty(), "NeuronsExtraInformation::set_area_names: New area names are empty");
         RelearnException::check(size == names.size(), "NeuronsExtraInformation::set_area_names: Size does not match area names count");
         area_names = std::move(names);
@@ -63,7 +63,7 @@ public:
      * @brief Returns the currently stored area names as a vector. The reference is invalidated whenever init or create_neurons is called.
      * @return The currently stored area names as a vector
      */
-    [[nodiscard]] const std::vector<std::string>& get_area_names() const noexcept {
+    [[nodiscard]] const std::vector<RelearnTypes::area_name>& get_area_names() const noexcept {
         return area_names;
     }
 
@@ -71,7 +71,7 @@ public:
      * @brief A set containing all used area names
      * @return The currently stored unique area names
      */
-    [[nodiscard]] std::set<std::string> get_unique_area_names() const noexcept {
+    [[nodiscard]] std::set<RelearnTypes::area_name> get_unique_area_names() const noexcept {
         return { area_names.begin(), area_names.end() };
     }
 
@@ -79,7 +79,7 @@ public:
      * @brief Number of neurons placed with a certain area name
      * @return Number of neurons currently stored under the given area name
      */
-    [[nodiscard]] RelearnTypes::number_neurons_type get_nr_neurons_in_area(const std::string& area_name) const {
+    [[nodiscard]] RelearnTypes::number_neurons_type get_nr_neurons_in_area(const RelearnTypes::area_name& area_name) const {
         const auto counted = std::count(area_names.begin(), area_names.end(), area_name);
         return static_cast<RelearnTypes::number_neurons_type>(counted);
     }
@@ -120,7 +120,7 @@ public:
      * @param neuron_id The local id of the neuron, i.e., from [0, num_local_neurons)
      * @exception Throws an RelearnAxception if the specified id exceeds the number of stored neurons
      */
-    [[nodiscard]] const std::string& get_area_name(const NeuronID& neuron_id) const {
+    [[nodiscard]] const RelearnTypes::area_name& get_area_name(const NeuronID& neuron_id) const {
         const auto local_neuron_id = neuron_id.get_neuron_id();
         RelearnException::check(local_neuron_id < area_names.size(), "NeuronsExtraInfo::get_area_name: neuron_id must be smaller than size but was {}", neuron_id);
         return area_names[local_neuron_id];
@@ -129,6 +129,6 @@ public:
 private:
     number_neurons_type size{ 0 };
 
-    std::vector<std::string> area_names{};
+    std::vector<RelearnTypes::area_name> area_names{};
     std::vector<position_type> positions{};
 };

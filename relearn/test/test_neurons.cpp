@@ -1,6 +1,10 @@
 #include "gtest/gtest.h"
 
-#include "RelearnTest.hpp"
+#include "neurons/CalciumCalculator.h"
+#include "neurons/Neurons.h"
+#include "neurons/models/NeuronModels.h"
+#include "neurons/models/SynapticElements.h"
+#include "structure/Partition.h"
 
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"

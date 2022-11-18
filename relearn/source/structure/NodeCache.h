@@ -16,6 +16,8 @@
 #include "util/RelearnException.h"
 #include "util/SemiStableVector.h"
 
+#include "fmt/ostream.h"
+
 #include <array>
 #include <map>
 #include <type_traits>
@@ -42,6 +44,8 @@ inline std::ostream& operator<<(std::ostream& out, const NodeCacheType& cache_ty
 
     return out << "UNKOWN";
 }
+template <>
+struct fmt::formatter<NodeCacheType> : ostream_formatter { };
 
 /**
  * DO NOT USE THIS CLASS DIRECTLY. USE NodeCache and set NodeCacheType::Combined.

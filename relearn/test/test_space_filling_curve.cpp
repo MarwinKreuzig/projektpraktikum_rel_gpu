@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
-#include "RelearnTest.hpp"
+#include "structure/SpaceFillingCurve.h"
+#include "util/RelearnException.h"
 
 #include "structure/SpaceFillingCurve.h"
 #include "util/RelearnException.h"

@@ -174,7 +174,7 @@ public:
      * @param names The area names
      * @exception Throws the same RelearnException as NeuronsExtraInfo::set_area_names
      */
-    void set_area_names(std::vector<std::string> names) {
+    void set_area_names(std::vector<RelearnTypes::area_name> names) {
         extra_info->set_area_names(std::move(names));
     }
 

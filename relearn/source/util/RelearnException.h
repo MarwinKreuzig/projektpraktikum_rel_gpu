@@ -9,8 +9,10 @@
  * See the LICENSE file in the base directory for details.
  *
  */
+#include "Config.h"
 
-#include "spdlog/fmt/bundled/core.h"
+#include "fmt/core.h"
+#include "fmt/format.h"
 
 #include <exception>
 #include <string>
@@ -45,13 +47,13 @@ public:
      * @exception Throws an exception if the number of args does not match the number of placeholders in format
      *      Throws a RelearnException if the condition evaluates to false
      */
-    template <typename FormatString, typename... Args>
-    static constexpr void check(bool condition, FormatString&& format, Args&&... args) {
+    template <typename... Args>
+    static constexpr void check(bool condition, fmt::format_string<Args...>&& format, Args&&... args) {
         if (condition) {
             return;
         }
 
-        fail(std::forward<FormatString>(format), std::forward<Args>(args)...);
+        fail(std::forward<fmt::format_string<Args...>>(format), std::forward<Args>(args)...);
     }
 
     /**
@@ -63,13 +65,13 @@ public:
      * @exception Throws an exception if the number of args does not match the number of placeholders in format
      *      Throws a RelearnException
      */
-    template <typename FormatString, typename... Args>
-    [[noreturn]] static constexpr void fail(FormatString&& format, Args&&... args) {
+    template <typename... Args>
+    [[noreturn]] static constexpr void fail(fmt::format_string<Args...>&& format, Args&&... args) {
         if (hide_messages) {
             throw RelearnException{};
         }
 
-        auto message = fmt::format(fmt::runtime(std::forward<FormatString>(format)), std::forward<Args>(args)...);
+        auto message = fmt::format(fmt::runtime(std::forward<fmt::format_string<Args...>>(format)), std::forward<Args>(args)...);
         log_message(message);
         throw RelearnException{ std::move(message) };
     }

@@ -12,8 +12,7 @@
 
 #include "RelearnException.h"
 
-#include <spdlog/fmt/bundled/core.h>
-#include <spdlog/fmt/bundled/ostream.h>
+#include <fmt/ostream.h>
 
 #include <compare>
 #include <concepts>

@@ -8,7 +8,7 @@
  *
  */
 
-#include "FileLoader.h"
+#include "Helper.h"
 
 #include "../util/RelearnException.h"
 
@@ -16,7 +16,7 @@
 #include <iostream>
 #include <sstream>
 
-std::vector<std::string> FileLoader::split_string(const std::string& string, char delim) {
+std::vector<std::string> Helper::split_string(const std::string& string, char delim) {
     std::vector<std::string> result;
     std::stringstream ss(string);
     std::string item;

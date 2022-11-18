@@ -10,6 +10,8 @@
  *
  */
 
+#include "fmt/ostream.h"
+
 #include <ostream>
 
 /**
@@ -50,3 +52,5 @@ inline std::ostream& operator<<(std::ostream& out, const ElementType& element_ty
 
     return out;
 }
+template <>
+struct fmt::formatter<ElementType> : ostream_formatter { };

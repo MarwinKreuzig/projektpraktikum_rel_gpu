@@ -1,8 +1,8 @@
-#include "gtest/gtest.h"
-
 #include "RelearnTest.hpp"
 
 #include "util/MonitorParser.h"
+
+#include "gtest/gtest.h"
 
 #include <sstream>
 
@@ -246,7 +246,7 @@ TEST_F(MonitorParserTest, testParseIds) {
         }
     }
 
-    const auto& parsed_ids = MonitorParser::parse_my_ids(ss.str(), my_rank, my_rank);
+    const auto& parsed_ids = MonitorParser::parse_my_ids(ss.str(), my_rank, my_rank, {});
 
     ASSERT_EQ(parsed_ids.size(), my_number_neurons);
 

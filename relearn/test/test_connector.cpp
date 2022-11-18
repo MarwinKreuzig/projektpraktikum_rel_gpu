@@ -1,12 +1,11 @@
-#include "gtest/gtest.h"
-
 #include "RelearnTest.hpp"
 
 #include "algorithm/Connector.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/models/SynapticElements.h"
 
-#include <algorithm>
+#include "gtest/gtest.h"
+
 #include <map>
 #include <vector>
 

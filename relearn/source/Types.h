@@ -38,6 +38,8 @@ using counter_type = unsigned int;
 using step_type = std::uint32_t;
 using number_neurons_type = std::uint64_t;
 
+using area_name = std::string;
+
 } // namespace RelearnTypes
 
 using LocalSynapse = Synapse<NeuronID, NeuronID, RelearnTypes::synapse_weight>;

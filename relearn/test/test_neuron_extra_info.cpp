@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "RelearnTest.hpp"
+#include "neurons/NeuronsExtraInfo.h"
 
 #include "neurons/NeuronsExtraInfo.h"
 

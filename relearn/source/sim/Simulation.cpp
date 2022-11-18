@@ -13,9 +13,9 @@
 #include "algorithm/Algorithms.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
-#include "neurons/helper/AreaMonitor.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/Neurons.h"
+#include "neurons/helper/AreaMonitor.h"
 #include "neurons/helper/NeuronMonitor.h"
 #include "neurons/models/NeuronModels.h"
 #include "sim/NeuronToSubdomainAssignment.h"
@@ -25,7 +25,8 @@
 #include "util/RelearnException.h"
 #include "util/Timers.h"
 
-#include <fstream>
+#include "fmt/std.h"
+
 #include <iomanip>
 #include <sstream>
 #include <utility>

@@ -23,6 +23,8 @@
 #include "util/TaggedID.h"
 #include "util/Vec3.h"
 
+#include "fmt/ostream.h"
+
 #include <algorithm>
 #include <numeric>
 #include <ostream>
@@ -60,6 +62,8 @@ inline std::ostream& operator<<(std::ostream& out, const KernelType& kernel_type
 
     return out << "UNKOWN";
 }
+template <>
+struct fmt::formatter<KernelType> : ostream_formatter { };
 
 /**
  * This class encapsulates the necessary probability kernels that determine how
