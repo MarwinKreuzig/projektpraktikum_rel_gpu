@@ -1,8 +1,8 @@
+#include "RelearnTest.hpp"
+
+#include "neurons/NeuronsExtraInfo.h"
+
 #include "gtest/gtest.h"
-
-#include "neurons/NeuronsExtraInfo.h"
-
-#include "neurons/NeuronsExtraInfo.h"
 
 void NeuronsTest::assert_empty(const NeuronsExtraInfo& nei, size_t number_neurons) {
     const auto& area_names = nei.get_area_names();

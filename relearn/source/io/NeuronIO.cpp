@@ -550,7 +550,8 @@ std::pair<std::tuple<LocalSynapses, DistantInSynapses>, std::tuple<LocalSynapses
             continue;
         }
         if (sstream.good() && sstream.get() && sstream.good()) {
-            const char flag = static_cast<char>(sstream.get());
+            const auto read_char = sstream.get();
+            const char flag = static_cast<char>(read_char);
             RelearnException::check(flag == '0' || flag == '1', "NeuronIO::read_in_synapses: Invalid plastic flag {}", flag);
             plastic = (flag == '1');
         }

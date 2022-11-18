@@ -1,10 +1,12 @@
+#include "RelearnTest.hpp"
+
+#include "neurons/models/SynapticElements.h"
+#include "neurons/UpdateStatus.h"
+
+#include "neurons/models/SynapticElements.h"
+#include "neurons/UpdateStatus.h"
+
 #include "gtest/gtest.h"
-
-#include "neurons/models/SynapticElements.h"
-#include "neurons/UpdateStatus.h"
-
-#include "neurons/models/SynapticElements.h"
-#include "neurons/UpdateStatus.h"
 
 #include <numeric>
 #include <sstream>
