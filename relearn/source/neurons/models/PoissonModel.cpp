@@ -19,18 +19,17 @@ PoissonModel::PoissonModel(
     const unsigned int h,
     std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
     std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
-    std::unique_ptr<ExternalStimulusCalculator>&& external_stimulus,
     const double x_0,
     const double tau_x,
     const unsigned int refrac_time)
-    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(external_stimulus) }
+    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator)}
     , x_0{ x_0 }
     , tau_x{ tau_x }
     , refrac_time{ refrac_time } {
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> PoissonModel::clone() const {
-    return std::make_unique<PoissonModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(), get_external_stimulus_calculator()->clone(),
+    return std::make_unique<PoissonModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(),
         x_0, tau_x, refrac_time);
 }
 
@@ -64,8 +63,7 @@ void PoissonModel::update_activity(const NeuronID& neuron_id) {
 
     const auto synaptic_input = get_synaptic_input(neuron_id);
     const auto background = get_background_activity(neuron_id);
-    const auto external = get_external_stimulus(neuron_id);
-    const auto input = synaptic_input + background + external;
+    const auto input = synaptic_input + background;
 
     auto x = get_x(neuron_id);
 

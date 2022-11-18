@@ -20,7 +20,6 @@
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 #include "Types.h"
-#include "ExternalStimulusCalculator.h"
 
 #include <algorithm>
 #include <memory>
@@ -58,11 +57,10 @@ public:
      * @param background_activity_calculator The object that is resonsible for calculating the background activity
      */
     NeuronModel(unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
-        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<ExternalStimulusCalculator>&& external_stimulus)
+        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator)
         : h(h)
         , input_calculator(std::move(synaptic_input_calculator))
-        , background_calculator(std::move(background_activity_calculator))
-        , external_stimulus(std::move(external_stimulus)) { }
+        , background_calculator(std::move(background_activity_calculator)) { }
 
     virtual ~NeuronModel() = default;
 
@@ -290,20 +288,12 @@ protected:
         return background_calculator->get_background_activity(neuron_id);
     }
 
-    [[nodiscard]] double get_external_stimulus(const NeuronID& neuron_id) const {
-        return external_stimulus->get_external_stimulus(neuron_id);
-    }
-
     [[nodiscard]] const std::unique_ptr<SynapticInputCalculator>& get_synaptic_input_calculator() const noexcept {
         return input_calculator;
     }
 
     [[nodiscard]] const std::unique_ptr<BackgroundActivityCalculator>& get_background_activity_calculator() const noexcept {
         return background_calculator;
-    }
-
-    [[nodiscard]] const std::unique_ptr<ExternalStimulusCalculator>& get_external_stimulus_calculator() const noexcept {
-        return external_stimulus;
     }
 
 private:
@@ -320,7 +310,6 @@ private:
 
     std::unique_ptr<SynapticInputCalculator> input_calculator{};
     std::unique_ptr<BackgroundActivityCalculator> background_calculator{};
-    std::unique_ptr<ExternalStimulusCalculator> external_stimulus{};
 };
 
 namespace models {
@@ -348,7 +337,6 @@ public:
         unsigned int h,
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
-        std::unique_ptr<ExternalStimulusCalculator>&& external_stimulus,
         double x_0,
         double tau_x,
         unsigned int refrac_time);
@@ -483,7 +471,6 @@ public:
         unsigned int h,
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
-        std::unique_ptr<ExternalStimulusCalculator>&& external_stimulus,
         double a,
         double b,
         double c,
@@ -678,7 +665,6 @@ public:
         unsigned int h,
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
-        std::unique_ptr<ExternalStimulusCalculator>&& external_stimulus,
         double a,
         double b,
         double phi);
@@ -818,7 +804,6 @@ public:
         unsigned int h,
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
-        std::unique_ptr<ExternalStimulusCalculator>&& external_stimulus,
         double C,
         double g_L,
         double E_L,

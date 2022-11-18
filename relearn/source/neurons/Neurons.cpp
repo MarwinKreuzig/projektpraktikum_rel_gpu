@@ -872,23 +872,31 @@ void Neurons::print_calcium_statistics_to_essentials() {
 }
 
 void Neurons::print_network_graph_to_log_file(const step_type step) const {
-    LogFiles::save_and_open_new(LogFiles::EventType::InNetwork, "step_" + std::to_string(step) + "_in_network", "network/");
-    LogFiles::save_and_open_new(LogFiles::EventType::OutNetwork, "step_" + std::to_string(step) + "_out_network", "network/");
+    print_network_graph_to_log_file("step_" + std::to_string(step) + "_");
+}
+
+void Neurons::print_network_graph_to_log_file() const {
+    print_network_graph_to_log_file("");
+}
+
+void Neurons::print_network_graph_to_log_file(const std::string& prefix) const {
+    LogFiles::save_and_open_new(LogFiles::EventType::InNetwork, prefix + "in_network", "network/");
+    LogFiles::save_and_open_new(LogFiles::EventType::OutNetwork, prefix + "out_network", "network/");
 
     std::stringstream ss_in_network{};
 
     ss_in_network << "# Total number neurons: " << partition->get_total_number_neurons() << '\n';
     ss_in_network << "# Local number neurons: " << partition->get_number_local_neurons() << '\n';
     ss_in_network << "# Number MPI ranks: " << partition->get_number_mpi_ranks() << '\n';
-    ss_in_network << "# Current simulation step: " << step << '\n';
-    ss_in_network << "# <target_rank> <target_id>\t<source_rank> <source_id>\t<weight> \n";
+    ss_in_network << "# Current simulation step: " << prefix << '\n';
+    ss_in_network << "# <target_rank> <target_id>\t<source_rank> <source_id>\t<weight>\t<plastic> \n";
 
     std::stringstream ss_out_network{};
 
     ss_out_network << "# Total number neurons: " << partition->get_total_number_neurons() << '\n';
     ss_out_network << "# Local number neurons: " << partition->get_number_local_neurons() << '\n';
     ss_out_network << "# Number MPI ranks: " << partition->get_number_mpi_ranks() << '\n';
-    ss_out_network << "# Current simulation step: " << step << '\n';
+    ss_out_network << "# Current simulation step: " << prefix << '\n';
     ss_out_network << "# <target_rank> <target_id>\t<source_rank> <source_id>\t<weight>\t<plastic> \n";
 
     network_graph_plastic->print_with_ranks(ss_out_network, ss_in_network, '1');

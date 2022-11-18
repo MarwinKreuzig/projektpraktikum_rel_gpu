@@ -707,8 +707,10 @@ TEST_F(IOTest, testReadInSynapses) {
     const auto number_synapses = get_random_number_synapses();
     const auto number_neurons = get_random_number_neurons();
 
-    LocalSynapses preliminary_local_synapses{};
-    DistantInSynapses preliminary_distant_synapses{};
+    LocalSynapses preliminary_local_synapses_static{};
+    DistantInSynapses preliminary_distant_synapses_static{};
+    LocalSynapses preliminary_local_synapses_plastic{};
+    DistantInSynapses preliminary_distant_synapses_plastic{};
 
     std::filesystem::path path{ "./in_network.tmp" };
     std::ofstream ofstream(path);
@@ -721,28 +723,47 @@ TEST_F(IOTest, testReadInSynapses) {
 
         const auto weight = get_random_synapse_weight();
 
+        const bool plastic = get_random_bool();
+        const char flag = plastic ? '1' : '0';
+
         if (source_rank == my_rank) {
-            preliminary_local_synapses.emplace_back(target_id, source_id, weight);
+            if (plastic) {
+                preliminary_local_synapses_plastic.emplace_back(target_id, source_id, weight);
+            } else {
+                preliminary_local_synapses_static.emplace_back(target_id, source_id, weight);
+            }
         } else {
-            preliminary_distant_synapses.emplace_back(target_id, RankNeuronId(source_rank, source_id), weight);
+            if (plastic) {
+                preliminary_distant_synapses_plastic.emplace_back(target_id, RankNeuronId(source_rank, source_id), weight);
+            } else {
+                preliminary_distant_synapses_static.emplace_back(target_id, RankNeuronId(source_rank, source_id), weight);
+            }
         }
 
-        ofstream << my_rank << ' ' << (target_id.get_neuron_id() + 1) << '\t' << source_rank << ' ' << (source_id.get_neuron_id() + 1) << ' ' << weight << '\n';
+        ofstream << my_rank << ' ' << (target_id.get_neuron_id() + 1) << '\t' << source_rank << ' ' << (source_id.get_neuron_id() + 1) << ' ' << weight << '\t' << flag << '\n';
     }
 
     ofstream.flush();
     ofstream.close();
 
-    auto [read_local_synapses, read_distant_synapses] = NeuronIO::read_in_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [synapses_static, synapses_plastic] = NeuronIO::read_in_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [read_local_synapses_plastic, read_distant_synapses_plastic] = synapses_plastic;
+    auto [read_local_synapses_static, read_distant_synapses_static] = synapses_static;
 
-    std::ranges::sort(preliminary_local_synapses);
-    std::ranges::sort(preliminary_distant_synapses);
+    std::ranges::sort(preliminary_local_synapses_static);
+    std::ranges::sort(preliminary_distant_synapses_static);
+    std::ranges::sort(preliminary_local_synapses_plastic);
+    std::ranges::sort(preliminary_distant_synapses_plastic);
 
-    std::ranges::sort(read_local_synapses);
-    std::ranges::sort(read_distant_synapses);
+    std::ranges::sort(read_local_synapses_static);
+    std::ranges::sort(read_distant_synapses_static);
+    std::ranges::sort(read_local_synapses_plastic);
+    std::ranges::sort(read_distant_synapses_plastic);
 
-    ASSERT_EQ(preliminary_local_synapses, read_local_synapses);
-    ASSERT_EQ(preliminary_distant_synapses, read_distant_synapses);
+    ASSERT_EQ(preliminary_local_synapses_static, read_local_synapses_static);
+    ASSERT_EQ(preliminary_distant_synapses_static, read_distant_synapses_static);
+    ASSERT_EQ(preliminary_local_synapses_plastic, read_local_synapses_plastic);
+    ASSERT_EQ(preliminary_distant_synapses_plastic, read_distant_synapses_plastic);
 }
 
 TEST_F(IOTest, testReadOutSynapsesFileNotFound) {
@@ -757,8 +778,10 @@ TEST_F(IOTest, testReadOutSynapses) {
     const auto number_synapses = get_random_number_synapses();
     const auto number_neurons = get_random_number_neurons();
 
-    LocalSynapses preliminary_local_synapses{};
-    DistantOutSynapses preliminary_distant_synapses{};
+    LocalSynapses preliminary_local_synapses_static{};
+    DistantOutSynapses preliminary_distant_synapses_static{};
+    LocalSynapses preliminary_local_synapses_plastic{};
+    DistantOutSynapses preliminary_distant_synapses_plastic{};
 
     std::filesystem::path path{ "./out_network.tmp" };
     std::ofstream ofstream(path);
@@ -771,33 +794,51 @@ TEST_F(IOTest, testReadOutSynapses) {
 
         const auto weight = get_random_synapse_weight();
 
-        if (target_rank == my_rank) {
-            preliminary_local_synapses.emplace_back(target_id, source_id, weight);
-        } else {
-            preliminary_distant_synapses.emplace_back(RankNeuronId(target_rank, target_id), source_id, weight);
-        }
+        const bool plastic = get_random_bool();
+        const char flag = plastic ? '1' : '0';
 
-        ofstream << target_rank << ' ' << (target_id.get_neuron_id() + 1) << '\t' << my_rank << ' ' << (source_id.get_neuron_id() + 1) << ' ' << weight << '\n';
+        if (target_rank == my_rank) {
+            if (plastic) {
+                preliminary_local_synapses_plastic.emplace_back(target_id, source_id, weight);
+            } else {
+                preliminary_local_synapses_static.emplace_back(target_id, source_id, weight);
+            }
+        } else {
+            if (plastic) {
+                preliminary_distant_synapses_plastic.emplace_back(RankNeuronId(target_rank, target_id), source_id, weight);
+            } else {
+                preliminary_distant_synapses_static.emplace_back(RankNeuronId(target_rank, target_id), source_id, weight);
+            }
+        }
+        ofstream << target_rank << ' ' << (target_id.get_neuron_id() + 1) << '\t' << my_rank << ' ' << (source_id.get_neuron_id() + 1) << ' ' << weight << '\t' << flag << '\n';
     }
 
     ofstream.flush();
     ofstream.close();
 
-    auto [read_local_synapses, read_distant_synapses] = NeuronIO::read_out_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [synapses_static, synapses_plastic] = NeuronIO::read_out_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [read_local_synapses_plastic, read_distant_synapses_plastic] = synapses_plastic;
+    auto [read_local_synapses_static, read_distant_synapses_static] = synapses_static;
 
-    std::ranges::sort(preliminary_local_synapses);
-    std::ranges::sort(preliminary_distant_synapses);
+    std::ranges::sort(preliminary_local_synapses_static);
+    std::ranges::sort(preliminary_distant_synapses_static);
+    std::ranges::sort(preliminary_local_synapses_plastic);
+    std::ranges::sort(preliminary_distant_synapses_plastic);
 
-    std::ranges::sort(read_local_synapses);
-    std::ranges::sort(read_distant_synapses);
+    std::ranges::sort(read_local_synapses_static);
+    std::ranges::sort(read_distant_synapses_static);
+    std::ranges::sort(read_local_synapses_plastic);
+    std::ranges::sort(read_distant_synapses_plastic);
 
-    ASSERT_EQ(preliminary_local_synapses, read_local_synapses);
-    ASSERT_EQ(preliminary_distant_synapses, read_distant_synapses);
+    ASSERT_EQ(preliminary_local_synapses_static, read_local_synapses_static);
+    ASSERT_EQ(preliminary_distant_synapses_static, read_distant_synapses_static);
+    ASSERT_EQ(preliminary_local_synapses_plastic, read_local_synapses_plastic);
+    ASSERT_EQ(preliminary_distant_synapses_plastic, read_distant_synapses_plastic);
 }
 
 TEST_F(IOTest, testWriteInSynapsesFileNotFound) {
     std::filesystem::path path{ "" };
-    ASSERT_THROW(NeuronIO::write_in_synapses({}, {}, 0, path);, RelearnException);
+    ASSERT_THROW(NeuronIO::write_in_synapses({}, {}, {}, {}, 0, path);, RelearnException);
 }
 
 TEST_F(IOTest, testWriteInSynapses) {
@@ -807,8 +848,10 @@ TEST_F(IOTest, testWriteInSynapses) {
     const auto number_synapses = get_random_number_synapses();
     const auto number_neurons = get_random_number_neurons();
 
-    LocalSynapses preliminary_local_synapses{};
-    DistantInSynapses preliminary_distant_synapses{};
+    LocalSynapses preliminary_local_synapses_static{};
+    DistantInSynapses preliminary_distant_synapses_static{};
+    LocalSynapses preliminary_local_synapses_plastic{};
+    DistantInSynapses preliminary_distant_synapses_plastic{};
 
     std::filesystem::path path{ "./in_network.tmp" };
 
@@ -820,30 +863,49 @@ TEST_F(IOTest, testWriteInSynapses) {
 
         const auto weight = get_random_synapse_weight();
 
+        const bool plastic = get_random_bool();
+        const char flag = plastic ? '1' : '0';
+
         if (source_rank == my_rank) {
-            preliminary_local_synapses.emplace_back(target_id, source_id, weight);
+            if (plastic) {
+                preliminary_local_synapses_plastic.emplace_back(target_id, source_id, weight);
+            } else {
+                preliminary_local_synapses_static.emplace_back(target_id, source_id, weight);
+            }
         } else {
-            preliminary_distant_synapses.emplace_back(target_id, RankNeuronId(source_rank, source_id), weight);
+            if (plastic) {
+                preliminary_distant_synapses_plastic.emplace_back(target_id, RankNeuronId(source_rank, source_id), weight);
+            } else {
+                preliminary_distant_synapses_static.emplace_back(target_id, RankNeuronId(source_rank, source_id), weight);
+            }
         }
     }
 
-    NeuronIO::write_in_synapses(preliminary_local_synapses, preliminary_distant_synapses, my_rank, path);
+    NeuronIO::write_in_synapses(preliminary_local_synapses_static, preliminary_distant_synapses_static, preliminary_local_synapses_plastic, preliminary_distant_synapses_plastic, my_rank, path);
 
-    auto [read_local_synapses, read_distant_synapses] = NeuronIO::read_in_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [synapses_static, synapses_plastic] = NeuronIO::read_in_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [read_local_synapses_plastic, read_distant_synapses_plastic] = synapses_plastic;
+    auto [read_local_synapses_static, read_distant_synapses_static] = synapses_static;
 
-    std::ranges::sort(preliminary_local_synapses);
-    std::ranges::sort(preliminary_distant_synapses);
+    std::ranges::sort(preliminary_local_synapses_static);
+    std::ranges::sort(preliminary_distant_synapses_static);
+    std::ranges::sort(preliminary_local_synapses_plastic);
+    std::ranges::sort(preliminary_distant_synapses_plastic);
 
-    std::ranges::sort(read_local_synapses);
-    std::ranges::sort(read_distant_synapses);
+    std::ranges::sort(read_local_synapses_static);
+    std::ranges::sort(read_distant_synapses_static);
+    std::ranges::sort(read_local_synapses_plastic);
+    std::ranges::sort(read_distant_synapses_plastic);
 
-    ASSERT_EQ(preliminary_local_synapses, read_local_synapses);
-    ASSERT_EQ(preliminary_distant_synapses, read_distant_synapses);
+    ASSERT_EQ(preliminary_local_synapses_static, read_local_synapses_static);
+    ASSERT_EQ(preliminary_distant_synapses_static, read_distant_synapses_static);
+    ASSERT_EQ(preliminary_local_synapses_plastic, read_local_synapses_plastic);
+    ASSERT_EQ(preliminary_distant_synapses_plastic, read_distant_synapses_plastic);
 }
 
 TEST_F(IOTest, testWriteOutSynapsesFileNotFound) {
     std::filesystem::path path{ "" };
-    ASSERT_THROW(NeuronIO::write_out_synapses({}, {}, 0, path);, RelearnException);
+    ASSERT_THROW(NeuronIO::write_out_synapses({}, {}, {}, {}, 0, path);, RelearnException);
 }
 
 TEST_F(IOTest, testWriteOutSynapses) {
@@ -853,8 +915,10 @@ TEST_F(IOTest, testWriteOutSynapses) {
     const auto number_synapses = get_random_number_synapses();
     const auto number_neurons = get_random_number_neurons();
 
-    LocalSynapses preliminary_local_synapses{};
-    DistantOutSynapses preliminary_distant_synapses{};
+    LocalSynapses preliminary_local_synapses_static{};
+    DistantOutSynapses preliminary_distant_synapses_static{};
+    LocalSynapses preliminary_local_synapses_plastic{};
+    DistantOutSynapses preliminary_distant_synapses_plastic{};
 
     std::filesystem::path path{ "./out_network.tmp" };
 
@@ -866,25 +930,44 @@ TEST_F(IOTest, testWriteOutSynapses) {
 
         const auto weight = get_random_synapse_weight();
 
+        const bool plastic = get_random_bool();
+        const char flag = plastic ? '1' : '0';
+
         if (target_rank == my_rank) {
-            preliminary_local_synapses.emplace_back(target_id, source_id, weight);
+            if (plastic) {
+                preliminary_local_synapses_plastic.emplace_back(target_id, source_id, weight);
+            } else {
+                preliminary_local_synapses_static.emplace_back(target_id, source_id, weight);
+            }
         } else {
-            preliminary_distant_synapses.emplace_back(RankNeuronId(target_rank, target_id), source_id, weight);
+            if (plastic) {
+                preliminary_distant_synapses_plastic.emplace_back(RankNeuronId(target_rank, target_id), source_id, weight);
+            } else {
+                preliminary_distant_synapses_static.emplace_back(RankNeuronId(target_rank, target_id), source_id, weight);
+            }
         }
     }
 
-    NeuronIO::write_out_synapses(preliminary_local_synapses, preliminary_distant_synapses, my_rank, path);
+    NeuronIO::write_out_synapses(preliminary_local_synapses_static, preliminary_distant_synapses_static, preliminary_local_synapses_plastic, preliminary_distant_synapses_plastic, my_rank, path);
 
-    auto [read_local_synapses, read_distant_synapses] = NeuronIO::read_out_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [synapses_static, synapses_plastic] = NeuronIO::read_out_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [read_local_synapses_plastic, read_distant_synapses_plastic] = synapses_plastic;
+    auto [read_local_synapses_static, read_distant_synapses_static] = synapses_static;
 
-    std::ranges::sort(preliminary_local_synapses);
-    std::ranges::sort(preliminary_distant_synapses);
+    std::ranges::sort(preliminary_local_synapses_static);
+    std::ranges::sort(preliminary_distant_synapses_static);
+    std::ranges::sort(preliminary_local_synapses_plastic);
+    std::ranges::sort(preliminary_distant_synapses_plastic);
 
-    std::ranges::sort(read_local_synapses);
-    std::ranges::sort(read_distant_synapses);
+    std::ranges::sort(read_local_synapses_static);
+    std::ranges::sort(read_distant_synapses_static);
+    std::ranges::sort(read_local_synapses_plastic);
+    std::ranges::sort(read_distant_synapses_plastic);
 
-    ASSERT_EQ(preliminary_local_synapses, read_local_synapses);
-    ASSERT_EQ(preliminary_distant_synapses, read_distant_synapses);
+    ASSERT_EQ(preliminary_local_synapses_static, read_local_synapses_static);
+    ASSERT_EQ(preliminary_distant_synapses_static, read_distant_synapses_static);
+    ASSERT_EQ(preliminary_local_synapses_plastic, read_local_synapses_plastic);
+    ASSERT_EQ(preliminary_distant_synapses_plastic, read_distant_synapses_plastic);
 }
 
 TEST_F(IOTest, testReadSynapsesInteractionNetworkGraph) {
@@ -972,9 +1055,12 @@ TEST_F(IOTest, testReadSynapsesInteractionNetworkGraph) {
     out_ofstream.flush();
     out_ofstream.close();
 
-    auto [read_local_in_synapses, read_distant_in_synapses] = NeuronIO::read_in_synapses(in_path, number_neurons, my_rank, static_cast<int>(number_ranks));
-    auto [read_local_out_synapses, read_distant_out_synapses] = NeuronIO::read_out_synapses(out_path, number_neurons, my_rank, static_cast<int>(number_ranks));
-       
+    auto [read_in_synapses_static, read_in_synapses_plastic] = NeuronIO::read_in_synapses(in_path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    ;
+    auto [read_local_in_synapses, read_distant_in_synapses] = read_in_synapses_plastic;
+    auto [reader_out_synapses_static, read_out_synapses_plastic] = NeuronIO::read_out_synapses(out_path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [read_local_out_synapses, read_distant_out_synapses] = read_out_synapses_plastic;
+
     std::ranges::sort(read_local_in_synapses);
     std::ranges::sort(read_distant_in_synapses);
     std::ranges::sort(read_local_out_synapses);

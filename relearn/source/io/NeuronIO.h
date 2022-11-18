@@ -176,19 +176,21 @@ public:
      *      (3) a target rank is not my_rank
      *      (4) a source rank is not from [0, number_mpi_ranks)
      *      (5) or a target id is not from [0, number_local_neurons)
-     * @return All in-synapses as a tuple: (1) The local ones and (2) the distant ones
+     * @return All in-synapses as a tuple: { { (1) Static synapses: (1.1) The local ones and (1.2) the distant ones }, { (2) Plastic synapses: (2.1) The local ones and (2.2) the distant ones } }
      */
-    static std::tuple<LocalSynapses, DistantInSynapses> read_in_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons, int my_rank, int number_mpi_ranks);
+    static std::pair<std::tuple<LocalSynapses, DistantInSynapses>, std::tuple<LocalSynapses, DistantInSynapses>> read_in_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons, int my_rank, int number_mpi_ranks);
 
     /**
      * @brief Writes all in-synapses to the specified file
-     * @param local_in_synapses The local in-synapses
-     * @param distant_in_synapses The distant in-synapses
+     * @param local_in_synapses_static The local in-synapses that are static
+     * @param distant_in_synapses_static The distant in-synapses that are static
+     * @param local_in_synapses_plastic The local in-synapses that are plastic
+     * @param distant_in_synapses_plastic The distant in-synapses that are plastic
      * @param my_rank The current MPI rank
      * @param file_path The path to the file
      * @exception Throws a RelearnException if opening the file failed or if the source rank of a distant in-synapse is equal to my_rank
      */
-    static void write_in_synapses(const LocalSynapses& local_in_synapses, const DistantInSynapses& distant_in_synapses, int my_rank, const std::filesystem::path& file_path);
+    static void write_in_synapses(const LocalSynapses& local_in_synapses_static, const DistantInSynapses& distant_in_synapses_static, const LocalSynapses& local_in_synapses_plastic, const DistantInSynapses& distant_in_synapses_plastic, int my_rank, const std::filesystem::path& file_path);
 
     /**
      * @brief Reads all out-synapses from a file and returns those.
@@ -203,17 +205,19 @@ public:
      *      (3) a source rank is not my_rank
      *      (4) a target rank is not from [0, number_mpi_ranks)
      *      (5) or a source id is not from [0, number_local_neurons)
-     * @return All out-synapses as a tuple: (1) The local ones and (2) the distant ones
+     * @return All out-synapses as a tuple: { { (1) Static synapses: (1.1) The local ones and (1.2) the distant ones }, { (2) Plastic synapses: (2.1) The local ones and (2.2) the distant ones } }
      */
-    static std::tuple<LocalSynapses, DistantOutSynapses> read_out_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons, int my_rank, int number_mpi_ranks);
+    static std::pair<std::tuple<LocalSynapses, DistantOutSynapses>, std::tuple<LocalSynapses, DistantOutSynapses>> read_out_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons, int my_rank, int number_mpi_ranks);
 
     /**
      * @brief Writes all out-synapses to the specified file
-     * @param local_out_synapses The local out-synapses
-     * @param distant_out_synapses The distant out-synapses
+     * @param local_out_synapses_static The local out-synapses that are static
+     * @param distant_out_synapses_static The distant out-synapses that are static
+     * @param local_out_synapses_plastic The local out-synapses that are plastic
+     * @param distant_out_synapses_plastic The distant out-synapses that are plastic
      * @param my_rank The current MPI rank
      * @param file_path The path to the file
      * @exception Throws a RelearnException if opening the file failed or if the target rank of a distant out-synapse is equal to my_rank
      */
-    static void write_out_synapses(const LocalSynapses& local_out_synapses, const DistantOutSynapses& distant_out_synapses, int my_rank, const std::filesystem::path& file_path);
+    static void write_out_synapses(const LocalSynapses& local_out_synapses_static, const DistantOutSynapses& distant_out_synapses_static, const LocalSynapses& local_out_synapses_plastic, const DistantOutSynapses& distant_out_synapses_plastic, int my_rank, const std::filesystem::path& file_path);
 };

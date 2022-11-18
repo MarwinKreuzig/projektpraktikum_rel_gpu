@@ -21,9 +21,5 @@
  */
 class FileLoader {
 public:
-    static std::vector<size_t> load_neuron_id_list(const std::string& path_to_file);
-
-    static std::function<std::vector<std::pair<size_t, double>>(size_t)> load_external_stimulus(const std::string& path_to_file);
-
     static std::vector<std::string> split_string(const std::string &string, char delim);
 };

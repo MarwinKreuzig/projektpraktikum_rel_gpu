@@ -183,7 +183,7 @@ public:
      * @param background Optionally a pair of the mean and standarddeviation (if the latter is 0.0, the input will be the mean)
      * @exception Throws a RelearnException if the file is not present or the second argument of background is <0.0 (if provided)
      */
-    StimulusBackgroundActivityCalculator(std::filesystem::path stimulus_file, std::optional<std::pair<double, double>> background)
+    StimulusBackgroundActivityCalculator(const std::filesystem::path& stimulus_file, std::optional<std::pair<double, double>> background)
         : file(stimulus_file) {
         if (background.has_value()) {
             auto [mean, stddev] = background.value();

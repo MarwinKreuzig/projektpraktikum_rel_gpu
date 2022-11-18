@@ -29,7 +29,6 @@ target_sources(
           neurons/models/SynapticInputCalculator.cpp
           neurons/models/SynapticInputCalculators.cpp
           neurons/CalciumCalculator.cpp
-          neurons/NetworkGraph.cpp
           neurons/Neurons.cpp
           neurons/NeuronsExtraInfo.cpp
           # sim

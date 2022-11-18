@@ -21,12 +21,10 @@
 #include "neurons/helper/NeuronMonitor.h"
 #include "neurons/models/BackgroundActivityCalculator.h"
 #include "neurons/models/BackgroundActivityCalculators.h"
-#include "neurons/models/ExternalStimulusCalculators.h"
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
 #include "neurons/models/SynapticInputCalculator.h"
 #include "neurons/models/SynapticInputCalculators.h"
-#include "sim/NeuronToSubdomainAssignment.h"
 #include "sim/Simulation.h"
 #include "sim/file/SubdomainFromFile.h"
 #include "sim/file/MultipleSubdomainsFromFile.h"
@@ -40,7 +38,6 @@
 #include "util/MonitorParser.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
-#include "util/StepParser.h"
 #include "util/Timers.h"
 
 #include "spdlog/spdlog.h"
@@ -353,8 +350,8 @@ int main(int argc, char** argv) {
     std::string static_neurons_str{};
     auto* opt_static_neurons = app.add_option("--static-neurons", static_neurons_str, "File with neuron ids for static neurons");
 
-    std::string file_external_stimulations{};
-    auto* opt_file_external_stimulations = app.add_option("--external-stimulation", file_external_stimulations, "File with the external stimulation.");
+    std::string file_external_stimulation{};
+    auto* opt_file_external_stimulation = app.add_option("--external-stimulation", file_external_stimulation, "File with the external stimulation.");
 
     auto* const opt_background_activity = app.add_option("--background-activity", chosen_background_activity_calculator_type, "The type of background activity");
     opt_background_activity->transform(CLI::CheckedTransformer(cli_parse_background_activity_calculator_type, CLI::ignore_case));
@@ -471,13 +468,13 @@ int main(int argc, char** argv) {
     opt_file_disable_interrupts->check(CLI::ExistingFile);
     opt_file_creation_interrupts->check(CLI::ExistingFile);
 
-    opt_file_external_stimulations->check(CLI::ExistingFile);
+    opt_file_external_stimulation->check(CLI::ExistingFile);
 
     opt_ensemble_file_paths->check(CLI::ExistingFile);
 
     opt_log_path->check(CLI::ExistingDirectory);
 
-    opt_file_external_stimulations->check(CLI::ExistingFile);
+    opt_file_external_stimulation->check(CLI::ExistingFile);
 
     CLI11_PARSE(app, argc, argv);
 
@@ -538,10 +535,10 @@ int main(int argc, char** argv) {
 
         background_activity_calculator = std::make_unique<NormalBackgroundActivityCalculator>(base_background_activity, background_activity_mean, background_activity_stddev);
     } else if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Stimulus) {
-        RelearnException::check(static_cast<bool>(*opt_file_external_stimulations), "Setting the background activity to stimulus but not providing a file is not supported.");
+        RelearnException::check(static_cast<bool>(*opt_file_external_stimulation), "Setting the background activity to stimulus but not providing a file is not supported.");
         RelearnException::check(background_activity_stddev >= 0.0, "When choosing the stimulus-background calculator, the standard deviation must be set to >= 0.0.");
 
-        background_activity_calculator = std::make_unique<StimulusBackgroundActivityCalculator>(file_external_stimulations, std::optional{ std::pair{ background_activity_mean, background_activity_stddev } });
+        background_activity_calculator = std::make_unique<StimulusBackgroundActivityCalculator>(file_external_stimulation, std::optional{ std::pair{ background_activity_mean, background_activity_stddev } });
     } else {
         RelearnException::fail("Chose a background activity calculator that is not implemented");
     }
@@ -693,27 +690,21 @@ int main(int argc, char** argv) {
         RelearnException::fail("Chose a synaptic input calculator that is not implemented");
     }
 
-    std::unique_ptr<ExternalStimulusCalculator> external_stimulus;
-    if (static_cast<bool>(*opt_file_external_stimulations)) {
-        external_stimulus = std::make_unique<FunctionExternalStimulusCalculator>(std::make_unique<ExternalStimulusFunction>(FileLoader::load_external_stimulus(file_external_stimulations)));
-    } else {
-        external_stimulus = std::make_unique<NullExternalStimulusCalculator>();
-    }
 
     std::unique_ptr<NeuronModel> neuron_model{};
     if (chosen_neuron_model == NeuronModelEnum::Poisson) {
-        neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(external_stimulus),
+        neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
             models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
     } else if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
-        neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(external_stimulus),
+        neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
             models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
             models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
             models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
     } else if (chosen_neuron_model == NeuronModelEnum::FitzHughNagumo) {
-        neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(external_stimulus),
+        neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
             models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
     } else if (chosen_neuron_model == NeuronModelEnum::AEIF) {
-        neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(external_stimulus),
+        neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
             models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
             models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
             models::AEIFModel::default_V_spike);

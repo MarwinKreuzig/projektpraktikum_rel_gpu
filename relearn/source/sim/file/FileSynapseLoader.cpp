@@ -35,9 +35,14 @@ FileSynapseLoader::synapses_pair_type FileSynapseLoader::internal_load_synapses(
 
     const auto number_local_neurons = partition->get_number_local_neurons();
 
-    auto [read_local_in_synapses, read_distant_in_synapses] = NeuronIO::read_in_synapses(actual_path / expected_in_name, number_local_neurons, 0, 1);
-    auto [read_local_out_synapses, read_distant_out_synapses] = NeuronIO::read_out_synapses(actual_path / expected_out_name, number_local_neurons, 0, 1);
+    auto [in_synapses_static, in_synapses_plastic] = NeuronIO::read_in_synapses(actual_path / expected_in_name, number_local_neurons, 0, 1);
+    auto [read_local_in_synapses_static, read_distant_in_synapses_static] = in_synapses_static;
+    auto [read_local_in_synapses_plastic, read_distant_in_synapses_plastic] = in_synapses_plastic;
+    auto [out_synapses_static, out_synapses_plastic] = NeuronIO::read_out_synapses(actual_path / expected_out_name, number_local_neurons, 0, 1);
+    auto [read_local_out_synapses_static, read_distant_out_synapses_static] = out_synapses_static;
+    auto [read_local_out_synapses_plastic, read_distant_out_synapses_plastic] = out_synapses_plastic;
 
-    auto return_synapses_plastic = std::make_tuple(std::move(read_local_in_synapses), std::move(read_distant_in_synapses), std::move(read_distant_out_synapses));
-    return synapses_pair_type({}, std::move(return_synapses_plastic));
+    auto return_synapses_plastic = std::make_tuple(std::move(read_local_in_synapses_plastic), std::move(read_distant_in_synapses_plastic), std::move(read_distant_out_synapses_plastic));
+    auto return_synapses_static = std::make_tuple(std::move(read_local_in_synapses_static), std::move(read_distant_in_synapses_static), std::move(read_distant_out_synapses_static));
+    return { std::move(return_synapses_static), std::move(return_synapses_plastic) };
 }

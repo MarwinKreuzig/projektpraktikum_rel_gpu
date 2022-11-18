@@ -332,10 +332,15 @@ public:
     void print_calcium_statistics_to_essentials();
 
     /**
-     * @brief Prints the network graph to LogFiles::EventType::Network
+     * @brief Prints the network graph to LogFiles::EventType::Network. Stores current step in file name and log
      * @param step The current simulation step
      */
     void print_network_graph_to_log_file(step_type step) const;
+
+    /**
+     * @brief Prints the final network graph to LogFiles::EventType::Network
+     */
+    void print_network_graph_to_log_file() const;
 
     /**
      * @brief Prints the neuron positions to LogFiles::EventType::Positions
@@ -408,6 +413,8 @@ private:
     [[nodiscard]] size_t delete_synapses_commit_deletions(const CommunicationMap<SynapseDeletionRequest>& list);
 
     [[nodiscard]] size_t create_synapses();
+
+    void print_network_graph_to_log_file(const std::string& prefix) const;
 
     number_neurons_type number_neurons = 0;
 

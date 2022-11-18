@@ -16,18 +16,17 @@ FitzHughNagumoModel::FitzHughNagumoModel(
     const unsigned int h,
     std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
     std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
-    std::unique_ptr<ExternalStimulusCalculator>&& external_stimulus,
     const double a,
     const double b,
     const double phi)
-    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(external_stimulus) }
+    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator) }
     , a{ a }
     , b{ b }
     , phi{ phi } {
 }
 
 std::unique_ptr<NeuronModel> FitzHughNagumoModel::clone() const {
-    return std::make_unique<FitzHughNagumoModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(), get_external_stimulus_calculator()->clone(),
+    return std::make_unique<FitzHughNagumoModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(),
         a, b, phi);
 }
 
@@ -61,8 +60,7 @@ void FitzHughNagumoModel::update_activity(const NeuronID& neuron_id) {
 
     const auto synaptic_input = get_synaptic_input(neuron_id);
     const auto background = get_background_activity(neuron_id);
-    const auto external = get_external_stimulus(neuron_id);
-    const auto input = synaptic_input + background + external;
+    const auto input = synaptic_input + background;
 
     auto x = get_x(neuron_id);
 
