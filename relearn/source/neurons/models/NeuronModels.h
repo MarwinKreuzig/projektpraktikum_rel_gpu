@@ -28,6 +28,7 @@
 #include <vector>
 
 class AdapterNeuronModel;
+class AreaMonitor;
 class NetworkGraph;
 class NeuronMonitor;
 
@@ -38,6 +39,7 @@ class NeuronMonitor;
  * This class performs communication with MPI.
  */
 class NeuronModel {
+    friend class AreaMonitor;
     friend class AdapterNeuronModel;
     friend class NeuronMonitor;
 
@@ -69,6 +71,12 @@ public:
 
     NeuronModel(NeuronModel&& other) = default;
     NeuronModel& operator=(NeuronModel&& other) = default;
+
+    enum FireRecorderPeriod {
+        NEURON_MONITOR = 0,
+        AREA_MONITOR = 1
+    };
+    int number_fire_recorders = 2;
 
     /**
      * @brief Creates an object of type T wrapped inside an std::unique_ptr
@@ -114,16 +122,16 @@ public:
     /**
      * @brief Resets the fired recorder to 0 spikes per neuron.
      */
-    void reset_fired_recorder() noexcept {
-        std::fill(fired_recorder.begin(), fired_recorder.end(), 0U);
+    void reset_fired_recorder(const FireRecorderPeriod fire_recorder_period) noexcept {
+        std::fill(fired_recorder[fire_recorder_period].begin(), fired_recorder[fire_recorder_period].end(), 0U);
     }
 
     /**
      * @brief Returns a vector of counts how often the neurons have spiked in the last period
      * @return A constant reference to the vector of counts. It is not invalidated by calls to other methods
      */
-    [[nodiscard]] const std::vector<unsigned int>& get_fired_recorder() const noexcept {
-        return fired_recorder;
+    [[nodiscard]] const std::vector<unsigned int>& get_fired_recorder(const FireRecorderPeriod fire_recorder_period) const noexcept {
+        return fired_recorder[fire_recorder_period];
     }
 
     /**
@@ -232,7 +240,10 @@ public:
 
             RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::disable_neurons: There is a too large id: {} vs {}", neuron_id, number_local_neurons);
             fired[local_neuron_id] = FiredStatus::Inactive;
-            fired_recorder[local_neuron_id] = 0;
+            fired_recorder.resize(number_fire_recorders, {});
+            for (int i = 0; i < number_fire_recorders; i++) {
+                fired_recorder[i][local_neuron_id] = 0U;
+            }
         }
     }
 
@@ -276,7 +287,10 @@ protected:
         fired[local_neuron_id] = new_value;
 
         if (new_value == FiredStatus::Fired) {
-            fired_recorder[local_neuron_id]++;
+            fired_recorder.resize(number_fire_recorders, {});
+            for (int i = 0; i < number_fire_recorders; i++) {
+                fired_recorder[i][local_neuron_id]++;
+            }
         }
     }
 
@@ -305,7 +319,7 @@ private:
 
     // Variables for each neuron where the array index denotes the local neuron ID
     std::vector<double> x{}; // The membrane potential (in equations usually v(t))
-    std::vector<unsigned int> fired_recorder{}; // How often the neurons have spiked
+    std::vector<std::vector<unsigned int>> fired_recorder{}; // How often the neurons have spiked
     std::vector<FiredStatus> fired{}; // If the neuron fired in the current update step
 
     std::unique_ptr<SynapticInputCalculator> input_calculator{};

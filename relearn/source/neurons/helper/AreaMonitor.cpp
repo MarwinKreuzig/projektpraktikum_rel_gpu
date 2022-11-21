@@ -47,6 +47,7 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
     den_inh_conn += sim->get_neurons()->get_dendrites_inh().get_connected_elements(neuron_id);
 
     calcium += sim->get_neurons()->get_calcium(neuron_id);
+    fired_fraction += static_cast<double>(sim->get_neurons()->get_neuron_model()->fired_recorder[NeuronModel::FireRecorderPeriod::AREA_MONITOR][neuron_id.get_neuron_id()]) / static_cast<double>(Config::monitor_area_step);
 }
 
 void AreaMonitor::prepare_recording() {
@@ -58,12 +59,13 @@ void AreaMonitor::prepare_recording() {
     den_inh_conn = 0;
     den_inh_grown = 0;
     calcium = 0;
+    fired_fraction = 0;
     mpi_data.clear();
     mpi_data.resize(MPIWrapper::get_num_ranks(), {});
 }
 
 void AreaMonitor::finish_recording() {
-    data.emplace_back(connections, axons_grown, static_cast<double>(axons_conn), den_ex_grown, static_cast<double>(den_ex_conn), den_inh_grown, static_cast<double>(den_inh_conn), calcium);
+    data.emplace_back(connections, axons_grown, static_cast<double>(axons_conn), den_ex_grown, static_cast<double>(den_ex_conn), den_inh_grown, static_cast<double>(den_inh_conn), calcium, fired_fraction);
     mpi_data.clear();
 }
 
@@ -88,9 +90,9 @@ void AreaMonitor::write_data_to_file(const std::filesystem::path& file_path) {
     out << "Step;";
     for (const auto& [rank, area_id] : unique_area_ids_list) {
         out << rank << ":" << area_id << "ex;"
-            << rank << ":" << area_id << "inh;";
+            << rank << ":" << area_id << "in;";
     }
-    out << "Axons grown;Axons conn;Den ex grown;Den ex conn;Den inh grown;Den inh conn;Calcium;";
+    out << "Axons grown;Axons conn;Den ex grown;Den ex conn;Den inh grown;Den inh conn;Calcium;Fire rate;";
     out << std::endl;
 
     // Data
@@ -110,6 +112,7 @@ void AreaMonitor::write_data_to_file(const std::filesystem::path& file_path) {
         out << std::to_string(std::get<5>(single_record)) << ";";
         out << std::to_string(std::get<6>(single_record)) << ";";
         out << std::to_string(std::get<7>(single_record)) << ";";
+        out << std::to_string(std::get<8>(single_record)) << ";";
 
         out << std::endl;
         step += Config::monitor_area_step;

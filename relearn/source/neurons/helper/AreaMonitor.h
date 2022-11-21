@@ -60,6 +60,7 @@ private:
     int den_ex_conn = 0;
     int den_inh_conn = 0;
     double calcium = 0;
+    double fired_fraction = 0.0;
     using EnsembleConnections = std::map<std::pair<int, RelearnTypes::area_id>, ConnectionCount>;
 
     /**
@@ -70,7 +71,7 @@ private:
     /**
      * Complete data of all earlier logging steps
      */
-    std::vector<std::tuple<EnsembleConnections, double, double, double, double, double, double, double>> data;
+    std::vector<std::tuple<EnsembleConnections, double, double, double, double, double, double, double, double>> data;
 
     std::vector<std::vector<AreaConnection>> mpi_data{};
 

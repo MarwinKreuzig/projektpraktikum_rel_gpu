@@ -257,7 +257,7 @@ void Simulation::simulate(const step_type number_steps) {
             }
             Timers::stop_and_add(TimerRegion::CAPTURE_MONITORS);
 
-            neurons->get_neuron_model()->reset_fired_recorder();
+            neurons->get_neuron_model()->reset_fired_recorder(NeuronModel::FireRecorderPeriod::NEURON_MONITOR);
         }
 
         if (step % Config::monitor_area_step == 0 && !area_monitors->empty()) {
@@ -293,6 +293,8 @@ void Simulation::simulate(const step_type number_steps) {
             for (auto& [_, area_monitor] : *area_monitors) {
                 area_monitor.finish_recording();
             }
+
+            neurons->get_neuron_model()->reset_fired_recorder(NeuronModel::FireRecorderPeriod::AREA_MONITOR);
         }
 
         for (const auto& [disable_step, disable_ids] : disable_interrupts) {
@@ -520,7 +522,7 @@ void Simulation::snapshot_monitors() {
         }
         Timers::stop_and_add(TimerRegion::CAPTURE_MONITORS);
 
-        neurons->get_neuron_model()->reset_fired_recorder();
+        neurons->get_neuron_model()->reset_fired_recorder(NeuronModel::FireRecorderPeriod::NEURON_MONITOR);
     }
 }
 
