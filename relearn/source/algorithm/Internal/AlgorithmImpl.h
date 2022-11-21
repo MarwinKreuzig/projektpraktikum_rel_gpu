@@ -110,7 +110,6 @@ private:
             && num_leaf_nodes == num_dendrites_inhibitory_counts
             && num_leaf_nodes == num_dendrites_inhibitory_connected_counts;
 
-        LogFiles::print_message_rank(MPIWrapper::get_my_rank(), "Num leaf nodes: {}", num_leaf_nodes);
         RelearnException::check(all_same_size, "AlgorithmImpl::update_leaf_nodes: The vectors were of different sizes");
 
         using counter_type = typename AdditionalCellAttributes::counter_type;

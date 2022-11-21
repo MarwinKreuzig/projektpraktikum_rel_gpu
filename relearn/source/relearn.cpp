@@ -8,14 +8,6 @@
  *
  */
 
-/*
- * TODOs
- * Area id <-> names in eigene Klasse auslagern
- * Tests für diese Klasse
- * Tests für area monitor?
- * read neuron positions in NeuronIO auslagern und mit Tests kombinieren
- */
-
 #include "Config.h"
 #include "Types.h"
 #include "algorithm/Algorithms.h"
