@@ -86,7 +86,10 @@ void AreaMonitor::write_data_to_file(const std::filesystem::path& file_path) {
         p1.first < p2
     });*/
     // Header
-    out << "#Connections from ensemble " << area_name << " (" << my_rank << ":" << area_id << ") to ..." << std::endl;
+    out << "# Connections from ensemble " << area_name << " (" << my_rank << ":" << area_id << ") to ..." << std::endl;
+    out << "# Rank: " << my_rank << std::endl;
+    out << "# Area id: " << area_id << std::endl;
+    out << "# Area name: " << area_name << std::endl;
     out << "Step;";
     for (const auto& [rank, area_id] : unique_area_ids_list) {
         out << rank << ":" << area_id << "ex;"
