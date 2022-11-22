@@ -8,33 +8,33 @@
 #include <string>
 
 void NeuronMonitor::init_print_file() {
-    const auto& path = LogFiles::get_output_path();
-
-    const auto& file_path = path / (MPIWrapper::get_my_rank_str() + '_' + std::to_string(target_neuron_id.get_neuron_id()) + ".csv");
-    std::ofstream outfile(file_path, std::ios_base::out | std::ios_base::trunc);
-
-    constexpr auto description = "Step;Fired;Fired Fraction;x;Secondary Variable;Calcium;Target Calcium;Synaptic Input;Background Activity;Grown Axons;Connected Axons;Grown Excitatory Dendrites;Connected Excitatory Dendrites;Grown Inhibitory Dendrites;Connected Inhibitory Dendrites\n";
-
-    constexpr auto filler = ";";
-    constexpr auto width = 6;
-
-    outfile << std::setprecision(Constants::print_precision);
-    outfile.imbue(std::locale());
-
-    outfile << description;
-}
-
-void NeuronMonitor::flush_current_contents() {
-    std::filesystem::path path = LogFiles::get_output_path() / "neuron_monitors";
+    const auto& path = LogFiles::get_output_path() / "neuron_monitors";
     if (!std::filesystem::exists(path)) {
         std::filesystem::create_directories(path);
     }
 
     const auto& file_path = path / (MPIWrapper::get_my_rank_str() + '_' + std::to_string(target_neuron_id.get_neuron_id()) + ".csv");
+    std::ofstream outfile(file_path, std::ios_base::out | std::ios_base::trunc);
+
+    constexpr auto description = "# Step;Fired;Fired Fraction;x;Secondary Variable;Calcium;Target Calcium;Synaptic Input;Background Activity;Grown Axons;Connected Axons;Grown Excitatory Dendrites;Connected Excitatory Dendrites;Grown Inhibitory Dendrites;Connected Inhibitory Dendrites\n";
+
+    outfile << std::setprecision(Constants::print_precision);
+    outfile.imbue(std::locale());
+
+    outfile << "# Rank: " << MPIWrapper::get_my_rank_str() << std::endl;
+    outfile << "# Neuron ID: " << target_neuron_id.get_neuron_id() << std::endl;
+    outfile << "# Area name: " << neurons_to_monitor->extra_info->get_area_name_for_neuron_id(target_neuron_id.get_neuron_id()) << std::endl;
+    outfile << "# Area id: " << neurons_to_monitor->extra_info->get_area_id_for_neuron_id(target_neuron_id) << std::endl;
+    outfile << description;
+}
+
+void NeuronMonitor::flush_current_contents() {
+    std::filesystem::path path = LogFiles::get_output_path() / "neuron_monitors";
+
+    const auto& file_path = path / (MPIWrapper::get_my_rank_str() + '_' + std::to_string(target_neuron_id.get_neuron_id()) + ".csv");
     std::ofstream outfile(file_path, std::ios_base::ate | std::ios_base::app);
 
     constexpr auto filler = ";";
-    constexpr auto width = 6;
 
     auto current_step = static_cast<decltype(Config::monitor_step)>(0);
     for (const auto& info : informations) {

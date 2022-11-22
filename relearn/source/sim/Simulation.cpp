@@ -39,6 +39,7 @@ Simulation::Simulation(std::shared_ptr<Partition> partition)
 
 void Simulation::register_neuron_monitor(const NeuronID& neuron_id) {
     monitors->emplace_back(neuron_id);
+    monitors->at(monitors->size() - 1).init_print_file();
 }
 
 void Simulation::set_acceptance_criterion_for_barnes_hut(const double value) {
@@ -226,10 +227,6 @@ void Simulation::initialize() {
     neurons->debug_check_counts();
     neurons->print_neurons_overview_to_log_file_on_rank_0(0);
     neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, 0, 0, 0);
-
-    for (auto& monitor : *monitors) {
-        monitor.init_print_file();
-    }
 }
 
 void Simulation::simulate(const step_type number_steps) {
