@@ -535,9 +535,9 @@ public:
      *      <target_rank> <target_id>\t<source_rank> <source_id>\t<weight>\t<flag>
      * @param os_out_edges The out-stream to which the out-connections are printed
      * @param os_in_edges The out-stream to which the in-connections are printed
-     * @param flag Character flag which will be printed at the end of the line of each connection. Usually indicates the plasticity
+     * @param flag Boolean flag which will be printed at the end of the line of each connection. Usually indicates the plasticity
      */
-    void print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges, char flag) const {
+    void print_with_ranks(std::ostream& os_out_edges, std::ostream& os_in_edges, bool flag) const {
         for (const auto& source_id : NeuronID::range(number_local_neurons)) {
             const auto& source_local_id = source_id.get_neuron_id();
 
