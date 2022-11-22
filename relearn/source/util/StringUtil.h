@@ -24,7 +24,7 @@
 /**
  * This class provides a static interface to load interrupts from files, i.e., when during the simulation the neurons should be altered.
  */
-class Helper {
+class StringUtil {
 public:
     static std::vector<std::string> split_string(const std::string& string, char delim);
 
@@ -49,7 +49,7 @@ public:
      * @return string with the number and leading zeros if necessary
      */
     static std::string format_int_with_leading_zeros(int number, int nr_of_digits) {
-        RelearnException::check(nr_of_digits >= 1, "Helper::format_with_leading_zeros. Number must has at least 1 digit");
+        RelearnException::check(nr_of_digits >= 1, "StringUtil::format_with_leading_zeros. Number must has at least 1 digit");
         std::stringstream ss;
         ss << std::setw(nr_of_digits) << std::setfill('0') << number;
         return ss.str();
@@ -57,7 +57,7 @@ public:
 
     template <typename T>
     static void stack_vectors(std::vector<std::vector<T>>& first, const std::vector<std::vector<T>>& second) {
-        RelearnException::check(first.size() == second.size(), "Helper::stack_vectors: Cannot stack vectors with different size {} != {} ", first.size(), second.size());
+        RelearnException::check(first.size() == second.size(), "StringUtil::stack_vectors: Cannot stack vectors with different size {} != {} ", first.size(), second.size());
 
         for (int i = 0; i < first.size(); i++) {
             first[i].insert(first[i].end(), second[i].begin(), second[i].end());
@@ -77,12 +77,12 @@ public:
     static std::filesystem::path find_file_for_rank(const std::filesystem::path& directory, int rank, const std::string& prefix, const std::string& suffix, int max_digits) {
         std::filesystem::path path_to_file;
         for (int nr_digits = 1; nr_digits < max_digits; nr_digits++) {
-            const auto my_position_filename = prefix + Helper::format_int_with_leading_zeros(rank, nr_digits) + suffix;
+            const auto my_position_filename = prefix + StringUtil::format_int_with_leading_zeros(rank, nr_digits) + suffix;
             path_to_file = directory / my_position_filename;
             if (std::filesystem::exists(path_to_file)) {
                 return path_to_file;
             }
         }
-        RelearnException::fail("Helper::find_file_for_rank: No file found for {}{}{}", prefix, rank, suffix);
+        RelearnException::fail("StringUtil::find_file_for_rank: No file found for {}{}{}", prefix, rank, suffix);
     }
 };

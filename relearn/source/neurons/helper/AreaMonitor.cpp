@@ -21,9 +21,7 @@ AreaMonitor::AreaMonitor(Simulation* simulation, RelearnTypes::area_id area_id, 
 void AreaMonitor::record_data(NeuronID neuron_id) {
     const auto out_edges = sim->get_network_graph()->get_all_in_edges(neuron_id);
 
-    for (const auto& edge : out_edges) {
-        const RankNeuronId rank_neuron_id = std::get<0>(edge);
-        const RelearnTypes::synapse_weight weight = std::get<1>(edge);
+    for (const auto& [rank_neuron_id, weight] : out_edges) {
         if (rank_neuron_id.get_rank() == my_rank) {
             const auto& other_neuron_id = rank_neuron_id.get_neuron_id();
             const auto other_area_id = sim->get_neurons()->get_extra_info()->get_area_id_for_neuron_id(other_neuron_id);

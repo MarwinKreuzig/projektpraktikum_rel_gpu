@@ -34,7 +34,7 @@
 #include "structure/NodeCache.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
-#include "util/Helper.h"
+#include "util/StringUtil.h"
 #include "util/MonitorParser.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"

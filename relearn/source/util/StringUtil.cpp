@@ -8,15 +8,12 @@
  *
  */
 
-#include "Helper.h"
+#include "StringUtil.h"
 
-#include "../util/RelearnException.h"
+#include <string>
+#include <vector>
 
-#include <fstream>
-#include <iostream>
-#include <sstream>
-
-std::vector<std::string> Helper::split_string(const std::string& string, char delim) {
+std::vector<std::string> StringUtil::split_string(const std::string& string, char delim) {
     std::vector<std::string> result;
     std::stringstream ss(string);
     std::string item;

@@ -11,7 +11,7 @@
  */
 
 #include "neurons/helper/RankNeuronId.h"
-#include "util/Helper.h"
+#include "util/StringUtil.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
@@ -113,10 +113,10 @@ public:
     }
 
     [[nodiscard]] static std::vector<RelearnTypes::area_id> parse_area_names(const std::string& description, const std::vector<RelearnTypes::area_name>& area_id_vs_area_name) {
-        const auto& vector = Helper::split_string(description, ';');
+        const auto& vector = StringUtil::split_string(description, ';');
         std::vector<RelearnTypes::area_name> area_names;
         for (const auto& desc : vector) {
-            if (desc.find(':') != std::string::npos || Helper::is_number(desc)) {
+            if (desc.find(':') != std::string::npos || StringUtil::is_number(desc)) {
                 // Description has the format of a neuron id. Skip it
                 continue;
             }

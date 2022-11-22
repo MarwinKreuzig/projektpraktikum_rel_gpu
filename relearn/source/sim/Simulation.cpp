@@ -11,7 +11,7 @@
 #include "Simulation.h"
 
 #include "algorithm/Algorithms.h"
-#include "util/Helper.h"
+#include "util/StringUtil.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/helper/AreaMonitor.h"
@@ -272,7 +272,7 @@ void Simulation::simulate(const step_type number_steps) {
             std::vector<std::vector<AreaMonitor::AreaConnection>> all_exchange_data(MPIWrapper::get_num_ranks());
             for (auto& [_, area_monitor] : *area_monitors) {
                 const auto& exchange_data_single = area_monitor.get_exchange_data();
-                Helper::stack_vectors<AreaMonitor::AreaConnection>(all_exchange_data, exchange_data_single);
+                StringUtil::stack_vectors<AreaMonitor::AreaConnection>(all_exchange_data, exchange_data_single);
             }
             const auto& received_data = MPIWrapper::exchange_values<AreaMonitor::AreaConnection>(all_exchange_data);
             RelearnException::check(received_data.size() == MPIWrapper::get_num_ranks(), "Simulation::simulate: MPI Communication for area monitor failed {} != {}", received_data.size() != MPIWrapper::get_num_ranks());

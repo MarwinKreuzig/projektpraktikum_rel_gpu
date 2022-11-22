@@ -15,7 +15,7 @@
 #include "neurons/NeuronsExtraInfo.h"
 #include "util/Interval.h"
 #include "util/TaggedID.h"
-#include "util/Helper.h"
+#include "util/StringUtil.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -74,7 +74,7 @@ public:
         area_names.reserve(line.size());
 
         for (std::string current_value{}; ss >> current_value;) {
-            const auto& rank_neuron_id_vector = Helper::split_string(current_value, ':');
+            const auto& rank_neuron_id_vector = StringUtil::split_string(current_value, ':');
             if (rank_neuron_id_vector.size() == 2) {
                 // Neuron has format <rank>:<neuron_id>
                 const int rank = std::stoi(rank_neuron_id_vector[0]);
@@ -84,7 +84,7 @@ public:
                 const auto neuron_id = std::stoul(rank_neuron_id_vector[1]);
                 ids.insert({ neuron_id });
             } else {
-                RelearnException::check(!Helper::is_number(current_value), "StimulusParser::parseLine:: Illegal neuron id {} in stimulus files. Must have the format <rank>:<neuron_id> or be an area name", current_value);
+                RelearnException::check(!StringUtil::is_number(current_value), "StimulusParser::parseLine:: Illegal neuron id {} in stimulus files. Must have the format <rank>:<neuron_id> or be an area name", current_value);
                 // Neuron descriptor is an area name
                 area_names.insert(current_value);
             }
