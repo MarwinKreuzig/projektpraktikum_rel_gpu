@@ -13,6 +13,12 @@
 #include <string>
 #include <vector>
 
+/**
+ * @brief Split a string basedd on a delimiter character in a list of substrings
+ * @param string The string to split
+ * @param delim Single char used as delimiter
+ * @return Vector of substrings
+ */
 std::vector<std::string> StringUtil::split_string(const std::string& string, char delim) {
     std::vector<std::string> result;
     std::stringstream ss(string);

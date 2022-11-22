@@ -121,6 +121,7 @@ public:
 
     /**
      * @brief Resets the fired recorder to 0 spikes per neuron.
+     * @param fire_recorder_period Type of recorder that will be resetted
      */
     void reset_fired_recorder(const FireRecorderPeriod fire_recorder_period) noexcept {
         std::fill(fired_recorder[fire_recorder_period].begin(), fired_recorder[fire_recorder_period].end(), 0U);
@@ -128,6 +129,7 @@ public:
 
     /**
      * @brief Returns a vector of counts how often the neurons have spiked in the last period
+     * @param fire_recorder_period Type of recorder period that shall be returned
      * @return A constant reference to the vector of counts. It is not invalidated by calls to other methods
      */
     [[nodiscard]] const std::vector<unsigned int>& get_fired_recorder(const FireRecorderPeriod fire_recorder_period) const noexcept {

@@ -13,7 +13,7 @@
 class Simulation;
 
 /**
- * Monitors the number of connections between ensembles
+ * Monitors the number of connections between areas and more area statistics
  */
 class AreaMonitor {
 public:
@@ -36,9 +36,6 @@ private:
 
     int my_rank;
 
-    /**
-     * Id of the ensemble which is monitored by this instance
-     */
     RelearnTypes::area_name area_name;
 
     RelearnTypes::area_id area_id;
@@ -76,13 +73,26 @@ private:
     std::vector<std::vector<AreaConnection>> mpi_data{};
 
 public:
+    /**
+     * If a connected neuron is managed by another mpi rank. This area monitor cannot notify the other area about the connection to this area.
+     * Hence, it creates a vector with information for each mpi rank that shall be sent to the other mpi ranks
+     * @return Index i of the returned vector contains the information which shall be sent to mpi rank i. Each rank receives a vector of AreaConnections
+     */
     [[nodiscard]] const std::vector<std::vector<AreaConnection>>& get_exchange_data() const;
 
-    void add_connection(const AreaConnection& connection);
+    /**
+     * Add an ingoing connection to the area. This method shall be called by other area monitors with ingoing connections to this area
+     * @param connection Connection whose source is this area
+     */
+    void add_outgoing_connection(const AreaConnection& connection);
 
     /**
-     *
-     * @param simulation
+     * Construct an object for monitoring a specific area on this mpi rank
+     * @param simulation Pointer to the simulation
+     * @param area_id Id of the area that will be monitored
+     * @param area_name Name of the area that will be monitored
+     * @param nr_neurons_in_area The number of neurons in this area on this rank
+     * @param my_rank The mpi rank of this process
      * @param ensembleId Id of the current ensemble
      */
     AreaMonitor(Simulation* simulation, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name, RelearnTypes::number_neurons_type nr_neurons_in_area, int my_rank);
@@ -111,9 +121,18 @@ public:
      */
     void write_data_to_file(const std::filesystem::path& file_path);
 
+    /**
+     * Returns the name of the area that is monitored
+     * @return Area name
+     */
     [[nodiscard]] const RelearnTypes::area_name& get_area_name() const noexcept {
         return area_name;
     }
+
+    /**
+     * Returns the id of the area that is monitored
+     * @return Area id
+     */
     [[nodiscard]] const RelearnTypes::area_id& get_area_id() const noexcept {
         return area_id;
     }

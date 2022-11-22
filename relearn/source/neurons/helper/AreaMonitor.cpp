@@ -19,16 +19,20 @@ AreaMonitor::AreaMonitor(Simulation* simulation, RelearnTypes::area_id area_id, 
 }
 
 void AreaMonitor::record_data(NeuronID neuron_id) {
-    const auto out_edges = sim->get_network_graph()->get_all_in_edges(neuron_id);
+    // Notify the areas of the ingoing connections of this area about the connections
+    // We only store the outgoing connections for the notified area to reduce the need of memory and mpi communication
+    const auto in_edges = sim->get_network_graph()->get_all_in_edges(neuron_id);
 
-    for (const auto& [rank_neuron_id, weight] : out_edges) {
+    for (const auto& [rank_neuron_id, weight] : in_edges) {
         if (rank_neuron_id.get_rank() == my_rank) {
+            // Other area is on the same rank. Notify the responsible area monitor directly
             const auto& other_neuron_id = rank_neuron_id.get_neuron_id();
             const auto other_area_id = sim->get_neurons()->get_extra_info()->get_area_id_for_neuron_id(other_neuron_id);
             AreaMonitor& other_area_monitor = sim->get_area_monitors()->at(other_area_id);
             const auto signal_type = weight > 0 ? SignalType::Excitatory : SignalType::Inhibitory;
-            other_area_monitor.add_connection({ my_rank, area_id, other_neuron_id, signal_type });
+            other_area_monitor.add_outgoing_connection({ my_rank, area_id, other_neuron_id, signal_type });
         } else {
+            // Other area is on different mpi rank. Save connection for communication over mpi
             const NeuronID other_neuron_id = rank_neuron_id.get_neuron_id();
             const SignalType signal_type = (weight > 0) ? SignalType::Excitatory : SignalType::Inhibitory;
             RelearnException::check(mpi_data.size() == MPIWrapper::get_num_ranks(), "AreaMonitor::record_data: mpi_data has wrong size {} != {}", mpi_data.size(), MPIWrapper::get_num_ranks());
@@ -36,6 +40,7 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
         }
     }
 
+    // Store statistics
     axons_grown += sim->get_neurons()->get_axons().get_grown_elements(neuron_id);
     den_ex_grown += sim->get_neurons()->get_dendrites_exc().get_grown_elements(neuron_id);
     den_inh_grown += sim->get_neurons()->get_dendrites_inh().get_grown_elements(neuron_id);
@@ -80,9 +85,7 @@ void AreaMonitor::write_data_to_file(const std::filesystem::path& file_path) {
 
     std::vector<std::pair<int, RelearnTypes::area_id>> unique_area_ids_list;
     std::copy(unique_area_ids.begin(), unique_area_ids.end(), std::back_inserter(unique_area_ids_list));
-    std::sort(unique_area_ids_list.begin(), unique_area_ids_list.end()); /*, [](const auto& p1,const auto &p2) -> {
-        p1.first < p2
-    });*/
+    std::sort(unique_area_ids_list.begin(), unique_area_ids_list.end());
     // Header
     out << "# Connections from ensemble " << area_name << " (" << my_rank << ":" << area_id << ") to ..." << std::endl;
     out << "# Rank: " << my_rank << std::endl;
@@ -124,7 +127,7 @@ const std::vector<std::vector<AreaMonitor::AreaConnection>>& AreaMonitor::get_ex
     return mpi_data;
 }
 
-void AreaMonitor::add_connection(const AreaMonitor::AreaConnection& connection) {
+void AreaMonitor::add_outgoing_connection(const AreaMonitor::AreaConnection& connection) {
     auto pair = std::make_pair(connection.from_rank, connection.from_area);
     if (connections.contains(pair)) {
         auto& conn = connections.at(pair);

@@ -112,6 +112,12 @@ public:
         return parsed_ids;
     }
 
+    /**
+     * Parses a descriptor string and looks for area names
+     * @param description The string that will be parsed
+     * @param area_id_vs_area_name
+     * @return List of area names found in the string
+     */
     [[nodiscard]] static std::vector<RelearnTypes::area_id> parse_area_names(const std::string& description, const std::vector<RelearnTypes::area_name>& area_id_vs_area_name) {
         const auto& vector = StringUtil::split_string(description, ';');
         std::vector<RelearnTypes::area_name> area_names;
@@ -182,6 +188,12 @@ public:
         return neuron_ids;
     }
 
+    /**
+     * @brief Returns all neuron ids in a specific area on this rank
+     * @param neuron_id_vs_area_id
+     * @param my_area_ids Vector of area ids in which the neuron ids must lay
+     * @return Vector of neuron ids within the specified area in my_area_ids
+     */
     [[nodiscard]] static std::vector<NeuronID> get_neuron_ids_in_area(const std::vector<RelearnTypes::area_id>& neuron_id_vs_area_id, const std::vector<RelearnTypes::area_id>& my_area_ids) {
         std::vector<NeuronID> neurons_in_area{};
         for (const auto& neuron_id : NeuronID::range(0, neuron_id_vs_area_id.size())) {

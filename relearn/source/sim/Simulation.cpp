@@ -283,7 +283,7 @@ void Simulation::simulate(const step_type number_steps) {
                 }
                 for (const AreaMonitor::AreaConnection& connection : received_data_single) {
                     const auto& area_id = neurons->get_extra_info()->get_area_id_for_neuron_id(connection.to_local_neuron_id);
-                    area_monitors->at(area_id).add_connection(connection);
+                    area_monitors->at(area_id).add_outgoing_connection(connection);
                 }
             }
 
