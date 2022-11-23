@@ -720,7 +720,7 @@ TEST_F(IOTest, testNeuronIOReadIDsEmpty2) {
     preliminary_ids.emplace_back(false, number_neurons + 1);
     preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
     preliminary_area_names.emplace_back("area_" + std::to_string(number_neurons + 1));
-    preliminary_area_ids.emplace_back(number_neurons + 1);
+    preliminary_area_ids.emplace_back(number_neurons);
     preliminary_signal_types.emplace_back(get_random_signal_type());
 
     std::filesystem::path path{ "./neurons.tmp" };
