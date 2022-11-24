@@ -87,17 +87,18 @@ void AreaMonitor::write_data_to_file(const std::filesystem::path& file_path) {
     std::copy(unique_area_ids.begin(), unique_area_ids.end(), std::back_inserter(unique_area_ids_list));
     std::sort(unique_area_ids_list.begin(), unique_area_ids_list.end());
     // Header
-    out << "# Connections from ensemble " << area_name << " (" << my_rank << ":" << area_id << ") to ..." << std::endl;
-    out << "# Rank: " << my_rank << std::endl;
-    out << "# Area id: " << area_id << std::endl;
-    out << "# Area name: " << area_name << std::endl;
+    out << "# Connections from ensemble " << area_name << " (" << my_rank << ":" << area_id << ") to ..."
+        << "\n";
+    out << "# Rank: " << my_rank << "\n";
+    out << "# Area id: " << area_id << "\n";
+    out << "# Area name: " << area_name << "\n";
     out << "Step;";
     for (const auto& [rank, area_id] : unique_area_ids_list) {
         out << rank << ":" << area_id << "ex;"
             << rank << ":" << area_id << "in;";
     }
     out << "Axons grown;Axons conn;Den ex grown;Den ex conn;Den inh grown;Den inh conn;Calcium;Fire rate;";
-    out << std::endl;
+    out << "\n";
 
     // Data
     size_t step = 0;
@@ -118,7 +119,7 @@ void AreaMonitor::write_data_to_file(const std::filesystem::path& file_path) {
         out << std::to_string(std::get<7>(single_record)) << ";";
         out << std::to_string(std::get<8>(single_record)) << ";";
 
-        out << std::endl;
+        out << "\n";
         step += Config::monitor_area_step;
     }
     out.close();

@@ -21,10 +21,10 @@ void NeuronMonitor::init_print_file() {
     outfile << std::setprecision(Constants::print_precision);
     outfile.imbue(std::locale());
 
-    outfile << "# Rank: " << MPIWrapper::get_my_rank_str() << std::endl;
-    outfile << "# Neuron ID: " << target_neuron_id.get_neuron_id() << std::endl;
-    outfile << "# Area name: " << neurons_to_monitor->extra_info->get_area_name_for_neuron_id(target_neuron_id.get_neuron_id()) << std::endl;
-    outfile << "# Area id: " << neurons_to_monitor->extra_info->get_area_id_for_neuron_id(target_neuron_id) << std::endl;
+    outfile << "# Rank: " << MPIWrapper::get_my_rank_str() << "\n";
+    outfile << "# Neuron ID: " << target_neuron_id.get_neuron_id() << "\n";
+    outfile << "# Area name: " << neurons_to_monitor->extra_info->get_area_name_for_neuron_id(target_neuron_id.get_neuron_id()) << "\n";
+    outfile << "# Area id: " << neurons_to_monitor->extra_info->get_area_id_for_neuron_id(target_neuron_id) << "\n";
     outfile << description;
 }
 

@@ -255,7 +255,7 @@ void NeuronIO::write_area_names(const std::filesystem::path& file_path, const st
     of << "# ID area_name \n";
 
     for (int i = 0; i < area_names.size(); i++) {
-        of << i << " " << area_names[i] << std::endl;
+        of << i << " " << area_names[i] << "\n";
     }
     of.close();
 }
