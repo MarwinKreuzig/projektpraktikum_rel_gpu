@@ -3,6 +3,7 @@
 #include "Config.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
+#include "neurons/LocalAreaTranslator.h"
 
 #include <fstream>
 #include <string>
@@ -23,8 +24,8 @@ void NeuronMonitor::init_print_file() {
 
     outfile << "# Rank: " << MPIWrapper::get_my_rank_str() << "\n";
     outfile << "# Neuron ID: " << target_neuron_id.get_neuron_id() << "\n";
-    outfile << "# Area name: " << neurons_to_monitor->extra_info->get_area_name_for_neuron_id(target_neuron_id.get_neuron_id()) << "\n";
-    outfile << "# Area id: " << neurons_to_monitor->extra_info->get_area_id_for_neuron_id(target_neuron_id) << "\n";
+    outfile << "# Area name: " << neurons_to_monitor->get_local_area_translator()->get_area_name_for_neuron_id(target_neuron_id.get_neuron_id()) << "\n";
+    outfile << "# Area id: " << neurons_to_monitor->get_local_area_translator()->get_area_id_for_neuron_id(target_neuron_id.get_neuron_id()) << "\n";
     outfile << description;
 }
 

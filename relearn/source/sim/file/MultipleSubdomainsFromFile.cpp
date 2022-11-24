@@ -82,7 +82,7 @@ void MultipleSubdomainsFromFile::read_neurons_from_file(const std::filesystem::p
     RelearnTypes::box_size_type maximum{ max_x, max_y, max_z };
 
     auto [nodes, area_id_vs_area_name, additional_infos] = NeuronIO::read_neurons(path_to_neurons);
-    set_area_id_vs_area_name(area_id_vs_area_name);
+    set_area_id_to_area_name(area_id_vs_area_name);
     const auto& [_1, _2, loaded_ex_neurons, loaded_in_neurons] = additional_infos;
 
     // TODO(future): Let partition calculate the local portion and then check if all neurons are in it

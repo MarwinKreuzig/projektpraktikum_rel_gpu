@@ -141,6 +141,10 @@ protected:
 
     std::vector<RelearnTypes::area_name> get_random_area_names(size_t max_areas) {
         int nr_areas = get_random_integer<size_t>(1, max_areas);
+        return std::move(get_random_area_names_specific(nr_areas));
+    }
+
+    std::vector<RelearnTypes::area_name> get_random_area_names_specific(size_t nr_areas) {
         std::vector<RelearnTypes::area_name> area_names{};
         for (int area_id = 0; area_id < nr_areas; area_id++) {
             area_names.emplace_back(std::to_string(get_random_percentage()));
@@ -874,8 +878,7 @@ protected:
 
     void assert_empty(const NeuronsExtraInfo& nei, size_t number_neurons);
 
-    void assert_contains(const NeuronsExtraInfo& nei, size_t number_neurons, size_t num_neurons_check,
-        const std::vector<RelearnTypes::area_id>& expected_area_ids, const std::vector<Vec3d>& expected_positions);
+    void assert_contains(const NeuronsExtraInfo& nei, size_t number_neurons, size_t num_neurons_check, const std::vector<Vec3d>& expected_positions);
 };
 
 class CellTest : public RelearnTest {
@@ -1107,6 +1110,13 @@ protected:
         auto interval = generate_random_interval();
         auto description = codify_interval(interval);
         return { std::move(interval), std::move(description) };
+    }
+};
+
+class LocalAreaTranslatorTest : public RelearnTest {
+protected:
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 

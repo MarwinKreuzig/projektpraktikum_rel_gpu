@@ -2,6 +2,7 @@
 
 #include "Types.h"
 #include "util/TaggedID.h"
+#include "neurons/LocalAreaTranslator.h"
 #include "neurons/SignalType.h"
 
 #include <filesystem>
@@ -40,7 +41,6 @@ private:
 
     RelearnTypes::area_id area_id;
 
-    unsigned int nr_neurons_in_area;
 
     /**
      * Number of connections to another ensemble in a single step
@@ -91,11 +91,9 @@ public:
      * @param simulation Pointer to the simulation
      * @param area_id Id of the area that will be monitored
      * @param area_name Name of the area that will be monitored
-     * @param nr_neurons_in_area The number of neurons in this area on this rank
      * @param my_rank The mpi rank of this process
-     * @param ensembleId Id of the current ensemble
      */
-    AreaMonitor(Simulation* simulation, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name, RelearnTypes::number_neurons_type nr_neurons_in_area, int my_rank);
+    AreaMonitor(Simulation* simulation, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name, int my_rank);
 
     /**
      * Prepares the monitor for a new logging step. Call this method before each logging step.

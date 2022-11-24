@@ -126,12 +126,11 @@ void Simulation::initialize() {
         "Simulation::initialize: The partition and the NTSA had a disagreement about the number of local neurons");
 
     auto neuron_positions = neuron_to_subdomain_assignment->get_neuron_positions_in_subdomains();
-    auto neuron_id_vs_area_id = neuron_to_subdomain_assignment->get_neuron_id_vs_area_id();
-    auto area_id_vs_area_name = neuron_to_subdomain_assignment->get_area_id_vs_area_name();
+    auto local_area_translator = neuron_to_subdomain_assignment->get_local_area_translator();
     auto signal_types = neuron_to_subdomain_assignment->get_neuron_types_in_subdomains();
 
     RelearnException::check(neuron_positions.size() == number_local_neurons, "Simulation::initialize: neuron_positions had the wrong size");
-    RelearnException::check(neuron_id_vs_area_id.size() == number_local_neurons, "Simulation::initialize: neuron_id_vs_area_id had the wrong size");
+    RelearnException::check(local_area_translator->get_number_neurons_in_total() == number_local_neurons, "Simulation::initialize: neuron_id_vs_area_id had the wrong size");
     RelearnException::check(signal_types.size() == number_local_neurons, "Simulation::initialize: signal_types had the wrong size");
 
     partition->print_my_subdomains_info_rank(-1);
@@ -194,8 +193,7 @@ void Simulation::initialize() {
 
     algorithm->set_synaptic_elements(axons, dendrites_ex, dendrites_in);
 
-    neurons->set_area_id_vs_area_name(std::move(area_id_vs_area_name));
-    neurons->set_neuron_id_vs_area_id(std::move(neuron_id_vs_area_id));
+    neurons->set_local_area_translator(local_area_translator);
     neurons->set_signal_types(std::move(signal_types));
     neurons->set_positions(std::move(neuron_positions));
 
@@ -203,9 +201,9 @@ void Simulation::initialize() {
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 
-    for (size_t area_id = 0; area_id < neurons->get_extra_info()->get_area_id_vs_area_name().size(); area_id++) {
-        const auto& area_name = neurons->get_extra_info()->get_area_id_vs_area_name()[area_id];
-        area_monitors->insert(std::make_pair(area_id, AreaMonitor(this, area_id, area_name, neurons->get_extra_info()->get_nr_neurons_in_area(area_id), my_rank)));
+    for (size_t area_id = 0; area_id < local_area_translator->get_number_of_areas(); area_id++) {
+        const auto& area_name = local_area_translator->get_area_name_for_area_id(area_id);
+        area_monitors->insert(std::make_pair(area_id, AreaMonitor(this, area_id, area_name, my_rank)));
     }
 
     auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
@@ -262,7 +260,7 @@ void Simulation::simulate(const step_type number_steps) {
                 area_monitor.prepare_recording();
             }
             for (NeuronID neuron_id : NeuronID::range(neurons->get_number_neurons())) {
-                const auto& area_id = neurons->get_extra_info()->get_area_id_for_neuron_id(neuron_id);
+                const auto& area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(neuron_id.get_neuron_id());
                 if (!area_monitors->contains(area_id)) {
                     continue;
                 }
@@ -282,7 +280,7 @@ void Simulation::simulate(const step_type number_steps) {
                     RelearnException::check(received_data_single.empty(), "Simulation::simulate: Send MPI {} messages to myself", received_data_single.size());
                 }
                 for (const AreaMonitor::AreaConnection& connection : received_data_single) {
-                    const auto& area_id = neurons->get_extra_info()->get_area_id_for_neuron_id(connection.to_local_neuron_id);
+                    const auto& area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(connection.to_local_neuron_id.get_neuron_id());
                     area_monitors->at(area_id).add_outgoing_connection(connection);
                 }
             }

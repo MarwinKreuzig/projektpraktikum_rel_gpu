@@ -2,6 +2,7 @@
 
 #include "mpi/MPIWrapper.h"
 #include "neurons/helper/RankNeuronId.h"
+#include "neurons/LocalAreaTranslator.h"
 #include "neurons/Neurons.h"
 #include "neurons/NetworkGraph.h"
 #include "sim/Simulation.h"
@@ -10,11 +11,10 @@
 #include <set>
 #include <tuple>
 
-AreaMonitor::AreaMonitor(Simulation* simulation, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name, RelearnTypes::number_neurons_type nr_neurons_in_area, int my_rank)
+AreaMonitor::AreaMonitor(Simulation* simulation, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name, int my_rank)
     : sim(simulation)
     , area_id(area_id)
     , area_name(std::move(area_name))
-    , nr_neurons_in_area(nr_neurons_in_area)
     , my_rank(my_rank) {
 }
 
@@ -27,7 +27,7 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
         if (rank_neuron_id.get_rank() == my_rank) {
             // Other area is on the same rank. Notify the responsible area monitor directly
             const auto& other_neuron_id = rank_neuron_id.get_neuron_id();
-            const auto other_area_id = sim->get_neurons()->get_extra_info()->get_area_id_for_neuron_id(other_neuron_id);
+            const auto other_area_id = sim->get_neurons()->get_local_area_translator()->get_area_id_for_neuron_id(other_neuron_id.get_neuron_id());
             AreaMonitor& other_area_monitor = sim->get_area_monitors()->at(other_area_id);
             const auto signal_type = weight > 0 ? SignalType::Excitatory : SignalType::Inhibitory;
             other_area_monitor.add_outgoing_connection({ my_rank, area_id, other_neuron_id, signal_type });

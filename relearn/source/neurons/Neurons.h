@@ -27,6 +27,7 @@
 #include "neurons/helper/SynapseDeletionRequests.h"
 #include "util/RelearnException.h"
 #include "util/StatisticalMeasures.h"
+#include "neurons/LocalAreaTranslator.h"
 
 #include <memory>
 #include <string>
@@ -176,30 +177,28 @@ public:
     }
 
     /**
-     * @brief Overwrites the current assignment of area ids to area names
-     * @param names The new area names. names[i] is assigned to the area id i
-     * @exception Throws an RelearnException if names.empty() or if the number of supplied elements does not match the number of stored neurons
-     */
-    void set_area_id_vs_area_name(std::vector<RelearnTypes::area_name> area_id_vs_area_name) {
-        extra_info->set_area_id_vs_area_name(std::move(area_id_vs_area_name));
-    }
-
-    /**
-     * @brief Overwrites the current area ids with the supplied ones
-     * @param ids The new area ids, must have the same size as neurons are stored. Neuron i is assigned to the area id ids[i]
-     * @exception Throws an RelearnException if ids.empty() or if the number of supplied elements does not match the number of stored neurons
-     */
-    void set_neuron_id_vs_area_id(std::vector<RelearnTypes::area_id> neuron_id_vs_area_id) {
-        extra_info->set_neuron_id_vs_area_id(std::move(neuron_id_vs_area_id));
-    }
-
-    /**
      * @brief Sets the positions in the extra infos
      * @param names The positions
      * @exception Throws the same RelearnException as NeuronsExtraInfo::set_positions
      */
     void set_positions(std::vector<NeuronsExtraInfo::position_type> pos) {
         extra_info->set_positions(std::move(pos));
+    }
+
+    /**
+     * @brief Sets the area translator that translates between the local area id on the current mpi rank and its area name
+     * @param local_area_translator the local area translator for this mpi rank
+     */
+    void set_local_area_translator(std::shared_ptr<LocalAreaTranslator> local_area_translator) {
+        this->local_area_translator = local_area_translator;
+    }
+
+    /**
+     * @brief Returns the area translate that translates between the local area id on the current mpi rank and its area name
+     * @return the local area translator
+     */
+    [[nodiscard]] const std::shared_ptr<LocalAreaTranslator> get_local_area_translator() const {
+        return local_area_translator;
     }
 
     /**
@@ -441,6 +440,8 @@ private:
     number_neurons_type number_neurons = 0;
 
     std::shared_ptr<Partition> partition{};
+
+    std::shared_ptr<LocalAreaTranslator> local_area_translator{};
 
     std::shared_ptr<Octree> global_tree{};
     std::shared_ptr<Algorithm> algorithm{};
