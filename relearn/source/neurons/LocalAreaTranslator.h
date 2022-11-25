@@ -26,17 +26,17 @@ public:
      * @param area_id_to_area_name Maps the id of an area to its name
      * @param neuron_id_to_area_id Map the neuron id to its assigned area id
      */
-    LocalAreaTranslator(std::vector<RelearnTypes::area_name> area_id_to_area_name,
-        std::vector<RelearnTypes::area_id> neuron_id_to_area_id)
-        : area_id_to_area_name(std::move(area_id_to_area_name))
-        , neuron_id_to_area_id(std::move(neuron_id_to_area_id)) {
+    LocalAreaTranslator(const std::vector<RelearnTypes::area_name> area_id_to_area_name,
+        const std::vector<RelearnTypes::area_id> neuron_id_to_area_id)
+        : area_id_to_area_name(area_id_to_area_name)
+        , neuron_id_to_area_id(neuron_id_to_area_id) {
 
         RelearnException::check(!this->area_id_to_area_name.empty(), "LocalAreaTranslator::Area id to area name is empty");
         RelearnException::check(!this->neuron_id_to_area_id.empty(), "LocalAreaTranslator:: Neuron id to area id is empty");
 
         RelearnException::check(this->area_id_to_area_name.size() <= this->neuron_id_to_area_id.size(), "LocalAreaTranslator:: More area ids than neurons");
 
-        for (uint64_t& area_id : this->neuron_id_to_area_id) {
+        for (const uint64_t& area_id : this->neuron_id_to_area_id) {
             RelearnException::check(area_id >= 0 && area_id < this->area_id_to_area_name.size(), "LocalAreaTranslator:: Invalid area id {}. Must be between 0 and {}", area_id, this->area_id_to_area_name.size());
         }
 
@@ -156,6 +156,6 @@ public:
     }
 
 private:
-    std::vector<RelearnTypes::area_name> area_id_to_area_name{};
-    std::vector<RelearnTypes::area_id> neuron_id_to_area_id{};
+    const std::vector<RelearnTypes::area_name> area_id_to_area_name;
+    const std::vector<RelearnTypes::area_id> neuron_id_to_area_id;
 };

@@ -15,7 +15,7 @@
 double RelearnTest::position_bounary = 10000;
 
 int RelearnTest::iterations = 10;
-double RelearnTest::eps = 0.00001;
+double RelearnTest::eps = 0.001;
 
 bool RelearnTest::use_predetermined_seed = false;
 unsigned int RelearnTest::predetermined_seed = 4075648332;

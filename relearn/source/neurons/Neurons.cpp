@@ -908,56 +908,15 @@ void Neurons::print_network_graph_to_log_file(const std::string& prefix) const {
 }
 
 void Neurons::print_positions_to_log_file() {
-    const auto& total_number_neurons = partition->get_total_number_neurons();
-
-    const auto& [simulation_box_min, simulation_box_max] = partition->get_simulation_box_size();
-    const auto& [min_x, min_y, min_z] = simulation_box_min;
-    const auto& [max_x, max_y, max_z] = simulation_box_max;
-
-    // Write total number of neurons to log file
-    LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# {} of {}", number_neurons, total_number_neurons);
-    LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# Minimum x: {}", min_x);
-    LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# Minimum y: {}", min_y);
-    LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# Minimum z: {}", min_z);
-    LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# Maximum x: {}", max_x);
-    LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# Maximum y: {}", max_y);
-    LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# Maximum z: {}", max_z);
-    LogFiles::write_to_file(LogFiles::EventType::Positions, false, "# <local id> <pos x> <pos y> <pos z> <area> <type>");
-
-    const auto& positions = extra_info->get_positions();
-    const auto& signal_types = axons->get_signal_types();
-
-    RelearnException::check(positions.size() == number_neurons,
-        "Neurons::print_positions_to_log_file: positions had size {}, but there were {} local neurons.", positions.size(), number_neurons);
-    RelearnException::check(signal_types.size() == number_neurons,
-        "Neurons::print_positions_to_log_file: signal_types had size {}, but there were {} local neurons.", signal_types.size(), number_neurons);
-
-    for (const auto& neuron_id : NeuronID::range(number_neurons)) {
-        const auto& local_neuron_id = neuron_id.get_neuron_id();
-
-        const auto& [x, y, z] = positions[local_neuron_id];
-        const auto& signal_type_name = (signal_types[local_neuron_id] == SignalType::Excitatory) ? "ex" : "in";
-        const auto& area_name = local_area_translator->get_area_id_for_neuron_id(local_neuron_id);
-
-        LogFiles::write_to_file(LogFiles::EventType::Positions, false,
-            "{1:<} {2:<.{0}} {3:<.{0}} {4:<.{0}} {5:<} {6:<}",
-            Constants::print_precision, (local_neuron_id + 1), x, y, z, area_name, signal_type_name);
-    }
+    std::stringstream ss;
+    NeuronIO::write_neurons_componentwise(NeuronID::range(number_neurons), extra_info->get_positions(), local_area_translator, axons->get_signal_types(), ss, partition->get_total_number_neurons(), partition->get_simulation_box_size());
+    LogFiles::write_to_file(LogFiles::EventType::Positions, false, ss.str());
 }
 
 void Neurons::print_area_mapping_to_log_file() {
-
-    LogFiles::write_to_file(LogFiles::EventType::AreaMapping, false, "# <area id>\t<ara_name>\t<num_neurons_in_area>");
-
-    const auto num_areas = local_area_translator->get_number_of_areas();
-
-    for (size_t area_id = 0; area_id < num_areas; area_id++) {
-        const auto& area_name = local_area_translator->get_area_name_for_area_id(area_id);
-
-        LogFiles::write_to_file(LogFiles::EventType::AreaMapping, false,
-            "{}\t{}\t{}",
-            area_id, area_name, local_area_translator->get_number_neurons_in_area(area_id));
-    }
+    std::stringstream ss;
+    NeuronIO::write_area_names(ss, local_area_translator);
+    LogFiles::write_to_file(LogFiles::EventType::AreaMapping, false, ss.str());
 }
 
 void Neurons::print() {

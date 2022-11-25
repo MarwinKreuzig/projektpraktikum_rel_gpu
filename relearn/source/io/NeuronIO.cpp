@@ -13,6 +13,7 @@
 #include "util/RelearnException.h"
 
 #include "spdlog/spdlog.h"
+#include "structure/Partition.h"
 
 #include <climits>
 #include <tuple>
@@ -212,38 +213,13 @@ NeuronIO::read_neurons_componentwise(const std::filesystem::path& file_path) {
     return { std::move(ids), std::move(positions), std::move(area_ids), std::move(area_names), std::move(signal_types), LoadedNeuronsInfo{ minimum, maximum, found_ex_neurons, found_in_neurons } };
 }
 
-void NeuronIO::write_neurons(const std::vector<LoadedNeuron>& neurons, const std::filesystem::path& file_path, const std::vector<RelearnTypes::area_name>& area_names) {
-    std::ofstream of(file_path, std::ios::binary | std::ios::out);
-
-    const auto is_good = of.good();
-    const auto is_bad = of.bad();
-
-    RelearnException::check(is_good && !is_bad, "NeuronIO::write_neurons_to_file: The ofstream failed to open");
-
-    of << std::setprecision(std::numeric_limits<double>::digits10);
-    of << "# ID, Position (x y z),  Area,   type \n";
-
-    for (const auto& node : neurons) {
-        const auto id = node.id.get_neuron_id() + 1;
-        const auto& [x, y, z] = node.pos;
-
-        const auto& area_name = area_names[node.area_id];
-
-        of << id << "\t"
-           << x << " "
-           << y << " "
-           << z << "\t"
-           << area_name << "\t";
-
-        if (node.signal_type == SignalType::Excitatory) {
-            of << "ex\n";
-        } else {
-            of << "in\n";
-        }
-    }
+void NeuronIO::write_neurons(const std::vector<LoadedNeuron>& neurons, const std::filesystem::path& file_path, const std::shared_ptr<LocalAreaTranslator>& local_area_translator) {
+    write_neurons(neurons, file_path, local_area_translator, nullptr);
 }
 
-void NeuronIO::write_area_names(const std::filesystem::path& file_path, const std::vector<RelearnTypes::area_name>& area_names) {
+void NeuronIO::write_neurons(const std::vector<LoadedNeuron>& neurons, const std::filesystem::path& file_path, const std::shared_ptr<LocalAreaTranslator>& local_area_translator, std::shared_ptr<Partition> partition) {
+    std::stringstream ss;
+    write_neurons(neurons, ss, local_area_translator, partition);
     std::ofstream of(file_path, std::ios::binary | std::ios::out);
 
     const auto is_good = of.good();
@@ -251,53 +227,114 @@ void NeuronIO::write_area_names(const std::filesystem::path& file_path, const st
 
     RelearnException::check(is_good && !is_bad, "NeuronIO::write_neurons_to_file: The ofstream failed to open");
 
-    of << std::setprecision(std::numeric_limits<double>::digits10);
-    of << "# ID area_name \n";
-
-    for (int i = 0; i < area_names.size(); i++) {
-        of << i << " " << area_names[i] << "\n";
-    }
+    of << ss.str();
     of.close();
 }
 
+void NeuronIO::write_neurons(const std::vector<LoadedNeuron>& neurons, std::stringstream& ss, const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::shared_ptr<Partition>& partition) {
+    if (partition != nullptr) {
+        const auto& total_number_neurons = partition->get_total_number_neurons();
+
+        const auto& [simulation_box_min, simulation_box_max] = partition->get_simulation_box_size();
+        const auto& [min_x, min_y, min_z] = simulation_box_min;
+        const auto& [max_x, max_y, max_z] = simulation_box_max;
+
+        ss << std::setprecision(std::numeric_limits<double>::digits10);
+
+        // Write total number of neurons to log file
+        ss << "# " << neurons.size() << " of " << total_number_neurons << '\n';
+        ss << "# Minimum x: " << min_x << '\n';
+        ss << "# Minimum y: " << min_y << '\n';
+        ss << "# Minimum z: " << min_z << '\n';
+        ss << "# Maximum x: " << max_x << '\n';
+        ss << "# Maximum y: " << max_y << '\n';
+        ss << "# Maximum z: " << max_z << '\n';
+        ss << "# <local id> <pos x> <pos y> <pos z> <area> <type>\n";
+    }
+
+    for (const auto& neuron : neurons) {
+        const auto& [x, y, z] = neuron.pos;
+        const auto& signal_type_name = (neuron.signal_type == SignalType::Excitatory) ? "ex" : "in";
+        const auto& area_name = local_area_translator->get_area_name_for_neuron_id(neuron.id.get_neuron_id());
+
+        ss << fmt::format("{1:<} {2:<.{0}} {3:<.{0}} {4:<.{0}} {5:<} {6:<}",
+            Constants::print_precision, (neuron.id.get_neuron_id() + 1), x, y, z, area_name, signal_type_name)
+           << '\n';
+    }
+}
+
+void NeuronIO::write_area_names(std::stringstream& ss, const std::shared_ptr<LocalAreaTranslator>& local_area_translator) {
+    ss << "# <area id>\t<ara_name>\t<num_neurons_in_area>\n";
+
+    const auto num_areas = local_area_translator->get_number_of_areas();
+
+    for (size_t area_id = 0; area_id < num_areas; area_id++) {
+        const auto& area_name = local_area_translator->get_area_name_for_area_id(area_id);
+
+        ss << area_id << '\t' << area_name << '\t' << local_area_translator->get_number_neurons_in_area(area_id) << '\n';
+    }
+}
+
 void NeuronIO::write_neurons_componentwise(const std::vector<NeuronID>& ids, const std::vector<position_type>& positions,
-    const std::vector<RelearnTypes::area_id> area_ids, const std::vector<RelearnTypes::area_name>& area_names, const std::vector<SignalType>& signal_types, const std::filesystem::path& file_path) {
+    const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::vector<SignalType>& signal_types, std::stringstream& ss, size_t total_number_neurons, const std::tuple<Vec3<double>, Vec3<double>>& simulation_box) {
 
     const auto size_ids = ids.size();
     const auto size_positions = positions.size();
-    const auto size_area_names = area_names.size();
     const auto size_signal_types = signal_types.size();
 
-    const auto all_same_size = size_ids == size_positions && size_ids == size_area_names && size_ids == size_signal_types;
+    const auto all_same_size = size_ids == size_positions && size_ids == size_signal_types;
 
     RelearnException::check(all_same_size, "NeuronIO::write_neurons_componentwise: The vectors had different sizes.");
 
+    // Write total number of neurons to log file
+    if (total_number_neurons > 0) {
+        ss << "# " << ids.size() << " of " << total_number_neurons << '\n';
+    }
+
+    ss << std::setprecision(std::numeric_limits<double>::digits10);
+    std::cout << 9 << std::endl;
+    const auto& [simulation_box_min, simulation_box_max] = simulation_box;
+    if (simulation_box_min.get_x() != simulation_box_max.get_x()) {
+        const auto& [min_x, min_y, min_z] = simulation_box_min;
+        const auto& [max_x, max_y, max_z] = simulation_box_max;
+
+        ss << "# Minimum x: " << min_x << '\n';
+        ss << "# Minimum y: " << min_y << '\n';
+        ss << "# Minimum z: " << min_z << '\n';
+        ss << "# Maximum x: " << max_x << '\n';
+        ss << "# Maximum y: " << max_y << '\n';
+        ss << "# Maximum z: " << max_z << '\n';
+        ss << "# <local id> <pos x> <pos y> <pos z> <area> <type>\n";
+    }
+
+    std::cout << 10 << std::endl;
+
+    for (const auto& neuron_id : ids) {
+        RelearnException::check(neuron_id.get_neuron_id() < ids.size(), "NeuronIO::write_neurons_componentwise: Neuron id {} is too large", neuron_id);
+        const auto& [x, y, z] = positions[neuron_id.get_neuron_id()];
+        const auto& signal_type_name = (signal_types[neuron_id.get_neuron_id()] == SignalType::Excitatory) ? "ex" : "in";
+        const auto& area_name = local_area_translator->get_area_name_for_neuron_id(neuron_id.get_neuron_id());
+        std::cout << 11 << std::endl;
+        ss << (neuron_id.get_neuron_id() + 1) << " " << x << " " << y << " " << z << " " << area_name << " " << signal_type_name << '\n';
+    }
+    std::cout << 12 << std::endl;
+}
+
+void NeuronIO::write_neurons_componentwise(const std::vector<NeuronID>& ids, const std::vector<position_type>& positions,
+    const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::vector<SignalType>& signal_types, std::filesystem::path& file_path) {
+    std::stringstream ss;
+    std::cout << 3 << std::endl;
+    write_neurons_componentwise(ids, positions, local_area_translator, signal_types, ss, 0, std::make_tuple(RelearnTypes::position_type({ 0.0, 0.0, 0.0 }), RelearnTypes::position_type({ 0.0, 0.0, 0.0 })));
+    std::cout << 4 << std::endl;
     std::ofstream of(file_path, std::ios::binary | std::ios::out);
 
     const auto is_good = of.good();
     const auto is_bad = of.bad();
 
-    RelearnException::check(is_good && !is_bad, "NeuronIO::write_neurons_componentwise: The ofstream failed to open");
+    RelearnException::check(is_good && !is_bad, "NeuronIO::write_neurons_to_file: The ofstream failed to open");
 
-    of << std::setprecision(std::numeric_limits<double>::digits10);
-    of << "# ID, Position (x y z),  Area,   type \n";
-
-    for (size_t i = 0; i < size_ids; i++) {
-        const auto id = ids[i].get_neuron_id() + 1;
-        const auto& [x, y, z] = positions[i];
-
-        of << id << "\t"
-           << x << " "
-           << y << " "
-           << z << "\t"
-           << area_names[area_ids[i]] << "\t";
-
-        if (signal_types[i] == SignalType::Excitatory) {
-            of << "ex\n";
-        } else {
-            of << "in\n";
-        }
-    }
+    of << ss.str();
+    of.close();
 }
 
 std::optional<std::vector<NeuronID>> NeuronIO::read_neuron_ids(const std::filesystem::path& file_path) {

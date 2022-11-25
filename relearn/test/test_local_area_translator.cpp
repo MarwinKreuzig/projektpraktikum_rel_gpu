@@ -48,17 +48,12 @@ TEST_F(LocalAreaTranslatorTest, simpleExceptionTest) {
     duplicated_area_name[i2] = duplicated_area_name[i3];
 
     ASSERT_THROW(LocalAreaTranslator(too_many_area_id_to_area_name, neuron_id_to_area_id), RelearnException);
-    neuron_id_to_area_id = get_random_area_ids(num_neurons, num_neurons);
     ASSERT_THROW(LocalAreaTranslator(duplicated_area_name, neuron_id_to_area_id), RelearnException);
-    neuron_id_to_area_id = get_random_area_ids(num_neurons, num_neurons);
     ASSERT_THROW(LocalAreaTranslator(area_id_to_area_name, one_wrong_area_id), RelearnException);
-    area_id_to_area_name = get_random_area_names_specific(num_neurons);
 
     ASSERT_THROW(LocalAreaTranslator(std::vector<RelearnTypes::area_name>({}), neuron_id_to_area_id), RelearnException);
-    neuron_id_to_area_id = get_random_area_ids(num_neurons, num_neurons);
     ASSERT_THROW(LocalAreaTranslator(std::vector<RelearnTypes::area_name>({}), std::vector<RelearnTypes::area_id>({})), RelearnException);
     ASSERT_THROW(LocalAreaTranslator(area_id_to_area_name, std::vector<RelearnTypes::area_id>({})), RelearnException);
-    area_id_to_area_name = get_random_area_names_specific(num_neurons);
 
     LocalAreaTranslator translator(area_id_to_area_name, neuron_id_to_area_id);
     ASSERT_EQ(num_neurons, translator.get_number_of_areas());

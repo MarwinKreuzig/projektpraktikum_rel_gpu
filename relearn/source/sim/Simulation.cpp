@@ -130,7 +130,7 @@ void Simulation::initialize() {
     auto signal_types = neuron_to_subdomain_assignment->get_neuron_types_in_subdomains();
 
     RelearnException::check(neuron_positions.size() == number_local_neurons, "Simulation::initialize: neuron_positions had the wrong size");
-    RelearnException::check(local_area_translator->get_number_neurons_in_total() == number_local_neurons, "Simulation::initialize: neuron_id_vs_area_id had the wrong size");
+    RelearnException::check(local_area_translator->get_number_neurons_in_total() == number_local_neurons, "Simulation::initialize: neuron_id_vs_area_id had the wrong size {} != {}", local_area_translator->get_number_neurons_in_total(), number_local_neurons);
     RelearnException::check(signal_types.size() == number_local_neurons, "Simulation::initialize: signal_types had the wrong size");
 
     partition->print_my_subdomains_info_rank(-1);

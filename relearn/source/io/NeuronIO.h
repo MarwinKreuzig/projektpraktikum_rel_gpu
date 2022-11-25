@@ -12,7 +12,9 @@
 
 #include "Types.h"
 
+#include "neurons/LocalAreaTranslator.h"
 #include "sim/LoadedNeuron.h"
+#include "structure/Partition.h"
 
 #include <filesystem>
 #include <optional>
@@ -67,32 +69,67 @@ public:
      * @brief Writes all neurons to the file
      * @param neurons The neurons
      * @param file_path The path to the file
-     * @param area_names Vector which assigns an area id to an area name
+     * @param local_area_translator Maps local area id to area map
+     * @param partition Partition of the entire simulation
      * @exception Throws a RelearnException if opening the file failed
      */
-    static void write_neurons(const std::vector<LoadedNeuron>& neurons, const std::filesystem::path& file_path, const std::vector<RelearnTypes::area_name>& area_names);
+    static void write_neurons(const std::vector<LoadedNeuron>& neurons, const std::filesystem::path& file_path, const std::shared_ptr<LocalAreaTranslator>& local_area_translator, std::shared_ptr<Partition> partition);
+
+    /**
+     * @brief Writes all neurons to the file
+     * @param neurons The neurons
+     * @param file_path The path to the file
+     * @param local_area_translator Maps local area id to area map
+     * @exception Throws a RelearnException if opening the file failed
+     */
+    static void write_neurons(const std::vector<LoadedNeuron>& neurons, const std::filesystem::path& file_path, const std::shared_ptr<LocalAreaTranslator>& local_area_translator);
+
+    /**
+     * @brief Writes all neurons to the file
+     * @param neurons The neurons
+     * @param ss StringStream in which the content is written
+     * @param local_area_translator Maps local area id to area map
+     * @param partition The partition of the simulation
+     * @exception Throws a RelearnException if opening the file failed
+     */
+    static void write_neurons(const std::vector<LoadedNeuron>& neurons, std::stringstream& ss, const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::shared_ptr<Partition>& partition);
 
     /**
      * @brief Writes the assignment of area ids to area names
-     * @param file_path The path to the file
+     * @param ss Stringstream in which the area mapping is written
      * @param area_names Vector which assigns an area id to an area name
+     * @param local_area_translator Maps local area id to area map
      * @exception Throws a RelearnException if opening the file failed
      */
-    static void write_area_names(const std::filesystem::path& file_path, const std::vector<RelearnTypes::area_name>& area_names);
+    static void write_area_names(std::stringstream& ss, const std::shared_ptr<LocalAreaTranslator>& local_area_translator);
 
     /**
      * @brief Writes all neurons to the file. The IDs must start at 0 and be ascending. All vectors must have the same length.
      *      Does not check for correct IDs or non-negative positions.
      * @param ids The IDs
      * @param positions The positions
-     * @param area_ids Vector: neuron id -> area id
-     * @param area_names Vector: area id <-> area name
+     * @param local_area_translator Maps local area id to area map
      * @param signal_types The signal types
-     * @param file_path The path to the file
+     * @param ss Stringstream to which is written
+     * @param total_number_neurons Number of all neurons in the simulation
+     * @param simulation_box Bounding box of the entire simulation
      * @exception Throws a RelearnException if the vectors don't all have the same length, or opening the file failed
      */
     static void write_neurons_componentwise(const std::vector<NeuronID>& ids, const std::vector<position_type>& positions,
-        const std::vector<RelearnTypes::area_id> area_ids, const std::vector<RelearnTypes::area_name>& area_names, const std::vector<SignalType>& signal_types, const std::filesystem::path& file_path);
+        const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::vector<SignalType>& signal_types, std::stringstream& ss, size_t total_number_neurons, const std::tuple<Vec3<double>, Vec3<double>>& simulation_box);
+
+    /**
+     * @brief Writes all neurons to the file. The IDs must start at 0 and be ascending. All vectors must have the same length.
+     *      Does not check for correct IDs or non-negative positions.
+     * @param ids The IDs
+     * @param positions The positions
+     * @param local_area_translator Maps local area id to area map
+     * @param signal_types The signal types
+     * @param file_path Path to the output file
+     * @exception Throws a RelearnException if the vectors don't all have the same length, or opening the file failed
+     */
+    static void write_neurons_componentwise(const std::vector<NeuronID>& ids, const std::vector<position_type>& positions,
+        const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::vector<SignalType>& signal_types, std::filesystem::path& file_path);
 
     /**
      * @brief Reads all neuron ids from a file and returns those.

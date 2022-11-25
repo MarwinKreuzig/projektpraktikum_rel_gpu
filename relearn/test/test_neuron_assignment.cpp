@@ -24,6 +24,7 @@ void NeuronAssignmentTest::generate_random_neurons(std::vector<Vec3d>& positions
     const auto um_per_neuron = get_random_percentage() * 100;
 
     const auto part = std::make_shared<Partition>(1, 0);
+    part->set_total_number_neurons(number_neurons);
     SubdomainFromNeuronDensity sfnd{ number_neurons, fraction_excitatory_neurons, um_per_neuron, part };
 
     sfnd.initialize();
