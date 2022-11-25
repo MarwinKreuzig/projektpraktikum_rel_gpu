@@ -6,7 +6,7 @@ build-mpi:
   before_script:
     - cd relearn && mkdir build-docker && cd build-docker  
   script:
-    - cmake -DENABLE_CLANG_TIDY=0 .. && make -j 16
+    - cmake -DENABLE_CLANG_TIDY=0 .. && make -j 16 VERBOSE=1
   artifacts:
     paths:
       - relearn/build-docker

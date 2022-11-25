@@ -22,6 +22,31 @@ if(ENABLE_MPI)
   if(MPI_CXX_FOUND)
     target_compile_definitions(project_options
                                INTERFACE -DMPI_FOUND=$<BOOL:${MPI_CXX_FOUND}>)
+
+    # fix CI build issue
+    get_target_property(mpi_cxx_compile_options MPI::MPI_CXX
+                        INTERFACE_COMPILE_OPTIONS)
+
+    if("${mpi_cxx_compile_options}" MATCHES "-flto=auto")
+      message(
+        WARNING
+          "MPI_CXX was compiled with -flto=auto and -ffat-lto-objects, removing lto flags to prevent CI build failure"
+      )
+      string(
+        REPLACE "-flto=auto"
+                ""
+                mpi_cxx_compile_options
+                ${mpi_cxx_compile_options})
+      string(
+        REPLACE "-ffat-lto-objects"
+                ""
+                mpi_cxx_compile_options
+                ${mpi_cxx_compile_options})
+    endif()
+
+    set_target_properties(MPI::MPI_CXX PROPERTIES INTERFACE_COMPILE_OPTIONS
+                                                  "${mpi_cxx_compile_options}")
+
     target_link_libraries(project_libraries INTERFACE MPI::MPI_CXX)
   endif()
 endif()
@@ -40,10 +65,10 @@ if(WIN32)
   endif()
 
   include_directories(${boostorg_SOURCE_DIR})
-  #target_link_libraries(project_libraries INTERFACE boostorg::random)
+  # target_link_libraries(project_libraries INTERFACE boostorg::random)
 else()
   find_package(Boost REQUIRED COMPONENTS RANDOM)
-  #target_link_libraries(project_options INTERFACE Boost::random)
+  # target_link_libraries(project_options INTERFACE Boost::random)
 endif()
 
 # declaration
