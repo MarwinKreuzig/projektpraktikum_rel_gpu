@@ -145,7 +145,12 @@ protected:
     std::vector<RelearnTypes::area_name> get_random_area_names_specific(size_t nr_areas) {
         std::vector<RelearnTypes::area_name> area_names{};
         for (int area_id = 0; area_id < nr_areas; area_id++) {
-            area_names.emplace_back(std::to_string(get_random_percentage()));
+            RelearnTypes::area_name name = "";
+            do {
+                name = std::to_string(get_random_percentage());
+            } while (name == "" || std::find(area_names.begin(), area_names.end(), name) != area_names.end());
+
+            area_names.emplace_back(name);
         }
         return std::move(area_names);
     }
