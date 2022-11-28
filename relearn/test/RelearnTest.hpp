@@ -108,6 +108,13 @@ protected:
             std::cerr << "Test seed: " << seed << '\n';
             mt.seed(seed);
         }
+        // Remove tmp files
+        for (auto const& entry : std::filesystem::recursive_directory_iterator("./")) {
+            if (std::filesystem::is_regular_file(entry) && entry.path().extension() == ".tmp") {
+                std::filesystem::remove(entry);
+                std::cerr << "REMOVED " << entry.path() << std::endl;
+            }
+        }
     }
 
     void TearDown() override {

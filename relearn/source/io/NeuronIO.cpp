@@ -292,7 +292,6 @@ void NeuronIO::write_neurons_componentwise(const std::vector<NeuronID>& ids, con
     }
 
     ss << std::setprecision(std::numeric_limits<double>::digits10);
-    std::cout << 9 << std::endl;
     const auto& [simulation_box_min, simulation_box_max] = simulation_box;
     if (simulation_box_min.get_x() != simulation_box_max.get_x()) {
         const auto& [min_x, min_y, min_z] = simulation_box_min;
@@ -307,25 +306,19 @@ void NeuronIO::write_neurons_componentwise(const std::vector<NeuronID>& ids, con
         ss << "# <local id> <pos x> <pos y> <pos z> <area> <type>\n";
     }
 
-    std::cout << 10 << std::endl;
-
     for (const auto& neuron_id : ids) {
         RelearnException::check(neuron_id.get_neuron_id() < ids.size(), "NeuronIO::write_neurons_componentwise: Neuron id {} is too large", neuron_id);
         const auto& [x, y, z] = positions[neuron_id.get_neuron_id()];
         const auto& signal_type_name = (signal_types[neuron_id.get_neuron_id()] == SignalType::Excitatory) ? "ex" : "in";
         const auto& area_name = local_area_translator->get_area_name_for_neuron_id(neuron_id.get_neuron_id());
-        std::cout << 11 << std::endl;
         ss << (neuron_id.get_neuron_id() + 1) << " " << x << " " << y << " " << z << " " << area_name << " " << signal_type_name << '\n';
     }
-    std::cout << 12 << std::endl;
 }
 
 void NeuronIO::write_neurons_componentwise(const std::vector<NeuronID>& ids, const std::vector<position_type>& positions,
     const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::vector<SignalType>& signal_types, std::filesystem::path& file_path) {
     std::stringstream ss;
-    std::cout << 3 << std::endl;
     write_neurons_componentwise(ids, positions, local_area_translator, signal_types, ss, 0, std::make_tuple(RelearnTypes::position_type({ 0.0, 0.0, 0.0 }), RelearnTypes::position_type({ 0.0, 0.0, 0.0 })));
-    std::cout << 4 << std::endl;
     std::ofstream of(file_path, std::ios::binary | std::ios::out);
 
     const auto is_good = of.good();
