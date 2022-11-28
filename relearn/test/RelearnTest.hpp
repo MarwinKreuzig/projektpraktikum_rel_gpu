@@ -973,10 +973,10 @@ protected:
     }
 };
 
-class BarnesHutTest : public RelearnTest {
+class BarnesHutTest : public RelearnTestWithAdditionalCellAttribute {
 protected:
     static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
+        SetUpTestCaseTemplate<BarnesHutCell>();
     }
 };
 
