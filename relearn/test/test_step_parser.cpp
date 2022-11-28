@@ -169,6 +169,26 @@ TEST_F(StepParserTest, testParseIntervalFail5) {
     ASSERT_FALSE(opt_interval.has_value());
 }
 
+TEST_F(StepParserTest, testParseIntervalFail6) {
+    using int_type = Interval::step_type;
+
+    constexpr auto min = std::numeric_limits<int_type>::min();
+    constexpr auto max = std::numeric_limits<int_type>::max();
+
+    const auto begin = get_random_integer<int_type>(min, max);
+    const auto end = get_random_integer<int_type>(min, max);
+    const auto frequency = get_random_integer<int_type>(min, max);
+
+    std::stringstream ss{};
+    ss << std::max(begin, end) << '-' << std::min(begin, end) << ':' << frequency;
+
+    const auto& description = ss.str();
+
+    const auto& opt_interval = Interval::parse_interval(description);
+
+    ASSERT_FALSE(opt_interval.has_value());
+}
+
 TEST_F(StepParserTest, testParseIntervals1) {
     std::vector<Interval> golden_intervals{};
     std::stringstream ss{};
@@ -365,4 +385,30 @@ TEST_F(StepParserTest, testGenerateFunction4) {
         const auto result_2 = function_2(step);
         ASSERT_EQ(result_1, result_2) << step;
     }
+}
+
+TEST_F(StepParserTest, testGenerateFunction5) {
+    using int_type = Interval::step_type;
+
+    constexpr auto min = 10000;
+    constexpr auto max = 90000;
+
+    auto begin = get_random_integer<int_type>(min, max);
+    auto end = get_random_integer<int_type>(min, max);
+
+    Interval i1{ 0, 99, 7 };
+    Interval i2{ 100, 999, 7 };
+    Interval i3{ 400, 2689, 7 };
+    Interval i4{ 2690, 9999, 7 };
+    Interval i5{ std::min(begin, end), std::max(begin, end), 11 };
+
+    std::stringstream ss{};
+    ss << codify_interval(i1) << ';';
+    ss << codify_interval(i2) << ';';
+    ss << codify_interval(i3) << ';';
+    ss << codify_interval(i4) << ';';
+    ss << codify_interval(i5);
+
+    auto function_1 = StepParser::generate_step_check_function({ i1, i2, i3, i4, i5 });
+    ASSERT_FALSE(function_1.operator bool());
 }

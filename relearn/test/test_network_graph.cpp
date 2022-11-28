@@ -439,10 +439,10 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges2) {
         std::ranges::sort(distant_in);
         std::ranges::sort(distant_out);
 
-        EXPECT_EQ(local_in_golden, local_in);
-        EXPECT_EQ(local_out_golden, local_out);
-        EXPECT_EQ(distant_in_golden, distant_in);
-        EXPECT_EQ(distant_out_golden, distant_out);
+        ASSERT_EQ(local_in_golden, local_in);
+        ASSERT_EQ(local_out_golden, local_out);
+        ASSERT_EQ(distant_in_golden, distant_in);
+        ASSERT_EQ(distant_out_golden, distant_out);
     }
 }
 

@@ -36,11 +36,11 @@ std::tuple<T, T, T, size_t> min_max_acc(const std::vector<T>& values, const std:
 
     size_t first_index = 0;
 
-    while (disable_flags[first_index] != UpdateStatus::Enabled) {
+    while (first_index < values.size() && disable_flags[first_index] != UpdateStatus::Enabled) {
         first_index++;
     }
 
-    RelearnException::check(first_index < values.size(), "Util::min_max_acc: all were disabled");
+    RelearnException::check(first_index != values.size(), "Util::min_max_acc: all were disabled");
 
     T min = values[first_index];
     T max = values[first_index];

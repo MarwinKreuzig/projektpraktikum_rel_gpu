@@ -615,6 +615,48 @@ TEST_F(VectorTest, testVectorComponentwiseFloorExceptionZ) {
     ASSERT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException) << ss.str();
 }
 
+TEST_F(VectorTest, testVectorFactorial) {
+    const auto x = get_random_integer<size_t>(0, 20);
+    const auto y = get_random_integer<size_t>(0, 20);
+    const auto z = get_random_integer<size_t>(0, 20);
+
+    Vec3s vec{ x, y, z };
+
+    const auto fac = vec.get_componentwise_factorial();
+
+    const auto xx = Util::factorial(x);
+    const auto yy = Util::factorial(y);
+    const auto zz = Util::factorial(z);
+
+    const auto product = xx * yy * zz;
+
+    ASSERT_EQ(fac, product);
+}
+
+TEST_F(VectorTest, testVectorPower) {
+    const auto x_exponent = get_random_integer<unsigned int>(0, 10);
+    const auto y_exponent = get_random_integer<unsigned int>(0, 10);
+    const auto z_exponent = get_random_integer<unsigned int>(0, 10);
+
+    Vec3<unsigned int> exponent{ x_exponent, y_exponent, z_exponent };
+
+    const auto x = get_random_double(-10.0, 10.0);
+    const auto y = get_random_double(-10.0, 10.0);
+    const auto z = get_random_double(-10.0, 10.0);
+
+    Vec3<double> base{ x, y, z };
+
+    const auto power = base.get_componentwise_power(exponent);
+
+    const auto xx = std::pow(x, x_exponent);
+    const auto yy = std::pow(y, y_exponent);
+    const auto zz = std::pow(z, z_exponent);
+
+    const auto product = xx * yy * zz;
+
+    ASSERT_EQ(power, product);
+}
+
 TEST_F(VectorTest, testVectorNorm) {
     uniform_real_distribution<double> urd_p(1.0, 10.1);
 
@@ -640,6 +682,27 @@ TEST_F(VectorTest, testVectorNorm) {
     const auto p_norm = pow(sum, 1.0 / p);
 
     ASSERT_NEAR(v_normed, p_norm, eps) << ss.str();
+}
+
+TEST_F(VectorTest, testVectorNorm1) {
+    const auto x = get_random_position_element();
+    const auto y = get_random_position_element();
+    const auto z = get_random_position_element();
+
+    std::stringstream ss{};
+    ss << x << ' ' << y << ' ' << z;
+
+    const Vec3<double> v{ x, y, z };
+
+    const auto v_normed = v.calculate_1_norm();
+
+    const auto xx = std::abs(x);
+    const auto yy = std::abs(y);
+    const auto zz = std::abs(z);
+
+    const auto sum = xx + yy + zz;
+
+    ASSERT_NEAR(v_normed, sum, eps) << ss.str();
 }
 
 TEST_F(VectorTest, testVectorNorm2) {
@@ -834,6 +897,12 @@ TEST_F(VectorTest, testVectorOrder) {
 
     const auto is_smaller_1_2 = v_1 < v_2;
     const auto is_smaller_2_1 = v_2 < v_1;
+
+    const auto is_smaller_1_2_struct = std::less<Vec3<double>>{}.operator()(v_1, v_2);
+    const auto is_smaller_2_1_struct = std::less<Vec3<double>>{}.operator()(v_2, v_1);
+
+    ASSERT_EQ(is_smaller_1_2, is_smaller_1_2_struct);
+    ASSERT_EQ(is_smaller_2_1, is_smaller_2_1_struct);
 
     const auto connected = is_smaller_1_2 || is_smaller_2_1;
 

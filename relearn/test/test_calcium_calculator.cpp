@@ -804,8 +804,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
     const auto now_target = cc.get_target_calcium();
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        EXPECT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
-        EXPECT_EQ(previous_target[neuron_id], now_target[neuron_id]);
+        ASSERT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
+        ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
     }
 
     const auto step = step_distr(mt);
@@ -816,8 +816,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
     const auto now_target_2 = cc.get_target_calcium();
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        EXPECT_EQ(previous_calcium[neuron_id], now_calcium_2[neuron_id]);
-        EXPECT_EQ(previous_target[neuron_id], now_target_2[neuron_id]);
+        ASSERT_EQ(previous_calcium[neuron_id], now_calcium_2[neuron_id]);
+        ASSERT_EQ(previous_target[neuron_id], now_target_2[neuron_id]);
     }
 
     const auto now_calcium_3 = cc.get_calcium();
@@ -826,8 +826,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
     ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status2));
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        EXPECT_EQ(previous_calcium[neuron_id], now_calcium_3[neuron_id]);
-        EXPECT_EQ(previous_target[neuron_id], now_target_3[neuron_id]);
+        ASSERT_EQ(previous_calcium[neuron_id], now_calcium_3[neuron_id]);
+        ASSERT_EQ(previous_target[neuron_id], now_target_3[neuron_id]);
     }
 
     ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status2));
@@ -836,8 +836,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
     const auto now_target_4 = cc.get_target_calcium();
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        EXPECT_EQ(previous_calcium[neuron_id], now_calcium_4[neuron_id]);
-        EXPECT_EQ(previous_target[neuron_id], now_target_4[neuron_id]);
+        ASSERT_EQ(previous_calcium[neuron_id], now_calcium_4[neuron_id]);
+        ASSERT_EQ(previous_target[neuron_id], now_target_4[neuron_id]);
     }
 }
 
@@ -882,10 +882,10 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneStep0) {
     const auto now_target = cc.get_target_calcium();
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        EXPECT_EQ(previous_target[neuron_id], now_target[neuron_id]);
+        ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
 
         if (update_status[neuron_id] == UpdateStatus::Disabled) {
-            EXPECT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
+            ASSERT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
             continue;
         }
 
@@ -898,7 +898,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneStep0) {
 
         const auto now_value = now_calcium[neuron_id];
 
-        EXPECT_NEAR(expected_calcium, now_value, eps);
+        ASSERT_NEAR(expected_calcium, now_value, eps);
     }
 }
 
@@ -947,10 +947,10 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNone) {
     const auto now_target = cc.get_target_calcium();
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        EXPECT_EQ(previous_target[neuron_id], now_target[neuron_id]);
+        ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
 
         if (update_status[neuron_id] == UpdateStatus::Disabled) {
-            EXPECT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
+            ASSERT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
             continue;
         }
 
@@ -963,7 +963,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNone) {
 
         const auto now_value = now_calcium[neuron_id];
 
-        EXPECT_NEAR(expected_calcium, now_value, eps);
+        ASSERT_NEAR(expected_calcium, now_value, eps);
     }
 }
 
@@ -1015,8 +1015,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
     const auto now_target = cc.get_target_calcium();
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        EXPECT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
-        EXPECT_EQ(previous_target[neuron_id], now_target[neuron_id]);
+        ASSERT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
+        ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
     }
 
     const auto step = step_distr(mt);
@@ -1027,8 +1027,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
     const auto now_target_2 = cc.get_target_calcium();
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        EXPECT_EQ(previous_calcium[neuron_id], now_calcium_2[neuron_id]);
-        EXPECT_EQ(previous_target[neuron_id], now_target_2[neuron_id]);
+        ASSERT_EQ(previous_calcium[neuron_id], now_calcium_2[neuron_id]);
+        ASSERT_EQ(previous_target[neuron_id], now_target_2[neuron_id]);
     }
 
     const auto now_calcium_3 = cc.get_calcium();
@@ -1037,8 +1037,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
     ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status2));
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        EXPECT_EQ(previous_calcium[neuron_id], now_calcium_3[neuron_id]);
-        EXPECT_EQ(previous_target[neuron_id], now_target_3[neuron_id]);
+        ASSERT_EQ(previous_calcium[neuron_id], now_calcium_3[neuron_id]);
+        ASSERT_EQ(previous_target[neuron_id], now_target_3[neuron_id]);
     }
 
     ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status2));
@@ -1047,8 +1047,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
     const auto now_target_4 = cc.get_target_calcium();
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        EXPECT_EQ(previous_calcium[neuron_id], now_calcium_4[neuron_id]);
-        EXPECT_EQ(previous_target[neuron_id], now_target_4[neuron_id]);
+        ASSERT_EQ(previous_calcium[neuron_id], now_calcium_4[neuron_id]);
+        ASSERT_EQ(previous_target[neuron_id], now_target_4[neuron_id]);
     }
 }
 
@@ -1100,12 +1100,12 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeStep0) {
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         if (update_status[neuron_id] == UpdateStatus::Disabled) {
-            EXPECT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
-            EXPECT_EQ(previous_target[neuron_id], now_target[neuron_id]);
+            ASSERT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
+            ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
             continue;
         }
 
-        EXPECT_NEAR(previous_target[neuron_id] * decay_amount_relative, now_target[neuron_id], eps);
+        ASSERT_NEAR(previous_target[neuron_id] * decay_amount_relative, now_target[neuron_id], eps);
 
         auto expected_calcium = previous_calcium[neuron_id];
         auto update_value = fired_status[neuron_id] == FiredStatus::Fired ? beta : 0.0;
@@ -1116,7 +1116,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeStep0) {
 
         const auto now_value = now_calcium[neuron_id];
 
-        EXPECT_NEAR(expected_calcium, now_value, eps);
+        ASSERT_NEAR(expected_calcium, now_value, eps);
     }
 }
 
@@ -1171,20 +1171,20 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelative) {
     if (step % decay_step == 0) {
         for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
             if (update_status[neuron_id] == UpdateStatus::Disabled) {
-                EXPECT_EQ(previous_target[neuron_id], now_target[neuron_id]);
+                ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
                 continue;
             }
-            EXPECT_NEAR(previous_target[neuron_id] * decay_amount_relative, now_target[neuron_id], eps);
+            ASSERT_NEAR(previous_target[neuron_id] * decay_amount_relative, now_target[neuron_id], eps);
         }
     } else {
         for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-            EXPECT_EQ(previous_target[neuron_id], now_target[neuron_id]);
+            ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
         }
     }
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         if (update_status[neuron_id] == UpdateStatus::Disabled) {
-            EXPECT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
+            ASSERT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
             continue;
         }
 
@@ -1197,7 +1197,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelative) {
 
         const auto now_value = now_calcium[neuron_id];
 
-        EXPECT_NEAR(expected_calcium, now_value, eps);
+        ASSERT_NEAR(expected_calcium, now_value, eps);
     }
 }
 
@@ -1249,8 +1249,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
     const auto now_target = cc.get_target_calcium();
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        EXPECT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
-        EXPECT_EQ(previous_target[neuron_id], now_target[neuron_id]);
+        ASSERT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
+        ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
     }
 
     const auto step = step_distr(mt);
@@ -1261,8 +1261,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
     const auto now_target_2 = cc.get_target_calcium();
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        EXPECT_EQ(previous_calcium[neuron_id], now_calcium_2[neuron_id]);
-        EXPECT_EQ(previous_target[neuron_id], now_target_2[neuron_id]);
+        ASSERT_EQ(previous_calcium[neuron_id], now_calcium_2[neuron_id]);
+        ASSERT_EQ(previous_target[neuron_id], now_target_2[neuron_id]);
     }
 
     const auto now_calcium_3 = cc.get_calcium();
@@ -1271,8 +1271,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
     ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status2));
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        EXPECT_EQ(previous_calcium[neuron_id], now_calcium_3[neuron_id]);
-        EXPECT_EQ(previous_target[neuron_id], now_target_3[neuron_id]);
+        ASSERT_EQ(previous_calcium[neuron_id], now_calcium_3[neuron_id]);
+        ASSERT_EQ(previous_target[neuron_id], now_target_3[neuron_id]);
     }
 
     ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status2));
@@ -1281,8 +1281,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
     const auto now_target_4 = cc.get_target_calcium();
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        EXPECT_EQ(previous_calcium[neuron_id], now_calcium_4[neuron_id]);
-        EXPECT_EQ(previous_target[neuron_id], now_target_4[neuron_id]);
+        ASSERT_EQ(previous_calcium[neuron_id], now_calcium_4[neuron_id]);
+        ASSERT_EQ(previous_target[neuron_id], now_target_4[neuron_id]);
     }
 }
 
@@ -1334,12 +1334,12 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteStep0) {
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         if (update_status[neuron_id] == UpdateStatus::Disabled) {
-            EXPECT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
-            EXPECT_EQ(previous_target[neuron_id], now_target[neuron_id]);
+            ASSERT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
+            ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
             continue;
         }
 
-        EXPECT_NEAR(previous_target[neuron_id] - decay_amount_absolute, now_target[neuron_id], eps);
+        ASSERT_NEAR(previous_target[neuron_id] - decay_amount_absolute, now_target[neuron_id], eps);
 
         auto expected_calcium = previous_calcium[neuron_id];
         auto update_value = fired_status[neuron_id] == FiredStatus::Fired ? beta : 0.0;
@@ -1350,7 +1350,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteStep0) {
 
         const auto now_value = now_calcium[neuron_id];
 
-        EXPECT_NEAR(expected_calcium, now_value, eps);
+        ASSERT_NEAR(expected_calcium, now_value, eps);
     }
 }
 
@@ -1405,20 +1405,20 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsolute) {
     if (step % decay_step == 0) {
         for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
             if (update_status[neuron_id] == UpdateStatus::Disabled) {
-                EXPECT_EQ(previous_target[neuron_id], now_target[neuron_id]);
+                ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
                 continue;
             }
-            EXPECT_NEAR(previous_target[neuron_id] - decay_amount_absolute, now_target[neuron_id], eps);
+            ASSERT_NEAR(previous_target[neuron_id] - decay_amount_absolute, now_target[neuron_id], eps);
         }
     } else {
         for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-            EXPECT_EQ(previous_target[neuron_id], now_target[neuron_id]);
+            ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
         }
     }
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         if (update_status[neuron_id] == UpdateStatus::Disabled) {
-            EXPECT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
+            ASSERT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
             continue;
         }
 
@@ -1431,6 +1431,6 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsolute) {
 
         const auto now_value = now_calcium[neuron_id];
 
-        EXPECT_NEAR(expected_calcium, now_value, eps);
+        ASSERT_NEAR(expected_calcium, now_value, eps);
     }
 }

@@ -93,8 +93,8 @@ TYPED_TEST(TaggedIDTest, testTaggedIDComparisons1) { // NOLINT
     const auto id1 = get_random_id();
     const auto id2 = get_random_id();
 
-    EXPECT_EQ(id1 <=> id2, id1.get_neuron_id() <=> id2.get_neuron_id());
-    EXPECT_EQ(TaggedID<TypeParam>{}, TaggedID<TypeParam>{});
+    ASSERT_EQ(id1 <=> id2, id1.get_neuron_id() <=> id2.get_neuron_id());
+    ASSERT_EQ(TaggedID<TypeParam>{}, TaggedID<TypeParam>{});
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDComparisons2) { // NOLINT
@@ -116,7 +116,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDComparisons2) { // NOLINT
 
     // test for == and != behavior
     // only compare equal if all members compare equal, otherwise compare unequal
-    EXPECT_EQ(
+    ASSERT_EQ(
         id1 == id2,
         this->get_initialized(id1) == this->get_initialized(id2)
             && this->get_virtual(id1) == this->get_virtual(id2)

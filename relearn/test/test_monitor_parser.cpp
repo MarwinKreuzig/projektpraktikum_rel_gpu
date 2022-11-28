@@ -36,6 +36,8 @@ TEST_F(MonitorParserTest, testParseDescriptionFail) {
     checker("0:", 0);
     checker("5;2", 0);
     checker("", 0);
+    checker("155:377", -1);
+    checker("-1:17", -513);
 }
 
 TEST_F(MonitorParserTest, testParseDescriptionRandom) {

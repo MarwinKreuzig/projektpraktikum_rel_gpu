@@ -525,7 +525,7 @@ protected:
         dendrites.init(number_elements);
 
         for (const auto& neuron_id : NeuronID::range(number_elements)) {
-            const auto number_grown_elements = get_random_synaptic_element_count(); 
+            const auto number_grown_elements = get_random_synaptic_element_count();
 
             dendrites.update_grown_elements(neuron_id, number_grown_elements);
             dendrites.update_connected_elements(neuron_id, 0);
@@ -540,7 +540,7 @@ protected:
         for (auto i = 0; i < max_id; i++) {
             ids[i] = NeuronID(i);
         }
-        std::shuffle(ids.begin(), ids.end(), mt);
+        shuffle(ids.begin(), ids.end());
 
         std::vector<std::tuple<Vec3d, NeuronID>> return_value(count);
         for (auto i = 0; i < count; i++) {
@@ -564,7 +564,7 @@ protected:
         };
 
         do {
-            std::shuffle(derangement.begin(), derangement.end(), mt);
+            shuffle(derangement.begin(), derangement.end());
         } while (!check(derangement));
 
         return derangement;
@@ -574,7 +574,7 @@ protected:
         std::vector<UpdateStatus> status(number_disabled, UpdateStatus::Disabled);
         status.resize(number_neurons, UpdateStatus::Enabled);
 
-        std::shuffle(status.begin(), status.end(), mt);
+        shuffle(status.begin(), status.end());
 
         return status;
     }
@@ -588,7 +588,7 @@ protected:
         std::vector<FiredStatus> status(number_inactive, FiredStatus::Inactive);
         status.resize(number_neurons, FiredStatus::Fired);
 
-        std::shuffle(status.begin(), status.end(), mt);
+        shuffle(status.begin(), status.end());
 
         return status;
     }
@@ -741,6 +741,11 @@ protected:
         }
 
         return extract_neurons<AdditionalCellAttributes>(root);
+    }
+
+    template <typename Iterator>
+    void shuffle(Iterator begin, Iterator end) {
+        detail::shuffle(begin, end, mt);
     }
 
     constexpr static double min_grown_elements = 0.0;
@@ -932,11 +937,11 @@ protected:
         SetUpTestCaseTemplate<FastMultipoleMethodsCell>();
     }
 
- /*   Stack<FastMultipoleMethodsBase::stack_entry> init_stack(FastMultipoleMethods fmm, const SignalType signal_type_needed) { return FastMultipoleMethodsBase::init_stack(signal_type_needed); }
+    /*   Stack<FastMultipoleMethodsBase::stack_entry> init_stack(FastMultipoleMethods fmm, const SignalType signal_type_needed) { return FastMultipoleMethodsBase::init_stack(signal_type_needed); }
 
-    void unpack_node_pair(FastMultipoleMethods fmm, Stack<FastMultipoleMethodsBase::stack_entry>& stack) { return FastMultipoleMethodsBase::unpack_node_pair(stack); }
+       void unpack_node_pair(FastMultipoleMethods fmm, Stack<FastMultipoleMethodsBase::stack_entry>& stack) { return FastMultipoleMethodsBase::unpack_node_pair(stack); }
 
-    FastMultipoleMethodsBase::interaction_list_type align_interaction_list(FastMultipoleMethods fmm, OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>* source_node, OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>* target_parent, const SignalType signal_type) { return fmm.align_interaction_list(source_node, target_parent, signal_type); }*/
+       FastMultipoleMethodsBase::interaction_list_type align_interaction_list(FastMultipoleMethods fmm, OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>* source_node, OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>* target_parent, const SignalType signal_type) { return fmm.align_interaction_list(source_node, target_parent, signal_type); }*/
 
     // std::array<double, Constants::p3> calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, double sigma, SignalType signal_type_needed) { return FastMultipoleMethods::calc_hermite_coefficients(source, sigma, signal_type_needed); }
     // CalculationType check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::check_calculation_requirements(source, target, sigma, signal_type_needed);}
@@ -1118,6 +1123,13 @@ protected:
 };
 
 class MPIRankTest : public RelearnTest {
+protected:
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
+class MiscTest : public RelearnTest {
 protected:
     static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
