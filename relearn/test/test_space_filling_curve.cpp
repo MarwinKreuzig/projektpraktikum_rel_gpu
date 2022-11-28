@@ -1,9 +1,9 @@
-#include "../googletest/include/gtest/gtest.h"
+#include "gtest/gtest.h"
 
 #include "RelearnTest.hpp"
 
-#include "../source/structure/SpaceFillingCurve.h"
-#include "../source/util/RelearnException.h"
+#include "structure/SpaceFillingCurve.h"
+#include "util/RelearnException.h"
 
 #include <sstream>
 

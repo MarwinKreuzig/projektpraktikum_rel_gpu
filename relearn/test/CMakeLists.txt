@@ -61,6 +61,8 @@ target_sources(
           test_kernel_weibull.cpp
         test_local_area_translator.cpp
         test_monitor_parser.cpp
+          test_monitor_parser.cpp
+          test_mpi_rank.cpp
           test_network_graph.cpp
           test_neuron_assignment.cpp
           test_neuron_extra_info.cpp

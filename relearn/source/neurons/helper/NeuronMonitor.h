@@ -10,6 +10,7 @@
  *
  */
 
+#include "Types.h"
 #include "neurons/CalciumCalculator.h"
 #include "neurons/Neurons.h"
 #include "neurons/models/NeuronModels.h"
@@ -40,9 +41,10 @@ public:
      * @param di The current number of inhibitory dendritic elements
      * @param di_c The current number of connected inhibitory dendritic elements
      */
-    NeuronInformation(const double c, const double tc, const double x, const bool f, const double ff, const double s, const double i, const double b,
-        const double ax, const double ax_c, const double de, const double de_c, const double di, const double di_c) noexcept
-        : calcium(c)
+    NeuronInformation(const RelearnTypes::step_type step, const double c, const double tc, const double x, const bool f, const double ff, const double s,
+        const double i, const double b, const double ax, const double ax_c, const double de, const double de_c, const double di, const double di_c) noexcept
+        : current_step(step)
+        , calcium(c)
         , target_calcium(tc)
         , x(x)
         , fired(f)
@@ -56,6 +58,14 @@ public:
         , excitatory_dendrites_connected(de_c)
         , inhibitory_dendrites_grown(di)
         , inhibitory_dendrites_connected(di_c) {
+    }
+
+    /**
+     * @brief Returns the step at which the data was recorded
+     * @return The step
+     */
+    [[nodiscard]] RelearnTypes::step_type get_step() const noexcept {
+        return current_step;
     }
 
     /**
@@ -171,6 +181,8 @@ public:
     }
 
 private:
+    RelearnTypes::step_type current_step{};
+
     double calcium{};
     double target_calcium{};
     double x{};
@@ -219,15 +231,16 @@ public:
      * @brief Returns the local neuron id which is monitored
      * @return The neuron id
      */
-    [[nodiscard]] NeuronID get_target_id() const noexcept {
+    [[nodiscard]] const NeuronID& get_target_id() const noexcept {
         return target_neuron_id;
     }
 
     /**
      * @brief Captures the current state of the monitored neuron
+     * @param current_step The current step of the recording
      * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons or if the std::shared_ptr is empty
      */
-    void record_data() {
+    void record_data(const RelearnTypes::step_type current_step) {
         RelearnException::check(neurons_to_monitor.operator bool(), "NeuronMonitor::record_data: The shared pointer is empty");
 
         const auto local_neuron_id = target_neuron_id.get_neuron_id();
@@ -249,7 +262,9 @@ public:
         const auto inhibitory_dendrites_grown = neurons_to_monitor->dendrites_inh->grown_elements[local_neuron_id];
         const auto inhibitory_dendrites_connected = neurons_to_monitor->dendrites_inh->connected_elements[local_neuron_id];
 
-        informations.emplace_back(calcium, target_calcium, x, fired, fired_fraction, secondary, synaptic_input, background_activity, axons, axons_connected, excitatory_dendrites_grown, excitatory_dendrites_connected, inhibitory_dendrites_grown, inhibitory_dendrites_connected);
+        informations.emplace_back(current_step, calcium, target_calcium, x, fired, fired_fraction, secondary, 
+            synaptic_input, background_activity, axons, axons_connected, excitatory_dendrites_grown, 
+            excitatory_dendrites_connected, inhibitory_dendrites_grown, inhibitory_dendrites_connected);
     }
 
     /**

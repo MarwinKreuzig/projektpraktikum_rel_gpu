@@ -95,6 +95,10 @@ void CalciumCalculator::update_target_calcium(const step_type step, const std::v
         return;
     }
 
+    if (step < first_decay_step || step > last_decay_step) {
+        return;
+    }
+
     if (step % decay_step != 0) {
         return;
     }

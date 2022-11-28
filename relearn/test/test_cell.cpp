@@ -1,11 +1,11 @@
-#include "../googletest/include/gtest/gtest.h"
+#include "gtest/gtest.h"
 
 #include "RelearnTest.hpp"
 
-#include "../source/algorithm/Algorithms.h"
-#include "../source/algorithm/Cells.h"
-#include "../source/structure/Cell.h"
-#include "../source/util/Vec3.h"
+#include "algorithm/Algorithms.h"
+#include "algorithm/Cells.h"
+#include "structure/Cell.h"
+#include "util/Vec3.h"
 
 #include <algorithm>
 #include <numeric>

@@ -37,9 +37,8 @@ void NeuronMonitor::flush_current_contents() {
 
     constexpr auto filler = ";";
 
-    auto current_step = static_cast<decltype(Config::monitor_step)>(0);
     for (const auto& info : informations) {
-        outfile << current_step << filler;
+        outfile << info.get_step() << filler;
         outfile << info.get_fired() << filler;
         outfile << info.get_fraction_fired() << filler;
         outfile << info.get_x() << filler;
@@ -54,8 +53,6 @@ void NeuronMonitor::flush_current_contents() {
         outfile << info.get_excitatory_dendrites_connected() << filler;
         outfile << info.get_inhibitory_dendrites_grown() << filler;
         outfile << info.get_inhibitory_dendrites_connected() << '\n';
-
-        current_step += Config::monitor_step;
     }
 
     informations.clear();
