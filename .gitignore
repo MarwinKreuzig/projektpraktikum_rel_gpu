@@ -359,3 +359,4 @@ ASALocalRun/
 /build
 /relearn/build-wsl
 **/out
+/relearn/build-coverage
