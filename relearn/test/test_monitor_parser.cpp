@@ -1,10 +1,9 @@
-#include "gtest/gtest.h"
-
 #include "RelearnTest.hpp"
 
 #include "neurons/LocalAreaTranslator.h"
 #include "util/MonitorParser.h"
 
+#include "gtest/gtest.h"
 #include <memory>
 #include <sstream>
 #include <vector>

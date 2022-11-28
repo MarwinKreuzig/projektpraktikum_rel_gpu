@@ -1,20 +1,20 @@
-//#include "../googletest/include/gtest/gtest.h"
+// #include "gtest/gtest.h"
 //
-//#include "RelearnTest.hpp"
+// #include "RelearnTest.hpp"
 //
-//#include "../source/neurons/Neurons.h"
-//#include "../source/neurons/UpdateStatus.h"
-//#include "../source/neurons/models/NeuronModels.h"
+// #include "neurons/Neurons.h"
+// #include "neurons/UpdateStatus.h"
+// #include "neurons/models/NeuronModels.h"
 //
-//#include "../source/neurons/NetworkGraph.h"
+// #include "neurons/NetworkGraph.h"
 //
-//#include "../source/structure/Partition.h"
+// #include "structure/Partition.h"
 //
-//#include <algorithm>
-//#include <map>
-//#include <numeric>
-//#include <random>
-//#include <stack>
+// #include <algorithm>
+// #include <map>
+// #include <numeric>
+// #include <random>
+// #include <stack>
 //#include <tuple>
 //#include <vector>
 //

@@ -14,9 +14,9 @@
 #include "util/StringUtil.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
-#include "neurons/helper/AreaMonitor.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/Neurons.h"
+#include "neurons/helper/AreaMonitor.h"
 #include "neurons/helper/NeuronMonitor.h"
 #include "neurons/models/NeuronModels.h"
 #include "sim/NeuronToSubdomainAssignment.h"
@@ -24,6 +24,8 @@
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
 #include "util/Timers.h"
+
+#include "fmt/std.h"
 
 #include <iomanip>
 #include <map>

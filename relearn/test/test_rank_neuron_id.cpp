@@ -1,8 +1,8 @@
-#include "gtest/gtest.h"
-
 #include "RelearnTest.hpp"
 
 #include "neurons/helper/RankNeuronId.h"
+
+#include "gtest/gtest.h"
 
 TEST_F(RankNeuronIdTest, testNeuronRankIdValid) {
     for (auto i = 0; i < 1000; i++) {

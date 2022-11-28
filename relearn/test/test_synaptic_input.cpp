@@ -1,9 +1,9 @@
-#include "gtest/gtest.h"
-
 #include "RelearnTest.hpp"
 
 #include "neurons/models/SynapticInputCalculator.h"
 #include "neurons/models/SynapticInputCalculators.h"
+
+#include "gtest/gtest.h"
 
 #include <memory>
 

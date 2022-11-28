@@ -1,3 +1,4 @@
+#pragma once
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -10,6 +11,8 @@
 
 #include "gtest/gtest.h"
 
+#include "Config.h"
+#include "Types.h"
 #include "algorithm/BarnesHutInternal/BarnesHutCell.h"
 #include "algorithm/FMMInternal/FastMultipoleMethods.h"
 #include "algorithm/FMMInternal/FastMultipoleMethodsBase.h"
@@ -22,17 +25,17 @@
 #include "io/LogFiles.h"
 #include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
+#include "neurons/CalciumCalculator.h"
 #include "neurons/ElementType.h"
 #include "neurons/FiredStatus.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/SignalType.h"
-#include "neurons/CalciumCalculator.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "neurons/models/SynapticElements.h"
 #include "structure/Cell.h"
-#include "structure/Partition.h"
 #include "structure/Octree.h"
 #include "structure/OctreeNode.h"
+#include "structure/Partition.h"
 #include "util/Interval.h"
 #include "util/MemoryHolder.h"
 #include "util/RelearnException.h"

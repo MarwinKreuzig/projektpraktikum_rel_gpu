@@ -1,6 +1,6 @@
-#include "gtest/gtest.h"
-
 #include "RelearnTest.hpp"
+
+#include "gtest/gtest.h"
 
 #include <sstream>
 
@@ -213,7 +213,7 @@ TEST_F(StepParserTest, testParseIntervalsFail1) {
 }
 
 TEST_F(StepParserTest, testParseIntervalsFail2) {
-    const auto& intervals = Interval::parse_description_as_intervals("sgahkllkrduf,'Ä.;fülsaüdf::SAfd--dfasdjf45");
+    const auto& intervals = Interval::parse_description_as_intervals("sgahkllkrduf,'ï¿½.;fï¿½lsaï¿½df::SAfd--dfasdjf45");
     ASSERT_TRUE(intervals.empty());
 }
 

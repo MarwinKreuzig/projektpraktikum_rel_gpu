@@ -14,7 +14,6 @@
 
 #include "util/Utility.h"
 
-#include "spdlog/fmt/bundled/core.h"
 #include <mpi.h>
 
 #include <bitset>
@@ -24,7 +23,6 @@
 #include <limits>
 #include <map>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <vector>
 

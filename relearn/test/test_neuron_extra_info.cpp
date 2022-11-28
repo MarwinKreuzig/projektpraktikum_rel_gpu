@@ -1,8 +1,8 @@
-#include "gtest/gtest.h"
-
 #include "RelearnTest.hpp"
 
 #include "neurons/NeuronsExtraInfo.h"
+
+#include "gtest/gtest.h"
 
 void NeuronsTest::assert_empty(const NeuronsExtraInfo& nei, size_t number_neurons) {
     const auto& positions = nei.get_positions();

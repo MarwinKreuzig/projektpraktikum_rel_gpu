@@ -7,7 +7,6 @@
  * See the LICENSE file in the base directory for details.
  *
  */
-
 #include "Config.h"
 #include "Types.h"
 #include "algorithm/Algorithms.h"
@@ -27,8 +26,8 @@
 #include "neurons/models/SynapticInputCalculator.h"
 #include "neurons/models/SynapticInputCalculators.h"
 #include "sim/Simulation.h"
-#include "sim/file/SubdomainFromFile.h"
 #include "sim/file/MultipleSubdomainsFromFile.h"
+#include "sim/file/SubdomainFromFile.h"
 #include "sim/random/SubdomainFromNeuronDensity.h"
 #include "sim/random/SubdomainFromNeuronPerRank.h"
 #include "structure/BaseCell.h"

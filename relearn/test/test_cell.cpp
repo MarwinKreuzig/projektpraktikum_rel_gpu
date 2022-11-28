@@ -7,7 +7,6 @@
 #include "structure/Cell.h"
 #include "util/Vec3.h"
 
-#include <algorithm>
 #include <numeric>
 #include <random>
 

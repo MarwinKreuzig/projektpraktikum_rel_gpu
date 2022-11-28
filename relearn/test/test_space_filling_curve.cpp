@@ -1,11 +1,11 @@
-#include "gtest/gtest.h"
-
 #include "RelearnTest.hpp"
 
 #include "structure/SpaceFillingCurve.h"
 #include "util/RelearnException.h"
 
 #include <sstream>
+
+#include "gtest/gtest.h"
 
 TEST_F(SpaceFillingCurveTest, testMortonConstructor) {
     Morton morton{};
