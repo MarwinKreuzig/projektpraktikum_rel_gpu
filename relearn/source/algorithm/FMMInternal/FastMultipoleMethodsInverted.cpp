@@ -34,14 +34,12 @@ CommunicationMap<SynapseCreationRequest> FastMultipoleMethodsInverted::find_targ
     const auto& local_branch_nodes = get_octree()->get_local_branch_nodes();
     const auto branch_level = get_level_of_branch_nodes();
 
-    /*
     if (total_number_axons_ex > 0) {
         FastMultipoleMethodsBase::make_creation_request_for(root, local_branch_nodes, branch_level, ElementType::Dendrite, SignalType::Excitatory, synapse_creation_requests_outgoing);
     }
     if (total_number_axons_in > 0) {
         FastMultipoleMethodsBase::make_creation_request_for(root, local_branch_nodes, branch_level, ElementType::Dendrite, SignalType::Inhibitory, synapse_creation_requests_outgoing);
     }
-    */
 
     // Stop Timer and make cache empty for next connectivity update
     Timers::start(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
