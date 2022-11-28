@@ -25,8 +25,6 @@
 #include "util/RelearnException.h"
 #include "util/Timers.h"
 
-#include "fmt/std.h"
-
 #include <iomanip>
 #include <map>
 #include <sstream>
