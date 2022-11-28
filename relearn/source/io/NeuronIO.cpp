@@ -549,11 +549,10 @@ std::pair<std::tuple<LocalSynapses, DistantInSynapses>, std::tuple<LocalSynapses
             spdlog::info("Skipping line: {}", line);
             continue;
         }
-        if (sstream.good() && sstream.get() && sstream.good()) {
-            const auto read_char = sstream.get();
-            const char flag = static_cast<char>(read_char);
-            RelearnException::check(flag == '0' || flag == '1', "NeuronIO::read_in_synapses: Invalid plastic flag {}", flag);
-            plastic = (flag == '1');
+                
+        if (char plastic_flag = '1'; sstream >> plastic_flag) {
+            RelearnException::check(plastic_flag == '0' || plastic_flag == '1', "NeuronIO::read_in_synapses: Invalid plastic flag {}", plastic_flag);
+            plastic = (plastic_flag == '1');
         }
 
         RelearnException::check(read_target_rank == my_rank, "NeuronIO::read_in_synapses: target_rank is not equal to my_rank: {} vs {}", read_target_rank, my_rank);
@@ -661,6 +660,7 @@ std::pair<std::tuple<LocalSynapses, DistantOutSynapses>, std::tuple<LocalSynapse
         int read_source_rank = 0;
         NeuronID::value_type read_source_id = 0;
         RelearnTypes::synapse_weight weight = 0;
+        bool plastic = true;
 
         std::stringstream sstream(line);
         const bool success = (sstream >> read_target_rank) && (sstream >> read_target_id) && (sstream >> read_source_rank) && (sstream >> read_source_id) && (sstream >> weight);
@@ -670,11 +670,9 @@ std::pair<std::tuple<LocalSynapses, DistantOutSynapses>, std::tuple<LocalSynapse
             continue;
         }
 
-        bool plastic = true;
-        if (sstream.good() && sstream.get() && sstream.good()) {
-            const char flag = static_cast<char>(sstream.get());
-            RelearnException::check(flag == '0' || flag == '1', "NeuronIO::read_in_synapses: Invalid plasticity flag {}", flag);
-            plastic = (flag == '1');
+        if (char plastic_flag = '1'; sstream >> plastic_flag) {
+            RelearnException::check(plastic_flag == '0' || plastic_flag == '1', "NeuronIO::read_in_synapses: Invalid plastic flag {}", plastic_flag);
+            plastic = (plastic_flag == '1');
         }
 
         RelearnException::check(read_source_rank == my_rank, "NeuronIO::read_out_synapses: source_rank is not equal to my_rank: {} vs {}", read_target_rank, my_rank);
