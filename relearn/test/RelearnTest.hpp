@@ -1177,6 +1177,6 @@ protected:
 class MPIRankTest : public RelearnTest {
 protected:
     static void SetUpTestSuite() {
-        SetUpTestCaseTemplate<BarnesHutCell>();
+        SetUpTestCaseTemplate();
     }
 };
