@@ -239,34 +239,31 @@ int main(int argc, char** argv) {
     RelearnTypes::step_type simulation_steps{};
     app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms.")->required();
 
-    size_t first_plasticity_step{ Config::first_plasticity_update };
+    RelearnTypes::step_type first_plasticity_step{ Config::first_plasticity_update };
     app.add_option("--first-plasticity-step", first_plasticity_step, "The first step in which the plasticity is updated.");
 
-    size_t last_plasticity_step{ Config::last_plasticity_update };
+    RelearnTypes::step_type last_plasticity_step{ Config::last_plasticity_update };
     auto* opt_last_plasticity_update_step = app.add_option("--last-plasticity-step", last_plasticity_step, "The last step in which the plasticity is updated.");
 
-    size_t plasticity_update_step{ Config::plasticity_update_step };
+    RelearnTypes::step_type plasticity_update_step{ Config::plasticity_update_step };
     auto* opt_plasticity_update_step = app.add_option("--plasticity-update-step", plasticity_update_step, "The interval of steps between a plasticity update.");
 
-    size_t calcium_log_step{ Config::calcium_log_step };
+    RelearnTypes::step_type calcium_log_step{ Config::calcium_log_step };
     app.add_option("--calcium-log-step", calcium_log_step, "Sets the interval for logging all calcium values.");
 
-    size_t synaptic_input_log_step{ Config::synaptic_input_log_step };
+    RelearnTypes::step_type synaptic_input_log_step{ Config::synaptic_input_log_step };
     app.add_option("--synaptic-input-log-step", synaptic_input_log_step, "Sets the interval for logging all synaptic inputs.");
 
-    const auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
+    RelearnTypes::step_type network_log_step = Config::network_log_step;
+    auto* const opt_network_log_step = app.add_option("--network-log-step", network_log_step, "Steps between saving the network graph");
 
-    std::string disable_logging{};
-    auto* opt_disable_logging = app.add_option("--disable_logging", disable_logging, "List of neuron ids which are ignored for calculating the statistics (comma separated)");
-
-    size_t monitor_steps{ Config::monitor_step };
+    RelearnTypes::step_type monitor_steps{ Config::monitor_step };
     auto* opt_monitor_steps = app.add_option("--monitor-steps", monitor_steps, "Every time the neuron state is captured");
 
-    size_t monitor_ensemble_steps{ Config::monitor_area_step };
+    RelearnTypes::step_type monitor_ensemble_steps{ Config::monitor_area_step };
     auto* opt_monitor_ensemble_steps = app.add_option("--monitor-ensemble-steps", monitor_ensemble_steps, "Every time the ensemble information are captured");
 
-    std::vector<std::string> ensemble_file_paths{};
-    auto* opt_ensemble_file_paths = app.add_option("--ensemble", ensemble_file_paths, "One or multiple file which each include an ensemble");
+    const auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
 
     unsigned int random_seed{ 0 };
     app.add_option("-r,--random-seed", random_seed, "Random seed. Default: 0.");
@@ -284,17 +281,17 @@ int main(int argc, char** argv) {
     const auto* flag_disable_network = app.add_flag("--no-print-network", "Disables printing the network to a file.");
     const auto* flag_disable_plasticity = app.add_flag("--no-print-plasticity", "Disables printing the plasticity changes to a file.");
 
-    size_t number_neurons{};
+    RelearnTypes::number_neurons_type number_neurons{};
     auto* const opt_num_neurons = app.add_option("-n,--num-neurons", number_neurons, "Number of neurons. This option only works with one MPI rank!");
 
-    size_t number_neurons_per_rank{};
+    RelearnTypes::number_neurons_type number_neurons_per_rank{};
     auto* const opt_num_neurons_per_rank = app.add_option("--num-neurons-per-rank", number_neurons_per_rank, "Number neurons per MPI rank.");
 
     double fraction_excitatory_neurons{ 1.0 };
-    app.add_option("--fraction-excitatory-neurons", fraction_excitatory_neurons, "The fraction of excitatory neurons, must be from [0.0, 1.0]. Required --num-neurons or --num-neurons-per-rank to take effect.");
+    app.add_option("--fraction-excitatory-neurons", fraction_excitatory_neurons, "The fraction of excitatory neurons, must be from [0.0, 1.0]. Requires --num-neurons or --num-neurons-per-rank to take effect.");
 
     double um_per_neuron{ 1.0 };
-    app.add_option("--um-per-neuron", um_per_neuron, "The micrometer per neuron in one dimension, must be from (0.0, \\inf). Required --num-neurons or --num-neurons-per-rank to take effect.");
+    app.add_option("--um-per-neuron", um_per_neuron, "The micrometer per neuron in one dimension, must be from (0.0, \\inf). Requires --num-neurons or --num-neurons-per-rank to take effect.");
 
     std::filesystem::path file_positions{};
     auto* const opt_file_positions = app.add_option("-f,--file", file_positions, "File with neuron positions. This option only works with one MPI rank!");
@@ -353,23 +350,20 @@ int main(int argc, char** argv) {
     std::string file_external_stimulation{};
     auto* opt_file_external_stimulation = app.add_option("--external-stimulation", file_external_stimulation, "File with the external stimulation.");
 
-    size_t network_log_step = Config::network_log_step;
-    auto* const opt_network_log_step = app.add_option("--network-log-step", network_log_step, "Steps between saving the network graph");
-
     auto* const opt_background_activity = app.add_option("--background-activity", chosen_background_activity_calculator_type, "The type of background activity");
     opt_background_activity->transform(CLI::CheckedTransformer(cli_parse_background_activity_calculator_type, CLI::ignore_case));
 
     double base_background_activity{ BackgroundActivityCalculator::default_base_background_activity };
     auto* const opt_base_background_activity = app.add_option("--base-background-activity", base_background_activity,
-        "The base background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
+        "The base background activity by which all neurons are excited");
 
     double background_activity_mean{ BackgroundActivityCalculator::default_background_activity_mean };
     auto* const opt_mean_background_activity = app.add_option("--background-activity-mean", background_activity_mean,
-        "The mean background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
+        "The mean background activity by which all neurons are excited. The background activity is calculated N(mean, stddev)");
 
     double background_activity_stddev{ BackgroundActivityCalculator::default_background_activity_stddev };
     auto* const opt_stddev_background_activity = app.add_option("--background-activity-stddev", background_activity_stddev,
-        "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as <base> + N(mean, stddev)");
+        "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as N(mean, stddev)");
 
     double synapse_conductance{ SynapticInputCalculator::default_k };
     app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transfered to its neighbors when a neuron spikes. Default is 0.03");
@@ -380,14 +374,14 @@ int main(int argc, char** argv) {
     double calcium_decay{ CalciumCalculator::default_tau_C };
     app.add_option("--calcium-decay", calcium_decay, "The decay constant for the intercellular calcium. Must be greater than 0.0");
 
-    RelearnTypes::step_type target_calcium_decay_step{ 0 };
-    app.add_option("--target-calcium-decay", target_calcium_decay_step, "The decay step for the target calcium values.");
-
     RelearnTypes::step_type first_decay_step{ 0 };
     app.add_option("--target-calcium-first-decay-step", first_decay_step, "The first decay step of the calcium.");
 
     RelearnTypes::step_type last_decay_step{ std::numeric_limits<RelearnTypes::step_type>::max() };
     app.add_option("--target-calcium-last-decay-step", last_decay_step, "The last decay step of the calcium.");
+
+    RelearnTypes::step_type target_calcium_decay_step{ 0 };
+    app.add_option("--target-calcium-decay-step", target_calcium_decay_step, "The decay step for the target calcium values.");
 
     double target_calcium_decay_amount{ 0.0 };
     app.add_option("--target-calcum-amount", target_calcium_decay_amount, "The decay amount for the target calcium values.");
@@ -474,8 +468,6 @@ int main(int argc, char** argv) {
 
     opt_file_external_stimulation->check(CLI::ExistingFile);
 
-    opt_ensemble_file_paths->check(CLI::ExistingFile);
-
     opt_log_path->check(CLI::ExistingDirectory);
 
     opt_file_external_stimulation->check(CLI::ExistingFile);
@@ -556,7 +548,7 @@ int main(int argc, char** argv) {
     } else if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Normal) {
         RelearnException::check(background_activity_stddev > 0.0, "When choosing the normal-background calculator, the standard deviation must be set to > 0.0.");
 
-        background_activity_calculator = std::make_unique<NormalBackgroundActivityCalculator>(base_background_activity, background_activity_mean, background_activity_stddev);
+        background_activity_calculator = std::make_unique<NormalBackgroundActivityCalculator>(background_activity_mean, background_activity_stddev);
     } else if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Stimulus) {
         RelearnException::check(static_cast<bool>(*opt_file_external_stimulation), "Setting the background activity to stimulus but not providing a file is not supported.");
         RelearnException::check(background_activity_stddev >= 0.0, "When choosing the stimulus-background calculator, the standard deviation must be set to >= 0.0.");

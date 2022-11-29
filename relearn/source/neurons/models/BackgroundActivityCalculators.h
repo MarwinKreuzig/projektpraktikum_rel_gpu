@@ -116,15 +116,13 @@ class NormalBackgroundActivityCalculator : public BackgroundActivityCalculator {
 public:
     /**
      * @brief Constructs a new object with the given normal input, i.e.,
-     *      from base + N(mean, stddev)
-     * @brief base The base input
+     *      from N(mean, stddev)
      * @brief mean The mean input
      * @brief stddev The standard deviation, must be > 0.0
      * @exception Throws a RelearnException if stddev <= 0.0
      */
-    NormalBackgroundActivityCalculator(const double base, const double mean, const double stddev)
+    NormalBackgroundActivityCalculator(const double mean, const double stddev)
         : BackgroundActivityCalculator()
-        , base_input(base)
         , mean_input(mean)
         , stddev_input(stddev) {
         RelearnException::check(stddev > 0.0, "NormalBackgroundActivityCalculator::NormalBackgroundActivityCalculator: stddev was: {}", stddev);
@@ -144,7 +142,7 @@ public:
 
         Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
         for (number_neurons_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
-            const auto input = disable_flags[neuron_id] == UpdateStatus::Disabled ? 0.0 : base_input + RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
+            const auto input = disable_flags[neuron_id] == UpdateStatus::Disabled ? 0.0 : RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
             set_background_activity(neuron_id, input);
         }
         Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
@@ -155,7 +153,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
-        return std::make_unique<NormalBackgroundActivityCalculator>(base_input, mean_input, stddev_input);
+        return std::make_unique<NormalBackgroundActivityCalculator>(mean_input, stddev_input);
     }
 
     /**
@@ -164,7 +162,6 @@ public:
      */
     [[nodiscard]] std::vector<ModelParameter> get_parameter() override {
         auto parameters = BackgroundActivityCalculator::get_parameter();
-        parameters.emplace_back(Parameter<double>("Base background activity", base_input, BackgroundActivityCalculator::min_base_background_activity, BackgroundActivityCalculator::max_base_background_activity));
         parameters.emplace_back(Parameter<double>("Mean background activity", mean_input, BackgroundActivityCalculator::min_background_activity_mean, BackgroundActivityCalculator::max_background_activity_mean));
         parameters.emplace_back(Parameter<double>("Stddev background activity", stddev_input, BackgroundActivityCalculator::min_background_activity_stddev, BackgroundActivityCalculator::max_background_activity_stddev));
 
@@ -172,7 +169,6 @@ public:
     }
 
 private:
-    double base_input{ default_base_background_activity };
     double mean_input{ default_background_activity_mean };
     double stddev_input{ default_background_activity_stddev };
 };

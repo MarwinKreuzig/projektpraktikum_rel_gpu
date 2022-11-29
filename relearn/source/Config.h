@@ -11,6 +11,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 
 #ifdef _OPENMP
 constexpr bool OPENMPAVAILABLE = true;
@@ -53,41 +54,41 @@ public:
     constexpr static bool do_debug_checks = false;
 
     // Update connectivity every <plasticity_update_step> ms
-    inline static size_t plasticity_update_step = 100; // NOLINT
+    inline static std::uint32_t plasticity_update_step = 100; // NOLINT
 
     // Update connectivity starting at <first_plasticity_update> ms
-    inline static size_t first_plasticity_update = 0; // NOLINT
+    inline static std::uint32_t first_plasticity_update = 0; // NOLINT
 
     // End the connectivity updates at <last_plascitiy_update> ms
-    inline static size_t last_plasticity_update = -1; // NOLINT
+    inline static std::uint32_t last_plasticity_update = -1; // NOLINT
 
     // Print details every <logfile_update_step> ms
-    inline static size_t logfile_update_step = 100; // NOLINT
+    inline static std::uint32_t logfile_update_step = 100; // NOLINT
 
     // Print to cout every <console_update_step> ms
-    inline static size_t console_update_step = 100; // NOLINT
+    inline static std::uint32_t console_update_step = 100; // NOLINT
 
     // Capture individual neuron informations ever <monitor_step> ms
-    inline static size_t monitor_step = 100; // NOLINT
+    inline static std::uint32_t monitor_step = 100; // NOLINT
 
     // Capture ensemble informations ever <monitor_area_step> ms
-    inline static size_t monitor_area_step = 100; // NOLINT
+    inline static std::uint32_t monitor_area_step = 100; // NOLINT
 
     // Capture the global statistics every <statistics_step> ms
-    inline static size_t statistics_step = 100; // NOLINT
+    inline static std::uint32_t statistics_step = 100; // NOLINT
 
     // Capture the calcium values every <calcium_log_step> ms
-    inline static size_t calcium_log_step = 1000000; // NOLINT
+    inline static std::uint32_t calcium_log_step = 1000000; // NOLINT
 
     // Capture the network every <network_log_step> ms
-    inline static size_t network_log_step = 10000; // NOLINT
+    inline static std::uint32_t network_log_step = 10000; // NOLINT
 
     // Capture the syanptic input every <synaptic_input_log_step> ms
-    inline static size_t synaptic_input_log_step = 10000; // NOLINT
+    inline static std::uint32_t synaptic_input_log_step = 10000; // NOLINT
 
     // Capture the average local euclidean distance every <distance_step> ms
-    inline static size_t distance_step = 10000; // NOLINT
+    inline static std::uint32_t distance_step = 10000; // NOLINT
 
     // Flush the neuron monitors every <flush_monitor_step> ms
-    inline static size_t flush_monitor_step = 30000; // NOLINT
+    inline static std::uint32_t flush_monitor_step = 30000; // NOLINT
 };

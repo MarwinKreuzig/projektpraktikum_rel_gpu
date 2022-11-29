@@ -117,11 +117,10 @@ TEST_F(BackgroundActivityTest, testConstantBackgroundActivityConstruct) {
 }
 
 TEST_F(BackgroundActivityTest, testNormalBackgroundActivityConstruct) {
-    const auto base_background = get_random_double(BackgroundActivityCalculator::min_base_background_activity, BackgroundActivityCalculator::max_base_background_activity);
     const auto mean_background = get_random_double(BackgroundActivityCalculator::min_background_activity_mean, BackgroundActivityCalculator::max_background_activity_mean);
     const auto stddev_background = get_random_double(BackgroundActivityCalculator::min_background_activity_stddev, BackgroundActivityCalculator::max_background_activity_stddev);
 
-    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NormalBackgroundActivityCalculator>(base_background, mean_background, stddev_background);
+    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NormalBackgroundActivityCalculator>(mean_background, stddev_background);
 
     const auto number_neurons_init = get_random_number_neurons();
     const auto number_neurons_create = get_random_number_neurons();
@@ -129,28 +128,21 @@ TEST_F(BackgroundActivityTest, testNormalBackgroundActivityConstruct) {
     test_init_create(background_calculator, number_neurons_init, number_neurons_create);
 
     const auto& parameters = background_calculator->get_parameter();
-    ASSERT_EQ(parameters.size(), 3);
+    ASSERT_EQ(parameters.size(), 2);
 
     ModelParameter mp1 = parameters[0];
     Parameter<double> param1 = std::get<Parameter<double>>(mp1);
 
-    ASSERT_EQ(param1.min(), BackgroundActivityCalculator::min_base_background_activity);
-    ASSERT_EQ(param1.max(), BackgroundActivityCalculator::max_base_background_activity);
-    ASSERT_EQ(param1.value(), base_background);
+    ASSERT_EQ(param1.min(), BackgroundActivityCalculator::min_background_activity_mean);
+    ASSERT_EQ(param1.max(), BackgroundActivityCalculator::max_background_activity_mean);
+    ASSERT_EQ(param1.value(), mean_background);
 
     ModelParameter mp2 = parameters[1];
     Parameter<double> param2 = std::get<Parameter<double>>(mp2);
 
-    ASSERT_EQ(param2.min(), BackgroundActivityCalculator::min_background_activity_mean);
-    ASSERT_EQ(param2.max(), BackgroundActivityCalculator::max_background_activity_mean);
-    ASSERT_EQ(param2.value(), mean_background);
-
-    ModelParameter mp3 = parameters[2];
-    Parameter<double> param3 = std::get<Parameter<double>>(mp3);
-
-    ASSERT_EQ(param3.min(), BackgroundActivityCalculator::min_background_activity_stddev);
-    ASSERT_EQ(param3.max(), BackgroundActivityCalculator::max_background_activity_stddev);
-    ASSERT_EQ(param3.value(), stddev_background);
+    ASSERT_EQ(param2.min(), BackgroundActivityCalculator::min_background_activity_stddev);
+    ASSERT_EQ(param2.max(), BackgroundActivityCalculator::max_background_activity_stddev);
+    ASSERT_EQ(param2.value(), stddev_background);
 }
 
 TEST_F(BackgroundActivityTest, testNullBackgroundActivityUpdate) {
@@ -207,11 +199,10 @@ TEST_F(BackgroundActivityTest, testConstantBackgroundActivityUpdate) {
 }
 
 TEST_F(BackgroundActivityTest, testNormalBackgroundActivityUpdate) {
-    const auto base_background = get_random_double(BackgroundActivityCalculator::min_base_background_activity, BackgroundActivityCalculator::max_base_background_activity);
     const auto mean_background = get_random_double(BackgroundActivityCalculator::min_background_activity_mean, BackgroundActivityCalculator::max_background_activity_mean);
     const auto stddev_background = get_random_double(BackgroundActivityCalculator::min_background_activity_stddev, BackgroundActivityCalculator::max_background_activity_stddev);
 
-    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NormalBackgroundActivityCalculator>(base_background, mean_background, stddev_background);
+    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NormalBackgroundActivityCalculator>(mean_background, stddev_background);
 
     const auto number_neurons = get_random_number_neurons();
     background_calculator->init(number_neurons);
@@ -237,7 +228,7 @@ TEST_F(BackgroundActivityTest, testNormalBackgroundActivityUpdate) {
         if (update_status[neuron_id] == UpdateStatus::Disabled) {
             ASSERT_EQ(background_input[neuron_id], 0.0);
         } else {
-            background_values.emplace_back(background_input[neuron_id] - base_background - mean_background);
+            background_values.emplace_back(background_input[neuron_id] - mean_background);
             number_enabled_neurons++;
         }
     }
