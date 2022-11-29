@@ -236,7 +236,7 @@ int main(int argc, char** argv) {
         { "stimulus", BackgroundActivityCalculatorType::Stimulus },
     };
 
-    size_t simulation_steps{};
+    RelearnTypes::step_type simulation_steps{};
     app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms.")->required();
 
     size_t first_plasticity_step{ Config::first_plasticity_update };

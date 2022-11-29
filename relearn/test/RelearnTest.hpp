@@ -148,7 +148,7 @@ protected:
     }
 
     std::vector<RelearnTypes::area_name> get_random_area_names(size_t max_areas) {
-        int nr_areas = get_random_integer<size_t>(1, max_areas);
+        const auto nr_areas = get_random_integer<size_t>(1, max_areas);
         return std::move(get_random_area_names_specific(nr_areas));
     }
 
@@ -1192,6 +1192,6 @@ protected:
 class MiscTest : public RelearnTest {
 protected:
     static void SetUpTestSuite() {
-        SetUpTestCaseTemplate<BarnesHutCell>();
+        SetUpTestCaseTemplate();
     }
 };

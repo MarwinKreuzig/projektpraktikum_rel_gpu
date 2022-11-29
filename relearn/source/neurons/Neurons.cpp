@@ -900,8 +900,8 @@ void Neurons::print_network_graph_to_log_file(const std::string& prefix) const {
     ss_out_network << "# Current simulation step: " << prefix << '\n';
     ss_out_network << "# <target_rank> <target_id>\t<source_rank> <source_id>\t<weight>\t<plastic> \n";
 
-    network_graph_plastic->print_with_ranks(ss_out_network, ss_in_network, '1');
-    network_graph_static->print_with_ranks(ss_out_network, ss_in_network, '0');
+    network_graph_plastic->print_with_ranks(ss_out_network, ss_in_network, true);
+    network_graph_static->print_with_ranks(ss_out_network, ss_in_network, false);
 
     LogFiles::write_to_file(LogFiles::EventType::InNetwork, false, ss_in_network.str());
     LogFiles::write_to_file(LogFiles::EventType::OutNetwork, false, ss_out_network.str());

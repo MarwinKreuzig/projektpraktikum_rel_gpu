@@ -4,11 +4,13 @@
 
 #include "gtest/gtest.h"
 
+#include <algorithm>
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-result"
 TEST_F(LocalAreaTranslatorTest, simpleTest) {
-    int num_neurons = get_random_number_neurons();
-    int num_areas_max = fmin(50, num_neurons);
+    const auto num_neurons = get_random_number_neurons();
+    const auto num_areas_max = std::min(size_t(50), num_neurons);
     auto area_id_to_area_name = get_random_area_names(num_areas_max);
     auto neuron_id_to_area_id = get_random_area_ids(area_id_to_area_name.size(), num_neurons);
     auto cp_area_id_to_area_name = std::vector<RelearnTypes::area_name>{};

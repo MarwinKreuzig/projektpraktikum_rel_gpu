@@ -40,7 +40,7 @@ public:
             RelearnException::check(area_id >= 0 && area_id < this->area_id_to_area_name.size(), "LocalAreaTranslator:: Invalid area id {}. Must be between 0 and {}", area_id, this->area_id_to_area_name.size());
         }
 
-        int num_area_names = this->area_id_to_area_name.size();
+        const auto num_area_names = this->area_id_to_area_name.size();
         std::set<RelearnTypes::area_name> set(this->area_id_to_area_name.begin(), this->area_id_to_area_name.end());
         RelearnException::check(num_area_names == set.size(), "LocalAreaTranslator::Area name must be unique on single mpi rank");
     }
@@ -89,7 +89,7 @@ public:
      * Returns the number of neurons on this mpi rank (over all local areas)
      * @return Number of neurons on this mpi rank
      */
-    [[nodiscard]] RelearnTypes::number_neurons_type get_number_neurons_in_total() const {
+    [[nodiscard]] RelearnTypes::number_neurons_type get_number_neurons_in_total() const noexcept {
         return neuron_id_to_area_id.size();
     }
 
@@ -97,7 +97,7 @@ public:
      * Vector with all used area names on this mpi rank
      * @return Vector of area names
      */
-    [[nodiscard]] const std::vector<RelearnTypes::area_name>& get_all_area_names() const {
+    [[nodiscard]] const std::vector<RelearnTypes::area_name>& get_all_area_names() const noexcept {
         return area_id_to_area_name;
     }
 
@@ -105,7 +105,7 @@ public:
      * Returns number of areas available on this mpi rank
      * @return Number of areas
      */
-    [[nodiscard]] unsigned int get_number_of_areas() const {
+    [[nodiscard]] size_t get_number_of_areas() const noexcept {
         return area_id_to_area_name.size();
     }
 
@@ -132,7 +132,7 @@ public:
                 neurons_in_area.emplace_back(neuron_id);
             }
         }
-        return std::move(neurons_in_area);
+        return neurons_in_area;
     }
 
     /**
@@ -148,10 +148,10 @@ public:
                 neurons_in_area.emplace_back(neuron_id);
             }
         }
-        return std::move(neurons_in_area);
+        return neurons_in_area;
     }
 
-    [[nodiscard]] const std::vector<RelearnTypes::area_id>& get_neuron_ids_to_area_ids() const {
+    [[nodiscard]] const std::vector<RelearnTypes::area_id>& get_neuron_ids_to_area_ids() const noexcept {
         return neuron_id_to_area_id;
     }
 

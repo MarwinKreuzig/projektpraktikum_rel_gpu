@@ -48,9 +48,9 @@ public:
      * @param nr_of_digits Number of digits including the leading zeros
      * @return string with the number and leading zeros if necessary
      */
-    static std::string format_int_with_leading_zeros(int number, int nr_of_digits) {
+    static std::string format_int_with_leading_zeros(const int number, const unsigned int nr_of_digits) {
         RelearnException::check(nr_of_digits >= 1, "StringUtil::format_with_leading_zeros. Number must has at least 1 digit");
-        std::stringstream ss;
+        std::stringstream ss{};
         ss << std::setw(nr_of_digits) << std::setfill('0') << number;
         return ss.str();
     }
@@ -74,15 +74,18 @@ public:
      * @return The file path for the found file
      * @throws RelearnException When no file was found
      */
-    static std::filesystem::path find_file_for_rank(const std::filesystem::path& directory, int rank, const std::string& prefix, const std::string& suffix, int max_digits) {
-        std::filesystem::path path_to_file;
-        for (int nr_digits = 1; nr_digits < max_digits; nr_digits++) {
+    static std::filesystem::path find_file_for_rank(const std::filesystem::path& directory, const int rank, 
+        const std::string& prefix, const std::string& suffix, const unsigned int max_digits) {
+        std::filesystem::path path_to_file{};
+
+        for (auto nr_digits = 1U; nr_digits < max_digits; nr_digits++) {
             const auto my_position_filename = prefix + StringUtil::format_int_with_leading_zeros(rank, nr_digits) + suffix;
             path_to_file = directory / my_position_filename;
             if (std::filesystem::exists(path_to_file)) {
                 return path_to_file;
             }
         }
+
         RelearnException::fail("StringUtil::find_file_for_rank: No file found for {}{}{}", prefix, rank, suffix);
     }
 };

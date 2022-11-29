@@ -128,7 +128,7 @@ TEST_F(MiscTest, testMinMaxAccSizeAllDisabled) {
     std::vector<UpdateStatus> update_status(3, UpdateStatus::Disabled);
 
     ASSERT_THROW(auto val = Util::min_max_acc(std::vector<double>{ 4.0, 1.2, 5.2 }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<float>{ 0.8f, -1.6f, 65423.8 }, update_status), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<float>{ 0.8f, -1.6f, 65423.8f }, update_status), RelearnException);
     ASSERT_THROW(auto val = Util::min_max_acc(std::vector<int>{ 5, -4, 8 }, update_status), RelearnException);
     ASSERT_THROW(auto val = Util::min_max_acc(std::vector<size_t>{ 10, 422, 5223 }, update_status), RelearnException);
 }
@@ -137,7 +137,7 @@ TEST_F(MiscTest, testMinMaxAccSizeAllStatic) {
     std::vector<UpdateStatus> update_status(3, UpdateStatus::STATIC);
 
     ASSERT_THROW(auto val = Util::min_max_acc(std::vector<double>{ 4.0, 1.2, 5.2 }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<float>{ 0.8f, -1.6f, 65423.8 }, update_status), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<float>{ 0.8f, -1.6f, 65423.8f }, update_status), RelearnException);
     ASSERT_THROW(auto val = Util::min_max_acc(std::vector<int>{ 5, -4, 8 }, update_status), RelearnException);
     ASSERT_THROW(auto val = Util::min_max_acc(std::vector<size_t>{ 10, 422, 5223 }, update_status), RelearnException);
 }

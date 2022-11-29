@@ -3,6 +3,7 @@
 #include "RelearnTest.hpp"
 
 #include "io/NeuronIO.h"
+#include "neurons/LocalAreaTranslator.h"
 
 #include <random>
 
@@ -1142,7 +1143,7 @@ TEST_F(IOTest, testReadSynapsesInteractionNetworkGraph) {
     std::ofstream in_ofstream{ in_path };
     std::ofstream out_ofstream{ out_path };
 
-    ng.print_with_ranks(out_ofstream, in_ofstream, '1');
+    ng.print_with_ranks(out_ofstream, in_ofstream, true);
 
     in_ofstream.flush();
     in_ofstream.close();
