@@ -11,7 +11,6 @@
  */
 
 #include "Types.h"
-#include "neurons/LocalAreaTranslator.h"
 #include "util/TaggedID.h"
 
 #include <cstdint>
@@ -20,6 +19,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+class LocalAreaTranslator;
 
 /**
  * This class provides a static interface to load interrupts from files,
@@ -86,5 +87,6 @@ public:
      * @exception Throws a RelearnException if opening the file fails
      * @return A function that specified for a given simulation step and a given neuron id, how much background it receives
      */
-    [[nodiscard]] static std::function<double(step_type, NeuronID::value_type)> load_stimulus_interrupts(const std::filesystem::path& path_to_file, int my_rank, const std::shared_ptr<LocalAreaTranslator> local_area_translator);
+    [[nodiscard]] static std::function<double(step_type, NeuronID::value_type)> load_stimulus_interrupts(
+        const std::filesystem::path& path_to_file, int my_rank, std::shared_ptr<LocalAreaTranslator> local_area_translator);
 };

@@ -10,10 +10,11 @@
 
 #include "NeuronIO.h"
 
+#include "neurons/LocalAreaTranslator.h"
+#include "structure/Partition.h"
 #include "util/RelearnException.h"
 
 #include "spdlog/spdlog.h"
-#include "structure/Partition.h"
 
 #include <climits>
 #include <tuple>
@@ -109,7 +110,7 @@ std::tuple<std::vector<LoadedNeuron>, std::vector<RelearnTypes::area_name>, Load
         RelearnTypes::area_id area_id{ 0 };
         if (area_id_it == area_names.end()) {
             // Area name not known
-            area_names.emplace_back(area_name);
+            area_names.emplace_back(std::move(area_name));
             area_id = area_names.size() - 1;
         } else {
             area_id = area_id_it - area_names.begin();
@@ -194,7 +195,7 @@ NeuronIO::read_neurons_componentwise(const std::filesystem::path& file_path) {
         RelearnTypes::area_id area_id{ 0 };
         if (area_id_it == area_names.end()) {
             // Area name not known
-            area_names.emplace_back(area_name);
+            area_names.emplace_back(std::move(area_name));
             area_id = area_names.size() - 1;
         } else {
             area_id = area_id_it - area_names.begin();
@@ -218,7 +219,7 @@ void NeuronIO::write_neurons(const std::vector<LoadedNeuron>& neurons, const std
 }
 
 void NeuronIO::write_neurons(const std::vector<LoadedNeuron>& neurons, const std::filesystem::path& file_path, const std::shared_ptr<LocalAreaTranslator>& local_area_translator, std::shared_ptr<Partition> partition) {
-    std::stringstream ss;
+    std::stringstream ss{};
     write_neurons(neurons, ss, local_area_translator, partition);
     std::ofstream of(file_path, std::ios::binary | std::ios::out);
 

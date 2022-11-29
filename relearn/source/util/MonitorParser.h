@@ -11,10 +11,10 @@
  */
 
 #include "neurons/helper/RankNeuronId.h"
+#include "neurons/LocalAreaTranslator.h"
 #include "util/StringUtil.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
-#include "neurons/LocalAreaTranslator.h"
 
 #include <algorithm>
 #include <charconv>
@@ -119,7 +119,8 @@ public:
      * @param local_area_translator Translates between the local area id on the current mpi rank and its area name
      * @return List of area names found in the string
      */
-    [[nodiscard]] static std::vector<RelearnTypes::area_id> parse_area_names(const std::string& description, const std::shared_ptr<LocalAreaTranslator> local_area_translator) {
+    [[nodiscard]] static std::vector<RelearnTypes::area_id> parse_area_names(const std::string& description, 
+        const std::shared_ptr<LocalAreaTranslator>& local_area_translator) {
         const auto& vector = StringUtil::split_string(description, ';');
         std::vector<RelearnTypes::area_name> area_names{};
         for (const auto& desc : vector) {
@@ -200,7 +201,8 @@ public:
      * @exception Throws a RelearnException if default_rank < 0 or my_rank < 0
      * @return A vector with all NeuronIDs that shall be monitored at the current rank, sorted and unique
      */
-    [[nodiscard]] static std::vector<NeuronID> parse_my_ids(const std::string& description, const int default_rank, const int my_rank, const std::shared_ptr<LocalAreaTranslator> local_area_translator) {
+    [[nodiscard]] static std::vector<NeuronID> parse_my_ids(const std::string& description, const int default_rank, 
+        const int my_rank, const std::shared_ptr<LocalAreaTranslator>& local_area_translator) {
         const auto& rank_neuron_ids = parse_multiple_description(description, default_rank);
         const auto& area_ids = parse_area_names(description, local_area_translator);
         auto neuron_ids = extract_my_ids(rank_neuron_ids, my_rank);

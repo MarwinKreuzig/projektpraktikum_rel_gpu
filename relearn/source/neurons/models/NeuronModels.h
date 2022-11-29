@@ -73,10 +73,11 @@ public:
     NeuronModel& operator=(NeuronModel&& other) = default;
 
     enum FireRecorderPeriod {
-        NEURON_MONITOR = 0,
-        AREA_MONITOR = 1
+        NeuronMonitor = 0,
+        AreaMonitor = 1
     };
-    int number_fire_recorders = 2;
+
+    constexpr static size_t number_fire_recorders = 2;
 
     /**
      * @brief Creates an object of type T wrapped inside an std::unique_ptr
@@ -243,7 +244,7 @@ public:
             RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::disable_neurons: There is a too large id: {} vs {}", neuron_id, number_local_neurons);
             fired[local_neuron_id] = FiredStatus::Inactive;
             fired_recorder.resize(number_fire_recorders, {});
-            for (int i = 0; i < number_fire_recorders; i++) {
+            for (auto i = 0; i < number_fire_recorders; i++) {
                 fired_recorder[i][local_neuron_id] = 0U;
             }
         }

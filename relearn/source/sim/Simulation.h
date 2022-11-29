@@ -232,7 +232,7 @@ public:
      */
     void save_network_graph(step_type current_steps);
 
-    const std::shared_ptr<std::map<RelearnTypes::area_id, AreaMonitor>> get_area_monitors() const noexcept {
+    const std::shared_ptr<std::map<RelearnTypes::area_id, AreaMonitor>>& get_area_monitors() const noexcept {
         return area_monitors;
     }
 

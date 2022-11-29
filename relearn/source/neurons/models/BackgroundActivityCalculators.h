@@ -13,7 +13,6 @@
 #include "neurons/models/BackgroundActivityCalculator.h"
 
 #include "io/InteractiveNeuronIO.h"
-#include "neurons/LocalAreaTranslator.h"
 #include "util/Random.h"
 #include "util/Timers.h"
 
@@ -21,6 +20,8 @@
 #include <functional>
 #include <optional>
 #include <utility>
+
+class LocalAreaTranslator;
 
 /**
  * This class provides no input whatsoever.
@@ -186,7 +187,8 @@ public:
      * @param local_area_translator Translates between local area ids and area names
      * @exception Throws a RelearnException if the file is not present or the second argument of background is <0.0 (if provided)
      */
-    StimulusBackgroundActivityCalculator(const std::filesystem::path& stimulus_file, std::optional<std::pair<double, double>> background, int mpi_rank, const std::shared_ptr<LocalAreaTranslator> local_area_translator)
+    StimulusBackgroundActivityCalculator(const std::filesystem::path& stimulus_file, std::optional<std::pair<double, double>> background, 
+        const int mpi_rank, std::shared_ptr<LocalAreaTranslator> local_area_translator)
         : file(stimulus_file) {
         if (background.has_value()) {
             auto [mean, stddev] = background.value();
@@ -196,7 +198,7 @@ public:
             stddev_input = stddev;
         }
 
-        auto function = InteractiveNeuronIO::load_stimulus_interrupts(stimulus_file, mpi_rank, local_area_translator);
+        auto function = InteractiveNeuronIO::load_stimulus_interrupts(stimulus_file, mpi_rank, std::move(local_area_translator));
         stimulus_function = std::move(function);
     }
 

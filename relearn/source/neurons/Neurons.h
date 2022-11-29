@@ -27,13 +27,13 @@
 #include "neurons/helper/SynapseDeletionRequests.h"
 #include "util/RelearnException.h"
 #include "util/StatisticalMeasures.h"
-#include "neurons/LocalAreaTranslator.h"
 
 #include <memory>
 #include <string>
 #include <tuple>
 #include <vector>
 
+class LocalAreaTranslator;
 class NetworkGraph;
 class NeuronMonitor;
 class Octree;

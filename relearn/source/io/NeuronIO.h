@@ -12,15 +12,16 @@
 
 #include "Types.h"
 
-#include "neurons/LocalAreaTranslator.h"
 #include "sim/LoadedNeuron.h"
-#include "structure/Partition.h"
 
 #include <filesystem>
 #include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
+
+class LocalAreaTranslator;
+class Partition;
 
 /**
  * This class provides a static interface to load/store neurons and synapses from/to files,

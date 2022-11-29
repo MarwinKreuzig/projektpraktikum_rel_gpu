@@ -26,10 +26,10 @@ public:
      * @param area_id_to_area_name Maps the id of an area to its name
      * @param neuron_id_to_area_id Map the neuron id to its assigned area id
      */
-    LocalAreaTranslator(const std::vector<RelearnTypes::area_name> area_id_to_area_name,
-        const std::vector<RelearnTypes::area_id> neuron_id_to_area_id)
-        : area_id_to_area_name(area_id_to_area_name)
-        , neuron_id_to_area_id(neuron_id_to_area_id) {
+    LocalAreaTranslator(std::vector<RelearnTypes::area_name> area_id_to_area_name,
+        std::vector<RelearnTypes::area_id> neuron_id_to_area_id)
+        : area_id_to_area_name(std::move(area_id_to_area_name))
+        , neuron_id_to_area_id(std::move(neuron_id_to_area_id)) {
 
         RelearnException::check(!this->area_id_to_area_name.empty(), "LocalAreaTranslator::Area id to area name is empty");
         RelearnException::check(!this->neuron_id_to_area_id.empty(), "LocalAreaTranslator:: Neuron id to area id is empty");
