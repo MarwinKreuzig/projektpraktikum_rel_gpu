@@ -50,7 +50,7 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
     den_inh_conn += sim->get_neurons()->get_dendrites_inh().get_connected_elements(neuron_id);
 
     calcium += sim->get_neurons()->get_calcium(neuron_id);
-    fired_fraction += static_cast<double>(sim->get_neurons()->get_neuron_model()->fired_recorder[NeuronModel::FireRecorderPeriod::AREA_MONITOR][neuron_id.get_neuron_id()]) / static_cast<double>(Config::monitor_area_step);
+    fired_fraction += static_cast<double>(sim->get_neurons()->get_neuron_model()->fired_recorder[NeuronModel::FireRecorderPeriod::AreaMonitor][neuron_id.get_neuron_id()]) / static_cast<double>(Config::monitor_area_step);
 }
 
 void AreaMonitor::prepare_recording() {
