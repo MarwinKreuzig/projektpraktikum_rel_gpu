@@ -11,9 +11,10 @@
  */
 
 #include "neurons/helper/RankNeuronId.h"
-#include "util/Helper.h"
+#include "util/StringUtil.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
+#include "neurons/LocalAreaTranslator.h"
 
 #include <algorithm>
 #include <charconv>
@@ -112,17 +113,33 @@ public:
         return parsed_ids;
     }
 
-    [[nodiscard]] static std::vector<RelearnTypes::area_name> parse_area_names(const std::string& description) {
-        const auto& vector = Helper::split_string(description, ';');
+    /**
+     * Parses a descriptor string and looks for area names
+     * @param description The string that will be parsed
+     * @param local_area_translator Translates between the local area id on the current mpi rank and its area name
+     * @return List of area names found in the string
+     */
+    [[nodiscard]] static std::vector<RelearnTypes::area_id> parse_area_names(const std::string& description, const std::shared_ptr<LocalAreaTranslator> local_area_translator) {
+        const auto& vector = StringUtil::split_string(description, ';');
         std::vector<RelearnTypes::area_name> area_names{};
         for (const auto& desc : vector) {
-            if (desc.find(':') != std::string::npos || Helper::is_number(desc)) {
+            if (desc.find(':') != std::string::npos || StringUtil::is_number(desc)) {
                 // Description has the format of a neuron id. Skip it
                 continue;
             }
             area_names.emplace_back(desc);
         }
-        return std::move(area_names);
+
+        std::vector<RelearnTypes::area_id> area_ids{};
+        const auto& known_area_names = local_area_translator->get_all_area_names();
+        for (const auto& area_name : area_names) {
+            const auto it = std::find(known_area_names.begin(), known_area_names.end(), area_name);
+            if (it != known_area_names.end()) {
+                area_ids.emplace_back(it - known_area_names.begin());
+            }
+        }
+
+        return std::move(area_ids);
     }
 
     /**
@@ -173,16 +190,6 @@ public:
         return neuron_ids;
     }
 
-    [[nodiscard]] static std::vector<NeuronID> get_neuron_ids_in_area(const std::vector<RelearnTypes::area_name>& neuron_vs_area, const std::vector<RelearnTypes::area_name>& area_names) {
-        std::vector<NeuronID> neurons_in_area{};
-        for (const auto& neuron_id : NeuronID::range(0, neuron_vs_area.size())) {
-            if (std::find(area_names.begin(), area_names.end(), neuron_vs_area[neuron_id.get_neuron_id()]) != area_names.end()) {
-                neurons_in_area.emplace_back(neuron_id);
-            }
-        }
-        return neurons_in_area;
-    }
-
     /**
      * @brief Extracts all to be monitored NeuronIDs that belong to the current rank. Format is:
      *      <mpi_rank>:<neuron_id> with ; separating the RankNeuronIds
@@ -193,11 +200,11 @@ public:
      * @exception Throws a RelearnException if default_rank < 0 or my_rank < 0
      * @return A vector with all NeuronIDs that shall be monitored at the current rank, sorted and unique
      */
-    [[nodiscard]] static std::vector<NeuronID> parse_my_ids(const std::string& description, const int default_rank, const int my_rank, const std::vector<RelearnTypes::area_name>& neuron_vs_area) {
+    [[nodiscard]] static std::vector<NeuronID> parse_my_ids(const std::string& description, const int default_rank, const int my_rank, const std::shared_ptr<LocalAreaTranslator> local_area_translator) {
         const auto& rank_neuron_ids = parse_multiple_description(description, default_rank);
-        const auto& area_names = parse_area_names(description);
+        const auto& area_ids = parse_area_names(description, local_area_translator);
         auto neuron_ids = extract_my_ids(rank_neuron_ids, my_rank);
-        auto neurons_in_areas = get_neuron_ids_in_area(neuron_vs_area, area_names);
+        auto neurons_in_areas = local_area_translator->get_neuron_ids_in_areas(area_ids);
         neuron_ids.insert(neuron_ids.end(), neurons_in_areas.begin(), neurons_in_areas.end());
         return remove_duplicates_and_sort(std::move(neuron_ids));
     }

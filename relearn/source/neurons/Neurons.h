@@ -27,6 +27,7 @@
 #include "neurons/helper/SynapseDeletionRequests.h"
 #include "util/RelearnException.h"
 #include "util/StatisticalMeasures.h"
+#include "neurons/LocalAreaTranslator.h"
 
 #include <memory>
 #include <string>
@@ -118,14 +119,20 @@ public:
     }
 
     /**
-     * @brief Sets the network graph in which the synapses for the neurons are stored
-     * @param octree The network graph
+     * @brief Sets the network graphs in which the synapses for the neurons are stored
+     * @param network_static The network graph for static connections
+     * @param network_plastic The network graph for plastic connections
      */
     void set_network_graph(std::shared_ptr<NetworkGraph> network_static, std::shared_ptr<NetworkGraph> network_plastic) {
         network_graph_static = std::move(network_static);
         network_graph_plastic = std::move(network_plastic);
     }
 
+    /**
+     * @brief Neurons that are static are only allowed to have static connections. Plastic connections cannot be added during the simulation. This method marks the given neurons as static
+     * @param static_neurons List of neuron ids that will be marked as static
+     * @throws RelearnException When a static neuron is loaded with a plastic connection
+     */
     void set_static_neurons(const std::vector<NeuronID>& static_neurons) {
         for (const auto& neuronId : static_neurons) {
             disable_flags[neuronId.get_neuron_id()] = UpdateStatus::STATIC;
@@ -170,21 +177,28 @@ public:
     }
 
     /**
-     * @brief Sets the area names in the extra infos
-     * @param names The area names
-     * @exception Throws the same RelearnException as NeuronsExtraInfo::set_area_names
-     */
-    void set_area_names(std::vector<RelearnTypes::area_name> names) {
-        extra_info->set_area_names(std::move(names));
-    }
-
-    /**
      * @brief Sets the positions in the extra infos
      * @param names The positions
      * @exception Throws the same RelearnException as NeuronsExtraInfo::set_positions
      */
     void set_positions(std::vector<NeuronsExtraInfo::position_type> pos) {
         extra_info->set_positions(std::move(pos));
+    }
+
+    /**
+     * @brief Sets the area translator that translates between the local area id on the current mpi rank and its area name
+     * @param local_area_translator the local area translator for this mpi rank
+     */
+    void set_local_area_translator(std::shared_ptr<LocalAreaTranslator> local_area_translator) {
+        this->local_area_translator = local_area_translator;
+    }
+
+    /**
+     * @brief Returns the area translate that translates between the local area id on the current mpi rank and its area name
+     * @return the local area translator
+     */
+    [[nodiscard]] const std::shared_ptr<LocalAreaTranslator> get_local_area_translator() const {
+        return local_area_translator;
     }
 
     /**
@@ -203,6 +217,11 @@ public:
         return neuron_model;
     }
 
+    /**
+     * @brief Returns the current calcium value of the neuron
+     * @param neuron_id Local neuron id
+     * @return Calcium of the neuron
+     */
     [[nodiscard]] double get_calcium(const NeuronID& neuron_id) const {
         return calcium_calculator->get_calcium()[neuron_id.get_neuron_id()];
     }
@@ -347,6 +366,8 @@ public:
      */
     void print_positions_to_log_file();
 
+    void print_area_mapping_to_log_file();
+
     /**
      * @brief Prints some overview to LogFiles::EventType::Cout
      */
@@ -419,6 +440,8 @@ private:
     number_neurons_type number_neurons = 0;
 
     std::shared_ptr<Partition> partition{};
+
+    std::shared_ptr<LocalAreaTranslator> local_area_translator{};
 
     std::shared_ptr<Octree> global_tree{};
     std::shared_ptr<Algorithm> algorithm{};

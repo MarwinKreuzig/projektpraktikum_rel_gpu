@@ -1,10 +1,12 @@
 #include "RelearnTest.hpp"
 
+#include "neurons/LocalAreaTranslator.h"
 #include "util/MonitorParser.h"
 
 #include "gtest/gtest.h"
-
+#include <memory>
 #include <sstream>
+#include <vector>
 
 TEST_F(MonitorParserTest, testParseDescriptionFixed) {
     auto checker = [](std::string_view description, int default_rank, int rank, NeuronID::value_type neuron_id) {
@@ -248,7 +250,9 @@ TEST_F(MonitorParserTest, testParseIds) {
         }
     }
 
-    const auto& parsed_ids = MonitorParser::parse_my_ids(ss.str(), my_rank, my_rank, {});
+    auto translator = std::make_shared<LocalAreaTranslator>(std::vector<RelearnTypes::area_name>({ "random" }), std::vector<RelearnTypes::area_id>({ 0 }));
+
+    const auto& parsed_ids = MonitorParser::parse_my_ids(ss.str(), my_rank, my_rank, translator);
 
     ASSERT_EQ(parsed_ids.size(), my_number_neurons);
 

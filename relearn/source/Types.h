@@ -39,6 +39,7 @@ using step_type = std::uint32_t;
 using number_neurons_type = std::uint64_t;
 
 using area_name = std::string;
+using area_id = size_t;
 
 } // namespace RelearnTypes
 

@@ -11,6 +11,7 @@
  */
 
 #include "Types.h"
+#include "neurons/LocalAreaTranslator.h"
 #include "util/TaggedID.h"
 
 #include <cstdint>
@@ -81,9 +82,9 @@ public:
      *      A neuron id must have the format: <rank>:<local_neuron_id> or must be an area name
      * @param path_to_file The path to the stimulus interrupts file
      * @param my_rank The mpi rank of the current process
-     * @param neuron_id_vs_area_name Vector which assigns each local neuron id of the current process an area name
+     * @param local_area_translator Translates between the local area id on the current mpi rank and its area name
      * @exception Throws a RelearnException if opening the file fails
      * @return A function that specified for a given simulation step and a given neuron id, how much background it receives
      */
-    [[nodiscard]] static std::function<double(step_type, NeuronID::value_type)> load_stimulus_interrupts(const std::filesystem::path& path_to_file, int my_rank, const std::vector<RelearnTypes::area_name>& neuron_id_vs_area_name);
+    [[nodiscard]] static std::function<double(step_type, NeuronID::value_type)> load_stimulus_interrupts(const std::filesystem::path& path_to_file, int my_rank, const std::shared_ptr<LocalAreaTranslator> local_area_translator);
 };

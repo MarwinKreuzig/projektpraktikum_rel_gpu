@@ -13,6 +13,7 @@
 #include "neurons/models/BackgroundActivityCalculator.h"
 
 #include "io/InteractiveNeuronIO.h"
+#include "neurons/LocalAreaTranslator.h"
 #include "util/Random.h"
 #include "util/Timers.h"
 
@@ -181,9 +182,11 @@ public:
      * @brief Creates a new instance for calculating the background activity based on a stimulus file and optionally a normal distribution
      * @param stimulus_file The path to the stimulus file
      * @param background Optionally a pair of the mean and standarddeviation (if the latter is 0.0, the input will be the mean)
+     * @param mpi_rank The mpi rank of the process
+     * @param local_area_translator Translates between local area ids and area names
      * @exception Throws a RelearnException if the file is not present or the second argument of background is <0.0 (if provided)
      */
-    StimulusBackgroundActivityCalculator(const std::filesystem::path& stimulus_file, std::optional<std::pair<double, double>> background, int mpi_rank, const std::vector<RelearnTypes::area_name>& neuron_id_vs_area_name)
+    StimulusBackgroundActivityCalculator(const std::filesystem::path& stimulus_file, std::optional<std::pair<double, double>> background, int mpi_rank, const std::shared_ptr<LocalAreaTranslator> local_area_translator)
         : file(stimulus_file) {
         if (background.has_value()) {
             auto [mean, stddev] = background.value();
@@ -193,7 +196,7 @@ public:
             stddev_input = stddev;
         }
 
-        auto function = InteractiveNeuronIO::load_stimulus_interrupts(stimulus_file, mpi_rank, neuron_id_vs_area_name);
+        auto function = InteractiveNeuronIO::load_stimulus_interrupts(stimulus_file, mpi_rank, local_area_translator);
         stimulus_function = std::move(function);
     }
 
@@ -261,6 +264,6 @@ private:
     std::function<double(step_type, NeuronID::value_type)> stimulus_function{};
     double mean_input{ default_background_activity_mean };
     double stddev_input{ default_background_activity_stddev };
-    std::vector<RelearnTypes::area_name> neuron_id_vs_area_name;
+    std::vector<RelearnTypes::area_name> neuron_id_vs_area_id;
     int my_rank;
 };

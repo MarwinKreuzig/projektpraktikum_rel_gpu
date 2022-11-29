@@ -26,5 +26,5 @@ void NeuronToSubdomainAssignment::initialize() {
 }
 
 void NeuronToSubdomainAssignment::write_neurons_to_file(const std::filesystem::path& file_path) const {
-    NeuronIO::write_neurons(loaded_neurons, file_path);
+    NeuronIO::write_neurons(loaded_neurons, file_path, local_area_translator, partition);
 }

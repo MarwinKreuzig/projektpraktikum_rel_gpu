@@ -65,6 +65,9 @@ void LogFiles::init() {
     // Create log file for positions on all ranks
     LogFiles::add_logfile(EventType::Positions, "positions", -1, ".txt", "positions/");
 
+    // Create log file for positions on all ranks
+    LogFiles::add_logfile(EventType::AreaMapping, "area_mapping", -1, ".txt", "area_mapping/");
+
     // Create log file for std::cout
     LogFiles::add_logfile(EventType::Cout, "stdcout", -1);
 

@@ -59,6 +59,7 @@ target_sources(
           test_kernel_gaussian.cpp
           test_kernel_linear.cpp
           test_kernel_weibull.cpp
+          test_local_area_translator.cpp
           test_misc.cpp
           test_monitor_parser.cpp
           test_mpi_rank.cpp

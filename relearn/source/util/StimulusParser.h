@@ -12,10 +12,11 @@
 
 #include "Config.h"
 #include "Types.h"
+#include "neurons/LocalAreaTranslator.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "util/Interval.h"
 #include "util/TaggedID.h"
-#include "util/Helper.h"
+#include "util/StringUtil.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -74,7 +75,7 @@ public:
         area_names.reserve(line.size());
 
         for (std::string current_value{}; ss >> current_value;) {
-            const auto& rank_neuron_id_vector = Helper::split_string(current_value, ':');
+            const auto& rank_neuron_id_vector = StringUtil::split_string(current_value, ':');
             if (rank_neuron_id_vector.size() == 2) {
                 // Neuron has format <rank>:<neuron_id>
                 const int rank = std::stoi(rank_neuron_id_vector[0]);
@@ -84,7 +85,7 @@ public:
                 const auto neuron_id = std::stoul(rank_neuron_id_vector[1]);
                 ids.insert({ neuron_id });
             } else {
-                RelearnException::check(!Helper::is_number(current_value), "StimulusParser::parseLine:: Illegal neuron id {} in stimulus files. Must have the format <rank>:<neuron_id> or be an area name", current_value);
+                RelearnException::check(!StringUtil::is_number(current_value), "StimulusParser::parseLine:: Illegal neuron id {} in stimulus files. Must have the format <rank>:<neuron_id> or be an area name", current_value);
                 // Neuron descriptor is an area name
                 area_names.insert(current_value);
             }
@@ -117,10 +118,10 @@ public:
      * @brief Converts the given stimuli to a function that allows easy checking of the current step and neuron id.
      *      If a the combination of step and neuron id hits a stimulus, it returns the intensity. Otherwise, returns 0.0.
      * @param stimuli The given stimuli, should not intersect.
-     * @param neuron_id_vs_area_name A vector which assigns each neuron id to an area name
+     * @param local_area_translator Translates between the local area id on the current mpi rank and its area name
      * @return The check function. Empty if the stimuli intersect
      */
-    [[nodiscard]] static std::function<double(step_type, NeuronID::value_type)> generate_stimulus_function(std::vector<Stimulus> stimuli, const std::vector<RelearnTypes::area_name>& neuron_id_vs_area_name) {
+    [[nodiscard]] static std::function<double(step_type, NeuronID::value_type)> generate_stimulus_function(std::vector<Stimulus> stimuli, const std::shared_ptr<LocalAreaTranslator> local_area_translator) {
         std::vector<Interval> intervals{};
         intervals.reserve(stimuli.size());
 
@@ -139,9 +140,9 @@ public:
 
         std::ranges::sort(stimuli, comparison);
 
-        auto step_checker_function = [stimuli = std::move(stimuli), neuron_id_vs_area_name](step_type current_step, NeuronID::value_type neuron_id) noexcept -> double {
+        auto step_checker_function = [stimuli = std::move(stimuli), local_area_translator](step_type current_step, NeuronID::value_type neuron_id) noexcept -> double {
             for (const auto& [interval, intensity, ids, areas] : stimuli) {
-                if (interval.hits_step(current_step) && (ids.contains(neuron_id) || areas.contains(neuron_id_vs_area_name[neuron_id]))) {
+                if (interval.hits_step(current_step) && (ids.contains(neuron_id) || areas.contains(local_area_translator->get_area_name_for_neuron_id(neuron_id)))) {
                     return intensity;
                 }
             }

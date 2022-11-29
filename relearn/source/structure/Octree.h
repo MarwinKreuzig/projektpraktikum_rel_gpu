@@ -257,6 +257,16 @@ public:
             }
         }
 
+        RelearnException::check(leaf_nodes.size() == num_neurons, "Octree::initializes_leaf_nodes: Less number of leaf nodes than number of local neurons {} != {}", leaf_nodes.size(), num_neurons);
+
+        for (const auto neuron_id : NeuronID::range(num_neurons)) {
+            const auto& node = leaf_nodes[neuron_id.get_neuron_id()];
+            RelearnException::check(node != nullptr, "Octree::initializes_leaf_nodes: Leaf node {} is null", neuron_id);
+            RelearnException::check(node->is_leaf(), "Octree::initializes_leaf_nodes: Leaf node {} is not a leaf node", neuron_id);
+            RelearnException::check(node->is_local(), "Octree::initializes_leaf_nodes: Leaf node {} is not local", neuron_id);
+            RelearnException::check(node->get_cell().get_neuron_id() == neuron_id, "Octree::initializes_leaf_nodes: Leaf node {} has wrong neuron id {}", neuron_id, node->get_cell().get_neuron_id());
+        }
+
         all_leaf_nodes = std::move(leaf_nodes);
     }
 
@@ -329,8 +339,6 @@ public:
 
         auto* res = root->insert(position, neuron_id, get_level_of_branch_nodes());
         RelearnException::check(res != nullptr, "Octree::insert: res was nullptr");
-
-        // LogFiles::print_message_rank(-1, "Inserted {:X} into the octree", reinterpret_cast<unsigned long long int>(res));
     }
 
     void print() {

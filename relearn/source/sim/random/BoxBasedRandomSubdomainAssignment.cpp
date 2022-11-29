@@ -88,7 +88,7 @@ BoxBasedRandomSubdomainAssignment::place_neurons_in_box(const box_size_type& off
         const box_size_type pos = pos_rnd + offset;
         const auto signal_type = signal_types[i];
 
-        nodes.emplace_back(pos, NeuronID{ false, i + first_id }, signal_type, "random");
+        nodes.emplace_back(pos, NeuronID{ false, i + first_id }, signal_type, 0);
     }
 
     return { nodes, expected_number_ex };

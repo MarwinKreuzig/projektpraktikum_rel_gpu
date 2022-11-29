@@ -16,6 +16,7 @@
 #include "sim/LoadedNeuron.h"
 #include "sim/SynapseLoader.h"
 #include "util/RelearnException.h"
+#include "neurons/LocalAreaTranslator.h"
 
 #include <filesystem>
 #include <functional>
@@ -155,18 +156,11 @@ public:
     }
 
     /**
-     * @brief Returns all area names of neurons in the local subdomains, indexed by the neuron id
-     * @return The all position of neurons in the local subdomains
+     * @brief Returns the area translator that translates between the local area id on the current mpi rank and its area name
+     * @return the local area translator for this mpi rank
      */
-    [[nodiscard]] std::vector<RelearnTypes::area_name> get_neuron_area_names_in_subdomains() const {
-        std::vector<std::string> areas{};
-        areas.reserve(loaded_neurons.size());
-
-        for (const auto& loaded_neuron : loaded_neurons) {
-            areas.push_back(loaded_neuron.area_name);
-        }
-
-        return areas;
+    [[nodiscard]] std::shared_ptr<LocalAreaTranslator> get_local_area_translator() const noexcept {
+        return local_area_translator;
     }
 
     /**
@@ -203,16 +197,37 @@ protected:
 
     void set_loaded_nodes(std::vector<LoadedNeuron>&& neurons) {
         loaded_neurons = std::move(neurons);
+
+        create_local_area_translator();
+    }
+
+    void set_area_id_to_area_name(const std::vector<RelearnTypes::area_name>& area_id_vs_area_name) {
+        RelearnException::check(!area_id_vs_area_name.empty(), "NeuronToSubdomainAssignment::set_area_id_to_area_name is empty");
+        this->area_id_to_area_name = area_id_vs_area_name;
     }
 
     std::shared_ptr<Partition> partition{};
 
     std::shared_ptr<SynapseLoader> synapse_loader{};
 
+    std::shared_ptr<LocalAreaTranslator> local_area_translator{};
+
     bool initialized{ false };
 
 private:
+    void create_local_area_translator() {
+        std::vector<RelearnTypes::area_id> neuron_id_to_area_id{};
+        neuron_id_to_area_id.reserve(loaded_neurons.size());
+
+        for (const auto& loaded_neuron : loaded_neurons) {
+            neuron_id_to_area_id.push_back(loaded_neuron.area_id);
+        }
+
+        local_area_translator = std::make_shared<LocalAreaTranslator>(area_id_to_area_name, neuron_id_to_area_id);
+    }
     std::vector<LoadedNeuron> loaded_neurons{};
+
+    std::vector<RelearnTypes::area_name> area_id_to_area_name{};
 
     double requested_ratio_excitatory_neurons{ 0.0 };
     number_neurons_type requested_number_neurons{ 0 };

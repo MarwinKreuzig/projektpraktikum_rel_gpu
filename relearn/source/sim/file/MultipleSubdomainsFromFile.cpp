@@ -16,9 +16,8 @@
 #include "mpi/MPIWrapper.h"
 #include "sim/file/MultipleFilesSynapseLoader.h"
 #include "structure/Partition.h"
-#include "util/Helper.h"
+#include "util/StringUtil.h"
 #include "util/RelearnException.h"
-
 
 #include <string>
 
@@ -26,10 +25,7 @@ MultipleSubdomainsFromFile::MultipleSubdomainsFromFile(const std::filesystem::pa
     std::optional<std::filesystem::path> path_to_synapses, std::shared_ptr<Partition> partition)
     : NeuronToSubdomainAssignment(partition) {
     RelearnException::check(partition->get_number_mpi_ranks() > 1, "MultipleSubdomainsFromFile::MultipleSubdomainsFromFile: There was only one MPI rank.");
-    const auto my_position_filename = "rank_" + Helper::format_int_with_leading_zeros(static_cast<int>(partition->get_my_mpi_rank()), 2) + "_positions.txt";
-    const auto& path_to_file = path_to_neurons / my_position_filename;
-
-    RelearnException::check(std::filesystem::exists(path_to_file), "MultipleSubdomainsFromFile::MultipleSubdomainsFromFile: position file {} does not exist.", path_to_file.string());
+    std::filesystem::path path_to_file = StringUtil::find_file_for_rank(path_to_neurons, partition->get_my_mpi_rank(), "rank_", "_positions.txt", 5);
 
     synapse_loader = std::make_shared<MultipleFilesSynapseLoader>(std::move(partition), std::move(path_to_synapses));
 
@@ -85,7 +81,8 @@ void MultipleSubdomainsFromFile::read_neurons_from_file(const std::filesystem::p
     RelearnTypes::box_size_type minimum{ min_x, min_y, min_z };
     RelearnTypes::box_size_type maximum{ max_x, max_y, max_z };
 
-    auto [nodes, additional_infos] = NeuronIO::read_neurons(path_to_neurons);
+    auto [nodes, area_id_vs_area_name, additional_infos] = NeuronIO::read_neurons(path_to_neurons);
+    set_area_id_to_area_name(area_id_vs_area_name);
     const auto& [_1, _2, loaded_ex_neurons, loaded_in_neurons] = additional_infos;
 
     // TODO(future): Let partition calculate the local portion and then check if all neurons are in it
