@@ -155,20 +155,20 @@ protected:
     std::vector<RelearnTypes::area_name> get_random_area_names_specific(size_t nr_areas) {
         std::vector<RelearnTypes::area_name> area_names{};
         for (int area_id = 0; area_id < nr_areas; area_id++) {
-            RelearnTypes::area_name name = "";
+            RelearnTypes::area_name name;
             do {
                 name = std::to_string(get_random_percentage());
-            } while (name == "" || std::find(area_names.begin(), area_names.end(), name) != area_names.end());
+            } while (name.empty() || std::find(area_names.begin(), area_names.end(), name) != area_names.end());
 
             area_names.emplace_back(name);
         }
         return std::move(area_names);
     }
 
-    std::vector<RelearnTypes::area_id> get_random_area_ids(int num_areas, int num_neurons) {
+    std::vector<RelearnTypes::area_id> get_random_area_ids(size_t num_areas, size_t num_neurons) {
         std::vector<RelearnTypes::area_id> area_ids{};
         for (const auto& neuron_id : NeuronID::range(num_neurons)) {
-            area_ids.emplace_back(get_random_integer(0, num_areas - 1));
+            area_ids.emplace_back(get_random_integer(static_cast<size_t>(0), num_areas - 1));
         }
         return std::move(area_ids);
     }
@@ -176,8 +176,8 @@ protected:
     static std::vector<RelearnTypes::area_name> get_neuron_id_vs_area_name(const std::vector<RelearnTypes::area_id>& neuron_id_vs_area_id, const std::vector<RelearnTypes::area_name>& area_id_vs_area_name) {
         std::vector<RelearnTypes::area_name> neuron_id_vs_area_name{};
 
-        for (auto i = 0; i < neuron_id_vs_area_id.size(); i++) {
-            neuron_id_vs_area_name.emplace_back(area_id_vs_area_name[neuron_id_vs_area_id[i]]);
+        for (auto i : neuron_id_vs_area_id) {
+            neuron_id_vs_area_name.emplace_back(area_id_vs_area_name[i]);
         }
         return std::move(neuron_id_vs_area_name);
     }
