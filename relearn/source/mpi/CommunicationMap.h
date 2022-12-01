@@ -193,12 +193,12 @@ public:
     /**
      * @brief Resized the buffer for the data packages for a specified MPI rank, inserts the requests for that rank if not yet present
      * @param mpi_rank The MPI rank
-     * @param size The number of elements the buffer should be able to hold
+     * @param size_for_rank The number of elements the buffer should be able to hold
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
      */
-    void resize(const int mpi_rank, const requests_size_type size) {
+    void resize(const int mpi_rank, const requests_size_type size_for_rank) {
         RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::resize: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
-        requests[mpi_rank].resize(size);
+        requests[mpi_rank].resize(size_for_rank);
     }
 
     /**
@@ -226,9 +226,9 @@ public:
     void resize(sizes_type sizes) {
         requests.clear();
 
-        for (const auto& [mpi_rank, size] : sizes) {
+        for (const auto& [mpi_rank, size_for_rank] : sizes) {
             RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "");
-            requests[mpi_rank].resize(size);
+            requests[mpi_rank].resize(size_for_rank);
         }
     }
 
