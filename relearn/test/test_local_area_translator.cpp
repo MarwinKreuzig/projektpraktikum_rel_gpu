@@ -40,7 +40,7 @@ TEST_F(LocalAreaTranslatorTest, simpleExceptionTest) {
 
     auto one_wrong_area_id = std::vector<RelearnTypes::area_id>{};
     std::copy(neuron_id_to_area_id.begin(), neuron_id_to_area_id.end(), std::back_inserter(one_wrong_area_id));
-    auto i1 = get_random_integer(size_t{ 0 }, one_wrong_area_id.size()) - 1;
+    auto i1 = get_random_integer(size_t{ 0 }, one_wrong_area_id.size() - 1);
     one_wrong_area_id[i1] = num_neurons;
 
     auto duplicated_area_name = std::vector<RelearnTypes::area_name>{};
