@@ -360,3 +360,5 @@ ASALocalRun/
 /relearn/build-wsl
 **/out
 /relearn/build-coverage
+/relearn/build-clang-tidy
+/relearn/build-cppcheck
