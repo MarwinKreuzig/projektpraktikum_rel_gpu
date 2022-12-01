@@ -140,7 +140,7 @@ public:
             }
         }
 
-        return std::move(area_ids);
+        return area_ids;
     }
 
     /**

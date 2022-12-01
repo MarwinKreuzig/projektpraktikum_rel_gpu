@@ -34,7 +34,7 @@ Simulation::Simulation(std::shared_ptr<Partition> partition)
     : partition(std::move(partition)) {
 
     monitors = std::make_shared<std::vector<NeuronMonitor>>();
-    area_monitors = std::make_shared<std::map<RelearnTypes::area_id, AreaMonitor>>();
+    area_monitors = std::make_shared<std::unordered_map<RelearnTypes::area_id, AreaMonitor>>();
 }
 
 void Simulation::register_neuron_monitor(const NeuronID& neuron_id) {

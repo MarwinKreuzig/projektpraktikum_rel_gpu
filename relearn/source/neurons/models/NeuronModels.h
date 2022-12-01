@@ -22,6 +22,7 @@
 #include "Types.h"
 
 #include <algorithm>
+#include <array>
 #include <memory>
 #include <span>
 #include <utility>
@@ -243,9 +244,8 @@ public:
 
             RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::disable_neurons: There is a too large id: {} vs {}", neuron_id, number_local_neurons);
             fired[local_neuron_id] = FiredStatus::Inactive;
-            fired_recorder.resize(number_fire_recorders, {});
             for (auto i = 0; i < number_fire_recorders; i++) {
-                fired_recorder[i][local_neuron_id] = 0U;
+                fired_recorder.at(i)[local_neuron_id] = 0U;
             }
         }
     }
@@ -290,9 +290,8 @@ protected:
         fired[local_neuron_id] = new_value;
 
         if (new_value == FiredStatus::Fired) {
-            fired_recorder.resize(number_fire_recorders, {});
             for (int i = 0; i < number_fire_recorders; i++) {
-                fired_recorder[i][local_neuron_id]++;
+                fired_recorder.at(i)[local_neuron_id]++;
             }
         }
     }
@@ -322,7 +321,7 @@ private:
 
     // Variables for each neuron where the array index denotes the local neuron ID
     std::vector<double> x{}; // The membrane potential (in equations usually v(t))
-    std::vector<std::vector<unsigned int>> fired_recorder{}; // How often the neurons have spiked
+    std::array<std::vector<unsigned int>, number_fire_recorders> fired_recorder{}; // How often the neurons have spiked
     std::vector<FiredStatus> fired{}; // If the neuron fired in the current update step
 
     std::unique_ptr<SynapticInputCalculator> input_calculator{};
