@@ -115,9 +115,9 @@ TEST_F(LocalAreaTranslatorTest, getterExceptionTest) {
 
     LocalAreaTranslator translator(area_id_to_area_name, neuron_id_to_area_id);
 
-    ASSERT_THROW(translator.get_area_name_for_neuron_id(num_neurons), RelearnException);
-    ASSERT_THROW(translator.get_area_id_for_neuron_id(num_neurons), RelearnException);
-    ASSERT_THROW(translator.get_area_name_for_area_id(num_areas), RelearnException);
-    ASSERT_THROW(translator.get_area_id_for_area_name(std::to_string(get_random_percentage())), RelearnException);
+    ASSERT_THROW(auto val = translator.get_area_name_for_neuron_id(num_neurons), RelearnException);
+    ASSERT_THROW(auto val = translator.get_area_id_for_neuron_id(num_neurons), RelearnException);
+    ASSERT_THROW(auto val = translator.get_area_name_for_area_id(num_areas), RelearnException);
+    ASSERT_THROW(auto val = translator.get_area_id_for_area_name(std::to_string(get_random_percentage())), RelearnException);
 }
 #pragma clang diagnostic pop
