@@ -45,7 +45,7 @@ TEST_F(LocalAreaTranslatorTest, simpleExceptionTest) {
 
     auto duplicated_area_name = std::vector<RelearnTypes::area_name>{};
     std::copy(area_id_to_area_name.begin(), area_id_to_area_name.end(), std::back_inserter(duplicated_area_name));
-    auto i2 = get_random_integer(size_t{ 0 }, duplicated_area_name.size()) - 1;
+    auto i2 = get_random_integer(size_t{ 0 }, duplicated_area_name.size() - 1);
     size_t i3;
     do {
         i3 = get_random_integer(size_t{ 0 }, duplicated_area_name.size() - 1);

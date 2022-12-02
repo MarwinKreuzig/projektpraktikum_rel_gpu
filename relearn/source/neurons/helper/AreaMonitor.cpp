@@ -131,7 +131,7 @@ const std::vector<std::vector<AreaMonitor::AreaConnection>>& AreaMonitor::get_ex
 void AreaMonitor::add_outgoing_connection(const AreaMonitor::AreaConnection& connection) {
     auto pair = std::make_pair(connection.from_rank, connection.from_area);
     if (connections.contains(pair)) {
-        auto& conn = connections.at(pair);
+        auto& conn = connections[pair];
         if (connection.signal_type == SignalType::Excitatory) {
             conn.den_ex += 1;
         } else {
