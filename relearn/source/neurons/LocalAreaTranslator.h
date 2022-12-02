@@ -155,7 +155,11 @@ public:
         return neuron_id_to_area_id;
     }
 
+    void neurons_created(size_t created_neurons) {
+        neuron_id_to_area_id.insert(neuron_id_to_area_id.end(), created_neurons, 0UL);
+    }
+
 private:
     const std::vector<RelearnTypes::area_name> area_id_to_area_name;
-    const std::vector<RelearnTypes::area_id> neuron_id_to_area_id;
+    std::vector<RelearnTypes::area_id> neuron_id_to_area_id;
 };

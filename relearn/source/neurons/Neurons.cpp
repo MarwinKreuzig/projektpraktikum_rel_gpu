@@ -14,6 +14,7 @@
 #include "io/LogFiles.h"
 #include "models/NeuronModels.h"
 #include "mpi/MPIWrapper.h"
+#include "neurons/LocalAreaTranslator.h"
 #include "neurons/NetworkGraph.h"
 #include "io/NeuronIO.h"
 #include "structure/Octree.h"
@@ -203,6 +204,7 @@ void Neurons::create_neurons(const number_neurons_type creation_count) {
     const auto current_size = number_neurons;
     const auto new_size = current_size + creation_count;
 
+    local_area_translator->neurons_created(creation_count);
     neuron_model->create_neurons(creation_count);
     calcium_calculator->create_neurons(creation_count);
     extra_info->create_neurons(creation_count);
