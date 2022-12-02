@@ -251,6 +251,20 @@ void NeuronIO::write_neurons(const std::vector<LoadedNeuron>& neurons, std::stri
         ss << "# Maximum y: " << max_y << '\n';
         ss << "# Maximum z: " << max_z << '\n';
         ss << "# <local id> <pos x> <pos y> <pos z> <area> <type>\n";
+
+        const auto number_local_subdomains = partition->get_number_local_subdomains();
+        const auto first_local_subdomain_index = partition->get_local_subdomain_id_start();
+        const auto last_local_subdomain_index = partition->get_local_subdomain_id_end();
+
+        ss << "# Local subdomain index start: " << first_local_subdomain_index << "\n";
+        ss << "# Local subdomain index end: " << last_local_subdomain_index << "\n";
+        ss << "# Number of local subdomains: " << number_local_subdomains << "\n";
+
+        for (auto local_subdomain_index = 0; local_subdomain_index < number_local_subdomains; local_subdomain_index++) {
+            const auto& [subdomain_bounding_box_min, subdomain_bounding_box_max] = partition->get_subdomain_boundaries(local_subdomain_index);
+            ss << "# Local subdomain " << local_subdomain_index << " boundaries (" << subdomain_bounding_box_min.get_x() << ", " << subdomain_bounding_box_min.get_y() << ", " << subdomain_bounding_box_min.get_z() << ") - (";
+            ss << subdomain_bounding_box_max.get_x() << ", " << subdomain_bounding_box_max.get_y() << ", " << subdomain_bounding_box_max.get_z() << ")\n";
+        }
     }
 
     for (const auto& neuron : neurons) {
@@ -277,7 +291,8 @@ void NeuronIO::write_area_names(std::stringstream& ss, const std::shared_ptr<Loc
 }
 
 void NeuronIO::write_neurons_componentwise(const std::vector<NeuronID>& ids, const std::vector<position_type>& positions,
-    const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::vector<SignalType>& signal_types, std::stringstream& ss, size_t total_number_neurons, const std::tuple<Vec3<double>, Vec3<double>>& simulation_box) {
+    const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::vector<SignalType>& signal_types, std::stringstream& ss, size_t total_number_neurons, const std::tuple<Vec3<double>, Vec3<double>>& simulation_box,
+    const std::vector<std::pair<Partition::box_size_type, Partition::box_size_type>>& local_subdomain_boundaries) {
 
     const auto size_ids = ids.size();
     const auto size_positions = positions.size();
@@ -307,6 +322,17 @@ void NeuronIO::write_neurons_componentwise(const std::vector<NeuronID>& ids, con
         ss << "# <local id> <pos x> <pos y> <pos z> <area> <type>\n";
     }
 
+    if (!local_subdomain_boundaries.empty()) {
+        const auto number_local_subdomains = local_subdomain_boundaries.size();
+        ss << "# Number of local subdomains: " << number_local_subdomains << "\n";
+
+        for (auto local_subdomain_index = 0; local_subdomain_index < number_local_subdomains; local_subdomain_index++) {
+            const auto& [subdomain_bounding_box_min, subdomain_bounding_box_max] = local_subdomain_boundaries[local_subdomain_index];
+            ss << "# Local subdomain " << local_subdomain_index << " boundaries (" << subdomain_bounding_box_min.get_x() << ", " << subdomain_bounding_box_min.get_y() << ", " << subdomain_bounding_box_min.get_z() << ") - (";
+            ss << subdomain_bounding_box_max.get_x() << ", " << subdomain_bounding_box_max.get_y() << ", " << subdomain_bounding_box_max.get_z() << ")\n";
+        }
+    }
+
     for (const auto& neuron_id : ids) {
         RelearnException::check(neuron_id.get_neuron_id() < ids.size(), "NeuronIO::write_neurons_componentwise: Neuron id {} is too large", neuron_id);
         const auto& [x, y, z] = positions[neuron_id.get_neuron_id()];
@@ -319,7 +345,7 @@ void NeuronIO::write_neurons_componentwise(const std::vector<NeuronID>& ids, con
 void NeuronIO::write_neurons_componentwise(const std::vector<NeuronID>& ids, const std::vector<position_type>& positions,
     const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::vector<SignalType>& signal_types, std::filesystem::path& file_path) {
     std::stringstream ss;
-    write_neurons_componentwise(ids, positions, local_area_translator, signal_types, ss, 0, std::make_tuple(RelearnTypes::position_type({ 0.0, 0.0, 0.0 }), RelearnTypes::position_type({ 0.0, 0.0, 0.0 })));
+    write_neurons_componentwise(ids, positions, local_area_translator, signal_types, ss, 0, std::make_tuple(RelearnTypes::position_type({ 0.0, 0.0, 0.0 }), RelearnTypes::position_type({ 0.0, 0.0, 0.0 })), {});
     std::ofstream of(file_path, std::ios::binary | std::ios::out);
 
     const auto is_good = of.good();

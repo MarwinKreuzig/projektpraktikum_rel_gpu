@@ -909,7 +909,7 @@ void Neurons::print_network_graph_to_log_file(const std::string& prefix) const {
 
 void Neurons::print_positions_to_log_file() {
     std::stringstream ss;
-    NeuronIO::write_neurons_componentwise(NeuronID::range(number_neurons), extra_info->get_positions(), local_area_translator, axons->get_signal_types(), ss, partition->get_total_number_neurons(), partition->get_simulation_box_size());
+    NeuronIO::write_neurons_componentwise(NeuronID::range(number_neurons), extra_info->get_positions(), local_area_translator, axons->get_signal_types(), ss, partition->get_total_number_neurons(), partition->get_simulation_box_size(), partition->get_all_local_subdomain_boundaries());
     LogFiles::write_to_file(LogFiles::EventType::Positions, false, ss.str());
 }
 

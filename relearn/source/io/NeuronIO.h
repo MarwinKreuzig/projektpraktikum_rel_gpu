@@ -13,6 +13,7 @@
 #include "Types.h"
 
 #include "sim/LoadedNeuron.h"
+#include "structure/Partition.h"
 
 #include <filesystem>
 #include <optional>
@@ -21,7 +22,6 @@
 #include <vector>
 
 class LocalAreaTranslator;
-class Partition;
 
 /**
  * This class provides a static interface to load/store neurons and synapses from/to files,
@@ -114,10 +114,11 @@ public:
      * @param ss Stringstream to which is written
      * @param total_number_neurons Number of all neurons in the simulation
      * @param simulation_box Bounding box of the entire simulation
+     * @param local_subdomain_boundaries List of bounding boxes (as pair of bounding box min and bounding box max) of the local subdomains
      * @exception Throws a RelearnException if the vectors don't all have the same length, or opening the file failed
      */
     static void write_neurons_componentwise(const std::vector<NeuronID>& ids, const std::vector<position_type>& positions,
-        const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::vector<SignalType>& signal_types, std::stringstream& ss, size_t total_number_neurons, const std::tuple<Vec3<double>, Vec3<double>>& simulation_box);
+        const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::vector<SignalType>& signal_types, std::stringstream& ss, size_t total_number_neurons, const std::tuple<Vec3<double>, Vec3<double>>& simulation_box, const std::vector<std::pair<Partition::box_size_type, Partition::box_size_type>>& local_subdomain_boundaries);
 
     /**
      * @brief Writes all neurons to the file. The IDs must start at 0 and be ascending. All vectors must have the same length.
