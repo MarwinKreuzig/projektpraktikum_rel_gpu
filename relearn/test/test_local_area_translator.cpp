@@ -33,7 +33,7 @@ TEST_F(LocalAreaTranslatorTest, simpleTest) {
 }
 
 TEST_F(LocalAreaTranslatorTest, simpleExceptionTest) {
-    const auto num_neurons = get_random_number_neurons();
+    const auto num_neurons = get_random_number_neurons() + 10;
     auto too_many_area_id_to_area_name = get_random_area_names_specific(num_neurons + 1);
     auto neuron_id_to_area_id = get_random_area_ids(num_neurons, num_neurons);
     auto area_id_to_area_name = get_random_area_names_specific(num_neurons);
