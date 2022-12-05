@@ -820,7 +820,6 @@ int main(int argc, char** argv) {
     MPIWrapper::lock_window(my_rank, MPI_Locktype::Exclusive);
 
     sim.initialize();
-    sim.save_network_graph(0);
 
     if (static_cast<bool>(*flag_monitor_all)) {
         const auto number_local_neurons = partition->get_number_local_neurons();

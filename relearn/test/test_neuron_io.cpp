@@ -934,7 +934,7 @@ TEST_F(IOTest, testReadOutSynapses) {
 
 TEST_F(IOTest, testWriteInSynapsesFileNotFound) {
     std::filesystem::path path{ "" };
-    ASSERT_THROW(NeuronIO::write_in_synapses({}, {}, {}, {}, 0, path);, RelearnException);
+    ASSERT_THROW(NeuronIO::write_in_synapses({}, {}, {}, {}, 0, 0, path);, RelearnException);
 }
 
 TEST_F(IOTest, testWriteInSynapses) {
@@ -977,7 +977,7 @@ TEST_F(IOTest, testWriteInSynapses) {
         }
     }
 
-    NeuronIO::write_in_synapses(preliminary_local_synapses_static, preliminary_distant_synapses_static, preliminary_local_synapses_plastic, preliminary_distant_synapses_plastic, my_rank, path);
+    NeuronIO::write_in_synapses(preliminary_local_synapses_static, preliminary_distant_synapses_static, preliminary_local_synapses_plastic, preliminary_distant_synapses_plastic, my_rank, number_neurons, path);
 
     auto [synapses_static, synapses_plastic] = NeuronIO::read_in_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
     auto [read_local_synapses_plastic, read_distant_synapses_plastic] = synapses_plastic;
@@ -993,6 +993,8 @@ TEST_F(IOTest, testWriteInSynapses) {
     std::ranges::sort(read_local_synapses_plastic);
     std::ranges::sort(read_distant_synapses_plastic);
 
+    ASSERT_EQ(preliminary_local_synapses_static.size(), read_local_synapses_static.size());
+
     ASSERT_EQ(preliminary_local_synapses_static, read_local_synapses_static);
     ASSERT_EQ(preliminary_distant_synapses_static, read_distant_synapses_static);
     ASSERT_EQ(preliminary_local_synapses_plastic, read_local_synapses_plastic);
@@ -1001,7 +1003,7 @@ TEST_F(IOTest, testWriteInSynapses) {
 
 TEST_F(IOTest, testWriteOutSynapsesFileNotFound) {
     std::filesystem::path path{ "" };
-    ASSERT_THROW(NeuronIO::write_out_synapses({}, {}, {}, {}, 0, path);, RelearnException);
+    ASSERT_THROW(NeuronIO::write_out_synapses({}, {}, {}, {}, 0, 0, path);, RelearnException);
 }
 
 TEST_F(IOTest, testWriteOutSynapses) {
@@ -1044,7 +1046,7 @@ TEST_F(IOTest, testWriteOutSynapses) {
         }
     }
 
-    NeuronIO::write_out_synapses(preliminary_local_synapses_static, preliminary_distant_synapses_static, preliminary_local_synapses_plastic, preliminary_distant_synapses_plastic, my_rank, path);
+    NeuronIO::write_out_synapses(preliminary_local_synapses_static, preliminary_distant_synapses_static, preliminary_local_synapses_plastic, preliminary_distant_synapses_plastic, my_rank, number_neurons, path);
 
     auto [synapses_static, synapses_plastic] = NeuronIO::read_out_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
     auto [read_local_synapses_plastic, read_distant_synapses_plastic] = synapses_plastic;

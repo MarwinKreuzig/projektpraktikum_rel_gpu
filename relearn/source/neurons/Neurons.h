@@ -353,13 +353,9 @@ public:
     /**
      * @brief Prints the network graph to LogFiles::EventType::Network. Stores current step in file name and log
      * @param step The current simulation step
+     * @param with_prefix If the file name should contain the current step as prefix
      */
-    void print_network_graph_to_log_file(step_type step) const;
-
-    /**
-     * @brief Prints the final network graph to LogFiles::EventType::Network
-     */
-    void print_network_graph_to_log_file() const;
+    void print_network_graph_to_log_file(step_type step, bool with_prefix) const;
 
     /**
      * @brief Prints the neuron positions to LogFiles::EventType::Positions
@@ -410,6 +406,14 @@ public:
      */
     [[nodiscard]] StatisticalMeasures get_statistics(NeuronAttribute attribute) const;
 
+    /**
+     * @brief Checks if the weights of the out-going connections match their signal type
+     * @param network_graph Network graph with all connections of the current mpi rank
+     * @param signal_types Vector of SignalTypes. Neuron i has signal_type[i]
+     * @throws RelearnException If signal_type does not match weight
+     */
+    static void check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, const std::vector<SignalType>& signal_types);
+
 private:
     [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, int root, const std::vector<UpdateStatus>& disable_flags) const;
 
@@ -434,8 +438,6 @@ private:
     [[nodiscard]] size_t delete_synapses_commit_deletions(const CommunicationMap<SynapseDeletionRequest>& list);
 
     [[nodiscard]] size_t create_synapses();
-
-    void print_network_graph_to_log_file(const std::string& prefix) const;
 
     number_neurons_type number_neurons = 0;
 

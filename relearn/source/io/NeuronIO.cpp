@@ -11,6 +11,7 @@
 #include "NeuronIO.h"
 
 #include "neurons/LocalAreaTranslator.h"
+#include "neurons/NetworkGraph.h"
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
 
@@ -471,55 +472,6 @@ std::pair<std::tuple<LocalSynapses, DistantInSynapses>, std::tuple<LocalSynapses
     return { { local_in_synapses_static, distant_in_synapses_static }, { local_in_synapses_plastic, distant_in_synapses_plastic } };
 }
 
-void NeuronIO::write_in_synapses(const LocalSynapses& local_in_synapses_static, const DistantInSynapses& distant_in_synapses_static, const LocalSynapses& local_in_synapses_plastic, const DistantInSynapses& distant_in_synapses_plastic, int my_rank, const std::filesystem::path& file_path) {
-    std::ofstream file_synapses(file_path, std::ios::binary | std::ios::out);
-
-    const auto is_good = file_synapses.good();
-    const auto is_bad = file_synapses.bad();
-
-    RelearnException::check(is_good && !is_bad, "NeuronIO::write_in_synapses: The ofstream failed to open");
-
-    file_synapses << "# Number local in-sypases static: " << local_in_synapses_static.size() << '\n';
-    file_synapses << "# Number distant in-sypases static: " << distant_in_synapses_static.size() << '\n';
-    file_synapses << "# Number local in-sypases plastic: " << local_in_synapses_plastic.size() << '\n';
-    file_synapses << "# Number distant in-sypases plastic: " << distant_in_synapses_plastic.size() << '\n';
-    file_synapses << "# <target rank> <target neuron id>\t<source rank> <source neuron id>\t<weight>\n";
-
-    for (const auto& [target_id, source_id, weight] : local_in_synapses_static) {
-        const auto target_neuron_id = target_id.get_neuron_id();
-        const auto source_neuron_id = source_id.get_neuron_id();
-
-        file_synapses << my_rank << ' ' << (target_neuron_id + 1) << '\t' << my_rank << ' ' << (source_neuron_id + 1) << '\t' << weight << '\t' << '0' << '\n';
-    }
-    for (const auto& [target_id, source_id, weight] : local_in_synapses_plastic) {
-        const auto target_neuron_id = target_id.get_neuron_id();
-        const auto source_neuron_id = source_id.get_neuron_id();
-
-        file_synapses << my_rank << ' ' << (target_neuron_id + 1) << '\t' << my_rank << ' ' << (source_neuron_id + 1) << '\t' << weight << '\t' << '1' << '\n';
-    }
-
-    for (const auto& [target_id, source_rni, weight] : distant_in_synapses_static) {
-        const auto target_neuron_id = target_id.get_neuron_id();
-
-        const auto& [source_rank, source_id] = source_rni;
-        const auto source_neuron_id = source_id.get_neuron_id();
-
-        RelearnException::check(source_rank != my_rank, "NeuronIO::write_distant_in_synapses: source rank was equal to my_rank: {}", my_rank);
-
-        file_synapses << my_rank << ' ' << (target_neuron_id + 1) << '\t' << source_rank << ' ' << (source_neuron_id + 1) << '\t' << weight << '\t' << '0' << '\n';
-    }
-    for (const auto& [target_id, source_rni, weight] : distant_in_synapses_plastic) {
-        const auto target_neuron_id = target_id.get_neuron_id();
-
-        const auto& [source_rank, source_id] = source_rni;
-        const auto source_neuron_id = source_id.get_neuron_id();
-
-        RelearnException::check(source_rank != my_rank, "NeuronIO::write_distant_in_synapses: source rank was equal to my_rank: {}", my_rank);
-
-        file_synapses << my_rank << ' ' << (target_neuron_id + 1) << '\t' << source_rank << ' ' << (source_neuron_id + 1) << '\t' << weight << '\t' << '1' << '\n';
-    }
-}
-
 std::pair<std::tuple<LocalSynapses, DistantOutSynapses>, std::tuple<LocalSynapses, DistantOutSynapses>> NeuronIO::read_out_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons, int my_rank, int number_mpi_ranks) {
     LocalSynapses local_out_synapses_static{};
     DistantOutSynapses distant_out_synapses_static{};
@@ -586,51 +538,171 @@ std::pair<std::tuple<LocalSynapses, DistantOutSynapses>, std::tuple<LocalSynapse
     return { { local_out_synapses_static, distant_out_synapses_static }, { local_out_synapses_plastic, distant_out_synapses_plastic } };
 }
 
-void NeuronIO::write_out_synapses(const LocalSynapses& local_out_synapses_static, const DistantOutSynapses& distant_out_synapses_static, const LocalSynapses& local_out_synapses_plastic, const DistantOutSynapses& distant_out_synapses_plastic, int my_rank, const std::filesystem::path& file_path) {
-    std::ofstream file_synapses(file_path, std::ios::binary | std::ios::out);
+// void NeuronIO::write_out_synapses(const LocalSynapses& local_out_synapses_static, const DistantOutSynapses& distant_out_synapses_static, const LocalSynapses& local_out_synapses_plastic, const DistantOutSynapses& distant_out_synapses_plastic, int my_rank, const std::filesystem::path& file_path) {
+//     std::stringstream ss;
+//     write_out_synapses(local_out_synapses_static, distant_out_synapses_static, local_out_synapses_plastic, distant_out_synapses_plastic, my_rank, ss);
+//     std::ofstream of(file_path, std::ios::binary | std::ios::out);
+//
+//     const auto is_good = of.good();
+//     const auto is_bad = of.bad();
+//
+//     RelearnException::check(is_good && !is_bad, "NeuronIO::write_neurons_to_file: The ofstream failed to open");
+//
+//     of << ss.str();
+//     of.close();
+// }
 
-    const auto is_good = file_synapses.good();
-    const auto is_bad = file_synapses.bad();
+void NeuronIO::write_out_synapses(const NetworkGraph::NeuronLocalOutNeighborhood& local_out_edges_static, const NetworkGraph::NeuronDistantOutNeighborhood& distant_out_edges_static, const NetworkGraph::NeuronLocalOutNeighborhood& local_out_edges_plastic, const NetworkGraph::NeuronDistantOutNeighborhood& distant_out_edges_plastic, const int my_rank, const uint64_t mpi_ranks, const RelearnTypes::number_neurons_type number_local_neurons, const RelearnTypes::number_neurons_type number_total_neurons, std::stringstream& ss, const size_t step) {
+    const auto is_good = ss.good();
+    const auto is_bad = ss.bad();
 
     RelearnException::check(is_good && !is_bad, "NeuronIO::write_distant_out_synapses: The ofstream failed to open");
 
-    file_synapses << "# Number local out-sypases static: " << local_out_synapses_static.size() << '\n';
-    file_synapses << "# Number distant out-sypases static: " << distant_out_synapses_static.size() << '\n';
-    file_synapses << "# Number local out-sypases plastic: " << local_out_synapses_plastic.size() << '\n';
-    file_synapses << "# Number distant out-sypases plastic: " << distant_out_synapses_plastic.size() << '\n';
-    file_synapses << "# <target rank> <target neuron id>\t<source rank> <source neuron id>\t<weight>\n";
+    ss << "# Total number neurons: " << number_total_neurons << '\n';
+    ss << "# Local number neurons: " << number_local_neurons << '\n';
+    ss << "# Number MPI ranks: " << mpi_ranks << '\n';
+    ss << "# Current simulation step: " << step << '\n';
+    ss << "# <target rank> <target neuron id>\t<source rank> <source neuron id>\t<weight>\t<plastic>\n";
+
+    for (const auto& source_id : NeuronID::range(number_local_neurons)) {
+        const auto& source_local_id = source_id.get_neuron_id();
+
+        for (const auto& [target_id, weight] : local_out_edges_static[source_local_id]) {
+            const auto& target_local_id = target_id.get_neuron_id();
+
+            ss << my_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << '0' << '\n';
+        }
+
+        for (const auto& [target_neuron, weight] : distant_out_edges_static[source_local_id]) {
+            const auto& [target_rank, target_id] = target_neuron;
+            const auto& target_local_id = target_id.get_neuron_id();
+
+            RelearnException::check(target_rank != my_rank, "NeuronIO::write_distant_out_synapses: target rank was equal to my_rank: {}", my_rank);
+            ss << target_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << '0' << '\n';
+        }
+
+        for (const auto& [target_id, weight] : local_out_edges_plastic[source_local_id]) {
+            const auto& target_local_id = target_id.get_neuron_id();
+
+            ss << my_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << '1' << '\n';
+        }
+
+        for (const auto& [target_neuron, weight] : distant_out_edges_plastic[source_local_id]) {
+            const auto& [target_rank, target_id] = target_neuron;
+            const auto& target_local_id = target_id.get_neuron_id();
+
+            RelearnException::check(target_rank != my_rank, "NeuronIO::write_distant_out_synapses: target rank was equal to my_rank: {}", my_rank);
+            ss << target_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << '1' << '\n';
+        }
+    }
+}
+
+void NeuronIO::write_in_synapses(const NetworkGraph::NeuronLocalInNeighborhood& local_in_edges_static, const NetworkGraph::NeuronDistantInNeighborhood& distant_in_edges_static, const NetworkGraph::NeuronLocalInNeighborhood& local_in_edges_plastic, const NetworkGraph::NeuronDistantInNeighborhood& distant_in_edges_plastic, const int my_rank, const uint64_t mpi_ranks, const RelearnTypes::number_neurons_type number_local_neurons, const RelearnTypes::number_neurons_type number_total_neurons, std::stringstream& ss, const size_t step) {
+    const auto is_good = ss.good();
+    const auto is_bad = ss.bad();
+
+    RelearnException::check(is_good && !is_bad, "NeuronIO::write_distant_out_synapses: The ofstream failed to open");
+
+    ss << "# Total number neurons: " << number_total_neurons << '\n';
+    ss << "# Local number neurons: " << number_local_neurons << '\n';
+    ss << "# Number MPI ranks: " << mpi_ranks << '\n';
+    ss << "# Current simulation step: " << step << '\n';
+    ss << "# <target rank> <target neuron id>\t<source rank> <source neuron id>\t<weight>\t<plastic>\n";
+
+    for (const auto& target_id : NeuronID::range(number_local_neurons)) {
+        const auto& target_local_id = target_id.get_neuron_id();
+
+        for (const auto& [source_id, weight] : local_in_edges_static[target_local_id]) {
+            const auto& source_local_id = source_id.get_neuron_id();
+
+            ss << my_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << '0' << '\n';
+        }
+
+        for (const auto& [source_neuron, weight] : distant_in_edges_static[target_local_id]) {
+            const auto& [source_rank, source_id] = source_neuron;
+            const auto& source_local_id = source_id.get_neuron_id();
+
+            RelearnException::check(source_rank != my_rank, "NeuronIO::write_distant_out_synapses: target rank was equal to my_rank: {}", my_rank);
+            ss << my_rank << ' ' << (target_local_id + 1) << '\t' << source_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << '0' << '\n';
+        }
+
+        for (const auto& [source_id, weight] : local_in_edges_plastic[target_local_id]) {
+            const auto& source_local_id = source_id.get_neuron_id();
+
+            ss << my_rank << ' ' << (target_local_id + 1) << '\t' << my_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << '1' << '\n';
+        }
+
+        for (const auto& [source_neuron, weight] : distant_in_edges_plastic[target_local_id]) {
+            const auto& [source_rank, source_id] = source_neuron;
+            const auto& source_local_id = source_id.get_neuron_id();
+
+            RelearnException::check(source_rank != my_rank, "NeuronIO::write_distant_out_synapses: target rank was equal to my_rank: {}", my_rank);
+            ss << my_rank << ' ' << (target_local_id + 1) << '\t' << source_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << '1' << '\n';
+        }
+    }
+}
+void NeuronIO::write_out_synapses(const LocalSynapses& local_out_synapses_static, const DistantOutSynapses& distant_out_synapses_static, const LocalSynapses& local_out_synapses_plastic, const DistantOutSynapses& distant_out_synapses_plastic, int my_rank, RelearnTypes::number_neurons_type number_neurons, const std::filesystem::path& file_path) {
+    NetworkGraph::NeuronLocalOutNeighborhood local_neighborhood_static{};
+    local_neighborhood_static.resize(number_neurons);
+    NetworkGraph::NeuronDistantOutNeighborhood distant_neighborhood_static{};
+    distant_neighborhood_static.resize(number_neurons);
+    NetworkGraph::NeuronLocalOutNeighborhood local_neighborhood_plastic{};
+    local_neighborhood_plastic.resize(number_neurons);
+    NetworkGraph::NeuronDistantOutNeighborhood distant_neighborhood_plastic{};
+    distant_neighborhood_plastic.resize(number_neurons);
 
     for (const auto& [target_id, source_id, weight] : local_out_synapses_static) {
-        const auto target_neuron_id = target_id.get_neuron_id();
-        const auto source_neuron_id = source_id.get_neuron_id();
-
-        file_synapses << my_rank << ' ' << (target_neuron_id + 1) << '\t' << my_rank << ' ' << (source_neuron_id + 1) << '\t' << weight << '\t' << '0' << '\n';
+        local_neighborhood_static[source_id.get_neuron_id()].emplace_back(std::make_pair(target_id.get_neuron_id(), weight));
     }
     for (const auto& [target_id, source_id, weight] : local_out_synapses_plastic) {
-        const auto target_neuron_id = target_id.get_neuron_id();
-        const auto source_neuron_id = source_id.get_neuron_id();
-
-        file_synapses << my_rank << ' ' << (target_neuron_id + 1) << '\t' << my_rank << ' ' << (source_neuron_id + 1) << '\t' << weight << '\t' << '1' << '\n';
+        local_neighborhood_plastic[source_id.get_neuron_id()].emplace_back(std::make_pair(target_id.get_neuron_id(), weight));
+    }
+    for (const auto& [target_id, source_id, weight] : distant_out_synapses_static) {
+        distant_neighborhood_static[source_id.get_neuron_id()].emplace_back(std::make_pair(target_id, weight));
+    }
+    for (const auto& [target_id, source_id, weight] : distant_out_synapses_plastic) {
+        distant_neighborhood_plastic[source_id.get_neuron_id()].emplace_back(std::make_pair(target_id, weight));
     }
 
-    for (const auto& [target_rni, source_id, weight] : distant_out_synapses_static) {
-        const auto& [target_rank, target_id] = target_rni;
-        const auto target_neuron_id = target_id.get_neuron_id();
+    std::stringstream ss{};
+    write_out_synapses(local_neighborhood_static, distant_neighborhood_static, local_neighborhood_plastic, distant_neighborhood_plastic, my_rank, 1, number_neurons, number_neurons, ss, 0);
+    std::ofstream of(file_path, std::ios::binary | std::ios::out);
+    const auto is_good = of.good();
+    const auto is_bad = of.bad();
+    RelearnException::check(is_good && !is_bad, "NeuronIO::write_neurons_to_file: The ofstream failed to open");
+    of << ss.str();
+    of.close();
+}
 
-        const auto source_neuron_id = source_id.get_neuron_id();
+void NeuronIO::write_in_synapses(const LocalSynapses& local_in_synapses_static, const DistantInSynapses& distant_in_synapses_static, const LocalSynapses& local_in_synapses_plastic, const DistantInSynapses& distant_in_synapses_plastic, int my_rank, RelearnTypes::number_neurons_type number_neurons, const std::filesystem::path& file_path) {
+    NetworkGraph::NeuronLocalInNeighborhood local_neighborhood_static{};
+    local_neighborhood_static.resize(number_neurons);
+    NetworkGraph::NeuronDistantInNeighborhood distant_neighborhood_static{};
+    distant_neighborhood_static.resize(number_neurons);
+    NetworkGraph::NeuronLocalInNeighborhood local_neighborhood_plastic{};
+    local_neighborhood_plastic.resize(number_neurons);
+    NetworkGraph::NeuronDistantInNeighborhood distant_neighborhood_plastic{};
+    distant_neighborhood_plastic.resize(number_neurons);
 
-        RelearnException::check(target_rank != my_rank, "NeuronIO::write_distant_out_synapses: target rank was equal to my_rank: {}", my_rank);
-
-        file_synapses << target_rank << ' ' << (target_neuron_id + 1) << '\t' << my_rank << ' ' << (source_neuron_id + 1) << '\t' << weight << '\t' << '0' << '\n';
+    for (const auto& [target_id, source_id, weight] : local_in_synapses_static) {
+        local_neighborhood_static[target_id.get_neuron_id()].emplace_back(std::make_pair(source_id.get_neuron_id(), weight));
     }
-    for (const auto& [target_rni, source_id, weight] : distant_out_synapses_plastic) {
-        const auto& [target_rank, target_id] = target_rni;
-        const auto target_neuron_id = target_id.get_neuron_id();
-
-        const auto source_neuron_id = source_id.get_neuron_id();
-
-        RelearnException::check(target_rank != my_rank, "NeuronIO::write_distant_out_synapses: target rank was equal to my_rank: {}", my_rank);
-
-        file_synapses << target_rank << ' ' << (target_neuron_id + 1) << '\t' << my_rank << ' ' << (source_neuron_id + 1) << '\t' << weight << '\t' << '1' << '\n';
+    for (const auto& [target_id, source_id, weight] : local_in_synapses_plastic) {
+        local_neighborhood_plastic[target_id.get_neuron_id()].emplace_back(std::make_pair(source_id.get_neuron_id(), weight));
     }
+    for (const auto& [target_id, source_id, weight] : distant_in_synapses_static) {
+        distant_neighborhood_static[target_id.get_neuron_id()].emplace_back(std::make_pair(source_id, weight));
+    }
+    for (const auto& [target_id, source_id, weight] : distant_in_synapses_plastic) {
+        distant_neighborhood_plastic[target_id.get_neuron_id()].emplace_back(std::make_pair(source_id, weight));
+    }
+
+    std::stringstream ss{};
+    write_in_synapses(local_neighborhood_static, distant_neighborhood_static, local_neighborhood_plastic, distant_neighborhood_plastic, my_rank, 1, number_neurons, number_neurons, ss, 0);
+    std::ofstream of(file_path, std::ios::binary | std::ios::out);
+    const auto is_good = of.good();
+    const auto is_bad = of.bad();
+    RelearnException::check(is_good && !is_bad, "NeuronIO::write_neurons_to_file: The ofstream failed to open");
+    of << ss.str();
+    of.close();
 }

@@ -80,6 +80,19 @@ void Neurons::init_synaptic_elements() {
         RelearnException::check(dendrites_inh_cnts[local_id] >= dendrites_inh->get_connected_elements()[local_id], "Error is with: %d", local_id);
         RelearnException::check(dendrites_exc_cnts[local_id] >= dendrites_exc->get_connected_elements()[local_id], "Error is with: %d", local_id);
     }
+
+    check_signal_types(network_graph_plastic, axons->get_signal_types());
+}
+
+void Neurons::check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, const std::vector<SignalType>& signal_types) {
+    for (const auto& neuron_id : NeuronID::range(signal_types.size())) {
+        const auto& signal_type = signal_types[neuron_id.get_neuron_id()];
+        const auto& out_edges = network_graph->get_all_out_edges(neuron_id);
+        for (const auto& [tgt_rni, weight] : out_edges) {
+            RelearnException::check(SignalType::Excitatory == signal_type && weight > 0 || SignalType::Inhibitory == signal_type && weight < 0, "Neuron has outgoing connections not matching its signal type. {} -> {} {} {}",
+                neuron_id, tgt_rni, signal_type, weight);
+        }
+    }
 }
 
 Neurons::number_neurons_type Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
@@ -874,36 +887,19 @@ void Neurons::print_calcium_statistics_to_essentials() {
         calcium_statistics.max);
 }
 
-void Neurons::print_network_graph_to_log_file(const step_type step) const {
-    print_network_graph_to_log_file("step_" + std::to_string(step) + "_");
-}
-
-void Neurons::print_network_graph_to_log_file() const {
-    print_network_graph_to_log_file("");
-}
-
-void Neurons::print_network_graph_to_log_file(const std::string& prefix) const {
+void Neurons::print_network_graph_to_log_file(const step_type step, bool with_prefix) const {
+    std::string prefix = "";
+    if (with_prefix) {
+        prefix = "step_" + std::to_string(step) + "_";
+    }
     LogFiles::save_and_open_new(LogFiles::EventType::InNetwork, prefix + "in_network", "network/");
     LogFiles::save_and_open_new(LogFiles::EventType::OutNetwork, prefix + "out_network", "network/");
 
     std::stringstream ss_in_network{};
-
-    ss_in_network << "# Total number neurons: " << partition->get_total_number_neurons() << '\n';
-    ss_in_network << "# Local number neurons: " << partition->get_number_local_neurons() << '\n';
-    ss_in_network << "# Number MPI ranks: " << partition->get_number_mpi_ranks() << '\n';
-    ss_in_network << "# Current simulation step: " << prefix << '\n';
-    ss_in_network << "# <target_rank> <target_id>\t<source_rank> <source_id>\t<weight>\t<plastic> \n";
-
     std::stringstream ss_out_network{};
 
-    ss_out_network << "# Total number neurons: " << partition->get_total_number_neurons() << '\n';
-    ss_out_network << "# Local number neurons: " << partition->get_number_local_neurons() << '\n';
-    ss_out_network << "# Number MPI ranks: " << partition->get_number_mpi_ranks() << '\n';
-    ss_out_network << "# Current simulation step: " << prefix << '\n';
-    ss_out_network << "# <target_rank> <target_id>\t<source_rank> <source_id>\t<weight>\t<plastic> \n";
-
-    network_graph_plastic->print_with_ranks(ss_out_network, ss_in_network, true);
-    network_graph_static->print_with_ranks(ss_out_network, ss_in_network, false);
+    NeuronIO::write_out_synapses(network_graph_static->get_all_local_out_edges(), network_graph_static->get_all_distant_out_edges(), network_graph_plastic->get_all_local_out_edges(), network_graph_plastic->get_all_distant_out_edges(), MPIWrapper::get_my_rank(), partition->get_number_mpi_ranks(), partition->get_number_local_neurons(), partition->get_total_number_neurons(), ss_out_network, step);
+    NeuronIO::write_in_synapses(network_graph_static->get_all_local_in_edges(), network_graph_static->get_all_distant_in_edges(), network_graph_plastic->get_all_local_in_edges(), network_graph_plastic->get_all_distant_in_edges(), MPIWrapper::get_my_rank(), partition->get_number_mpi_ranks(), partition->get_number_local_neurons(), partition->get_total_number_neurons(), ss_in_network, step);
 
     LogFiles::write_to_file(LogFiles::EventType::InNetwork, false, ss_in_network.str());
     LogFiles::write_to_file(LogFiles::EventType::OutNetwork, false, ss_out_network.str());

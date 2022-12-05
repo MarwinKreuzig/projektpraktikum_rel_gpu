@@ -265,6 +265,14 @@ protected:
         return NeuronID{ uid(mt) };
     }
 
+    NeuronID get_random_neuron_id(size_t number_neurons, NeuronID except) {
+        NeuronID nid;
+        do {
+            nid = get_random_neuron_id(number_neurons);
+        } while (nid == except);
+        return nid;
+    }
+
     int get_random_synapse_weight() {
         int weight = uid_synapse_weight(mt);
 

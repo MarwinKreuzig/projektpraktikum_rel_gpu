@@ -226,12 +226,6 @@ public:
      */
     void snapshot_monitors();
 
-    /**
-     * @brief Prints the current network graph with the attached number of steps to the file
-     * @param current_steps The current number of steps that will appear in the file name
-     */
-    void save_network_graph(step_type current_steps);
-
     const std::shared_ptr<std::unordered_map<RelearnTypes::area_id, AreaMonitor>>& get_area_monitors() const noexcept {
         return area_monitors;
     }

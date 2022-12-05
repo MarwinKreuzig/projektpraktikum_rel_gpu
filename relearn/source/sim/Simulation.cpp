@@ -372,7 +372,7 @@ void Simulation::simulate(const step_type number_steps) {
         }
 
         if (Config::network_log_step > 0 && step % Config::network_log_step == 0) {
-            neurons->print_network_graph_to_log_file(step);
+            neurons->print_network_graph_to_log_file(step, true);
         }
 
         if (step % Config::statistics_step == 0) {
@@ -446,7 +446,7 @@ void Simulation::finalize() const {
         netto_creations);
 
     // Print final network graph
-    neurons->print_network_graph_to_log_file();
+    neurons->print_network_graph_to_log_file(step, false);
 }
 
 std::vector<std::unique_ptr<NeuronModel>> Simulation::get_models() {
@@ -469,16 +469,6 @@ void Simulation::snapshot_monitors() {
         Timers::stop_and_add(TimerRegion::CAPTURE_MONITORS);
 
         neurons->get_neuron_model()->reset_fired_recorder(NeuronModel::FireRecorderPeriod::NeuronMonitor);
-    }
-}
-
-void Simulation::save_network_graph(step_type current_steps) {
-    // Check wether there are multiple runs or not
-    if (current_steps == 0) {
-        neurons->print_network_graph_to_log_file(current_steps);
-    } else {
-        LogFiles::save_and_open_new(LogFiles::EventType::Network, "network_" + std::to_string(current_steps));
-        neurons->print_network_graph_to_log_file(current_steps);
     }
 }
 
