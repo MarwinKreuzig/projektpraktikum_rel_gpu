@@ -81,16 +81,16 @@ void Neurons::init_synaptic_elements() {
         RelearnException::check(dendrites_exc_cnts[local_id] >= dendrites_exc->get_connected_elements()[local_id], "Error is with: %d", local_id);
     }
 
-    check_signal_types(network_graph_plastic, axons->get_signal_types());
+    check_signal_types(network_graph_plastic, axons->get_signal_types(), MPIWrapper::get_my_rank());
 }
 
-void Neurons::check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, const std::vector<SignalType>& signal_types) {
+void Neurons::check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, const std::vector<SignalType>& signal_types, const int my_rank) {
     for (const auto& neuron_id : NeuronID::range(signal_types.size())) {
         const auto& signal_type = signal_types[neuron_id.get_neuron_id()];
         const auto& out_edges = network_graph->get_all_out_edges(neuron_id);
         for (const auto& [tgt_rni, weight] : out_edges) {
-            RelearnException::check(SignalType::Excitatory == signal_type && weight > 0 || SignalType::Inhibitory == signal_type && weight < 0, "Neuron has outgoing connections not matching its signal type. {} -> {} {} {}",
-                neuron_id, tgt_rni, signal_type, weight);
+            RelearnException::check(SignalType::Excitatory == signal_type && weight > 0 || SignalType::Inhibitory == signal_type && weight < 0, "Neuron has outgoing connections not matching its signal type. {} {} -> {} {} {}",
+                my_rank, neuron_id, tgt_rni, signal_type, weight);
         }
     }
 }

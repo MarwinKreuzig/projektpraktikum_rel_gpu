@@ -49,7 +49,7 @@ TEST_F(NeuronsTest, testSignalTypeCheck) {
         }
     }
 
-    ASSERT_NO_THROW(Neurons::check_signal_types(network_graph, signal_types));
+    ASSERT_NO_THROW(Neurons::check_signal_types(network_graph, signal_types, 0));
 
     const auto src = get_random_neuron_id(num_neurons);
     const auto tgt_rank = get_random_rank(num_ranks);
@@ -65,12 +65,12 @@ TEST_F(NeuronsTest, testSignalTypeCheck) {
         } else {
             network_graph->add_synapse({ RankNeuronId(tgt_rank, tgt), src, weight });
         }
-        ASSERT_THROW(Neurons::check_signal_types(network_graph, signal_types), RelearnException);
+        ASSERT_THROW(Neurons::check_signal_types(network_graph, signal_types, 0), RelearnException);
         if (tgt_rank == 0) {
             network_graph->add_synapse({ tgt, src, -weight });
         } else {
             network_graph->add_synapse({ RankNeuronId(tgt_rank, tgt), src, -weight });
         }
-        ASSERT_NO_THROW(Neurons::check_signal_types(network_graph, signal_types));
+        ASSERT_NO_THROW(Neurons::check_signal_types(network_graph, signal_types, 0));
     }
 }
