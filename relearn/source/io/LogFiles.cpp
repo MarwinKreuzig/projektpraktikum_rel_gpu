@@ -106,7 +106,8 @@ void LogFiles::save_and_open_new(EventType type, const std::string& new_file_nam
     const auto iterator = log_files.find(type);
     RelearnException::check(iterator != log_files.end(), "The LogFiles don't contain the requested type");
 
-    auto complete_path = output_path.string() + directory_prefix + general_prefix + get_specific_file_prefix() + "_" + new_file_name + ".txt";
+
+    auto complete_path = (directory_prefix.empty() ? output_path : (output_path / directory_prefix) ) / (general_prefix + get_specific_file_prefix() + "_" + new_file_name + ".txt");
 
     iterator->second->flush();
 
@@ -123,7 +124,7 @@ void LogFiles::add_logfile(const EventType type, const std::string& file_name, c
     }
 
     if (do_i_print(rank)) {
-        auto complete_path = output_path.string() + directory_prefix + general_prefix + get_specific_file_prefix() + "_" + file_name + file_ending;
+        auto complete_path = (directory_prefix.empty() ? output_path : (output_path / directory_prefix) ) / (general_prefix + get_specific_file_prefix() + "_" + file_name + file_ending);
         auto logger = spdlog::basic_logger_mt(file_name, complete_path);
         logger->set_pattern("%v");
         log_files.emplace(type, std::move(logger));
