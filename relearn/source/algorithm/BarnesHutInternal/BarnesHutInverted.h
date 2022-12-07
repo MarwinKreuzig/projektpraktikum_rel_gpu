@@ -10,9 +10,9 @@
  *
  */
 
-#include "BarnesHutBase.h"
 #include "algorithm/Internal/ExchangingAlgorithm.h"
 
+#include "Config.h"
 #include "Types.h"
 #include "algorithm/BarnesHutInternal/BarnesHutInvertedCell.h"
 #include "mpi/CommunicationMap.h"
@@ -33,7 +33,7 @@ class SynapticElements;
  * In this instance, dendrites search for axons.
  * It is strongly tied to Octree, which might perform MPI communication via NodeCache::download_children()
  */
-class BarnesHutInverted : public BarnesHutBase<BarnesHutInvertedCell>, public BackwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, BarnesHutInvertedCell> {
+class BarnesHutInverted :public BackwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, BarnesHutInvertedCell> {
 public:
     using AdditionalCellAttributes = BarnesHutInvertedCell;
     using position_type = typename RelearnTypes::position_type;
@@ -47,6 +47,21 @@ public:
      */
     explicit BarnesHutInverted(const std::shared_ptr<OctreeImplementation<BarnesHutInvertedCell>>& octree)
         : BackwardAlgorithm(octree) { }
+
+    /**
+     * @brief Sets acceptance criterion for cells in the tree
+     * @param acceptance_criterion The acceptance criterion, > 0.0
+     * @exception Throws a RelearnException if acceptance_criterion <= 0.0
+     */
+    void set_acceptance_criterion(double acceptance_criterion);
+
+    /**
+     * @brief Returns the currently used acceptance criterion
+     * @return The currently used acceptance criterion
+     */
+    [[nodiscard]] double get_acceptance_criterion() const noexcept {
+        return acceptance_criterion;
+    }
 
 protected:
     /**
@@ -78,4 +93,7 @@ protected:
      */
     [[nodiscard]] DistantInSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
         const CommunicationMap<SynapseCreationResponse>& creation_responses) override;
+
+private:
+    double acceptance_criterion{ Constants::bh_default_theta };
 };

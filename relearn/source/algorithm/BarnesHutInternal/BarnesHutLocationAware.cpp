@@ -10,6 +10,7 @@
 
 #include "BarnesHutLocationAware.h"
 
+#include "algorithm/BarnesHutInternal/BarnesHutBase.h"
 #include "algorithm/Connector.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "neurons/helper/SynapseCreationRequests.h"
@@ -20,6 +21,11 @@
 #include "util/Timers.h"
 
 #include <algorithm>
+
+void BarnesHutLocationAware::set_acceptance_criterion(const double acceptance_criterion) {
+    RelearnException::check(acceptance_criterion > 0.0, "BarnesHut::set_acceptance_criterion: acceptance_criterion was less than or equal to 0 ({})", acceptance_criterion);
+    this->acceptance_criterion = acceptance_criterion;
+}
 
 CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neurons(const number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
@@ -73,7 +79,7 @@ std::vector<std::tuple<int, DistantNeuronRequest>> BarnesHutLocationAware::find_
 
     for (counter_type j = 0; j < number_vacant_elements; j++) {
         // Find one target at the time
-        const auto& neuron_request = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type, level_of_branch_nodes);
+        const auto& neuron_request = BarnesHutBase<BarnesHutCell>::find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type, level_of_branch_nodes, acceptance_criterion);
         if (!neuron_request.has_value()) {
             // If finding failed, it won't succeed in later iterations
             break;
@@ -133,7 +139,7 @@ BarnesHutLocationAware::process_requests(const CommunicationMap<DistantNeuronReq
             const auto source_position = current_request.get_source_position();
 
             // If the local search is successful, create a SynapseCreationRequest
-            if (const auto& local_search = BarnesHutBase<BarnesHutCell>::find_target_neuron(source_neuron_id, source_position, chosen_target, ElementType::Dendrite, signal_type); local_search.has_value()) {
+            if (const auto& local_search = BarnesHutBase<BarnesHutCell>::find_target_neuron(source_neuron_id, source_position, chosen_target, ElementType::Dendrite, signal_type, acceptance_criterion); local_search.has_value()) {
                 const auto& [target_rank, target_neuron_id] = local_search.value();
 
                 creation_requests.set_request(source_rank, request_index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });

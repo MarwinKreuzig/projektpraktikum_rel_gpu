@@ -44,8 +44,8 @@ void Simulation::register_neuron_monitor(const NeuronID& neuron_id) {
 
 void Simulation::set_acceptance_criterion_for_barnes_hut(const double value) {
     // Needed to avoid creating autapses
-    RelearnException::check(value <= BarnesHut::max_theta,
-        "Simulation::set_acceptance_criterion_for_barnes_hut: Acceptance criterion must be smaller or equal to {} but was {}", BarnesHut::max_theta, value);
+    RelearnException::check(value <= Constants::bh_max_theta,
+        "Simulation::set_acceptance_criterion_for_barnes_hut: Acceptance criterion must be smaller or equal to {} but was {}", Constants::bh_max_theta, value);
     RelearnException::check(value > 0.0, "Simulation::set_acceptance_criterion_for_barnes_hut: Acceptance criterion must larger than 0.0, but it was {}", value);
 
     accept_criterion = value;

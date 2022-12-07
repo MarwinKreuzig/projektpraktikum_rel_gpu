@@ -10,6 +10,7 @@
 #include "Config.h"
 #include "Types.h"
 #include "algorithm/Algorithms.h"
+#include "algorithm/Kernel/Kernel.h"
 #include "io/CalciumIO.h"
 #include "io/InteractiveNeuronIO.h"
 #include "io/LogFiles.h"
@@ -314,7 +315,7 @@ int main(int argc, char** argv) {
     auto* const opt_node_cache_type = app.add_option("--node-cache-type", chosen_cache_type, "The type of cache for the nodes of other ranks.");
     opt_node_cache_type->transform(CLI::CheckedTransformer(cli_parse_cache_type, CLI::ignore_case));
 
-    double accept_criterion{ BarnesHut::default_theta };
+    double accept_criterion{ Constants::bh_default_theta };
     const auto* const opt_accept_criterion = app.add_option("-t,--theta", accept_criterion, "Theta, the acceptance criterion for Barnes-Hut. Default: 0.3. Requires Barnes-Hut or inverted Barnes-Hut.");
 
     auto* const opt_kernel_type = app.add_option("--kernel-type", chosen_kernel_type, "The probability kernel type, cannot be set for the fast multipole methods.");
@@ -476,7 +477,7 @@ int main(int argc, char** argv) {
 
     if (static_cast<bool>(*opt_accept_criterion)) {
         RelearnException::check(is_barnes_hut(chosen_algorithm), "Acceptance criterion can only be set if Barnes-Hut is used");
-        RelearnException::check(accept_criterion <= BarnesHut::max_theta, "Acceptance criterion must be smaller or equal to {}", BarnesHut::max_theta);
+        RelearnException::check(accept_criterion <= Constants::bh_max_theta, "Acceptance criterion must be smaller or equal to {}", Constants::bh_max_theta);
         RelearnException::check(accept_criterion > 0.0, "Acceptance criterion must be larger than 0.0");
     }
 

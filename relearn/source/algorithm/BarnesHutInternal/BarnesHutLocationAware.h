@@ -10,11 +10,10 @@
  *
  */
 
-#include "BarnesHutBase.h"
 #include "algorithm/Internal/ExchangingAlgorithm.h"
 
+#include "Config.h"
 #include "Types.h"
-
 #include "algorithm/BarnesHutInternal/BarnesHutCell.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/ElementType.h"
@@ -37,7 +36,7 @@ class SynapticElements;
  * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
  * It is strongly tied to Octree, and performs MPI communication
  */
-class BarnesHutLocationAware : public BarnesHutBase<BarnesHutCell>, public ForwardAlgorithm<DistantNeuronRequest, DistantNeuronResponse, BarnesHutCell> {
+class BarnesHutLocationAware : public ForwardAlgorithm<DistantNeuronRequest, DistantNeuronResponse, BarnesHutCell> {
 public:
     using AdditionalCellAttributes = BarnesHutCell;
     using position_type = typename RelearnTypes::position_type;
@@ -51,6 +50,21 @@ public:
      */
     explicit BarnesHutLocationAware(const std::shared_ptr<OctreeImplementation<BarnesHutCell>>& octree)
         : ForwardAlgorithm(octree) { }
+
+    /**
+     * @brief Sets acceptance criterion for cells in the tree
+     * @param acceptance_criterion The acceptance criterion, > 0.0
+     * @exception Throws a RelearnException if acceptance_criterion <= 0.0
+     */
+    void set_acceptance_criterion(double acceptance_criterion);
+
+    /**
+     * @brief Returns the currently used acceptance criterion
+     * @return The currently used acceptance criterion
+     */
+    [[nodiscard]] double get_acceptance_criterion() const noexcept {
+        return acceptance_criterion;
+    }
 
 protected:
     /**
@@ -95,4 +109,7 @@ protected:
      */
     [[nodiscard]] DistantOutSynapses process_responses(const CommunicationMap<DistantNeuronRequest>& neuron_requests,
         const CommunicationMap<DistantNeuronResponse>& neuron_responses) override;
+
+private:
+    double acceptance_criterion{ Constants::bh_default_theta };
 };

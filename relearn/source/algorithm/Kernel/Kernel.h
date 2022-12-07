@@ -212,8 +212,8 @@ public:
      * @exception Throws a RelearnException if one of the pointer in nodes is a nullptr, or if KernelType::calculate_attractiveness_to_connect throws
      * @return The selected target node, is nullptr if nodes.empty()
      */
-    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* pick_target(const NeuronID& source_neuron_id, const position_type& source_position, const std::vector<OctreeNode<AdditionalCellAttributes>*>& nodes,
-        const ElementType element_type, const SignalType signal_type) {
+    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* pick_target(const NeuronID& source_neuron_id, const position_type& source_position,
+        const std::vector<OctreeNode<AdditionalCellAttributes>*>& nodes, const ElementType element_type, const SignalType signal_type) {
         if (nodes.empty()) {
             return nullptr;
         }

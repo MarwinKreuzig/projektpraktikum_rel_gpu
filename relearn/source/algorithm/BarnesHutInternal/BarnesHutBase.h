@@ -28,6 +28,9 @@
 #include <tuple>
 #include <vector>
 
+class BarnesHutTest;
+class BarnesHutInvertedTest;
+
 /**
  * This class provides all computational elements of the Barnes-Hut algorithm.
  * It purely calculates things, but does not change any state.
@@ -36,9 +39,6 @@
 template <typename AdditionalCellAttributes>
 class BarnesHutBase {
 public:
-    constexpr static double default_theta{ 0.3 };
-    constexpr static double max_theta{ 0.5 };
-
     using position_type = typename RelearnTypes::position_type;
     using counter_type = typename RelearnTypes::counter_type;
 
@@ -56,27 +56,6 @@ public:
     };
 
     /**
-     * @brief Sets acceptance criterion for cells in the tree
-     * @param acceptance_criterion The acceptance criterion, > 0.0
-     * @exception Throws a RelearnException if acceptance_criterion <= 0.0
-     */
-    void set_acceptance_criterion(const double acceptance_criterion) {
-        RelearnException::check(acceptance_criterion > 0.0, "BarnesHutBase::set_acceptance_criterion: acceptance_criterion was less than or equal to 0 ({})", acceptance_criterion);
-        this->acceptance_criterion = acceptance_criterion;
-    }
-
-    /**
-     * @brief Returns the currently used acceptance criterion
-     * @return The currently used acceptance criterion
-     */
-    [[nodiscard]] double get_acceptance_criterion() const noexcept {
-        return acceptance_criterion;
-    }
-
-protected:
-    double acceptance_criterion{ default_theta };
-
-    /**
      * @brief Tests the Barnes-Hut criterion on the source position and the target wrt. to required element type and signal type
      * @param source_position The source position of the calculation
      * @param target_node The target node within the Octree that should be considered
@@ -85,9 +64,14 @@ protected:
      * @exception Throws a RelearnEception if there was an algorithmic error
      * @return The acceptance status for the node, i.e., if it must be discarded, can be accepted, or must be expanded.
      */
-    [[nodiscard]] AcceptanceStatus test_acceptance_criterion(const position_type& source_position, const OctreeNode<AdditionalCellAttributes>* target_node,
-        const ElementType element_type, const SignalType signal_type) const {
-        RelearnException::check(target_node != nullptr, "BarnesHutBase::test_acceptance_criterion: target_node was nullptr");
+    [[nodiscard]] static AcceptanceStatus test_acceptance_criterion(const position_type& source_position, const OctreeNode<AdditionalCellAttributes>* target_node,
+        const ElementType element_type, const SignalType signal_type, const double acceptance_criterion) {
+        RelearnException::check(acceptance_criterion > 0.0, 
+            "BarnesHutBase::test_acceptance_criterion: The acceptance criterion must not positive: ({})", acceptance_criterion);
+        RelearnException::check(acceptance_criterion <= Constants::bh_max_theta, 
+            "BarnesHutBase::test_acceptance_criterion: The acceptance criterion must not be larger than {}: ({})", Constants::bh_max_theta, acceptance_criterion);
+        RelearnException::check(target_node != nullptr,
+            "BarnesHutBase::test_acceptance_criterion: target_node was nullptr");
 
         const auto& cell = target_node->get_cell();
 
@@ -131,8 +115,8 @@ protected:
      * @param signal_type The signal type that the source searches
      * @param accept_early_far_node If true, then nodes that belong to another MPI rank and (don't) satisfy the acceptance criterion are still returned
      */
-    [[nodiscard]] std::vector<OctreeNode<AdditionalCellAttributes>*> get_nodes_to_consider(const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
-        const ElementType element_type, const SignalType signal_type, const bool accept_early_far_node = false) const {
+    [[nodiscard]] static std::vector<OctreeNode<AdditionalCellAttributes>*> get_nodes_to_consider(const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
+        const ElementType element_type, const SignalType signal_type, const double acceptance_criterion, const bool accept_early_far_node = false) {
         if (root == nullptr) {
             return {};
         }
@@ -149,7 +133,7 @@ protected:
              * Without pushing root onto the stack, it would not make it into the "vector" of nodes.
              */
 
-            const auto status = test_acceptance_criterion(source_position, root, element_type, signal_type);
+            const auto status = test_acceptance_criterion(source_position, root, element_type, signal_type, acceptance_criterion);
             if (status == AcceptanceStatus::Accept) {
                 return { root };
             }
@@ -184,7 +168,7 @@ protected:
              * Should node be used for probability interval?
              * Only take those that have the required elements
              */
-            const auto status = test_acceptance_criterion(source_position, node, element_type, signal_type);
+            const auto status = test_acceptance_criterion(source_position, node, element_type, signal_type, acceptance_criterion);
 
             if (status == AcceptanceStatus::Discard) {
                 continue;
@@ -219,8 +203,8 @@ protected:
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorithm found a matching neuron, its RankNeuronId is returned
      */
-    [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
-        const ElementType element_type, const SignalType signal_type) const {
+    [[nodiscard]] static std::optional<RankNeuronId> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
+        const ElementType element_type, const SignalType signal_type, const double acceptance_criterion) {
         RelearnException::check(root != nullptr, "BarnesHutBase::find_target_neuron: root was nullptr");
 
         if (root->is_leaf()) {
@@ -228,7 +212,7 @@ protected:
         }
 
         for (auto root_of_subtree = root; true;) {
-            const auto& vector = get_nodes_to_consider(source_position, root_of_subtree, element_type, signal_type);
+            const auto& vector = get_nodes_to_consider(source_position, root_of_subtree, element_type, signal_type, acceptance_criterion);
 
             auto* node_selected = Kernel<AdditionalCellAttributes>::pick_target(source_neuron_id, source_position, vector, element_type, signal_type);
             if (node_selected == nullptr) {
@@ -255,15 +239,15 @@ protected:
      * @param signal_type The signal type the source neuron searches
      * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank
      */
-    [[nodiscard]] std::vector<std::tuple<int, SynapseCreationRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
-        const counter_type& number_vacant_elements, OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type) {
+    [[nodiscard]] static std::vector<std::tuple<int, SynapseCreationRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
+        const counter_type& number_vacant_elements, OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type, const double acceptance_criterion) {
 
         std::vector<std::tuple<int, SynapseCreationRequest>> requests{};
         requests.reserve(number_vacant_elements);
 
         for (counter_type j = 0; j < number_vacant_elements; j++) {
             // Find one target at the time
-            const auto& rank_neuron_id = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type);
+            const auto& rank_neuron_id = find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type, acceptance_criterion);
             if (!rank_neuron_id.has_value()) {
                 // If finding failed, it won't succeed in later iterations
                 break;
@@ -290,12 +274,12 @@ protected:
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorithm found a matching neuron, its RankNeuronId is returned
      */
-    [[nodiscard]] std::optional<std::pair<int, DistantNeuronRequest>> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
-        const ElementType element_type, const SignalType signal_type, const std::uint16_t level_of_branch_nodes) const {
+    [[nodiscard]] static std::optional<std::pair<int, DistantNeuronRequest>> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position,
+        OctreeNode<AdditionalCellAttributes>* const root, const ElementType element_type, const SignalType signal_type, const std::uint16_t level_of_branch_nodes, const double acceptance_criterion) {
         RelearnException::check(root != nullptr, "BarnesHutLocationAwareBase::find_target_neuron: root was nullptr");
 
         for (auto root_of_subtree = root; true;) {
-            const auto& vector = BarnesHutBase<AdditionalCellAttributes>::get_nodes_to_consider(source_position, root_of_subtree, element_type, signal_type, true);
+            const auto& vector = BarnesHutBase<AdditionalCellAttributes>::get_nodes_to_consider(source_position, root_of_subtree, element_type, signal_type, true, acceptance_criterion);
 
             auto* node_selected = Kernel<AdditionalCellAttributes>::pick_target(source_neuron_id, source_position, vector, element_type, signal_type);
             if (node_selected == nullptr) {

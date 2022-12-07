@@ -14,6 +14,7 @@
 #include "Config.h"
 #include "Types.h"
 #include "algorithm/BarnesHutInternal/BarnesHutCell.h"
+#include "algorithm/BarnesHutInternal/BarnesHutInvertedCell.h"
 #include "algorithm/FMMInternal/FastMultipoleMethods.h"
 #include "algorithm/FMMInternal/FastMultipoleMethodsBase.h"
 #include "algorithm/FMMInternal/FastMultipoleMethodsCell.h"
@@ -982,6 +983,13 @@ class BarnesHutTest : public RelearnTestWithAdditionalCellAttribute {
 protected:
     static void SetUpTestSuite() {
         SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
+class BarnesHutInvertedTest : public RelearnTestWithAdditionalCellAttribute {
+protected:
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<BarnesHutInvertedCell>();
     }
 };
 

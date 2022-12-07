@@ -10,6 +10,7 @@
 
 #include "BarnesHut.h"
 
+#include "algorithm/BarnesHutInternal/BarnesHutBase.h"
 #include "algorithm/Connector.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "structure/NodeCache.h"
@@ -19,6 +20,11 @@
 #include "util/Timers.h"
 
 #include <algorithm>
+
+void BarnesHut::set_acceptance_criterion(const double acceptance_criterion) {
+    RelearnException::check(acceptance_criterion > 0.0, "BarnesHut::set_acceptance_criterion: acceptance_criterion was less than or equal to 0 ({})", acceptance_criterion);
+    this->acceptance_criterion = acceptance_criterion;
+}
 
 CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
     const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
@@ -47,7 +53,7 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const nu
         const auto& axon_position = extra_infos->get_position(id);
         const auto dendrite_type_needed = axons->get_signal_type(id);
 
-        const auto& requests = BarnesHutBase::find_target_neurons(id, axon_position, number_vacant_axons, root, ElementType::Dendrite, dendrite_type_needed);
+        const auto& requests = BarnesHutBase<BarnesHutCell>::find_target_neurons(id, axon_position, number_vacant_axons, root, ElementType::Dendrite, dendrite_type_needed, acceptance_criterion);
         for (const auto& [target_rank, creation_request] : requests) {
 #pragma omp critical(BHrequests)
             synapse_creation_requests_outgoing.append(target_rank, creation_request);

@@ -47,6 +47,9 @@ public:
 
     constexpr static unsigned int unpacking = 0; // indicates how many levels a node is unpacked to give the synaptic elements more choice to connect
     // only used when FMM is selected. When unpacking == 0 normal FMM is used.
+
+    constexpr static double bh_default_theta{ 0.3 };
+    constexpr static double bh_max_theta{ 0.5 };
 };
 
 class Config {
