@@ -137,5 +137,9 @@ if(WIN32)
 	
 	#tests
 	list(APPEND relearn_tests_additional_files "RelearnTest.hpp")
+	
+	list(APPEND relearn_tests_additional_files "helper/test_distant_synapse_creation_request.h")
+	list(APPEND relearn_tests_additional_files "helper/test_synapse_creation_request.h")
+	list(APPEND relearn_tests_additional_files "helper/test_synapse_deletion_request.h")
 	list(APPEND relearn_tests_additional_files "vector/test_vector.h")
 endif()

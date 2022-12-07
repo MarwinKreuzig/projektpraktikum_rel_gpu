@@ -81,10 +81,17 @@ target_sources(
           ${CMAKE_BINARY_DIR}/test_get_relearn_path.cpp
           RelearnTest.cpp
 		  
+		  helper/test_distant_synapse_creation_request.cpp
+		  helper/test_synapse_creation_request.cpp
+		  helper/test_synapse_deletion_request.cpp
+			  
 		  vector/test_vector.cpp
 		  
 		  # for visual studio
 		  ${relearn_tests_additional_files})
+		  
+		  
+target_include_directories(relearn_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(relearn_tests PRIVATE project_options project_libraries)
 target_link_libraries(relearn_tests PRIVATE relearn_lib)
 target_link_libraries(relearn_tests PRIVATE gtest_main)

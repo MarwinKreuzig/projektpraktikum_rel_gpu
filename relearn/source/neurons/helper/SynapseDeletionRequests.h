@@ -34,11 +34,11 @@ public:
 
     /**
      * @brief Creates a new deletion request with the passed arguments
-     * @param initiator_neuron The neuron that initiaed the request
-     * @param affected_neuron The neuron that is affected by the request (the other end of the synapse)
+     * @param initiator_neuron The neuron that initiated the request, must be an actual neuron id
+     * @param affected_neuron The neuron that is affected by the request (the other end of the synapse), must be an actual neuron id
      * @param element_type The element type that initiated the request
      * @param signal_type The signal type of the synapse
-     * @exception Throws a RelearnException if any neuron id is invalid
+     * @exception Throws a RelearnException if any neuron id is invalid or virtual
      */
     constexpr SynapseDeletionRequest(const NeuronID& initiator_neuron, const NeuronID& affected_neuron,
         const ElementType element_type, const SignalType signal_type)
