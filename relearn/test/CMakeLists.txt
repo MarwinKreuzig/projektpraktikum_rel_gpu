@@ -79,9 +79,17 @@ target_sources(
           test_tagged_id.cpp
           test_vector.cpp
           ${CMAKE_BINARY_DIR}/test_get_relearn_path.cpp
-          RelearnTest.cpp)
+          RelearnTest.cpp
+		  
+		  vector/test_vector.cpp
+		  
+		  # for visual studio
+		  ${relearn_tests_additional_files})
 target_link_libraries(relearn_tests PRIVATE project_options project_libraries)
 target_link_libraries(relearn_tests PRIVATE relearn_lib)
 target_link_libraries(relearn_tests PRIVATE gtest_main)
 add_test(NAME SerialTests COMMAND relearn_tests)
 add_dependencies(check relearn_tests)
+
+get_target_property(relearn_tests_sources relearn_tests SOURCES)
+source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${relearn_tests_sources})

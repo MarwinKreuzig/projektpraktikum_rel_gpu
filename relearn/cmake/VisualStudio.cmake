@@ -1,4 +1,5 @@
 set(relearn_lib_additional_files "" CACHE INTERNAL "")
+set(relearn_tests_additional_files "" CACHE INTERNAL "")
 	
 if(WIN32)
 	# root files
@@ -128,4 +129,8 @@ if(WIN32)
 	
 	# shuffle
 	list(APPEND relearn_lib_additional_files "util/shuffle/shuffle.h")
+	
+	#tests
+	list(APPEND relearn_tests_additional_files "RelearnTest.hpp")
+	list(APPEND relearn_tests_additional_files "vector/test_vector.h")
 endif()
