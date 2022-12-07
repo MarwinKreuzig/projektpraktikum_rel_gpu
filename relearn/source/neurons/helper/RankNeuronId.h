@@ -39,7 +39,7 @@ public:
      * @param rank The MPI rank
      * @param neuron_id The neuron id
      */
-    [[deprecated("Use RankNeuronId(MPIRank, NeuronID)")]] constexpr RankNeuronId(const int rank, const NeuronID& neuron_id) noexcept
+    [[deprecated("Use RankNeuronId(MPIRank, NeuronID)")]] constexpr RankNeuronId(const int rank, const NeuronID& neuron_id)
         : rank(rank)
         , neuron_id(neuron_id) {
     }

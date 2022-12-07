@@ -21,10 +21,7 @@ TEST_F(RankNeuronIdTest, testNeuronRankIdInvalidRank) {
         const auto rank = get_random_integer<int>(-1000, -1);
         const auto id = get_random_number_neurons();
 
-        RankNeuronId rni(rank, NeuronID{ id });
-
-        ASSERT_NO_THROW(auto tmp = rni.get_neuron_id());
-        ASSERT_THROW(auto tmp = rni.get_rank(), RelearnException);
+        ASSERT_THROW(RankNeuronId rni(rank, NeuronID{ id });, RelearnException);
     }
 }
 

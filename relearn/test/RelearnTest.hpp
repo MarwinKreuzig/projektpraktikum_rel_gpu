@@ -40,6 +40,7 @@
 #include "structure/Partition.h"
 #include "util/Interval.h"
 #include "util/MemoryHolder.h"
+#include "util/MPIRank.h"
 #include "util/RelearnException.h"
 #include "util/StepParser.h"
 #include "util/TaggedID.h"
@@ -273,6 +274,21 @@ protected:
             nid = get_random_neuron_id(number_neurons);
         } while (nid == except);
         return nid;
+    }
+
+    RankNeuronId generate_random_rank_neuron_id() {
+        using rank_type = int;
+        using neuron_id_type = NeuronID::value_type;
+
+        const auto rank = get_random_mpi_rank();
+        const auto neuron_id = get_random_neuron_id(10000);
+
+        return { rank, neuron_id };
+    }
+
+    MPIRank get_random_mpi_rank(size_t number_ranks = 100000000) {
+        const auto rank = get_random_integer<int>(0, int(number_ranks - 1));
+        return MPIRank(rank);
     }
 
     int get_random_synapse_weight() {
@@ -1174,16 +1190,6 @@ class MonitorParserTest : public RelearnTest {
 protected:
     static void SetUpTestSuite() {
         SetUpTestCaseTemplate();
-    }
-
-    RankNeuronId generate_random_rank_neuron_id() {
-        using rank_type = int;
-        using neuron_id_type = NeuronID::value_type;
-
-        const auto rank = get_random_integer<rank_type>(0, std::numeric_limits<rank_type>::max());
-        const auto neuron_id = get_random_integer<neuron_id_type>(std::numeric_limits<neuron_id_type>::min(), std::numeric_limits<neuron_id_type>::min());
-
-        return { rank, NeuronID(neuron_id) };
     }
 
     std::string codify_rank_neuron_id(const RankNeuronId& rni) {
