@@ -12,7 +12,7 @@
 
 #include "RelearnTest.hpp"
 
-class VectorTest : public RelearnTest {
+class PartitionTest : public RelearnTest {
 protected:
     static void SetUpTestSuite() {
         SetUpTestCaseTemplate();

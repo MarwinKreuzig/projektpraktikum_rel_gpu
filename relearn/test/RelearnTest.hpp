@@ -11,6 +11,7 @@
  */
 
 #include "gtest/gtest.h"
+#include "gtest/gtest-typed-test.h"
 
 #include "Config.h"
 #include "Types.h"
@@ -32,6 +33,7 @@
 #include "neurons/FiredStatus.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/SignalType.h"
+#include "neurons/helper/DistantNeuronRequests.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "neurons/models/SynapticElements.h"
 #include "structure/Cell.h"
@@ -350,6 +352,21 @@ protected:
 
     SignalType get_random_signal_type() noexcept {
         return get_random_bool() ? SignalType::Excitatory : SignalType::Inhibitory;
+    }
+
+    DistantNeuronRequest::TargetNeuronType get_random_target_neuron_type() {
+        uniform_int_distribution<unsigned short> uid_3(0, 2);
+        const auto drawn = uid_3(mt);
+    
+        if (drawn == 0) {
+            return DistantNeuronRequest::TargetNeuronType::BranchNode;
+        } 
+
+        if (drawn == 1) {
+            return DistantNeuronRequest::TargetNeuronType::Leaf;
+        }
+
+        return DistantNeuronRequest::TargetNeuronType::VirtualNode;
     }
 
     double get_random_gamma_k() noexcept {
@@ -864,357 +881,5 @@ protected:
     static void SetUpTestCaseTemplate() {
         RelearnTest::SetUpTestCaseTemplate();
         init<AdditionalCellAttributes>();
-    }
-};
-
-class NetworkGraphTest : public RelearnTest {
-protected:
-    static int num_ranks;
-    static int num_synapses_per_neuron;
-
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-
-    template <typename T>
-    void erase_empty(std::map<T, int>& edges) {
-        for (auto iterator = edges.begin(); iterator != edges.end();) {
-            if (iterator->second == 0) {
-                iterator = edges.erase(iterator);
-            } else {
-                ++iterator;
-            }
-        }
-    }
-
-    template <typename T>
-    void erase_empties(std::map<T, std::map<T, int>>& edges) {
-        for (auto iterator = edges.begin(); iterator != edges.end();) {
-            erase_empty<T>(iterator->second);
-
-            if (iterator->second.empty()) {
-                iterator = edges.erase(iterator);
-            } else {
-                ++iterator;
-            }
-        }
-    }
-};
-
-class NeuronAssignmentTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-    double calculate_box_length(const size_t number_neurons, const double um_per_neuron) const noexcept {
-        return ceil(pow(static_cast<double>(number_neurons), 1 / 3.)) * um_per_neuron;
-    }
-
-    void generate_random_neurons(std::vector<Vec3d>& positions,
-        std::vector<RelearnTypes::area_id>& neuron_id_to_area_ids, std::vector<RelearnTypes::area_name>& area_id_to_area_name, std::vector<SignalType>& types);
-};
-
-class NeuronModelsTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-
-    void test_update(std::unique_ptr<NeuronModel> model, std::shared_ptr<NetworkGraph> ng, size_t number_neurons);
-};
-
-class RankNeuronIdTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-};
-
-class NeuronsTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-
-    void assert_empty(const NeuronsExtraInfo& nei, size_t number_neurons);
-
-    void assert_contains(const NeuronsExtraInfo& nei, size_t number_neurons, size_t num_neurons_check, const std::vector<Vec3d>& expected_positions);
-};
-
-class CellTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-
-    template <typename AdditionalCellAttributes>
-    void test_cell_size();
-
-    template <typename AdditionalCellAttributes>
-    void test_cell_dendrites_position();
-
-    template <typename AdditionalCellAttributes>
-    void test_cell_dendrites_position_exception();
-
-    template <typename AdditionalCellAttributes>
-    void test_cell_set_number_dendrites();
-
-    template <typename AdditionalCellAttributes>
-    void test_cell_dendrites_position_combined();
-
-    template <typename AdditionalCellAttributes>
-    void test_cell_axons_position();
-
-    template <typename AdditionalCellAttributes>
-    void test_cell_axons_position_exception();
-
-    template <typename AdditionalCellAttributes>
-    void test_cell_set_number_axons();
-
-    template <typename AdditionalCellAttributes>
-    void test_cell_axons_position_combined();
-
-    template <typename AdditionalCellAttributes>
-    void test_cell_set_neuron_id();
-
-    template <typename AdditionalCellAttributes>
-    void test_cell_octants();
-
-    template <typename AdditionalCellAttributes>
-    void test_cell_octants_exception();
-
-    template <typename AdditionalCellAttributes>
-    void test_cell_octants_size();
-
-    template <typename VirtualPlasticityElement>
-    void test_vpe_number_elements();
-
-    template <typename VirtualPlasticityElement>
-    void test_vpe_position();
-
-    template <typename VirtualPlasticityElement>
-    void test_vpe_mixed();
-};
-
-template <typename AdditionalCellAttributes>
-class OctreeTest : public RelearnTestWithAdditionalCellAttribute {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate<AdditionalCellAttributes>();
-    }
-};
-
-class BarnesHutTest : public RelearnTestWithAdditionalCellAttribute {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate<BarnesHutCell>();
-    }
-};
-
-class BarnesHutInvertedTest : public RelearnTestWithAdditionalCellAttribute {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate<BarnesHutInvertedCell>();
-    }
-};
-
-// class FMMTest : public RelearnTest {
-// protected:
-//     static void SetUpTestSuite() {
-//         SetUpTestCaseTemplate<FastMultipoleMethodsCell>();
-//     }
-/*   Stack<FastMultipoleMethodsBase::stack_entry> init_stack(FastMultipoleMethods fmm, const SignalType signal_type_needed) { return FastMultipoleMethodsBase::init_stack(signal_type_needed); }
-
-   void unpack_node_pair(FastMultipoleMethods fmm, Stack<FastMultipoleMethodsBase::stack_entry>& stack) { return FastMultipoleMethodsBase::unpack_node_pair(stack); }
-
-   FastMultipoleMethodsBase::interaction_list_type align_interaction_list(FastMultipoleMethods fmm, OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>* source_node, OctreeNode<FastMultipoleMethods::AdditionalCellAttributes>* target_parent, const SignalType signal_type) { return fmm.align_interaction_list(source_node, target_parent, signal_type); }*/
-
-// std::array<double, Constants::p3> calc_hermite_coefficients(const OctreeNode<FastMultipoleMethodsCell>* source, double sigma, SignalType signal_type_needed) { return FastMultipoleMethods::calc_hermite_coefficients(source, sigma, signal_type_needed); }
-// CalculationType check_calculation_requirements(const OctreeNode<FastMultipoleMethodsCell>* source, const OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::check_calculation_requirements(source, target, sigma, signal_type_needed);}
-// const std::vector<std::pair<FastMultipoleMethods::position_type, FastMultipoleMethods::counter_type>> get_all_positions_for(OctreeNode<FastMultipoleMethodsCell>* node, const ElementType type, const SignalType signal_type_needed){return FastMultipoleMethodsBase<FastMultipoleMethodsCell>::get_all_positions_for(node, type, signal_type_needed);}
-// double calc_taylor(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_taylor(source, target, sigma, signal_type_needed);}
-// double calc_direct_gauss(OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_direct_gauss(source, target, sigma, signal_type_needed);}
-// double calc_hermite(const OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target, const std::array<double, Constants::p3>& coefficients_buffer, double sigma, SignalType signal_type_needed){return FastMultipoleMethods::calc_hermite(source, target, coefficients_buffer, sigma, signal_type_needed);}
-//};
-
-class PartitionTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-};
-
-class NeuronIdTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-};
-
-class ConnectorTest : public RelearnTestWithAdditionalCellAttribute {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate<BarnesHutCell>();
-    }
-};
-
-class KernelTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-};
-
-class ProbabilityKernelTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-};
-
-class SynapticElementsTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-};
-
-class VectorTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-};
-
-class SpaceFillingCurveTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-};
-
-template <typename T>
-class TaggedIDTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-
-    static bool get_initialized(const TaggedID<T>& id) {
-        return id.is_initialized_;
-    }
-
-    static bool get_virtual(const TaggedID<T>& id) {
-        return id.is_virtual_;
-    }
-
-    static bool get_global(const TaggedID<T>& id) {
-        return id.is_global_;
-    }
-
-    static typename TaggedID<T>::value_type get_id(const TaggedID<T>& id) {
-        return id.id_;
-    }
-
-    static_assert(sizeof(typename TaggedID<T>::value_type) == sizeof(T));
-};
-
-class IOTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-};
-
-class CalciumCalculatorTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-};
-
-class SynapticInputTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-};
-
-class BackgroundActivityTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-};
-
-class StepParserTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-
-    Interval generate_random_interval() {
-        using int_type = Interval::step_type;
-
-        constexpr auto min = std::numeric_limits<int_type>::min();
-        constexpr auto max = std::numeric_limits<int_type>::max();
-
-        const auto begin = get_random_integer<int_type>(min, max);
-        const auto end = get_random_integer<int_type>(min, max);
-        const auto frequency = get_random_integer<int_type>(min, max);
-
-        return Interval{ std::min(begin, end), std::max(begin, end), frequency };
-    }
-
-    std::string codify_interval(const Interval& interval) {
-        std::stringstream ss{};
-        ss << interval.begin << '-' << interval.end << ':' << interval.frequency;
-        return ss.str();
-    }
-
-    std::pair<Interval, std::string> generate_random_interval_description() {
-        auto interval = generate_random_interval();
-        auto description = codify_interval(interval);
-        return { std::move(interval), std::move(description) };
-    }
-};
-
-class LocalAreaTranslatorTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-};
-
-class MonitorParserTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-
-    std::string codify_rank_neuron_id(const RankNeuronId& rni) {
-        std::stringstream ss{};
-        ss << rni.get_rank() << ':' << rni.get_neuron_id();
-        return ss.str();
-    }
-
-    std::pair<RankNeuronId, std::string> generate_random_rank_neuron_id_description() {
-        auto rank_neuron_id = generate_random_rank_neuron_id();
-        auto description = codify_rank_neuron_id(rank_neuron_id);
-        return { std::move(rank_neuron_id), std::move(description) };
-    }
-};
-
-class MPIRankTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-};
-
-class MiscTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
     }
 };

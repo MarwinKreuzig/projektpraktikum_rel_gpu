@@ -26,9 +26,6 @@ uniform_int_distribution<size_t> RelearnTest::uid_num_synapses(1, upper_bound_nu
 
 uniform_int_distribution<int> RelearnTest::uid_synapse_weight(-bound_synapse_weight, bound_synapse_weight);
 
-int NetworkGraphTest::num_ranks = 17;
-int NetworkGraphTest::num_synapses_per_neuron = 2;
-
 uniform_int_distribution<unsigned short> RelearnTest::uid_refinement(0, max_refinement_level);
 uniform_int_distribution<unsigned short> RelearnTest::uid_small_refinement(0, small_refinement_level);
 uniform_int_distribution<unsigned short> RelearnTest::uid_large_refinement(small_refinement_level + 1, max_refinement_level);

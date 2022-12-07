@@ -12,9 +12,16 @@
 
 #include "RelearnTest.hpp"
 
-class VectorTest : public RelearnTest {
+class BarnesHutTest : public RelearnTestWithAdditionalCellAttribute {
 protected:
     static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
+class BarnesHutInvertedTest : public RelearnTestWithAdditionalCellAttribute {
+protected:
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<BarnesHutInvertedCell>();
     }
 };

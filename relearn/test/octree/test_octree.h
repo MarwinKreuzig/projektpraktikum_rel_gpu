@@ -12,9 +12,10 @@
 
 #include "RelearnTest.hpp"
 
-class VectorTest : public RelearnTest {
+template <typename AdditionalCellAttributes>
+class OctreeTest : public RelearnTestWithAdditionalCellAttribute {
 protected:
     static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
+        SetUpTestCaseTemplate<AdditionalCellAttributes>();
     }
 };
