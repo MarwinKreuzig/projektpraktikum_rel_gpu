@@ -12,7 +12,12 @@
 
 #include "util/RelearnException.h"
 
+#include <fmt/format.h>
+#include <fmt/ostream.h>
+
 #include <climits>
+#include <compare>
+#include <ostream>
 
 /**
  * This type reflects an MPI rank in a type safe manner
@@ -51,6 +56,8 @@ public:
         RelearnException::check(rank < maximum_rank, "MPIRank::MPIRank: The actual rank must be < {}: {}.", maximum_rank, rank);
     }
 
+    [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const MPIRank& first, const MPIRank& second) = default;
+
     /**
      * @brief Check if the rank is initialized
      * @return true iff the rank is initialized
@@ -67,7 +74,24 @@ public:
         return actual_rank_;
     }
 
+    /**
+     * @brief Prints the object's represented MPI rank
+     * @param os The out-stream in which the object is printed
+     * @return The argument os to allow chaining
+     */
+    friend std::ostream& operator<<(std::ostream& os, const MPIRank& rank) {
+        if (rank.is_initialized_) {
+            os << "MPIRank: " << rank.actual_rank_;
+        } else {
+            os << "MPIRank: uninitialized";
+        }
+        return os;
+    }
+
 private:
     int actual_rank_ : id_bit_count = -1;
     bool is_initialized_ : 1 = false;
 };
+
+template <>
+struct fmt::formatter<MPIRank> : ostream_formatter { };

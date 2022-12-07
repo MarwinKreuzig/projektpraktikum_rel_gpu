@@ -10,11 +10,12 @@
  *
  */
 
-#include "Config.h"
+#include "util/MPIRank.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
 #include <fmt/format.h>
+#include <fmt/ostream.h>
 
 #include <compare>
 #include <ostream>
@@ -27,41 +28,59 @@
 class RankNeuronId {
 public:
     /**
-     * @brief Constructs a new RankNeuronId with invalid rank and id
+     * @brief Constructs a new RankNeuronId with invalid rank and id.
+     *      This constructor is present for resizing vectors, etc.
      */
-    RankNeuronId() = default;
+    constexpr RankNeuronId() = default;
+
+    /**
+     * @brief Constructs a new RankNeuronId with specified inputs (not validated).
+     *      This constructor is deprecated; please use the type-safe version with MPIRank
+     * @param rank The MPI rank
+     * @param neuron_id The neuron id
+     */
+    [[deprecated("Use RankNeuronId(MPIRank, NeuronID)")]] constexpr RankNeuronId(const int rank, const NeuronID& neuron_id) noexcept
+        : rank(rank)
+        , neuron_id(neuron_id) {
+    }
 
     /**
      * @brief Constructs a new RankNeuronId with specified inputs (not validated)
      * @param rank The MPI rank
      * @param neuron_id The neuron id
      */
-    RankNeuronId(const int rank, const NeuronID neuron_id) noexcept
+    constexpr RankNeuronId(const MPIRank& rank, const NeuronID& neuron_id) noexcept
         : rank(rank)
         , neuron_id(neuron_id) {
     }
+
+    /**
+     * @brief Provides a lexiographical ordering of RankNeuronId
+     * @param first The first object
+     * @param second The second object
+     * @return A strong ordering on RankNeuronId
+     */
+    [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const RankNeuronId& first, const RankNeuronId& second) noexcept = default;
 
     /**
      * @brief Returns the associated MPI rank
      * @return The MPI rank
      * @exception Throws a RelearnException if the rank is negative
      */
-    [[nodiscard]] int get_rank() const {
-        RelearnException::check(rank >= 0, "RankNeuronId::get_rank: It was negative: {}", rank);
-        return rank;
+    [[nodiscard]] constexpr int get_rank() const {
+        RelearnException::check(rank.is_initialized(), "RankNeuronId::get_rank: It was negative: {}", rank);
+        return rank.get_rank();
     }
 
     /**
      * @brief Returns the associated neuron id
      * @return The neuron id
-     * @exception Throws a RelearnException if the id is not smaller than Constants::uninitialized
+     * @exception Throws a RelearnException if the id is not initialized
      */
-    [[nodiscard]] NeuronID get_neuron_id() const {
+    [[nodiscard]] constexpr const NeuronID& get_neuron_id() const {
         RelearnException::check(neuron_id.is_initialized(), "RankNeuronId::get_neuron_id: neuron_id is not initialized");
         return neuron_id;
     }
-
-    [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const RankNeuronId& first, const RankNeuronId& second) noexcept = default;
 
     /**
      * @brief Prints the object's rank and id; inserts \n
@@ -74,9 +93,9 @@ public:
     }
 
     template <std::size_t Index>
-    [[nodiscard]] auto& get() & {
+    [[nodiscard]] constexpr auto& get() & {
         if constexpr (Index == 0) {
-            return rank;
+            return rank.get_rank();
         }
         if constexpr (Index == 1) {
             return neuron_id;
@@ -84,9 +103,9 @@ public:
     }
 
     template <std::size_t Index>
-    [[nodiscard]] auto const& get() const& {
+    [[nodiscard]] constexpr auto const& get() const& {
         if constexpr (Index == 0) {
-            return rank;
+            return rank.get_rank();
         }
         if constexpr (Index == 1) {
             return neuron_id;
@@ -94,9 +113,9 @@ public:
     }
 
     template <std::size_t Index>
-    [[nodiscard]] auto&& get() && {
+    [[nodiscard]] constexpr auto&& get() && {
         if constexpr (Index == 0) {
-            return rank;
+            return rank.get_rank();
         }
         if constexpr (Index == 1) {
             return neuron_id;
@@ -104,8 +123,8 @@ public:
     }
 
 private:
-    int rank{ -1 }; // MPI rank of the owner
-    NeuronID neuron_id{ NeuronID::uninitialized_id() }; // Neuron id on the owner
+    MPIRank rank{}; // MPI rank of the owner
+    NeuronID neuron_id{}; // Neuron id on the owner
 };
 
 template <>

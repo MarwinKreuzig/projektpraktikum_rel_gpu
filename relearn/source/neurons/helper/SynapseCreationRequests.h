@@ -10,17 +10,26 @@
  *
  */
 
-#include "Types.h"
 #include "neurons/SignalType.h"
+#include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
+#include <cstddef>
 #include <utility>
 
 /**
- * One SynapseCreationRequest always consists of a target neuron, a source neuron, and a signal type
+ * One SynapseCreationRequest always consists of a target neuron, a source neuron, and a signal type.
+ * It is exchanged between MPI ranks but does not perform MPI communication on its own.
+ * A synapse creation is requested as
+ *      (source, element_type, signal_type) ---> (target, !element_type, signal_type)
+ * with element_type being known from context (i.e., only dendrites send creation requests)
  */
 class SynapseCreationRequest {
 public:
+    /**
+     * @brief Constructs an object with default-constructed members.
+     *      This constructor is present for resizing vectors, etc.
+     */
     constexpr SynapseCreationRequest() = default;
 
     /**
@@ -33,8 +42,8 @@ public:
         : target(target)
         , source(source)
         , signal_type(signal_type) {
-        RelearnException::check(target.is_local(), "SynapseCreationRequest::SynapseCreationRequest: Can only serve local ids (target): {}", target);
-        RelearnException::check(source.is_local(), "SynapseCreationRequest::SynapseCreationRequest: Can only serve local ids (source): {}", source);
+        RelearnException::check(target.is_local(), "SynapseCreationRequest::SynapseCreationRequest: Can only serve non-virtual ids (target): {}", target);
+        RelearnException::check(source.is_local(), "SynapseCreationRequest::SynapseCreationRequest: Can only serve non-virtual ids (source): {}", source);
     }
 
     /**
@@ -62,7 +71,7 @@ public:
     }
 
     template <std::size_t Index>
-    [[nodiscard]] auto& get() & {
+    [[nodiscard]] constexpr auto& get() & {
         if constexpr (Index == 0) {
             return target;
         }
@@ -75,7 +84,7 @@ public:
     }
 
     template <std::size_t Index>
-    [[nodiscard]] auto const& get() const& {
+    [[nodiscard]] constexpr auto const& get() const& {
         if constexpr (Index == 0) {
             return target;
         }
@@ -88,7 +97,7 @@ public:
     }
 
     template <std::size_t Index>
-    [[nodiscard]] auto&& get() && {
+    [[nodiscard]] constexpr auto&& get() && {
         if constexpr (Index == 0) {
             return target;
         }
