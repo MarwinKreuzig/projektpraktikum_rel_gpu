@@ -59,6 +59,7 @@ if(WIN32)
 	list(APPEND relearn_lib_additional_files "neurons/CalciumCalculator.h")
 	list(APPEND relearn_lib_additional_files "neurons/ElementType.h")
 	list(APPEND relearn_lib_additional_files "neurons/FiredStatus.h")
+	list(APPEND relearn_lib_additional_files "neurons/LocalAreaTranslator.h")
 	list(APPEND relearn_lib_additional_files "neurons/NetworkGraph.h")
 	list(APPEND relearn_lib_additional_files "neurons/Neurons.h")
 	list(APPEND relearn_lib_additional_files "neurons/NeuronsExtraInfo.h")
@@ -66,7 +67,8 @@ if(WIN32)
 	list(APPEND relearn_lib_additional_files "neurons/TargetCalciumDecay.h")
 	list(APPEND relearn_lib_additional_files "neurons/UpdateStatus.h")
 	
-	# neurons
+	# helper
+	list(APPEND relearn_lib_additional_files "neurons/helper/AreaMonitor.h")
 	list(APPEND relearn_lib_additional_files "neurons/helper/DistantNeuronRequests.h")
 	list(APPEND relearn_lib_additional_files "neurons/helper/NeuronMonitor.h")
 	list(APPEND relearn_lib_additional_files "neurons/helper/RankNeuronId.h")
@@ -74,7 +76,7 @@ if(WIN32)
 	list(APPEND relearn_lib_additional_files "neurons/helper/SynapseCreationRequests.h")
 	list(APPEND relearn_lib_additional_files "neurons/helper/SynapseDeletionRequests.h")
 	
-	# neurons
+	# models
 	list(APPEND relearn_lib_additional_files "neurons/models/BackgroundActivityCalculator.h")
 	list(APPEND relearn_lib_additional_files "neurons/models/BackgroundActivityCalculators.h")
 	list(APPEND relearn_lib_additional_files "neurons/models/FiredStatusCommunicationMap.h")
@@ -113,6 +115,7 @@ if(WIN32)
 	list(APPEND relearn_lib_additional_files "structure/SpaceFillingCurve.h")
 	
 	# util
+	list(APPEND relearn_lib_additional_files "util/Interval.h")
 	list(APPEND relearn_lib_additional_files "util/MemoryHolder.h")
 	list(APPEND relearn_lib_additional_files "util/MonitorParser.h")
 	list(APPEND relearn_lib_additional_files "util/MPIRank.h")
@@ -122,6 +125,8 @@ if(WIN32)
 	list(APPEND relearn_lib_additional_files "util/Stack.h")
 	list(APPEND relearn_lib_additional_files "util/StatisticalMeasures.h")
 	list(APPEND relearn_lib_additional_files "util/StepParser.h")
+	list(APPEND relearn_lib_additional_files "util/StimulusParser.h")
+	list(APPEND relearn_lib_additional_files "util/StringUtil.h")
 	list(APPEND relearn_lib_additional_files "util/TaggedID.h")
 	list(APPEND relearn_lib_additional_files "util/Timers.h")
 	list(APPEND relearn_lib_additional_files "util/Utility.h")

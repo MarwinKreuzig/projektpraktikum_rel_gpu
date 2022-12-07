@@ -14,6 +14,8 @@
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
+#include <fmt/format.h>
+
 #include <compare>
 #include <ostream>
 #include <utility>
@@ -105,6 +107,7 @@ private:
     int rank{ -1 }; // MPI rank of the owner
     NeuronID neuron_id{ NeuronID::uninitialized_id() }; // Neuron id on the owner
 };
+
 template <>
 struct fmt::formatter<RankNeuronId> : ostream_formatter { };
 

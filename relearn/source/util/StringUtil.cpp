@@ -20,12 +20,14 @@
  * @return Vector of substrings
  */
 std::vector<std::string> StringUtil::split_string(const std::string& string, char delim) {
-    std::vector<std::string> result;
+    std::vector<std::string> result{};
+    result.reserve(string.size());
+
     std::stringstream ss(string);
-    std::string item;
+    std::string item{};
 
     while (getline(ss, item, delim)) {
-        result.push_back(item);
+        result.emplace_back(std::move(item));
     }
 
     return result;
