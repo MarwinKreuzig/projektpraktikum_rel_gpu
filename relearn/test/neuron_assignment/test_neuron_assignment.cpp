@@ -1,5 +1,7 @@
 #include "test_neuron_assignment.h"
 
+#include "neuron_assignment_adapter.h"
+
 #include "sim/random/SubdomainFromNeuronDensity.h"
 #include "sim/random/SubdomainFromNeuronPerRank.h"
 #include "sim/file/MultipleSubdomainsFromFile.h"
@@ -13,27 +15,6 @@
 #include <numeric>
 #include <sstream>
 #include <string>
-
-void NeuronAssignmentTest::generate_random_neurons(std::vector<Vec3d>& positions,
-    std::vector<RelearnTypes::area_id>& neuron_id_to_area_ids, std::vector<RelearnTypes::area_name>& area_id_to_area_name, std::vector<SignalType>& types) {
-
-    const auto number_neurons = get_random_number_neurons();
-    const auto fraction_excitatory_neurons = get_random_percentage();
-    const auto um_per_neuron = get_random_percentage() * 100;
-
-    const auto part = std::make_shared<Partition>(1, 0);
-    part->set_total_number_neurons(number_neurons);
-    SubdomainFromNeuronDensity sfnd{ number_neurons, fraction_excitatory_neurons, um_per_neuron, part };
-
-    sfnd.initialize();
-
-    positions = sfnd.get_neuron_positions_in_subdomains();
-    neuron_id_to_area_ids = sfnd.get_local_area_translator()->get_neuron_ids_to_area_ids();
-    area_id_to_area_name = sfnd.get_local_area_translator()->get_all_area_names();
-    types = sfnd.get_neuron_types_in_subdomains();
-
-    sfnd.write_neurons_to_file("neurons.tmp");
-}
 
 double calculate_excitatory_fraction(const std::vector<SignalType>& types) {
     auto number_excitatory = 0;
@@ -200,7 +181,7 @@ TEST_F(NeuronAssignmentTest, testDensityWriteToFile) {
     std::vector<RelearnTypes::area_name> area_names{};
     std::vector<SignalType> types{};
 
-    generate_random_neurons(positions, area_ids, area_names, types);
+    NeuronAssignmentAdapter::generate_random_neurons(positions, area_ids, area_names, types, mt);
 
     const auto number_neurons = positions.size();
 
@@ -528,7 +509,7 @@ TEST_F(NeuronAssignmentTest, testFileLoadSingleSubdomain) {
     std::vector<RelearnTypes::area_name> area_names{};
     std::vector<SignalType> types{};
 
-    generate_random_neurons(positions, area_ids, area_names, types);
+    NeuronAssignmentAdapter::generate_random_neurons(positions, area_ids, area_names, types, mt);
 
     const auto number_neurons = positions.size();
 
@@ -571,7 +552,7 @@ TEST_F(NeuronAssignmentTest, testFileLoadNetworkSingleSubdomain) {
     std::vector<RelearnTypes::area_name> area_names{};
     std::vector<SignalType> types{};
 
-    generate_random_neurons(positions, area_ids, area_names, types);
+    NeuronAssignmentAdapter::generate_random_neurons(positions, area_ids, area_names, types, mt);
 
     const auto number_neurons = positions.size();
 

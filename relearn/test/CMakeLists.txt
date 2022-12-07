@@ -68,6 +68,8 @@ target_sources(
 		  helper/test_synapse_creation_request.cpp
 		  helper/test_synapse_deletion_request.cpp
 			  
+		  interval/test_interval.cpp
+		  
 		  kernel/test_kernel.cpp
 		  kernel/test_kernel_gamma.cpp
 		  kernel/test_kernel_gaussian.cpp

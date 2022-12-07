@@ -136,6 +136,7 @@ if(WIN32)
 	list(APPEND relearn_lib_additional_files "util/shuffle/shuffle.h")
 	
 	#tests
+	list(APPEND relearn_tests_additional_files "RandomAdapter.h")
 	list(APPEND relearn_tests_additional_files "RelearnTest.hpp")
 	
 	list(APPEND relearn_tests_additional_files "background_activity/test_background_activity.h")
@@ -150,10 +151,14 @@ if(WIN32)
 	
 	list(APPEND relearn_tests_additional_files "fast_multipole_method/test_fast_multipole_method.h")
 	
+	list(APPEND relearn_tests_additional_files "helper/rank_neuron_id_adapter.h")
 	list(APPEND relearn_tests_additional_files "helper/test_distant_neuron_request.h")
 	list(APPEND relearn_tests_additional_files "helper/test_rank_neuron_id.h")
 	list(APPEND relearn_tests_additional_files "helper/test_synapse_creation_request.h")
 	list(APPEND relearn_tests_additional_files "helper/test_synapse_deletion_request.h")
+	
+	list(APPEND relearn_tests_additional_files "interval/interval_adapter.h")
+	list(APPEND relearn_tests_additional_files "interval/test_interval.h")
 	
 	list(APPEND relearn_tests_additional_files "kernel/test_kernel.h")
 	
@@ -161,10 +166,12 @@ if(WIN32)
 	
 	list(APPEND relearn_tests_additional_files "misc/test_misc.h")
 	
+	list(APPEND relearn_tests_additional_files "mpi/mpi_rank_adapter.h")
 	list(APPEND relearn_tests_additional_files "mpi/test_mpi_rank.h")
 	
 	list(APPEND relearn_tests_additional_files "network_graph/test_network_graph.h")
 	
+	list(APPEND relearn_tests_additional_files "neuron_assignment/neuron_assignment_adapter.h")
 	list(APPEND relearn_tests_additional_files "neuron_assignment/test_neuron_assignment.h")
 	
 	list(APPEND relearn_tests_additional_files "neuron_extra_info/test_neuron_extra_info.h")
@@ -188,6 +195,7 @@ if(WIN32)
 	
 	list(APPEND relearn_tests_additional_files "synaptic_input/test_synaptic_input.h")
 	
+	list(APPEND relearn_tests_additional_files "tagged_id/tagged_id_adapter.h")
 	list(APPEND relearn_tests_additional_files "tagged_id/test_tagged_id.h")
 	
 	list(APPEND relearn_tests_additional_files "vector/test_vector.h")

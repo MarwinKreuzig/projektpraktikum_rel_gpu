@@ -16,9 +16,6 @@
 
 class NetworkGraphTest : public RelearnTest {
 protected:
-    static int num_ranks;
-    static int num_synapses_per_neuron;
-
     static void SetUpTestSuite() {
         SetUpTestCaseTemplate();
     }

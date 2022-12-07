@@ -232,16 +232,16 @@ protected:
         return { x, y, z };
     }
 
-    size_t get_random_number_ranks() {
+    [[deprecated]] size_t get_random_number_ranks() {
         return uid_num_ranks(mt);
     }
 
-    int get_random_rank(size_t number_ranks) {
+    [[deprecated]] int get_random_rank(size_t number_ranks) {
         uniform_int_distribution<int> uid(0, static_cast<int>(number_ranks) - 1);
         return uid(mt);
     }
 
-    int get_random_rank(size_t number_ranks, int exclude_rank) {
+    [[deprecated]] int get_random_rank(size_t number_ranks, int exclude_rank) {
         uniform_int_distribution<int> uid(0, static_cast<int>(number_ranks) - 1);
 
         auto rank = uid(mt);
@@ -252,12 +252,12 @@ protected:
         return rank;
     }
 
-    size_t get_adjusted_random_number_ranks() {
+    [[deprecated]] size_t get_adjusted_random_number_ranks() {
         const auto random_rank = get_random_number_ranks();
         return round_to_next_exponent(random_rank, 2);
     }
 
-    size_t get_random_number_neurons() {
+    [[deprecated]] size_t get_random_number_neurons() {
         return uid_num_neurons(mt);
     }
 
@@ -265,12 +265,12 @@ protected:
         return uid_num_synapses(mt);
     }
 
-    NeuronID get_random_neuron_id(size_t number_neurons, size_t offset = 0) {
+    [[deprecated]] NeuronID get_random_neuron_id(size_t number_neurons, size_t offset = 0) {
         uniform_int_distribution<size_t> uid(offset, offset + number_neurons - 1);
         return NeuronID{ uid(mt) };
     }
 
-    NeuronID get_random_neuron_id(size_t number_neurons, NeuronID except) {
+    [[deprecated]] NeuronID get_random_neuron_id(size_t number_neurons, NeuronID except) {
         NeuronID nid;
         do {
             nid = get_random_neuron_id(number_neurons);
@@ -278,17 +278,14 @@ protected:
         return nid;
     }
 
-    RankNeuronId generate_random_rank_neuron_id() {
-        using rank_type = int;
-        using neuron_id_type = NeuronID::value_type;
-
+    [[deprecated]] RankNeuronId generate_random_rank_neuron_id() {
         const auto rank = get_random_mpi_rank();
         const auto neuron_id = get_random_neuron_id(10000);
 
         return { rank, neuron_id };
     }
 
-    MPIRank get_random_mpi_rank(size_t number_ranks = 100000000) {
+    [[deprecated]] MPIRank get_random_mpi_rank(size_t number_ranks = 100000000) {
         const auto rank = get_random_integer<int>(0, int(number_ranks - 1));
         return MPIRank(rank);
     }

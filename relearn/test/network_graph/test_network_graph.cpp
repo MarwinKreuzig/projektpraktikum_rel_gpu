@@ -21,9 +21,6 @@
 #include <utility>
 #include <vector>
 
-int NetworkGraphTest::num_ranks = 17;
-int NetworkGraphTest::num_synapses_per_neuron = 2;
-
 TEST_F(NetworkGraphTest, testNetworkGraphConstructor) {
     const auto number_neurons = get_random_number_neurons();
     NetworkGraph ng(number_neurons, 0);
