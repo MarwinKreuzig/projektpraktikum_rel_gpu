@@ -51,15 +51,21 @@ TEST_F(NeuronsTest, testSignalTypeCheck) {
 
     ASSERT_NO_THROW(Neurons::check_signal_types(network_graph, signal_types, 0));
 
-    const auto src = get_random_neuron_id(num_neurons);
-    const auto tgt_rank = get_random_rank(num_ranks);
-    const auto tgt = get_random_neuron_id(num_neurons, src);
-    auto weight = get_random_double(0.1, 20.0);
-    if (signal_types[src.get_neuron_id()] == SignalType::Excitatory) {
-        weight = -weight;
-    }
-
     for (int test_synapse = 0; test_synapse < num_test_synapses; test_synapse++) {
+        const auto src = get_random_neuron_id(num_neurons);
+        const auto tgt_rank = get_random_rank(num_ranks);
+        const auto tgt = get_random_neuron_id(num_neurons, src);
+        const RankNeuronId tgt_rni(tgt_rank, tgt);
+        auto weight = get_random_double(0.1, 20.0);
+        if (signal_types[src.get_neuron_id()] == SignalType::Excitatory) {
+            weight = -weight;
+        }
+        const auto& out_egdes = network_graph->get_all_out_edges(src);
+        for (const auto& [out_tgt_rni, out_weight] : out_egdes) {
+            if (tgt_rni == out_tgt_rni) {
+                weight = weight - out_weight;
+            }
+        }
         if (tgt_rank == 0) {
             network_graph->add_synapse({ tgt, src, weight });
         } else {
