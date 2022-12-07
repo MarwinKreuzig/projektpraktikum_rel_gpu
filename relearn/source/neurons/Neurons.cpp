@@ -14,6 +14,7 @@
 #include "io/LogFiles.h"
 #include "models/NeuronModels.h"
 #include "mpi/MPIWrapper.h"
+#include "neurons/LocalAreaTranslator.h"
 #include "neurons/NetworkGraph.h"
 #include "io/NeuronIO.h"
 #include "structure/Octree.h"
@@ -78,6 +79,19 @@ void Neurons::init_synaptic_elements() {
         RelearnException::check(axons_cnts[local_id] >= axons->get_connected_elements()[local_id], "Error is with: %d", local_id);
         RelearnException::check(dendrites_inh_cnts[local_id] >= dendrites_inh->get_connected_elements()[local_id], "Error is with: %d", local_id);
         RelearnException::check(dendrites_exc_cnts[local_id] >= dendrites_exc->get_connected_elements()[local_id], "Error is with: %d", local_id);
+    }
+
+    check_signal_types(network_graph_plastic, axons->get_signal_types(), MPIWrapper::get_my_rank());
+}
+
+void Neurons::check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, const std::vector<SignalType>& signal_types, const int my_rank) {
+    for (const auto& neuron_id : NeuronID::range(signal_types.size())) {
+        const auto& signal_type = signal_types[neuron_id.get_neuron_id()];
+        const auto& out_edges = network_graph->get_all_out_edges(neuron_id);
+        for (const auto& [tgt_rni, weight] : out_edges) {
+            RelearnException::check(SignalType::Excitatory == signal_type && weight > 0 || SignalType::Inhibitory == signal_type && weight < 0, "Neuron has outgoing connections not matching its signal type. {} {} -> {} {} {}",
+                my_rank, neuron_id, tgt_rni, signal_type, weight);
+        }
     }
 }
 
@@ -203,6 +217,7 @@ void Neurons::create_neurons(const number_neurons_type creation_count) {
     const auto current_size = number_neurons;
     const auto new_size = current_size + creation_count;
 
+    local_area_translator->neurons_created(creation_count);
     neuron_model->create_neurons(creation_count);
     calcium_calculator->create_neurons(creation_count);
     extra_info->create_neurons(creation_count);
@@ -872,36 +887,19 @@ void Neurons::print_calcium_statistics_to_essentials() {
         calcium_statistics.max);
 }
 
-void Neurons::print_network_graph_to_log_file(const step_type step) const {
-    print_network_graph_to_log_file("step_" + std::to_string(step) + "_");
-}
-
-void Neurons::print_network_graph_to_log_file() const {
-    print_network_graph_to_log_file("");
-}
-
-void Neurons::print_network_graph_to_log_file(const std::string& prefix) const {
+void Neurons::print_network_graph_to_log_file(const step_type step, bool with_prefix) const {
+    std::string prefix = "";
+    if (with_prefix) {
+        prefix = "step_" + std::to_string(step) + "_";
+    }
     LogFiles::save_and_open_new(LogFiles::EventType::InNetwork, prefix + "in_network", "network/");
     LogFiles::save_and_open_new(LogFiles::EventType::OutNetwork, prefix + "out_network", "network/");
 
     std::stringstream ss_in_network{};
-
-    ss_in_network << "# Total number neurons: " << partition->get_total_number_neurons() << '\n';
-    ss_in_network << "# Local number neurons: " << partition->get_number_local_neurons() << '\n';
-    ss_in_network << "# Number MPI ranks: " << partition->get_number_mpi_ranks() << '\n';
-    ss_in_network << "# Current simulation step: " << prefix << '\n';
-    ss_in_network << "# <target_rank> <target_id>\t<source_rank> <source_id>\t<weight>\t<plastic> \n";
-
     std::stringstream ss_out_network{};
 
-    ss_out_network << "# Total number neurons: " << partition->get_total_number_neurons() << '\n';
-    ss_out_network << "# Local number neurons: " << partition->get_number_local_neurons() << '\n';
-    ss_out_network << "# Number MPI ranks: " << partition->get_number_mpi_ranks() << '\n';
-    ss_out_network << "# Current simulation step: " << prefix << '\n';
-    ss_out_network << "# <target_rank> <target_id>\t<source_rank> <source_id>\t<weight>\t<plastic> \n";
-
-    network_graph_plastic->print_with_ranks(ss_out_network, ss_in_network, true);
-    network_graph_static->print_with_ranks(ss_out_network, ss_in_network, false);
+    NeuronIO::write_out_synapses(network_graph_static->get_all_local_out_edges(), network_graph_static->get_all_distant_out_edges(), network_graph_plastic->get_all_local_out_edges(), network_graph_plastic->get_all_distant_out_edges(), MPIWrapper::get_my_rank(), partition->get_number_mpi_ranks(), partition->get_number_local_neurons(), partition->get_total_number_neurons(), ss_out_network, step);
+    NeuronIO::write_in_synapses(network_graph_static->get_all_local_in_edges(), network_graph_static->get_all_distant_in_edges(), network_graph_plastic->get_all_local_in_edges(), network_graph_plastic->get_all_distant_in_edges(), MPIWrapper::get_my_rank(), partition->get_number_mpi_ranks(), partition->get_number_local_neurons(), partition->get_total_number_neurons(), ss_in_network, step);
 
     LogFiles::write_to_file(LogFiles::EventType::InNetwork, false, ss_in_network.str());
     LogFiles::write_to_file(LogFiles::EventType::OutNetwork, false, ss_out_network.str());
@@ -909,7 +907,7 @@ void Neurons::print_network_graph_to_log_file(const std::string& prefix) const {
 
 void Neurons::print_positions_to_log_file() {
     std::stringstream ss;
-    NeuronIO::write_neurons_componentwise(NeuronID::range(number_neurons), extra_info->get_positions(), local_area_translator, axons->get_signal_types(), ss, partition->get_total_number_neurons(), partition->get_simulation_box_size());
+    NeuronIO::write_neurons_componentwise(NeuronID::range(number_neurons), extra_info->get_positions(), local_area_translator, axons->get_signal_types(), ss, partition->get_total_number_neurons(), partition->get_simulation_box_size(), partition->get_all_local_subdomain_boundaries());
     LogFiles::write_to_file(LogFiles::EventType::Positions, false, ss.str());
 }
 

@@ -150,7 +150,7 @@ protected:
 
     std::vector<RelearnTypes::area_name> get_random_area_names(size_t max_areas) {
         const auto nr_areas = get_random_integer<size_t>(1, max_areas);
-        return std::move(get_random_area_names_specific(nr_areas));
+        return get_random_area_names_specific(nr_areas);
     }
 
     std::vector<RelearnTypes::area_name> get_random_area_names_specific(size_t nr_areas) {
@@ -163,7 +163,7 @@ protected:
 
             area_names.emplace_back(name);
         }
-        return std::move(area_names);
+        return area_names;
     }
 
     std::vector<RelearnTypes::area_id> get_random_area_ids(size_t num_areas, size_t num_neurons) {
@@ -171,7 +171,7 @@ protected:
         for (const auto& neuron_id : NeuronID::range(num_neurons)) {
             area_ids.emplace_back(get_random_integer(static_cast<size_t>(0), num_areas - 1));
         }
-        return std::move(area_ids);
+        return area_ids;
     }
 
     static std::vector<RelearnTypes::area_name> get_neuron_id_vs_area_name(const std::vector<RelearnTypes::area_id>& neuron_id_vs_area_id, const std::vector<RelearnTypes::area_name>& area_id_vs_area_name) {
@@ -180,7 +180,7 @@ protected:
         for (auto i : neuron_id_vs_area_id) {
             neuron_id_vs_area_name.emplace_back(area_id_vs_area_name[i]);
         }
-        return std::move(neuron_id_vs_area_name);
+        return neuron_id_vs_area_name;
     }
 
     std::tuple<Vec3d, Vec3d> get_random_simulation_box_size() {
@@ -264,6 +264,14 @@ protected:
     NeuronID get_random_neuron_id(size_t number_neurons, size_t offset = 0) {
         uniform_int_distribution<size_t> uid(offset, offset + number_neurons - 1);
         return NeuronID{ uid(mt) };
+    }
+
+    NeuronID get_random_neuron_id(size_t number_neurons, NeuronID except) {
+        NeuronID nid;
+        do {
+            nid = get_random_neuron_id(number_neurons);
+        } while (nid == except);
+        return nid;
     }
 
     int get_random_synapse_weight() {

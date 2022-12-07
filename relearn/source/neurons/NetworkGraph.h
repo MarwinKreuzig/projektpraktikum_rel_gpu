@@ -155,6 +155,38 @@ public:
     }
 
     /**
+     * @brief Returns a constant reference to all local out-edges of all neurons on this mpi rank
+     * @return Vector of edges. Edges from neuron with id i are at position i
+     */
+    [[nodiscard]] const NeuronLocalOutNeighborhood& get_all_local_out_edges() const {
+        return neuron_local_out_neighborhood;
+    }
+
+    /**
+     * @brief Returns a constant reference to all distant out-edges of all neurons on this mpi rank
+     * @return Vector of edges. Edges from neuron with id i are at position i
+     */
+    [[nodiscard]] const NeuronDistantOutNeighborhood& get_all_distant_out_edges() const {
+        return neuron_distant_out_neighborhood;
+    }
+
+    /**
+     * @brief Returns a constant reference to all local in-edges of all neurons on this mpi rank
+     * @return Vector of edges. Edges from neuron with id i are at position i
+     */
+    [[nodiscard]] const NeuronLocalInNeighborhood& get_all_local_in_edges() const {
+        return neuron_local_in_neighborhood;
+    }
+
+    /**
+     * @brief Returns a constant reference to all distant in-edges of all neurons on this mpi rank
+     * @return Vector of edges. Edges from neuron with id i are at position i
+     */
+    [[nodiscard]] const NeuronDistantInNeighborhood& get_all_distant_in_edges() const {
+        return neuron_distant_in_neighborhood;
+    }
+
+    /**
      * @brief Returns a copy of all in-edges to a neuron, i.e., a copy of all neurons that connect to the specified one via a synapse, of a specified type.
      *      All local in-edges are added with the current MPI rank.
      * @param neuron_id The id of the neuron

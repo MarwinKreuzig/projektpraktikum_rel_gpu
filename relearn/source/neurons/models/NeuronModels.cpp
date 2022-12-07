@@ -22,7 +22,6 @@ void NeuronModel::init(number_neurons_type number_neurons) {
 
     x.resize(number_neurons, 0.0);
     fired.resize(number_neurons, FiredStatus::Inactive);
-    fired_recorder.resize(number_fire_recorders, {});
     for (auto i = 0; i < number_fire_recorders; i++) {
         fired_recorder[i].resize(number_local_neurons, 0U);
     }

@@ -105,6 +105,8 @@ private:
     int rank{ -1 }; // MPI rank of the owner
     NeuronID neuron_id{ NeuronID::uninitialized_id() }; // Neuron id on the owner
 };
+template <>
+struct fmt::formatter<RankNeuronId> : ostream_formatter { };
 
 namespace std {
 template <>

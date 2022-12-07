@@ -6,8 +6,8 @@
 
 #include <algorithm>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-result"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"
 TEST_F(LocalAreaTranslatorTest, simpleTest) {
     const auto num_neurons = get_random_number_neurons();
     const auto num_areas_max = std::min(size_t{ 50 }, num_neurons);
@@ -17,7 +17,7 @@ TEST_F(LocalAreaTranslatorTest, simpleTest) {
     auto cp_neuron_id_to_area_id = std::vector<RelearnTypes::area_id>{};
     std::copy(area_id_to_area_name.begin(), area_id_to_area_name.end(), std::back_inserter(cp_area_id_to_area_name));
     std::copy(neuron_id_to_area_id.begin(), neuron_id_to_area_id.end(), std::back_inserter(cp_neuron_id_to_area_id));
-    LocalAreaTranslator translator(area_id_to_area_name, neuron_id_to_area_id);
+    const LocalAreaTranslator translator(area_id_to_area_name, neuron_id_to_area_id);
 
     ASSERT_EQ(area_id_to_area_name.size(), translator.get_number_of_areas());
     ASSERT_EQ(num_neurons, translator.get_number_neurons_in_total());
@@ -33,19 +33,19 @@ TEST_F(LocalAreaTranslatorTest, simpleTest) {
 }
 
 TEST_F(LocalAreaTranslatorTest, simpleExceptionTest) {
-    const auto num_neurons = get_random_number_neurons();
+    const auto num_neurons = get_random_number_neurons() + 10;
     auto too_many_area_id_to_area_name = get_random_area_names_specific(num_neurons + 1);
     auto neuron_id_to_area_id = get_random_area_ids(num_neurons, num_neurons);
     auto area_id_to_area_name = get_random_area_names_specific(num_neurons);
 
     auto one_wrong_area_id = std::vector<RelearnTypes::area_id>{};
     std::copy(neuron_id_to_area_id.begin(), neuron_id_to_area_id.end(), std::back_inserter(one_wrong_area_id));
-    auto i1 = get_random_integer(size_t{ 0 }, one_wrong_area_id.size()) - 1;
+    auto i1 = get_random_integer(size_t{ 0 }, one_wrong_area_id.size() - 1);
     one_wrong_area_id[i1] = num_neurons;
 
     auto duplicated_area_name = std::vector<RelearnTypes::area_name>{};
     std::copy(area_id_to_area_name.begin(), area_id_to_area_name.end(), std::back_inserter(duplicated_area_name));
-    auto i2 = get_random_integer(size_t{ 0 }, duplicated_area_name.size()) - 1;
+    auto i2 = get_random_integer(size_t{ 0 }, duplicated_area_name.size() - 1);
     size_t i3;
     do {
         i3 = get_random_integer(size_t{ 0 }, duplicated_area_name.size() - 1);
@@ -60,7 +60,7 @@ TEST_F(LocalAreaTranslatorTest, simpleExceptionTest) {
     ASSERT_THROW(LocalAreaTranslator(std::vector<RelearnTypes::area_name>({}), std::vector<RelearnTypes::area_id>({})), RelearnException);
     ASSERT_THROW(LocalAreaTranslator(area_id_to_area_name, std::vector<RelearnTypes::area_id>({})), RelearnException);
 
-    LocalAreaTranslator translator(area_id_to_area_name, neuron_id_to_area_id);
+    const LocalAreaTranslator translator(area_id_to_area_name, neuron_id_to_area_id);
     ASSERT_EQ(num_neurons, translator.get_number_of_areas());
     ASSERT_EQ(num_neurons, translator.get_number_neurons_in_total());
 }
@@ -80,7 +80,7 @@ TEST_F(LocalAreaTranslatorTest, getterAreaTest) {
             area1.emplace_back(i);
         }
     }
-    LocalAreaTranslator translator(area_id_to_area_name, neuron_id_to_area_id);
+    const LocalAreaTranslator translator(area_id_to_area_name, neuron_id_to_area_id);
 
     ASSERT_EQ(area0.size(), translator.get_number_neurons_in_area(0));
     ASSERT_EQ(area1.size(), translator.get_number_neurons_in_area(1));
@@ -111,13 +111,13 @@ TEST_F(LocalAreaTranslatorTest, getterExceptionTest) {
     auto num_neurons = get_random_number_neurons() + 1;
     auto area_id_to_area_name = get_random_area_names_specific(get_random_integer(size_t{ 1 }, num_neurons));
     auto num_areas = area_id_to_area_name.size();
-    std::vector<RelearnTypes::area_id> neuron_id_to_area_id = get_random_area_ids(area_id_to_area_name.size(), num_neurons);
+    const std::vector<RelearnTypes::area_id> neuron_id_to_area_id = get_random_area_ids(area_id_to_area_name.size(), num_neurons);
 
-    LocalAreaTranslator translator(area_id_to_area_name, neuron_id_to_area_id);
+    const LocalAreaTranslator translator(area_id_to_area_name, neuron_id_to_area_id);
 
     ASSERT_THROW(auto val = translator.get_area_name_for_neuron_id(num_neurons), RelearnException);
     ASSERT_THROW(auto val = translator.get_area_id_for_neuron_id(num_neurons), RelearnException);
     ASSERT_THROW(auto val = translator.get_area_name_for_area_id(num_areas), RelearnException);
     ASSERT_THROW(auto val = translator.get_area_id_for_area_name(std::to_string(get_random_percentage())), RelearnException);
 }
-#pragma clang diagnostic pop
+#pragma GCC diagnostic pop

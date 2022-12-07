@@ -4,7 +4,9 @@
 #include "util/TaggedID.h"
 #include "neurons/LocalAreaTranslator.h"
 #include "neurons/SignalType.h"
+#include "util/HashPair.h"
 
+#include <boost/functional/hash.hpp>
 #include <filesystem>
 #include <map>
 #include <string>
@@ -58,7 +60,7 @@ private:
     int den_inh_conn = 0;
     double calcium = 0;
     double fired_fraction = 0.0;
-    using EnsembleConnections = std::map<std::pair<int, RelearnTypes::area_id>, ConnectionCount>;
+    using EnsembleConnections = std::unordered_map<std::pair<int, RelearnTypes::area_id>, ConnectionCount, HashPair>;
 
     /**
      * For current logging step: Maps for each ensemble the number of connections
