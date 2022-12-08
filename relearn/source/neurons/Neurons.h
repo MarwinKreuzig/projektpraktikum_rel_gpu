@@ -139,13 +139,15 @@ public:
         }
 
         for (NeuronID neuron_id : NeuronID::range(0, number_neurons)) {
-            const auto source = neuron_id.get_neuron_id();
-            NetworkGraph::DistantEdges edges = network_graph_plastic->get_all_out_edges(neuron_id);
-            // Check for forbidden plastic connection from or to a static neuron
-            for (const auto& edge : edges) {
-                const RelearnTypes::neuron_id target = edge.first.get_neuron_id().get_neuron_id();
-                RelearnException::check(disable_flags[source] != UpdateStatus::STATIC, "Plastic connection from a static neuron is forbidden. {} (static)  -> {}", source, target);
-                RelearnException::check(disable_flags[target] != UpdateStatus::STATIC, "Plastic connection to a static neuron is forbidden. {} -> {}(static)", source, target);
+            const auto neuron_id_id = neuron_id.get_neuron_id();
+            NetworkGraph::DistantEdges edges_out = network_graph_plastic->get_all_out_edges(neuron_id);
+            if (!edges_out.empty()) {
+                RelearnException::check(disable_flags[neuron_id_id] != UpdateStatus::STATIC, "Plastic connection from a static neuron is forbidden. {} (static)  -> ?", neuron_id_id);
+            }
+
+            NetworkGraph::DistantEdges edges_in = network_graph_plastic->get_all_in_edges(neuron_id);
+            if (!edges_in.empty()) {
+                RelearnException::check(disable_flags[neuron_id_id] != UpdateStatus::STATIC, "Plastic connection from a static neuron is forbidden. ? -> {} (static)", neuron_id_id);
             }
         }
     }
