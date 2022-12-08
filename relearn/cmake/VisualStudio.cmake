@@ -148,6 +148,7 @@ if(WIN32)
 	list(APPEND relearn_tests_additional_files "cell/test_cell.h")
 	
 	list(APPEND relearn_tests_additional_files "connector/test_connector.h")
+	list(APPEND relearn_tests_additional_files "connector/connector_adapter.h")
 	
 	list(APPEND relearn_tests_additional_files "fast_multipole_method/test_fast_multipole_method.h")
 	
@@ -169,6 +170,7 @@ if(WIN32)
 	list(APPEND relearn_tests_additional_files "mpi/mpi_rank_adapter.h")
 	list(APPEND relearn_tests_additional_files "mpi/test_mpi_rank.h")
 	
+	list(APPEND relearn_tests_additional_files "network_graph/network_graph_adapter.h")
 	list(APPEND relearn_tests_additional_files "network_graph/test_network_graph.h")
 	
 	list(APPEND relearn_tests_additional_files "neuron_assignment/neuron_assignment_adapter.h")

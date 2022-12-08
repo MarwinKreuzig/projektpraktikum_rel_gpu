@@ -22,9 +22,6 @@ unsigned int RelearnTest::predetermined_seed = 2818124801;
 
 uniform_int_distribution<size_t> RelearnTest::uid_num_ranks(1, upper_bound_num_ranks);
 uniform_int_distribution<size_t> RelearnTest::uid_num_neurons(1, upper_bound_num_neurons);
-uniform_int_distribution<size_t> RelearnTest::uid_num_synapses(1, upper_bound_num_synapses);
-
-uniform_int_distribution<int> RelearnTest::uid_synapse_weight(-bound_synapse_weight, bound_synapse_weight);
 
 uniform_int_distribution<unsigned short> RelearnTest::uid_refinement(0, max_refinement_level);
 uniform_int_distribution<unsigned short> RelearnTest::uid_small_refinement(0, small_refinement_level);

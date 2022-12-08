@@ -12,6 +12,8 @@
 
 #include "RelearnTest.hpp"
 
+#include "helper/rank_neuron_id_adapter.h"
+
 #include "neurons/helper/RankNeuronId.h"
 
 #include <sstream>
@@ -31,7 +33,7 @@ protected:
     }
 
     std::pair<RankNeuronId, std::string> generate_random_rank_neuron_id_description() {
-        auto rank_neuron_id = generate_random_rank_neuron_id();
+        auto rank_neuron_id = RankNeuronIdAdapter::generate_random_rank_neuron_id(mt);
         auto description = codify_rank_neuron_id(rank_neuron_id);
         return { std::move(rank_neuron_id), std::move(description) };
     }

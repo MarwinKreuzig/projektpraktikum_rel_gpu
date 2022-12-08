@@ -10,6 +10,10 @@
 
 #include "test_connector.h"
 
+#include "connector_adapter.h"
+#include "mpi/mpi_rank_adapter.h"
+#include "tagged_id/tagged_id_adapter.h"
+
 #include "algorithm/Connector.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/models/SynapticElements.h"
@@ -18,13 +22,13 @@
 #include <vector>
 
 TEST_F(ConnectorTest, testForwardConnectorExceptions) {
-    const auto number_neurons_1 = get_random_number_neurons();
-    const auto number_neurons_2 = get_random_number_neurons();
+    const auto number_neurons_1 = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_2 = TaggedIdAdapter::get_random_number_neurons(mt);
 
     const auto final_number_neurons = number_neurons_1 == number_neurons_2 ? number_neurons_2 + 1 : number_neurons_2;
 
-    const auto number_ranks_1 = get_random_number_ranks() + 1;
-    const auto number_ranks_2 = get_random_number_ranks() + 1;
+    const auto number_ranks_1 = MPIRankAdapter::get_random_number_ranks(mt) + 1;
+    const auto number_ranks_2 = MPIRankAdapter::get_random_number_ranks(mt) + 1;
 
     const auto final_number_ranks = number_ranks_1 == number_neurons_2 ? number_neurons_2 + 1 : number_ranks_2;
 
@@ -48,8 +52,8 @@ TEST_F(ConnectorTest, testForwardConnectorExceptions) {
 }
 
 TEST_F(ConnectorTest, testForwardConnectorEmptyMap) {
-    const auto number_neurons = get_random_number_neurons();
-    const auto number_ranks = get_random_number_ranks() + 1;
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt) + 1;
 
     const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
     const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Inhibitory);
@@ -101,8 +105,8 @@ TEST_F(ConnectorTest, testForwardConnectorEmptyMap) {
 }
 
 TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
-    const auto number_neurons = get_random_number_neurons();
-    const auto number_ranks = get_random_number_ranks() + 1;
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt) + 1;
 
     const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
     const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Inhibitory);
@@ -180,8 +184,8 @@ TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
 }
 
 TEST_F(ConnectorTest, testForwardConnectorIncoming) {
-    const auto number_neurons = get_random_number_neurons();
-    const auto number_ranks = get_random_number_ranks() + 1;
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt) + 1;
 
     const auto& axons = create_axons(number_neurons);
     const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
@@ -194,7 +198,7 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
     const auto previous_grown_inhibitory_counts = inhibitory_dendrites->get_grown_elements();
 
     const auto& [incoming_requests, number_excitatory_requests, number_inhibitory_requests]
-        = create_incoming_requests(number_ranks, 0, number_neurons, 0, 9);
+        = ConnectorAdapter::create_incoming_requests(number_ranks, 0, number_neurons, 0, 9, mt);
 
     auto [responses, synapses] = ForwardConnector::process_requests(incoming_requests, excitatory_dendrites, inhibitory_dendrites);
     auto [local_synapses, distant_in_synapses] = synapses;

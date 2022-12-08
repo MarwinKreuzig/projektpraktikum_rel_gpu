@@ -10,6 +10,8 @@
 
 #include "test_cell.h"
 
+#include "tagged_id/tagged_id_adapter.h"
+
 #include "algorithm/Algorithms.h"
 #include "algorithm/Cells.h"
 #include "structure/Cell.h"
@@ -367,8 +369,8 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_set_number_dendrites() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto num_dends_ex_1 = get_random_number_neurons();
-    const auto num_dends_in_1 = get_random_number_neurons();
+    const auto num_dends_ex_1 = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto num_dends_in_1 = TaggedIdAdapter::get_random_number_neurons(mt);
 
     cell.set_number_excitatory_dendrites(static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_dends_ex_1));
     cell.set_number_inhibitory_dendrites(static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_dends_in_1));
@@ -380,8 +382,8 @@ void CellTest::test_cell_set_number_dendrites() {
     ASSERT_EQ(num_dends_in_1, cell.get_number_dendrites_for(SignalType::Inhibitory));
     ASSERT_EQ(num_dends_in_1, cell.get_number_elements_for(ElementType::Dendrite, SignalType::Inhibitory));
 
-    const auto num_dends_ex_2 = get_random_number_neurons();
-    const auto num_dends_in_2 = get_random_number_neurons();
+    const auto num_dends_ex_2 = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto num_dends_in_2 = TaggedIdAdapter::get_random_number_neurons(mt);
 
     cell.set_number_excitatory_dendrites(static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_dends_ex_2));
     cell.set_number_inhibitory_dendrites(static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_dends_in_2));
@@ -771,8 +773,8 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_set_number_axons() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto num_axs_ex_1 = get_random_number_neurons();
-    const auto num_axs_in_1 = get_random_number_neurons();
+    const auto num_axs_ex_1 = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto num_axs_in_1 = TaggedIdAdapter::get_random_number_neurons(mt);
 
     cell.set_number_excitatory_axons(static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_axs_ex_1));
     cell.set_number_inhibitory_axons(static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_axs_in_1));
@@ -784,8 +786,8 @@ void CellTest::test_cell_set_number_axons() {
     ASSERT_EQ(num_axs_in_1, cell.get_number_axons_for(SignalType::Inhibitory));
     ASSERT_EQ(num_axs_in_1, cell.get_number_elements_for(ElementType::Axon, SignalType::Inhibitory));
 
-    const auto num_axs_ex_2 = get_random_number_neurons();
-    const auto num_axs_in_2 = get_random_number_neurons();
+    const auto num_axs_ex_2 = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto num_axs_in_2 = TaggedIdAdapter::get_random_number_neurons(mt);
 
     cell.set_number_excitatory_axons(static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_axs_ex_2));
     cell.set_number_inhibitory_axons(static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_axs_in_2));
@@ -853,12 +855,12 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_set_neuron_id() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto neuron_id_1 = get_random_number_neurons();
+    const auto neuron_id_1 = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto id1 = NeuronID{ neuron_id_1 };
     cell.set_neuron_id(id1);
     ASSERT_EQ(id1, cell.get_neuron_id());
 
-    const auto neuron_id_2 = get_random_number_neurons();
+    const auto neuron_id_2 = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto id2 = NeuronID{ neuron_id_2 };
     cell.set_neuron_id(id2);
     ASSERT_EQ(id2, cell.get_neuron_id());
@@ -960,13 +962,13 @@ void CellTest::test_vpe_number_elements() {
     const auto& number_initially_free_elements = vpe.get_number_free_elements();
     ASSERT_EQ(number_initially_free_elements, 0) << number_initially_free_elements;
 
-    const auto nfe_1 = get_random_number_neurons();
+    const auto nfe_1 = TaggedIdAdapter::get_random_number_neurons(mt);
     vpe.set_number_free_elements(static_cast<typename VirtualPlasticityElement::counter_type>(nfe_1));
 
     const auto& number_free_elements_1 = vpe.get_number_free_elements();
     ASSERT_EQ(number_free_elements_1, nfe_1) << number_free_elements_1 << ' ' << nfe_1;
 
-    const auto nfe_2 = get_random_number_neurons();
+    const auto nfe_2 = TaggedIdAdapter::get_random_number_neurons(mt);
     vpe.set_number_free_elements(static_cast<typename VirtualPlasticityElement::counter_type>(nfe_2));
 
     const auto& number_free_elements_2 = vpe.get_number_free_elements();
@@ -1014,7 +1016,7 @@ void CellTest::test_vpe_mixed() {
     const auto& number_initially_free_elements = vpe.get_number_free_elements();
     ASSERT_EQ(number_initially_free_elements, 0) << number_initially_free_elements;
 
-    const auto nfe_1 = get_random_number_neurons();
+    const auto nfe_1 = TaggedIdAdapter::get_random_number_neurons(mt);
     vpe.set_number_free_elements(nfe_1);
 
     const auto& number_free_elements_1 = vpe.get_number_free_elements();
@@ -1029,7 +1031,7 @@ void CellTest::test_vpe_mixed() {
     ASSERT_TRUE(position_3.has_value());
     ASSERT_EQ(position_3.value(), pos_3);
 
-    const auto nfe_2 = get_random_number_neurons();
+    const auto nfe_2 = TaggedIdAdapter::get_random_number_neurons(mt);
     vpe.set_number_free_elements(nfe_2);
 
     const auto& number_free_elements_2 = vpe.get_number_free_elements();

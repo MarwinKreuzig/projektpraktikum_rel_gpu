@@ -10,6 +10,8 @@
 
 #include "test_misc.h"
 
+#include "tagged_id/tagged_id_adapter.h"
+
 #include "util/Utility.h"
 
 TEST_F(MiscTest, testNumberDigitsInt) {
@@ -151,9 +153,9 @@ TEST_F(MiscTest, testMinMaxAccSizeAllStatic) {
 }
 
 TEST_F(MiscTest, testMinMaxAccDouble) {
-    const auto number_enabled = get_random_number_neurons();
-    const auto number_disabled = get_random_number_neurons();
-    const auto number_static = get_random_number_neurons();
+    const auto number_enabled = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_disabled = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_static = TaggedIdAdapter::get_random_number_neurons(mt);
 
     const auto number_values = number_enabled + number_disabled + number_static;
 
@@ -191,9 +193,9 @@ TEST_F(MiscTest, testMinMaxAccDouble) {
 }
 
 TEST_F(MiscTest, testMinMaxAccSizet) {
-    const auto number_enabled = get_random_number_neurons();
-    const auto number_disabled = get_random_number_neurons();
-    const auto number_static = get_random_number_neurons();
+    const auto number_enabled = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_disabled = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_static = TaggedIdAdapter::get_random_number_neurons(mt);
 
     const auto number_values = number_enabled + number_disabled + number_static;
 

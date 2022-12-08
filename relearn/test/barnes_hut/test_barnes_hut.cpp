@@ -10,6 +10,9 @@
 
 #include "test_barnes_hut.h"
 
+#include "mpi/mpi_rank_adapter.h"
+#include "tagged_id/tagged_id_adapter.h"
+
 #include "algorithm/Algorithms.h"
 #include "algorithm/BarnesHutInternal/BarnesHutBase.h"
 #include "algorithm/Cells.h"
@@ -47,14 +50,14 @@ TEST_F(BarnesHutTest, testBarnesHutACException) {
     const auto minimum = Vec3d{ 0.0, 0.0, 0.0 };
     const auto maximum = Vec3d{ 10.0, 10.0, 10.0 };
 
-    const auto rank = get_random_rank(1024);
+    const auto rank = MPIRankAdapter::get_random_mpi_rank(1024, mt);
     const auto level = get_random_integer<std::uint16_t>(0, 24);
-    const auto& neuron_id = get_random_neuron_id(10000);
+    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
     const auto& node_position = get_random_position_in_box(minimum, maximum);
 
     OctreeNode<additional_cell_attributes> node{};
 
-    node.set_rank(rank);
+    node.set_rank(rank.get_rank());
     node.set_cell_neuron_id(neuron_id);
     node.set_level(level);
 
@@ -90,14 +93,14 @@ TEST_F(BarnesHutTest, testBarnesHutACLeaf) {
     const auto minimum = Vec3d{ 0.0, 0.0, 0.0 };
     const auto maximum = Vec3d{ 10.0, 10.0, 10.0 };
 
-    const auto rank = get_random_rank(1024);
+    const auto rank = MPIRankAdapter::get_random_mpi_rank(1024, mt);
     const auto level = get_random_integer<std::uint16_t>(0, 24);
-    const auto& neuron_id = get_random_neuron_id(10000);
+    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
     const auto& node_position = get_random_position_in_box(minimum, maximum);
 
     OctreeNode<additional_cell_attributes> node{};
 
-    node.set_rank(rank);
+    node.set_rank(rank.get_rank());
     node.set_cell_neuron_id(neuron_id);
     node.set_level(level);
 
@@ -138,14 +141,14 @@ TEST_F(BarnesHutTest, testBarnesHutACParent) {
     const auto& scaled_minimum = minimum / 10.0;
     const auto& scaled_maximum = maximum / 10.0;
 
-    const auto rank = get_random_rank(1024);
+    const auto rank = MPIRankAdapter::get_random_mpi_rank(1024, mt);
     const auto level = get_random_integer<std::uint16_t>(0, 24);
-    const auto& neuron_id = get_random_neuron_id(10000);
+    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
     const auto& node_position = get_random_position_in_box(scaled_minimum, scaled_maximum);
 
     OctreeNode<additional_cell_attributes> node{};
 
-    node.set_rank(rank);
+    node.set_rank(rank.get_rank());
     node.set_cell_neuron_id(neuron_id);
     node.set_level(level);
     node.set_parent();
@@ -193,7 +196,7 @@ TEST_F(BarnesHutTest, testBarnesHutACParent) {
 }
 
 TEST_F(BarnesHutTest, testUpdateFunctor) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& [min, max] = get_random_simulation_box_size();
 
     const auto& axons = create_axons(number_neurons);
@@ -347,14 +350,14 @@ TEST_F(BarnesHutInvertedTest, testBarnesHutInvertedACException) {
     const auto minimum = Vec3d{ 0.0, 0.0, 0.0 };
     const auto maximum = Vec3d{ 10.0, 10.0, 10.0 };
 
-    const auto rank = get_random_rank(1024);
+    const auto rank = MPIRankAdapter::get_random_mpi_rank(1024, mt);
     const auto level = get_random_integer<std::uint16_t>(0, 24);
-    const auto& neuron_id = get_random_neuron_id(10000);
+    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
     const auto& node_position = get_random_position_in_box(minimum, maximum);
 
     OctreeNode<additional_cell_attributes> node{};
 
-    node.set_rank(rank);
+    node.set_rank(rank.get_rank());
     node.set_cell_neuron_id(neuron_id);
     node.set_level(level);
 
@@ -390,14 +393,14 @@ TEST_F(BarnesHutInvertedTest, testBarnesHutInvertedACLeaf) {
     const auto minimum = Vec3d{ 0.0, 0.0, 0.0 };
     const auto maximum = Vec3d{ 10.0, 10.0, 10.0 };
 
-    const auto rank = get_random_rank(1024);
+    const auto rank = MPIRankAdapter::get_random_mpi_rank(1024, mt);
     const auto level = get_random_integer<std::uint16_t>(0, 24);
-    const auto& neuron_id = get_random_neuron_id(10000);
+    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
     const auto& node_position = get_random_position_in_box(minimum, maximum);
 
     OctreeNode<additional_cell_attributes> node{};
 
-    node.set_rank(rank);
+    node.set_rank(rank.get_rank());
     node.set_cell_neuron_id(neuron_id);
     node.set_level(level);
 
@@ -438,14 +441,14 @@ TEST_F(BarnesHutInvertedTest, testBarnesHutACParent) {
     const auto& scaled_minimum = minimum / 10.0;
     const auto& scaled_maximum = maximum / 10.0;
 
-    const auto rank = get_random_rank(1024);
+    const auto rank = MPIRankAdapter::get_random_mpi_rank(1024, mt);
     const auto level = get_random_integer<std::uint16_t>(0, 24);
-    const auto& neuron_id = get_random_neuron_id(10000);
+    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
     const auto& node_position = get_random_position_in_box(scaled_minimum, scaled_maximum);
 
     OctreeNode<additional_cell_attributes> node{};
 
-    node.set_rank(rank);
+    node.set_rank(rank.get_rank());
     node.set_cell_neuron_id(neuron_id);
     node.set_level(level);
     node.set_parent();

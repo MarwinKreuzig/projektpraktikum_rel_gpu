@@ -10,6 +10,8 @@
 
 #include "test_synapse_deletion_request.h"
 
+#include "tagged_id/tagged_id_adapter.h"
+
 #include "neurons/helper/SynapseDeletionRequests.h"
 
 TEST_F(SynapseDeletionTest, testDefaultConstructor) {
@@ -28,8 +30,8 @@ TEST_F(SynapseDeletionTest, testDefaultConstructor) {
 }
 
 TEST_F(SynapseDeletionTest, testConstructor) {
-    const auto& golden_affected_neuron_id = get_random_neuron_id(10000);
-    const auto& golden_initiator_neuron_id = get_random_neuron_id(10000);
+    const auto& golden_affected_neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
+    const auto& golden_initiator_neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
     const auto& golden_initiator_element_type = get_random_element_type();
     const auto& golden_signal_type = get_random_signal_type();
 
@@ -51,7 +53,7 @@ TEST_F(SynapseDeletionTest, testConstructorException) {
     const auto& golden_initiator_element_type = get_random_element_type();
     const auto& golden_signal_type = get_random_signal_type();
 
-    const auto& dummy_neuron_id = get_random_neuron_id(10000);
+    const auto& dummy_neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
 
     ASSERT_THROW(SynapseDeletionRequest sdr(NeuronID::virtual_id(), dummy_neuron_id, golden_initiator_element_type, golden_signal_type), RelearnException);
     ASSERT_THROW(SynapseDeletionRequest sdr(NeuronID::uninitialized_id(), dummy_neuron_id, golden_initiator_element_type, golden_signal_type), RelearnException);
@@ -67,8 +69,8 @@ TEST_F(SynapseDeletionTest, testConstructorException) {
 }
 
 TEST_F(SynapseDeletionTest, testStructuredBinding) {
-    const auto& golden_affected_neuron_id = get_random_neuron_id(10000);
-    const auto& golden_initiator_neuron_id = get_random_neuron_id(10000);
+    const auto& golden_affected_neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
+    const auto& golden_initiator_neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
     const auto& golden_initiator_element_type = get_random_element_type();
     const auto& golden_signal_type = get_random_signal_type();
 

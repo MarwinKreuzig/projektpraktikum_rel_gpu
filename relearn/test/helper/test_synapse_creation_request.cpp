@@ -10,6 +10,8 @@
 
 #include "test_synapse_creation_request.h"
 
+#include "tagged_id/tagged_id_adapter.h"
+
 #include "neurons/helper/SynapseCreationRequests.h"
 
 TEST_F(SynapseCreationTest, testDefaultConstructor) {
@@ -26,8 +28,8 @@ TEST_F(SynapseCreationTest, testDefaultConstructor) {
 }
 
 TEST_F(SynapseCreationTest, testConstructor) {
-    const auto& golden_target_neuron_id = get_random_neuron_id(10000);
-    const auto& golden_source_neuron_id = get_random_neuron_id(10000);
+    const auto& golden_target_neuron_id = TaggedIdAdapter::get_random_neuron_id(mt);
+    const auto& golden_source_neuron_id = TaggedIdAdapter::get_random_neuron_id(mt);
     const auto& golden_signal_type = get_random_signal_type();
 
     SynapseCreationRequest scr{ golden_target_neuron_id, golden_source_neuron_id, golden_signal_type };
@@ -45,7 +47,7 @@ TEST_F(SynapseCreationTest, testConstructor) {
 TEST_F(SynapseCreationTest, testConstructorException) {
     const auto& golden_signal_type = get_random_signal_type();
 
-    const auto& dummy_neuron_id = get_random_neuron_id(10000);
+    const auto& dummy_neuron_id = TaggedIdAdapter::get_random_neuron_id(mt);
 
     ASSERT_THROW(SynapseCreationRequest scr(NeuronID::virtual_id(), dummy_neuron_id, golden_signal_type), RelearnException);
     ASSERT_THROW(SynapseCreationRequest scr(NeuronID::uninitialized_id(), dummy_neuron_id, golden_signal_type), RelearnException);
@@ -61,8 +63,8 @@ TEST_F(SynapseCreationTest, testConstructorException) {
 }
 
 TEST_F(SynapseCreationTest, testStructuredBinding) {
-    const auto& golden_target_neuron_id = get_random_neuron_id(10000);
-    const auto& golden_source_neuron_id = get_random_neuron_id(10000);
+    const auto& golden_target_neuron_id = TaggedIdAdapter::get_random_neuron_id(mt);
+    const auto& golden_source_neuron_id = TaggedIdAdapter::get_random_neuron_id(mt);
     const auto& golden_signal_type = get_random_signal_type();
 
     SynapseCreationRequest scr{ golden_target_neuron_id, golden_source_neuron_id, golden_signal_type };

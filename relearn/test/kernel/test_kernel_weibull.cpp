@@ -10,6 +10,8 @@
 
 #include "test_kernel.h"
 
+#include "tagged_id/tagged_id_adapter.h"
+
 #include "algorithm/Kernel/Gaussian.h"
 #include "algorithm/Kernel/Kernel.h"
 #include "algorithm/Cells.h"
@@ -143,8 +145,8 @@ TEST_F(ProbabilityKernelTest, testWeibullPrecalculatedValues) {
 }
 
 TEST_F(KernelTest, testWeibullKernelIntegration) {
-    const auto& neuron_id_1 = get_random_neuron_id(1000);
-    const auto& neuron_id_2 = get_random_neuron_id(1000, 1000);
+    const auto& neuron_id_1 = TaggedIdAdapter::get_random_neuron_id(1000, mt);
+    const auto& neuron_id_2 = TaggedIdAdapter::get_random_neuron_id(1000, 1000, mt);
 
     const auto& source_position = get_random_position();
 

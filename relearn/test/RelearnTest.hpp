@@ -152,32 +152,6 @@ protected:
         return uid(mt);
     }
 
-    std::vector<RelearnTypes::area_name> get_random_area_names(size_t max_areas) {
-        const auto nr_areas = get_random_integer<size_t>(1, max_areas);
-        return get_random_area_names_specific(nr_areas);
-    }
-
-    std::vector<RelearnTypes::area_name> get_random_area_names_specific(size_t nr_areas) {
-        std::vector<RelearnTypes::area_name> area_names{};
-        for (int area_id = 0; area_id < nr_areas; area_id++) {
-            RelearnTypes::area_name name;
-            do {
-                name = std::to_string(get_random_percentage());
-            } while (name.empty() || std::find(area_names.begin(), area_names.end(), name) != area_names.end());
-
-            area_names.emplace_back(name);
-        }
-        return area_names;
-    }
-
-    std::vector<RelearnTypes::area_id> get_random_area_ids(size_t num_areas, size_t num_neurons) {
-        std::vector<RelearnTypes::area_id> area_ids{};
-        for (const auto& neuron_id : NeuronID::range(num_neurons)) {
-            area_ids.emplace_back(get_random_integer(static_cast<size_t>(0), num_areas - 1));
-        }
-        return area_ids;
-    }
-
     static std::vector<RelearnTypes::area_name> get_neuron_id_vs_area_name(const std::vector<RelearnTypes::area_id>& neuron_id_vs_area_id, const std::vector<RelearnTypes::area_name>& area_id_vs_area_name) {
         std::vector<RelearnTypes::area_name> neuron_id_vs_area_name{};
 
@@ -232,90 +206,8 @@ protected:
         return { x, y, z };
     }
 
-    [[deprecated]] size_t get_random_number_ranks() {
-        return uid_num_ranks(mt);
-    }
-
-    [[deprecated]] int get_random_rank(size_t number_ranks) {
-        uniform_int_distribution<int> uid(0, static_cast<int>(number_ranks) - 1);
-        return uid(mt);
-    }
-
-    [[deprecated]] int get_random_rank(size_t number_ranks, int exclude_rank) {
-        uniform_int_distribution<int> uid(0, static_cast<int>(number_ranks) - 1);
-
-        auto rank = uid(mt);
-        while (rank == exclude_rank) {
-            rank = uid(mt);
-        }
-
-        return rank;
-    }
-
-    [[deprecated]] size_t get_adjusted_random_number_ranks() {
-        const auto random_rank = get_random_number_ranks();
-        return round_to_next_exponent(random_rank, 2);
-    }
-
-    [[deprecated]] size_t get_random_number_neurons() {
-        return uid_num_neurons(mt);
-    }
-
-    size_t get_random_number_synapses() {
-        return uid_num_synapses(mt);
-    }
-
-    [[deprecated]] NeuronID get_random_neuron_id(size_t number_neurons, size_t offset = 0) {
-        uniform_int_distribution<size_t> uid(offset, offset + number_neurons - 1);
-        return NeuronID{ uid(mt) };
-    }
-
-    [[deprecated]] NeuronID get_random_neuron_id(size_t number_neurons, NeuronID except) {
-        NeuronID nid;
-        do {
-            nid = get_random_neuron_id(number_neurons);
-        } while (nid == except);
-        return nid;
-    }
-
-    [[deprecated]] RankNeuronId generate_random_rank_neuron_id() {
-        const auto rank = get_random_mpi_rank();
-        const auto neuron_id = get_random_neuron_id(10000);
-
-        return { rank, neuron_id };
-    }
-
-    [[deprecated]] MPIRank get_random_mpi_rank(size_t number_ranks = 100000000) {
-        const auto rank = get_random_integer<int>(0, int(number_ranks - 1));
-        return MPIRank(rank);
-    }
-
-    int get_random_synapse_weight() {
-        int weight = uid_synapse_weight(mt);
-
-        while (weight == 0) {
-            weight = uid_synapse_weight(mt);
-        }
-
-        return weight;
-    }
-
     unsigned int get_random_synaptic_element_connected_count(unsigned int maximum) {
         return get_random_integer<unsigned int>(0, maximum);
-    }
-
-    std::vector<std::tuple<NeuronID, NeuronID, int>> get_random_synapses(size_t number_neurons, size_t number_synapses) {
-        std::vector<std::tuple<NeuronID, NeuronID, int>> synapses(number_synapses);
-
-        for (auto i = 0; i < number_synapses; i++) {
-            const auto source_id = get_random_neuron_id(number_neurons);
-            const auto target_id = get_random_neuron_id(number_neurons);
-            const auto weight = get_random_synapse_weight();
-
-            synapses[i] = { source_id, target_id, weight };
-        }
-
-        return synapses;
     }
 
     double get_random_percentage() {
@@ -462,65 +354,6 @@ protected:
         return ss.str();
     }
 
-    std::vector<LocalSynapse> generate_local_synapses(size_t number_neurons) {
-        const auto number_synapses = get_random_number_synapses();
-
-        std::map<std::pair<NeuronID, NeuronID>, int> synapse_map{};
-        for (auto i = 0; i < number_synapses; i++) {
-            const auto source = get_random_neuron_id(number_neurons);
-            const auto target = get_random_neuron_id(number_neurons);
-            const auto weight = get_random_synapse_weight();
-
-            synapse_map[{ target, source }] += weight;
-        }
-
-        std::vector<LocalSynapse> synapses{};
-        synapses.reserve(synapse_map.size());
-
-        for (const auto& [pair, weight] : synapse_map) {
-            const auto& [target, source] = pair;
-            if (weight != 0) {
-                synapses.emplace_back(target, source, weight);
-            }
-        }
-
-        return synapses;
-    }
-
-    std::tuple<CommunicationMap<SynapseCreationRequest>, std::vector<size_t>, std::vector<size_t>> create_incoming_requests(size_t number_ranks, int current_rank,
-        size_t number_neurons, size_t number_requests_lower_bound, size_t number_requests_upper_bound) {
-
-        CommunicationMap<SynapseCreationRequest> cm(static_cast<int>(number_ranks));
-        std::vector<size_t> number_excitatory_requests(number_neurons, 0);
-        std::vector<size_t> number_inhibitory_requests(number_neurons, 0);
-
-        for (const auto& target_id : NeuronID::range(number_neurons)) {
-            const auto number_requests = get_random_integer<size_t>(number_requests_lower_bound, number_requests_upper_bound);
-
-            const auto id = target_id.get_neuron_id();
-
-            for (auto r = 0; r < number_requests; r++) {
-                const auto source_rank = get_random_rank(number_ranks);
-                const auto source_id = get_random_neuron_id(number_neurons);
-                const auto fixed_source_id = (source_id.get_neuron_id() == target_id.get_neuron_id() && current_rank == source_rank) ? NeuronID{ (source_id.get_neuron_id() + 1) % number_neurons } : source_id;
-
-                const auto signal_type = get_random_signal_type();
-
-                const SynapseCreationRequest scr{ target_id, fixed_source_id, signal_type };
-
-                if (signal_type == SignalType::Excitatory) {
-                    number_excitatory_requests[id]++;
-                } else {
-                    number_inhibitory_requests[id]++;
-                }
-
-                cm.append(source_rank, scr);
-            }
-        }
-
-        return { cm, number_excitatory_requests, number_inhibitory_requests };
-    }
-
     std::tuple<SynapticElements, std::vector<double>, std::vector<unsigned int>, std::vector<SignalType>>
     create_random_synaptic_elements(size_t number_elements, ElementType element_type, double min_calcium_to_grow,
         double growth_factor = SynapticElements::default_nu, double retract_ratio = SynapticElements::default_vacant_retract_ratio,
@@ -629,26 +462,6 @@ protected:
         return return_value;
     }
 
-    std::vector<size_t> get_random_derangement(size_t size) {
-        std::vector<size_t> derangement(size);
-        std::iota(derangement.begin(), derangement.end(), 0);
-
-        auto check = [](const std::vector<size_t>& vec) -> bool {
-            for (auto i = 0; i < vec.size(); i++) {
-                if (i == vec[i]) {
-                    return false;
-                }
-            }
-            return true;
-        };
-
-        do {
-            shuffle(derangement.begin(), derangement.end());
-        } while (!check(derangement));
-
-        return derangement;
-    }
-
     std::vector<UpdateStatus> get_update_status(size_t number_neurons, size_t number_disabled) {
         std::vector<UpdateStatus> status(number_disabled, UpdateStatus::Disabled);
         status.resize(number_neurons, UpdateStatus::Enabled);
@@ -675,48 +488,6 @@ protected:
     std::vector<FiredStatus> get_fired_status(size_t number_neurons) {
         const auto number_disabled = get_random_integer<size_t>(0, number_neurons);
         return get_fired_status(number_neurons, number_disabled);
-    }
-
-    std::shared_ptr<NetworkGraph> create_network_graph_all_to_all(size_t number_neurons, int mpi_rank) {
-        auto ptr = std::make_shared<NetworkGraph>(number_neurons, mpi_rank);
-
-        for (const auto& source_id : NeuronID::range(number_neurons)) {
-            for (const auto& target_id : NeuronID::range(number_neurons)) {
-                if (source_id.get_neuron_id() == target_id.get_neuron_id()) {
-                    continue;
-                }
-
-                const auto weight = get_random_synapse_weight();
-                LocalSynapse ls(target_id, source_id, weight);
-
-                ptr->add_synapse(ls);
-            }
-        }
-
-        return ptr;
-    }
-
-    std::shared_ptr<NetworkGraph> create_network_graph(size_t number_neurons, int mpi_rank, unsigned long long number_connections_per_vertex) {
-        auto ptr = std::make_shared<NetworkGraph>(number_neurons, mpi_rank);
-
-        for (auto i = 0ULL; i < number_connections_per_vertex; i++) {
-            const auto& source_ids = NeuronID::range(number_neurons);
-            const auto& target_ids = get_random_derangement(number_neurons);
-
-            for (auto j = 0; j < number_neurons; j++) {
-
-                const auto weight = get_random_synapse_weight();
-                LocalSynapse ls(NeuronID(false, target_ids[j]), source_ids[j], weight);
-                ptr->add_synapse(ls);
-            }
-        }
-
-        return ptr;
-    }
-
-    std::shared_ptr<NetworkGraph> create_empty_network_graph(size_t number_neurons, int mpi_rank) {
-        auto ptr = std::make_shared<NetworkGraph>(number_neurons, mpi_rank);
-        return ptr;
     }
 
     template <typename AdditionalCellAttributes>
@@ -837,11 +608,8 @@ protected:
     constexpr static int upper_bound_num_ranks = 32;
 
     constexpr static int upper_bound_num_neurons = 1000;
-    constexpr static int upper_bound_num_synapses = 1000;
 
     constexpr static int number_neurons_out_of_scope = 100;
-
-    constexpr static int bound_synapse_weight = 10;
 
     mt19937 mt;
 
@@ -855,9 +623,6 @@ private:
 
     static uniform_int_distribution<size_t> uid_num_ranks;
     static uniform_int_distribution<size_t> uid_num_neurons;
-    static uniform_int_distribution<size_t> uid_num_synapses;
-
-    static uniform_int_distribution<int> uid_synapse_weight;
 
     static double position_bounary;
 

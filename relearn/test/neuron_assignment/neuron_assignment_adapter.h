@@ -43,4 +43,37 @@ public:
 
         sfnd.write_neurons_to_file("neurons.tmp");
     }
+
+    static std::vector<RelearnTypes::area_id> get_random_area_ids(size_t number_areas, size_t number_neurons, std::mt19937& mt) {
+        std::vector<RelearnTypes::area_id> area_ids{};
+        area_ids.reserve(number_neurons);
+
+        for (size_t i = 0; i < number_areas; i++) {
+            const auto area_id = RandomAdapter::get_random_integer<RelearnTypes::area_id>(0, RelearnTypes::area_id(number_areas - 1), mt);
+            area_ids.emplace_back(area_id);
+        }
+
+        return area_ids;
+    }
+
+    static std::vector<RelearnTypes::area_name> get_random_area_names(size_t max_areas, std::mt19937& mt) {
+        const auto number_areas = RandomAdapter::get_random_integer<size_t>(1, max_areas, mt);
+        return get_random_area_names_specific(number_areas, mt);
+    }
+
+    static std::vector<RelearnTypes::area_name> get_random_area_names_specific(size_t number_areas, std::mt19937& mt) {
+        std::vector<RelearnTypes::area_name> area_names{};
+        area_names.reserve(number_areas);
+
+        for (size_t area_id = 0; area_id < number_areas; area_id++) {
+            RelearnTypes::area_name name{};
+            do {
+                name = std::to_string(RandomAdapter::get_random_percentage<double>(mt));
+            } while (name.empty() || std::find(area_names.begin(), area_names.end(), name) != area_names.end());
+
+            area_names.emplace_back(std::move(name));
+        }
+
+        return area_names;
+    }
 };

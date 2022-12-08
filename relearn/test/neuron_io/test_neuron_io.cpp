@@ -1,12 +1,16 @@
 #include "test_neuron_io.h"
 
+#include "mpi/mpi_rank_adapter.h"
+#include "network_graph/network_graph_adapter.h"
+#include "tagged_id/tagged_id_adapter.h"
+
 #include "io/NeuronIO.h"
 #include "neurons/LocalAreaTranslator.h"
 
 #include <random>
 
 TEST_F(IOTest, testNeuronIOWriteComponentwiseSizeExceptions) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     const auto correct_ids = std::vector<NeuronID>{ number_neurons };
     const auto correct_position = std::vector<RelearnTypes::position_type>{ number_neurons };
@@ -40,7 +44,7 @@ TEST_F(IOTest, testNeuronIOWriteComponentwiseSizeExceptions) {
 }
 
 TEST_F(IOTest, testNeuronIOWriteComponentwiseFileNotFound) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -65,7 +69,7 @@ TEST_F(IOTest, testNeuronIOWriteComponentwiseFileNotFound) {
 }
 
 TEST_F(IOTest, testNeuronIOWriteComponentwise) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -90,7 +94,7 @@ TEST_F(IOTest, testNeuronIOWriteComponentwise) {
 }
 
 TEST_F(IOTest, testNeuronIOReadComponentwise) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -161,7 +165,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwiseFileNotFound) {
 }
 
 TEST_F(IOTest, testNeuronIOReadComponentwiseIDException) {
-    const auto number_neurons = get_random_number_neurons() + 1;
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -200,7 +204,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwiseIDException) {
 }
 
 TEST_F(IOTest, testNeuronIOReadComponentwisePositionXException) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -232,7 +236,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionXException) {
 }
 
 TEST_F(IOTest, testNeuronIOReadComponentwisePositionYException) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -264,7 +268,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionYException) {
 }
 
 TEST_F(IOTest, testNeuronIOReadComponentwisePositionZException) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -296,7 +300,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionZException) {
 }
 
 TEST_F(IOTest, testNeuronIOWrite1) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -324,7 +328,7 @@ TEST_F(IOTest, testNeuronIOWrite1) {
 }
 
 TEST_F(IOTest, testNeuronIOWrite2) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -393,7 +397,7 @@ TEST_F(IOTest, testNeuronIOWrite2) {
 }
 
 TEST_F(IOTest, testNeuronIOWriteFileNotFound) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -422,7 +426,7 @@ TEST_F(IOTest, testNeuronIOWriteFileNotFound) {
 }
 
 TEST_F(IOTest, testNeuronIORead) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_neurons = std::vector<LoadedNeuron>{};
 
@@ -492,7 +496,7 @@ TEST_F(IOTest, testNeuronIOReadFileNotFound) {
 }
 
 TEST_F(IOTest, testNeuronIOReadIDException) {
-    const auto number_neurons = get_random_number_neurons() + 3;
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 3;
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -531,7 +535,7 @@ TEST_F(IOTest, testNeuronIOReadIDException) {
 }
 
 TEST_F(IOTest, testNeuronIOReadPositionXException) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -563,7 +567,7 @@ TEST_F(IOTest, testNeuronIOReadPositionXException) {
 }
 
 TEST_F(IOTest, testNeuronIOReadPositionYException) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -595,7 +599,7 @@ TEST_F(IOTest, testNeuronIOReadPositionYException) {
 }
 
 TEST_F(IOTest, testNeuronIOReadPositionZException) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -627,7 +631,7 @@ TEST_F(IOTest, testNeuronIOReadPositionZException) {
 }
 
 TEST_F(IOTest, testNeuronIOReadIDs) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -696,7 +700,7 @@ TEST_F(IOTest, testNeuronIOReadIDsEmpty1) {
 }
 
 TEST_F(IOTest, testNeuronIOReadIDsEmpty2) {
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -795,11 +799,11 @@ TEST_F(IOTest, testReadInSynapsesFileNotFound) {
 }
 
 TEST_F(IOTest, testReadInSynapses) {
-    const auto number_ranks = get_random_number_ranks();
-    const auto my_rank = get_random_rank(number_ranks);
+    const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt);
+    const auto my_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
-    const auto number_synapses = get_random_number_synapses();
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_synapses = NetworkGraphAdapter::get_random_number_synapses(mt);
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     LocalSynapses preliminary_local_synapses_static{};
     DistantInSynapses preliminary_distant_synapses_static{};
@@ -810,12 +814,12 @@ TEST_F(IOTest, testReadInSynapses) {
     std::ofstream ofstream(path);
 
     for (auto synapse_id = 0; synapse_id < number_synapses; synapse_id++) {
-        const auto& source_id = get_random_neuron_id(number_neurons);
-        const auto& target_id = get_random_neuron_id(number_neurons);
+        const auto& source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto& target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
 
-        const auto source_rank = get_random_rank(number_ranks);
+        const auto source_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
-        const auto weight = get_random_synapse_weight();
+        const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
 
         const bool plastic = get_random_bool();
         const char flag = plastic ? '1' : '0';
@@ -840,7 +844,7 @@ TEST_F(IOTest, testReadInSynapses) {
     ofstream.flush();
     ofstream.close();
 
-    auto [synapses_static, synapses_plastic] = NeuronIO::read_in_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [synapses_static, synapses_plastic] = NeuronIO::read_in_synapses(path, number_neurons, my_rank.get_rank(), static_cast<int>(number_ranks));
     auto [read_local_synapses_plastic, read_distant_synapses_plastic] = synapses_plastic;
     auto [read_local_synapses_static, read_distant_synapses_static] = synapses_static;
 
@@ -866,11 +870,11 @@ TEST_F(IOTest, testReadOutSynapsesFileNotFound) {
 }
 
 TEST_F(IOTest, testReadOutSynapses) {
-    const auto number_ranks = get_random_number_ranks();
-    const auto my_rank = get_random_rank(number_ranks);
+    const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt);
+    const auto my_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
-    const auto number_synapses = get_random_number_synapses();
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_synapses = NetworkGraphAdapter::get_random_number_synapses(mt);
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     LocalSynapses preliminary_local_synapses_static{};
     DistantOutSynapses preliminary_distant_synapses_static{};
@@ -881,12 +885,12 @@ TEST_F(IOTest, testReadOutSynapses) {
     std::ofstream ofstream(path);
 
     for (auto synapse_id = 0; synapse_id < number_synapses; synapse_id++) {
-        const auto& source_id = get_random_neuron_id(number_neurons);
-        const auto& target_id = get_random_neuron_id(number_neurons);
+        const auto& source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto& target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
 
-        const auto target_rank = get_random_rank(number_ranks);
+        const auto target_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
-        const auto weight = get_random_synapse_weight();
+        const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
 
         const bool plastic = get_random_bool();
         const char flag = plastic ? '1' : '0';
@@ -910,7 +914,7 @@ TEST_F(IOTest, testReadOutSynapses) {
     ofstream.flush();
     ofstream.close();
 
-    auto [synapses_static, synapses_plastic] = NeuronIO::read_out_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [synapses_static, synapses_plastic] = NeuronIO::read_out_synapses(path, number_neurons, my_rank.get_rank(), static_cast<int>(number_ranks));
     auto [read_local_synapses_plastic, read_distant_synapses_plastic] = synapses_plastic;
     auto [read_local_synapses_static, read_distant_synapses_static] = synapses_static;
 
@@ -936,11 +940,11 @@ TEST_F(IOTest, testWriteInSynapsesFileNotFound) {
 }
 
 TEST_F(IOTest, testWriteInSynapses) {
-    const auto number_ranks = get_random_number_ranks();
-    const auto my_rank = get_random_rank(number_ranks);
+    const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt);
+    const auto my_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
-    const auto number_synapses = get_random_number_synapses();
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_synapses = NetworkGraphAdapter::get_random_number_synapses(mt);
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     LocalSynapses preliminary_local_synapses_static{};
     DistantInSynapses preliminary_distant_synapses_static{};
@@ -950,12 +954,12 @@ TEST_F(IOTest, testWriteInSynapses) {
     std::filesystem::path path{ "./in_network.tmp" };
 
     for (auto synapse_id = 0; synapse_id < number_synapses; synapse_id++) {
-        const auto& source_id = get_random_neuron_id(number_neurons);
-        const auto& target_id = get_random_neuron_id(number_neurons);
+        const auto& source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto& target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
 
-        const auto source_rank = get_random_rank(number_ranks);
+        const auto source_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
-        const auto weight = get_random_synapse_weight();
+        const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
 
         const bool plastic = get_random_bool();
         const char flag = plastic ? '1' : '0';
@@ -975,9 +979,9 @@ TEST_F(IOTest, testWriteInSynapses) {
         }
     }
 
-    NeuronIO::write_in_synapses(preliminary_local_synapses_static, preliminary_distant_synapses_static, preliminary_local_synapses_plastic, preliminary_distant_synapses_plastic, my_rank, number_neurons, path);
+    NeuronIO::write_in_synapses(preliminary_local_synapses_static, preliminary_distant_synapses_static, preliminary_local_synapses_plastic, preliminary_distant_synapses_plastic, my_rank.get_rank(), number_neurons, path);
 
-    auto [synapses_static, synapses_plastic] = NeuronIO::read_in_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [synapses_static, synapses_plastic] = NeuronIO::read_in_synapses(path, number_neurons, my_rank.get_rank(), static_cast<int>(number_ranks));
     auto [read_local_synapses_plastic, read_distant_synapses_plastic] = synapses_plastic;
     auto [read_local_synapses_static, read_distant_synapses_static] = synapses_static;
 
@@ -1005,11 +1009,11 @@ TEST_F(IOTest, testWriteOutSynapsesFileNotFound) {
 }
 
 TEST_F(IOTest, testWriteOutSynapses) {
-    const auto number_ranks = get_random_number_ranks();
-    const auto my_rank = get_random_rank(number_ranks);
+    const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt);
+    const auto my_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
-    const auto number_synapses = get_random_number_synapses();
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_synapses = NetworkGraphAdapter::get_random_number_synapses(mt);
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     LocalSynapses preliminary_local_synapses_static{};
     DistantOutSynapses preliminary_distant_synapses_static{};
@@ -1019,12 +1023,12 @@ TEST_F(IOTest, testWriteOutSynapses) {
     std::filesystem::path path{ "./out_network.tmp" };
 
     for (auto synapse_id = 0; synapse_id < number_synapses; synapse_id++) {
-        const auto& source_id = get_random_neuron_id(number_neurons);
-        const auto& target_id = get_random_neuron_id(number_neurons);
+        const auto& source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto& target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
 
-        const auto target_rank = get_random_rank(number_ranks);
+        const auto target_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
-        const auto weight = get_random_synapse_weight();
+        const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
 
         const bool plastic = get_random_bool();
         const char flag = plastic ? '1' : '0';
@@ -1044,9 +1048,9 @@ TEST_F(IOTest, testWriteOutSynapses) {
         }
     }
 
-    NeuronIO::write_out_synapses(preliminary_local_synapses_static, preliminary_distant_synapses_static, preliminary_local_synapses_plastic, preliminary_distant_synapses_plastic, my_rank, number_neurons, path);
+    NeuronIO::write_out_synapses(preliminary_local_synapses_static, preliminary_distant_synapses_static, preliminary_local_synapses_plastic, preliminary_distant_synapses_plastic, my_rank.get_rank(), number_neurons, path);
 
-    auto [synapses_static, synapses_plastic] = NeuronIO::read_out_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [synapses_static, synapses_plastic] = NeuronIO::read_out_synapses(path, number_neurons, my_rank.get_rank(), static_cast<int>(number_ranks));
     auto [read_local_synapses_plastic, read_distant_synapses_plastic] = synapses_plastic;
     auto [read_local_synapses_static, read_distant_synapses_static] = synapses_static;
 
@@ -1067,23 +1071,23 @@ TEST_F(IOTest, testWriteOutSynapses) {
 }
 
 TEST_F(IOTest, testReadSynapsesInteractionNetworkGraph) {
-    const auto number_ranks = get_random_number_ranks();
-    const auto my_rank = get_random_rank(number_ranks);
+    const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt);
+    const auto my_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
-    const auto number_synapses = get_random_number_synapses() * 0 + 5;
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) * 0 + 5;
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     std::vector<std::map<NeuronID, RelearnTypes::synapse_weight>> local_synapses(number_neurons, std::map<NeuronID, RelearnTypes::synapse_weight>{});
     std::vector<std::map<RankNeuronId, RelearnTypes::synapse_weight>> distant_in_synapses(number_neurons, std::map<RankNeuronId, RelearnTypes::synapse_weight>{});
     std::vector<std::map<RankNeuronId, RelearnTypes::synapse_weight>> distant_out_synapses(number_neurons, std::map<RankNeuronId, RelearnTypes::synapse_weight>{});
 
     for (auto synapse_id = 0; synapse_id < number_synapses; synapse_id++) {
-        const auto& source_id = get_random_neuron_id(number_neurons);
-        const auto& target_id = get_random_neuron_id(number_neurons);
+        const auto& source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto& target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
 
-        const auto target_rank = get_random_rank(number_ranks);
+        const auto target_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
-        const auto weight = get_random_synapse_weight();
+        const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
 
         if (target_rank == my_rank) {
             local_synapses[target_id.get_neuron_id()][source_id] += weight;
@@ -1093,12 +1097,12 @@ TEST_F(IOTest, testReadSynapsesInteractionNetworkGraph) {
     }
 
     for (auto synapse_id = 0; synapse_id < number_synapses; synapse_id++) {
-        const auto& source_id = get_random_neuron_id(number_neurons);
-        const auto& target_id = get_random_neuron_id(number_neurons);
+        const auto& source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto& target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
 
-        const auto source_rank = get_random_rank(number_ranks);
+        const auto source_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
-        const auto weight = get_random_synapse_weight();
+        const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
 
         if (source_rank == my_rank) {
             local_synapses[target_id.get_neuron_id()][source_id] += weight;
@@ -1134,7 +1138,7 @@ TEST_F(IOTest, testReadSynapsesInteractionNetworkGraph) {
     std::ranges::sort(golden_distant_in_synapses);
     std::ranges::sort(golden_distant_out_synapses);
 
-    NetworkGraph ng(number_neurons, my_rank);
+    NetworkGraph ng(number_neurons, my_rank.get_rank());
     ng.add_edges(golden_local_synapses, golden_distant_in_synapses, golden_distant_out_synapses);
 
     std::filesystem::path in_path{ "./in_network.tmp" };
@@ -1151,10 +1155,10 @@ TEST_F(IOTest, testReadSynapsesInteractionNetworkGraph) {
     out_ofstream.flush();
     out_ofstream.close();
 
-    auto [read_in_synapses_static, read_in_synapses_plastic] = NeuronIO::read_in_synapses(in_path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [read_in_synapses_static, read_in_synapses_plastic] = NeuronIO::read_in_synapses(in_path, number_neurons, my_rank.get_rank(), static_cast<int>(number_ranks));
     ;
     auto [read_local_in_synapses, read_distant_in_synapses] = read_in_synapses_plastic;
-    auto [reader_out_synapses_static, read_out_synapses_plastic] = NeuronIO::read_out_synapses(out_path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [reader_out_synapses_static, read_out_synapses_plastic] = NeuronIO::read_out_synapses(out_path, number_neurons, my_rank.get_rank(), static_cast<int>(number_ranks));
     auto [read_local_out_synapses, read_distant_out_synapses] = read_out_synapses_plastic;
 
     std::ranges::sort(read_local_in_synapses);

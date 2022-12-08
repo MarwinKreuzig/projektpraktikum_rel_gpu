@@ -1,5 +1,8 @@
 #include "test_octree.h"
 
+#include "mpi/mpi_rank_adapter.h"
+#include "tagged_id/tagged_id_adapter.h"
+
 #include "algorithm/Algorithms.h"
 #include "algorithm/Cells.h"
 #include "neurons/models/SynapticElements.h"
@@ -38,10 +41,10 @@ TYPED_TEST(OctreeTest, testOctreeNodeReset) {
 
     node.set_parent();
 
-    const auto number_ranks = this->get_random_number_ranks();
-    const auto rank = this->get_random_rank(number_ranks);
+    const auto number_ranks = MPIRankAdapter::get_random_number_ranks(this->mt);
+    const auto rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, this->mt);
 
-    node.set_rank(rank);
+    node.set_rank(rank.get_rank());
 
     std::array<OctreeNode<AdditionalCellAttributes>, Constants::number_oct> other_nodes{};
     for (auto i = 0; i < Constants::number_oct; i++) {
@@ -69,20 +72,20 @@ TYPED_TEST(OctreeTest, testOctreeNodeSetterGetter) {
 
     node.set_parent();
 
-    const auto number_ranks = this->get_random_number_ranks();
-    const auto rank = this->get_random_rank(number_ranks);
+    const auto number_ranks = MPIRankAdapter::get_random_number_ranks(this->mt);
+    const auto rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, this->mt);
 
-    node.set_rank(rank);
+    node.set_rank(rank.get_rank());
 
     std::array<OctreeNode<AdditionalCellAttributes>, Constants::number_oct> other_nodes{};
     for (auto i = 0; i < Constants::number_oct; i++) {
         node.set_child(&(other_nodes[i]), i);
     }
 
-    ASSERT_THROW(node.set_rank(-rank - 1), RelearnException) << rank;
+    ASSERT_THROW(node.set_rank(-rank.get_rank() - 1), RelearnException) << rank;
 
     ASSERT_TRUE(node.is_parent());
-    ASSERT_TRUE(node.get_rank() == rank);
+    ASSERT_TRUE(node.get_rank() == rank.get_rank());
     ASSERT_TRUE(node.get_children().size() == Constants::number_oct);
 
     const auto& children = node.get_children();
@@ -142,8 +145,8 @@ TYPED_TEST(OctreeTest, testOctreeNodeInsert) {
     node.set_cell_neuron_id(NeuronID::virtual_id());
     node.set_cell_neuron_position(own_position);
 
-    size_t number_neurons = this->get_random_number_neurons();
-    size_t num_additional_ids = this->get_random_number_neurons();
+    size_t number_neurons = TaggedIdAdapter::get_random_number_neurons(this->mt);
+    size_t num_additional_ids = TaggedIdAdapter::get_random_number_neurons(this->mt);
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = this->generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids);
 
@@ -226,8 +229,8 @@ TYPED_TEST(OctreeTest, testOctreeInsertNeurons) {
 
     OctreeImplementation<TypeParam> octree(min, max, level_of_branch_nodes);
 
-    size_t number_neurons = this->get_random_number_neurons();
-    size_t num_additional_ids = this->get_random_number_neurons();
+    size_t number_neurons = TaggedIdAdapter::get_random_number_neurons(this->mt);
+    size_t num_additional_ids = TaggedIdAdapter::get_random_number_neurons(this->mt);
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = this->generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids);
 
@@ -262,15 +265,15 @@ TYPED_TEST(OctreeTest, testOctreeInsertNeuronsExceptions) {
 
     OctreeImplementation<TypeParam> octree(min, max, level_of_branch_nodes);
 
-    size_t number_neurons = this->get_random_number_neurons();
-    size_t num_additional_ids = this->get_random_number_neurons();
+    size_t number_neurons = TaggedIdAdapter::get_random_number_neurons(this->mt);
+    size_t num_additional_ids = TaggedIdAdapter::get_random_number_neurons(this->mt);
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = this->generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids);
 
-    const auto number_ranks = this->get_random_number_ranks();
+    const auto number_ranks = MPIRankAdapter::get_random_number_ranks(this->mt);
 
     for (const auto& [position, id] : neurons_to_place) {
-        const auto rank = this->get_random_rank(number_ranks);
+        const auto rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, this->mt);
 
         const Vec3d pos_invalid_x_max = max + Vec3d{ 1, 0, 0 };
         const Vec3d pos_invalid_y_max = max + Vec3d{ 0, 1, 0 };
@@ -302,8 +305,8 @@ TYPED_TEST(OctreeTest, testOctreeStructure) {
 
     OctreeImplementation<TypeParam> octree(min, max, level_of_branch_nodes);
 
-    size_t number_neurons = this->get_random_number_neurons();
-    size_t num_additional_ids = this->get_random_number_neurons();
+    size_t number_neurons = TaggedIdAdapter::get_random_number_neurons(this->mt);
+    size_t num_additional_ids = TaggedIdAdapter::get_random_number_neurons(this->mt);
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = this->generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids);
 
@@ -386,8 +389,8 @@ TYPED_TEST(OctreeTest, testOctreeMemoryStructure) {
 
     OctreeImplementation<TypeParam> octree(min, max, level_of_branch_nodes);
 
-    size_t number_neurons = this->get_random_number_neurons();
-    size_t num_additional_ids = this->get_random_number_neurons();
+    size_t number_neurons = TaggedIdAdapter::get_random_number_neurons(this->mt);
+    size_t num_additional_ids = TaggedIdAdapter::get_random_number_neurons(this->mt);
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = this->generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids);
 
@@ -479,8 +482,8 @@ TYPED_TEST(OctreeTest, testOctreeInsertLocalTree) {
 
     OctreeImplementation<TypeParam> octree(min, max, level_of_branch_nodes);
 
-    size_t number_neurons = this->get_random_number_neurons();
-    size_t num_additional_ids = this->get_random_number_neurons();
+    size_t number_neurons = TaggedIdAdapter::get_random_number_neurons(this->mt);
+    size_t num_additional_ids = TaggedIdAdapter::get_random_number_neurons(this->mt);
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = this->generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids);
 
@@ -519,7 +522,7 @@ TYPED_TEST(OctreeTest, testOctreeInsertLocalTree) {
         nodes_to_save_new_local_trees[i]->set_rank(my_rank);
 
         for (auto j = 0; j < 8; j++) {
-            const auto id_nodes = this->get_random_neuron_id(2000).get_neuron_id();
+            const auto id_nodes = TaggedIdAdapter::get_random_neuron_id(2000, this->mt).get_neuron_id();
             if (id_nodes < 1000) {
                 node.set_child(nodes_to_refer_to[id_nodes], j);
                 nodes_to_save_new_local_trees[i]->set_child(nodes_to_refer_to[id_nodes], j);
@@ -589,8 +592,8 @@ TYPED_TEST(OctreeTest, testOctreeLevel) {
     node.set_cell_neuron_id(NeuronID::virtual_id());
     node.set_cell_neuron_position(own_position);
 
-    size_t number_neurons = this->get_random_number_neurons();
-    size_t num_additional_ids = this->get_random_number_neurons();
+    size_t number_neurons = TaggedIdAdapter::get_random_number_neurons(this->mt);
+    size_t num_additional_ids = TaggedIdAdapter::get_random_number_neurons(this->mt);
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = this->generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids);
 

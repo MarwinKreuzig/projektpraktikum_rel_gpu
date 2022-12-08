@@ -1,5 +1,7 @@
 #include "test_neuron_extra_info.h"
 
+#include "tagged_id/tagged_id_adapter.h"
+
 #include "neurons/NeuronsExtraInfo.h"
 
 void NeuronsExtraInfoTest::assert_empty(const NeuronsExtraInfo& nei, size_t number_neurons) {
@@ -10,7 +12,7 @@ void NeuronsExtraInfoTest::assert_empty(const NeuronsExtraInfo& nei, size_t numb
     ASSERT_EQ(0, positions_size) << positions_size;
 
     for (auto i = 0; i < number_neurons_out_of_scope; i++) {
-        const auto neuron_id = get_random_neuron_id(number_neurons, 1);
+        const auto neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, 1, mt);
 
         ASSERT_THROW(const auto& tmp = nei.get_position(neuron_id), RelearnException) << "assert empty position" << neuron_id;
     }
@@ -35,7 +37,7 @@ void NeuronsExtraInfoTest::assert_contains(const NeuronsExtraInfo& nei, size_t n
     }
 
     for (auto i = 0; i < number_neurons_out_of_scope; i++) {
-        const auto neuron_id = get_random_neuron_id(number_neurons, number_neurons);
+        const auto neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, number_neurons, mt);
 
         ASSERT_THROW(const auto& tmp = nei.get_position(neuron_id), RelearnException) << neuron_id;
     }
@@ -50,7 +52,7 @@ TEST_F(NeuronsExtraInfoTest, testNeuronsExtraInfo) {
 
     assert_empty(nei, upper_bound_num_neurons);
 
-    const auto new_size = get_random_number_neurons();
+    const auto new_size = TaggedIdAdapter::get_random_number_neurons(mt);
 
     ASSERT_THROW(nei.set_positions(std::vector<NeuronsExtraInfo::position_type>(new_size)), RelearnException);
 
@@ -60,12 +62,12 @@ TEST_F(NeuronsExtraInfoTest, testNeuronsExtraInfo) {
 TEST_F(NeuronsExtraInfoTest, testNeuronsExtraInfoInit) {
     NeuronsExtraInfo nei{};
 
-    const auto number_neurons = get_random_number_neurons();
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     nei.init(number_neurons);
     assert_empty(nei, number_neurons);
 
-    auto num_neurons_wrong = get_random_number_neurons();
+    auto num_neurons_wrong = TaggedIdAdapter::get_random_number_neurons(mt);
     if (num_neurons_wrong == number_neurons) {
         num_neurons_wrong++;
     }
@@ -100,9 +102,9 @@ TEST_F(NeuronsExtraInfoTest, testNeuronsExtraInfoInit) {
 TEST_F(NeuronsExtraInfoTest, testNeuronsExtraInfoCreate) {
     NeuronsExtraInfo nei{};
 
-    const auto num_neurons_init = get_random_number_neurons();
-    const auto num_neurons_create_1 = get_random_number_neurons();
-    const auto num_neurons_create_2 = get_random_number_neurons();
+    const auto num_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto num_neurons_create_1 = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto num_neurons_create_2 = TaggedIdAdapter::get_random_number_neurons(mt);
 
     const auto num_neurons_total_1 = num_neurons_init + num_neurons_create_1;
     const auto num_neurons_total_2 = num_neurons_total_1 + num_neurons_create_2;

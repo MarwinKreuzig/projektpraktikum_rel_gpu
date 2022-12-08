@@ -133,7 +133,7 @@
 //    model->init(number_neurons);
 //
 //    const auto conductance = model->get_k();
-//    const auto number_disabled_neurons = get_random_neuron_id(number_neurons).get_neuron_id() * 0;
+//    const auto number_disabled_neurons = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt).get_neuron_id() * 0;
 //
 //    const auto status_flags = get_update_status(number_neurons, number_disabled_neurons);
 //
@@ -1067,7 +1067,7 @@
 //    auto model = std::make_unique<PoissonModel>();
 //
 //    const auto number_neurons = get_random_number_neurons();
-//    const auto number_synapses = get_random_neuron_id(number_neurons);
+//    const auto number_synapses = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
 //
 //    auto ng = create_network_graph(number_neurons, 0, number_synapses.get_neuron_id());
 //
@@ -1079,7 +1079,7 @@
 //    auto model = std::make_unique<IzhikevichModel>();
 //
 //    const auto number_neurons = get_random_number_neurons();
-//    const auto number_synapses = get_random_neuron_id(number_neurons);
+//    const auto number_synapses = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
 //
 //    auto ng = create_network_graph(number_neurons, 0, number_synapses.get_neuron_id());
 //
@@ -1091,7 +1091,7 @@
 //    auto model = std::make_unique<FitzHughNagumoModel>();
 //
 //    const auto number_neurons = get_random_number_neurons();
-//    const auto number_synapses = get_random_neuron_id(number_neurons);
+//    const auto number_synapses = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
 //
 //    auto ng = create_network_graph(number_neurons, 0, number_synapses.get_neuron_id());
 //
@@ -1103,7 +1103,7 @@
 //    auto model = std::make_unique<AEIFModel>();
 //
 //    const auto number_neurons = get_random_number_neurons();
-//    const auto number_synapses = get_random_neuron_id(number_neurons);
+//    const auto number_synapses = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
 //
 //    auto ng = create_network_graph(number_neurons, 0, number_synapses.get_neuron_id());
 //

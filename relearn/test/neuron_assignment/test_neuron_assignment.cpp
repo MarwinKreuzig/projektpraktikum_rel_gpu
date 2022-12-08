@@ -1,6 +1,9 @@
 #include "test_neuron_assignment.h"
 
+#include "mpi/mpi_rank_adapter.h"
+#include "network_graph/network_graph_adapter.h"
 #include "neuron_assignment_adapter.h"
+#include "tagged_id/tagged_id_adapter.h"
 
 #include "sim/random/SubdomainFromNeuronDensity.h"
 #include "sim/random/SubdomainFromNeuronPerRank.h"
@@ -43,8 +46,8 @@ void write_synapses_to_file(const std::vector<LocalSynapse>& synapses, std::file
 }
 
 TEST_F(NeuronAssignmentTest, testDensityTooManyRanks) {
-    const auto golden_number_neurons = get_random_number_neurons();
-    const auto golden_number_ranks = get_adjusted_random_number_ranks() * 2;
+    const auto golden_number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto golden_number_ranks = MPIRankAdapter::get_adjusted_random_number_ranks(mt) * 2;
     const auto golden_fraction_excitatory_neurons = get_random_percentage();
     const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -55,7 +58,7 @@ TEST_F(NeuronAssignmentTest, testDensityTooManyRanks) {
 }
 
 TEST_F(NeuronAssignmentTest, testDensityConstructor) {
-    const auto golden_number_neurons = get_random_number_neurons() + 100;
+    const auto golden_number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 100;
     const auto golden_fraction_excitatory_neurons = get_random_percentage();
     const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -79,7 +82,7 @@ TEST_F(NeuronAssignmentTest, testDensityConstructor) {
 }
 
 TEST_F(NeuronAssignmentTest, testDensityInitialize) {
-    const auto golden_number_neurons = get_random_number_neurons() + 100;
+    const auto golden_number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 100;
     const auto golden_fraction_excitatory_neurons = get_random_percentage();
     const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -111,7 +114,7 @@ TEST_F(NeuronAssignmentTest, testDensityInitialize) {
 }
 
 TEST_F(NeuronAssignmentTest, testDensityNeuronAttributesSizes) {
-    const auto golden_number_neurons = get_random_number_neurons() + 100;
+    const auto golden_number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 100;
     const auto golden_fraction_excitatory_neurons = get_random_percentage();
     const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -133,7 +136,7 @@ TEST_F(NeuronAssignmentTest, testDensityNeuronAttributesSizes) {
 }
 
 TEST_F(NeuronAssignmentTest, testDensityNeuronAttributesSemantic) {
-    const auto golden_number_neurons = get_random_number_neurons() + 100;
+    const auto golden_number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 100;
     const auto golden_fraction_excitatory_neurons = get_random_percentage();
     const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -254,7 +257,7 @@ TEST_F(NeuronAssignmentTest, testDensityWriteToFile) {
 }
 
 TEST_F(NeuronAssignmentTest, testPerRankTooFewNeurons) {
-    const auto golden_number_ranks = get_adjusted_random_number_ranks();
+    const auto golden_number_ranks = MPIRankAdapter::get_adjusted_random_number_ranks(mt);
     const auto golden_fraction_excitatory_neurons = get_random_percentage();
     const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -265,7 +268,7 @@ TEST_F(NeuronAssignmentTest, testPerRankTooFewNeurons) {
 }
 
 TEST_F(NeuronAssignmentTest, testPerRankSingleSubdomain) {
-    const auto golden_number_neurons = get_random_number_neurons() + 100;
+    const auto golden_number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 100;
     const auto golden_fraction_excitatory_neurons = get_random_percentage();
     const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -289,9 +292,9 @@ TEST_F(NeuronAssignmentTest, testPerRankSingleSubdomain) {
 }
 
 TEST_F(NeuronAssignmentTest, testPerRankConstructorMultipleSubdomains) {
-    const auto golden_number_ranks = get_adjusted_random_number_ranks();
+    const auto golden_number_ranks = MPIRankAdapter::get_adjusted_random_number_ranks(mt);
     const auto number_subdomains = round_to_next_exponent(golden_number_ranks, 8);
-    const auto golden_number_neurons = get_random_number_neurons() + number_subdomains * 50;
+    const auto golden_number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + number_subdomains * 50;
     const auto golden_fraction_excitatory_neurons = get_random_percentage();
     const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -320,7 +323,7 @@ TEST_F(NeuronAssignmentTest, testPerRankConstructorMultipleSubdomains) {
 }
 
 TEST_F(NeuronAssignmentTest, testPerRankInitializeSingleSubdomain) {
-    const auto golden_number_neurons = get_random_number_neurons() + 100;
+    const auto golden_number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 100;
     const auto golden_fraction_excitatory_neurons = get_random_percentage();
     const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -352,9 +355,9 @@ TEST_F(NeuronAssignmentTest, testPerRankInitializeSingleSubdomain) {
 }
 
 TEST_F(NeuronAssignmentTest, testPerRankInitializeMultipleSubdomains) {
-    const auto golden_number_ranks = get_adjusted_random_number_ranks();
+    const auto golden_number_ranks = MPIRankAdapter::get_adjusted_random_number_ranks(mt);
     const auto number_subdomains = round_to_next_exponent(golden_number_ranks, 8);
-    const auto golden_number_neurons = get_random_number_neurons() + number_subdomains * 50;
+    const auto golden_number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + number_subdomains * 50;
     const auto golden_fraction_excitatory_neurons = get_random_percentage();
     const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -376,7 +379,7 @@ TEST_F(NeuronAssignmentTest, testPerRankInitializeMultipleSubdomains) {
 }
 
 TEST_F(NeuronAssignmentTest, testPerRankNeuronAttributesSizesSingleSubdomain) {
-    const auto golden_number_neurons = get_random_number_neurons() + 100;
+    const auto golden_number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 100;
     const auto golden_fraction_excitatory_neurons = get_random_percentage();
     const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -398,9 +401,9 @@ TEST_F(NeuronAssignmentTest, testPerRankNeuronAttributesSizesSingleSubdomain) {
 }
 
 TEST_F(NeuronAssignmentTest, testPerRankNeuronAttributesSizeMultipleSubdomains) {
-    const auto golden_number_ranks = get_adjusted_random_number_ranks();
+    const auto golden_number_ranks = MPIRankAdapter::get_adjusted_random_number_ranks(mt);
     const auto number_subdomains = round_to_next_exponent(golden_number_ranks, 8);
-    const auto golden_number_neurons = get_random_number_neurons() + number_subdomains * 50;
+    const auto golden_number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + number_subdomains * 50;
     const auto golden_fraction_excitatory_neurons = get_random_percentage();
     const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -429,7 +432,7 @@ TEST_F(NeuronAssignmentTest, testPerRankNeuronAttributesSizeMultipleSubdomains) 
 }
 
 TEST_F(NeuronAssignmentTest, testPerRankNeuronAttributesSemanticSingleSubdomain) {
-    const auto golden_number_neurons = get_random_number_neurons() + 100;
+    const auto golden_number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 100;
     const auto golden_fraction_excitatory_neurons = get_random_percentage();
     const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -472,9 +475,9 @@ TEST_F(NeuronAssignmentTest, testPerRankNeuronAttributesSemanticSingleSubdomain)
 }
 
 TEST_F(NeuronAssignmentTest, testPerRankNeuronAttributesSemanticMultipleSubdomains) {
-    const auto golden_number_ranks = get_adjusted_random_number_ranks();
+    const auto golden_number_ranks = MPIRankAdapter::get_adjusted_random_number_ranks(mt);
     const auto number_subdomains = round_to_next_exponent(golden_number_ranks, 8);
-    const auto golden_number_neurons = get_random_number_neurons() + number_subdomains * 50;
+    const auto golden_number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + number_subdomains * 50;
     const auto golden_fraction_excitatory_neurons = get_random_percentage();
     const auto golden_um_per_neuron = get_random_percentage() * 100;
 
@@ -556,7 +559,7 @@ TEST_F(NeuronAssignmentTest, testFileLoadNetworkSingleSubdomain) {
 
     const auto number_neurons = positions.size();
 
-    const auto& synapses = generate_local_synapses(number_neurons);
+    const auto& synapses = NetworkGraphAdapter::generate_local_synapses(number_neurons, mt);
 
     write_synapses_to_file(synapses, ".");
 
@@ -617,7 +620,7 @@ TEST_F(NeuronAssignmentTest, testFileGivenInputONCE) {
 }
 
 TEST_F(NeuronAssignmentTest, testMultipleFilesEmptyPositionPath) {
-    const auto golden_number_ranks = get_adjusted_random_number_ranks();
+    const auto golden_number_ranks = MPIRankAdapter::get_adjusted_random_number_ranks(mt);
 
     for (auto rank = 0; rank < golden_number_ranks; rank++) {
         auto partition = std::make_shared<Partition>(golden_number_ranks, rank);
@@ -626,7 +629,7 @@ TEST_F(NeuronAssignmentTest, testMultipleFilesEmptyPositionPath) {
 }
 
 TEST_F(NeuronAssignmentTest, testMultipleFilesNonExistentPositionPath) {
-    const auto golden_number_ranks = get_adjusted_random_number_ranks();
+    const auto golden_number_ranks = MPIRankAdapter::get_adjusted_random_number_ranks(mt);
 
     for (auto rank = 0; rank < golden_number_ranks; rank++) {
         auto partition = std::make_shared<Partition>(golden_number_ranks, rank);
@@ -637,7 +640,7 @@ TEST_F(NeuronAssignmentTest, testMultipleFilesNonExistentPositionPath) {
 TEST_F(NeuronAssignmentTest, testMultipleFilesNonExistentFiles) {
     namespace fs = std::filesystem;
 
-    const auto golden_number_ranks = get_adjusted_random_number_ranks();
+    const auto golden_number_ranks = MPIRankAdapter::get_adjusted_random_number_ranks(mt);
     const auto directory = fs::path("./temp_dir");
 
     if (fs::exists(directory)) {
@@ -660,7 +663,7 @@ TEST_F(NeuronAssignmentTest, testMultipleFilesNonExistentFiles) {
 TEST_F(NeuronAssignmentTest, testMultipleFilesEmptyFiles) {
     namespace fs = std::filesystem;
 
-    const auto golden_number_ranks = get_adjusted_random_number_ranks();
+    const auto golden_number_ranks = MPIRankAdapter::get_adjusted_random_number_ranks(mt);
     const auto directory = fs::path("./temp_dir");
 
     if (fs::exists(directory)) {

@@ -22,7 +22,7 @@ public:
     constexpr static int upper_bound_num_ranks = 32;
 
     static size_t get_random_number_ranks(std::mt19937& mt) {
-        return RandomAdapter::get_random_integer<int>(0, upper_bound_my_rank - 1, mt);
+        return RandomAdapter::get_random_integer<int>(0, upper_bound_num_ranks - 1, mt);
     }
 
     static size_t get_adjusted_random_number_ranks(std::mt19937& mt) {
@@ -35,15 +35,30 @@ public:
         return MPIRank(rank);
     }
 
-    static MPIRank get_random_mpi_rank(int number_ranks, std::mt19937& mt) {
+    static MPIRank get_random_mpi_rank(size_t number_ranks, std::mt19937& mt) {
         const auto rank = RandomAdapter::get_random_integer<int>(0, int(number_ranks - 1), mt);
+        return MPIRank(rank);
+    }
+
+    static MPIRank get_random_mpi_rank(size_t number_ranks, MPIRank except, std::mt19937& mt) {
+        MPIRank mpi_rank{};
+        do {
+            const auto rank = RandomAdapter::get_random_integer<int>(0, int(number_ranks - 1), mt);
+            mpi_rank = MPIRank(rank);
+        } while (mpi_rank == except);
+
+        return mpi_rank;
+    }
+
+    static MPIRank get_random_mpi_rank(int number_ranks, std::mt19937& mt) {
+        const auto rank = RandomAdapter::get_random_integer<int>(0, number_ranks - 1, mt);
         return MPIRank(rank);
     }
 
     static MPIRank get_random_mpi_rank(int number_ranks, MPIRank except, std::mt19937& mt) {
         MPIRank mpi_rank{};
         do {
-            const auto rank = RandomAdapter::get_random_integer<int>(0, int(number_ranks - 1), mt);
+            const auto rank = RandomAdapter::get_random_integer<int>(0, number_ranks - 1, mt);
             mpi_rank = MPIRank(rank);
         } while (mpi_rank == except);
 

@@ -10,6 +10,9 @@
 
 #include "test_partition.h"
 
+#include "mpi/mpi_rank_adapter.h"
+#include "tagged_id/tagged_id_adapter.h"
+
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
 
@@ -31,13 +34,13 @@ bool is_power_of_two(size_t number) {
 }
 
 TEST_F(PartitionTest, testPartitionZeroRanks) {
-    const auto my_rank = get_random_number_ranks();
+    const auto my_rank = MPIRankAdapter::get_random_number_ranks(mt);
     ASSERT_THROW(Partition part(0, my_rank), RelearnException) << my_rank;
 }
 
 TEST_F(PartitionTest, testPartitionConstructorArguments) {
-    const auto my_rank = get_random_number_ranks();
-    const auto num_ranks = get_random_number_ranks();
+    const auto my_rank = MPIRankAdapter::get_random_number_ranks(mt);
+    const auto num_ranks = MPIRankAdapter::get_random_number_ranks(mt);
     const auto is_rank_power_2 = is_power_of_two(num_ranks);
 
     if (!is_rank_power_2) {
@@ -54,7 +57,7 @@ TEST_F(PartitionTest, testPartitionConstructorArguments) {
 }
 
 TEST_F(PartitionTest, testPartitionConstructor) {
-    const auto num_ranks = get_adjusted_random_number_ranks();
+    const auto num_ranks = MPIRankAdapter::get_adjusted_random_number_ranks(mt);
     const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
 
     const auto my_subdomains = num_subdomains / num_ranks;
@@ -80,7 +83,7 @@ TEST_F(PartitionTest, testPartitionConstructor) {
 }
 
 TEST_F(PartitionTest, testPartitionNumberNeurons) {
-    const auto num_ranks = get_adjusted_random_number_ranks();
+    const auto num_ranks = MPIRankAdapter::get_adjusted_random_number_ranks(mt);
     const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
     const auto my_subdomains = num_subdomains / num_ranks;
 
@@ -91,7 +94,7 @@ TEST_F(PartitionTest, testPartitionNumberNeurons) {
         number_local_neurons[my_rank] = std::vector<size_t>(my_subdomains);
 
         for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
-            const auto num_local_neurons = get_random_number_neurons();
+            const auto num_local_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
             number_local_neurons[my_rank][my_subdomain] = num_local_neurons;
             number_total_neurons += num_local_neurons;
@@ -128,7 +131,7 @@ TEST_F(PartitionTest, testPartitionNumberNeurons) {
 }
 
 TEST_F(PartitionTest, testPartitionSubdomainIndices) {
-    const auto num_ranks = get_adjusted_random_number_ranks();
+    const auto num_ranks = MPIRankAdapter::get_adjusted_random_number_ranks(mt);
     const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
     const auto my_subdomains = num_subdomains / num_ranks;
 
@@ -170,7 +173,7 @@ TEST_F(PartitionTest, testPartitionSubdomainIndices) {
 }
 
 TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
-    const auto num_ranks = get_adjusted_random_number_ranks();
+    const auto num_ranks = MPIRankAdapter::get_adjusted_random_number_ranks(mt);
     const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
     const auto my_subdomains = num_subdomains / num_ranks;
 
@@ -266,7 +269,7 @@ TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
 }
 
 TEST_F(PartitionTest, testPartitionPositionToMpi) {
-    const auto num_ranks = get_adjusted_random_number_ranks();
+    const auto num_ranks = MPIRankAdapter::get_adjusted_random_number_ranks(mt);
     const auto num_subdomains = round_to_next_exponent(num_ranks, 8);
     const auto my_subdomains = num_subdomains / num_ranks;
 
