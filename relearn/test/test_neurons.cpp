@@ -1,7 +1,10 @@
 #include "RelearnTest.hpp"
 
+#include "neurons/models/BackgroundActivityCalculators.h"
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
+#include "neurons/models/SynapticInputCalculator.h"
+#include "neurons/models/SynapticInputCalculators.h"
 #include "neurons/CalciumCalculator.h"
 #include "neurons/Neurons.h"
 #include "structure/Partition.h"
@@ -78,5 +81,98 @@ TEST_F(NeuronsTest, testSignalTypeCheck) {
             network_graph->add_synapse({ RankNeuronId(tgt_rank, tgt), src, -weight });
         }
         ASSERT_NO_THROW(Neurons::check_signal_types(network_graph, signal_types, 0));
+    }
+}
+
+TEST_F(NeuronsTest, testStaticConnectionsChecker) {
+    auto num_neurons = get_random_number_neurons() + 30;
+    auto num_static_neurons = get_random_integer(15, static_cast<int>(num_neurons) - 10);
+
+    std::vector<NeuronID> static_neurons{};
+    for (auto i = 0; i < num_static_neurons; i++) {
+        NeuronID static_neuron;
+        do {
+            static_neuron = get_random_neuron_id(num_neurons);
+        } while (std::find(static_neurons.begin(), static_neurons.end(), static_neuron) != static_neurons.end());
+        static_neurons.emplace_back(static_neuron);
+    }
+
+    auto partition = std::make_shared<Partition>(1, 0);
+    auto model = std::make_unique<models::PoissonModel>(models::PoissonModel::default_h,
+        std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_k),
+        std::make_unique<NullBackgroundActivityCalculator>(),
+        models::PoissonModel::default_x_0,
+        models::PoissonModel::default_tau_x,
+        models::PoissonModel::default_refrac_time);
+    auto calcium = std::make_unique<CalciumCalculator>();
+    calcium->set_initial_calcium_calculator([](int /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
+    calcium->set_target_calcium_calculator([](int /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
+    auto dends_ex = std::make_unique<SynapticElements>(ElementType::Dendrite, 0.2);
+    auto dends_in = std::make_unique<SynapticElements>(ElementType::Dendrite, 0.2);
+    auto axs = std::make_unique<SynapticElements>(ElementType::Axon, 0.2);
+
+    Neurons neurons{ partition, std::move(model), std::move(calcium), std::move(axs), std::move(dends_ex), std::move(dends_in) };
+
+    auto network_graph_static = std::make_shared<NetworkGraph>(num_neurons, 0);
+    auto network_graph_plastic = std::make_shared<NetworkGraph>(num_neurons, 0);
+
+    auto num_synapses_static = get_random_integer(30, 100);
+    auto num_synapses_plastic = get_random_integer(30, 100);
+
+    for (auto i = 0; i < num_synapses_static; i++) {
+        auto src = get_random_neuron_id(num_neurons);
+        auto tgt = get_random_neuron_id(num_neurons, NeuronID(src));
+        auto weight = get_random_double(0.1, 10);
+        network_graph_static->add_synapse({ tgt, src, weight });
+    }
+
+    for (auto i = 0; i < num_synapses_plastic; i++) {
+        NeuronID src, tgt;
+        do {
+            src = get_random_neuron_id(num_neurons);
+            tgt = get_random_neuron_id(num_neurons);
+        } while (std::find(static_neurons.begin(), static_neurons.end(), src) != static_neurons.end() || std::find(static_neurons.begin(), static_neurons.end(), tgt) != static_neurons.end()
+            || src == tgt);
+        auto weight = get_random_double(0.1, 10);
+        network_graph_plastic->add_synapse({ NeuronID{ tgt }, NeuronID{ src }, weight });
+    }
+
+    neurons.init(num_neurons);
+    neurons.set_network_graph(network_graph_static, network_graph_plastic);
+
+    neurons.set_static_neurons(static_neurons);
+
+    const auto num_tries = get_random_integer(10, 100);
+    for (auto i = 0; i < num_tries; i++) {
+        const bool src_is_static = get_random_bool();
+        const bool tgt_is_static = !src_is_static || get_random_bool();
+
+        NeuronID src, tgt;
+        if (src_is_static) {
+            src = static_neurons[get_random_integer<int>(0, static_neurons.size() - 1)];
+        } else {
+            do {
+                src = get_random_neuron_id(num_neurons);
+            } while (std::find(static_neurons.begin(), static_neurons.end(), src) != static_neurons.end());
+        }
+        if (tgt_is_static) {
+            tgt = static_neurons[get_random_integer<int>(0, static_neurons.size() - 1)];
+        } else {
+            do {
+                tgt = get_random_neuron_id(num_neurons);
+            } while (std::find(static_neurons.begin(), static_neurons.end(), tgt) != static_neurons.end());
+        }
+        if (tgt == src)
+            continue;
+        double weight = get_random_double(0.1, 100.0);
+        if (get_random_bool()) {
+            weight = -weight;
+        }
+
+        network_graph_plastic->add_synapse({ tgt, src, weight });
+
+        ASSERT_THROW(neurons.set_static_neurons(static_neurons), RelearnException);
+        network_graph_plastic->add_synapse({ tgt, src, -weight });
+        neurons.set_static_neurons(static_neurons);
     }
 }

@@ -123,9 +123,9 @@ public:
      * @param network_static The network graph for static connections
      * @param network_plastic The network graph for plastic connections
      */
-    void set_network_graph(std::shared_ptr<NetworkGraph> network_static, std::shared_ptr<NetworkGraph> network_plastic) {
-        network_graph_static = std::move(network_static);
-        network_graph_plastic = std::move(network_plastic);
+    void set_network_graph(std::shared_ptr<NetworkGraph>& network_static, std::shared_ptr<NetworkGraph>& network_plastic) {
+        network_graph_static = network_static;
+        network_graph_plastic = network_plastic;
     }
 
     /**
