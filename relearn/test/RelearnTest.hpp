@@ -14,38 +14,21 @@
 #include "gtest/gtest-typed-test.h"
 
 #include "Config.h"
+#include "RandomAdapter.h"
 #include "Types.h"
-#include "algorithm/BarnesHutInternal/BarnesHutCell.h"
-#include "algorithm/BarnesHutInternal/BarnesHutInvertedCell.h"
-#include "algorithm/FMMInternal/FastMultipoleMethods.h"
-#include "algorithm/FMMInternal/FastMultipoleMethodsBase.h"
-#include "algorithm/FMMInternal/FastMultipoleMethodsCell.h"
-#include "algorithm/Kernel/Gamma.h"
-#include "algorithm/Kernel/Gaussian.h"
-#include "algorithm/Kernel/Kernel.h"
-#include "algorithm/Kernel/Linear.h"
-#include "algorithm/Kernel/Weibull.h"
 #include "io/LogFiles.h"
-#include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
-#include "neurons/CalciumCalculator.h"
 #include "neurons/ElementType.h"
 #include "neurons/FiredStatus.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/SignalType.h"
 #include "neurons/helper/DistantNeuronRequests.h"
 #include "neurons/helper/SynapseCreationRequests.h"
-#include "neurons/models/SynapticElements.h"
 #include "structure/Cell.h"
 #include "structure/Octree.h"
 #include "structure/OctreeNode.h"
-#include "structure/Partition.h"
-#include "util/Interval.h"
 #include "util/MemoryHolder.h"
-#include "util/MPIRank.h"
 #include "util/RelearnException.h"
-#include "util/StepParser.h"
-#include "util/TaggedID.h"
 
 #include <chrono>
 #include <cmath>
@@ -55,9 +38,6 @@
 #include <stack>
 #include <tuple>
 #include <vector>
-
-class NeuronModel;
-class NeuronsExtraInfo;
 
 inline bool initialized = false;
 
@@ -142,14 +122,12 @@ protected:
     }
 
     double get_random_double(double min, double max) {
-        uniform_real_distribution<double> urd(min, max);
-        return urd(mt);
+        return RandomAdapter::get_random_double(min, max, mt);
     }
 
     template <typename T>
     T get_random_integer(T min, T max) {
-        uniform_int_distribution<T> uid(min, max);
-        return uid(mt);
+        return RandomAdapter::get_random_integer<T>(min, max, mt);
     }
 
     static std::vector<RelearnTypes::area_name> get_neuron_id_vs_area_name(const std::vector<RelearnTypes::area_id>& neuron_id_vs_area_id, const std::vector<RelearnTypes::area_name>& area_id_vs_area_name) {
@@ -162,14 +140,14 @@ protected:
     }
 
     std::tuple<Vec3d, Vec3d> get_random_simulation_box_size() {
-        const auto rand_x_1 = get_random_double(-position_bounary, +position_bounary);
-        const auto rand_x_2 = get_random_double(-position_bounary, +position_bounary);
-
-        const auto rand_y_1 = get_random_double(-position_bounary, +position_bounary);
-        const auto rand_y_2 = get_random_double(-position_bounary, +position_bounary);
-
-        const auto rand_z_1 = get_random_double(-position_bounary, +position_bounary);
-        const auto rand_z_2 = get_random_double(-position_bounary, +position_bounary);
+        const auto rand_x_1 = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
+        const auto rand_x_2 = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
+                                                                                                  
+        const auto rand_y_1 = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
+        const auto rand_y_2 = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
+                                                                                                   
+        const auto rand_z_1 = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
+        const auto rand_z_2 = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
 
         return {
             { std::min(rand_x_1, rand_x_2), std::min(rand_y_1, rand_y_2), std::min(rand_z_1, rand_z_2) },
@@ -178,14 +156,14 @@ protected:
     }
 
     double get_random_position_element() {
-        const auto val = get_random_double(-position_bounary, +position_bounary);
+        const auto val = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
         return val;
     }
 
     Vec3d get_random_position() {
-        const auto x = get_random_double(-position_bounary, +position_bounary);
-        const auto y = get_random_double(-position_bounary, +position_bounary);
-        const auto z = get_random_double(-position_bounary, +position_bounary);
+        const auto x = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
+        const auto y = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
+        const auto z = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
 
         return { x, y, z };
     }
@@ -199,23 +177,15 @@ protected:
     }
 
     Vec3d get_random_position_in_box(const Vec3d& min, const Vec3d& max) {
-        const auto x = get_random_double(min.get_x(), max.get_x());
-        const auto y = get_random_double(min.get_y(), max.get_y());
-        const auto z = get_random_double(min.get_z(), max.get_z());
+        const auto x = RandomAdapter::get_random_double(min.get_x(), max.get_x(), mt);
+        const auto y = RandomAdapter::get_random_double(min.get_y(), max.get_y(), mt);
+        const auto z = RandomAdapter::get_random_double(min.get_z(), max.get_z(), mt);
 
         return { x, y, z };
     }
 
-    unsigned int get_random_synaptic_element_connected_count(unsigned int maximum) {
-        return get_random_integer<unsigned int>(0, maximum);
-    }
-
     double get_random_percentage() {
-        return get_random_double(0.0, std::nextafter(1.0, 2.0));
-    }
-
-    double get_random_synaptic_element_count() {
-        return get_random_double(min_grown_elements, std::nextafter(max_grown_elements, max_grown_elements * 2.0));
+        return RandomAdapter::get_random_percentage<double>(mt);
     }
 
     uint8_t get_random_refinement_level() noexcept {
@@ -231,220 +201,7 @@ protected:
     }
 
     bool get_random_bool() noexcept {
-        uniform_int_distribution<unsigned short> uid_bool(0, 1);
-        return uid_bool(mt) == 0;
-    }
-
-    ElementType get_random_element_type() noexcept {
-        return get_random_bool() ? ElementType::Axon : ElementType::Dendrite;
-    }
-
-    SignalType get_random_signal_type() noexcept {
-        return get_random_bool() ? SignalType::Excitatory : SignalType::Inhibitory;
-    }
-
-    DistantNeuronRequest::TargetNeuronType get_random_target_neuron_type() {
-        uniform_int_distribution<unsigned short> uid_3(0, 2);
-        const auto drawn = uid_3(mt);
-    
-        if (drawn == 0) {
-            return DistantNeuronRequest::TargetNeuronType::BranchNode;
-        } 
-
-        if (drawn == 1) {
-            return DistantNeuronRequest::TargetNeuronType::Leaf;
-        }
-
-        return DistantNeuronRequest::TargetNeuronType::VirtualNode;
-    }
-
-    double get_random_gamma_k() noexcept {
-        return get_random_double(0.001, 10.0);
-    }
-
-    double get_random_gamma_theta() noexcept {
-        return get_random_double(0.001, 100.0);
-    }
-
-    double get_random_gaussian_mu() noexcept {
-        return get_random_double(-10000.0, 10000.0);
-    }
-
-    double get_random_gaussian_sigma() noexcept {
-        return get_random_double(0.001, 10000.0);
-    }
-
-    double get_random_linear_cutoff() noexcept {
-        return get_random_double(0.001, 1000.0);
-    }
-
-    double get_random_weibull_k() noexcept {
-        return get_random_double(0.001, 10.0);
-    }
-
-    double get_random_weibull_b() noexcept {
-        return get_random_double(0.001, 10000.0);
-    }
-
-    KernelType get_random_kernel_type() noexcept {
-        const auto choice = get_random_integer<int>(0, 3);
-
-        switch (choice) {
-        case 0:
-            return KernelType::Gamma;
-        case 1:
-            return KernelType::Gaussian;
-        case 2:
-            return KernelType::Linear;
-        case 3:
-            return KernelType::Weibull;
-        }
-
-        return KernelType::Gamma;
-    }
-
-    template <typename AdditionalCellAttributes>
-    std::string set_random_kernel() {
-        const auto kernel_choice = get_random_kernel_type();
-
-        Kernel<AdditionalCellAttributes>::set_kernel_type(kernel_choice);
-
-        std::stringstream ss{};
-
-        ss << kernel_choice;
-
-        if (kernel_choice == KernelType::Gamma) {
-            const auto k = get_random_gamma_k();
-            const auto theta = get_random_gamma_theta();
-
-            ss << '\t' << k << '\t' << theta;
-
-            GammaDistributionKernel::set_k(k);
-            GammaDistributionKernel::set_theta(theta);
-        }
-
-        if (kernel_choice == KernelType::Gaussian) {
-            const auto sigma = get_random_gaussian_sigma();
-            const auto mu = get_random_gaussian_mu();
-
-            ss << '\t' << sigma << '\t' << mu;
-
-            GaussianDistributionKernel::set_sigma(sigma);
-            GaussianDistributionKernel::set_mu(mu);
-        }
-
-        if (kernel_choice == KernelType::Linear) {
-            const auto cutoff = get_random_linear_cutoff();
-
-            ss << '\t' << cutoff;
-
-            LinearDistributionKernel::set_cutoff(cutoff);
-        }
-
-        if (kernel_choice == KernelType::Weibull) {
-            const auto k = get_random_weibull_k();
-            const auto b = get_random_weibull_b();
-
-            ss << '\t' << k << '\t' << b;
-
-            WeibullDistributionKernel::set_k(k);
-            WeibullDistributionKernel::set_b(b);
-        }
-
-        return ss.str();
-    }
-
-    std::tuple<SynapticElements, std::vector<double>, std::vector<unsigned int>, std::vector<SignalType>>
-    create_random_synaptic_elements(size_t number_elements, ElementType element_type, double min_calcium_to_grow,
-        double growth_factor = SynapticElements::default_nu, double retract_ratio = SynapticElements::default_vacant_retract_ratio,
-        double lb_free_elements = SynapticElements::default_vacant_elements_initially_lower_bound, double ub_free_elements = SynapticElements::default_vacant_elements_initially_upper_bound) {
-
-        SynapticElements se(element_type, min_calcium_to_grow, growth_factor, retract_ratio, lb_free_elements, ub_free_elements);
-        se.init(number_elements);
-
-        std::vector<double> grown_elements(number_elements);
-        std::vector<unsigned int> connected_elements(number_elements);
-        std::vector<SignalType> signal_types(number_elements);
-
-        for (const auto& neuron_id : NeuronID::range(number_elements)) {
-            const auto number_grown_elements = get_random_synaptic_element_count();
-            const auto number_connected_elements = get_random_synaptic_element_connected_count(static_cast<unsigned int>(number_grown_elements));
-            const auto signal_type = get_random_signal_type();
-
-            se.update_grown_elements(neuron_id, number_grown_elements);
-            se.update_connected_elements(neuron_id, number_connected_elements);
-            se.set_signal_type(neuron_id, signal_type);
-
-            const auto i = neuron_id.get_neuron_id();
-
-            grown_elements[i] = number_grown_elements;
-            connected_elements[i] = number_connected_elements;
-            signal_types[i] = signal_type;
-        }
-
-        return std::make_tuple<SynapticElements, std::vector<double>, std::vector<unsigned int>, std::vector<SignalType>>(std::move(se), std::move(grown_elements), std::move(connected_elements), std::move(signal_types));
-    }
-
-    std::shared_ptr<SynapticElements> create_axons(size_t number_elements, double minimal_grown, double maximal_grown) {
-        SynapticElements axons(ElementType::Axon, CalciumCalculator::default_C_target);
-        axons.init(number_elements);
-
-        for (const auto& neuron_id : NeuronID::range(number_elements)) {
-            const auto number_grown_elements = get_random_double(minimal_grown, maximal_grown);
-            const auto signal_type = get_random_signal_type();
-
-            axons.update_grown_elements(neuron_id, number_grown_elements);
-            axons.update_connected_elements(neuron_id, 0);
-            axons.set_signal_type(neuron_id, signal_type);
-        }
-
-        return std::make_shared<SynapticElements>(std::move(axons));
-    }
-
-    std::shared_ptr<SynapticElements> create_dendrites(size_t number_elements, SignalType signal_type, double minimal_grown, double maximal_grown) {
-        SynapticElements dendrites(ElementType::Axon, CalciumCalculator::default_C_target);
-        dendrites.init(number_elements);
-
-        for (const auto& neuron_id : NeuronID::range(number_elements)) {
-            const auto number_grown_elements = get_random_double(minimal_grown, maximal_grown);
-
-            dendrites.update_grown_elements(neuron_id, number_grown_elements);
-            dendrites.update_connected_elements(neuron_id, 0);
-            dendrites.set_signal_type(neuron_id, signal_type);
-        }
-
-        return std::make_shared<SynapticElements>(std::move(dendrites));
-    }
-
-    std::shared_ptr<SynapticElements> create_axons(size_t number_elements) {
-        SynapticElements axons(ElementType::Axon, CalciumCalculator::default_C_target);
-        axons.init(number_elements);
-
-        for (const auto& neuron_id : NeuronID::range(number_elements)) {
-            const auto number_grown_elements = get_random_synaptic_element_count();
-            const auto signal_type = get_random_signal_type();
-
-            axons.update_grown_elements(neuron_id, number_grown_elements);
-            axons.update_connected_elements(neuron_id, 0);
-            axons.set_signal_type(neuron_id, signal_type);
-        }
-
-        return std::make_shared<SynapticElements>(std::move(axons));
-    }
-
-    std::shared_ptr<SynapticElements> create_dendrites(size_t number_elements, SignalType signal_type) {
-        SynapticElements dendrites(ElementType::Axon, CalciumCalculator::default_C_target);
-        dendrites.init(number_elements);
-
-        for (const auto& neuron_id : NeuronID::range(number_elements)) {
-            const auto number_grown_elements = get_random_synaptic_element_count();
-
-            dendrites.update_grown_elements(neuron_id, number_grown_elements);
-            dendrites.update_connected_elements(neuron_id, 0);
-            dendrites.set_signal_type(neuron_id, signal_type);
-        }
-
-        return std::make_shared<SynapticElements>(std::move(dendrites));
+        return RandomAdapter::get_random_bool(mt);
     }
 
     std::vector<std::tuple<Vec3d, NeuronID>> generate_random_neurons(const Vec3d& min, const Vec3d& max, size_t count, size_t max_id) {
@@ -486,7 +243,7 @@ protected:
     }
 
     std::vector<FiredStatus> get_fired_status(size_t number_neurons) {
-        const auto number_disabled = get_random_integer<size_t>(0, number_neurons);
+        const auto number_disabled = RandomAdapter::get_random_integer<size_t>(0, number_neurons, mt);
         return get_fired_status(number_neurons, number_disabled);
     }
 
@@ -595,11 +352,8 @@ protected:
 
     template <typename Iterator>
     void shuffle(Iterator begin, Iterator end) {
-        detail::shuffle(begin, end, mt);
+        RandomAdapter::shuffle(begin, end, mt);
     }
-
-    constexpr static double min_grown_elements = 0.0;
-    constexpr static double max_grown_elements = 10.0;
 
     constexpr static unsigned short small_refinement_level = 5;
     constexpr static unsigned short max_refinement_level = Constants::max_lvl_subdomains;
@@ -611,18 +365,18 @@ protected:
 
     constexpr static int number_neurons_out_of_scope = 100;
 
-    mt19937 mt;
+    std::mt19937 mt;
 
     static int iterations;
     static double eps;
 
 private:
-    static uniform_int_distribution<unsigned short> uid_refinement;
-    static uniform_int_distribution<unsigned short> uid_small_refinement;
-    static uniform_int_distribution<unsigned short> uid_large_refinement;
-
-    static uniform_int_distribution<size_t> uid_num_ranks;
-    static uniform_int_distribution<size_t> uid_num_neurons;
+    static boost::random::uniform_int_distribution<unsigned short> uid_refinement;
+    static boost::random::uniform_int_distribution<unsigned short> uid_small_refinement;
+    static boost::random::uniform_int_distribution<unsigned short> uid_large_refinement;
+           
+    static boost::random::uniform_int_distribution<size_t> uid_num_ranks;
+    static boost::random::uniform_int_distribution<size_t> uid_num_neurons;
 
     static double position_bounary;
 

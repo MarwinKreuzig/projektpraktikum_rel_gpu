@@ -1,6 +1,7 @@
 #include "test_neurons.h"
 
 #include "mpi/mpi_rank_adapter.h"
+#include "neurons/neuron_types_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "neurons/models/NeuronModels.h"
@@ -32,7 +33,7 @@ TEST_F(NeuronsTest, testSignalTypeCheck) {
     const auto network_graph = std::make_shared<NetworkGraph>(num_neurons, 0);
 
     for (const auto& neuron_id : NeuronID::range(num_neurons)) {
-        const auto signal_type = get_random_signal_type();
+        const auto signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
         signal_types.emplace_back(signal_type);
     }
 

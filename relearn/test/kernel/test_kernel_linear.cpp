@@ -10,14 +10,13 @@
 
 #include "test_kernel.h"
 
+#include "kernel_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "algorithm/Kernel/Gaussian.h"
 #include "algorithm/Kernel/Kernel.h"
 #include "algorithm/Cells.h"
 #include "util/Random.h"
-
-#include "gtest/gtest.h"
 
 #include <array>
 #include <sstream>
@@ -26,7 +25,7 @@
 TEST_F(ProbabilityKernelTest, testLinearGetterSetter) {
     LinearDistributionKernel::set_cutoff(LinearDistributionKernel::default_cutoff);
 
-    const auto cutoff_point = get_random_linear_cutoff();
+    const auto cutoff_point = KernelAdapter::get_random_linear_cutoff(mt);
 
     std::stringstream ss{};
     ss << "Cutoff Point: " << cutoff_point << '\n';
@@ -51,7 +50,7 @@ TEST_F(ProbabilityKernelTest, testLinearGetterSetterInf) {
 TEST_F(ProbabilityKernelTest, testLinearGetterSetterException) {
     LinearDistributionKernel::set_cutoff(LinearDistributionKernel::default_cutoff);
 
-    const auto cutoff_point = -get_random_linear_cutoff();
+    const auto cutoff_point = -KernelAdapter::get_random_linear_cutoff(mt);
 
     std::stringstream ss{};
     ss << "Cutoff Point: " << cutoff_point << '\n';
@@ -61,7 +60,7 @@ TEST_F(ProbabilityKernelTest, testLinearGetterSetterException) {
 }
 
 TEST_F(ProbabilityKernelTest, testLinearNoFreeElements) {
-    const auto cutoff_point = get_random_linear_cutoff();
+    const auto cutoff_point = KernelAdapter::get_random_linear_cutoff(mt);
     LinearDistributionKernel::set_cutoff(cutoff_point);
 
     const auto& source_position = get_random_position();
@@ -78,7 +77,7 @@ TEST_F(ProbabilityKernelTest, testLinearNoFreeElements) {
 }
 
 TEST_F(ProbabilityKernelTest, testLinearLinearFreeElements) {
-    const auto cutoff_point = get_random_linear_cutoff();
+    const auto cutoff_point = KernelAdapter::get_random_linear_cutoff(mt);
     LinearDistributionKernel::set_cutoff(cutoff_point);
 
     const auto& source_position = get_random_position();
@@ -104,7 +103,7 @@ TEST_F(ProbabilityKernelTest, testLinearLinearFreeElements) {
 }
 
 TEST_F(ProbabilityKernelTest, testLinearSamePosition) {
-    const auto cutoff_point = get_random_linear_cutoff();
+    const auto cutoff_point = KernelAdapter::get_random_linear_cutoff(mt);
     LinearDistributionKernel::set_cutoff(cutoff_point);
 
     const auto number_elements = get_random_integer<unsigned int>(0, 10000);
@@ -148,7 +147,7 @@ TEST_F(ProbabilityKernelTest, testLinearInf) {
 }
 
 TEST_F(ProbabilityKernelTest, testLinearFinite) {
-    const auto cutoff_point = get_random_linear_cutoff();
+    const auto cutoff_point = KernelAdapter::get_random_linear_cutoff(mt);
     LinearDistributionKernel::set_cutoff(cutoff_point);
 
     for (auto i = 0; i < 100; i++) {
@@ -191,7 +190,7 @@ TEST_F(KernelTest, testLinearKernelIntegration) {
 
     Kernel<FastMultipoleMethodsCell>::set_kernel_type(KernelType::Linear);
 
-    const auto cutoff_point = get_random_linear_cutoff();
+    const auto cutoff_point = KernelAdapter::get_random_linear_cutoff(mt);
     LinearDistributionKernel::set_cutoff(cutoff_point);
 
     const auto& target_excitatory_axon_position = get_random_position();
@@ -199,10 +198,10 @@ TEST_F(KernelTest, testLinearKernelIntegration) {
     const auto& target_excitatory_dendrite_position = get_random_position();
     const auto& target_inhibitory_dendrite_position = get_random_position();
 
-    const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
-    const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
-    const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
-    const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+    const auto& number_vacant_excitatory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
 
     OctreeNode<FastMultipoleMethodsCell> node{};
     node.set_cell_neuron_id(neuron_id_1);

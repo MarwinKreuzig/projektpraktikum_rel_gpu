@@ -10,6 +10,7 @@
 
 #include "test_distant_neuron_request.h"
 
+#include "neurons/neuron_types_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "neurons/helper/DistantNeuronRequests.h"
@@ -34,9 +35,9 @@ TEST_F(DistantNeuronRequestTest, testConstructor) {
     const auto& golden_source_position = get_random_position();
 
     const auto golden_target_id = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto golden_target_neuron_type = get_random_target_neuron_type();
+    const auto golden_target_neuron_type = NeuronTypesAdapter::get_random_target_neuron_type(mt);
 
-    const auto golden_signal_type = get_random_signal_type();
+    const auto golden_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
     DistantNeuronRequest dnr{ golden_source_neuron_id, golden_source_position, golden_target_id, golden_target_neuron_type, golden_signal_type };
 
@@ -80,9 +81,9 @@ TEST_F(DistantNeuronRequestTest, testConstructorException) {
     const auto& golden_source_position = get_random_position();
 
     const auto golden_target_id = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto golden_target_neuron_type = get_random_target_neuron_type();
+    const auto golden_target_neuron_type = NeuronTypesAdapter::get_random_target_neuron_type(mt);
 
-    const auto golden_signal_type = get_random_signal_type();
+    const auto golden_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
     ASSERT_THROW(DistantNeuronRequest dnr(NeuronID::virtual_id(), golden_source_position, golden_target_id, golden_target_neuron_type, golden_signal_type), RelearnException);
     ASSERT_THROW(DistantNeuronRequest dnr(NeuronID::uninitialized_id(), golden_source_position, golden_target_id, golden_target_neuron_type, golden_signal_type), RelearnException);

@@ -15,11 +15,8 @@
 #include "neurons/CalciumCalculator.h"
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorNone) {
-    uniform_real_distribution<double> amount_distr(-10000.0, 10000.0);
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(0, 10000000);
-
-    const auto decay_amount = amount_distr(mt);
-    const auto decay_step = step_distr(mt);
+    const auto decay_amount = RandomAdapter::get_random_double(-10000.0, 10000.0, mt);
+    const auto decay_step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
     ASSERT_NO_THROW(CalciumCalculator cc1(TargetCalciumDecay::None, 0.0, 0)) << 0.0 << ' ' << 0;
     ASSERT_NO_THROW(CalciumCalculator cc2(TargetCalciumDecay::None, 0.0, decay_step)) << 0.0 << ' ' << decay_step;
@@ -28,11 +25,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorNone) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorRelative) {
-    uniform_real_distribution<double> amount_distr(std::nextafter(0.0, 1.0), 1.0);
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
-
-    const auto decay_amount = amount_distr(mt);
-    const auto decay_step = step_distr(mt);
+    const auto decay_amount = RandomAdapter::get_random_double(std::nextafter(0.0, 1.0), 1.0, mt);
+    const auto decay_step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
     ASSERT_NO_THROW(CalciumCalculator cc1(TargetCalciumDecay::Relative, 0.0, 1000)) << 1.0 << ' ' << 1000;
     ASSERT_NO_THROW(CalciumCalculator cc2(TargetCalciumDecay::Relative, 0.0, decay_step)) << 1.0 << ' ' << decay_step;
@@ -41,11 +35,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorRelative) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorAbsolute) {
-    uniform_real_distribution<double> amount_distr(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
-
-    const auto decay_amount = amount_distr(mt);
-    const auto decay_step = step_distr(mt);
+    const auto decay_amount = RandomAdapter::get_random_double(std::nextafter(0.0, 1.0), 1.0, mt);
+    const auto decay_step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
     ASSERT_NO_THROW(CalciumCalculator cc1(TargetCalciumDecay::Absolute, 1.0, 1000)) << 1.0 << ' ' << 1000;
     ASSERT_NO_THROW(CalciumCalculator cc2(TargetCalciumDecay::Absolute, 1.0, decay_step)) << 1.0 << ' ' << decay_step;
@@ -54,11 +45,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorAbsolute) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorRelativeException) {
-    uniform_real_distribution<double> amount_low_distr(-1000.0, std::nextafter(0.0, -1.0));
-    uniform_real_distribution<double> amount_high_distr(1.0, 1000.0);
-
-    const auto decay_amount_low = amount_low_distr(mt);
-    const auto decay_amount_high = amount_high_distr(mt);
+    const auto decay_amount_low = RandomAdapter::get_random_double(-1000.0, std::nextafter(0.0, -1.0), mt);
+    const auto decay_amount_high = RandomAdapter::get_random_double(1.0, 1000.0, mt);
 
     ASSERT_THROW(CalciumCalculator cc1(TargetCalciumDecay::Relative, decay_amount_low, 1000), RelearnException) << decay_amount_low << ' ' << 1000;
     ASSERT_THROW(CalciumCalculator cc2(TargetCalciumDecay::Relative, decay_amount_high, 1000), RelearnException) << decay_amount_high << ' ' << 1000;
@@ -67,9 +55,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorRelativeException)
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorAbsoluteException) {
-    uniform_real_distribution<double> amount_distr(-1000.0, std::nextafter(0.0, -1.0));
-
-    const auto decay_amount = amount_distr(mt);
+    const auto decay_amount = RandomAdapter::get_random_double(-1000.0, std::nextafter(0.0, -1.0), mt);
 
     ASSERT_THROW(CalciumCalculator cc1(TargetCalciumDecay::Absolute, 0.5, 0), RelearnException) << 0.5 << ' ' << 0;
     ASSERT_THROW(CalciumCalculator cc1(TargetCalciumDecay::Absolute, 0.0, 100), RelearnException) << 0.0 << ' ' << 100;
@@ -77,17 +63,13 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorAbsoluteException)
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructurGetter) {
-    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
-    uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
+    const auto decay_amount_relative = RandomAdapter::get_random_double(0.0, std::nextafter(1.0, 0.0), mt);
+    const auto decay_amount_absolute = RandomAdapter::get_random_double(std::nextafter(0.0, 1.0), 1000.0, mt);
+    const auto decay_step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    const auto decay_amount_relative = amount_distr_relative(mt);
-    const auto decay_amount_absolute = amount_distr_absolute(mt);
-    const auto decay_step = step_distr(mt);
-
-    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
-    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
-    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
+    boost::random::uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    boost::random::uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    boost::random::uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
     CalciumCalculator cc1(TargetCalciumDecay::None, 0.0, 0);
     CalciumCalculator cc2(TargetCalciumDecay::Relative, decay_amount_relative, decay_step);
@@ -107,17 +89,13 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructurGetter) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorGetterSetter) {
-    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
-    uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
+    const auto decay_amount_relative = RandomAdapter::get_random_double(0.0, std::nextafter(1.0, 0.0), mt);
+    const auto decay_amount_absolute = RandomAdapter::get_random_double(std::nextafter(0.0, 1.0), 1000.0, mt);
+    const auto decay_step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    const auto decay_amount_relative = amount_distr_relative(mt);
-    const auto decay_amount_absolute = amount_distr_absolute(mt);
-    const auto decay_step = step_distr(mt);
-
-    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
-    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
-    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
+    boost::random::uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    boost::random::uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    boost::random::uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
     CalciumCalculator cc1(TargetCalciumDecay::None, 0.0, 0);
     CalciumCalculator cc2(TargetCalciumDecay::Relative, decay_amount_relative, decay_step);
@@ -205,17 +183,15 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorGetterSetter) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorGetterSetterException) {
-    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
-    uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
 
-    const auto decay_amount_relative = amount_distr_relative(mt);
-    const auto decay_amount_absolute = amount_distr_absolute(mt);
-    const auto decay_step = step_distr(mt);
+    const auto decay_amount_relative = RandomAdapter::get_random_double(0.0, std::nextafter(1.0, 0.0), mt);
+    const auto decay_amount_absolute = RandomAdapter::get_random_double(std::nextafter(0.0, 1.0), 1000.0, mt);
+    const auto decay_step
+        = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
-    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
-    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
+    boost::random::uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    boost::random::uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    boost::random::uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
     CalciumCalculator cc1(TargetCalciumDecay::None, 0.0, 0);
     CalciumCalculator cc2(TargetCalciumDecay::Relative, decay_amount_relative, decay_step);
@@ -321,17 +297,14 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorInitialTargetCalcium) {
         return static_cast<double>(v) * 5.98;
     };
 
-    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
-    uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
+    const auto decay_amount_relative = RandomAdapter::get_random_double(0.0, std::nextafter(1.0, 0.0), mt);
+    const auto decay_amount_absolute = RandomAdapter::get_random_double(std::nextafter(0.0, 1.0), 1000.0, mt);
+    const auto decay_step
+        = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    const auto decay_amount_relative = amount_distr_relative(mt);
-    const auto decay_amount_absolute = amount_distr_absolute(mt);
-    const auto decay_step = step_distr(mt);
-
-    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
-    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
-    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
+    boost::random::uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    boost::random::uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    boost::random::uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
     CalciumCalculator cc1(TargetCalciumDecay::None, 0.0, 0);
     CalciumCalculator cc2(TargetCalciumDecay::Relative, decay_amount_relative, decay_step);
@@ -439,17 +412,14 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorCreate) {
         return static_cast<double>(v) * 86.2;
     };
 
-    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
-    uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
+    const auto decay_amount_relative = RandomAdapter::get_random_double(0.0, std::nextafter(1.0, 0.0), mt);
+    const auto decay_amount_absolute = RandomAdapter::get_random_double(std::nextafter(0.0, 1.0), 1000.0, mt);
+    const auto decay_step
+        = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    const auto decay_amount_relative = amount_distr_relative(mt);
-    const auto decay_amount_absolute = amount_distr_absolute(mt);
-    const auto decay_step = step_distr(mt);
-
-    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
-    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
-    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
+    boost::random::uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    boost::random::uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    boost::random::uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
     CalciumCalculator cc1(TargetCalciumDecay::None, 0.0, 0);
     CalciumCalculator cc2(TargetCalciumDecay::Relative, decay_amount_relative, decay_step);
@@ -559,17 +529,14 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorZeroNeurons) {
         return static_cast<double>(v) * 5.98;
     };
 
-    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
-    uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
+    const auto decay_amount_relative = RandomAdapter::get_random_double(0.0, std::nextafter(1.0, 0.0), mt);
+    const auto decay_amount_absolute = RandomAdapter::get_random_double(std::nextafter(0.0, 1.0), 1000.0, mt);
+    const auto decay_step
+        = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    const auto decay_amount_relative = amount_distr_relative(mt);
-    const auto decay_amount_absolute = amount_distr_absolute(mt);
-    const auto decay_step = step_distr(mt);
-
-    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
-    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
-    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
+    boost::random::uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    boost::random::uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    boost::random::uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
     CalciumCalculator cc1(TargetCalciumDecay::None, 0.0, 0);
     CalciumCalculator cc2(TargetCalciumDecay::Relative, decay_amount_relative, decay_step);
@@ -625,17 +592,14 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorEmptyFunctions) {
         return static_cast<double>(v) * 5.98;
     };
 
-    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
-    uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
+    const auto decay_amount_relative = RandomAdapter::get_random_double(0.0, std::nextafter(1.0, 0.0), mt);
+    const auto decay_amount_absolute = RandomAdapter::get_random_double(std::nextafter(0.0, 1.0), 1000.0, mt);
+    const auto decay_step
+        = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    const auto decay_amount_relative = amount_distr_relative(mt);
-    const auto decay_amount_absolute = amount_distr_absolute(mt);
-    const auto decay_step = step_distr(mt);
-
-    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
-    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
-    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
+    boost::random::uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    boost::random::uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    boost::random::uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
     CalciumCalculator cc1(TargetCalciumDecay::None, 0.0, 0);
     CalciumCalculator cc2(TargetCalciumDecay::Relative, decay_amount_relative, decay_step);
@@ -705,17 +669,14 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateException) {
         return static_cast<double>(v) * 5.98;
     };
 
-    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
-    uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
+    const auto decay_amount_relative = RandomAdapter::get_random_double(0.0, std::nextafter(1.0, 0.0), mt);
+    const auto decay_amount_absolute = RandomAdapter::get_random_double(std::nextafter(0.0, 1.0), 1000.0, mt);
+    const auto decay_step
+        = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    const auto decay_amount_relative = amount_distr_relative(mt);
-    const auto decay_amount_absolute = amount_distr_absolute(mt);
-    const auto decay_step = step_distr(mt);
-
-    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
-    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
-    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
+    boost::random::uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    boost::random::uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    boost::random::uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
     CalciumCalculator cc1(TargetCalciumDecay::None, 0.0, 0);
     CalciumCalculator cc2(TargetCalciumDecay::Relative, decay_amount_relative, decay_step);
@@ -743,7 +704,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateException) {
     cc3.set_initial_calcium_calculator(initiator);
     cc3.set_target_calcium_calculator(calculator);
 
-    const auto step = step_distr(mt);
+    const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
     ASSERT_THROW(cc1.update_calcium(step, {}, { FiredStatus::Fired }), RelearnException);
     ASSERT_THROW(cc1.update_calcium(step, { UpdateStatus::Disabled }, {}), RelearnException);
@@ -781,11 +742,9 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
         return static_cast<double>(v) * 5.98;
     };
 
-    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
-    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
-    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
-
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
+    boost::random::uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    boost::random::uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    boost::random::uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
     CalciumCalculator cc(TargetCalciumDecay::None, 0.0, 0);
 
@@ -818,7 +777,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
         ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
     }
 
-    const auto step = step_distr(mt);
+    const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
     ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status));
 
@@ -862,9 +821,9 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneStep0) {
         return static_cast<double>(v) * 5.98;
     };
 
-    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
-    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
-    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
+    boost::random::uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    boost::random::uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    boost::random::uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
     CalciumCalculator cc(TargetCalciumDecay::None, 0.0, 0);
 
@@ -923,11 +882,9 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNone) {
         return static_cast<double>(v) * 5.98;
     };
 
-    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
-    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
-    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
-
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
+    boost::random::uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    boost::random::uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    boost::random::uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
     CalciumCalculator cc(TargetCalciumDecay::None, 0.0, 0);
 
@@ -935,7 +892,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNone) {
     const auto tau_C = tau_C_distr(mt);
     const auto h = h_distr(mt);
 
-    const auto step = step_distr(mt);
+    const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
     cc.set_beta(beta);
     cc.set_tau_C(tau_C);
@@ -988,15 +945,12 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
         return static_cast<double>(v) * 5.98;
     };
 
-    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
+    const auto decay_amount_relative = RandomAdapter::get_random_double(0.0, std::nextafter(1.0, 0.0), mt);
+    const auto decay_step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    const auto decay_amount_relative = amount_distr_relative(mt);
-    const auto decay_step = step_distr(mt);
-
-    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
-    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
-    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
+    boost::random::uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    boost::random::uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    boost::random::uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
     CalciumCalculator cc(TargetCalciumDecay::Relative, decay_amount_relative, decay_step);
 
@@ -1029,7 +983,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
         ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
     }
 
-    const auto step = step_distr(mt);
+    const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
     ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status));
 
@@ -1073,15 +1027,12 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeStep0) {
         return static_cast<double>(v) * 5.98;
     };
 
-    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
+    const auto decay_amount_relative = RandomAdapter::get_random_double(0.0, std::nextafter(1.0, 0.0), mt);
+    const auto decay_step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    const auto decay_amount_relative = amount_distr_relative(mt);
-    const auto decay_step = step_distr(mt);
-
-    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
-    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
-    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
+    boost::random::uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    boost::random::uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    boost::random::uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
     CalciumCalculator cc(TargetCalciumDecay::Relative, decay_amount_relative, decay_step);
 
@@ -1141,15 +1092,12 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelative) {
         return static_cast<double>(v) * 5.98;
     };
 
-    uniform_real_distribution<double> amount_distr_relative(0.0, std::nextafter(1.0, 0.0));
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
+    const auto decay_amount_relative = RandomAdapter::get_random_double(0.0, std::nextafter(1.0, 0.0), mt);
+    const auto decay_step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    const auto decay_amount_relative = amount_distr_relative(mt);
-    const auto decay_step = step_distr(mt);
-
-    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
-    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
-    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
+    boost::random::uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    boost::random::uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    boost::random::uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
     CalciumCalculator cc(TargetCalciumDecay::Relative, decay_amount_relative, decay_step);
 
@@ -1157,7 +1105,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelative) {
     const auto tau_C = tau_C_distr(mt);
     const auto h = h_distr(mt);
 
-    const auto step = step_distr(mt);
+    const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
     cc.set_beta(beta);
     cc.set_tau_C(tau_C);
@@ -1222,15 +1170,13 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
         return static_cast<double>(v) * 5.98;
     };
 
-    uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
+    const auto decay_amount_absolute = RandomAdapter::get_random_double(std::nextafter(0.0, 1.0), 1000.0, mt);
+    const auto decay_step
+        = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    const auto decay_amount_absolute = amount_distr_absolute(mt);
-    const auto decay_step = step_distr(mt);
-
-    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
-    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
-    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
+    boost::random::uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    boost::random::uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    boost::random::uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
     CalciumCalculator cc(TargetCalciumDecay::Absolute, decay_amount_absolute, decay_step);
 
@@ -1263,7 +1209,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
         ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
     }
 
-    const auto step = step_distr(mt);
+    const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
     ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status));
 
@@ -1307,15 +1253,13 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteStep0) {
         return static_cast<double>(v) * 5.98;
     };
 
-    uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
+    const auto decay_amount_absolute = RandomAdapter::get_random_double(std::nextafter(0.0, 1.0), 1000.0, mt);
+    const auto decay_step
+        = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    const auto decay_amount_absolute = amount_distr_absolute(mt);
-    const auto decay_step = step_distr(mt);
-
-    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
-    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
-    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
+    boost::random::uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    boost::random::uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    boost::random::uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
     CalciumCalculator cc(TargetCalciumDecay::Absolute, decay_amount_absolute, decay_step);
 
@@ -1375,15 +1319,13 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsolute) {
         return static_cast<double>(v) * 5.98;
     };
 
-    uniform_real_distribution<double> amount_distr_absolute(std::nextafter(0.0, 1.0), 1000.0);
-    uniform_int_distribution<RelearnTypes::step_type> step_distr(1, 10000000);
+    const auto decay_amount_absolute = RandomAdapter::get_random_double(std::nextafter(0.0, 1.0), 1000.0, mt);
+    const auto decay_step
+        = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    const auto decay_amount_absolute = amount_distr_absolute(mt);
-    const auto decay_step = step_distr(mt);
-
-    uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
-    uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
-    uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
+    boost::random::uniform_real_distribution<double> beta_distr(CalciumCalculator::min_beta, CalciumCalculator::max_beta);
+    boost::random::uniform_real_distribution<double> tau_C_distr(CalciumCalculator::min_tau_C, CalciumCalculator::max_tau_C);
+    boost::random::uniform_int_distribution<unsigned int> h_distr(CalciumCalculator::min_h, CalciumCalculator::max_h);
 
     CalciumCalculator cc(TargetCalciumDecay::Absolute, decay_amount_absolute, decay_step);
 
@@ -1391,7 +1333,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsolute) {
     const auto tau_C = tau_C_distr(mt);
     const auto h = h_distr(mt);
 
-    const auto step = step_distr(mt);
+    const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
     cc.set_beta(beta);
     cc.set_tau_C(tau_C);

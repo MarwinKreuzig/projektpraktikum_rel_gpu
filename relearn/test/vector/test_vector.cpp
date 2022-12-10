@@ -666,13 +666,11 @@ TEST_F(VectorTest, testVectorPower) {
 }
 
 TEST_F(VectorTest, testVectorNorm) {
-    uniform_real_distribution<double> urd_p(1.0, 10.1);
-
     const auto x = get_random_position_element();
     const auto y = get_random_position_element();
     const auto z = get_random_position_element();
 
-    const auto p = urd_p(mt);
+    const auto p = RandomAdapter::get_random_double<double>(1.0, 10.1, mt);
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
@@ -738,13 +736,11 @@ TEST_F(VectorTest, testVectorNorm2) {
 }
 
 TEST_F(VectorTest, testVectorNormException) {
-    uniform_real_distribution<double> urd_bad_p(-10.0, 1.0);
-
     const auto x = get_random_position_element();
     const auto y = get_random_position_element();
     const auto z = get_random_position_element();
 
-    const auto p = urd_bad_p(mt);
+    const auto p = RandomAdapter::get_random_double<double>(-10.0, 1.0, mt);
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
@@ -756,13 +752,11 @@ TEST_F(VectorTest, testVectorNormException) {
 }
 
 TEST_F(VectorTest, testVectorRound) {
-    uniform_real_distribution<double> urd_multiple(1.0, 10.1);
-
     const auto x = get_random_position_element();
     const auto y = get_random_position_element();
     const auto z = get_random_position_element();
 
-    const auto multiple = urd_multiple(mt);
+    const auto multiple = RandomAdapter::get_random_double<double>(1.0, 10.1, mt);
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
@@ -802,8 +796,6 @@ TEST_F(VectorTest, testVectorRound) {
 }
 
 TEST_F(VectorTest, testVectorOrderEqual) {
-    uniform_real_distribution<double> urd_offset(1.0, 10.1);
-
     const auto x = get_random_position_element();
     const auto y = get_random_position_element();
     const auto z = get_random_position_element();
@@ -819,13 +811,11 @@ TEST_F(VectorTest, testVectorOrderEqual) {
 }
 
 TEST_F(VectorTest, testVectorOrderSmallerX) {
-    uniform_real_distribution<double> urd_offset(1.0, 10.1);
-
     const auto x = get_random_position_element();
     const auto y = get_random_position_element();
     const auto z = get_random_position_element();
 
-    const auto offset = urd_offset(mt);
+    const auto offset = RandomAdapter::get_random_double<double>(1.0, 10.1, mt);
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
@@ -842,13 +832,11 @@ TEST_F(VectorTest, testVectorOrderSmallerX) {
 }
 
 TEST_F(VectorTest, testVectorOrderSmallerY) {
-    uniform_real_distribution<double> urd_offset(1.0, 10.1);
-
     const auto x = get_random_position_element();
     const auto y = get_random_position_element();
     const auto z = get_random_position_element();
 
-    const auto offset = urd_offset(mt);
+    const auto offset = RandomAdapter::get_random_double<double>(1.0, 10.1, mt);
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
@@ -865,13 +853,11 @@ TEST_F(VectorTest, testVectorOrderSmallerY) {
 }
 
 TEST_F(VectorTest, testVectorOrderSmallerZ) {
-    uniform_real_distribution<double> urd_offset(1.0, 10.1);
-
     const auto x = get_random_position_element();
     const auto y = get_random_position_element();
     const auto z = get_random_position_element();
 
-    const auto offset = urd_offset(mt);
+    const auto offset = RandomAdapter::get_random_double<double>(1.0, 10.1, mt);
 
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
@@ -980,13 +966,9 @@ TEST_F(VectorTest, testVectorInBoxTrue) {
     const Vec3<double> v_min{ x_min, y_min, z_min };
     const Vec3<double> v_max{ x_max, y_max, z_max };
 
-    uniform_real_distribution<double> urd_x(x_min, x_max);
-    uniform_real_distribution<double> urd_y(y_min, y_max);
-    uniform_real_distribution<double> urd_z(z_min, z_max);
-
-    const auto x3 = urd_x(mt);
-    const auto y3 = urd_y(mt);
-    const auto z3 = urd_z(mt);
+    const auto x3 = RandomAdapter::get_random_double<double>(x_min, x_max, mt);
+    const auto y3 = RandomAdapter::get_random_double<double>(y_min, y_max, mt);
+    const auto z3 = RandomAdapter::get_random_double<double>(z_min, z_max, mt);
 
     std::stringstream ss{};
     ss << x_min << ' ' << y_min << ' ' << z_min << '\n';
@@ -1018,13 +1000,9 @@ TEST_F(VectorTest, testVectorInBoxFalseXlarge) {
     const Vec3<double> v_min{ x_min, y_min, z_min };
     const Vec3<double> v_max{ x_max, y_max, z_max };
 
-    uniform_real_distribution<double> urd_x(x_min, x_max);
-    uniform_real_distribution<double> urd_y(y_min, y_max);
-    uniform_real_distribution<double> urd_z(z_min, z_max);
-
-    const auto x3 = urd_x(mt) + x_max - x_min;
-    const auto y3 = urd_y(mt);
-    const auto z3 = urd_z(mt);
+    const auto x3 = RandomAdapter::get_random_double<double>(x_min, x_max, mt) + x_max - x_min;
+    const auto y3 = RandomAdapter::get_random_double<double>(y_min, y_max, mt);
+    const auto z3 = RandomAdapter::get_random_double<double>(z_min, z_max, mt);
 
     std::stringstream ss{};
     ss << x_min << ' ' << y_min << ' ' << z_min << '\n';
@@ -1056,13 +1034,9 @@ TEST_F(VectorTest, testVectorInBoxFalseYlarge) {
     const Vec3<double> v_min{ x_min, y_min, z_min };
     const Vec3<double> v_max{ x_max, y_max, z_max };
 
-    uniform_real_distribution<double> urd_x(x_min, x_max);
-    uniform_real_distribution<double> urd_y(y_min, y_max);
-    uniform_real_distribution<double> urd_z(z_min, z_max);
-
-    const auto x3 = urd_x(mt);
-    const auto y3 = urd_y(mt) + y_max - y_min;
-    const auto z3 = urd_z(mt);
+    const auto x3 = RandomAdapter::get_random_double<double>(x_min, x_max, mt);
+    const auto y3 = RandomAdapter::get_random_double<double>(y_min, y_max, mt) + y_max - y_min;
+    const auto z3 = RandomAdapter::get_random_double<double>(z_min, z_max, mt);
 
     std::stringstream ss{};
     ss << x_min << ' ' << y_min << ' ' << z_min << '\n';
@@ -1094,13 +1068,9 @@ TEST_F(VectorTest, testVectorInBoxFalseZlarge) {
     const Vec3<double> v_min{ x_min, y_min, z_min };
     const Vec3<double> v_max{ x_max, y_max, z_max };
 
-    uniform_real_distribution<double> urd_x(x_min, x_max);
-    uniform_real_distribution<double> urd_y(y_min, y_max);
-    uniform_real_distribution<double> urd_z(z_min, z_max);
-
-    const auto x3 = urd_x(mt);
-    const auto y3 = urd_y(mt);
-    const auto z3 = urd_z(mt) + z_max - z_min;
+    const auto x3 = RandomAdapter::get_random_double<double>(x_min, x_max, mt);
+    const auto y3 = RandomAdapter::get_random_double<double>(y_min, y_max, mt);
+    const auto z3 = RandomAdapter::get_random_double<double>(z_min, z_max, mt) + z_max - z_min;
 
     std::stringstream ss{};
     ss << x_min << ' ' << y_min << ' ' << z_min << '\n';
@@ -1132,13 +1102,9 @@ TEST_F(VectorTest, testVectorInBoxFalseXsmall) {
     const Vec3<double> v_min{ x_min, y_min, z_min };
     const Vec3<double> v_max{ x_max, y_max, z_max };
 
-    uniform_real_distribution<double> urd_x(x_min, x_max);
-    uniform_real_distribution<double> urd_y(y_min, y_max);
-    uniform_real_distribution<double> urd_z(z_min, z_max);
-
-    const auto x3 = urd_x(mt) - x_max + x_min;
-    const auto y3 = urd_y(mt);
-    const auto z3 = urd_z(mt);
+    const auto x3 = RandomAdapter::get_random_double<double>(x_min, x_max, mt) - x_max + x_min;
+    const auto y3 = RandomAdapter::get_random_double<double>(y_min, y_max, mt);
+    const auto z3 = RandomAdapter::get_random_double<double>(z_min, z_max, mt);
 
     std::stringstream ss{};
     ss << x_min << ' ' << y_min << ' ' << z_min << '\n';
@@ -1170,13 +1136,9 @@ TEST_F(VectorTest, testVectorInBoxFalseYsmall) {
     const Vec3<double> v_min{ x_min, y_min, z_min };
     const Vec3<double> v_max{ x_max, y_max, z_max };
 
-    uniform_real_distribution<double> urd_x(x_min, x_max);
-    uniform_real_distribution<double> urd_y(y_min, y_max);
-    uniform_real_distribution<double> urd_z(z_min, z_max);
-
-    const auto x3 = urd_x(mt);
-    const auto y3 = urd_y(mt) - y_max + y_min;
-    const auto z3 = urd_z(mt);
+    const auto x3 = RandomAdapter::get_random_double<double>(x_min, x_max, mt);
+    const auto y3 = RandomAdapter::get_random_double<double>(y_min, y_max, mt) - y_max + y_min;
+    const auto z3 = RandomAdapter::get_random_double<double>(z_min, z_max, mt);
 
     std::stringstream ss{};
     ss << x_min << ' ' << y_min << ' ' << z_min << '\n';
@@ -1208,13 +1170,9 @@ TEST_F(VectorTest, testVectorInBoxFalseZsmall) {
     const Vec3<double> v_min{ x_min, y_min, z_min };
     const Vec3<double> v_max{ x_max, y_max, z_max };
 
-    uniform_real_distribution<double> urd_x(x_min, x_max);
-    uniform_real_distribution<double> urd_y(y_min, y_max);
-    uniform_real_distribution<double> urd_z(z_min, z_max);
-
-    const auto x3 = urd_x(mt);
-    const auto y3 = urd_y(mt);
-    const auto z3 = urd_z(mt) - z_max + z_min;
+    const auto x3 = RandomAdapter::get_random_double<double>(x_min, x_max, mt);
+    const auto y3 = RandomAdapter::get_random_double<double>(y_min, y_max, mt);
+    const auto z3 = RandomAdapter::get_random_double<double>(z_min, z_max, mt) - z_max + z_min;
 
     std::stringstream ss{};
     ss << x_min << ' ' << y_min << ' ' << z_min << '\n';
@@ -1246,13 +1204,9 @@ TEST_F(VectorTest, testVectorInBoxExceptionX) {
     const Vec3<double> v_min{ x_max, y_min, z_min };
     const Vec3<double> v_max{ x_min, y_max, z_max };
 
-    uniform_real_distribution<double> urd_x(x_min, x_max);
-    uniform_real_distribution<double> urd_y(y_min, y_max);
-    uniform_real_distribution<double> urd_z(z_min, z_max);
-
-    const auto x3 = urd_x(mt);
-    const auto y3 = urd_y(mt);
-    const auto z3 = urd_z(mt);
+    const auto x3 = RandomAdapter::get_random_double<double>(x_min, x_max, mt);
+    const auto y3 = RandomAdapter::get_random_double<double>(y_min, y_max, mt);
+    const auto z3 = RandomAdapter::get_random_double<double>(z_min, z_max, mt);
 
     std::stringstream ss{};
     ss << x_min << ' ' << y_min << ' ' << z_min << '\n';
@@ -1283,13 +1237,9 @@ TEST_F(VectorTest, testVectorInBoxExceptionY) {
     const Vec3<double> v_min{ x_min, y_max, z_min };
     const Vec3<double> v_max{ x_max, y_min, z_max };
 
-    uniform_real_distribution<double> urd_x(x_min, x_max);
-    uniform_real_distribution<double> urd_y(y_min, y_max);
-    uniform_real_distribution<double> urd_z(z_min, z_max);
-
-    const auto x3 = urd_x(mt);
-    const auto y3 = urd_y(mt);
-    const auto z3 = urd_z(mt);
+    const auto x3 = RandomAdapter::get_random_double<double>(x_min, x_max, mt);
+    const auto y3 = RandomAdapter::get_random_double<double>(y_min, y_max, mt);
+    const auto z3 = RandomAdapter::get_random_double<double>(z_min, z_max, mt);
 
     std::stringstream ss{};
     ss << x_min << ' ' << y_min << ' ' << z_min << '\n';
@@ -1320,13 +1270,9 @@ TEST_F(VectorTest, testVectorInBoxExceptionZ) {
     const Vec3<double> v_min{ x_min, y_min, z_max };
     const Vec3<double> v_max{ x_max, y_max, z_min };
 
-    uniform_real_distribution<double> urd_x(x_min, x_max);
-    uniform_real_distribution<double> urd_y(y_min, y_max);
-    uniform_real_distribution<double> urd_z(z_min, z_max);
-
-    const auto x3 = urd_x(mt);
-    const auto y3 = urd_y(mt);
-    const auto z3 = urd_z(mt);
+    const auto x3 = RandomAdapter::get_random_double<double>(x_min, x_max, mt);
+    const auto y3 = RandomAdapter::get_random_double<double>(y_min, y_max, mt);
+    const auto z3 = RandomAdapter::get_random_double<double>(z_min, z_max, mt);
 
     std::stringstream ss{};
     ss << x_min << ' ' << y_min << ' ' << z_min << '\n';

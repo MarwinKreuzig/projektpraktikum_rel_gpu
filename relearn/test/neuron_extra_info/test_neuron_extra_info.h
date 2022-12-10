@@ -12,6 +12,8 @@
 
 #include "RelearnTest.hpp"
 
+#include "neurons/NeuronsExtraInfo.h"
+
 class NeuronsExtraInfoTest : public RelearnTest {
 protected:
     static void SetUpTestSuite() {

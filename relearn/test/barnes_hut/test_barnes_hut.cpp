@@ -11,6 +11,8 @@
 #include "test_barnes_hut.h"
 
 #include "mpi/mpi_rank_adapter.h"
+#include "neurons/neuron_types_adapter.h"
+#include "synaptic_elements/synaptic_elements_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "algorithm/Algorithms.h"
@@ -64,7 +66,7 @@ TEST_F(BarnesHutTest, testBarnesHutACException) {
     node.set_cell_size(minimum, maximum);
     node.set_cell_neuron_position(node_position);
 
-    const auto searched_signal_type = get_random_signal_type();
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
     const auto source_position = Vec3d{ 15.0, 15.0, 15.0 };
 
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(source_position,
@@ -107,7 +109,7 @@ TEST_F(BarnesHutTest, testBarnesHutACLeaf) {
     node.set_cell_size(minimum, maximum);
     node.set_cell_neuron_position(node_position);
 
-    const auto searched_signal_type = get_random_signal_type();
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
     const auto acceptance_criterion = get_random_double(eps, Constants::bh_max_theta);
 
     for (auto it = 0; it < 1000; it++) {
@@ -159,7 +161,7 @@ TEST_F(BarnesHutTest, testBarnesHutACParent) {
     const auto& cell_dimenstions = scaled_maximum - scaled_minimum;
     const auto& maximum_cell_dimension = cell_dimenstions.get_maximum();
 
-    const auto searched_signal_type = get_random_signal_type();
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
     for (auto it = 0; it < 1000; it++) {
         const auto acceptance_criterion = get_random_double(eps, Constants::bh_max_theta);
@@ -199,9 +201,9 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& [min, max] = get_random_simulation_box_size();
 
-    const auto& axons = create_axons(number_neurons);
-    const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
-    const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
+    const auto& axons = SynapticElementsAdapter::create_axons(number_neurons, mt);
+    const auto& excitatory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Excitatory, mt);
+    const auto& inhibitory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Inhibitory, mt);
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = generate_random_neurons(min, max, number_neurons, number_neurons);
 
@@ -364,7 +366,7 @@ TEST_F(BarnesHutInvertedTest, testBarnesHutInvertedACException) {
     node.set_cell_size(minimum, maximum);
     node.set_cell_neuron_position(node_position);
 
-    const auto searched_signal_type = get_random_signal_type();
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
     const auto source_position = Vec3d{ 15.0, 15.0, 15.0 };
 
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(source_position,
@@ -407,7 +409,7 @@ TEST_F(BarnesHutInvertedTest, testBarnesHutInvertedACLeaf) {
     node.set_cell_size(minimum, maximum);
     node.set_cell_neuron_position(node_position);
 
-    const auto searched_signal_type = get_random_signal_type();
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
     const auto acceptance_criterion = get_random_double(eps, Constants::bh_max_theta);
 
     for (auto it = 0; it < 1000; it++) {
@@ -459,7 +461,7 @@ TEST_F(BarnesHutInvertedTest, testBarnesHutACParent) {
     const auto& cell_dimenstions = scaled_maximum - scaled_minimum;
     const auto& maximum_cell_dimension = cell_dimenstions.get_maximum();
 
-    const auto searched_signal_type = get_random_signal_type();
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
     for (auto it = 0; it < 1000; it++) {
         const auto acceptance_criterion = get_random_double(eps, Constants::bh_max_theta);

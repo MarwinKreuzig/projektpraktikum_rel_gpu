@@ -17,6 +17,7 @@
 #include <boost/random/uniform_real_distribution.hpp>
 
 #include <cmath>
+#include <numeric>
 #include <random>
 #include <vector>
 

@@ -10,6 +10,8 @@
 
 #include "test_kernel.h"
 
+#include "kernel_adapter.h"
+#include "neurons/neuron_types_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "algorithm/Kernel/Kernel.h"
@@ -23,12 +25,12 @@
 TEST_F(KernelTest, testKernelSameNode) {
     const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(1000, mt);
 
-    const auto& debug_kernel_string = set_random_kernel<BarnesHutCell>();
+    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
 
     const auto& position = get_random_position();
 
-    const auto element_type = get_random_element_type();
-    const auto signal_type = get_random_signal_type();
+    const auto element_type = NeuronTypesAdapter::get_random_element_type(mt);
+    const auto signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
     OctreeNode<BarnesHutCell> node{};
     node.set_cell_neuron_id(neuron_id);
@@ -43,14 +45,10 @@ TEST_F(KernelTest, testKernelException) {
 
     const auto& source_position = get_random_position();
 
-    const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-    ;
-    const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-    ;
-    const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-    ;
-    const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-    ;
+    const auto& number_vacant_excitatory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
 
     OctreeNode<FastMultipoleMethodsCell> node{};
     node.set_cell_neuron_id(neuron_id_1);
@@ -64,7 +62,7 @@ TEST_F(KernelTest, testKernelException) {
     node.set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
     node.set_cell_number_dendrites(number_vacant_excitatory_dendrites, number_vacant_inhibitory_dendrites);
 
-    const auto& debug_kernel_string = set_random_kernel<FastMultipoleMethodsCell>();
+    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<FastMultipoleMethodsCell>(mt);
 
     using type = Kernel<FastMultipoleMethodsCell>;
     ASSERT_THROW(const auto attr_exc_axons = type::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Axon, SignalType::Excitatory);, RelearnException);
@@ -78,10 +76,10 @@ TEST_F(KernelTest, testKernelEmptyVector) {
 
     const auto& position = get_random_position();
 
-    const auto element_type = get_random_element_type();
-    const auto signal_type = get_random_signal_type();
+    const auto element_type = NeuronTypesAdapter::get_random_element_type(mt);
+    const auto signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
-    const auto& debug_kernel_string = set_random_kernel<FastMultipoleMethodsCell>();
+    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<FastMultipoleMethodsCell>(mt);
 
     const auto& [sum, attrs] = Kernel<FastMultipoleMethodsCell>::create_probability_interval(
         neuron_id, position, {}, element_type, signal_type);
@@ -95,8 +93,8 @@ TEST_F(KernelTest, testKernelAutapseVector) {
 
     const auto& position = get_random_position();
 
-    const auto element_type = get_random_element_type();
-    const auto signal_type = get_random_signal_type();
+    const auto element_type = NeuronTypesAdapter::get_random_element_type(mt);
+    const auto signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
     const auto number_nodes = TaggedIdAdapter::get_random_number_neurons(mt);
 
@@ -112,10 +110,10 @@ TEST_F(KernelTest, testKernelAutapseVector) {
         const auto& target_excitatory_dendrite_position = get_random_position();
         const auto& target_inhibitory_dendrite_position = get_random_position();
 
-        const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-        const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-        const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-        const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
+        const auto& number_vacant_excitatory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
 
         nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
         nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
@@ -128,7 +126,7 @@ TEST_F(KernelTest, testKernelAutapseVector) {
         node_pointers[i] = &nodes[i];
     }
 
-    const auto& debug_kernel_string = set_random_kernel<FastMultipoleMethodsCell>();
+    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<FastMultipoleMethodsCell>(mt);
 
     const auto& [sum, attrs] = Kernel<FastMultipoleMethodsCell>::create_probability_interval(
         neuron_id, position, node_pointers, element_type, signal_type);
@@ -142,8 +140,8 @@ TEST_F(KernelTest, testKernelVectorException) {
 
     const auto& position = get_random_position();
 
-    const auto element_type = get_random_element_type();
-    const auto signal_type = get_random_signal_type();
+    const auto element_type = NeuronTypesAdapter::get_random_element_type(mt);
+    const auto signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
     const auto number_nodes = TaggedIdAdapter::get_random_number_neurons(mt);
 
@@ -159,10 +157,10 @@ TEST_F(KernelTest, testKernelVectorException) {
         const auto& target_excitatory_dendrite_position = get_random_position();
         const auto& target_inhibitory_dendrite_position = get_random_position();
 
-        const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-        const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-        const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-        const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
+        const auto& number_vacant_excitatory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
 
         nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
         nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
@@ -178,7 +176,7 @@ TEST_F(KernelTest, testKernelVectorException) {
     const auto nullptr_index = get_random_integer<size_t>(0, number_nodes - 1);
     node_pointers[nullptr_index] = nullptr;
 
-    const auto& debug_kernel_string = set_random_kernel<FastMultipoleMethodsCell>();
+    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<FastMultipoleMethodsCell>(mt);
 
     using TT = Kernel<FastMultipoleMethodsCell>;
 
@@ -190,8 +188,8 @@ TEST_F(KernelTest, testKernelRandomVector) {
 
     const auto& position = get_random_position();
 
-    const auto element_type = get_random_element_type();
-    const auto signal_type = get_random_signal_type();
+    const auto element_type = NeuronTypesAdapter::get_random_element_type(mt);
+    const auto signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
     const auto number_nodes = TaggedIdAdapter::get_random_number_neurons(mt);
 
@@ -207,10 +205,10 @@ TEST_F(KernelTest, testKernelRandomVector) {
         const auto& target_excitatory_dendrite_position = get_random_position();
         const auto& target_inhibitory_dendrite_position = get_random_position();
 
-        const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-        const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-        const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-        const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
+        const auto& number_vacant_excitatory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
 
         nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
         nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
@@ -223,7 +221,7 @@ TEST_F(KernelTest, testKernelRandomVector) {
         node_pointers[i] = &nodes[i];
     }
 
-    const auto& debug_kernel_string = set_random_kernel<FastMultipoleMethodsCell>();
+    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<FastMultipoleMethodsCell>(mt);
 
     auto total_attractiveness = 0.0;
     std::vector<double> attractivenesses{};
@@ -254,7 +252,7 @@ TEST_F(KernelTest, testPickTargetEmpty) {
 
     const auto random_number = get_random_double(0.0, 100.0);
 
-    const auto& debug_kernel_string = set_random_kernel<BarnesHutCell>();
+    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
 
     using TT = Kernel<BarnesHutCell>;
 
@@ -273,7 +271,7 @@ TEST_F(KernelTest, testPickTargetMismatchSize) {
 
     const auto random_number = get_random_double(0.0, 100.0);
 
-    const auto& debug_kernel_string = set_random_kernel<BarnesHutCell>();
+    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
 
     using TT = Kernel<BarnesHutCell>;
 
@@ -288,7 +286,7 @@ TEST_F(KernelTest, testPickTargetNegativeRandomNumber) {
 
     const auto random_number = -get_random_double(0.001, 100.0);
 
-    const auto& debug_kernel_string = set_random_kernel<BarnesHutCell>();
+    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
 
     using TT = Kernel<BarnesHutCell>;
 
@@ -309,7 +307,7 @@ TEST_F(KernelTest, testPickTargetRandom) {
 
     const auto total_probability = std::reduce(probabilities.begin(), probabilities.end(), 0.0);
 
-    const auto& debug_kernel_string = set_random_kernel<BarnesHutCell>();
+    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
 
     for (auto it = 0; it < number_nodes; it++) {
         const auto random_number = get_random_double(0.0, total_probability);
@@ -350,7 +348,7 @@ TEST_F(KernelTest, testPickTargetTooLarge) {
 
     const auto total_probability = std::reduce(probabilities.begin(), probabilities.end(), 0.0);
 
-    const auto& debug_kernel_string = set_random_kernel<BarnesHutCell>();
+    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
 
     for (auto it = 0; it < number_nodes; it++) {
         const auto random_number = get_random_double(total_probability + eps, (total_probability + eps + 1) * 2);
@@ -365,10 +363,10 @@ TEST_F(KernelTest, testPickTargetEmpty2) {
 
     const auto& position = get_random_position();
 
-    const auto element_type = get_random_element_type();
-    const auto signal_type = get_random_signal_type();
+    const auto element_type = NeuronTypesAdapter::get_random_element_type(mt);
+    const auto signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
-    const auto& debug_kernel_string = set_random_kernel<BarnesHutCell>();
+    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
 
     auto* result = Kernel<BarnesHutCell>::pick_target(neuron_id, position, {}, element_type, signal_type);
 
@@ -381,8 +379,8 @@ TEST_F(KernelTest, testPickTargetException) {
 
     const auto& position = get_random_position();
 
-    const auto element_type = get_random_element_type();
-    const auto signal_type = get_random_signal_type();
+    const auto element_type = NeuronTypesAdapter::get_random_element_type(mt);
+    const auto signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
     std::vector<OctreeNode<FastMultipoleMethodsCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodsCell>{} };
     std::vector<OctreeNode<FastMultipoleMethodsCell>*> node_pointers{ number_nodes, nullptr };
@@ -396,10 +394,10 @@ TEST_F(KernelTest, testPickTargetException) {
         const auto& target_excitatory_dendrite_position = get_random_position();
         const auto& target_inhibitory_dendrite_position = get_random_position();
 
-        const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-        const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-        const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-        const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
+        const auto& number_vacant_excitatory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
 
         nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
         nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
@@ -415,7 +413,7 @@ TEST_F(KernelTest, testPickTargetException) {
     const auto nullptr_index = get_random_integer<size_t>(0, number_nodes - 1);
     node_pointers[nullptr_index] = nullptr;
 
-    const auto& debug_kernel_string = set_random_kernel<FastMultipoleMethodsCell>();
+    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<FastMultipoleMethodsCell>(mt);
 
     using TT = Kernel<FastMultipoleMethodsCell>;
     ASSERT_THROW(auto* result = TT::pick_target(neuron_id, position, node_pointers, element_type, signal_type);, RelearnException);
@@ -427,8 +425,8 @@ TEST_F(KernelTest, testPickTargetRandom2) {
 
     const auto& position = get_random_position();
 
-    const auto element_type = get_random_element_type();
-    const auto signal_type = get_random_signal_type();
+    const auto element_type = NeuronTypesAdapter::get_random_element_type(mt);
+    const auto signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
     std::vector<OctreeNode<FastMultipoleMethodsCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodsCell>{} };
     std::vector<OctreeNode<FastMultipoleMethodsCell>*> node_pointers{ number_nodes, nullptr };
@@ -442,10 +440,10 @@ TEST_F(KernelTest, testPickTargetRandom2) {
         const auto& target_excitatory_dendrite_position = get_random_position();
         const auto& target_inhibitory_dendrite_position = get_random_position();
 
-        const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-        const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-        const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
-        const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());
+        const auto& number_vacant_excitatory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
 
         nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
         nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
@@ -458,7 +456,7 @@ TEST_F(KernelTest, testPickTargetRandom2) {
         node_pointers[i] = &nodes[i];
     }
 
-    const auto& debug_kernel_string = set_random_kernel<FastMultipoleMethodsCell>();
+    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<FastMultipoleMethodsCell>(mt);
 
     for (auto i = 0; i < number_nodes; i++) {
         auto* result = Kernel<FastMultipoleMethodsCell>::

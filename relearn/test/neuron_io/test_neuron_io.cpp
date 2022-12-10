@@ -2,6 +2,7 @@
 
 #include "mpi/mpi_rank_adapter.h"
 #include "network_graph/network_graph_adapter.h"
+#include "neurons/neuron_types_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "io/NeuronIO.h"
@@ -57,7 +58,7 @@ TEST_F(IOTest, testNeuronIOWriteComponentwiseFileNotFound) {
         preliminary_position.emplace_back(get_random_position());
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
-        preliminary_signal_types.emplace_back(get_random_signal_type());
+        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
@@ -82,7 +83,7 @@ TEST_F(IOTest, testNeuronIOWriteComponentwise) {
         preliminary_position.emplace_back(get_random_position());
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
-        preliminary_signal_types.emplace_back(get_random_signal_type());
+        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
@@ -110,7 +111,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwise) {
         preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
-        preliminary_signal_types.emplace_back(get_random_signal_type());
+        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
@@ -181,7 +182,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwiseIDException) {
         preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
-        preliminary_signal_types.emplace_back(get_random_signal_type());
+        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
@@ -220,7 +221,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionXException) {
         preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
-        preliminary_signal_types.emplace_back(get_random_signal_type());
+        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
@@ -252,7 +253,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionYException) {
         preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
-        preliminary_signal_types.emplace_back(get_random_signal_type());
+        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
@@ -284,7 +285,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionZException) {
         preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
-        preliminary_signal_types.emplace_back(get_random_signal_type());
+        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
@@ -314,7 +315,7 @@ TEST_F(IOTest, testNeuronIOWrite1) {
         preliminary_ids.emplace_back(false, i);
         preliminary_position.emplace_back(get_random_position());
         preliminary_area_ids.emplace_back(i);
-        preliminary_signal_types.emplace_back(get_random_signal_type());
+        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
 
         preliminary_neurons.emplace_back(preliminary_position[i], preliminary_ids[i], preliminary_signal_types[i], preliminary_area_ids[i]);
@@ -346,7 +347,7 @@ TEST_F(IOTest, testNeuronIOWrite2) {
         preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
         preliminary_area_ids.emplace_back(i);
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
-        preliminary_signal_types.emplace_back(get_random_signal_type());
+        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
 
         preliminary_neurons.emplace_back(preliminary_position[i], preliminary_ids[i], preliminary_signal_types[i], preliminary_area_ids[i]);
     }
@@ -412,7 +413,7 @@ TEST_F(IOTest, testNeuronIOWriteFileNotFound) {
         preliminary_position.emplace_back(get_random_position());
         preliminary_area_ids.emplace_back(i);
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
-        preliminary_signal_types.emplace_back(get_random_signal_type());
+        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
 
         preliminary_neurons.emplace_back(preliminary_position[i], preliminary_ids[i], preliminary_signal_types[i], preliminary_area_ids[i]);
     }
@@ -436,7 +437,7 @@ TEST_F(IOTest, testNeuronIORead) {
     std::vector<RelearnTypes::area_id> area_ids{};
 
     for (auto i = 0; i < number_neurons; i++) {
-        preliminary_neurons.emplace_back(get_random_position_in_box(min_pos, max_pos), NeuronID{ false, i }, get_random_signal_type(), i);
+        preliminary_neurons.emplace_back(get_random_position_in_box(min_pos, max_pos), NeuronID{ false, i }, NeuronTypesAdapter::get_random_signal_type(mt), i);
         area_names.emplace_back("area_" + std::to_string(i));
         area_ids.emplace_back(i);
     }
@@ -512,7 +513,7 @@ TEST_F(IOTest, testNeuronIOReadIDException) {
         preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
-        preliminary_signal_types.emplace_back(get_random_signal_type());
+        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
@@ -551,7 +552,7 @@ TEST_F(IOTest, testNeuronIOReadPositionXException) {
         preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
-        preliminary_signal_types.emplace_back(get_random_signal_type());
+        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
@@ -583,7 +584,7 @@ TEST_F(IOTest, testNeuronIOReadPositionYException) {
         preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
-        preliminary_signal_types.emplace_back(get_random_signal_type());
+        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
@@ -615,7 +616,7 @@ TEST_F(IOTest, testNeuronIOReadPositionZException) {
         preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
-        preliminary_signal_types.emplace_back(get_random_signal_type());
+        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
@@ -647,7 +648,7 @@ TEST_F(IOTest, testNeuronIOReadIDs) {
         preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
-        preliminary_signal_types.emplace_back(get_random_signal_type());
+        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
 
     std::filesystem::path path{ "./neurons.tmp" };
@@ -676,7 +677,7 @@ TEST_F(IOTest, testNeuronIOReadIDsEmpty1) {
         preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
-        preliminary_signal_types.emplace_back(get_random_signal_type());
+        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
@@ -716,7 +717,7 @@ TEST_F(IOTest, testNeuronIOReadIDsEmpty2) {
         preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
-        preliminary_signal_types.emplace_back(get_random_signal_type());
+        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
@@ -726,7 +727,7 @@ TEST_F(IOTest, testNeuronIOReadIDsEmpty2) {
     preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
     preliminary_area_names.emplace_back("area_" + std::to_string(number_neurons + 1));
     preliminary_area_ids.emplace_back(number_neurons);
-    preliminary_signal_types.emplace_back(get_random_signal_type());
+    preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
 
     std::filesystem::path path{ "./neurons.tmp" };
 

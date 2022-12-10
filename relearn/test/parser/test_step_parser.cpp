@@ -10,6 +10,8 @@
 
 #include "test_step_parser.h"
 
+#include "util/StepParser.h"
+
 #include <sstream>
 
 TEST_F(StepParserTest, testGenerateFunction1) {

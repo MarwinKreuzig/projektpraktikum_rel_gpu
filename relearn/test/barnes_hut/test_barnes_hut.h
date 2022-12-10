@@ -12,6 +12,9 @@
 
 #include "RelearnTest.hpp"
 
+#include "algorithm/BarnesHutInternal/BarnesHutCell.h"
+#include "algorithm/BarnesHutInternal/BarnesHutInvertedCell.h"
+
 class BarnesHutTest : public RelearnTestWithAdditionalCellAttribute {
 protected:
     static void SetUpTestSuite() {

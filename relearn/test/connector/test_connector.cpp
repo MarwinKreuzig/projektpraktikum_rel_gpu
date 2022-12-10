@@ -12,6 +12,7 @@
 
 #include "connector_adapter.h"
 #include "mpi/mpi_rank_adapter.h"
+#include "synaptic_elements/synaptic_elements_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "algorithm/Connector.h"
@@ -32,8 +33,8 @@ TEST_F(ConnectorTest, testForwardConnectorExceptions) {
 
     const auto final_number_ranks = number_ranks_1 == number_neurons_2 ? number_neurons_2 + 1 : number_ranks_2;
 
-    const auto& excitatory_dendrites = create_dendrites(number_neurons_1, SignalType::Excitatory);
-    const auto& inhibitory_dendrites = create_dendrites(final_number_neurons, SignalType::Inhibitory);
+    const auto& excitatory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons_1, SignalType::Excitatory, mt);
+    const auto& inhibitory_dendrites = SynapticElementsAdapter::create_dendrites(final_number_neurons, SignalType::Inhibitory, mt);
 
     std::shared_ptr<SynapticElements> empty = nullptr;
 
@@ -55,8 +56,8 @@ TEST_F(ConnectorTest, testForwardConnectorEmptyMap) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt) + 1;
 
-    const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
-    const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Inhibitory);
+    const auto& excitatory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Excitatory, mt);
+    const auto& inhibitory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Inhibitory, mt);
 
     // The following copies are intentional
     const auto previous_connected_excitatory = excitatory_dendrites->get_connected_elements();
@@ -108,8 +109,8 @@ TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt) + 1;
 
-    const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
-    const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Inhibitory);
+    const auto& excitatory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Excitatory, mt);
+    const auto& inhibitory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Inhibitory, mt);
 
     CommunicationMap<SynapseCreationRequest> incoming_requests{ static_cast<int>(number_ranks) };
 
@@ -187,9 +188,9 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt) + 1;
 
-    const auto& axons = create_axons(number_neurons);
-    const auto& excitatory_dendrites = create_dendrites(number_neurons, SignalType::Excitatory);
-    const auto& inhibitory_dendrites = create_dendrites(number_neurons, SignalType::Inhibitory);
+    const auto& axons = SynapticElementsAdapter::create_axons(number_neurons, mt);
+    const auto& excitatory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Excitatory, mt);
+    const auto& inhibitory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Inhibitory, mt);
 
     // The following copies are intentional
     const auto previous_connected_excitatory_counts = excitatory_dendrites->get_connected_elements();

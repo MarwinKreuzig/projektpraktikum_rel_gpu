@@ -10,6 +10,7 @@
 
 #include "test_kernel.h"
 
+#include "kernel_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "algorithm/Kernel/Gaussian.h"
@@ -30,8 +31,8 @@ TEST_F(ProbabilityKernelTest, testGammaSetterGetter) {
     ASSERT_EQ(GammaDistributionKernel::get_k(), GammaDistributionKernel::default_k);
     ASSERT_EQ(GammaDistributionKernel::get_theta(), GammaDistributionKernel::default_theta);
 
-    const auto k = get_random_gamma_k();
-    const auto theta = get_random_gamma_theta();
+    const auto k = KernelAdapter::get_random_gamma_k(mt);
+    const auto theta = KernelAdapter::get_random_gamma_theta(mt);
 
     GammaDistributionKernel::set_k(k);
     GammaDistributionKernel::set_theta(theta);
@@ -41,8 +42,8 @@ TEST_F(ProbabilityKernelTest, testGammaSetterGetter) {
 }
 
 TEST_F(ProbabilityKernelTest, testGammaSetterGetterException) {
-    const auto k = get_random_gamma_k();
-    const auto theta = get_random_gamma_theta();
+    const auto k = KernelAdapter::get_random_gamma_k(mt);
+    const auto theta = KernelAdapter::get_random_gamma_theta(mt);
 
     GammaDistributionKernel::set_k(k);
     GammaDistributionKernel::set_theta(theta);
@@ -60,8 +61,8 @@ TEST_F(ProbabilityKernelTest, testGammaNoFreeElements) {
     GammaDistributionKernel::set_k(GammaDistributionKernel::default_k);
     GammaDistributionKernel::set_theta(GammaDistributionKernel::default_theta);
 
-    const auto k = get_random_gamma_k();
-    const auto theta = get_random_gamma_theta();
+    const auto k = KernelAdapter::get_random_gamma_k(mt);
+    const auto theta = KernelAdapter::get_random_gamma_theta(mt);
 
     GammaDistributionKernel::set_k(k);
     GammaDistributionKernel::set_theta(theta);
@@ -78,8 +79,8 @@ TEST_F(ProbabilityKernelTest, testGammaLinearElements) {
     GammaDistributionKernel::set_k(GammaDistributionKernel::default_k);
     GammaDistributionKernel::set_theta(GammaDistributionKernel::default_theta);
 
-    const auto k = get_random_gamma_k();
-    const auto theta = get_random_gamma_theta();
+    const auto k = KernelAdapter::get_random_gamma_k(mt);
+    const auto theta = KernelAdapter::get_random_gamma_theta(mt);
 
     GammaDistributionKernel::set_k(k);
     GammaDistributionKernel::set_theta(theta);
@@ -95,25 +96,6 @@ TEST_F(ProbabilityKernelTest, testGammaLinearElements) {
         const auto expected_attractiveness = attractiveness_one * number_free_elements;
         ASSERT_NEAR(attractiveness, expected_attractiveness, eps);
     }
-}
-
-TEST_F(ProbabilityKernelTest, testGammaSamePosition) {
-    // Unfortunately, this test does not make sense for a gamma distribution
-
-    //GammaDistributionKernel::set_k(GammaDistributionKernel::default_k);
-    //GammaDistributionKernel::set_theta(GammaDistributionKernel::default_theta);
-
-    //const auto k = get_random_gamma_k();
-    //const auto theta = get_random_gamma_theta();
-
-    //GammaDistributionKernel::set_k(k);
-    //GammaDistributionKernel::set_theta(theta);
-
-    //const auto number_elements = get_random_integer<unsigned int>(0, 10000);
-    //const auto& position = get_random_position();
-    //const auto attractiveness = GammaDistributionKernel::calculate_attractiveness_to_connect(position, position, number_elements);
-
-    //ASSERT_NEAR(attractiveness, 0.0, eps);
 }
 
 TEST_F(ProbabilityKernelTest, testGammaPrecalculatedValues) {
@@ -153,8 +135,8 @@ TEST_F(KernelTest, testGammaKernelIntegration) {
 
     Kernel<FastMultipoleMethodsCell>::set_kernel_type(KernelType::Gamma);
 
-    const auto k = get_random_gamma_k();
-    const auto theta = get_random_gamma_theta();
+    const auto k = KernelAdapter::get_random_gamma_k(mt);
+    const auto theta = KernelAdapter::get_random_gamma_theta(mt);
 
     GammaDistributionKernel::set_k(k);
     GammaDistributionKernel::set_theta(theta);
@@ -164,10 +146,10 @@ TEST_F(KernelTest, testGammaKernelIntegration) {
     const auto& target_excitatory_dendrite_position = get_random_position();
     const auto& target_inhibitory_dendrite_position = get_random_position();
 
-    const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
-    const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
-    const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
-    const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+    const auto& number_vacant_excitatory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);;
+    const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);;
+    const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);;
+    const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);;
 
     OctreeNode<FastMultipoleMethodsCell> node{};
     node.set_cell_neuron_id(neuron_id_1);

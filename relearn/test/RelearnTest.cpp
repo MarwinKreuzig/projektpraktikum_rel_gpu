@@ -8,8 +8,6 @@
  *
  */
 
-#include "gtest/gtest.h"
-
 #include "RelearnTest.hpp"
 
 double RelearnTest::position_bounary = 10000;
@@ -20,9 +18,9 @@ double RelearnTest::eps = 0.001;
 bool RelearnTest::use_predetermined_seed = false;
 unsigned int RelearnTest::predetermined_seed = 2818124801;
 
-uniform_int_distribution<size_t> RelearnTest::uid_num_ranks(1, upper_bound_num_ranks);
-uniform_int_distribution<size_t> RelearnTest::uid_num_neurons(1, upper_bound_num_neurons);
+boost::random::uniform_int_distribution<size_t> RelearnTest::uid_num_ranks(1, upper_bound_num_ranks);
+boost::random::uniform_int_distribution<size_t> RelearnTest::uid_num_neurons(1, upper_bound_num_neurons);
 
-uniform_int_distribution<unsigned short> RelearnTest::uid_refinement(0, max_refinement_level);
-uniform_int_distribution<unsigned short> RelearnTest::uid_small_refinement(0, small_refinement_level);
-uniform_int_distribution<unsigned short> RelearnTest::uid_large_refinement(small_refinement_level + 1, max_refinement_level);
+boost::random::uniform_int_distribution<unsigned short> RelearnTest::uid_refinement(0, max_refinement_level);
+boost::random::uniform_int_distribution<unsigned short> RelearnTest::uid_small_refinement(0, small_refinement_level);
+boost::random::uniform_int_distribution<unsigned short> RelearnTest::uid_large_refinement(small_refinement_level + 1, max_refinement_level);

@@ -10,6 +10,7 @@
 
 #include "test_kernel.h"
 
+#include "kernel_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "algorithm/Kernel/Gaussian.h"
@@ -27,8 +28,8 @@ TEST_F(ProbabilityKernelTest, testGaussianGetterSetter) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
 
-    const auto sigma = get_random_gaussian_sigma();
-    const auto mu = get_random_gaussian_mu();
+    const auto sigma = KernelAdapter::get_random_gaussian_sigma(mt);
+    const auto mu = KernelAdapter::get_random_gaussian_mu(mt);
 
     ASSERT_EQ(GaussianDistributionKernel::get_mu(), GaussianDistributionKernel::default_mu);
     ASSERT_EQ(GaussianDistributionKernel::get_sigma(), GaussianDistributionKernel::default_sigma);
@@ -48,7 +49,7 @@ TEST_F(ProbabilityKernelTest, testGaussianGetterSetterExceptions) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
 
-    const auto sigma = -get_random_gaussian_sigma();
+    const auto sigma = -KernelAdapter::get_random_gaussian_sigma(mt);
 
     ASSERT_THROW(GaussianDistributionKernel::set_sigma(0.0), RelearnException);
 
@@ -65,7 +66,7 @@ TEST_F(ProbabilityKernelTest, testGaussianNoFreeElements) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
 
-    const auto sigma = get_random_gaussian_sigma();
+    const auto sigma = KernelAdapter::get_random_gaussian_sigma(mt);
 
     const auto& source_position = get_random_position();
     const auto& target_position = get_random_position();
@@ -80,7 +81,7 @@ TEST_F(ProbabilityKernelTest, testGaussianLinearFreeElements) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
 
-    const auto sigma = get_random_gaussian_sigma();
+    const auto sigma = KernelAdapter::get_random_gaussian_sigma(mt);
 
     const auto& source_position = get_random_position();
     const auto& target_position = get_random_position();
@@ -100,7 +101,7 @@ TEST_F(ProbabilityKernelTest, testGaussianSamePosition) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
 
-    const auto sigma = get_random_gaussian_sigma();
+    const auto sigma = KernelAdapter::get_random_gaussian_sigma(mt);
     const auto number_elements = get_random_integer<unsigned int>(0, 10000);
     const auto converted_double = static_cast<double>(number_elements);
 
@@ -123,7 +124,7 @@ TEST_F(ProbabilityKernelTest, testGaussianVariableSigma) {
 
     std::vector<double> sigmas{};
     for (auto i = 0; i < 100; i++) {
-        sigmas.emplace_back(get_random_gaussian_sigma());
+        sigmas.emplace_back(KernelAdapter::get_random_gaussian_sigma(mt));
     }
 
     std::sort(sigmas.begin(), sigmas.end());
@@ -146,7 +147,7 @@ TEST_F(ProbabilityKernelTest, testGaussianVariablePosition) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
 
-    const auto sigma = get_random_gaussian_sigma();
+    const auto sigma = KernelAdapter::get_random_gaussian_sigma(mt);
     GaussianDistributionKernel::set_sigma(sigma);
 
     const auto& source_position = get_random_position();
@@ -185,7 +186,7 @@ TEST_F(ProbabilityKernelTest, testGaussianConstantDistance) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
 
-    const auto sigma = get_random_gaussian_sigma();
+    const auto sigma = KernelAdapter::get_random_gaussian_sigma(mt);
     GaussianDistributionKernel::set_sigma(sigma);
 
     const auto& source_position = get_random_position();
@@ -216,7 +217,7 @@ TEST_F(ProbabilityKernelTest, testGaussianShiftedMu) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
 
-    const auto sigma = get_random_gaussian_sigma();
+    const auto sigma = KernelAdapter::get_random_gaussian_sigma(mt);
     GaussianDistributionKernel::set_sigma(sigma);
 
     const auto number_elements = get_random_integer<unsigned int>(0, 10000);
@@ -224,7 +225,7 @@ TEST_F(ProbabilityKernelTest, testGaussianShiftedMu) {
     const Vec3d source = get_random_position();
 
     for (auto i = 0; i < 100; i++) {
-        const auto mu = get_random_gaussian_mu();
+        const auto mu = KernelAdapter::get_random_gaussian_mu(mt);
         GaussianDistributionKernel::set_mu(mu);
 
         const auto attr_a = GaussianDistributionKernel::calculate_attractiveness_to_connect(source, source, number_elements);
@@ -277,7 +278,7 @@ TEST_F(KernelTest, testGaussianKernelIntegration) {
 
     Kernel<FastMultipoleMethodsCell>::set_kernel_type(KernelType::Gaussian);
 
-    const auto sigma = get_random_gaussian_sigma();
+    const auto sigma = KernelAdapter::get_random_gaussian_sigma(mt);
     GaussianDistributionKernel::set_sigma(sigma);
 
     const auto& target_excitatory_axon_position = get_random_position();
@@ -285,10 +286,10 @@ TEST_F(KernelTest, testGaussianKernelIntegration) {
     const auto& target_excitatory_dendrite_position = get_random_position();
     const auto& target_inhibitory_dendrite_position = get_random_position();
 
-    const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
-    const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
-    const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
-    const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+    const auto& number_vacant_excitatory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
 
     OctreeNode<FastMultipoleMethodsCell> node{};
     node.set_cell_neuron_id(neuron_id_1);

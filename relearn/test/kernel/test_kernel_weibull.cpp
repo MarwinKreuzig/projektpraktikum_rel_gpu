@@ -10,14 +10,13 @@
 
 #include "test_kernel.h"
 
+#include "kernel_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "algorithm/Kernel/Gaussian.h"
 #include "algorithm/Kernel/Kernel.h"
 #include "algorithm/Cells.h"
 #include "util/Random.h"
-
-#include "gtest/gtest.h"
 
 #include <array>
 #include <iostream>
@@ -30,8 +29,8 @@ TEST_F(ProbabilityKernelTest, testWeibullSetterGetter) {
     ASSERT_EQ(WeibullDistributionKernel::get_k(), WeibullDistributionKernel::default_k);
     ASSERT_EQ(WeibullDistributionKernel::get_b(), WeibullDistributionKernel::default_b);
 
-    const auto k = get_random_weibull_k();
-    const auto b = get_random_weibull_b();
+    const auto k = KernelAdapter::get_random_weibull_k(mt);
+    const auto b = KernelAdapter::get_random_weibull_b(mt);
 
     WeibullDistributionKernel::set_k(k);
     WeibullDistributionKernel::set_b(b);
@@ -41,8 +40,8 @@ TEST_F(ProbabilityKernelTest, testWeibullSetterGetter) {
 }
 
 TEST_F(ProbabilityKernelTest, testWeibullSetterGetterException) {
-    const auto k = get_random_weibull_k();
-    const auto b = get_random_weibull_b();
+    const auto k = KernelAdapter::get_random_weibull_k(mt);
+    const auto b = KernelAdapter::get_random_weibull_b(mt);
 
     WeibullDistributionKernel::set_k(k);
     WeibullDistributionKernel::set_b(b);
@@ -60,8 +59,8 @@ TEST_F(ProbabilityKernelTest, testWeibullNoFreeElements) {
     WeibullDistributionKernel::set_k(WeibullDistributionKernel::default_k);
     WeibullDistributionKernel::set_b(WeibullDistributionKernel::default_b);
 
-    const auto k = get_random_weibull_k();
-    const auto b = get_random_weibull_b();
+    const auto k = KernelAdapter::get_random_weibull_k(mt);
+    const auto b = KernelAdapter::get_random_weibull_b(mt);
 
     WeibullDistributionKernel::set_k(k);
     WeibullDistributionKernel::set_b(b);
@@ -78,8 +77,8 @@ TEST_F(ProbabilityKernelTest, testWeibullLinearElements) {
     WeibullDistributionKernel::set_k(WeibullDistributionKernel::default_k);
     WeibullDistributionKernel::set_b(WeibullDistributionKernel::default_b);
 
-    const auto k = get_random_weibull_k();
-    const auto b = get_random_weibull_b();
+    const auto k = KernelAdapter::get_random_weibull_k(mt);
+    const auto b = KernelAdapter::get_random_weibull_b(mt);
 
     WeibullDistributionKernel::set_k(k);
     WeibullDistributionKernel::set_b(b);
@@ -95,25 +94,6 @@ TEST_F(ProbabilityKernelTest, testWeibullLinearElements) {
         const auto expected_attractiveness = attractiveness_one * number_free_elements;
         ASSERT_NEAR(attractiveness, expected_attractiveness, eps);
     }
-}
-
-TEST_F(ProbabilityKernelTest, testWeibullSamePosition) {
-    // Unfortunately, this test does not make sense for a gamma distribution
-
-    //WeibullDistributionKernel::set_k(WeibullDistributionKernel::default_k);
-    //WeibullDistributionKernel::set_b(WeibullDistributionKernel::default_b);
-
-    //const auto k = get_random_weibull_k();
-    //const auto b = get_random_weibull_b();
-
-    //WeibullDistributionKernel::set_k(k);
-    //WeibullDistributionKernel::set_b(b);
-
-    //const auto number_elements = get_random_integer<unsigned int>(0, 10000);
-    //const auto& position = get_random_position();
-    //const auto attractiveness = WeibullDistributionKernel::calculate_attractiveness_to_connect(position, position, number_elements);
-
-    //ASSERT_NEAR(attractiveness, 0.0, eps);
 }
 
 TEST_F(ProbabilityKernelTest, testWeibullPrecalculatedValues) {
@@ -152,8 +132,8 @@ TEST_F(KernelTest, testWeibullKernelIntegration) {
 
     Kernel<FastMultipoleMethodsCell>::set_kernel_type(KernelType::Weibull);
 
-    const auto k = get_random_weibull_k();
-    const auto b = get_random_weibull_b();
+    const auto k = KernelAdapter::get_random_weibull_k(mt);
+    const auto b = KernelAdapter::get_random_weibull_b(mt);
 
     WeibullDistributionKernel::set_k(k);
     WeibullDistributionKernel::set_b(b);
@@ -163,10 +143,10 @@ TEST_F(KernelTest, testWeibullKernelIntegration) {
     const auto& target_excitatory_dendrite_position = get_random_position();
     const auto& target_inhibitory_dendrite_position = get_random_position();
 
-    const auto& number_vacant_excitatory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
-    const auto& number_vacant_inhibitory_axons = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
-    const auto& number_vacant_excitatory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
-    const auto& number_vacant_inhibitory_dendrites = static_cast<RelearnTypes::counter_type>(get_random_synaptic_element_count());;
+    const auto& number_vacant_excitatory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
 
     OctreeNode<FastMultipoleMethodsCell> node{};
     node.set_cell_neuron_id(neuron_id_1);
