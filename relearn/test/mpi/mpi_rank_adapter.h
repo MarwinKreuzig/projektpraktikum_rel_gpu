@@ -22,7 +22,7 @@ public:
     constexpr static int upper_bound_num_ranks = 32;
 
     static size_t get_random_number_ranks(std::mt19937& mt) {
-        return RandomAdapter::get_random_integer<int>(0, upper_bound_num_ranks - 1, mt);
+        return RandomAdapter::get_random_integer<size_t>(size_t(1), upper_bound_num_ranks, mt);
     }
 
     static size_t get_adjusted_random_number_ranks(std::mt19937& mt) {

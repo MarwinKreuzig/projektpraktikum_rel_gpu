@@ -588,7 +588,7 @@ TEST_F(NeuronAssignmentTest, testFileLoadNetworkSingleSubdomain) {
     }
 
     for (const auto& [_, weight] : synapse_map) {
-        ASSERT_EQ(weight, 0);
+        ASSERT_NEAR(weight, 0.0, eps);
     }
 }
 

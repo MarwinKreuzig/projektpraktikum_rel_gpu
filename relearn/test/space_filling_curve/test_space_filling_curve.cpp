@@ -58,9 +58,9 @@ TEST_F(SpaceFillingCurveTest, testMortonTranslationStochastic) {
     const size_t total_num_boxes = num_boxes_per_dimension * num_boxes_per_dimension * num_boxes_per_dimension;
 
     for (auto rep = 0; rep < 1000; rep++) {
-        const auto x = get_random_integer<size_t>(0, num_boxes_per_dimension);
-        const auto y = get_random_integer<size_t>(0, num_boxes_per_dimension);
-        const auto z = get_random_integer<size_t>(0, num_boxes_per_dimension);
+        const auto x = get_random_integer<size_t>(0, num_boxes_per_dimension - 1);
+        const auto y = get_random_integer<size_t>(0, num_boxes_per_dimension - 1);
+        const auto z = get_random_integer<size_t>(0, num_boxes_per_dimension - 1);
 
         Morton::BoxCoordinates index3d{ x, y, z };
 
@@ -179,9 +179,9 @@ TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonTranslationStochastic) 
     const size_t total_num_boxes = num_boxes_per_dimension * num_boxes_per_dimension * num_boxes_per_dimension;
 
     for (auto rep = 0; rep < 1000; rep++) {
-        const auto x = get_random_integer<size_t>(0, num_boxes_per_dimension);
-        const auto y = get_random_integer<size_t>(0, num_boxes_per_dimension);
-        const auto z = get_random_integer<size_t>(0, num_boxes_per_dimension);
+        const auto x = get_random_integer<size_t>(0, num_boxes_per_dimension - 1);
+        const auto y = get_random_integer<size_t>(0, num_boxes_per_dimension - 1);
+        const auto z = get_random_integer<size_t>(0, num_boxes_per_dimension - 1);
 
         Vec3s index3d{ x, y, z };
 

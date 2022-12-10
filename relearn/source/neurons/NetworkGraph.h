@@ -517,7 +517,8 @@ public:
     }
 
     /**
-     * @brief Returns a histogram of the local neurons' connectivity
+     * @brief Returns a histogram of the local neurons' connectivity.
+     *      Casts the weights to size_t 
      * @param edge_direction An enum that indicates if in-edges or out-edges should be considered
      * @exception Throws an exception if the allocation of memory fails
      * @return A histogram of the connectivity, i.e., <return>[i] == c indicates that c local neurons have i edges in the requested direction

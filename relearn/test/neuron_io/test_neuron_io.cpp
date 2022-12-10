@@ -838,7 +838,8 @@ TEST_F(IOTest, testReadInSynapses) {
             }
         }
 
-        ofstream << my_rank << ' ' << (target_id.get_neuron_id() + 1) << '\t' << source_rank << ' ' << (source_id.get_neuron_id() + 1) << ' ' << weight << '\t' << flag << '\n';
+        ofstream << my_rank.get_rank() << ' ' << (target_id.get_neuron_id() + 1) << '\t'
+                 << source_rank.get_rank() << ' ' << (source_id.get_neuron_id() + 1) << ' ' << weight << '\t' << flag << '\n';
     }
 
     ofstream.flush();
@@ -858,10 +859,38 @@ TEST_F(IOTest, testReadInSynapses) {
     std::ranges::sort(read_local_synapses_plastic);
     std::ranges::sort(read_distant_synapses_plastic);
 
-    ASSERT_EQ(preliminary_local_synapses_static, read_local_synapses_static);
-    ASSERT_EQ(preliminary_distant_synapses_static, read_distant_synapses_static);
-    ASSERT_EQ(preliminary_local_synapses_plastic, read_local_synapses_plastic);
-    ASSERT_EQ(preliminary_distant_synapses_plastic, read_distant_synapses_plastic);
+    ASSERT_EQ(preliminary_local_synapses_static.size(), read_local_synapses_static.size());
+    ASSERT_EQ(preliminary_distant_synapses_static.size(), read_distant_synapses_static.size());
+    ASSERT_EQ(preliminary_local_synapses_plastic.size(), read_local_synapses_plastic.size());
+    ASSERT_EQ(preliminary_distant_synapses_plastic.size(), read_distant_synapses_plastic.size());
+
+    for (auto i = 0; i < preliminary_local_synapses_static.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = preliminary_local_synapses_static[i];
+        const auto& [r_1, r_2, r_weight] = read_local_synapses_static[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
+
+    for (auto i = 0; i < preliminary_distant_synapses_static.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = preliminary_distant_synapses_static[i];
+        const auto& [r_1, r_2, r_weight] = read_distant_synapses_static[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
+
+    for (auto i = 0; i < preliminary_local_synapses_plastic.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = preliminary_local_synapses_plastic[i];
+        const auto& [r_1, r_2, r_weight] = read_local_synapses_plastic[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
+
+    for (auto i = 0; i < preliminary_distant_synapses_plastic.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = preliminary_distant_synapses_plastic[i];
+        const auto& [r_1, r_2, r_weight] = read_distant_synapses_plastic[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
 }
 
 TEST_F(IOTest, testReadOutSynapsesFileNotFound) {
@@ -908,7 +937,8 @@ TEST_F(IOTest, testReadOutSynapses) {
                 preliminary_distant_synapses_static.emplace_back(RankNeuronId(target_rank, target_id), source_id, weight);
             }
         }
-        ofstream << target_rank << ' ' << (target_id.get_neuron_id() + 1) << '\t' << my_rank << ' ' << (source_id.get_neuron_id() + 1) << ' ' << weight << '\t' << flag << '\n';
+        ofstream << target_rank.get_rank() << ' ' << (target_id.get_neuron_id() + 1) << '\t' 
+            << my_rank.get_rank() << ' ' << (source_id.get_neuron_id() + 1) << ' ' << weight << '\t' << flag << '\n';
     }
 
     ofstream.flush();
@@ -928,10 +958,38 @@ TEST_F(IOTest, testReadOutSynapses) {
     std::ranges::sort(read_local_synapses_plastic);
     std::ranges::sort(read_distant_synapses_plastic);
 
-    ASSERT_EQ(preliminary_local_synapses_static, read_local_synapses_static);
-    ASSERT_EQ(preliminary_distant_synapses_static, read_distant_synapses_static);
-    ASSERT_EQ(preliminary_local_synapses_plastic, read_local_synapses_plastic);
-    ASSERT_EQ(preliminary_distant_synapses_plastic, read_distant_synapses_plastic);
+    ASSERT_EQ(preliminary_local_synapses_static.size(), read_local_synapses_static.size());
+    ASSERT_EQ(preliminary_distant_synapses_static.size(), read_distant_synapses_static.size());
+    ASSERT_EQ(preliminary_local_synapses_plastic.size(), read_local_synapses_plastic.size());
+    ASSERT_EQ(preliminary_distant_synapses_plastic.size(), read_distant_synapses_plastic.size());
+
+    for (auto i = 0; i < preliminary_local_synapses_static.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = preliminary_local_synapses_static[i];
+        const auto& [r_1, r_2, r_weight] = read_local_synapses_static[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
+
+    for (auto i = 0; i < preliminary_distant_synapses_static.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = preliminary_distant_synapses_static[i];
+        const auto& [r_1, r_2, r_weight] = read_distant_synapses_static[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
+
+    for (auto i = 0; i < preliminary_local_synapses_plastic.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = preliminary_local_synapses_plastic[i];
+        const auto& [r_1, r_2, r_weight] = read_local_synapses_plastic[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
+
+    for (auto i = 0; i < preliminary_distant_synapses_plastic.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = preliminary_distant_synapses_plastic[i];
+        const auto& [r_1, r_2, r_weight] = read_distant_synapses_plastic[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
 }
 
 TEST_F(IOTest, testWriteInSynapsesFileNotFound) {
@@ -996,11 +1054,37 @@ TEST_F(IOTest, testWriteInSynapses) {
     std::ranges::sort(read_distant_synapses_plastic);
 
     ASSERT_EQ(preliminary_local_synapses_static.size(), read_local_synapses_static.size());
+    ASSERT_EQ(preliminary_distant_synapses_static.size(), read_distant_synapses_static.size());
+    ASSERT_EQ(preliminary_local_synapses_plastic.size(), read_local_synapses_plastic.size());
+    ASSERT_EQ(preliminary_distant_synapses_plastic.size(), read_distant_synapses_plastic.size());
 
-    ASSERT_EQ(preliminary_local_synapses_static, read_local_synapses_static);
-    ASSERT_EQ(preliminary_distant_synapses_static, read_distant_synapses_static);
-    ASSERT_EQ(preliminary_local_synapses_plastic, read_local_synapses_plastic);
-    ASSERT_EQ(preliminary_distant_synapses_plastic, read_distant_synapses_plastic);
+    for (auto i = 0; i < preliminary_local_synapses_static.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = preliminary_local_synapses_static[i];
+        const auto& [r_1, r_2, r_weight] = read_local_synapses_static[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
+
+    for (auto i = 0; i < preliminary_distant_synapses_static.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = preliminary_distant_synapses_static[i];
+        const auto& [r_1, r_2, r_weight] = read_distant_synapses_static[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
+
+    for (auto i = 0; i < preliminary_local_synapses_plastic.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = preliminary_local_synapses_plastic[i];
+        const auto& [r_1, r_2, r_weight] = read_local_synapses_plastic[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
+
+    for (auto i = 0; i < preliminary_distant_synapses_plastic.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = preliminary_distant_synapses_plastic[i];
+        const auto& [r_1, r_2, r_weight] = read_distant_synapses_plastic[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
 }
 
 TEST_F(IOTest, testWriteOutSynapsesFileNotFound) {
@@ -1064,10 +1148,38 @@ TEST_F(IOTest, testWriteOutSynapses) {
     std::ranges::sort(read_local_synapses_plastic);
     std::ranges::sort(read_distant_synapses_plastic);
 
-    ASSERT_EQ(preliminary_local_synapses_static, read_local_synapses_static);
-    ASSERT_EQ(preliminary_distant_synapses_static, read_distant_synapses_static);
-    ASSERT_EQ(preliminary_local_synapses_plastic, read_local_synapses_plastic);
-    ASSERT_EQ(preliminary_distant_synapses_plastic, read_distant_synapses_plastic);
+    ASSERT_EQ(preliminary_local_synapses_static.size(), read_local_synapses_static.size());
+    ASSERT_EQ(preliminary_distant_synapses_static.size(), read_distant_synapses_static.size());
+    ASSERT_EQ(preliminary_local_synapses_plastic.size(), read_local_synapses_plastic.size());
+    ASSERT_EQ(preliminary_distant_synapses_plastic.size(), read_distant_synapses_plastic.size());
+
+    for (auto i = 0; i < preliminary_local_synapses_static.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = preliminary_local_synapses_static[i];
+        const auto& [r_1, r_2, r_weight] = read_local_synapses_static[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
+
+    for (auto i = 0; i < preliminary_distant_synapses_static.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = preliminary_distant_synapses_static[i];
+        const auto& [r_1, r_2, r_weight] = read_distant_synapses_static[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
+
+    for (auto i = 0; i < preliminary_local_synapses_plastic.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = preliminary_local_synapses_plastic[i];
+        const auto& [r_1, r_2, r_weight] = read_local_synapses_plastic[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
+
+    for (auto i = 0; i < preliminary_distant_synapses_plastic.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = preliminary_distant_synapses_plastic[i];
+        const auto& [r_1, r_2, r_weight] = read_distant_synapses_plastic[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
 }
 
 TEST_F(IOTest, testReadSynapsesInteractionNetworkGraph) {
@@ -1156,7 +1268,6 @@ TEST_F(IOTest, testReadSynapsesInteractionNetworkGraph) {
     out_ofstream.close();
 
     auto [read_in_synapses_static, read_in_synapses_plastic] = NeuronIO::read_in_synapses(in_path, number_neurons, my_rank.get_rank(), static_cast<int>(number_ranks));
-    ;
     auto [read_local_in_synapses, read_distant_in_synapses] = read_in_synapses_plastic;
     auto [reader_out_synapses_static, read_out_synapses_plastic] = NeuronIO::read_out_synapses(out_path, number_neurons, my_rank.get_rank(), static_cast<int>(number_ranks));
     auto [read_local_out_synapses, read_distant_out_synapses] = read_out_synapses_plastic;
@@ -1166,8 +1277,36 @@ TEST_F(IOTest, testReadSynapsesInteractionNetworkGraph) {
     std::ranges::sort(read_local_out_synapses);
     std::ranges::sort(read_distant_out_synapses);
 
-    ASSERT_EQ(golden_local_synapses, read_local_in_synapses);
-    ASSERT_EQ(golden_distant_in_synapses, read_distant_in_synapses);
-    ASSERT_EQ(golden_local_synapses, read_local_out_synapses);
-    ASSERT_EQ(golden_distant_out_synapses, read_distant_out_synapses);
+    ASSERT_EQ(golden_local_synapses.size(), read_local_in_synapses.size());
+    ASSERT_EQ(golden_distant_in_synapses.size(), read_distant_in_synapses.size());
+    ASSERT_EQ(golden_local_synapses.size(), read_local_out_synapses.size());
+    ASSERT_EQ(golden_distant_out_synapses.size(), read_distant_out_synapses.size());
+
+    for (auto i = 0; i < golden_local_synapses.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = golden_local_synapses[i];
+        const auto& [r_1, r_2, r_weight] = read_local_in_synapses[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
+
+    for (auto i = 0; i < golden_distant_in_synapses.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = golden_distant_in_synapses[i];
+        const auto& [r_1, r_2, r_weight] = read_distant_in_synapses[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
+
+    for (auto i = 0; i < golden_local_synapses.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = golden_local_synapses[i];
+        const auto& [r_1, r_2, r_weight] = read_local_out_synapses[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
+
+    for (auto i = 0; i < golden_distant_out_synapses.size(); i++) {
+        const auto& [p_1, p_2, p_weight] = golden_distant_out_synapses[i];
+        const auto& [r_1, r_2, r_weight] = read_distant_out_synapses[i];
+
+        ASSERT_NEAR(p_weight, r_weight, eps);
+    }
 }

@@ -48,7 +48,7 @@ public:
         std::vector<RelearnTypes::area_id> area_ids{};
         area_ids.reserve(number_neurons);
 
-        for (size_t i = 0; i < number_areas; i++) {
+        for (size_t i = 0; i < number_neurons; i++) {
             const auto area_id = RandomAdapter::get_random_integer<RelearnTypes::area_id>(0, RelearnTypes::area_id(number_areas - 1), mt);
             area_ids.emplace_back(area_id);
         }
