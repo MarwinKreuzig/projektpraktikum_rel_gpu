@@ -7,6 +7,7 @@
  * See the LICENSE file in the base directory for details.
  *
  */
+
 #include "Config.h"
 #include "Types.h"
 #include "algorithm/Algorithms.h"

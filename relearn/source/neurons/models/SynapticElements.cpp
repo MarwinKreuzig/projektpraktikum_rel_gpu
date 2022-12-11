@@ -1,13 +1,14 @@
-#include "SynapticElements.h"
-
-/**
- * Updates the number of synaptic elements for neuron "neuron_id"
- * Returns the number of synapses to be deleted as a consequence of deleting synaptic elements
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
- * Synaptic elements are deleted based on "deltas_since_last_update" in the following way:
- * 1. Delete vacant elements
- * 2. Delete bound elements
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
  */
+
+#include "SynapticElements.h"
 
 unsigned int SynapticElements::update_number_elements(const NeuronID& neuron_id) {
     const auto local_neuron_id = neuron_id.get_neuron_id();

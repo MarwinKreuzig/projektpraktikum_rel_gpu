@@ -1,4 +1,3 @@
-#include "Simulation.h"
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
