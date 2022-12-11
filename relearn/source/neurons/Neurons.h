@@ -236,6 +236,19 @@ public:
     }
 
     /**
+     * @brief Manually sets the fired status of the neurons
+     * @param fired The fired status of the neurons
+     * @exception Throws a RelearnException if fired.size() is not equal to the number of local neurons
+     */
+    void set_fired(std::vector<FiredStatus> fired) {
+        RelearnException::check(fired.size() == number_neurons, "Neurons::set_fired: The sizes didn't match: {} vs {}", fired.size(), number_neurons);
+        
+        for (const auto neuron_id : NeuronID::range(number_neurons)) {
+            neuron_model->set_fired(neuron_id, fired[neuron_id.get_neuron_id()]);
+        }
+    }
+
+    /**
      * @brief Returns a constant reference to the axon model
      *      The reference is never invalidated
      * @return A constant reference to the axon model

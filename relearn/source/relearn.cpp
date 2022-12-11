@@ -104,6 +104,9 @@ void print_sizes() {
     constexpr auto sizeof_neuron_id = sizeof(NeuronID);
     constexpr auto sizeof_rank_neuron_id = sizeof(RankNeuronId);
 
+    constexpr auto sizeof_mpi_rank = sizeof(MPIRank);
+    constexpr auto sizeof_int = sizeof(int);
+
     constexpr auto sizeof_local_synapse = sizeof(LocalSynapse);
     constexpr auto sizeof_distant_in_synapse = sizeof(DistantInSynapse);
     constexpr auto sizeof_distant_out_synapse = sizeof(DistantOutSynapse);
@@ -141,6 +144,9 @@ void print_sizes() {
 
     ss << "Size of NeuronID: " << sizeof_neuron_id << '\n';
     ss << "Size of RankNeuronID: " << sizeof_rank_neuron_id << '\n';
+
+    ss << "Size of MPIRank: " << sizeof_mpi_rank << '\n';
+    ss << "Size of int: " << sizeof_int << '\n';
 
     ss << "Size of LocalSynapse: " << sizeof_local_synapse << '\n';
     ss << "Size of DistantInSynapse: " << sizeof_distant_in_synapse << '\n';
@@ -435,6 +441,9 @@ int main(int argc, char** argv) {
     auto* flag_monitor_all = app.add_flag("--neuron-monitors-all", "Monitors all neurons.");
     // auto* flag_area_monitor_all = app.add_flag("--area-monitors-all", "Monitors all areas.");
 
+    double percentage_initial_fired_neurons{ 0.0 };
+    app.add_option("--percentage-initial-fired-neurons", percentage_initial_fired_neurons, "The percentage of neurons that fired in the (imaginary) 0th step. Must be from [0.0, 1.0]. Default ist 0.0");
+
     monitor_option->excludes(flag_monitor_all);
     flag_monitor_all->excludes(monitor_option);
 
@@ -494,6 +503,8 @@ int main(int argc, char** argv) {
         "Missing command line option, need a total number of neurons (-n,--num-neurons), a number of neurons per rank (--num-neurons-per-rank), or file_positions (-f,--file).");
     RelearnException::check(openmp_threads > 0, "Number of OpenMP Threads must be greater than 0 (or not set).");
     RelearnException::check(calcium_decay > 0.0, "The calcium decay constant must be greater than 0.");
+
+    RelearnException::check(percentage_initial_fired_neurons >= 0.0 && percentage_initial_fired_neurons <= 1.0, "The percentage of neurons that fired in the 0th step must be from [0.0, 1.0]: {}", percentage_initial_fired_neurons);
 
     if (static_cast<bool>(*opt_target_calcium)) {
         RelearnException::check(target_calcium >= SynapticElements::min_C_target, "Target calcium is smaller than {}", SynapticElements::min_C_target);
@@ -707,7 +718,6 @@ int main(int argc, char** argv) {
         RelearnException::fail("Chose a synaptic input calculator that is not implemented");
     }
 
-
     std::unique_ptr<NeuronModel> neuron_model{};
     if (chosen_neuron_model == NeuronModelEnum::Poisson) {
         neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
@@ -756,13 +766,14 @@ int main(int argc, char** argv) {
     auto inhibitory_dendrites_model = std::make_shared<SynapticElements>(ElementType::Dendrite, min_calcium_inhibitory_dendrites,
         nu_dend, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
-
     Simulation sim(partition);
     sim.set_neuron_model(std::move(neuron_model));
     sim.set_calcium_calculator(std::move(calcium_calculator));
     sim.set_axons(std::move(axons_model));
     sim.set_dendrites_ex(std::move(excitatory_dendrites_model));
     sim.set_dendrites_in(std::move(inhibitory_dendrites_model));
+
+    sim.set_percentage_initial_fired_neurons(percentage_initial_fired_neurons);
 
     if (*opt_static_neurons) {
         auto static_neurons = MonitorParser::parse_my_ids(static_neurons_str, my_rank, my_rank, subdomain->get_local_area_translator());

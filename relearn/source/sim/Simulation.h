@@ -126,6 +126,13 @@ public:
     void set_algorithm(AlgorithmEnum algorithm) noexcept;
 
     /**
+     * @brief Sets the percentage of neurons that fired in the 0th simulation step.
+     * @param percentage The percentage, must be 0.0 <= percentage <= 1.0
+     * @exception Throws a RelearnException if the percentage is out of bounds
+     */
+    void set_percentage_initial_fired_neurons(double percentage);
+
+    /**
      * @brief Sets the subdomain assignment that determines how the neurons are loaded.
      * @param subdomain_assignment The desired subdomain assignment
      */
@@ -263,6 +270,8 @@ private:
 
     std::function<double(int, NeuronID::value_type)> target_calcium_calculator{};
     std::function<double(int, NeuronID::value_type)> initial_calcium_initiator{};
+
+    double percentage_initially_fired{ 0.0 };
 
     double accept_criterion{ 0.0 };
 

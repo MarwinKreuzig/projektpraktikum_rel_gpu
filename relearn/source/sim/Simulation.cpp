@@ -1,3 +1,4 @@
+#include "Simulation.h"
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -93,6 +94,12 @@ void Simulation::set_creation_interrupts(std::vector<std::pair<step_type, number
 
 void Simulation::set_algorithm(const AlgorithmEnum algorithm) noexcept {
     algorithm_enum = algorithm;
+}
+
+void Simulation::set_percentage_initial_fired_neurons(double percentage) {
+    RelearnException::check(percentage >= 0.0, "Simulation::set_percentage_initial_fired_neurons: percentage is too low: {}", percentage);
+    RelearnException::check(percentage <= 1.0, "Simulation::set_percentage_initial_fired_neurons: percentage is too high: {}", percentage);
+    percentage_initially_fired = percentage;
 }
 
 void Simulation::set_subdomain_assignment(std::unique_ptr<NeuronToSubdomainAssignment>&& subdomain_assignment) noexcept {
@@ -222,6 +229,15 @@ void Simulation::initialize() {
     LogFiles::print_message_rank(0, "Synaptic elements initialized");
 
     neurons->init_synaptic_elements();
+
+    const auto fired_neurons = static_cast<size_t>(number_local_neurons * percentage_initially_fired);
+    std::vector<FiredStatus> initial_fired(fired_neurons, FiredStatus::Fired);
+    initial_fired.resize(number_local_neurons, FiredStatus::Inactive);
+
+    RandomHolder::shuffle(RandomHolderKey::Neurons, initial_fired.begin(), initial_fired.end());
+
+    neurons->set_fired(std::move(initial_fired));
+
     neurons->debug_check_counts();
     neurons->print_neurons_overview_to_log_file_on_rank_0(0);
     neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, 0, 0, 0);
