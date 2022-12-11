@@ -46,14 +46,6 @@ public:
      * @brief Returns the MPI rank this node belongs to
      * @return The MPI rank
      */
-    [[nodiscard,deprecated]] constexpr int get_rank() const noexcept {
-        return rank.get_rank();
-    }
-
-    /**
-     * @brief Returns the MPI rank this node belongs to
-     * @return The MPI rank
-     */
     [[nodiscard]] constexpr MPIRank get_mpi_rank() const noexcept {
         return rank;
     }
@@ -171,7 +163,7 @@ public:
                  */
                 parent_node->set_cell_neuron_id(neuron_id);
                 parent_node->set_cell_neuron_position({ position });
-                parent_node->set_rank(MPIRank{ my_rank });
+                parent_node->set_rank(my_rank);
                 return parent_node;
             }
 

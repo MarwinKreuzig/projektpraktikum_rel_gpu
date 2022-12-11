@@ -113,9 +113,8 @@ void Simulation::initialize() {
     partition->set_total_number_neurons(number_total_neurons);
     const auto number_local_neurons = partition->get_number_local_neurons();
 
-    const auto my_rank_int = MPIWrapper::get_my_rank();
-    const auto my_rank = MPIRank(my_rank_int);
-    RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank_int);
+    const auto my_rank = MPIWrapper::get_my_rank();
+    RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank.get_rank());
 
     neurons = std::make_shared<Neurons>(partition, std::move(neuron_models), std::move(calcium_calculator), axons, dendrites_ex, dendrites_in);
     neurons->init(number_local_neurons);

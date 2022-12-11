@@ -289,7 +289,7 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
 
             const auto weight = signal_type == SignalType::Excitatory ? 1 : -1;
 
-            if (rank == MPIRank(my_rank)) {
+            if (rank == my_rank) {
                 expected_local_synapses.emplace_back(target_index, source_index, weight);
             } else {
                 expected_distant_in_synapses.emplace_back(target_index, RankNeuronId{ rank, source_index }, weight);

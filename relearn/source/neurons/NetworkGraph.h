@@ -591,7 +591,7 @@ public:
                 const auto& [target_rank, target_id] = target_neuron;
                 const auto& target_local_id = target_id.get_neuron_id();
 
-                os_out_edges << target_rank << ' ' << (target_local_id + 1) << '\t' << my_rank.get_rank() << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
+                os_out_edges << target_rank.get_rank() << ' ' << (target_local_id + 1) << '\t' << my_rank.get_rank() << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
             }
         }
 
@@ -608,7 +608,7 @@ public:
                 const auto& [source_rank, source_id] = source_neuron;
                 const auto& source_local_id = source_id.get_neuron_id();
 
-                os_in_edges << my_rank.get_rank() << ' ' << (target_local_id + 1) << '\t' << source_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
+                os_in_edges << my_rank.get_rank() << ' ' << (target_local_id + 1) << '\t' << source_rank.get_rank() << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
             }
         }
     }

@@ -111,7 +111,7 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const number
              * Append request for synapse creation to rank "target_rank"
              * Note that "target_rank" could also be my own rank.
              */
-            synapse_creation_requests_outgoing.append(MPIRank(target_rank), creation_request);
+            synapse_creation_requests_outgoing.append(target_rank, creation_request);
         }
     }
 

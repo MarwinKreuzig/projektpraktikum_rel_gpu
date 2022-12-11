@@ -56,7 +56,7 @@ void FiredStatusCommunicationMap::set_local_fired_status(const std::vector<Fired
 
                 // Function expects to insert neuron ids in sorted order
                 // Append if it is not already in
-                outgoing_ids.append(MPIRank(target_rank), id);
+                outgoing_ids.append(target_rank, id);
             }
         };
 

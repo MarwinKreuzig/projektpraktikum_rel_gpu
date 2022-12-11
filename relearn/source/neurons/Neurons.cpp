@@ -362,7 +362,7 @@ CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(
 
         for (const auto& [rank, other_neuron_id] : affected_neuron_ids) {
             SynapseDeletionRequest psd(neuron_id, other_neuron_id, element_type, signal_type);
-            deletion_requests.append(MPIRank(rank), psd);
+            deletion_requests.append(rank, psd);
 
             if (my_rank == rank) {
                 continue;
@@ -496,8 +496,7 @@ size_t Neurons::delete_synapses_commit_deletions(const CommunicationMap<SynapseD
 }
 
 size_t Neurons::create_synapses() {
-    const auto my_rank_int = MPIWrapper::get_my_rank();
-    const auto my_rank = MPIRank(my_rank_int);
+    const auto my_rank = MPIWrapper::get_my_rank();
 
     // Lock local RMA memory for local stores and make them visible afterwards
     MPIWrapper::lock_window(my_rank, MPI_Locktype::Exclusive);

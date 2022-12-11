@@ -53,8 +53,7 @@ public:
         RelearnException::check(number_neurons == number_neurons_2,
             "ForwardConnector::process_requests: The sizes of the synaptic elements don't match: {} and {}", number_neurons, number_neurons_2);
 
-        const auto my_rank_int = MPIWrapper::get_my_rank();
-        const auto my_rank = MPIRank(my_rank_int);
+        const auto my_rank = MPIWrapper::get_my_rank();
         const auto number_ranks = creation_requests.get_number_ranks();
 
         const auto size_hint = creation_requests.size();
@@ -214,8 +213,7 @@ public:
         RelearnException::check(axons_empty, "BackwardConnector::process_requests: The axons are empty");
 
         const auto number_neurons = axons->get_size();
-        const auto my_rank_int = MPIWrapper::get_my_rank();
-        const auto my_rank = MPIRank(my_rank_int);
+        const auto my_rank = MPIWrapper::get_my_rank();
         const auto number_ranks = MPIWrapper::get_num_ranks();
 
         const auto size_hint = creation_requests.size();

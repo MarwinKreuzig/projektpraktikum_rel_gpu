@@ -141,7 +141,7 @@ TYPED_TEST(OctreeTest, testOctreeNodeInsert) {
 
     OctreeNode<AdditionalCellAttributes> node{};
     node.set_level(0);
-    node.set_rank(MPIRank(my_rank));
+    node.set_rank(my_rank);
     node.set_cell_size(min, max);
     node.set_cell_neuron_id(NeuronID::virtual_id());
     node.set_cell_neuron_position(own_position);
@@ -326,7 +326,7 @@ TYPED_TEST(OctreeTest, testOctreeStructure) {
 
         octree_nodes.pop();
         ASSERT_EQ(level, current_node->get_level());
-        ASSERT_TRUE(current_node->get_mpi_rank() == MPIRank(my_rank));
+        ASSERT_TRUE(current_node->get_mpi_rank() == my_rank);
 
         if (current_node->is_parent()) {
             const auto& childs = current_node->get_children();
@@ -513,11 +513,11 @@ TYPED_TEST(OctreeTest, testOctreeInsertLocalTree) {
         OctreeNode<AdditionalCellAttributes> node{};
         node.set_cell_size(cell_min, cell_max);
         node.set_cell_neuron_position(position);
-        node.set_rank(MPIRank(my_rank));
+        node.set_rank(my_rank);
 
         nodes_to_save_new_local_trees[i]->set_cell_size(cell_min, cell_max);
         nodes_to_save_new_local_trees[i]->set_cell_neuron_position(position);
-        nodes_to_save_new_local_trees[i]->set_rank(MPIRank(my_rank));
+        nodes_to_save_new_local_trees[i]->set_rank(my_rank);
 
         for (auto j = 0; j < 8; j++) {
             const auto id_nodes = TaggedIdAdapter::get_random_neuron_id(2000, this->mt).get_neuron_id();
@@ -585,7 +585,7 @@ TYPED_TEST(OctreeTest, testOctreeLevel) {
 
     OctreeNode<AdditionalCellAttributes> node{};
     node.set_level(level);
-    node.set_rank(MPIRank(my_rank));
+    node.set_rank(my_rank);
     node.set_cell_size(min, max);
     node.set_cell_neuron_id(NeuronID::virtual_id());
     node.set_cell_neuron_position(own_position);

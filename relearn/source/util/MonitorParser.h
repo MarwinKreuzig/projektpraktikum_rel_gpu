@@ -51,21 +51,21 @@ public:
         const auto& mpi_rank_string = description.substr(0, colon_position);
         const auto& neuron_id_string = description.substr(colon_position + 1, description.size() - colon_position);
 
-        int mpi_rank{};
-        const auto& [mpi_rank_ptr, mpi_rank_err] = std::from_chars(mpi_rank_string.data(), mpi_rank_string.data() + mpi_rank_string.size(), mpi_rank);
+        int parsed_mpi_rank{};
+        const auto& [mpi_rank_ptr, mpi_rank_err] = std::from_chars(mpi_rank_string.data(), mpi_rank_string.data() + mpi_rank_string.size(), parsed_mpi_rank);
 
         NeuronID::value_type neuron_id{};
         const auto& [neuron_id_ptr, neuron_id_err] = std::from_chars(neuron_id_string.data(), neuron_id_string.data() + neuron_id_string.size(), neuron_id);
 
-        if (mpi_rank == -1) {
-            mpi_rank = default_rank.get_rank();
+        if (parsed_mpi_rank == -1) {
+            parsed_mpi_rank = default_rank.get_rank();
         }
 
-        const auto mpi_rank_ok = (mpi_rank_err == std::errc{}) && (mpi_rank_ptr == mpi_rank_string.data() + mpi_rank_string.size()) && mpi_rank >= 0;
+        const auto mpi_rank_ok = (mpi_rank_err == std::errc{}) && (mpi_rank_ptr == mpi_rank_string.data() + mpi_rank_string.size()) && parsed_mpi_rank >= 0;
         const auto neuron_id_ok = (neuron_id_err == std::errc{}) && (neuron_id_ptr == neuron_id_string.data() + neuron_id_string.size());
 
         if (mpi_rank_ok && neuron_id_ok) {
-            return RankNeuronId{ MPIRank(mpi_rank), NeuronID(neuron_id) };
+            return RankNeuronId{ MPIRank(parsed_mpi_rank), NeuronID(neuron_id) };
         }
 
         LogFiles::print_message_rank(0, "Failed to parse string to match the pattern <mpi_rank>:<neuron_id> : {}", description);
