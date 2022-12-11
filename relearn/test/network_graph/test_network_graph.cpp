@@ -534,7 +534,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
 
     NetworkGraph ng(number_neurons, MPIRank::root_rank());
 
-    std::vector<std::tuple<NeuronID, int, NeuronID, int, RelearnTypes::synapse_weight>> synapses(num_edges);
+    std::vector<std::tuple<NeuronID, MPIRank, NeuronID, MPIRank, RelearnTypes::synapse_weight>> synapses(num_edges);
 
     for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
         const auto other_rank = MPIRankAdapter::get_random_mpi_rank(32, MPIRank::root_rank(), mt);
@@ -549,16 +549,16 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
 
         if (other_rank == MPIRank::root_rank()) {
             ng.add_synapse(LocalSynapse(neuron_id, other_neuron_id, weight));
-            synapses[edge_id] = std::make_tuple(neuron_id, 0, other_neuron_id, 0, weight);
+            synapses[edge_id] = std::make_tuple(neuron_id, MPIRank::root_rank(), other_neuron_id, MPIRank::root_rank(), weight);
             continue;
         }
 
         if (is_in_synapse) {
             ng.add_synapse(DistantInSynapse(neuron_id, other_id, weight));
-            synapses[edge_id] = std::make_tuple(neuron_id, 0, other_neuron_id, other_rank.get_rank(), weight);
+            synapses[edge_id] = std::make_tuple(neuron_id, MPIRank::root_rank(), other_neuron_id, other_rank, weight);
         } else {
             ng.add_synapse(DistantOutSynapse(other_id, neuron_id, weight));
-            synapses[edge_id] = std::make_tuple(other_neuron_id, other_rank.get_rank(), neuron_id, 0, weight);
+            synapses[edge_id] = std::make_tuple(other_neuron_id, other_rank, neuron_id, MPIRank::root_rank(), weight);
         }
     }
 
@@ -571,12 +571,12 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
         RankNeuronId target_id{ target_rank, target_neuron_id };
         RankNeuronId source_id{ source_rank, source_neuron_id };
 
-        if (source_rank == 0 && target_rank == 0) {
+        if (source_rank == MPIRank::root_rank() && target_rank == MPIRank::root_rank()) {
             ng.add_synapse(LocalSynapse(target_neuron_id, source_neuron_id, -weight));
             continue;
         }
 
-        if (source_rank == 0) {
+        if (source_rank == MPIRank::root_rank()) {
             ng.add_synapse(DistantOutSynapse(target_id, source_neuron_id, -weight));
             continue;
         }
@@ -670,7 +670,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
         auto inh_in_edges_count_meta = 0.0;
         auto out_edges_count_meta = 0.0;
 
-        for (const auto& it : in_edges[{ 0, neuron_id }]) {
+        for (const auto& it : in_edges[{ MPIRank::root_rank(), neuron_id }]) {
             if (it.second > 0) {
                 exc_in_edges_count_meta += it.second;
             } else {

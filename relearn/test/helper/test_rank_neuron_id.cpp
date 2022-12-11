@@ -23,16 +23,7 @@ TEST_F(RankNeuronIdTest, testNeuronRankIdValid) {
         const RankNeuronId rni{ rank, NeuronID{ id } };
 
         ASSERT_EQ(rni.get_neuron_id(), NeuronID{ id });
-        ASSERT_EQ(rni.get_rank(), rank.get_rank());
-    }
-}
-
-TEST_F(RankNeuronIdTest, testNeuronRankIdInvalidRank) {
-    for (auto i = 0; i < 1000; i++) {
-        const auto rank = RandomAdapter::get_random_integer<int>(-1000, -1, mt);
-        const auto id = TaggedIdAdapter::get_random_neuron_id(mt);
-
-        ASSERT_THROW(RankNeuronId rni(rank, NeuronID{ id });, RelearnException);
+        ASSERT_TRUE(rni.get_rank() == rank);
     }
 }
 

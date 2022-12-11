@@ -178,7 +178,7 @@ public:
                 // Increment number of connected axons
                 axons->update_connected_elements(source_neuron_id, 1);
 
-                if (target_rank.get_rank() == my_rank) {
+                if (target_rank == my_rank) {
                     // I have already created the synapse in the network if the response comes from myself
                     continue;
                 }
@@ -332,7 +332,7 @@ public:
                 // Increment number of connected axons
                 dendrites->update_connected_elements(source_neuron_id, 1);
 
-                if (target_rank.get_rank() == my_rank) {
+                if (target_rank == my_rank) {
                     // I have already created the synapse in the network if the response comes from myself
                     continue;
                 }

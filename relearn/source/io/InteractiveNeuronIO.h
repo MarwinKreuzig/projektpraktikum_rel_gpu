@@ -11,6 +11,7 @@
  */
 
 #include "Types.h"
+#include "util/MPIRank.h"
 #include "util/TaggedID.h"
 
 #include <cstdint>
@@ -88,5 +89,5 @@ public:
      * @return A function that specified for a given simulation step and a given neuron id, how much background it receives
      */
     [[nodiscard]] static std::function<double(step_type, NeuronID::value_type)> load_stimulus_interrupts(
-        const std::filesystem::path& path_to_file, int my_rank, std::shared_ptr<LocalAreaTranslator> local_area_translator);
+        const std::filesystem::path& path_to_file, MPIRank my_rank, std::shared_ptr<LocalAreaTranslator> local_area_translator);
 };

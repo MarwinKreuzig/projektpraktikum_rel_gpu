@@ -35,12 +35,12 @@ bool is_power_of_two(size_t number) {
 }
 
 TEST_F(PartitionTest, testPartitionZeroRanks) {
-    const auto my_rank = MPIRankAdapter::get_random_number_ranks(mt);
+    const auto my_rank = MPIRankAdapter::get_random_mpi_rank(mt);
     ASSERT_THROW(Partition part(0, my_rank), RelearnException) << my_rank;
 }
 
 TEST_F(PartitionTest, testPartitionConstructorArguments) {
-    const auto my_rank = MPIRankAdapter::get_random_number_ranks(mt);
+    const auto my_rank = MPIRankAdapter::get_random_mpi_rank(mt);
     const auto num_ranks = MPIRankAdapter::get_random_number_ranks(mt);
     const auto is_rank_power_2 = is_power_of_two(num_ranks);
 
@@ -49,7 +49,7 @@ TEST_F(PartitionTest, testPartitionConstructorArguments) {
         return;
     }
 
-    if (my_rank >= num_ranks) {
+    if (my_rank.get_rank() >= num_ranks) {
         ASSERT_THROW(Partition part(num_ranks, my_rank), RelearnException) << num_ranks << ' ' << my_rank;
         return;
     }
@@ -66,7 +66,7 @@ TEST_F(PartitionTest, testPartitionConstructor) {
     const auto oct_exponent = static_cast<size_t>(std::log(static_cast<double>(num_subdomains)) / std::log(8.0));
     const auto num_subdomains_per_dim = static_cast<size_t>(std::ceil(std::pow(static_cast<double>(num_subdomains), 1.0 / 3.0)));
 
-    for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
+    for (const auto my_rank : MPIRank::range(num_ranks)) {
         Partition partition(num_ranks, my_rank);
 
         ASSERT_EQ(partition.get_number_mpi_ranks(), num_ranks);
@@ -75,8 +75,8 @@ TEST_F(PartitionTest, testPartitionConstructor) {
         ASSERT_EQ(partition.get_total_number_subdomains(), num_subdomains) << num_subdomains;
         ASSERT_EQ(partition.get_number_local_subdomains(), my_subdomains) << my_subdomains;
 
-        ASSERT_EQ(partition.get_local_subdomain_id_start(), my_subdomains * my_rank) << my_subdomains << ' ' << my_rank;
-        ASSERT_EQ(partition.get_local_subdomain_id_end(), my_subdomains * (my_rank + 1) - 1) << my_subdomains << ' ' << my_rank;
+        ASSERT_EQ(partition.get_local_subdomain_id_start(), my_subdomains * my_rank.get_rank()) << my_subdomains << ' ' << my_rank;
+        ASSERT_EQ(partition.get_local_subdomain_id_end(), my_subdomains * (my_rank.get_rank() + 1) - 1) << my_subdomains << ' ' << my_rank;
 
         ASSERT_EQ(partition.get_level_of_subdomain_trees(), oct_exponent) << oct_exponent;
         ASSERT_EQ(partition.get_number_subdomains_per_dimension(), num_subdomains_per_dim) << num_subdomains_per_dim;
@@ -118,7 +118,7 @@ TEST_F(PartitionTest, testPartitionNumberNeurons) {
             local_ids_ends[my_subdomain] = NeuronID(false, local_end);
         }
 
-        Partition partition(num_ranks, my_rank);
+        Partition partition(num_ranks, MPIRank(my_rank));
 
         ASSERT_THROW(auto val = partition.get_total_number_neurons(), RelearnException);
         partition.set_total_number_neurons(number_total_neurons);
@@ -148,7 +148,7 @@ TEST_F(PartitionTest, testPartitionSubdomainIndices) {
     std::vector<bool> found_indices(num_subdomains, false);
 
     for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
-        Partition partition(num_ranks, my_rank);
+        Partition partition(num_ranks, MPIRank(my_rank));
 
         for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
             const auto index_1 = partition.get_1d_index_of_subdomain(my_subdomain);
@@ -194,7 +194,7 @@ TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
     const auto& subdomain_box_dimensions = simulation_box_dimensions / num_subdomains_per_dim;
 
     for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
-        Partition partition(num_ranks, my_rank);
+        Partition partition(num_ranks, MPIRank(my_rank));
 
         ASSERT_THROW(partition.set_simulation_box_size(simulation_box_maximum, simulation_box_minimum), RelearnException);
 
@@ -224,7 +224,7 @@ TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
     }
 
     for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
-        Partition partition(num_ranks, my_rank);
+        Partition partition(num_ranks, MPIRank(my_rank));
         partition.set_simulation_box_size(simulation_box_minimum, simulation_box_maximum);
 
         for (size_t subdomain_index_1 = 0; subdomain_index_1 < num_subdomains; subdomain_index_1++) {
@@ -289,7 +289,7 @@ TEST_F(PartitionTest, testPartitionPositionToMpi) {
     const auto& subdomain_box_dimensions = simulation_box_dimensions / num_subdomains_per_dim;
 
     for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
-        Partition partition(num_ranks, my_rank);
+        Partition partition(num_ranks, MPIRank(my_rank));
 
         for (auto j = 0; j < iterations; j++) {
             const auto& position = SimulationAdapter::get_random_position_in_box(simulation_box_minimum, simulation_box_maximum, mt);

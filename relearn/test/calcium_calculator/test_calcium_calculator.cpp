@@ -282,7 +282,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorGetterSetterException) {
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorInitialTargetCalcium) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    auto initiator = [number_neurons](int i, NeuronID::value_type v) {
+    auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         if (v >= number_neurons) {
             return -1.0;
         }
@@ -290,7 +290,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorInitialTargetCalcium) {
         return static_cast<double>(v) / 7.342;
     };
 
-    auto calculator = [number_neurons](int i, NeuronID::value_type v) {
+    auto calculator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         if (v >= number_neurons) {
             return -1.0;
         }
@@ -373,7 +373,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorCreate) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto number_created_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    auto initiator = [number_neurons](int i, NeuronID::value_type v) {
+    auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         if (v >= number_neurons) {
             return -1.0;
         }
@@ -381,7 +381,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorCreate) {
         return static_cast<double>(v) / 7.342;
     };
 
-    auto calculator = [number_neurons](int i, NeuronID::value_type v) {
+    auto calculator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         if (v >= number_neurons) {
             return -1.0;
         }
@@ -389,7 +389,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorCreate) {
         return static_cast<double>(v) * 5.98;
     };
 
-    auto initiator_created = [number_neurons, number_created_neurons](int i, NeuronID::value_type v) {
+    auto initiator_created = [number_neurons, number_created_neurons](MPIRank i, NeuronID::value_type v) {
         if (v < number_neurons) {
             return -1.0;
         }
@@ -401,7 +401,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorCreate) {
         return static_cast<double>(v) / 1.52;
     };
 
-    auto calculator_created = [number_neurons, number_created_neurons](int i, NeuronID::value_type v) {
+    auto calculator_created = [number_neurons, number_created_neurons](MPIRank i, NeuronID::value_type v) {
         if (v < number_neurons) {
             return -1.0;
         }
@@ -514,7 +514,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorCreate) {
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorZeroNeurons) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    auto initiator = [number_neurons](int i, NeuronID::value_type v) {
+    auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         if (v >= number_neurons) {
             return -1.0;
         }
@@ -522,7 +522,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorZeroNeurons) {
         return static_cast<double>(v) / 7.342;
     };
 
-    auto calculator = [number_neurons](int i, NeuronID::value_type v) {
+    auto calculator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         if (v >= number_neurons) {
             return -1.0;
         }
@@ -577,7 +577,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorZeroNeurons) {
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorEmptyFunctions) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    auto initiator = [number_neurons](int i, NeuronID::value_type v) {
+    auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         if (v >= number_neurons) {
             return -1.0;
         }
@@ -585,7 +585,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorEmptyFunctions) {
         return static_cast<double>(v) / 7.342;
     };
 
-    auto calculator = [number_neurons](int i, NeuronID::value_type v) {
+    auto calculator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         if (v >= number_neurons) {
             return -1.0;
         }
@@ -662,11 +662,11 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorEmptyFunctions) {
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateException) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    auto initiator = [number_neurons](int i, NeuronID::value_type v) {
+    auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
     };
 
-    auto calculator = [number_neurons](int i, NeuronID::value_type v) {
+    auto calculator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) * 5.98;
     };
 
@@ -735,11 +735,11 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateException) {
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    auto initiator = [number_neurons](int i, NeuronID::value_type v) {
+    auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
     };
 
-    auto calculator = [number_neurons](int i, NeuronID::value_type v) {
+    auto calculator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) * 5.98;
     };
 
@@ -814,11 +814,11 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneStep0) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    auto initiator = [number_neurons](int i, NeuronID::value_type v) {
+    auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
     };
 
-    auto calculator = [number_neurons](int i, NeuronID::value_type v) {
+    auto calculator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) * 5.98;
     };
 
@@ -875,11 +875,11 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneStep0) {
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNone) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    auto initiator = [number_neurons](int i, NeuronID::value_type v) {
+    auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
     };
 
-    auto calculator = [number_neurons](int i, NeuronID::value_type v) {
+    auto calculator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) * 5.98;
     };
 
@@ -938,11 +938,11 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNone) {
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    auto initiator = [number_neurons](int i, NeuronID::value_type v) {
+    auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
     };
 
-    auto calculator = [number_neurons](int i, NeuronID::value_type v) {
+    auto calculator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) * 5.98;
     };
 
@@ -1020,11 +1020,11 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeStep0) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    auto initiator = [number_neurons](int i, NeuronID::value_type v) {
+    auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
     };
 
-    auto calculator = [number_neurons](int i, NeuronID::value_type v) {
+    auto calculator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) * 5.98;
     };
 
@@ -1085,11 +1085,11 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeStep0) {
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelative) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    auto initiator = [number_neurons](int i, NeuronID::value_type v) {
+    auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
     };
 
-    auto calculator = [number_neurons](int i, NeuronID::value_type v) {
+    auto calculator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) * 5.98;
     };
 
@@ -1163,11 +1163,11 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelative) {
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    auto initiator = [number_neurons](int i, NeuronID::value_type v) {
+    auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
     };
 
-    auto calculator = [number_neurons](int i, NeuronID::value_type v) {
+    auto calculator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) * 5.98;
     };
 
@@ -1246,11 +1246,11 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteStep0) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    auto initiator = [number_neurons](int i, NeuronID::value_type v) {
+    auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
     };
 
-    auto calculator = [number_neurons](int i, NeuronID::value_type v) {
+    auto calculator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) * 5.98;
     };
 
@@ -1312,11 +1312,11 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteStep0) {
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsolute) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    auto initiator = [number_neurons](int i, NeuronID::value_type v) {
+    auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
     };
 
-    auto calculator = [number_neurons](int i, NeuronID::value_type v) {
+    auto calculator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) * 5.98;
     };
 

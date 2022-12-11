@@ -11,6 +11,7 @@
  */
 
 #include "Types.h"
+#include "util/MPIRank.h"
 
 #include <filesystem>
 #include <functional>
@@ -25,8 +26,8 @@
  */
 class CalciumIO {
 public:
-    using initial_value_calculator = std::function<double(int, NeuronID::value_type)>;
-    using target_value_calculator = std::function<double(int, NeuronID::value_type)>;
+    using initial_value_calculator = std::function<double(MPIRank, NeuronID::value_type)>;
+    using target_value_calculator = std::function<double(MPIRank, NeuronID::value_type)>;
 
     /**
      * @brief Loads from a file a function that maps the current MPI rank and a neuron's id to its initial calcium value

@@ -604,12 +604,12 @@ int main(int argc, char** argv) {
     LogFiles::init();
 
     // Init random number seeds
-    RandomHolder::seed(RandomHolderKey::Partition, static_cast<unsigned int>(my_rank));
+    RandomHolder::seed(RandomHolderKey::Partition, static_cast<unsigned int>(my_rank.is_initialized()));
     RandomHolder::seed(RandomHolderKey::Algorithm, random_seed);
 
     // Rank 0 prints start time of simulation
     MPIWrapper::barrier();
-    if (0 == my_rank) {
+    if (MPIRank::root_rank() == my_rank) {
         LogFiles::write_to_file(LogFiles::EventType::Essentials, true, "Number of ranks: {}", num_ranks);
         LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
             "START OF SIMULATION: {}\n"
@@ -740,10 +740,10 @@ int main(int argc, char** argv) {
         calcium_calculator->set_initial_calcium_calculator(std::move(initial_calcium_calculator));
         calcium_calculator->set_target_calcium_calculator(std::move(target_calcium_calculator));
     } else {
-        auto initial_calcium_calculator = [inital = initial_calcium](int /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return inital; };
+        auto initial_calcium_calculator = [inital = initial_calcium](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return inital; };
         calcium_calculator->set_initial_calcium_calculator(std::move(initial_calcium_calculator));
 
-        auto target_calcium_calculator = [target = target_calcium](int /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return target; };
+        auto target_calcium_calculator = [target = target_calcium](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return target; };
         calcium_calculator->set_target_calcium_calculator(std::move(target_calcium_calculator));
     }
 

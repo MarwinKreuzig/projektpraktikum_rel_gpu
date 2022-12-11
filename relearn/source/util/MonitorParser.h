@@ -38,8 +38,8 @@ public:
      * @param default_rank The default MPI rank, must be non-negative
      * @return An optional that contains the parsed RankNeuronId. Is empty if parsing failed or default_rank < 0.
      */
-    [[nodiscard]] static std::optional<RankNeuronId> parse_description(const std::string_view description, const int default_rank) {
-        if (default_rank < 0) {
+    [[nodiscard]] static std::optional<RankNeuronId> parse_description(const std::string_view description, const MPIRank default_rank) {
+        if (!default_rank.is_initialized()) {
             return {};
         }
 
@@ -58,7 +58,7 @@ public:
         const auto& [neuron_id_ptr, neuron_id_err] = std::from_chars(neuron_id_string.data(), neuron_id_string.data() + neuron_id_string.size(), neuron_id);
 
         if (mpi_rank == -1) {
-            mpi_rank = default_rank;
+            mpi_rank = default_rank.get_rank();
         }
 
         const auto mpi_rank_ok = (mpi_rank_err == std::errc{}) && (mpi_rank_ptr == mpi_rank_string.data() + mpi_rank_string.size()) && mpi_rank >= 0;
@@ -81,8 +81,8 @@ public:
      * @exception Throws a RelearnException if default_rank < 0
      * @return A vector with all successfully parsed RankNeuronIds
      */
-    [[nodiscard]] static std::vector<RankNeuronId> parse_multiple_description(const std::string& description, const int default_rank) {
-        RelearnException::check(default_rank >= 0, "MonitorParser::parse_multiple_description: default_rank {} is < 0.", default_rank);
+    [[nodiscard]] static std::vector<RankNeuronId> parse_multiple_description(const std::string& description, const MPIRank default_rank) {
+        RelearnException::check(default_rank.is_initialized(), "MonitorParser::parse_multiple_description: default_rank {} is < 0.", default_rank);
 
         std::vector<RankNeuronId> parsed_ids{};
         // The first description is at least 3 chars long, the following at least 4
@@ -150,8 +150,8 @@ public:
      * @exception Throws a RelearnException if my_rank < 0
      * @return A vector with all successfully parsed RankNeuronIds
      */
-    [[nodiscard]] static std::vector<NeuronID> extract_my_ids(const std::vector<RankNeuronId>& rank_neuron_ids, const int my_rank) {
-        RelearnException::check(my_rank >= 0, "MonitorParser::extract_my_ids: my_rank {} is < 0.", my_rank);
+    [[nodiscard]] static std::vector<NeuronID> extract_my_ids(const std::vector<RankNeuronId>& rank_neuron_ids, const MPIRank my_rank) {
+        RelearnException::check(my_rank.is_initialized(), "MonitorParser::extract_my_ids: my_rank {} is < 0.", my_rank);
 
         std::vector<NeuronID> my_parsed_ids{};
         my_parsed_ids.reserve(rank_neuron_ids.size());
@@ -201,8 +201,8 @@ public:
      * @exception Throws a RelearnException if default_rank < 0 or my_rank < 0
      * @return A vector with all NeuronIDs that shall be monitored at the current rank, sorted and unique
      */
-    [[nodiscard]] static std::vector<NeuronID> parse_my_ids(const std::string& description, const int default_rank, 
-        const int my_rank, const std::shared_ptr<LocalAreaTranslator>& local_area_translator) {
+    [[nodiscard]] static std::vector<NeuronID> parse_my_ids(const std::string& description, const MPIRank default_rank, 
+        const MPIRank my_rank, const std::shared_ptr<LocalAreaTranslator>& local_area_translator) {
         const auto& rank_neuron_ids = parse_multiple_description(description, default_rank);
         const auto& area_ids = parse_area_names(description, local_area_translator);
         auto neuron_ids = extract_my_ids(rank_neuron_ids, my_rank);

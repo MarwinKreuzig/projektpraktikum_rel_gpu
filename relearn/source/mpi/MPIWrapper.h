@@ -232,21 +232,21 @@ public:
         }
 
         std::vector<AsyncToken> async_tokens{};
-        for (auto rank = 0; rank < num_ranks; rank++) {
+        for (const auto rank : MPIRank::range(num_ranks)) {
             if (rank == my_rank) {
                 continue;
             }
 
-            const auto token = async_receive(std::span{ retrieved_data[rank] }, rank);
+            const auto token = async_receive(std::span{ retrieved_data[rank.get_rank()] }, rank.get_rank());
             async_tokens.emplace_back(token);
         }
 
-        for (auto rank = 0; rank < num_ranks; rank++) {
+        for (const auto rank : MPIRank::range(num_ranks)) {
             if (rank == my_rank) {
                 continue;
             }
 
-            const auto token = async_send(std::span{ values[rank] }, rank);
+            const auto token = async_send(std::span{ values[rank.get_rank()] }, rank.get_rank());
             async_tokens.emplace_back(token);
         }
 
@@ -350,29 +350,14 @@ public:
      * @exception Throws a RelearnException if the MPIWrapper is not initialized
      * @return The number of MPI ranks
      */
-    [[nodiscard]] static int get_num_ranks();
-
-    /**
-     * @brief Get a range of all ranks [0, num_ranks)
-     *
-     * @return auto the range of all ranks
-     */
-    [[nodiscard]] static const std::vector<int>& get_ranks() {
-        static std::vector<int> ranks = []() {
-            std::vector<int> r(get_num_ranks());
-            std::iota(r.begin(), r.end(), 0);
-            return r;
-        }();
-
-        return ranks;
-    }
+    [[nodiscard]] static size_t get_num_ranks();
 
     /**
      * @brief Returns the current MPI rank's id
      * @exception Throws a RelearnException if the MPIWrapper is not initialized
      * @return The current MPI rank's id
      */
-    [[nodiscard]] static int get_my_rank();
+    [[nodiscard]] static MPIRank get_my_rank();
 
     /**
      * @brief Returns the current MPI rank's id as string
@@ -499,8 +484,8 @@ private:
      */
     static void wait_all_tokens(const std::vector<AsyncToken>& tokens);
 
-    static inline int num_ranks{ -1 }; // Number of ranks in MPI_COMM_WORLD
-    static inline int my_rank{ -1 }; // My rank in MPI_COMM_WORLD
+    static inline size_t num_ranks{ 0 }; // Number of ranks in MPI_COMM_WORLD
+    static inline MPIRank my_rank{ MPIRank::uninitialized_rank() }; // My rank in MPI_COMM_WORLD
 
     static inline int thread_level_provided{ -1 }; // Thread level provided by MPI
 

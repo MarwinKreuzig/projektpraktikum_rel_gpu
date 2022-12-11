@@ -15,11 +15,11 @@
 #include <cmath>
 #include <sstream>
 
-Partition::Partition(const size_t num_ranks, const size_t my_rank)
+Partition::Partition(const size_t num_ranks, const MPIRank my_rank)
     : my_mpi_rank{ my_rank }
     , number_mpi_ranks{ num_ranks } {
     RelearnException::check(num_ranks > 0, "Partition::Partition: Number of MPI ranks must be a positive number: {}", num_ranks);
-    RelearnException::check(num_ranks > my_rank, "Partition::Partition: My rank must be smaller than number of ranks: {} vs {}", num_ranks, my_rank);
+    RelearnException::check(num_ranks > my_rank.get_rank(), "Partition::Partition: My rank must be smaller than number of ranks: {} vs {}", num_ranks, my_rank);
 
     /**
      * Total number of local_subdomains is smallest power of 8 that is >= num_ranks.
@@ -45,7 +45,7 @@ Partition::Partition(const size_t num_ranks, const size_t my_rank)
     // NOLINTNEXTLINE
     number_local_subdomains = total_number_subdomains / num_ranks;
     const size_t rest = total_number_subdomains % num_ranks;
-    number_local_subdomains += (my_rank < rest) ? 1 : 0;
+    number_local_subdomains += (my_rank.get_rank() < rest) ? 1 : 0;
 
     if (rest != 0) {
         LogFiles::print_message_rank(-1, "My rank is: {}; There are {} ranks in total; The rest is: {}", my_rank, num_ranks, rest);
@@ -65,7 +65,7 @@ Partition::Partition(const size_t num_ranks, const size_t my_rank)
     space_curve.set_refinement_level(static_cast<uint8_t>(level_of_subdomain_trees));
 
     // Calc start and end index of subdomain
-    local_subdomain_id_start = (total_number_subdomains / num_ranks) * my_rank;
+    local_subdomain_id_start = (total_number_subdomains / num_ranks) * my_rank.get_rank();
     local_subdomain_id_end = local_subdomain_id_start + number_local_subdomains - 1;
 
     // Allocate vector with my number of local_subdomains

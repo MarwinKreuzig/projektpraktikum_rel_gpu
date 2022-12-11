@@ -119,7 +119,7 @@ public:
      * @return True iff this object belongs to the current MPI process
      */
     [[nodiscard]] bool is_local() const {
-        return rank.get_rank() == MPIWrapper::get_my_rank();
+        return rank == MPIWrapper::get_my_rank();
     }
 
     /**

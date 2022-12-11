@@ -71,24 +71,29 @@ void MPIWrapper::init(int argc, char** argv) {
     // Number of ranks must be 2^n so that
     // the connectivity update works correctly
     const std::bitset<sizeof(int) * 8> bitset_num_ranks(num_ranks);
-    if (1 != bitset_num_ranks.count() && (0 == my_rank)) {
+    if (1 != bitset_num_ranks.count() && (MPIRank::root_rank() == my_rank)) {
         RelearnException::fail("MPIWrapper::init: Number of ranks must be of the form 2^n");
     }
 
     register_custom_function();
 
     const unsigned int num_digits = Util::num_digits(num_ranks - 1);
-    my_rank_str = fmt::format("{1:0>{0}}", num_digits, my_rank);
+    my_rank_str = fmt::format("{1:0>{0}}", num_digits, my_rank.get_rank());
 
     LogFiles::print_message_rank(0, "I'm using the MPIWrapper");
 }
 
 void MPIWrapper::init_globals() {
+    int num_ranks_int{};
     // NOLINTNEXTLINE
-    MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
+    MPI_Comm_size(MPI_COMM_WORLD, &num_ranks_int);
 
+    int my_rank_int{};
     // NOLINTNEXTLINE
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank_int);
+
+    num_ranks = static_cast<size_t>(num_ranks_int);
+    my_rank = MPIRank(my_rank_int);
 }
 
 size_t MPIWrapper::init_window(const size_t size_requested, const size_t octree_node_size) {
@@ -139,7 +144,7 @@ double MPIWrapper::reduce(double value, const ReduceFunction function, const MPI
     RelearnException::check(errorcode == 0, "MPIWrapper::reduce: Error code received: {}", errorcode);
 
     bytes_sent.fetch_add(sizeof(double), std::memory_order::relaxed);
-    if (my_rank == root_rank.get_rank()) {
+    if (my_rank == root_rank) {
         bytes_received.fetch_add(sizeof(double), std::memory_order::relaxed);
     }
 
@@ -181,7 +186,7 @@ void MPIWrapper::reduce_double(const double* src, double* dst, const size_t size
     RelearnException::check(errorcode == 0, "MPIWrapper::reduce_double: Error code received: {}", errorcode);
 
     bytes_sent.fetch_add(sizeof(double) * size, std::memory_order::relaxed);
-    if (my_rank == root_rank) {
+    if (my_rank.get_rank() == root_rank) {
         bytes_received.fetch_add(sizeof(double) * size, std::memory_order::relaxed);
     }
 }
@@ -195,7 +200,7 @@ void MPIWrapper::reduce_int64(const int64_t* src, int64_t* dst, const size_t siz
     RelearnException::check(errorcode == 0, "MPIWrapper::reduce_int64: Error code received: {}", errorcode);
 
     bytes_sent.fetch_add(sizeof(int64_t) * size, std::memory_order::relaxed);
-    if (my_rank == root_rank) {
+    if (my_rank.get_rank() == root_rank) {
         bytes_received.fetch_add(sizeof(int64_t) * size, std::memory_order::relaxed);
     }
 }
@@ -261,7 +266,7 @@ void MPIWrapper::reduce(const void* src, void* dst, const int size, const Reduce
     RelearnException::check(errorcode == 0, "MPIWrapper::reduce: Error code received: {}", errorcode);
 
     bytes_sent.fetch_add(size, std::memory_order::relaxed);
-    if (my_rank == root_rank) {
+    if (my_rank.get_rank() == root_rank) {
         bytes_received.fetch_add(size, std::memory_order::relaxed);
     }
 }
@@ -300,18 +305,18 @@ void MPIWrapper::get(void* origin, const size_t size, const int target_rank, con
     bytes_remote.fetch_add(size, std::memory_order::relaxed);
 }
 
-int MPIWrapper::get_num_ranks() {
-    RelearnException::check(num_ranks >= 0, "MPIWrapper::get_num_ranks: MPIWrapper is not initialized");
+size_t MPIWrapper::get_num_ranks() {
+    RelearnException::check(num_ranks >= 1, "MPIWrapper::get_num_ranks: MPIWrapper is not initialized");
     return num_ranks;
 }
 
-int MPIWrapper::get_my_rank() {
-    RelearnException::check(my_rank >= 0, "MPIWrapper::get_my_rank: MPIWrapper is not initialized");
+MPIRank MPIWrapper::get_my_rank() {
+    RelearnException::check(my_rank.is_initialized(), "MPIWrapper::get_my_rank: MPIWrapper is not initialized");
     return my_rank;
 }
 
 std::string MPIWrapper::get_my_rank_str() {
-    RelearnException::check(my_rank >= 0, "MPIWrapper::get_my_rank_str: MPIWrapper is not initialized");
+    RelearnException::check(my_rank.is_initialized(), "MPIWrapper::get_my_rank_str: MPIWrapper is not initialized");
     return my_rank_str;
 }
 

@@ -13,7 +13,7 @@
 #include <vector>
 
 TEST_F(NeuronsTest, testNeuronsConstructor) {
-    auto partition = std::make_shared<Partition>(1, 0);
+    auto partition = std::make_shared<Partition>(1, MPIRank::root_rank());
 
     auto model = std::make_unique<models::PoissonModel>();
     auto calcium = std::make_unique<CalciumCalculator>();
@@ -30,7 +30,7 @@ TEST_F(NeuronsTest, testSignalTypeCheck) {
     const auto num_synapses = RandomAdapter::get_random_integer(10, 100, mt);
     const auto num_ranks = MPIRankAdapter::get_random_number_ranks(mt);
     std::vector<SignalType> signal_types{};
-    const auto network_graph = std::make_shared<NetworkGraph>(num_neurons, 0);
+    const auto network_graph = std::make_shared<NetworkGraph>(num_neurons, MPIRank::root_rank());
 
     for (const auto& neuron_id : NeuronID::range(num_neurons)) {
         const auto signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
@@ -52,7 +52,7 @@ TEST_F(NeuronsTest, testSignalTypeCheck) {
         }
     }
 
-    ASSERT_NO_THROW(Neurons::check_signal_types(network_graph, signal_types, 0));
+    ASSERT_NO_THROW(Neurons::check_signal_types(network_graph, signal_types, MPIRank(0)));
 
     for (int test_synapse = 0; test_synapse < num_test_synapses; test_synapse++) {
         const auto src = TaggedIdAdapter::get_random_neuron_id(num_neurons, mt);
@@ -74,12 +74,12 @@ TEST_F(NeuronsTest, testSignalTypeCheck) {
         } else {
             network_graph->add_synapse({ RankNeuronId(tgt_rank, tgt), src, weight });
         }
-        ASSERT_THROW(Neurons::check_signal_types(network_graph, signal_types, 0), RelearnException);
+        ASSERT_THROW(Neurons::check_signal_types(network_graph, signal_types, MPIRank(0)), RelearnException);
         if (tgt_rank == MPIRank::root_rank()) {
             network_graph->add_synapse({ tgt, src, -weight });
         } else {
             network_graph->add_synapse({ RankNeuronId(tgt_rank, tgt), src, -weight });
         }
-        ASSERT_NO_THROW(Neurons::check_signal_types(network_graph, signal_types, 0));
+        ASSERT_NO_THROW(Neurons::check_signal_types(network_graph, signal_types, MPIRank(0)));
     }
 }

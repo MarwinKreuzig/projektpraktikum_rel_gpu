@@ -36,7 +36,7 @@ public:
      * @param number_neurons The number of local neurons
      * @exception Throws a RelearnException if number_ranks <= 0
      */
-    FiredStatusCommunicationMap(int number_ranks, number_neurons_type number_neurons)
+    FiredStatusCommunicationMap(size_t number_ranks, number_neurons_type number_neurons)
         : FiredStatusCommunicator(number_ranks, number_neurons)
         , outgoing_ids(number_ranks, std::min(number_neurons_type(number_ranks), number_neurons))
         , incoming_ids(number_ranks, std::min(number_neurons_type(number_ranks), number_neurons)) {
@@ -65,7 +65,7 @@ public:
      * @param neuron_id The neuron in question
      * @exception Throws a RelearnException if rank is not from [0, number_ranks) or the neuron_id is virtual
      */
-    bool contains(int rank, NeuronID neuron_id) const override;
+    bool contains(MPIRank rank, NeuronID neuron_id) const override;
 
 private:
     CommunicationMap<NeuronID> outgoing_ids;

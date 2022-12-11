@@ -184,7 +184,7 @@ public:
      * @exception Throws a RelearnException if the file is not present or the second argument of background is <0.0 (if provided)
      */
     StimulusBackgroundActivityCalculator(const std::filesystem::path& stimulus_file, std::optional<std::pair<double, double>> background, 
-        const int mpi_rank, std::shared_ptr<LocalAreaTranslator> local_area_translator)
+        const MPIRank mpi_rank, std::shared_ptr<LocalAreaTranslator> local_area_translator)
         : file(stimulus_file) {
         if (background.has_value()) {
             auto [mean, stddev] = background.value();

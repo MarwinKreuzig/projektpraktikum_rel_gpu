@@ -26,7 +26,7 @@ void MPINoWrapper::init(int argc, char** argv) {
 void MPINoWrapper::barrier() {
 }
 
-[[nodiscard]] double MPINoWrapper::reduce(double value, ReduceFunction /*function*/, int /*root_rank*/) {
+[[nodiscard]] double MPINoWrapper::reduce(double value, ReduceFunction /*function*/, MPIRank /*root_rank*/) {
     return value;
 }
 
@@ -50,12 +50,12 @@ void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size) {
     std::memcpy(buffer, own_data, size);
 }
 
-[[nodiscard]] int MPINoWrapper::get_num_ranks() {
-    return num_ranks;
+[[nodiscard]] size_t MPINoWrapper::get_num_ranks() {
+    return 1;
 }
 
-[[nodiscard]] int MPINoWrapper::get_my_rank() {
-    return my_rank;
+[[nodiscard]] MPIRank MPINoWrapper::get_my_rank() {
+    return MPIRank::root_rank();
 }
 
 [[nodiscard]] size_t MPINoWrapper::get_num_neurons() {
@@ -78,12 +78,12 @@ void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size) {
     return my_rank_str;
 }
 
-void MPINoWrapper::lock_window(int rank, MPI_Locktype /*lock_type*/) {
-    RelearnException::check(rank >= 0, "rank was: %d", rank);
+void MPINoWrapper::lock_window(MPIRank rank, MPI_Locktype /*lock_type*/) {
+    RelearnException::check(rank.is_initialized(), "rank was: %d", rank);
 }
 
-void MPINoWrapper::unlock_window(int rank) {
-    RelearnException::check(rank >= 0, "rank was: %d", rank);
+void MPINoWrapper::unlock_window(MPIRank rank) {
+    RelearnException::check(rank.is_initialized(), "rank was: %d", rank);
 }
 
 void MPINoWrapper::finalize() {

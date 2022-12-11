@@ -13,6 +13,7 @@
 #include "Config.h"
 #include "Types.h"
 #include "structure/SpaceFillingCurve.h"
+#include "util/MPIRank.h"
 #include "util/RelearnException.h"
 
 #include <functional>
@@ -54,7 +55,7 @@ public:
      * @param my_rank The current MPI rank
      * @exception Throws a RelearnException if 0 <= my_rank < num_ranks is violated, if the number of MPI ranks is not of the form 2^k
      */
-    Partition(size_t num_ranks, size_t my_rank);
+    Partition(size_t num_ranks, MPIRank my_rank);
 
     ~Partition() = default;
 
@@ -150,7 +151,7 @@ public:
      * @brief Returns the MPI rank id that was passed in the constructor
      * @return The MPI rank id
      */
-    [[nodiscard]] size_t get_my_mpi_rank() const noexcept {
+    [[nodiscard]] MPIRank get_my_mpi_rank() const noexcept {
         return my_mpi_rank;
     }
 
@@ -332,7 +333,7 @@ public:
     }
 
 private:
-    size_t my_mpi_rank{ Constants::uninitialized };
+    MPIRank my_mpi_rank{ MPIRank::root_rank() };
     size_t number_mpi_ranks{ Constants::uninitialized };
 
     number_neurons_type total_number_neurons{ Constants::uninitialized };

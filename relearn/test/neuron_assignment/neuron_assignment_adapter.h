@@ -30,7 +30,7 @@ public:
         const auto fraction_excitatory_neurons = RandomAdapter::get_random_percentage<double>(mt);
         const auto um_per_neuron = RandomAdapter::get_random_percentage<double>(mt) * 100.0;
 
-        const auto part = std::make_shared<Partition>(1, 0);
+        const auto part = std::make_shared<Partition>(1, MPIRank(0));
         part->set_total_number_neurons(number_neurons);
         SubdomainFromNeuronDensity sfnd{ number_neurons, fraction_excitatory_neurons, um_per_neuron, part };
 

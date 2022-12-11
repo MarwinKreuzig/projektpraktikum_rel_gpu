@@ -117,10 +117,10 @@ TYPED_TEST(OctreeTest, testOctreeNodeLocal) {
     OctreeNode<AdditionalCellAttributes> node{};
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    for (auto i = 0; i < 1000; i++) {
-        node.set_rank(MPIRank(i));
+    for (const auto rank : MPIRank::range(1000)) {
+        node.set_rank(rank);
 
-        if (i == my_rank) {
+        if (rank == my_rank) {
             ASSERT_TRUE(node.is_local());
         } else {
             ASSERT_FALSE(node.is_local());

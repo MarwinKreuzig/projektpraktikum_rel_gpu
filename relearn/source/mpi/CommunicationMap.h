@@ -43,7 +43,7 @@ public:
      *      Can be ignored depending on the container_type.
      * @exception Throws a RelearnException if number_ranks is smaller than 1
      */
-    explicit CommunicationMap(const int number_ranks, const size_type size_hint = 1)
+    explicit CommunicationMap(const size_t number_ranks, const size_type size_hint = 1)
         : number_ranks(number_ranks) {
         RelearnException::check(number_ranks > 0, "CommunicationMap::CommunicationMap: number_ranks is too small: {}", number_ranks);
         requests.reserve(size_hint);
@@ -73,7 +73,7 @@ public:
      * @brief Returns the number of ranks that this map can hold
      * @return The number of ranks
      */
-    [[nodiscard]] int get_number_ranks() const noexcept {
+    [[nodiscard]] size_t get_number_ranks() const noexcept {
         return number_ranks;
     }
 
@@ -417,6 +417,6 @@ public:
     }
 
 private:
-    int number_ranks{};
+    size_t number_ranks{};
     container_type requests{};
 };

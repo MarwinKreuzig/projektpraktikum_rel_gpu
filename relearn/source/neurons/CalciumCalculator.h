@@ -14,6 +14,7 @@
 #include "neurons/FiredStatus.h"
 #include "neurons/TargetCalciumDecay.h"
 #include "neurons/UpdateStatus.h"
+#include "util/MPIRank.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
@@ -162,7 +163,7 @@ public:
      *      When calling init(...), the initial calcium calculator must not be empty. It can be so inbetween.
      * @param calculator The function that maps neuron id to initial calcium value
      */
-    void set_initial_calcium_calculator(std::function<double(int, NeuronID::value_type)> initiator) noexcept {
+    void set_initial_calcium_calculator(std::function<double(MPIRank, NeuronID::value_type)> initiator) noexcept {
         initial_calcium_initiator = std::move(initiator);
     }
 
@@ -171,7 +172,7 @@ public:
      *      When calling init(...), the target calcium calculator must not be empty. It can be so inbetween.
      * @param calculator The function that maps neuron id to target calcium value
      */
-    void set_target_calcium_calculator(std::function<double(int, NeuronID::value_type)> calculator) noexcept {
+    void set_target_calcium_calculator(std::function<double(MPIRank, NeuronID::value_type)> calculator) noexcept {
         target_calcium_calculator = std::move(calculator);
     }
 
@@ -217,8 +218,8 @@ private:
 
     void update_target_calcium(step_type step, const std::vector<UpdateStatus>& disable_flags) noexcept;
 
-    std::function<double(int, NeuronID::value_type)> initial_calcium_initiator{};
-    std::function<double(int, NeuronID::value_type)> target_calcium_calculator{};
+    std::function<double(MPIRank, NeuronID::value_type)> initial_calcium_initiator{};
+    std::function<double(MPIRank, NeuronID::value_type)> target_calcium_calculator{};
 
     std::vector<double> calcium{};
     std::vector<double> target_calcium{};

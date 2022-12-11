@@ -450,7 +450,7 @@ public:
         const auto& [source_rank, source_id] = source_rni;
 
         RelearnException::check(local_target_id < number_local_neurons, "NetworkGraph::add_synapse: Distant in-synapse had a too large target: {} vs {}", target, number_local_neurons);
-        RelearnException::check(source_rank != my_rank.get_rank(), "NetworkGraph::add_synapse: Distant in-synapse was on my rank: {}", source_rank);
+        RelearnException::check(source_rank != my_rank, "NetworkGraph::add_synapse: Distant in-synapse was on my rank: {}", source_rank);
         RelearnException::check(weight != 0, "NetworkGraph::add_synapse: Local synapse had weight 0");
 
         DistantEdges& distant_in_edges = neuron_distant_in_neighborhood[local_target_id];
@@ -472,7 +472,7 @@ public:
         const auto& [target_rank, target_id] = target_rni;
 
         RelearnException::check(local_source_id < number_local_neurons, "NetworkGraph::add_synapse: Distant out-synapse had a too large target: {} vs {}", source, number_local_neurons);
-        RelearnException::check(target_rank != my_rank.get_rank(), "NetworkGraph::add_synapse: Distant out-synapse was on my rank: {}", target_rank);
+        RelearnException::check(target_rank != my_rank, "NetworkGraph::add_synapse: Distant out-synapse was on my rank: {}", target_rank);
         RelearnException::check(weight != 0, "NetworkGraph::add_synapse: Local synapse had weight 0");
 
         DistantEdges& distant_out_edges = neuron_distant_out_neighborhood[local_source_id];
@@ -648,8 +648,8 @@ public:
                 const auto& [target_rank, target_neuron_id] = target_id;
 
                 RelearnException::check(edge_val != 0, "NetworkGraph::debug_check: Distant synapse value is zero (out)");
-                RelearnException::check(target_rank >= 0, "NetworkGraph::debug_check: Distant synapse target rank is < 0");
-                RelearnException::check(target_rank != my_rank.get_rank(), "NetworkGraph::debug_check: Distant synapse target rank is the local rank");
+                RelearnException::check(target_rank.is_initialized(), "NetworkGraph::debug_check: Distant synapse target rank is < 0");
+                RelearnException::check(target_rank != my_rank, "NetworkGraph::debug_check: Distant synapse target rank is the local rank");
             }
         }
 
@@ -660,8 +660,8 @@ public:
                 const auto& [source_rank, source_neuron_id] = source_id;
 
                 RelearnException::check(edge_val != 0, "NetworkGraph::debug_check: Distant synapse value is zero (out)");
-                RelearnException::check(source_rank >= 0, "NetworkGraph::debug_check: Distant synapse source rank is < 0");
-                RelearnException::check(source_rank != my_rank.get_rank(), "NetworkGraph::debug_check: Distant synapse source rank is the local rank");
+                RelearnException::check(source_rank.is_initialized(), "NetworkGraph::debug_check: Distant synapse source rank is < 0");
+                RelearnException::check(source_rank != my_rank, "NetworkGraph::debug_check: Distant synapse source rank is the local rank");
             }
         }
 

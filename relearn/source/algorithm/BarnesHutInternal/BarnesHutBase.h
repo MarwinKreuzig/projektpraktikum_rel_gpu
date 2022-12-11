@@ -19,6 +19,7 @@
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "structure/NodeCache.h"
 #include "structure/OctreeNode.h"
+#include "util/MPIRank.h"
 #include "util/RelearnException.h"
 #include "util/Stack.h"
 
@@ -239,10 +240,10 @@ public:
      * @param signal_type The signal type the source neuron searches
      * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank
      */
-    [[nodiscard]] static std::vector<std::tuple<int, SynapseCreationRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
+    [[nodiscard]] static std::vector<std::tuple<MPIRank, SynapseCreationRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
         const counter_type& number_vacant_elements, OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type, const double acceptance_criterion) {
 
-        std::vector<std::tuple<int, SynapseCreationRequest>> requests{};
+        std::vector<std::tuple<MPIRank, SynapseCreationRequest>> requests{};
         requests.reserve(number_vacant_elements);
 
         for (counter_type j = 0; j < number_vacant_elements; j++) {

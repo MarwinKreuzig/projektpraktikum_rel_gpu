@@ -21,7 +21,7 @@ bool LogFiles::do_i_print(const int rank) {
         return false;
     }
 
-    return rank == MPIWrapper::get_my_rank() || rank == -1;
+    return rank == MPIWrapper::get_my_rank().get_rank() || rank == -1;
 }
 
 std::string LogFiles::get_my_rank_str() {
@@ -33,7 +33,7 @@ void LogFiles::init() {
         return;
     }
 
-    if (0 == MPIWrapper::get_my_rank()) {
+    if (MPIRank::root_rank() == MPIWrapper::get_my_rank()) {
         if (!std::filesystem::exists(output_path)) {
             std::filesystem::create_directory(output_path);
         }

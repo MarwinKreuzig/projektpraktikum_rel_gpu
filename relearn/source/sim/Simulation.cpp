@@ -277,7 +277,7 @@ void Simulation::simulate(const step_type number_steps) {
             RelearnException::check(received_data.size() == MPIWrapper::get_num_ranks(), "Simulation::simulate: MPI Communication for area monitor failed {} != {}", received_data.size() != MPIWrapper::get_num_ranks());
             for (int rank = 0; rank < received_data.size(); rank++) {
                 const auto& received_data_single = received_data[rank];
-                if (rank == my_rank) {
+                if (MPIRank(rank) == my_rank) {
                     RelearnException::check(received_data_single.empty(), "Simulation::simulate: Send MPI {} messages to myself", received_data_single.size());
                 }
                 for (const AreaMonitor::AreaConnection& connection : received_data_single) {
@@ -346,7 +346,7 @@ void Simulation::simulate(const step_type number_steps) {
             const auto global_deletions = global_cnts[0] + global_cnts[1];
             const auto global_creations = global_cnts[2];
 
-            if (0 == my_rank) {
+            if (MPIRank::root_rank() == my_rank) {
                 total_synapse_deletions += global_deletions;
                 total_synapse_creations += global_creations;
             }
@@ -391,7 +391,7 @@ void Simulation::simulate(const step_type number_steps) {
         }
 
         if (step % Config::console_update_step == 0) {
-            if (my_rank != 0) {
+            if (my_rank != MPIRank::root_rank()) {
                 continue;
             }
 

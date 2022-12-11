@@ -81,7 +81,7 @@ public:
     [[nodiscard]] static std::array<node_type*, Constants::number_oct> download_children(node_type* const node) {
         const auto target_rank = node->get_mpi_rank();
         RelearnException::check(node->get_cell_neuron_id().is_virtual(), "NodeCache::download_children: Tried to download from a non-virtual node");
-        RelearnException::check(target_rank.get_rank() != MPIWrapper::get_my_rank(), "NodeCache::download_children: Tried to download a local node");
+        RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "NodeCache::download_children: Tried to download a local node");
 
         auto actual_download = [target_rank](node_type* const node) {
             children_type local_children{ nullptr };
@@ -164,7 +164,7 @@ public:
      */
     [[nodiscard]] static std::array<node_type*, Constants::number_oct> download_children(node_type* const node) {
         const auto target_rank = node->get_mpi_rank();
-        RelearnException::check(target_rank.get_rank() != MPIWrapper::get_my_rank(), "NodeCache::download_children: Tried to download a local node");
+        RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "NodeCache::download_children: Tried to download a local node");
 
         auto actual_download = [target_rank](node_type* node) {
             std::array<node_type*, Constants::number_oct> local_children{ nullptr };

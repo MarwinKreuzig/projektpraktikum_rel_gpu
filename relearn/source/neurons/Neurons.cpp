@@ -84,7 +84,7 @@ void Neurons::init_synaptic_elements() {
     check_signal_types(network_graph_plastic, axons->get_signal_types(), MPIWrapper::get_my_rank());
 }
 
-void Neurons::check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, const std::vector<SignalType>& signal_types, const int my_rank) {
+void Neurons::check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, const std::vector<SignalType>& signal_types, const MPIRank my_rank) {
     for (const auto& neuron_id : NeuronID::range(signal_types.size())) {
         const auto& signal_type = signal_types[neuron_id.get_neuron_id()];
         const auto& out_edges = network_graph->get_all_out_edges(neuron_id);
@@ -452,8 +452,7 @@ std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
 }
 
 size_t Neurons::delete_synapses_commit_deletions(const CommunicationMap<SynapseDeletionRequest>& list) {
-    const int my_rank_int = MPIWrapper::get_my_rank();
-    const auto my_rank = MPIRank(my_rank_int);
+    const auto my_rank = MPIWrapper::get_my_rank();
 
     size_t num_synapses_deleted = 0;
 
@@ -687,7 +686,7 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const st
     std::array<int64_t, 7> sums_global = MPIWrapper::reduce(sums_local, MPIWrapper::ReduceFunction::Sum, MPIRank::root_rank());
 
     // Output data
-    if (0 == MPIWrapper::get_my_rank()) {
+    if (MPIRank::root_rank() == MPIWrapper::get_my_rank()) {
         const int cwidth = 20; // Column width
 
         // Write headers to file if not already done so
@@ -727,7 +726,7 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const step_type step)
     const StatisticalMeasures& dendrites_excitatory_statistics = get_statistics(NeuronAttribute::DendritesExcitatory);
     const StatisticalMeasures& dendrites_excitatory_connected_statistics = get_statistics(NeuronAttribute::DendritesExcitatoryConnected);
 
-    if (0 != MPIWrapper::get_my_rank()) {
+    if (MPIRank::root_rank() != MPIWrapper::get_my_rank()) {
         // All ranks must compute the statistics, but only one should print them
         return;
     }
@@ -876,7 +875,7 @@ void Neurons::print_calcium_statistics_to_essentials() {
     const auto& calcium = calcium_calculator->get_calcium();
     const StatisticalMeasures& calcium_statistics = global_statistics(calcium, MPIRank::root_rank(), disable_flags);
 
-    if (0 != MPIWrapper::get_my_rank()) {
+    if (MPIRank::root_rank() != MPIWrapper::get_my_rank()) {
         // All ranks must compute the statistics, but only one should print them
         return;
     }
@@ -901,8 +900,13 @@ void Neurons::print_network_graph_to_log_file(const step_type step, bool with_pr
     std::stringstream ss_in_network{};
     std::stringstream ss_out_network{};
 
-    NeuronIO::write_out_synapses(network_graph_static->get_all_local_out_edges(), network_graph_static->get_all_distant_out_edges(), network_graph_plastic->get_all_local_out_edges(), network_graph_plastic->get_all_distant_out_edges(), MPIWrapper::get_my_rank(), partition->get_number_mpi_ranks(), partition->get_number_local_neurons(), partition->get_total_number_neurons(), ss_out_network, step);
-    NeuronIO::write_in_synapses(network_graph_static->get_all_local_in_edges(), network_graph_static->get_all_distant_in_edges(), network_graph_plastic->get_all_local_in_edges(), network_graph_plastic->get_all_distant_in_edges(), MPIWrapper::get_my_rank(), partition->get_number_mpi_ranks(), partition->get_number_local_neurons(), partition->get_total_number_neurons(), ss_in_network, step);
+    NeuronIO::write_out_synapses(network_graph_static->get_all_local_out_edges(), network_graph_static->get_all_distant_out_edges(), 
+        network_graph_plastic->get_all_local_out_edges(), network_graph_plastic->get_all_distant_out_edges(), MPIWrapper::get_my_rank(),
+        partition->get_number_mpi_ranks(), partition->get_number_local_neurons(), partition->get_total_number_neurons(), ss_out_network, step);
+    
+    NeuronIO::write_in_synapses(network_graph_static->get_all_local_in_edges(), network_graph_static->get_all_distant_in_edges(), 
+        network_graph_plastic->get_all_local_in_edges(), network_graph_plastic->get_all_distant_in_edges(), MPIWrapper::get_my_rank(), 
+        partition->get_number_mpi_ranks(), partition->get_number_local_neurons(), partition->get_total_number_neurons(), ss_in_network, step);
 
     LogFiles::write_to_file(LogFiles::EventType::InNetwork, false, ss_in_network.str());
     LogFiles::write_to_file(LogFiles::EventType::OutNetwork, false, ss_out_network.str());
@@ -910,7 +914,8 @@ void Neurons::print_network_graph_to_log_file(const step_type step, bool with_pr
 
 void Neurons::print_positions_to_log_file() {
     std::stringstream ss;
-    NeuronIO::write_neurons_componentwise(NeuronID::range(number_neurons), extra_info->get_positions(), local_area_translator, axons->get_signal_types(), ss, partition->get_total_number_neurons(), partition->get_simulation_box_size(), partition->get_all_local_subdomain_boundaries());
+    NeuronIO::write_neurons_componentwise(NeuronID::range(number_neurons), extra_info->get_positions(), local_area_translator,
+        axons->get_signal_types(), ss, partition->get_total_number_neurons(), partition->get_simulation_box_size(), partition->get_all_local_subdomain_boundaries());
     LogFiles::write_to_file(LogFiles::EventType::Positions, false, ss.str());
 }
 

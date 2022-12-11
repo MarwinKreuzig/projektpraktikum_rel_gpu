@@ -73,12 +73,13 @@ void FiredStatusCommunicationMap::exchange_fired_status() {
     Timers::stop_and_add(TimerRegion::EXCHANGE_NEURON_IDS);
 }
 
-bool FiredStatusCommunicationMap::contains(int rank, NeuronID neuron_id) const {
+bool FiredStatusCommunicationMap::contains(MPIRank rank, NeuronID neuron_id) const {
     const auto number_ranks = get_number_ranks();
-    RelearnException::check(0 <= rank && rank < number_ranks, "FiredStatusCommunicationMap::contains: rank {} is larger than the number of ranks {} (or negative)", rank, number_ranks);
+    RelearnException::check(rank.is_initialized(), "FiredStatusCommunicationMap::contains: rank is not initialized");
+    RelearnException::check(rank.get_rank() < number_ranks, "FiredStatusCommunicationMap::contains: rank {} is larger than the number of ranks {}", rank, number_ranks);
     RelearnException::check(neuron_id.is_initialized(), "FiredStatusCommunicationMap::contains: The neuron id is not initialized: {}", neuron_id);
 
-    const auto& firings_ids_opt = incoming_ids.get_optional_request(MPIRank(rank));
+    const auto& firings_ids_opt = incoming_ids.get_optional_request(rank);
     if (!firings_ids_opt.has_value()) {
         return false;
     }

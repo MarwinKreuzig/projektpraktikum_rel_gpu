@@ -34,17 +34,6 @@ public:
     constexpr RankNeuronId() = default;
 
     /**
-     * @brief Constructs a new RankNeuronId with specified inputs (not validated).
-     *      This constructor is deprecated; please use the type-safe version with MPIRank
-     * @param rank The MPI rank
-     * @param neuron_id The neuron id
-     */
-    [[deprecated("Use RankNeuronId(MPIRank, NeuronID)")]] constexpr RankNeuronId(const int rank, const NeuronID& neuron_id)
-        : rank(rank)
-        , neuron_id(neuron_id) {
-    }
-
-    /**
      * @brief Constructs a new RankNeuronId with specified inputs (not validated)
      * @param rank The MPI rank
      * @param neuron_id The neuron id
@@ -67,9 +56,9 @@ public:
      * @return The MPI rank
      * @exception Throws a RelearnException if the rank is negative
      */
-    [[nodiscard]] constexpr int get_rank() const {
+    [[nodiscard]] constexpr MPIRank get_rank() const {
         RelearnException::check(rank.is_initialized(), "RankNeuronId::get_rank: It was negative: {}", rank);
-        return rank.get_rank();
+        return rank;
     }
 
     /**
@@ -95,7 +84,7 @@ public:
     template <std::size_t Index>
     [[nodiscard]] constexpr auto& get() & {
         if constexpr (Index == 0) {
-            return rank.get_rank();
+            return rank;
         }
         if constexpr (Index == 1) {
             return neuron_id;
@@ -105,7 +94,7 @@ public:
     template <std::size_t Index>
     [[nodiscard]] constexpr auto /*const&*/ get() const& {
         if constexpr (Index == 0) {
-            return rank.get_rank();
+            return rank;
         }
         if constexpr (Index == 1) {
             return neuron_id;
@@ -115,7 +104,7 @@ public:
     template <std::size_t Index>
     [[nodiscard]] constexpr auto&& get() && {
         if constexpr (Index == 0) {
-            return rank.get_rank();
+            return rank;
         }
         if constexpr (Index == 1) {
             return neuron_id;
@@ -138,7 +127,7 @@ struct tuple_size<::RankNeuronId> {
 
 template <>
 struct tuple_element<0, ::RankNeuronId> {
-    using type = int;
+    using type = MPIRank;
 };
 
 template <>

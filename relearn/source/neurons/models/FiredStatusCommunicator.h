@@ -33,7 +33,7 @@ public:
      * @param number_neurons The number of local neurons
      * @exception Throws a RelearnException if number_ranks <= 0
      */
-    FiredStatusCommunicator(int number_ranks, number_neurons_type number_local_neurons)
+    FiredStatusCommunicator(size_t number_ranks, number_neurons_type number_local_neurons)
         : number_ranks(number_ranks)
         , number_local_neurons(number_local_neurons) {
         RelearnException::check(number_ranks > 0, "FiredStatusCommunicator::FiredStatusCommunicator: number_ranks is too small: {}", number_ranks);
@@ -62,13 +62,13 @@ public:
      * @param neuron_id The neuron in question
      * @exception Can throw a RelearnException
      */
-    [[nodiscard]] virtual bool contains(int rank, NeuronID neuron_id) const = 0;
+    [[nodiscard]] virtual bool contains(MPIRank rank, NeuronID neuron_id) const = 0;
 
     /**
      * @brief Returns the number of MPI ranks
      * @return The number of MPI ranks
      */
-    [[nodiscard]] int get_number_ranks() const noexcept {
+    [[nodiscard]] size_t get_number_ranks() const noexcept {
         return number_ranks;
     }
 
@@ -83,6 +83,6 @@ public:
     virtual ~FiredStatusCommunicator() = default;
 
 private:
-    int number_ranks{ -1 };
+    size_t number_ranks{ 0 };
     number_neurons_type number_local_neurons{ 0 };
 };

@@ -412,7 +412,7 @@ public:
      * @param signal_types Vector of SignalTypes. Neuron i has signal_type[i]
      * @throws RelearnException If signal_type does not match weight
      */
-    static void check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, const std::vector<SignalType>& signal_types, const int my_rank);
+    static void check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, const std::vector<SignalType>& signal_types, const MPIRank my_rank);
 
 private:
     [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, MPIRank root, const std::vector<UpdateStatus>& disable_flags) const;

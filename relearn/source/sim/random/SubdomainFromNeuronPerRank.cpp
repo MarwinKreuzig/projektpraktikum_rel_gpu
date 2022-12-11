@@ -23,7 +23,7 @@ SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank(const SubdomainFromNeuron
 
     RelearnException::check(number_neurons_per_rank >= 1, "SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank: There must be at least one neuron per mpi rank!");
 
-    const auto my_rank = static_cast<unsigned int>(partition->get_my_mpi_rank());
+    const auto my_rank = static_cast<unsigned int>(partition->get_my_mpi_rank().get_rank());
     const auto number_ranks = partition->get_number_mpi_ranks();
     const auto number_local_subdomains = partition->get_number_local_subdomains();
 

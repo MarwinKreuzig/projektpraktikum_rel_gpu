@@ -21,7 +21,7 @@
 
 SubdomainFromFile::SubdomainFromFile(const std::filesystem::path& path_to_neurons, std::optional<std::filesystem::path> path_to_synapses, std::shared_ptr<Partition> partition)
     : NeuronToSubdomainAssignment(partition) {
-    RelearnException::check(partition->get_my_mpi_rank() == 0 && partition->get_number_mpi_ranks() == 1, "SubdomainFromFile::SubdomainFromFile: Can only be used for 1 MPI rank.");
+    RelearnException::check(partition->get_my_mpi_rank() == MPIRank::root_rank() && partition->get_number_mpi_ranks() == 1, "SubdomainFromFile::SubdomainFromFile: Can only be used for 1 MPI rank.");
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, false, "Loading: {} \n", path_to_neurons);
 

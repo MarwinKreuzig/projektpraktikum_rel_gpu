@@ -58,14 +58,14 @@ CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(
             BarnesHutBase<BarnesHutInvertedCell>::find_target_neurons(id, dendrite_position, number_vacant_excitatory_dendrites, root, ElementType::Axon, SignalType::Excitatory, acceptance_criterion);
         for (const auto& [target_rank, creation_request] : excitatory_requests) {
 #pragma omp critical(BHIrequests)
-            synapse_creation_requests_outgoing.append(MPIRank(target_rank), creation_request);
+            synapse_creation_requests_outgoing.append(target_rank, creation_request);
         }
 
         const auto& inhibitory_requests = 
             BarnesHutBase<BarnesHutInvertedCell>::find_target_neurons(id, dendrite_position, number_vacant_inhibitory_dendrites, root, ElementType::Axon, SignalType::Inhibitory, acceptance_criterion);
         for (const auto& [target_rank, creation_request] : inhibitory_requests) {
 #pragma omp critical(BHIrequests)
-            synapse_creation_requests_outgoing.append(MPIRank(target_rank), creation_request);
+            synapse_creation_requests_outgoing.append(target_rank, creation_request);
         }
     }
 
