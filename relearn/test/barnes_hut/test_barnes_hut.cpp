@@ -62,7 +62,7 @@ TEST_F(BarnesHutTest, testBarnesHutACException) {
 
     OctreeNode<additional_cell_attributes> node{};
 
-    node.set_rank(rank.get_rank());
+    node.set_rank(rank);
     node.set_cell_neuron_id(neuron_id);
     node.set_level(level);
 
@@ -105,7 +105,7 @@ TEST_F(BarnesHutTest, testBarnesHutACLeaf) {
 
     OctreeNode<additional_cell_attributes> node{};
 
-    node.set_rank(rank.get_rank());
+    node.set_rank(rank);
     node.set_cell_neuron_id(neuron_id);
     node.set_level(level);
 
@@ -153,7 +153,7 @@ TEST_F(BarnesHutTest, testBarnesHutACParent) {
 
     OctreeNode<additional_cell_attributes> node{};
 
-    node.set_rank(rank.get_rank());
+    node.set_rank(rank);
     node.set_cell_neuron_id(neuron_id);
     node.set_level(level);
     node.set_parent();
@@ -362,7 +362,7 @@ TEST_F(BarnesHutInvertedTest, testBarnesHutInvertedACException) {
 
     OctreeNode<additional_cell_attributes> node{};
 
-    node.set_rank(rank.get_rank());
+    node.set_rank(rank);
     node.set_cell_neuron_id(neuron_id);
     node.set_level(level);
 
@@ -405,7 +405,7 @@ TEST_F(BarnesHutInvertedTest, testBarnesHutInvertedACLeaf) {
 
     OctreeNode<additional_cell_attributes> node{};
 
-    node.set_rank(rank.get_rank());
+    node.set_rank(rank);
     node.set_cell_neuron_id(neuron_id);
     node.set_level(level);
 
@@ -453,7 +453,7 @@ TEST_F(BarnesHutInvertedTest, testBarnesHutACParent) {
 
     OctreeNode<additional_cell_attributes> node{};
 
-    node.set_rank(rank.get_rank());
+    node.set_rank(rank);
     node.set_cell_neuron_id(neuron_id);
     node.set_level(level);
     node.set_parent();

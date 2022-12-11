@@ -14,6 +14,7 @@
 #include "mpi/MPIWrapper.h"
 #include "structure/Cell.h"
 #include "util/MemoryHolder.h"
+#include "util/MPIRank.h"
 #include "util/RelearnException.h"
 
 #include <array>
@@ -45,7 +46,15 @@ public:
      * @brief Returns the MPI rank this node belongs to
      * @return The MPI rank
      */
-    [[nodiscard]] constexpr int get_rank() const noexcept {
+    [[nodiscard,deprecated]] constexpr int get_rank() const noexcept {
+        return rank.get_rank();
+    }
+
+    /**
+     * @brief Returns the MPI rank this node belongs to
+     * @return The MPI rank
+     */
+    [[nodiscard]] constexpr MPIRank get_mpi_rank() const noexcept {
         return rank;
     }
 
@@ -110,7 +119,7 @@ public:
      * @return True iff this object belongs to the current MPI process
      */
     [[nodiscard]] bool is_local() const {
-        return rank == MPIWrapper::get_my_rank();
+        return rank.get_rank() == MPIWrapper::get_my_rank();
     }
 
     /**
@@ -162,7 +171,7 @@ public:
                  */
                 parent_node->set_cell_neuron_id(neuron_id);
                 parent_node->set_cell_neuron_position({ position });
-                parent_node->set_rank(my_rank);
+                parent_node->set_rank(MPIRank{ my_rank });
                 return parent_node;
             }
 
@@ -183,7 +192,7 @@ public:
                 new_node->set_cell_size(minimum_position, maximum_position);
                 new_node->set_cell_neuron_position(parent_position);
                 new_node->set_cell_neuron_id(parent_neuron_id);
-                new_node->set_rank(parent_node->get_rank());
+                new_node->set_rank(parent_node->get_mpi_rank());
                 new_node->set_level(parent_node->get_level() + 1);
 
                 // Set the child and mark the parent as virtual
@@ -413,11 +422,11 @@ public:
 
     /**
      * @brief Sets the associated MPI rank
-     * @param new_rank The associated MPI rank, >= 0
-     * @exception Throws a RelearnException if new_rank < 0
+     * @param new_rank The associated MPI rank, must be initialized
+     * @exception Throws a RelearnException if new_rank is not initialized
      */
-    void set_rank(const int new_rank) {
-        RelearnException::check(new_rank >= 0, "OctreeNode::set_rank: new_rank is {}", new_rank);
+    void set_rank(const MPIRank new_rank) {
+        RelearnException::check(new_rank.is_initialized(), "OctreeNode::set_rank: new_rank not initialized", new_rank);
         rank = new_rank;
     }
 
@@ -472,14 +481,14 @@ public:
      *      (b) The cell is newly constructed
      *      (c) level is -1
      *      (d) parent is false
-     *      (e) rank is -1
+     *      (e) rank is MPIRank::uninitialized_rank()
      */
     constexpr void reset() noexcept {
         children = std::array<OctreeNodePtr, Constants::number_oct>{ nullptr };
         cell = Cell<AdditionalCellAttributes>{};
         level = -1;
         parent = false;
-        rank = -1;
+        rank = MPIRank::uninitialized_rank();
     }
 
     /**
@@ -512,7 +521,7 @@ private:
     std::uint16_t level{ std::numeric_limits<std::uint16_t>::max() };
     bool parent{ false };
 
-    int rank{ -1 }; // MPI rank who owns this octree node
+    MPIRank rank{ MPIRank::uninitialized_rank() }; // MPI rank who owns this octree node
 
 public:
     /**

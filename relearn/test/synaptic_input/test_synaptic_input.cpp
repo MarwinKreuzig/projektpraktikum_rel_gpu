@@ -228,8 +228,8 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdateEmptyGraph) {
     std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_k);
     input_calculator->init(number_neurons_init);
 
-    NetworkGraph ng_plastic(number_neurons_init, 0);
-    NetworkGraph ng_static(number_neurons_init, 0);
+    NetworkGraph ng_plastic(number_neurons_init, MPIRank::root_rank());
+    NetworkGraph ng_static(number_neurons_init, MPIRank::root_rank());
 
     std::vector<FiredStatus> fired_status(number_neurons_init, FiredStatus::Inactive);
     std::vector<UpdateStatus> update_status(number_neurons_init, UpdateStatus::Enabled);

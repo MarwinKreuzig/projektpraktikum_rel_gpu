@@ -384,7 +384,7 @@ protected:
         root_node.set_cell_size(xyz_min, xyz_max);
         root_node.set_cell_neuron_id(NeuronID::virtual_id());
         root_node.set_cell_neuron_position(xyz_min.get_midpoint(xyz_max));
-        root_node.set_rank(my_rank);
+        root_node.set_rank(MPIRank(my_rank));
         root_node.set_level(0);
 
         Stack<OctreeNode<AdditionalCellAttributes>*> stack_upper_part{ number_nodes_cast };
@@ -405,7 +405,7 @@ protected:
                 child_node.set_cell_size(child_min, child_max);
                 child_node.set_cell_neuron_id(NeuronID::virtual_id());
                 child_node.set_cell_neuron_position(child_min.get_midpoint(child_max));
-                child_node.set_rank(my_rank);
+                child_node.set_rank(MPIRank(my_rank));
                 child_node.set_level(current_level + 1);
 
                 current_node->set_child(&child_node, child_id);
