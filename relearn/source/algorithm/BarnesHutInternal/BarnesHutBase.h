@@ -208,7 +208,7 @@ public:
         RelearnException::check(root != nullptr, "BarnesHutBase::find_target_neuron: root was nullptr");
 
         if (root->is_leaf()) {
-            return RankNeuronId{ root->get_rank(), root->get_cell_neuron_id() };
+            return RankNeuronId{ root->get_mpi_rank(), root->get_cell_neuron_id() };
         }
 
         for (auto root_of_subtree = root; true;) {
@@ -221,7 +221,7 @@ public:
 
             // A chosen child is a valid target
             if (const auto done = node_selected->is_leaf(); done) {
-                return RankNeuronId{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
+                return RankNeuronId{ node_selected->get_mpi_rank(), node_selected->get_cell_neuron_id() };
             }
 
             // We need to choose again, starting from the chosen virtual neuron
@@ -274,7 +274,7 @@ public:
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorithm found a matching neuron, its RankNeuronId is returned
      */
-    [[nodiscard]] static std::optional<std::pair<int, DistantNeuronRequest>> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position,
+    [[nodiscard]] static std::optional<std::pair<MPIRank, DistantNeuronRequest>> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position,
         OctreeNode<AdditionalCellAttributes>* const root, const ElementType element_type, const SignalType signal_type, const std::uint16_t level_of_branch_nodes, const double acceptance_criterion) {
         RelearnException::check(root != nullptr, "BarnesHutLocationAwareBase::find_target_neuron: root was nullptr");
 
@@ -296,7 +296,7 @@ public:
 
             if (level_of_branch_nodes < node_selected->get_level()) {
                 const auto& cell = node_selected->get_cell();
-                const auto target_rank = node_selected->get_rank();
+                const auto target_rank = node_selected->get_mpi_rank();
                 const auto is_local = node_selected->is_local();
                 const auto is_leaf = node_selected->is_leaf();
 

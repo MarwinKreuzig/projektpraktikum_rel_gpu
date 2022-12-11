@@ -113,8 +113,9 @@ void Simulation::initialize() {
     partition->set_total_number_neurons(number_total_neurons);
     const auto number_local_neurons = partition->get_number_local_neurons();
 
-    const auto my_rank = MPIWrapper::get_my_rank();
-    RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank);
+    const auto my_rank_int = MPIWrapper::get_my_rank();
+    const auto my_rank = MPIRank(my_rank_int);
+    RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank_int);
 
     neurons = std::make_shared<Neurons>(partition, std::move(neuron_models), std::move(calcium_calculator), axons, dendrites_ex, dendrites_in);
     neurons->init(number_local_neurons);
@@ -203,7 +204,7 @@ void Simulation::initialize() {
 
     for (size_t area_id = 0; area_id < local_area_translator->get_number_of_areas(); area_id++) {
         const auto& area_name = local_area_translator->get_area_name_for_area_id(area_id);
-        area_monitors->insert(std::make_pair(area_id, AreaMonitor(this, area_id, area_name, my_rank)));
+        area_monitors->insert(std::make_pair(area_id, AreaMonitor(this, area_id, area_name, my_rank.get_rank())));
     }
 
     auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
@@ -337,7 +338,7 @@ void Simulation::simulate(const step_type number_steps) {
 
             // Get total number of synapses deleted and created
             const std::array<int64_t, 3> local_cnts = { static_cast<int64_t>(num_axons_deleted), static_cast<int64_t>(num_dendrites_deleted), static_cast<int64_t>(num_synapses_created) };
-            const std::array<int64_t, 3> global_cnts = MPIWrapper::reduce(local_cnts, MPIWrapper::ReduceFunction::Sum, 0);
+            const std::array<int64_t, 3> global_cnts = MPIWrapper::reduce(local_cnts, MPIWrapper::ReduceFunction::Sum, MPIRank::root_rank());
 
             const auto local_deletions = local_cnts[0] + local_cnts[1];
             const auto local_creations = local_cnts[2];

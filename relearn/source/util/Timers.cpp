@@ -77,7 +77,7 @@ void Timers::print() {
 
     LogFiles::write_to_file(LogFiles::EventType::TimersLocal, false, local_timer_output.str());
 
-    auto timers_global = MPIWrapper::reduce(timers_local, MPIWrapper::ReduceFunction::MinSumMax, 0);
+    auto timers_global = MPIWrapper::reduce(timers_local, MPIWrapper::ReduceFunction::MinSumMax, MPIRank::root_rank());
     if (0 != MPIWrapper::get_my_rank()) {
         return;
     }

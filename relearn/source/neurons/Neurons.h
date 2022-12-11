@@ -415,10 +415,10 @@ public:
     static void check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, const std::vector<SignalType>& signal_types, const int my_rank);
 
 private:
-    [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, int root, const std::vector<UpdateStatus>& disable_flags) const;
+    [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, MPIRank root, const std::vector<UpdateStatus>& disable_flags) const;
 
     template <typename T>
-    [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::vector<T>& local_values, const int root, const std::vector<UpdateStatus>& disable_flags) const {
+    [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::vector<T>& local_values, const MPIRank root, const std::vector<UpdateStatus>& disable_flags) const {
         std::vector<double> converted_values;
         converted_values.reserve(local_values.size());
 

@@ -79,13 +79,13 @@ public:
      * @return The downloaded children (perfect copies of the actual children), does not transfer ownership
      */
     [[nodiscard]] static std::array<node_type*, Constants::number_oct> download_children(node_type* const node) {
-        const auto target_rank = node->get_rank();
+        const auto target_rank = node->get_mpi_rank();
         RelearnException::check(node->get_cell_neuron_id().is_virtual(), "NodeCache::download_children: Tried to download from a non-virtual node");
-        RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "NodeCache::download_children: Tried to download a local node");
+        RelearnException::check(target_rank.get_rank() != MPIWrapper::get_my_rank(), "NodeCache::download_children: Tried to download a local node");
 
         auto actual_download = [target_rank](node_type* const node) {
             children_type local_children{ nullptr };
-            NodesCacheKey rank_address_pair{ target_rank, node };
+            NodesCacheKey rank_address_pair{ target_rank.get_rank(), node };
 
             const auto& [iterator, inserted] = remote_nodes_cache.insert({ rank_address_pair, local_children });
 
@@ -163,8 +163,8 @@ public:
      * @return The downloaded children (perfect copies of the actual children), does not transfer ownership
      */
     [[nodiscard]] static std::array<node_type*, Constants::number_oct> download_children(node_type* const node) {
-        const auto target_rank = node->get_rank();
-        RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "NodeCache::download_children: Tried to download a local node");
+        const auto target_rank = node->get_mpi_rank();
+        RelearnException::check(target_rank.get_rank() != MPIWrapper::get_my_rank(), "NodeCache::download_children: Tried to download a local node");
 
         auto actual_download = [target_rank](node_type* node) {
             std::array<node_type*, Constants::number_oct> local_children{ nullptr };
@@ -181,7 +181,7 @@ public:
                     continue;
                 }
 
-                NodesCacheKey rank_addr_pair{ target_rank, unusable_child_pointer_on_other_rank };
+                NodesCacheKey rank_addr_pair{ target_rank.get_rank(), unusable_child_pointer_on_other_rank };
                 std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair{ rank_addr_pair, nullptr };
 
                 // Get cache entry for "cache_key_val_pair"

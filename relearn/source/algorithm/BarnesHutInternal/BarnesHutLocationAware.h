@@ -88,7 +88,7 @@ protected:
      * @param signal_type The signal type the source neuron searches
      * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank
      */
-    [[nodiscard]] std::vector<std::tuple<int, DistantNeuronRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position, const counter_type& number_vacant_elements,
+    [[nodiscard]] std::vector<std::tuple<MPIRank, DistantNeuronRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position, const counter_type& number_vacant_elements,
         OctreeNode<AdditionalCellAttributes>* root, ElementType element_type, SignalType signal_type);
 
     /**

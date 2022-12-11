@@ -323,7 +323,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
         const RelearnTypes::synapse_weight weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
         const auto is_in_synapse = weight < 0;
 
-        RankNeuronId my_id{ 0, my_neuron_id };
+        RankNeuronId my_id{ MPIRank::root_rank(), my_neuron_id };
         RankNeuronId other_id{ other_rank, other_neuron_id };
 
         if (is_in_synapse) {
@@ -402,7 +402,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges2) {
         const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
         const auto is_in_synapse = weight < 0;
 
-        RankNeuronId my_id{ 0, my_neuron_id };
+        RankNeuronId my_id{ MPIRank::root_rank(), my_neuron_id };
         RankNeuronId other_id{ other_rank, other_neuron_id };
 
         if (is_in_synapse) {
@@ -467,7 +467,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesSplit) {
         const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
         const auto is_in_synapse = weight < 0;
 
-        RankNeuronId my_id{ 0, neuron_id };
+        RankNeuronId my_id{ MPIRank::root_rank(), neuron_id };
         RankNeuronId other_id{ other_rank, other_neuron_id };
 
         if (is_in_synapse) {
@@ -544,7 +544,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
         const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
         const auto is_in_synapse = weight < 0;
 
-        RankNeuronId my_id{ 0, neuron_id };
+        RankNeuronId my_id{ MPIRank::root_rank(), neuron_id };
         RankNeuronId other_id{ other_rank, other_neuron_id };
 
         if (other_rank == MPIRank::root_rank()) {
@@ -618,7 +618,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
         const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
         const auto is_in_synapse = weight < 0;
 
-        RankNeuronId my_id{ 0, neuron_id };
+        RankNeuronId my_id{ MPIRank::root_rank(), neuron_id };
         RankNeuronId other_id{ other_rank, other_neuron_id };
 
         if (is_in_synapse) {
@@ -646,7 +646,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
         const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
         const auto is_in_synapse = weight < 0;
 
-        RankNeuronId my_id{ 0, neuron_id };
+        RankNeuronId my_id{ MPIRank::root_rank(), neuron_id };
         RankNeuronId other_id{ other_rank, other_neuron_id };
 
         if (is_in_synapse) {
@@ -678,7 +678,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
             }
         }
 
-        for (const auto& it : out_edges[{ 0, neuron_id }]) {
+        for (const auto& it : out_edges[{ MPIRank::root_rank(), neuron_id }]) {
             out_edges_count_meta += std::abs(it.second);
         }
 
@@ -686,12 +686,12 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
         ASSERT_EQ(inh_in_edges_count_ng, inh_in_edges_count_meta);
         ASSERT_EQ(out_edges_count_ng, out_edges_count_meta);
 
-        for (const auto& [key, weight_meta] : in_edges[{ 0, neuron_id }]) {
+        for (const auto& [key, weight_meta] : in_edges[{ MPIRank::root_rank(), neuron_id }]) {
             const auto found_it = std::find(in_edges_ng.begin(), in_edges_ng.end(), std::make_pair(key, weight_meta));
             ASSERT_TRUE(found_it != in_edges_ng.end());
         }
 
-        for (const auto& [key, weight_meta] : out_edges[{ 0, neuron_id }]) {
+        for (const auto& [key, weight_meta] : out_edges[{ MPIRank::root_rank(), neuron_id }]) {
             const auto found_it = std::find(out_edges_ng.begin(), out_edges_ng.end(), std::make_pair(key, weight_meta));
             ASSERT_TRUE(found_it != out_edges_ng.end());
         }

@@ -24,8 +24,8 @@
 #include <vector>
 
 TEST_F(MonitorParserTest, testParseDescriptionFixed) {
-    auto checker = [](std::string_view description, int default_rank, int rank, NeuronID::value_type neuron_id) {
-        auto opt_rni = MonitorParser::parse_description(description, default_rank);
+    auto checker = [](std::string_view description, MPIRank default_rank, MPIRank rank, NeuronID::value_type neuron_id) {
+        auto opt_rni = MonitorParser::parse_description(description, default_rank.get_rank());
         ASSERT_TRUE(opt_rni.has_value());
 
         const auto& parsed_rni = opt_rni.value();
@@ -33,10 +33,10 @@ TEST_F(MonitorParserTest, testParseDescriptionFixed) {
         ASSERT_EQ(rni, parsed_rni);
     };
 
-    checker("0:0", 0, 0, 0);
-    checker("2:0", 0, 2, 0);
-    checker("155:377", 17, 155, 377);
-    checker("-1:17", 5, 5, 17);
+    checker("0:0", MPIRank(0), MPIRank(0), 0);
+    checker("2:0", MPIRank(0), MPIRank(2), 0);
+    checker("155:377", MPIRank(17), MPIRank(155), 377);
+    checker("-1:17", MPIRank(5), MPIRank(5), 17);
 }
 
 TEST_F(MonitorParserTest, testParseDescriptionFail) {

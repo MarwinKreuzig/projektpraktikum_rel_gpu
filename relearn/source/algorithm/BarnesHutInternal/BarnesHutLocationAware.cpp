@@ -57,7 +57,7 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
         const auto& requests = find_target_neurons(id, axon_position, number_vacant_axons, root, ElementType::Dendrite, dendrite_type_needed);
         for (const auto& [target_rank, creation_request] : requests) {
 #pragma omp critical(BHrequests)
-            neuron_requests_outgoing.append(MPIRank(target_rank), creation_request);
+            neuron_requests_outgoing.append(target_rank, creation_request);
         }
     }
 
@@ -69,10 +69,10 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
     return neuron_requests_outgoing;
 }
 
-std::vector<std::tuple<int, DistantNeuronRequest>> BarnesHutLocationAware::find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
+std::vector<std::tuple<MPIRank, DistantNeuronRequest>> BarnesHutLocationAware::find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
     const counter_type& number_vacant_elements, OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type) {
 
-    std::vector<std::tuple<int, DistantNeuronRequest>> requests{};
+    std::vector<std::tuple<MPIRank, DistantNeuronRequest>> requests{};
     requests.reserve(number_vacant_elements);
 
     const auto level_of_branch_nodes = get_level_of_branch_nodes();
