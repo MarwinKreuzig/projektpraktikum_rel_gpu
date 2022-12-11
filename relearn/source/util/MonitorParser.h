@@ -65,7 +65,7 @@ public:
         const auto neuron_id_ok = (neuron_id_err == std::errc{}) && (neuron_id_ptr == neuron_id_string.data() + neuron_id_string.size());
 
         if (mpi_rank_ok && neuron_id_ok) {
-            return RankNeuronId{ mpi_rank, NeuronID(neuron_id) };
+            return RankNeuronId{ MPIRank(mpi_rank), NeuronID(neuron_id) };
         }
 
         LogFiles::print_message_rank(0, "Failed to parse string to match the pattern <mpi_rank>:<neuron_id> : {}", description);

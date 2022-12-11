@@ -95,14 +95,14 @@ TEST_F(MonitorParserTest, testParseDescriptions) {
 
 TEST_F(MonitorParserTest, testParseDescriptionsFixed) {
     std::vector<RankNeuronId> rank_neuron_ids{
-        { 2, NeuronID(100) },
-        { 5, NeuronID(6) },
-        { 0, NeuronID(122) },
-        { 2, NeuronID(100) },
-        { 1674, NeuronID(0) },
-        { 89512, NeuronID(6) },
-        { 0, NeuronID(0) },
-        { 0, NeuronID(0) },
+        { MPIRank(2), NeuronID(100) },
+        { MPIRank(5), NeuronID(6) },
+        { MPIRank(0), NeuronID(122) },
+        { MPIRank(2), NeuronID(100) },
+        { MPIRank(1674), NeuronID(0) },
+        { MPIRank(89512), NeuronID(6) },
+        { MPIRank(0), NeuronID(0) },
+        { MPIRank(0), NeuronID(0) },
     };
 
     constexpr auto description_1 = "2:100;5:6;0:122;2:100;1674:0;89512:6;0:0;0:0";

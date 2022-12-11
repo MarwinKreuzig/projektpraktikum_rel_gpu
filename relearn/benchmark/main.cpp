@@ -41,7 +41,7 @@ DistantInSynapses generate_distant_in_synapses(uint64_t number_neurons, uint64_t
             const NeuronID source_id{ random_id };
             const NeuronID target_id{ neuron_id };
 
-            const RankNeuronId rni{ random_rank, source_id };
+            const RankNeuronId rni{ MPIRank(random_rank), source_id };
 
             const auto weight = 1;
 
@@ -68,7 +68,7 @@ DistantOutSynapses generate_distant_out_synapses(uint64_t number_neurons, uint64
             const NeuronID source_id{ neuron_id };
             const NeuronID target_id{ random_id };
 
-            const RankNeuronId rni{ random_rank, target_id };
+            const RankNeuronId rni{ MPIRank(random_rank), target_id };
 
             const auto weight = 1;
 

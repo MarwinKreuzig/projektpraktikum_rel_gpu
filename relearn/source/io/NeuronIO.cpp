@@ -456,9 +456,9 @@ std::pair<std::tuple<LocalSynapses, DistantInSynapses>, std::tuple<LocalSynapses
 
         if (read_source_rank != my_rank) {
             if (plastic) {
-                distant_in_synapses_plastic.emplace_back(target_id, RankNeuronId{ read_source_rank, source_id }, weight);
+                distant_in_synapses_plastic.emplace_back(target_id, RankNeuronId{ MPIRank(read_source_rank), source_id }, weight);
             } else {
-                distant_in_synapses_static.emplace_back(target_id, RankNeuronId{ read_source_rank, source_id }, weight);
+                distant_in_synapses_static.emplace_back(target_id, RankNeuronId{ MPIRank(read_source_rank), source_id }, weight);
             }
         } else {
             if (plastic) {
@@ -522,9 +522,9 @@ std::pair<std::tuple<LocalSynapses, DistantOutSynapses>, std::tuple<LocalSynapse
 
         if (read_target_rank != my_rank) {
             if (plastic) {
-                distant_out_synapses_plastic.emplace_back(RankNeuronId{ read_target_rank, target_id }, source_id, weight);
+                distant_out_synapses_plastic.emplace_back(RankNeuronId{ MPIRank(read_target_rank), target_id }, source_id, weight);
             } else {
-                distant_out_synapses_static.emplace_back(RankNeuronId{ read_target_rank, target_id }, source_id, weight);
+                distant_out_synapses_static.emplace_back(RankNeuronId{ MPIRank(read_target_rank), target_id }, source_id, weight);
             }
         } else {
             if (plastic) {

@@ -13,6 +13,7 @@
 #include "Config.h"
 #include "Types.h"
 #include "neurons/SignalType.h"
+#include "util/MPIRank.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
@@ -57,19 +58,33 @@ public:
     /**
      * @brief Constructs an object that has enough space to store the given number of neurons
      * @param number_neurons The number of neurons that the object shall handle
-     * @param mpi_rank The mpi rank that handles this portion of the graph, must be >= 0
+     * @param mpi_rank The mpi rank that handles this portion of the graph
      * @exception Throws an exception if the allocation of memory fails
-     *      Throws a RelearnException if mpi_rank < 0
      */
-    NetworkGraph(const number_neurons_type number_neurons, const int mpi_rank)
+    [[deprecated]] NetworkGraph(const number_neurons_type number_neurons, const int mpi_rank)
         : neuron_distant_in_neighborhood(number_neurons)
         , neuron_distant_out_neighborhood(number_neurons)
         , neuron_local_in_neighborhood(number_neurons)
         , neuron_local_out_neighborhood(number_neurons)
         , number_local_neurons(number_neurons)
-        , mpi_rank(mpi_rank) {
+        , my_rank(mpi_rank) {
+        RelearnException::check(my_rank.is_initialized(), "NetworkGraph::NetworkGraph: The mpi rank must be initialized");
+    }
 
-        RelearnException::check(mpi_rank >= 0, "NetworkGraph::NetworkGraph: mpi_rank was negative: {}", mpi_rank);
+    /**
+     * @brief Constructs an object that has enough space to store the given number of neurons
+     * @param number_neurons The number of neurons that the object shall handle
+     * @param mpi_rank The mpi rank that handles this portion of the graph, must be initialized
+     * @exception Throws an exception if the allocation of memory fails
+     */
+    NetworkGraph(const number_neurons_type number_neurons, const MPIRank mpi_rank)
+        : neuron_distant_in_neighborhood(number_neurons)
+        , neuron_distant_out_neighborhood(number_neurons)
+        , neuron_local_in_neighborhood(number_neurons)
+        , neuron_local_out_neighborhood(number_neurons)
+        , number_local_neurons(number_neurons)
+        , my_rank(mpi_rank) {
+        RelearnException::check(my_rank.is_initialized(), "NetworkGraph::NetworkGraph: The mpi rank must be initialized");
     }
 
     /**
@@ -196,8 +211,6 @@ public:
      * @return A copy of all in-edges from a certain neuron signal type
      */
     [[nodiscard]] DistantEdges get_all_in_edges(const NeuronID& neuron_id, const SignalType signal_type) const {
-        const auto my_rank = mpi_rank;
-
         const DistantEdges& all_distant_edges = get_distant_in_edges(neuron_id);
         const LocalEdges& all_local_edges = get_local_in_edges(neuron_id);
 
@@ -237,8 +250,6 @@ public:
      * @return A copy of all out-edges to a certain neuron signal type
      */
     [[nodiscard]] DistantEdges get_all_out_edges(const NeuronID& neuron_id, const SignalType signal_type) const {
-        const auto my_rank = mpi_rank;
-
         const DistantEdges& all_distant_edges = get_distant_out_edges(neuron_id);
         const LocalEdges& all_local_edges = get_local_out_edges(neuron_id);
 
@@ -278,8 +289,6 @@ public:
      * @return A copy of all in-edges
      */
     [[nodiscard]] DistantEdges get_all_in_edges(const NeuronID& neuron_id) const {
-        const auto my_rank = mpi_rank;
-
         const DistantEdges& all_distant_edges = get_distant_in_edges(neuron_id);
         const LocalEdges& all_local_edges = get_local_in_edges(neuron_id);
 
@@ -307,8 +316,6 @@ public:
      * @return A copy of all out-edges
      */
     [[nodiscard]] DistantEdges get_all_out_edges(const NeuronID& neuron_id) const {
-        const auto my_rank = mpi_rank;
-
         const DistantEdges& all_distant_edges = get_distant_out_edges(neuron_id);
         const LocalEdges& all_local_edges = get_local_out_edges(neuron_id);
 
@@ -443,7 +450,7 @@ public:
         const auto& [source_rank, source_id] = source_rni;
 
         RelearnException::check(local_target_id < number_local_neurons, "NetworkGraph::add_synapse: Distant in-synapse had a too large target: {} vs {}", target, number_local_neurons);
-        RelearnException::check(source_rank != mpi_rank, "NetworkGraph::add_synapse: Distant in-synapse was on my rank: {}", source_rank);
+        RelearnException::check(source_rank != my_rank.get_rank(), "NetworkGraph::add_synapse: Distant in-synapse was on my rank: {}", source_rank);
         RelearnException::check(weight != 0, "NetworkGraph::add_synapse: Local synapse had weight 0");
 
         DistantEdges& distant_in_edges = neuron_distant_in_neighborhood[local_target_id];
@@ -465,7 +472,7 @@ public:
         const auto& [target_rank, target_id] = target_rni;
 
         RelearnException::check(local_source_id < number_local_neurons, "NetworkGraph::add_synapse: Distant out-synapse had a too large target: {} vs {}", source, number_local_neurons);
-        RelearnException::check(target_rank != mpi_rank, "NetworkGraph::add_synapse: Distant out-synapse was on my rank: {}", target_rank);
+        RelearnException::check(target_rank != my_rank.get_rank(), "NetworkGraph::add_synapse: Distant out-synapse was on my rank: {}", target_rank);
         RelearnException::check(weight != 0, "NetworkGraph::add_synapse: Local synapse had weight 0");
 
         DistantEdges& distant_out_edges = neuron_distant_out_neighborhood[local_source_id];
@@ -577,14 +584,14 @@ public:
             for (const auto& [target_id, weight] : neuron_local_out_neighborhood[source_local_id]) {
                 const auto& target_local_id = target_id.get_neuron_id();
 
-                os_out_edges << mpi_rank << ' ' << (target_local_id + 1) << '\t' << mpi_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
+                os_out_edges << my_rank.get_rank() << ' ' << (target_local_id + 1) << '\t' << my_rank.get_rank() << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
             }
 
             for (const auto& [target_neuron, weight] : neuron_distant_out_neighborhood[source_local_id]) {
                 const auto& [target_rank, target_id] = target_neuron;
                 const auto& target_local_id = target_id.get_neuron_id();
 
-                os_out_edges << target_rank << ' ' << (target_local_id + 1) << '\t' << mpi_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
+                os_out_edges << target_rank << ' ' << (target_local_id + 1) << '\t' << my_rank.get_rank() << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
             }
         }
 
@@ -594,14 +601,14 @@ public:
             for (const auto& [source_id, weight] : neuron_local_in_neighborhood[target_local_id]) {
                 const auto& source_local_id = source_id.get_neuron_id();
 
-                os_in_edges << mpi_rank << ' ' << (target_local_id + 1) << '\t' << mpi_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
+                os_in_edges << my_rank.get_rank() << ' ' << (target_local_id + 1) << '\t' << my_rank.get_rank() << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
             }
 
             for (const auto& [source_neuron, weight] : neuron_distant_in_neighborhood[target_local_id]) {
                 const auto& [source_rank, source_id] = source_neuron;
                 const auto& source_local_id = source_id.get_neuron_id();
 
-                os_in_edges << mpi_rank << ' ' << (target_local_id + 1) << '\t' << source_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
+                os_in_edges << my_rank.get_rank() << ' ' << (target_local_id + 1) << '\t' << source_rank << ' ' << (source_local_id + 1) << '\t' << weight << '\t' << flag << '\n';
             }
         }
     }
@@ -642,7 +649,7 @@ public:
 
                 RelearnException::check(edge_val != 0, "NetworkGraph::debug_check: Distant synapse value is zero (out)");
                 RelearnException::check(target_rank >= 0, "NetworkGraph::debug_check: Distant synapse target rank is < 0");
-                RelearnException::check(target_rank != mpi_rank, "NetworkGraph::debug_check: Distant synapse target rank is the local rank");
+                RelearnException::check(target_rank != my_rank.get_rank(), "NetworkGraph::debug_check: Distant synapse target rank is the local rank");
             }
         }
 
@@ -654,7 +661,7 @@ public:
 
                 RelearnException::check(edge_val != 0, "NetworkGraph::debug_check: Distant synapse value is zero (out)");
                 RelearnException::check(source_rank >= 0, "NetworkGraph::debug_check: Distant synapse source rank is < 0");
-                RelearnException::check(source_rank != mpi_rank, "NetworkGraph::debug_check: Distant synapse source rank is the local rank");
+                RelearnException::check(source_rank != my_rank.get_rank(), "NetworkGraph::debug_check: Distant synapse source rank is the local rank");
             }
         }
 
@@ -729,5 +736,5 @@ private:
     NeuronLocalOutNeighborhood neuron_local_out_neighborhood{};
 
     number_neurons_type number_local_neurons{ Constants::uninitialized }; // My number of neurons
-    int mpi_rank{ -1 };
+    MPIRank my_rank{ MPIRank::uninitialized_rank() };
 };

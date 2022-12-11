@@ -1255,7 +1255,7 @@ TEST_F(IOTest, testReadSynapsesInteractionNetworkGraph) {
     std::ranges::sort(golden_distant_in_synapses);
     std::ranges::sort(golden_distant_out_synapses);
 
-    NetworkGraph ng(number_neurons, my_rank.get_rank());
+    NetworkGraph ng(number_neurons, my_rank);
     ng.add_edges(golden_local_synapses, golden_distant_in_synapses, golden_distant_out_synapses);
 
     std::filesystem::path in_path{ "./in_network.tmp" };

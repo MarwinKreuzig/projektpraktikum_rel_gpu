@@ -18,6 +18,7 @@
 #include <climits>
 #include <compare>
 #include <ostream>
+#include <vector>
 
 /**
  * This type reflects an MPI rank in a type safe manner
@@ -37,6 +38,34 @@ public:
      * @return The root rank
      */
     [[nodiscard]] static constexpr MPIRank root_rank() noexcept { return MPIRank{ 0 }; }
+
+    /**
+     * @brief Create a vector of MPIRanks within the range [0, size)
+     *
+     * @param size size of the vector
+     * @return constexpr auto vector of MPIRanks
+     */
+    [[nodiscard]] static constexpr std::vector<MPIRank> range(size_t size) {
+        return range(0, size);
+    }
+
+    /**
+     * @brief Create a vector of MPIRanks within the range [begin, end)
+     *
+     * @param begin begin of the vector
+     * @param end end of the vector
+     * @return constexpr auto vector of MPIRanks
+     */
+    [[nodiscard]] static constexpr std::vector<MPIRank> range(size_t begin, size_t end) {
+        std::vector<MPIRank> ids{};
+        ids.reserve(end - begin);
+
+        for (auto i = static_cast<int>(begin); i < static_cast<int>(end); i++) {
+            ids.emplace_back(i);
+        }
+
+        return ids;
+    }
 
     /**
      * @brief Default constructs an uninitialized rank
