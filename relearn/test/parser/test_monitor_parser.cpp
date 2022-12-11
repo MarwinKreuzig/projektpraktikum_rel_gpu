@@ -10,6 +10,8 @@
 
 #include "test_monitor_parser.h"
 
+#include "RandomAdapter.h"
+
 #include "mpi/mpi_rank_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
@@ -143,8 +145,8 @@ TEST_F(MonitorParserTest, testExtractNeuronIDs) {
         rank_neuron_ids.emplace_back(new_rni);
     }
 
-    const auto position_1 = get_random_integer<size_t>(0, number_neurons);
-    const auto position_2 = get_random_integer<size_t>(0, number_neurons);
+    const auto position_1 = RandomAdapter::get_random_integer<size_t>(0, number_neurons, mt);
+    const auto position_2 = RandomAdapter::get_random_integer<size_t>(0, number_neurons, mt);
 
     rank_neuron_ids.insert(rank_neuron_ids.begin() + position_1, RankNeuronId(my_rank, NeuronID(42)));
     rank_neuron_ids.insert(rank_neuron_ids.begin() + position_2, RankNeuronId(my_rank, NeuronID(9874)));
@@ -197,8 +199,8 @@ TEST_F(MonitorParserTest, testRemoveAndSortException1) {
         neuron_ids.emplace_back(TaggedIdAdapter::get_random_neuron_id(number_neurons, mt));
     }
 
-    const auto virtual_rma = get_random_integer<NeuronID::value_type>(0, 100000);
-    const auto position = get_random_integer<size_t>(0, number_neurons);
+    const auto virtual_rma = RandomAdapter::get_random_integer<NeuronID::value_type>(0, 100000, mt);
+    const auto position = RandomAdapter::get_random_integer<size_t>(0, number_neurons, mt);
 
     neuron_ids.insert(neuron_ids.begin() + position, NeuronID(true, virtual_rma));
 
@@ -215,7 +217,7 @@ TEST_F(MonitorParserTest, testRemoveAndSortException2) {
         neuron_ids.emplace_back(TaggedIdAdapter::get_random_neuron_id(number_neurons, mt));
     }
 
-    const auto position = get_random_integer<size_t>(0, number_neurons);
+    const auto position = RandomAdapter::get_random_integer<size_t>(0, number_neurons, mt);
 
     neuron_ids.insert(neuron_ids.begin() + position, NeuronID{});
 
@@ -227,7 +229,7 @@ TEST_F(MonitorParserTest, testParseIds) {
     const auto my_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
     std::vector<RankNeuronId> rank_neuron_ids{};
-    rank_neuron_ids.reserve(number_ranks * upper_bound_num_neurons);
+    rank_neuron_ids.reserve(number_ranks * TaggedIdAdapter::upper_bound_num_neurons);
 
     size_t my_number_neurons = 0;
 
@@ -254,7 +256,7 @@ TEST_F(MonitorParserTest, testParseIds) {
             continue;
         }
 
-        const auto use_default = get_random_bool();
+        const auto use_default = RandomAdapter::get_random_bool(mt);
 
         if (use_default) {
             ss << ";-1:" << rni.get_neuron_id();

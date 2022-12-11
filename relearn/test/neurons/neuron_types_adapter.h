@@ -13,10 +13,12 @@
 #include "RandomAdapter.h"
 
 #include "neurons/ElementType.h"
+#include "neurons/FiredStatus.h"
 #include "neurons/SignalType.h"
 #include "neurons/helper/DistantNeuronRequests.h"
 
 #include <random>
+#include <vector>
 
 class NeuronTypesAdapter {
 public:
@@ -40,5 +42,34 @@ public:
         }
 
         return DistantNeuronRequest::TargetNeuronType::VirtualNode;
+    }
+
+    static std::vector<FiredStatus> get_fired_status(size_t number_neurons, std::mt19937& mt) {
+        const auto number_disabled = RandomAdapter::get_random_integer<size_t>(0, number_neurons, mt);
+        return get_fired_status(number_neurons, number_disabled, mt);
+    }
+
+    static std::vector<FiredStatus> get_fired_status(size_t number_neurons, size_t number_inactive, std::mt19937& mt) {
+        std::vector<FiredStatus> status(number_inactive, FiredStatus::Inactive);
+        status.resize(number_neurons, FiredStatus::Fired);
+
+        RandomAdapter::shuffle(status.begin(), status.end(), mt);
+
+        return status;
+    }
+
+    static std::vector<UpdateStatus> get_update_status(size_t number_neurons, std::mt19937& mt) {
+        const auto number_disabled = RandomAdapter::get_random_integer<size_t>(0, number_neurons, mt);
+        return get_update_status(number_neurons, number_disabled, mt);
+    }
+    
+
+    static std::vector<UpdateStatus> get_update_status(size_t number_neurons, size_t number_disabled, std::mt19937& mt) {
+        std::vector<UpdateStatus> status(number_disabled, UpdateStatus::Disabled);
+        status.resize(number_neurons, UpdateStatus::Enabled);
+
+        RandomAdapter::shuffle(status.begin(), status.end(), mt);
+
+        return status;
     }
 };

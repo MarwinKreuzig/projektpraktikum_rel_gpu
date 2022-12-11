@@ -106,7 +106,7 @@ TEST_F(BackgroundActivityTest, testNullBackgroundActivityConstruct) {
 }
 
 TEST_F(BackgroundActivityTest, testConstantBackgroundActivityConstruct) {
-    const auto constant_background = get_random_double(BackgroundActivityCalculator::min_base_background_activity, BackgroundActivityCalculator::max_base_background_activity);
+    const auto constant_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_base_background_activity, BackgroundActivityCalculator::max_base_background_activity, mt);
 
     std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<ConstantBackgroundActivityCalculator>(constant_background);
 
@@ -127,8 +127,8 @@ TEST_F(BackgroundActivityTest, testConstantBackgroundActivityConstruct) {
 }
 
 TEST_F(BackgroundActivityTest, testNormalBackgroundActivityConstruct) {
-    const auto mean_background = get_random_double(BackgroundActivityCalculator::min_background_activity_mean, BackgroundActivityCalculator::max_background_activity_mean);
-    const auto stddev_background = get_random_double(BackgroundActivityCalculator::min_background_activity_stddev, BackgroundActivityCalculator::max_background_activity_stddev);
+    const auto mean_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_background_activity_mean, BackgroundActivityCalculator::max_background_activity_mean, mt);
+    const auto stddev_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_background_activity_stddev, BackgroundActivityCalculator::max_background_activity_stddev, mt);
 
     std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NormalBackgroundActivityCalculator>(mean_background, stddev_background);
 
@@ -163,12 +163,12 @@ TEST_F(BackgroundActivityTest, testNullBackgroundActivityUpdate) {
 
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        if (get_random_bool()) {
+        if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
         }
     }
 
-    const auto step = get_random_integer<RelearnTypes::step_type>(0, 1000000);
+    const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
     background_calculator->update_input(step, update_status);
 
     test_background_equality(background_calculator);
@@ -180,7 +180,7 @@ TEST_F(BackgroundActivityTest, testNullBackgroundActivityUpdate) {
 }
 
 TEST_F(BackgroundActivityTest, testConstantBackgroundActivityUpdate) {
-    const auto constant_background = get_random_double(BackgroundActivityCalculator::min_base_background_activity, BackgroundActivityCalculator::max_base_background_activity);
+    const auto constant_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_base_background_activity, BackgroundActivityCalculator::max_base_background_activity, mt);
     std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<ConstantBackgroundActivityCalculator>(constant_background);
 
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
@@ -188,12 +188,12 @@ TEST_F(BackgroundActivityTest, testConstantBackgroundActivityUpdate) {
 
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        if (get_random_bool()) {
+        if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
         }
     }
 
-    const auto step = get_random_integer<RelearnTypes::step_type>(0, 1000000);
+    const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
     background_calculator->update_input(step, update_status);
 
     test_background_equality(background_calculator);
@@ -209,8 +209,8 @@ TEST_F(BackgroundActivityTest, testConstantBackgroundActivityUpdate) {
 }
 
 TEST_F(BackgroundActivityTest, testNormalBackgroundActivityUpdate) {
-    const auto mean_background = get_random_double(BackgroundActivityCalculator::min_background_activity_mean, BackgroundActivityCalculator::max_background_activity_mean);
-    const auto stddev_background = get_random_double(BackgroundActivityCalculator::min_background_activity_stddev, BackgroundActivityCalculator::max_background_activity_stddev);
+    const auto mean_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_background_activity_mean, BackgroundActivityCalculator::max_background_activity_mean, mt);
+    const auto stddev_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_background_activity_stddev, BackgroundActivityCalculator::max_background_activity_stddev, mt);
 
     std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NormalBackgroundActivityCalculator>(mean_background, stddev_background);
 
@@ -219,12 +219,12 @@ TEST_F(BackgroundActivityTest, testNormalBackgroundActivityUpdate) {
 
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        if (get_random_bool()) {
+        if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
         }
     }
 
-    const auto step = get_random_integer<RelearnTypes::step_type>(0, 1000000);
+    const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
     background_calculator->update_input(step, update_status);
 
     test_background_equality(background_calculator);

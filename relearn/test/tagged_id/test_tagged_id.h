@@ -12,6 +12,8 @@
 
 #include "RelearnTest.hpp"
 
+#include "util/TaggedID.h"
+
 template <typename T>
 class TaggedIDTest : public RelearnTest {
 protected:

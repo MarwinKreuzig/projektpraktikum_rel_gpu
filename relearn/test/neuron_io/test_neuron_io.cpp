@@ -1,8 +1,12 @@
 #include "test_neuron_io.h"
 
+#include "RandomAdapter.h"
+
 #include "mpi/mpi_rank_adapter.h"
 #include "network_graph/network_graph_adapter.h"
+#include "neuron_assignment/neuron_assignment_adapter.h"
 #include "neurons/neuron_types_adapter.h"
+#include "simulation/simulation_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "io/NeuronIO.h"
@@ -55,7 +59,7 @@ TEST_F(IOTest, testNeuronIOWriteComponentwiseFileNotFound) {
 
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_ids.emplace_back(false, i);
-        preliminary_position.emplace_back(get_random_position());
+        preliminary_position.emplace_back(SimulationAdapter::get_random_position(mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
         preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
@@ -80,7 +84,7 @@ TEST_F(IOTest, testNeuronIOWriteComponentwise) {
 
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_ids.emplace_back(false, i);
-        preliminary_position.emplace_back(get_random_position());
+        preliminary_position.emplace_back(SimulationAdapter::get_random_position(mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
         preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
@@ -104,11 +108,11 @@ TEST_F(IOTest, testNeuronIOReadComponentwise) {
     auto preliminary_signal_types = std::vector<SignalType>{};
 
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
-    const auto& max_pos = get_maximum_position();
+    const auto& max_pos = SimulationAdapter::get_maximum_position();
 
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_ids.emplace_back(false, i);
-        preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
+        preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
         preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
@@ -124,8 +128,8 @@ TEST_F(IOTest, testNeuronIOReadComponentwise) {
     const auto& [read_ids, read_positions, read_area_ids, read_area_names, read_signal_types, additional_infos]
         = NeuronIO::read_neurons_componentwise(path);
 
-    const auto& preliminary_full_area_names = RelearnTest::get_neuron_id_vs_area_name(preliminary_area_ids, preliminary_area_names);
-    const auto& read_full_area_names = RelearnTest::get_neuron_id_vs_area_name(read_area_ids, read_area_names);
+    const auto& preliminary_full_area_names = NeuronAssignmentAdapter::get_neuron_id_vs_area_name(preliminary_area_ids, preliminary_area_names);
+    const auto& read_full_area_names = NeuronAssignmentAdapter::get_neuron_id_vs_area_name(read_area_ids, read_area_names);
     ASSERT_EQ(preliminary_full_area_names, read_full_area_names);
 
     ASSERT_EQ(preliminary_ids, read_ids);
@@ -175,11 +179,11 @@ TEST_F(IOTest, testNeuronIOReadComponentwiseIDException) {
     auto preliminary_area_ids = std::vector<RelearnTypes::area_id>{};
 
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
-    const auto& max_pos = get_maximum_position();
+    const auto& max_pos = SimulationAdapter::get_maximum_position();
 
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_ids.emplace_back(false, i);
-        preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
+        preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
         preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
@@ -188,8 +192,8 @@ TEST_F(IOTest, testNeuronIOReadComponentwiseIDException) {
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
     std::shuffle(preliminary_area_ids.begin(), preliminary_area_ids.end(), rng);
 
-    const auto idx1 = get_random_integer<size_t>(0, number_neurons - 1);
-    auto idx2 = get_random_integer<size_t>(0, number_neurons - 2);
+    const auto idx1 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 1, mt);
+    auto idx2 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 2, mt);
 
     if (idx1 <= idx2) {
         idx2++;
@@ -214,11 +218,11 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionXException) {
     auto preliminary_area_ids = std::vector<RelearnTypes::area_id>{};
 
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
-    const auto& max_pos = get_maximum_position();
+    const auto& max_pos = SimulationAdapter::get_maximum_position();
 
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_ids.emplace_back(false, i);
-        preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
+        preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
         preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
@@ -227,7 +231,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionXException) {
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
     std::shuffle(preliminary_area_ids.begin(), preliminary_area_ids.end(), rng);
 
-    const auto idx1 = get_random_integer<size_t>(0, number_neurons - 1);
+    const auto idx1 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 1, mt);
 
     preliminary_position[idx1].set_x(-preliminary_position[idx1].get_x());
 
@@ -246,11 +250,11 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionYException) {
     auto preliminary_area_ids = std::vector<RelearnTypes::area_id>{};
 
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
-    const auto& max_pos = get_maximum_position();
+    const auto& max_pos = SimulationAdapter::get_maximum_position();
 
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_ids.emplace_back(false, i);
-        preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
+        preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
         preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
@@ -259,7 +263,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionYException) {
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
     std::shuffle(preliminary_area_ids.begin(), preliminary_area_ids.end(), rng);
 
-    const auto idx1 = get_random_integer<size_t>(0, number_neurons - 1);
+    const auto idx1 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 1, mt);
 
     preliminary_position[idx1].set_y(-preliminary_position[idx1].get_y());
 
@@ -278,11 +282,11 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionZException) {
     auto preliminary_area_ids = std::vector<RelearnTypes::area_id>{};
 
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
-    const auto& max_pos = get_maximum_position();
+    const auto& max_pos = SimulationAdapter::get_maximum_position();
 
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_ids.emplace_back(false, i);
-        preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
+        preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
         preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
@@ -291,7 +295,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionZException) {
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
     std::shuffle(preliminary_area_ids.begin(), preliminary_area_ids.end(), rng);
 
-    const auto idx1 = get_random_integer<size_t>(0, number_neurons - 1);
+    const auto idx1 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 1, mt);
 
     preliminary_position[idx1].set_z(-preliminary_position[idx1].get_z());
 
@@ -313,7 +317,7 @@ TEST_F(IOTest, testNeuronIOWrite1) {
 
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_ids.emplace_back(false, i);
-        preliminary_position.emplace_back(get_random_position());
+        preliminary_position.emplace_back(SimulationAdapter::get_random_position(mt));
         preliminary_area_ids.emplace_back(i);
         preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
@@ -340,11 +344,11 @@ TEST_F(IOTest, testNeuronIOWrite2) {
     auto preliminary_neurons = std::vector<LoadedNeuron>{};
 
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
-    const auto& max_pos = get_maximum_position();
+    const auto& max_pos = SimulationAdapter::get_maximum_position();
 
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_ids.emplace_back(false, i);
-        preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
+        preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_ids.emplace_back(i);
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
@@ -361,8 +365,8 @@ TEST_F(IOTest, testNeuronIOWrite2) {
     const auto& [read_ids, read_positions, read_area_ids, read_area_names, read_signal_types, additional_infos]
         = NeuronIO::read_neurons_componentwise(path);
 
-    const auto& preliminary_full_area_names = RelearnTest::get_neuron_id_vs_area_name(preliminary_area_ids, preliminary_area_names);
-    const auto& read_full_area_names = RelearnTest::get_neuron_id_vs_area_name(read_area_ids, read_area_names);
+    const auto& preliminary_full_area_names = NeuronAssignmentAdapter::get_neuron_id_vs_area_name(preliminary_area_ids, preliminary_area_names);
+    const auto& read_full_area_names = NeuronAssignmentAdapter::get_neuron_id_vs_area_name(read_area_ids, read_area_names);
     ASSERT_EQ(preliminary_full_area_names, read_full_area_names);
 
     ASSERT_EQ(preliminary_ids, read_ids);
@@ -410,7 +414,7 @@ TEST_F(IOTest, testNeuronIOWriteFileNotFound) {
 
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_ids.emplace_back(false, i);
-        preliminary_position.emplace_back(get_random_position());
+        preliminary_position.emplace_back(SimulationAdapter::get_random_position(mt));
         preliminary_area_ids.emplace_back(i);
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
@@ -432,12 +436,12 @@ TEST_F(IOTest, testNeuronIORead) {
     auto preliminary_neurons = std::vector<LoadedNeuron>{};
 
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
-    const auto& max_pos = get_maximum_position();
+    const auto& max_pos = SimulationAdapter::get_maximum_position();
     std::vector<RelearnTypes::area_name> area_names{};
     std::vector<RelearnTypes::area_id> area_ids{};
 
     for (auto i = 0; i < number_neurons; i++) {
-        preliminary_neurons.emplace_back(get_random_position_in_box(min_pos, max_pos), NeuronID{ false, i }, NeuronTypesAdapter::get_random_signal_type(mt), i);
+        preliminary_neurons.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt), NeuronID{ false, i }, NeuronTypesAdapter::get_random_signal_type(mt), i);
         area_names.emplace_back("area_" + std::to_string(i));
         area_ids.emplace_back(i);
     }
@@ -506,11 +510,11 @@ TEST_F(IOTest, testNeuronIOReadIDException) {
     auto preliminary_area_ids = std::vector<RelearnTypes::area_id>{};
 
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
-    const auto& max_pos = get_maximum_position();
+    const auto& max_pos = SimulationAdapter::get_maximum_position();
 
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_ids.emplace_back(false, i);
-        preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
+        preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
         preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
@@ -519,8 +523,8 @@ TEST_F(IOTest, testNeuronIOReadIDException) {
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
     std::shuffle(preliminary_area_ids.begin(), preliminary_area_ids.end(), rng);
 
-    const auto idx1 = get_random_integer<size_t>(0, number_neurons - 1);
-    auto idx2 = get_random_integer<size_t>(0, number_neurons - 2);
+    const auto idx1 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 1, mt);
+    auto idx2 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 2, mt);
 
     if (idx1 <= idx2) {
         idx2++;
@@ -545,11 +549,11 @@ TEST_F(IOTest, testNeuronIOReadPositionXException) {
     auto preliminary_area_ids = std::vector<RelearnTypes::area_id>{};
 
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
-    const auto& max_pos = get_maximum_position();
+    const auto& max_pos = SimulationAdapter::get_maximum_position();
 
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_ids.emplace_back(false, i);
-        preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
+        preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
         preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
@@ -558,7 +562,7 @@ TEST_F(IOTest, testNeuronIOReadPositionXException) {
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
     std::shuffle(preliminary_area_ids.begin(), preliminary_area_ids.end(), rng);
 
-    const auto idx1 = get_random_integer<size_t>(0, number_neurons - 1);
+    const auto idx1 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 1, mt);
 
     preliminary_position[idx1].set_x(-preliminary_position[idx1].get_x());
 
@@ -577,11 +581,11 @@ TEST_F(IOTest, testNeuronIOReadPositionYException) {
     auto preliminary_signal_types = std::vector<SignalType>{};
 
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
-    const auto& max_pos = get_maximum_position();
+    const auto& max_pos = SimulationAdapter::get_maximum_position();
 
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_ids.emplace_back(false, i);
-        preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
+        preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
         preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
@@ -590,7 +594,7 @@ TEST_F(IOTest, testNeuronIOReadPositionYException) {
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
     std::shuffle(preliminary_area_ids.begin(), preliminary_area_ids.end(), rng);
 
-    const auto idx1 = get_random_integer<size_t>(0, number_neurons - 1);
+    const auto idx1 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 1, mt);
 
     preliminary_position[idx1].set_y(-preliminary_position[idx1].get_y());
 
@@ -609,11 +613,11 @@ TEST_F(IOTest, testNeuronIOReadPositionZException) {
     auto preliminary_area_ids = std::vector<RelearnTypes::area_id>{};
 
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
-    const auto& max_pos = get_maximum_position();
+    const auto& max_pos = SimulationAdapter::get_maximum_position();
 
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_ids.emplace_back(false, i);
-        preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
+        preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
         preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
@@ -622,7 +626,7 @@ TEST_F(IOTest, testNeuronIOReadPositionZException) {
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
     std::shuffle(preliminary_area_ids.begin(), preliminary_area_ids.end(), rng);
 
-    const auto idx1 = get_random_integer<size_t>(0, number_neurons - 1);
+    const auto idx1 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 1, mt);
 
     preliminary_position[idx1].set_z(-preliminary_position[idx1].get_z());
 
@@ -641,11 +645,11 @@ TEST_F(IOTest, testNeuronIOReadIDs) {
     auto preliminary_area_ids = std::vector<RelearnTypes::area_id>{};
 
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
-    const auto& max_pos = get_maximum_position();
+    const auto& max_pos = SimulationAdapter::get_maximum_position();
 
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_ids.emplace_back(false, i);
-        preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
+        preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
         preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
@@ -661,7 +665,7 @@ TEST_F(IOTest, testNeuronIOReadIDs) {
 }
 
 TEST_F(IOTest, testNeuronIOReadIDsEmpty1) {
-    const auto number_neurons = get_random_integer<NeuronID::value_type>(2, upper_bound_num_neurons);
+    const auto number_neurons = RandomAdapter::get_random_integer<NeuronID::value_type>(2, TaggedIdAdapter::upper_bound_num_neurons, mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -670,11 +674,11 @@ TEST_F(IOTest, testNeuronIOReadIDsEmpty1) {
     auto preliminary_area_ids = std::vector<RelearnTypes::area_id>{};
 
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
-    const auto& max_pos = get_maximum_position();
+    const auto& max_pos = SimulationAdapter::get_maximum_position();
 
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_ids.emplace_back(false, i);
-        preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
+        preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
         preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
@@ -683,8 +687,8 @@ TEST_F(IOTest, testNeuronIOReadIDsEmpty1) {
     std::shuffle(preliminary_area_names.begin(), preliminary_area_names.end(), rng);
     std::shuffle(preliminary_area_ids.begin(), preliminary_area_ids.end(), rng);
 
-    const auto idx1 = get_random_integer<size_t>(0, number_neurons - 1);
-    auto idx2 = get_random_integer<size_t>(0, number_neurons - 2);
+    const auto idx1 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 1, mt);
+    auto idx2 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 2, mt);
 
     if (idx1 <= idx2) {
         idx2++;
@@ -710,11 +714,11 @@ TEST_F(IOTest, testNeuronIOReadIDsEmpty2) {
     auto preliminary_area_ids = std::vector<RelearnTypes::area_id>{};
 
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
-    const auto& max_pos = get_maximum_position();
+    const auto& max_pos = SimulationAdapter::get_maximum_position();
 
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_ids.emplace_back(false, i);
-        preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
+        preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(i));
         preliminary_area_ids.emplace_back(i);
         preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
@@ -724,7 +728,7 @@ TEST_F(IOTest, testNeuronIOReadIDsEmpty2) {
     std::shuffle(preliminary_area_ids.begin(), preliminary_area_ids.end(), rng);
 
     preliminary_ids.emplace_back(false, number_neurons + 1);
-    preliminary_position.emplace_back(get_random_position_in_box(min_pos, max_pos));
+    preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
     preliminary_area_names.emplace_back("area_" + std::to_string(number_neurons + 1));
     preliminary_area_ids.emplace_back(number_neurons);
     preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
@@ -822,7 +826,7 @@ TEST_F(IOTest, testReadInSynapses) {
 
         const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
 
-        const bool plastic = get_random_bool();
+        const bool plastic = RandomAdapter::get_random_bool(mt);
         const char flag = plastic ? '1' : '0';
 
         if (source_rank == my_rank) {
@@ -922,7 +926,7 @@ TEST_F(IOTest, testReadOutSynapses) {
 
         const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
 
-        const bool plastic = get_random_bool();
+        const bool plastic = RandomAdapter::get_random_bool(mt);
         const char flag = plastic ? '1' : '0';
 
         if (target_rank == my_rank) {
@@ -1020,7 +1024,7 @@ TEST_F(IOTest, testWriteInSynapses) {
 
         const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
 
-        const bool plastic = get_random_bool();
+        const bool plastic = RandomAdapter::get_random_bool(mt);
         const char flag = plastic ? '1' : '0';
 
         if (source_rank == my_rank) {
@@ -1115,7 +1119,7 @@ TEST_F(IOTest, testWriteOutSynapses) {
 
         const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
 
-        const bool plastic = get_random_bool();
+        const bool plastic = RandomAdapter::get_random_bool(mt);
         const char flag = plastic ? '1' : '0';
 
         if (target_rank == my_rank) {

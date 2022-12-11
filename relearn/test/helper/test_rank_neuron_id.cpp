@@ -29,7 +29,7 @@ TEST_F(RankNeuronIdTest, testNeuronRankIdValid) {
 
 TEST_F(RankNeuronIdTest, testNeuronRankIdInvalidRank) {
     for (auto i = 0; i < 1000; i++) {
-        const auto rank = get_random_integer<int>(-1000, -1);
+        const auto rank = RandomAdapter::get_random_integer<int>(-1000, -1, mt);
         const auto id = TaggedIdAdapter::get_random_neuron_id(mt);
 
         ASSERT_THROW(RankNeuronId rni(rank, NeuronID{ id });, RelearnException);

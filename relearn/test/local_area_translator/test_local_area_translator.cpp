@@ -10,6 +10,8 @@
 
 #include "test_local_area_translator.h"
 
+#include "RandomAdapter.h"
+
 #include "neuron_assignment/neuron_assignment_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
@@ -51,15 +53,15 @@ TEST_F(LocalAreaTranslatorTest, simpleExceptionTest) {
 
     auto one_wrong_area_id = std::vector<RelearnTypes::area_id>{};
     std::copy(neuron_id_to_area_id.begin(), neuron_id_to_area_id.end(), std::back_inserter(one_wrong_area_id));
-    auto i1 = get_random_integer(size_t{ 0 }, one_wrong_area_id.size() - 1);
+    auto i1 = RandomAdapter::get_random_integer(size_t{ 0 }, one_wrong_area_id.size() - 1, mt);
     one_wrong_area_id[i1] = num_neurons;
 
     auto duplicated_area_name = std::vector<RelearnTypes::area_name>{};
     std::copy(area_id_to_area_name.begin(), area_id_to_area_name.end(), std::back_inserter(duplicated_area_name));
-    auto i2 = get_random_integer(size_t{ 0 }, duplicated_area_name.size() - 1);
+    auto i2 = RandomAdapter::get_random_integer(size_t{ 0 }, duplicated_area_name.size() - 1, mt);
     size_t i3;
     do {
-        i3 = get_random_integer(size_t{ 0 }, duplicated_area_name.size() - 1);
+        i3 = RandomAdapter::get_random_integer(size_t{ 0 }, duplicated_area_name.size() - 1, mt);
     } while (i3 == i2);
     duplicated_area_name[i2] = duplicated_area_name[i3];
 
@@ -83,7 +85,7 @@ TEST_F(LocalAreaTranslatorTest, getterAreaTest) {
     std::vector<RelearnTypes::neuron_id> area0{};
     std::vector<RelearnTypes::neuron_id> area1{};
     for (int i = 0; i < num_neurons; i++) {
-        if (get_random_bool()) {
+        if (RandomAdapter::get_random_bool(mt)) {
             neuron_id_to_area_id.emplace_back(0);
             area0.emplace_back(i);
         } else {
@@ -120,7 +122,7 @@ TEST_F(LocalAreaTranslatorTest, getterAreaTest) {
 
 TEST_F(LocalAreaTranslatorTest, getterExceptionTest) {
     auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
-    auto area_id_to_area_name = NeuronAssignmentAdapter::get_random_area_names_specific(get_random_integer(size_t{ 1 }, num_neurons), mt);
+    auto area_id_to_area_name = NeuronAssignmentAdapter::get_random_area_names_specific(RandomAdapter::get_random_integer(size_t{ 1 }, num_neurons, mt), mt);
     auto num_areas = area_id_to_area_name.size();
     const std::vector<RelearnTypes::area_id> neuron_id_to_area_id = NeuronAssignmentAdapter::get_random_area_ids(area_id_to_area_name.size(), num_neurons, mt);
 
@@ -129,6 +131,9 @@ TEST_F(LocalAreaTranslatorTest, getterExceptionTest) {
     ASSERT_THROW(auto val = translator.get_area_name_for_neuron_id(num_neurons), RelearnException);
     ASSERT_THROW(auto val = translator.get_area_id_for_neuron_id(num_neurons), RelearnException);
     ASSERT_THROW(auto val = translator.get_area_name_for_area_id(num_areas), RelearnException);
-    ASSERT_THROW(auto val = translator.get_area_id_for_area_name(std::to_string(get_random_percentage())), RelearnException);
+
+    const auto percentage = RandomAdapter::get_random_percentage<double>(mt);
+
+    ASSERT_THROW(auto val = translator.get_area_id_for_area_name(std::to_string(percentage)), RelearnException);
 }
 #pragma GCC diagnostic pop

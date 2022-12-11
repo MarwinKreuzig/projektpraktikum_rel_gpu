@@ -20,9 +20,9 @@ TEST_F(IntervalTest, testIntervalConstruction) {
     constexpr auto min = std::numeric_limits<int_type>::min();
     constexpr auto max = std::numeric_limits<int_type>::max();
 
-    const auto begin = get_random_integer<int_type>(min, max);
-    const auto end = get_random_integer<int_type>(min, max);
-    const auto frequency = get_random_integer<int_type>(min, max);
+    const auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto frequency = RandomAdapter::get_random_integer<int_type>(min, max, mt);
 
     Interval i{ begin, end, frequency };
 
@@ -107,8 +107,8 @@ TEST_F(IntervalTest, testParseIntervalFail2) {
     constexpr auto min = std::numeric_limits<int_type>::min();
     constexpr auto max = std::numeric_limits<int_type>::max();
 
-    const auto begin = get_random_integer<int_type>(min, max);
-    const auto end = get_random_integer<int_type>(min, max);
+    const auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
 
     std::stringstream ss{};
     ss << std::min(begin, end) << '-' << std::max(begin, end);
@@ -126,8 +126,8 @@ TEST_F(IntervalTest, testParseIntervalFail3) {
     constexpr auto min = std::numeric_limits<int_type>::min();
     constexpr auto max = std::numeric_limits<int_type>::max();
 
-    const auto begin = get_random_integer<int_type>(min, max);
-    const auto frequency = get_random_integer<int_type>(min, max);
+    const auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto frequency = RandomAdapter::get_random_integer<int_type>(min, max, mt);
 
     std::stringstream ss{};
     ss << begin << ':' << frequency;
@@ -145,9 +145,9 @@ TEST_F(IntervalTest, testParseIntervalFail4) {
     constexpr auto min = std::numeric_limits<int_type>::min();
     constexpr auto max = std::numeric_limits<int_type>::max();
 
-    const auto begin = get_random_integer<int_type>(min, max);
-    const auto end = get_random_integer<int_type>(min, max);
-    const auto frequency = get_random_integer<int_type>(min, max);
+    const auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto frequency = RandomAdapter::get_random_integer<int_type>(min, max, mt);
 
     std::stringstream ss{};
     ss << '-' << std::min(begin, end) << '-' << std::max(begin, end) << ':' << frequency;
@@ -165,9 +165,9 @@ TEST_F(IntervalTest, testParseIntervalFail5) {
     constexpr auto min = std::numeric_limits<int_type>::min();
     constexpr auto max = std::numeric_limits<int_type>::max();
 
-    const auto begin = get_random_integer<int_type>(min, max);
-    const auto end = get_random_integer<int_type>(min, max);
-    const auto frequency = get_random_integer<int_type>(min, max);
+    const auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto frequency = RandomAdapter::get_random_integer<int_type>(min, max, mt);
 
     std::stringstream ss{};
     ss << '-' << std::min(begin, end) << '-' << std::max(begin, end) << ':' << frequency << ':';
@@ -185,9 +185,9 @@ TEST_F(IntervalTest, testParseIntervalFail6) {
     constexpr auto min = std::numeric_limits<int_type>::min();
     constexpr auto max = std::numeric_limits<int_type>::max();
 
-    const auto begin = get_random_integer<int_type>(min, max);
-    const auto end = get_random_integer<int_type>(min, max);
-    const auto frequency = get_random_integer<int_type>(min, max);
+    const auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto frequency = RandomAdapter::get_random_integer<int_type>(min, max, mt);
 
     std::stringstream ss{};
     ss << std::max(begin, end) << '-' << std::min(begin, end) << ':' << frequency;

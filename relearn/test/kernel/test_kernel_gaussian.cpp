@@ -11,6 +11,7 @@
 #include "test_kernel.h"
 
 #include "kernel_adapter.h"
+#include "simulation/simulation_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "algorithm/Kernel/Gaussian.h"
@@ -68,8 +69,8 @@ TEST_F(ProbabilityKernelTest, testGaussianNoFreeElements) {
 
     const auto sigma = KernelAdapter::get_random_gaussian_sigma(mt);
 
-    const auto& source_position = get_random_position();
-    const auto& target_position = get_random_position();
+    const auto& source_position = SimulationAdapter::get_random_position(mt);
+    const auto& target_position = SimulationAdapter::get_random_position(mt);
 
     GaussianDistributionKernel::set_sigma(sigma);
     const auto attractiveness = GaussianDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, 0);
@@ -83,8 +84,8 @@ TEST_F(ProbabilityKernelTest, testGaussianLinearFreeElements) {
 
     const auto sigma = KernelAdapter::get_random_gaussian_sigma(mt);
 
-    const auto& source_position = get_random_position();
-    const auto& target_position = get_random_position();
+    const auto& source_position = SimulationAdapter::get_random_position(mt);
+    const auto& target_position = SimulationAdapter::get_random_position(mt);
 
     GaussianDistributionKernel::set_sigma(sigma);
     const auto attractiveness_one = GaussianDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, 1);
@@ -102,10 +103,10 @@ TEST_F(ProbabilityKernelTest, testGaussianSamePosition) {
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
 
     const auto sigma = KernelAdapter::get_random_gaussian_sigma(mt);
-    const auto number_elements = get_random_integer<unsigned int>(0, 10000);
+    const auto number_elements = RandomAdapter::get_random_integer<unsigned int>(0, 10000, mt);
     const auto converted_double = static_cast<double>(number_elements);
 
-    const auto& position = get_random_position();
+    const auto& position = SimulationAdapter::get_random_position(mt);
 
     GaussianDistributionKernel::set_sigma(sigma);
     const auto attractiveness = GaussianDistributionKernel::calculate_attractiveness_to_connect(position, position, number_elements);
@@ -117,10 +118,10 @@ TEST_F(ProbabilityKernelTest, testGaussianVariableSigma) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
 
-    const auto number_elements = get_random_integer<unsigned int>(0, 10000);
+    const auto number_elements = RandomAdapter::get_random_integer<unsigned int>(0, 10000, mt);
 
-    const auto& source_position = get_random_position();
-    const auto& target_position = get_random_position();
+    const auto& source_position = SimulationAdapter::get_random_position(mt);
+    const auto& target_position = SimulationAdapter::get_random_position(mt);
 
     std::vector<double> sigmas{};
     for (auto i = 0; i < 100; i++) {
@@ -150,13 +151,13 @@ TEST_F(ProbabilityKernelTest, testGaussianVariablePosition) {
     const auto sigma = KernelAdapter::get_random_gaussian_sigma(mt);
     GaussianDistributionKernel::set_sigma(sigma);
 
-    const auto& source_position = get_random_position();
+    const auto& source_position = SimulationAdapter::get_random_position(mt);
 
-    const auto number_elements = get_random_integer<unsigned int>(0, 10000);
+    const auto number_elements = RandomAdapter::get_random_integer<unsigned int>(0, 10000, mt);
 
     std::vector<Vec3d> positions{};
     for (auto i = 0; i < 100; i++) {
-        positions.emplace_back(get_random_position());
+        positions.emplace_back(SimulationAdapter::get_random_position(mt));
     }
 
     std::sort(positions.begin(), positions.end(), [&](const Vec3d& pos_a, const Vec3d& pos_b) {
@@ -189,12 +190,12 @@ TEST_F(ProbabilityKernelTest, testGaussianConstantDistance) {
     const auto sigma = KernelAdapter::get_random_gaussian_sigma(mt);
     GaussianDistributionKernel::set_sigma(sigma);
 
-    const auto& source_position = get_random_position();
+    const auto& source_position = SimulationAdapter::get_random_position(mt);
     const auto& [x, y, z] = source_position;
 
-    const auto number_elements = get_random_integer<unsigned int>(0, 10000);
+    const auto number_elements = RandomAdapter::get_random_integer<unsigned int>(0, 10000, mt);
 
-    const auto distance = get_random_position_element();
+    const auto distance = SimulationAdapter::get_random_position_element(mt);
 
     const auto sqrt3 = std::sqrt(3);
 
@@ -220,9 +221,9 @@ TEST_F(ProbabilityKernelTest, testGaussianShiftedMu) {
     const auto sigma = KernelAdapter::get_random_gaussian_sigma(mt);
     GaussianDistributionKernel::set_sigma(sigma);
 
-    const auto number_elements = get_random_integer<unsigned int>(0, 10000);
+    const auto number_elements = RandomAdapter::get_random_integer<unsigned int>(0, 10000, mt);
 
-    const Vec3d source = get_random_position();
+    const Vec3d source = SimulationAdapter::get_random_position(mt);
 
     for (auto i = 0; i < 100; i++) {
         const auto mu = KernelAdapter::get_random_gaussian_mu(mt);
@@ -258,7 +259,7 @@ TEST_F(ProbabilityKernelTest, testGaussianPrecalculatedValues) {
     const auto sqrt3 = std::sqrt(3);
 
     for (const auto& [position_difference, sigma, golden_attractiveness] : precalculated_values) {
-        const auto& source_position = get_random_position();
+        const auto& source_position = SimulationAdapter::get_random_position(mt);
         const auto& target_position = source_position + (position_difference / sqrt3);
 
         GaussianDistributionKernel::set_sigma(sigma);
@@ -274,26 +275,26 @@ TEST_F(KernelTest, testGaussianKernelIntegration) {
     const auto& neuron_id_1 = TaggedIdAdapter::get_random_neuron_id(1000, mt);
     const auto& neuron_id_2 = TaggedIdAdapter::get_random_neuron_id(1000, 1000, mt);
 
-    const auto& source_position = get_random_position();
+    const auto& source_position = SimulationAdapter::get_random_position(mt);
 
     Kernel<FastMultipoleMethodsCell>::set_kernel_type(KernelType::Gaussian);
 
     const auto sigma = KernelAdapter::get_random_gaussian_sigma(mt);
     GaussianDistributionKernel::set_sigma(sigma);
 
-    const auto& target_excitatory_axon_position = get_random_position();
-    const auto& target_inhibitory_axon_position = get_random_position();
-    const auto& target_excitatory_dendrite_position = get_random_position();
-    const auto& target_inhibitory_dendrite_position = get_random_position();
+    const auto& target_excitatory_axon_position = SimulationAdapter::get_random_position(mt);
+    const auto& target_inhibitory_axon_position = SimulationAdapter::get_random_position(mt);
+    const auto& target_excitatory_dendrite_position = SimulationAdapter::get_random_position(mt);
+    const auto& target_inhibitory_dendrite_position = SimulationAdapter::get_random_position(mt);
 
-    const auto& number_vacant_excitatory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-    const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-    const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-    const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_excitatory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_inhibitory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_excitatory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_inhibitory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
 
     OctreeNode<FastMultipoleMethodsCell> node{};
     node.set_cell_neuron_id(neuron_id_1);
-    node.set_cell_size(get_minimum_position(), get_maximum_position());
+    node.set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
 
     node.set_cell_excitatory_axons_position(target_excitatory_axon_position);
     node.set_cell_inhibitory_axons_position(target_inhibitory_axon_position);

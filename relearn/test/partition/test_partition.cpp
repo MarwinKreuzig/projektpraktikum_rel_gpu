@@ -11,6 +11,7 @@
 #include "test_partition.h"
 
 #include "mpi/mpi_rank_adapter.h"
+#include "simulation/simulation_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "structure/Partition.h"
@@ -187,7 +188,7 @@ TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
 
     SpaceFillingCurve<Morton> sfc(oct_exponent_cast);
 
-    const auto& [simulation_box_minimum, simulation_box_maximum] = get_random_simulation_box_size();
+    const auto& [simulation_box_minimum, simulation_box_maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     const auto& simulation_box_dimensions = simulation_box_maximum - simulation_box_minimum;
     const auto& subdomain_box_dimensions = simulation_box_dimensions / num_subdomains_per_dim;
@@ -282,7 +283,7 @@ TEST_F(PartitionTest, testPartitionPositionToMpi) {
     const auto oct_exponent_cast = static_cast<uint8_t>(oct_exponent);
     SpaceFillingCurve<Morton> sfc(oct_exponent_cast);
 
-    const auto& [simulation_box_minimum, simulation_box_maximum] = get_random_simulation_box_size();
+    const auto& [simulation_box_minimum, simulation_box_maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     const auto& simulation_box_dimensions = simulation_box_maximum - simulation_box_minimum;
     const auto& subdomain_box_dimensions = simulation_box_dimensions / num_subdomains_per_dim;
@@ -291,14 +292,14 @@ TEST_F(PartitionTest, testPartitionPositionToMpi) {
         Partition partition(num_ranks, my_rank);
 
         for (auto j = 0; j < iterations; j++) {
-            const auto& position = get_random_position_in_box(simulation_box_minimum, simulation_box_maximum);
+            const auto& position = SimulationAdapter::get_random_position_in_box(simulation_box_minimum, simulation_box_maximum, mt);
             ASSERT_THROW(auto val = partition.get_mpi_rank_from_position(position), RelearnException);
         }
 
         partition.set_simulation_box_size(simulation_box_minimum, simulation_box_maximum);
 
         for (auto j = 0; j < iterations; j++) {
-            const auto& position = get_random_position_in_box(simulation_box_minimum, simulation_box_maximum);
+            const auto& position = SimulationAdapter::get_random_position_in_box(simulation_box_minimum, simulation_box_maximum, mt);
             const auto proposed_rank = partition.get_mpi_rank_from_position(position);
 
             const auto index_1_start = proposed_rank * my_subdomains;

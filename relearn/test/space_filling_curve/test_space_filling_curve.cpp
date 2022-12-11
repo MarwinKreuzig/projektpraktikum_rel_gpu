@@ -1,5 +1,7 @@
 #include "test_space_filling_curve.h"
 
+#include "simulation/simulation_adapter.h"
+
 #include "structure/SpaceFillingCurve.h"
 #include "util/RelearnException.h"
 
@@ -8,7 +10,7 @@
 TEST_F(SpaceFillingCurveTest, testMortonConstructor) {
     Morton morton{};
 
-    for (auto refinement_level = 0; refinement_level < max_refinement_level; refinement_level++) {
+    for (auto refinement_level = 0; refinement_level < SimulationAdapter::max_refinement_level; refinement_level++) {
         std::stringstream ss{};
         ss << "Refinement level: " << refinement_level;
 
@@ -22,7 +24,7 @@ TEST_F(SpaceFillingCurveTest, testMortonConstructor) {
 TEST_F(SpaceFillingCurveTest, testMortonTranslationBruteForce) {
     Morton morton{};
 
-    for (auto refinement_level = 0; refinement_level < small_refinement_level; refinement_level++) {
+    for (auto refinement_level = 0; refinement_level < SimulationAdapter::small_refinement_level; refinement_level++) {
         morton.set_refinement_level(refinement_level);
 
         std::stringstream ss{};
@@ -51,16 +53,16 @@ TEST_F(SpaceFillingCurveTest, testMortonTranslationStochastic) {
     Morton morton{};
     std::stringstream ss{};
 
-    const auto refinement_level = get_large_refinement_level();
+    const auto refinement_level = SimulationAdapter::get_large_refinement_level(mt);
     morton.set_refinement_level(refinement_level);
 
     const size_t num_boxes_per_dimension = size_t{ 1 } << refinement_level;
     const size_t total_num_boxes = num_boxes_per_dimension * num_boxes_per_dimension * num_boxes_per_dimension;
 
     for (auto rep = 0; rep < 1000; rep++) {
-        const auto x = get_random_integer<size_t>(0, num_boxes_per_dimension - 1);
-        const auto y = get_random_integer<size_t>(0, num_boxes_per_dimension - 1);
-        const auto z = get_random_integer<size_t>(0, num_boxes_per_dimension - 1);
+        const auto x = RandomAdapter::get_random_integer<size_t>(0, num_boxes_per_dimension - 1, mt);
+        const auto y = RandomAdapter::get_random_integer<size_t>(0, num_boxes_per_dimension - 1, mt);
+        const auto z = RandomAdapter::get_random_integer<size_t>(0, num_boxes_per_dimension - 1, mt);
 
         Morton::BoxCoordinates index3d{ x, y, z };
 
@@ -79,7 +81,7 @@ TEST_F(SpaceFillingCurveTest, testMortonTranslationStochastic) {
 TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonConstructor) {
     SpaceFillingCurve<Morton> sfc{};
 
-    for (auto refinement_level = 0; refinement_level < max_refinement_level; refinement_level++) {
+    for (auto refinement_level = 0; refinement_level < SimulationAdapter::max_refinement_level; refinement_level++) {
         std::stringstream ss{};
         ss << "Refinement level: " << refinement_level;
 
@@ -89,8 +91,8 @@ TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonConstructor) {
         ASSERT_EQ(refinement_level, res) << ss.str();
     }
 
-    const auto refinement_level = get_random_refinement_level();
-    const auto refinement_level_2 = get_random_refinement_level();
+    const auto refinement_level = SimulationAdapter::get_random_refinement_level(mt);
+    const auto refinement_level_2 = SimulationAdapter::get_random_refinement_level(mt);
 
     std::stringstream ss{};
     ss << "Refinement level: " << refinement_level << '\n';
@@ -109,7 +111,7 @@ TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonConstructor) {
 }
 
 TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonConstructorException) {
-    const auto refinement_level = get_random_refinement_level() + Constants::max_lvl_subdomains + 1;
+    const auto refinement_level = SimulationAdapter::get_random_refinement_level(mt) + Constants::max_lvl_subdomains + 1;
 
     if (refinement_level > std::numeric_limits<uint8_t>::max()) {
         return;
@@ -126,7 +128,7 @@ TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonConstructorException) {
 TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonSetRefinementException) {
     SpaceFillingCurve<Morton> sfc{};
 
-    const auto refinement_level = get_random_refinement_level() + Constants::max_lvl_subdomains + 1;
+    const auto refinement_level = SimulationAdapter::get_random_refinement_level(mt) + Constants::max_lvl_subdomains + 1;
 
     if (refinement_level > std::numeric_limits<uint8_t>::max()) {
         return;
@@ -143,7 +145,7 @@ TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonSetRefinementException)
 TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonTranslationBruteForce) {
     SpaceFillingCurve<Morton> sfc{};
 
-    for (auto refinement_level = 0; refinement_level < small_refinement_level; refinement_level++) {
+    for (auto refinement_level = 0; refinement_level < SimulationAdapter::small_refinement_level; refinement_level++) {
         sfc.set_refinement_level(refinement_level);
 
         std::stringstream ss{};
@@ -172,16 +174,16 @@ TEST_F(SpaceFillingCurveTest, testSpaceFillingCurveMortonTranslationStochastic) 
     SpaceFillingCurve<Morton> sfc{};
     std::stringstream ss{};
 
-    const auto refinement_level = get_large_refinement_level();
+    const auto refinement_level = SimulationAdapter::get_large_refinement_level(mt);
     sfc.set_refinement_level(refinement_level);
 
     const size_t num_boxes_per_dimension = size_t{ 1 } << refinement_level;
     const size_t total_num_boxes = num_boxes_per_dimension * num_boxes_per_dimension * num_boxes_per_dimension;
 
     for (auto rep = 0; rep < 1000; rep++) {
-        const auto x = get_random_integer<size_t>(0, num_boxes_per_dimension - 1);
-        const auto y = get_random_integer<size_t>(0, num_boxes_per_dimension - 1);
-        const auto z = get_random_integer<size_t>(0, num_boxes_per_dimension - 1);
+        const auto x = RandomAdapter::get_random_integer<size_t>(0, num_boxes_per_dimension - 1, mt);
+        const auto y = RandomAdapter::get_random_integer<size_t>(0, num_boxes_per_dimension - 1, mt);
+        const auto z = RandomAdapter::get_random_integer<size_t>(0, num_boxes_per_dimension - 1, mt);
 
         Vec3s index3d{ x, y, z };
 

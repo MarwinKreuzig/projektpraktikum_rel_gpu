@@ -1,5 +1,7 @@
 #include "test_tagged_id.h"
 
+#include "RandomAdapter.h"
+
 #include <cstdint>
 #include <functional>
 #include <type_traits>
@@ -41,7 +43,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDConstructorDefault) { // NOLINT
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDConstructorOnlyID) { // NOLINT
-    const auto id_val = this->template get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max);
+    const auto id_val = RandomAdapter::template get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max, this->mt);
 
     const TaggedID<TypeParam> id{ id_val };
 
@@ -55,7 +57,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDConstructorOnlyID) { // NOLINT
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDConstructorLocal) {
-    const auto id_val = this->template get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max);
+    const auto id_val = RandomAdapter::template get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max, this->mt);
 
     const TaggedID<TypeParam> id{ false, id_val };
 
@@ -69,7 +71,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDConstructorLocal) {
 }
 
 TYPED_TEST(TaggedIDTest, testTaggedIDConstructorVirtual) {
-    const auto id_val = this->template get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max);
+    const auto id_val = RandomAdapter::template get_random_integer<TypeParam>(TaggedID<TypeParam>::limits::min, TaggedID<TypeParam>::limits::max, this->mt);
 
     const TaggedID<TypeParam> id{ true, id_val };
 
@@ -85,7 +87,7 @@ TYPED_TEST(TaggedIDTest, testTaggedIDComparisons1) { // NOLINT
     constexpr static auto min = TaggedID<TypeParam>::limits::min;
     constexpr static auto max = TaggedID<TypeParam>::limits::max;
 
-    const auto get_random_id = [this]() { return TaggedID<TypeParam>{ this->template get_random_integer<TypeParam>(min, max) }; };
+    const auto get_random_id = [this]() { return TaggedID<TypeParam>{ RandomAdapter::template get_random_integer<TypeParam>(min, max, this->mt) }; };
 
     const auto id1 = get_random_id();
     const auto id2 = get_random_id();
@@ -100,11 +102,11 @@ TYPED_TEST(TaggedIDTest, testTaggedIDComparisons2) { // NOLINT
 
     const auto get_random_id = [this]() {
         auto res = TaggedID<TypeParam>{
-            this->get_random_bool(),
-            this->template get_random_integer<TypeParam>(min, max)
+            RandomAdapter::get_random_bool(this->mt),
+            RandomAdapter::template get_random_integer<TypeParam>(min, max, this->mt)
         };
 
-        // res.is_initialized() = this->get_random_bool();
+        // res.is_initialized() = this->RandomAdapter::get_random_bool(this->mt);
         return res;
     };
 

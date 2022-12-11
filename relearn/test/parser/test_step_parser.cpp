@@ -26,7 +26,7 @@ TEST_F(StepParserTest, testGenerateFunction1) {
         const auto result_1 = function(step);
         ASSERT_FALSE(result_1) << step;
 
-        const auto random_step = get_random_integer<int_type>(min, max);
+        const auto random_step = RandomAdapter::get_random_integer<int_type>(min, max, mt);
         const auto result_2 = function(random_step);
         ASSERT_FALSE(result_2) << random_step;
     }
@@ -46,7 +46,7 @@ TEST_F(StepParserTest, testGenerateFunction2) {
         const auto result_1 = function(step);
         ASSERT_TRUE(result_1) << step;
 
-        const auto random_step = get_random_integer<int_type>(min, max);
+        const auto random_step = RandomAdapter::get_random_integer<int_type>(min, max, mt);
         const auto result_2 = function(random_step);
         ASSERT_TRUE(result_2) << random_step;
     }
@@ -69,7 +69,7 @@ TEST_F(StepParserTest, testGenerateFunction3) {
         const auto result_1 = function(step);
         ASSERT_EQ(result_1, (step <= 10000 && step % 10 == 0)) << step;
 
-        const auto random_step = get_random_integer<int_type>(min, max);
+        const auto random_step = RandomAdapter::get_random_integer<int_type>(min, max, mt);
         const auto result_2 = function(random_step);
         ASSERT_EQ(result_2, (random_step <= 10000 && random_step % 10 == 0)) << random_step;
     }
@@ -81,8 +81,8 @@ TEST_F(StepParserTest, testGenerateFunction4) {
     constexpr auto min = 10000;
     constexpr auto max = 90000;
 
-    auto begin = get_random_integer<int_type>(min, max);
-    auto end = get_random_integer<int_type>(min, max);
+    auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    auto end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
 
     Interval i1{ 0, 99, 7 };
     Interval i2{ 100, 999, 7 };
@@ -113,8 +113,8 @@ TEST_F(StepParserTest, testGenerateFunction5) {
     constexpr auto min = 10000;
     constexpr auto max = 90000;
 
-    auto begin = get_random_integer<int_type>(min, max);
-    auto end = get_random_integer<int_type>(min, max);
+    auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    auto end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
 
     Interval i1{ 0, 99, 7 };
     Interval i2{ 100, 999, 7 };

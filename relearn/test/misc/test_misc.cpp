@@ -23,27 +23,27 @@ TEST_F(MiscTest, testNumberDigitsInt) {
     }
 
     for (auto i = 0; i < 10; i++) {
-        const auto val = get_random_integer<integer_type>(10, 99);
+        const auto val = RandomAdapter::get_random_integer<integer_type>(10, 99, mt);
         ASSERT_EQ(2, Util::num_digits(val));
     }
 
     for (auto i = 0; i < 10; i++) {
-        const auto val = get_random_integer<integer_type>(100, 999);
+        const auto val = RandomAdapter::get_random_integer<integer_type>(100, 999, mt);
         ASSERT_EQ(3, Util::num_digits(val));
     }
 
     for (auto i = 0; i < 10; i++) {
-        const auto val = get_random_integer<integer_type>(1000, 9999);
+        const auto val = RandomAdapter::get_random_integer<integer_type>(1000, 9999, mt);
         ASSERT_EQ(4, Util::num_digits(val));
     }
 
     for (auto i = 0; i < 10; i++) {
-        const auto val = get_random_integer<integer_type>(10000, 99999);
+        const auto val = RandomAdapter::get_random_integer<integer_type>(10000, 99999, mt);
         ASSERT_EQ(5, Util::num_digits(val));
     }
 
     for (auto i = 0; i < 10; i++) {
-        const auto val = get_random_integer<integer_type>(100000, 999999);
+        const auto val = RandomAdapter::get_random_integer<integer_type>(100000, 999999, mt);
         ASSERT_EQ(6, Util::num_digits(val));
     }
 }
@@ -57,27 +57,27 @@ TEST_F(MiscTest, testNumberDigitsUnsignedInt) {
     }
 
     for (auto i = 0; i < 10; i++) {
-        const auto val = get_random_integer<integer_type>(10, 99);
+        const auto val = RandomAdapter::get_random_integer<integer_type>(10, 99, mt);
         ASSERT_EQ(2, Util::num_digits(val));
     }
 
     for (auto i = 0; i < 10; i++) {
-        const auto val = get_random_integer<integer_type>(100, 999);
+        const auto val = RandomAdapter::get_random_integer<integer_type>(100, 999, mt);
         ASSERT_EQ(3, Util::num_digits(val));
     }
 
     for (auto i = 0; i < 10; i++) {
-        const auto val = get_random_integer<integer_type>(1000, 9999);
+        const auto val = RandomAdapter::get_random_integer<integer_type>(1000, 9999, mt);
         ASSERT_EQ(4, Util::num_digits(val));
     }
 
     for (auto i = 0; i < 10; i++) {
-        const auto val = get_random_integer<integer_type>(10000, 99999);
+        const auto val = RandomAdapter::get_random_integer<integer_type>(10000, 99999, mt);
         ASSERT_EQ(5, Util::num_digits(val));
     }
 
     for (auto i = 0; i < 10; i++) {
-        const auto val = get_random_integer<integer_type>(100000, 999999);
+        const auto val = RandomAdapter::get_random_integer<integer_type>(100000, 999999, mt);
         ASSERT_EQ(6, Util::num_digits(val));
     }
 }
@@ -163,7 +163,7 @@ TEST_F(MiscTest, testMinMaxAccDouble) {
     update_status.resize(number_enabled + number_disabled, UpdateStatus::Disabled);
     update_status.resize(number_values, UpdateStatus::STATIC);
 
-    shuffle(update_status.begin(), update_status.end());
+    RandomAdapter::shuffle(update_status.begin(), update_status.end(), mt);
 
     std::vector<double> values{};
     values.reserve(number_values);
@@ -173,7 +173,7 @@ TEST_F(MiscTest, testMinMaxAccDouble) {
     auto sum = 0.0;
 
     for (auto i = 0; i < number_values; i++) {
-        const auto random_value = get_random_double(-100000.0, 100000.0);
+        const auto random_value = RandomAdapter::get_random_double<double>(-100000.0, 100000.0, mt);
 
         if (update_status[i] == UpdateStatus::Enabled) {
             min = std::min(min, random_value);
@@ -203,7 +203,7 @@ TEST_F(MiscTest, testMinMaxAccSizet) {
     update_status.resize(number_enabled + number_disabled, UpdateStatus::Disabled);
     update_status.resize(number_values, UpdateStatus::STATIC);
 
-    shuffle(update_status.begin(), update_status.end());
+    RandomAdapter::shuffle(update_status.begin(), update_status.end(), mt);
 
     std::vector<size_t> values{};
     values.reserve(number_values);
@@ -213,7 +213,7 @@ TEST_F(MiscTest, testMinMaxAccSizet) {
     auto sum = size_t(0);
 
     for (auto i = 0; i < number_values; i++) {
-        const auto random_value = get_random_integer<size_t>(std::numeric_limits<size_t>::min(), std::numeric_limits<size_t>::max());
+        const auto random_value = RandomAdapter::get_random_integer<size_t>(std::numeric_limits<size_t>::min(), std::numeric_limits<size_t>::max(), mt);
 
         if (update_status[i] == UpdateStatus::Enabled) {
             min = std::min(min, random_value);

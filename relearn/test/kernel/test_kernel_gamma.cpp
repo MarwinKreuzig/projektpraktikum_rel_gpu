@@ -11,6 +11,7 @@
 #include "test_kernel.h"
 
 #include "kernel_adapter.h"
+#include "simulation/simulation_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "algorithm/Kernel/Gaussian.h"
@@ -67,8 +68,8 @@ TEST_F(ProbabilityKernelTest, testGammaNoFreeElements) {
     GammaDistributionKernel::set_k(k);
     GammaDistributionKernel::set_theta(theta);
 
-    const auto& source_position = get_random_position();
-    const auto& target_position = get_random_position();
+    const auto& source_position = SimulationAdapter::get_random_position(mt);
+    const auto& target_position = SimulationAdapter::get_random_position(mt);
 
     const auto attractiveness = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, 0);
 
@@ -85,8 +86,8 @@ TEST_F(ProbabilityKernelTest, testGammaLinearElements) {
     GammaDistributionKernel::set_k(k);
     GammaDistributionKernel::set_theta(theta);
 
-    const auto& source_position = get_random_position();
-    const auto& target_position = get_random_position();
+    const auto& source_position = SimulationAdapter::get_random_position(mt);
+    const auto& target_position = SimulationAdapter::get_random_position(mt);
 
     const auto attractiveness_one = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, 1);
 
@@ -115,7 +116,7 @@ TEST_F(ProbabilityKernelTest, testGammaPrecalculatedValues) {
     const auto sqrt3 = std::sqrt(3);
 
     for (const auto& [position_difference, k, theta, expected] : precalculated_values) {
-        const auto& source_position = get_random_position();
+        const auto& source_position = SimulationAdapter::get_random_position(mt);
         const auto& target_position = source_position + (position_difference / sqrt3);
 
         GammaDistributionKernel::set_k(k);
@@ -131,7 +132,7 @@ TEST_F(KernelTest, testGammaKernelIntegration) {
     const auto& neuron_id_1 = TaggedIdAdapter::get_random_neuron_id(1000, mt);
     const auto& neuron_id_2 = TaggedIdAdapter::get_random_neuron_id(1000, 1000, mt);
 
-    const auto& source_position = get_random_position();
+    const auto& source_position = SimulationAdapter::get_random_position(mt);
 
     Kernel<FastMultipoleMethodsCell>::set_kernel_type(KernelType::Gamma);
 
@@ -141,10 +142,10 @@ TEST_F(KernelTest, testGammaKernelIntegration) {
     GammaDistributionKernel::set_k(k);
     GammaDistributionKernel::set_theta(theta);
 
-    const auto& target_excitatory_axon_position = get_random_position();
-    const auto& target_inhibitory_axon_position = get_random_position();
-    const auto& target_excitatory_dendrite_position = get_random_position();
-    const auto& target_inhibitory_dendrite_position = get_random_position();
+    const auto& target_excitatory_axon_position = SimulationAdapter::get_random_position(mt);
+    const auto& target_inhibitory_axon_position = SimulationAdapter::get_random_position(mt);
+    const auto& target_excitatory_dendrite_position = SimulationAdapter::get_random_position(mt);
+    const auto& target_inhibitory_dendrite_position = SimulationAdapter::get_random_position(mt);
 
     const auto& number_vacant_excitatory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);;
     const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);;
@@ -153,7 +154,7 @@ TEST_F(KernelTest, testGammaKernelIntegration) {
 
     OctreeNode<FastMultipoleMethodsCell> node{};
     node.set_cell_neuron_id(neuron_id_1);
-    node.set_cell_size(get_minimum_position(), get_maximum_position());
+    node.set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
 
     node.set_cell_excitatory_axons_position(target_excitatory_axon_position);
     node.set_cell_inhibitory_axons_position(target_inhibitory_axon_position);

@@ -1,5 +1,7 @@
 #include "test_synaptic_input.h"
 
+#include "RandomAdapter.h"
+
 #include "network_graph/network_graph_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
@@ -110,12 +112,12 @@ void test_init_create(const std::unique_ptr<SynapticInputCalculator>& input_calc
 }
 
 TEST_F(SynapticInputTest, testLinearSynapticInputConstruct) {
-    const auto random_k = get_random_double(SynapticInputCalculator::min_k, SynapticInputCalculator::max_k);
+    const auto random_k = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_k, SynapticInputCalculator::max_k, mt);
 
     std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_k);
     ASSERT_EQ(input_calculator->get_k(), random_k);
 
-    const auto new_k = get_random_double(SynapticInputCalculator::min_k, SynapticInputCalculator::max_k);
+    const auto new_k = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_k, SynapticInputCalculator::max_k, mt);
     test_constructor_clone(input_calculator, random_k, new_k);
 
     const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
@@ -125,7 +127,7 @@ TEST_F(SynapticInputTest, testLinearSynapticInputConstruct) {
 }
 
 TEST_F(SynapticInputTest, testLinearSynapticInputUpdateEmptyGraph) {
-    const auto random_k = get_random_double(SynapticInputCalculator::min_k, SynapticInputCalculator::max_k);
+    const auto random_k = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_k, SynapticInputCalculator::max_k, mt);
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_k);
@@ -146,7 +148,7 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdateEmptyGraph) {
 }
 
 TEST_F(SynapticInputTest, testLinearSynapticInputUpdate) {
-    const auto random_k = get_random_double(SynapticInputCalculator::min_k, SynapticInputCalculator::max_k);
+    const auto random_k = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_k, SynapticInputCalculator::max_k, mt);
 
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto num_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
@@ -168,15 +170,15 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdate) {
     }
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        if (get_random_bool()) {
+        if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
         }
-        if (get_random_bool()) {
+        if (RandomAdapter::get_random_bool(mt)) {
             fired_status[neuron_id] = FiredStatus::Fired;
         }
     }
 
-    const auto step = get_random_integer<RelearnTypes::step_type>(0, 1000000);
+    const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
 
     input_calculator->update_input(step, ng_static, ng_plastic,  fired_status, update_status);
 
@@ -205,12 +207,12 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdate) {
 }
 
 TEST_F(SynapticInputTest, testLogarithmicSynapticInputConstruct) {
-    const auto random_k = get_random_double(SynapticInputCalculator::min_k, SynapticInputCalculator::max_k);
+    const auto random_k = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_k, SynapticInputCalculator::max_k, mt);
 
     std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_k);
     ASSERT_EQ(input_calculator->get_k(), random_k);
 
-    const auto new_k = get_random_double(SynapticInputCalculator::min_k, SynapticInputCalculator::max_k);
+    const auto new_k = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_k, SynapticInputCalculator::max_k, mt);
     test_constructor_clone(input_calculator, random_k, new_k);
 
     const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
@@ -220,7 +222,7 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputConstruct) {
 }
 
 TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdateEmptyGraph) {
-    const auto random_k = get_random_double(SynapticInputCalculator::min_k, SynapticInputCalculator::max_k);
+    const auto random_k = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_k, SynapticInputCalculator::max_k, mt);
     const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
 
     std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_k);
@@ -242,7 +244,7 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdateEmptyGraph) {
 }
 
 TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate) {
-    const auto random_k = get_random_double(SynapticInputCalculator::min_k, SynapticInputCalculator::max_k);
+    const auto random_k = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_k, SynapticInputCalculator::max_k, mt);
 
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto num_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
@@ -265,15 +267,15 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate) {
     }
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        if (get_random_bool()) {
+        if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
         }
-        if (get_random_bool()) {
+        if (RandomAdapter::get_random_bool(mt)) {
             fired_status[neuron_id] = FiredStatus::Fired;
         }
     }
 
-    const auto step = get_random_integer<RelearnTypes::step_type>(0, 1000000);
+    const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
 
     input_calculator->update_input(step, ng_static, ng_plastic, fired_status, update_status);
 

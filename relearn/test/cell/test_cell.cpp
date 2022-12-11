@@ -10,6 +10,7 @@
 
 #include "test_cell.h"
 
+#include "simulation/simulation_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "algorithm/Algorithms.h"
@@ -24,7 +25,7 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_size() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& [min_1, max_1] = get_random_simulation_box_size();
+    const auto& [min_1, max_1] = SimulationAdapter::get_random_simulation_box_size(mt);
     cell.set_size(min_1, max_1);
 
     const auto& [res_min_1, res_max_1] = cell.get_size();
@@ -32,7 +33,7 @@ void CellTest::test_cell_size() {
     ASSERT_EQ(min_1, res_min_1);
     ASSERT_EQ(max_1, res_max_1);
 
-    const auto& [min_2, max_2] = get_random_simulation_box_size();
+    const auto& [min_2, max_2] = SimulationAdapter::get_random_simulation_box_size(mt);
     cell.set_size(min_2, max_2);
 
     const auto& [res_min_2, res_max_2] = cell.get_size();
@@ -47,10 +48,10 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_dendrites_position() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& [min, max] = get_random_simulation_box_size();
+    const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(mt);
     cell.set_size(min, max);
 
-    const auto& pos_ex_1 = get_random_position_in_box(min, max);
+    const auto& pos_ex_1 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_excitatory_dendrites_position(pos_ex_1);
 
     ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
@@ -79,7 +80,7 @@ void CellTest::test_cell_dendrites_position() {
     ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
     ASSERT_FALSE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
 
-    const auto& pos_ex_2 = get_random_position_in_box(min, max);
+    const auto& pos_ex_2 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_excitatory_dendrites_position(pos_ex_2);
 
     ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
@@ -108,7 +109,7 @@ void CellTest::test_cell_dendrites_position() {
     ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
     ASSERT_FALSE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
 
-    const auto& pos_in_1 = get_random_position_in_box(min, max);
+    const auto& pos_in_1 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_inhibitory_dendrites_position(pos_in_1);
 
     ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
@@ -137,7 +138,7 @@ void CellTest::test_cell_dendrites_position() {
     ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
     ASSERT_FALSE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
 
-    const auto& pos_in_2 = get_random_position_in_box(min, max);
+    const auto& pos_in_2 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_inhibitory_dendrites_position(pos_in_2);
 
     ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
@@ -166,10 +167,10 @@ void CellTest::test_cell_dendrites_position() {
     ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
     ASSERT_FALSE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
 
-    const auto& pos_ex_3 = get_random_position_in_box(min, max);
+    const auto& pos_ex_3 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_excitatory_dendrites_position(pos_ex_3);
 
-    const auto& pos_in_3 = get_random_position_in_box(min, max);
+    const auto& pos_in_3 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_inhibitory_dendrites_position(pos_in_3);
 
     ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
@@ -197,10 +198,10 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_dendrites_position_exception() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& [min, max] = get_random_simulation_box_size();
+    const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(mt);
     cell.set_size(min, max);
 
-    const auto& pos_ex_1 = get_random_position_in_box(min, max);
+    const auto& pos_ex_1 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_excitatory_dendrites_position(pos_ex_1);
 
     const auto& pos_ex_1_invalid_x_max = max + Vec3d{ 1, 0, 0 };
@@ -241,7 +242,7 @@ void CellTest::test_cell_dendrites_position_exception() {
     ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Excitatory).has_value());
     ASSERT_EQ(pos_ex_1, cell.get_dendrites_position_for(SignalType::Excitatory).value());
 
-    const auto& pos_ex_2 = get_random_position_in_box(min, max);
+    const auto& pos_ex_2 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_excitatory_dendrites_position(pos_ex_2);
 
     const auto& pos_ex_2_invalid_x_max = max + Vec3d{ 1, 0, 0 };
@@ -282,7 +283,7 @@ void CellTest::test_cell_dendrites_position_exception() {
     ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Excitatory).has_value());
     ASSERT_EQ(pos_ex_2, cell.get_dendrites_position_for(SignalType::Excitatory).value());
 
-    const auto& pos_in_1 = get_random_position_in_box(min, max);
+    const auto& pos_in_1 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_inhibitory_dendrites_position(pos_in_1);
 
     const auto& pos_in_1_invalid_x_max = max + Vec3d{ 1, 0, 0 };
@@ -323,7 +324,7 @@ void CellTest::test_cell_dendrites_position_exception() {
     ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Inhibitory).has_value());
     ASSERT_EQ(pos_in_1, cell.get_dendrites_position_for(SignalType::Inhibitory).value());
 
-    const auto& pos_in_2 = get_random_position_in_box(min, max);
+    const auto& pos_in_2 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_inhibitory_dendrites_position(pos_in_2);
 
     const auto& pos_in_2_invalid_x_max = max + Vec3d{ 1, 0, 0 };
@@ -400,13 +401,13 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_dendrites_position_combined() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& [min, max] = get_random_simulation_box_size();
+    const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(mt);
     cell.set_size(min, max);
 
-    const auto& pos_1 = get_random_position_in_box(min, max);
-    const auto& pos_2 = get_random_position_in_box(min, max);
-    const auto& pos_3 = get_random_position_in_box(min, max);
-    const auto& pos_4 = get_random_position_in_box(min, max);
+    const auto& pos_1 = SimulationAdapter::get_random_position_in_box(min, max, mt);
+    const auto& pos_2 = SimulationAdapter::get_random_position_in_box(min, max, mt);
+    const auto& pos_3 = SimulationAdapter::get_random_position_in_box(min, max, mt);
+    const auto& pos_4 = SimulationAdapter::get_random_position_in_box(min, max, mt);
 
     cell.set_dendrites_position({});
 
@@ -451,10 +452,10 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_axons_position() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& [min, max] = get_random_simulation_box_size();
+    const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(mt);
     cell.set_size(min, max);
 
-    const auto& pos_ex_1 = get_random_position_in_box(min, max);
+    const auto& pos_ex_1 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_excitatory_axons_position(pos_ex_1);
 
     ASSERT_TRUE(cell.get_excitatory_axons_position().has_value());
@@ -483,7 +484,7 @@ void CellTest::test_cell_axons_position() {
     ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
     ASSERT_FALSE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
 
-    const auto& pos_ex_2 = get_random_position_in_box(min, max);
+    const auto& pos_ex_2 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_excitatory_axons_position(pos_ex_2);
 
     ASSERT_TRUE(cell.get_excitatory_axons_position().has_value());
@@ -512,7 +513,7 @@ void CellTest::test_cell_axons_position() {
     ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
     ASSERT_FALSE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
 
-    const auto& pos_in_1 = get_random_position_in_box(min, max);
+    const auto& pos_in_1 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_inhibitory_axons_position(pos_in_1);
 
     ASSERT_TRUE(cell.get_inhibitory_axons_position().has_value());
@@ -541,7 +542,7 @@ void CellTest::test_cell_axons_position() {
     ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
     ASSERT_FALSE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
 
-    const auto& pos_in_2 = get_random_position_in_box(min, max);
+    const auto& pos_in_2 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_inhibitory_axons_position(pos_in_2);
 
     ASSERT_TRUE(cell.get_inhibitory_axons_position().has_value());
@@ -570,10 +571,10 @@ void CellTest::test_cell_axons_position() {
     ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
     ASSERT_FALSE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
 
-    const auto& pos_ex_3 = get_random_position_in_box(min, max);
+    const auto& pos_ex_3 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_excitatory_axons_position(pos_ex_3);
 
-    const auto& pos_in_3 = get_random_position_in_box(min, max);
+    const auto& pos_in_3 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_inhibitory_axons_position(pos_in_3);
 
     ASSERT_TRUE(cell.get_excitatory_axons_position().has_value());
@@ -601,10 +602,10 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_axons_position_exception() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& [min, max] = get_random_simulation_box_size();
+    const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(mt);
     cell.set_size(min, max);
 
-    const auto& pos_ex_1 = get_random_position_in_box(min, max);
+    const auto& pos_ex_1 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_excitatory_axons_position(pos_ex_1);
 
     const auto& pos_ex_1_invalid_x_max = max + Vec3d{ 1, 0, 0 };
@@ -645,7 +646,7 @@ void CellTest::test_cell_axons_position_exception() {
     ASSERT_TRUE(cell.get_axons_position_for(SignalType::Excitatory).has_value());
     ASSERT_EQ(pos_ex_1, cell.get_axons_position_for(SignalType::Excitatory).value());
 
-    const auto& pos_ex_2 = get_random_position_in_box(min, max);
+    const auto& pos_ex_2 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_excitatory_axons_position(pos_ex_2);
 
     const auto& pos_ex_2_invalid_x_max = max + Vec3d{ 1, 0, 0 };
@@ -686,7 +687,7 @@ void CellTest::test_cell_axons_position_exception() {
     ASSERT_TRUE(cell.get_axons_position_for(SignalType::Excitatory).has_value());
     ASSERT_EQ(pos_ex_2, cell.get_axons_position_for(SignalType::Excitatory).value());
 
-    const auto& pos_in_1 = get_random_position_in_box(min, max);
+    const auto& pos_in_1 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_inhibitory_axons_position(pos_in_1);
 
     const auto& pos_in_1_invalid_x_max = max + Vec3d{ 1, 0, 0 };
@@ -727,7 +728,7 @@ void CellTest::test_cell_axons_position_exception() {
     ASSERT_TRUE(cell.get_axons_position_for(SignalType::Inhibitory).has_value());
     ASSERT_EQ(pos_in_1, cell.get_axons_position_for(SignalType::Inhibitory).value());
 
-    const auto& pos_in_2 = get_random_position_in_box(min, max);
+    const auto& pos_in_2 = SimulationAdapter::get_random_position_in_box(min, max, mt);
     cell.set_inhibitory_axons_position(pos_in_2);
 
     const auto& pos_in_2_invalid_x_max = max + Vec3d{ 1, 0, 0 };
@@ -804,13 +805,13 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_axons_position_combined() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& [min, max] = get_random_simulation_box_size();
+    const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(mt);
     cell.set_size(min, max);
 
-    const auto& pos_1 = get_random_position_in_box(min, max);
-    const auto& pos_2 = get_random_position_in_box(min, max);
-    const auto& pos_3 = get_random_position_in_box(min, max);
-    const auto& pos_4 = get_random_position_in_box(min, max);
+    const auto& pos_1 = SimulationAdapter::get_random_position_in_box(min, max, mt);
+    const auto& pos_2 = SimulationAdapter::get_random_position_in_box(min, max, mt);
+    const auto& pos_3 = SimulationAdapter::get_random_position_in_box(min, max, mt);
+    const auto& pos_4 = SimulationAdapter::get_random_position_in_box(min, max, mt);
 
     cell.set_axons_position({});
 
@@ -870,13 +871,13 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_octants() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& [min, max] = get_random_simulation_box_size();
+    const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(mt);
     cell.set_size(min, max);
 
     const auto midpoint = (min + max) / 2;
 
     for (auto id = 0; id < 1000; id++) {
-        const auto& position = get_random_position_in_box(min, max);
+        const auto& position = SimulationAdapter::get_random_position_in_box(min, max, mt);
 
         const auto larger_x = position.get_x() >= midpoint.get_x() ? 1 : 0;
         const auto larger_y = position.get_y() >= midpoint.get_y() ? 2 : 0;
@@ -894,7 +895,7 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_octants_exception() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& [min, max] = get_random_simulation_box_size();
+    const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(mt);
     cell.set_size(min, max);
 
     const auto& pos_invalid_x_max = max + Vec3d{ 1, 0, 0 };
@@ -917,7 +918,7 @@ template <typename AdditionalCellAttributes>
 void CellTest::test_cell_octants_size() {
     Cell<AdditionalCellAttributes> cell{};
 
-    const auto& [min, max] = get_random_simulation_box_size();
+    const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(mt);
     cell.set_size(min, max);
 
     const auto midpoint = (min + max) / 2;
@@ -982,7 +983,7 @@ void CellTest::test_vpe_position() {
     const auto& initial_position = vpe.get_position();
     ASSERT_FALSE(initial_position.has_value());
 
-    const auto& [pos_1, pos_3] = get_random_simulation_box_size();
+    const auto& [pos_1, pos_3] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     vpe.set_position(pos_1);
     const auto& position_1 = vpe.get_position();
@@ -1006,7 +1007,7 @@ void CellTest::test_vpe_mixed() {
     const auto& initial_position = vpe.get_position();
     ASSERT_FALSE(initial_position.has_value());
 
-    const auto& [pos_1, pos_3] = get_random_simulation_box_size();
+    const auto& [pos_1, pos_3] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     vpe.set_position(pos_1);
     const auto& position_1 = vpe.get_position();

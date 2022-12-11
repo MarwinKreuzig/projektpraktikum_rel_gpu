@@ -11,6 +11,7 @@
 #include "test_kernel.h"
 
 #include "kernel_adapter.h"
+#include "simulation/simulation_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "algorithm/Kernel/Gaussian.h"
@@ -63,8 +64,8 @@ TEST_F(ProbabilityKernelTest, testLinearNoFreeElements) {
     const auto cutoff_point = KernelAdapter::get_random_linear_cutoff(mt);
     LinearDistributionKernel::set_cutoff(cutoff_point);
 
-    const auto& source_position = get_random_position();
-    const auto& target_position = get_random_position();
+    const auto& source_position = SimulationAdapter::get_random_position(mt);
+    const auto& target_position = SimulationAdapter::get_random_position(mt);
 
     std::stringstream ss{};
     ss << "Cutoff Point: " << cutoff_point << '\n';
@@ -80,8 +81,8 @@ TEST_F(ProbabilityKernelTest, testLinearLinearFreeElements) {
     const auto cutoff_point = KernelAdapter::get_random_linear_cutoff(mt);
     LinearDistributionKernel::set_cutoff(cutoff_point);
 
-    const auto& source_position = get_random_position();
-    const auto& target_position = get_random_position();
+    const auto& source_position = SimulationAdapter::get_random_position(mt);
+    const auto& target_position = SimulationAdapter::get_random_position(mt);
 
     const auto attractiveness_one = LinearDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, 1);
 
@@ -106,10 +107,10 @@ TEST_F(ProbabilityKernelTest, testLinearSamePosition) {
     const auto cutoff_point = KernelAdapter::get_random_linear_cutoff(mt);
     LinearDistributionKernel::set_cutoff(cutoff_point);
 
-    const auto number_elements = get_random_integer<unsigned int>(0, 10000);
+    const auto number_elements = RandomAdapter::get_random_integer<unsigned int>(0, 10000, mt);
     const auto converted_double = static_cast<double>(number_elements);
 
-    const auto& position = get_random_position();
+    const auto& position = SimulationAdapter::get_random_position(mt);
 
     const auto attractiveness = LinearDistributionKernel::calculate_attractiveness_to_connect(position, position, number_elements);
 
@@ -128,10 +129,10 @@ TEST_F(ProbabilityKernelTest, testLinearInf) {
     constexpr auto cutoff_point_inf = std::numeric_limits<double>::infinity();
     LinearDistributionKernel::set_cutoff(cutoff_point_inf);
 
-    const auto& source = get_random_position();
-    const auto& target = get_random_position();
+    const auto& source = SimulationAdapter::get_random_position(mt);
+    const auto& target = SimulationAdapter::get_random_position(mt);
 
-    const auto number_elements = get_random_integer<unsigned int>(0, 10000);
+    const auto number_elements = RandomAdapter::get_random_integer<unsigned int>(0, 10000, mt);
 
     const auto attractiveness = LinearDistributionKernel::calculate_attractiveness_to_connect(source, target, number_elements);
 
@@ -151,10 +152,10 @@ TEST_F(ProbabilityKernelTest, testLinearFinite) {
     LinearDistributionKernel::set_cutoff(cutoff_point);
 
     for (auto i = 0; i < 100; i++) {
-        const auto number_elements = get_random_integer<unsigned int>(0, 10000);
+        const auto number_elements = RandomAdapter::get_random_integer<unsigned int>(0, 10000, mt);
 
-        const auto& source = get_random_position();
-        const auto& target = get_random_position();
+        const auto& source = SimulationAdapter::get_random_position(mt);
+        const auto& target = SimulationAdapter::get_random_position(mt);
 
         const auto attractiveness = LinearDistributionKernel::calculate_attractiveness_to_connect(source, target, number_elements);
 
@@ -186,26 +187,26 @@ TEST_F(KernelTest, testLinearKernelIntegration) {
     const auto& neuron_id_1 = TaggedIdAdapter::get_random_neuron_id(1000, mt);
     const auto& neuron_id_2 = TaggedIdAdapter::get_random_neuron_id(1000, 1000, mt);
 
-    const auto& source_position = get_random_position();
+    const auto& source_position = SimulationAdapter::get_random_position(mt);
 
     Kernel<FastMultipoleMethodsCell>::set_kernel_type(KernelType::Linear);
 
     const auto cutoff_point = KernelAdapter::get_random_linear_cutoff(mt);
     LinearDistributionKernel::set_cutoff(cutoff_point);
 
-    const auto& target_excitatory_axon_position = get_random_position();
-    const auto& target_inhibitory_axon_position = get_random_position();
-    const auto& target_excitatory_dendrite_position = get_random_position();
-    const auto& target_inhibitory_dendrite_position = get_random_position();
+    const auto& target_excitatory_axon_position = SimulationAdapter::get_random_position(mt);
+    const auto& target_inhibitory_axon_position = SimulationAdapter::get_random_position(mt);
+    const auto& target_excitatory_dendrite_position = SimulationAdapter::get_random_position(mt);
+    const auto& target_inhibitory_dendrite_position = SimulationAdapter::get_random_position(mt);
 
-    const auto& number_vacant_excitatory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-    const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-    const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-    const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_excitatory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_inhibitory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_excitatory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_inhibitory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
 
     OctreeNode<FastMultipoleMethodsCell> node{};
     node.set_cell_neuron_id(neuron_id_1);
-    node.set_cell_size(get_minimum_position(), get_maximum_position());
+    node.set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
 
     node.set_cell_excitatory_axons_position(target_excitatory_axon_position);
     node.set_cell_inhibitory_axons_position(target_inhibitory_axon_position);

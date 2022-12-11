@@ -10,6 +10,7 @@
 
 #include "test_calcium_calculator.h"
 
+#include "neurons/neuron_types_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "neurons/CalciumCalculator.h"
@@ -839,8 +840,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneStep0) {
 
     ASSERT_NO_THROW(cc.init(number_neurons));
 
-    const auto& fired_status = get_fired_status(number_neurons);
-    const auto& update_status = get_update_status(number_neurons);
+    const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
+    const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
 
     const auto previous_calcium = cc.get_calcium();
     const auto previous_target = cc.get_target_calcium();
@@ -902,8 +903,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNone) {
 
     ASSERT_NO_THROW(cc.init(number_neurons));
 
-    const auto& fired_status = get_fired_status(number_neurons);
-    const auto& update_status = get_update_status(number_neurons);
+    const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
+    const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
 
     const auto previous_calcium = cc.get_calcium();
     const auto previous_target = cc.get_target_calcium();
@@ -1048,8 +1049,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeStep0) {
 
     ASSERT_NO_THROW(cc.init(number_neurons));
 
-    const auto& fired_status = get_fired_status(number_neurons);
-    const auto& update_status = get_update_status(number_neurons);
+    const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
+    const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
 
     const auto previous_calcium = cc.get_calcium();
     const auto previous_target = cc.get_target_calcium();
@@ -1115,8 +1116,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelative) {
 
     ASSERT_NO_THROW(cc.init(number_neurons));
 
-    const auto& fired_status = get_fired_status(number_neurons);
-    const auto& update_status = get_update_status(number_neurons);
+    const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
+    const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
 
     const auto previous_calcium = cc.get_calcium();
     const auto previous_target = cc.get_target_calcium();
@@ -1275,8 +1276,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteStep0) {
 
     ASSERT_NO_THROW(cc.init(number_neurons));
 
-    const auto& fired_status = get_fired_status(number_neurons);
-    const auto& update_status = get_update_status(number_neurons);
+    const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
+    const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
 
     const auto previous_calcium = cc.get_calcium();
     const auto previous_target = cc.get_target_calcium();
@@ -1343,8 +1344,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsolute) {
 
     ASSERT_NO_THROW(cc.init(number_neurons));
 
-    const auto& fired_status = get_fired_status(number_neurons);
-    const auto& update_status = get_update_status(number_neurons);
+    const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
+    const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
 
     const auto previous_calcium = cc.get_calcium();
     const auto previous_target = cc.get_target_calcium();

@@ -25,9 +25,9 @@ TEST_F(NeuronsTest, testNeuronsConstructor) {
 }
 
 TEST_F(NeuronsTest, testSignalTypeCheck) {
-    const auto num_test_synapses = get_random_integer(50, 500);
+    const auto num_test_synapses = RandomAdapter::get_random_integer(50, 500, mt);
     const auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 10;
-    const auto num_synapses = get_random_integer(10, 100);
+    const auto num_synapses = RandomAdapter::get_random_integer(10, 100, mt);
     const auto num_ranks = MPIRankAdapter::get_random_number_ranks(mt);
     std::vector<SignalType> signal_types{};
     const auto network_graph = std::make_shared<NetworkGraph>(num_neurons, 0);
@@ -38,7 +38,7 @@ TEST_F(NeuronsTest, testSignalTypeCheck) {
     }
 
     for (int synapse_nr = 0; synapse_nr < num_synapses; synapse_nr++) {
-        auto weight = get_random_double(0.1, 20.0);
+        auto weight = RandomAdapter::get_random_double(0.1, 20.0, mt);
         const auto src = TaggedIdAdapter::get_random_neuron_id(num_neurons, mt);
         const auto tgt = TaggedIdAdapter::get_random_neuron_id(num_neurons, src, mt);
         const auto tgt_rank = MPIRankAdapter::get_random_mpi_rank(num_ranks, mt);
@@ -59,7 +59,7 @@ TEST_F(NeuronsTest, testSignalTypeCheck) {
         const auto tgt_rank = MPIRankAdapter::get_random_mpi_rank(num_ranks, mt);
         const auto tgt = TaggedIdAdapter::get_random_neuron_id(num_neurons, src, mt);
         const RankNeuronId tgt_rni(tgt_rank, tgt);
-        auto weight = get_random_double(0.1, 20.0);
+        auto weight = RandomAdapter::get_random_double(0.1, 20.0, mt);
         if (signal_types[src.get_neuron_id()] == SignalType::Excitatory) {
             weight = -weight;
         }

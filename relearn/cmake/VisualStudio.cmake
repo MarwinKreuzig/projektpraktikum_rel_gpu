@@ -161,6 +161,7 @@ if(WIN32)
 	list(APPEND relearn_tests_additional_files "interval/interval_adapter.h")
 	list(APPEND relearn_tests_additional_files "interval/test_interval.h")
 	
+	list(APPEND relearn_tests_additional_files "kernel/kernel_adapter.h")
 	list(APPEND relearn_tests_additional_files "kernel/test_kernel.h")
 	
 	list(APPEND relearn_tests_additional_files "local_area_translator/test_local_area_translator.h")
@@ -182,8 +183,10 @@ if(WIN32)
 	
 	list(APPEND relearn_tests_additional_files "neuron_models/test_neuron_models.h")
 	
+	list(APPEND relearn_tests_additional_files "neurons/neuron_types_adapter.h")
 	list(APPEND relearn_tests_additional_files "neurons/test_neurons.h")
 	
+	list(APPEND relearn_tests_additional_files "octree/octree_adapter.h")
 	list(APPEND relearn_tests_additional_files "octree/test_octree.h")
 	
 	list(APPEND relearn_tests_additional_files "parser/test_monitor_parser.h")	
@@ -191,8 +194,11 @@ if(WIN32)
 	
 	list(APPEND relearn_tests_additional_files "partition/test_partition.h")
 	
-	list(APPEND relearn_tests_additional_files "space_filling_curve/test_space_filling_curve.h")
+	list(APPEND relearn_tests_additional_files "simulation/simulation_adapter.h")
 	
+	list(APPEND relearn_tests_additional_files "space_filling_curve/test_space_filling_curve.h")
+
+	list(APPEND relearn_tests_additional_files "synaptic_elements/synaptic_elements_adapter.h")
 	list(APPEND relearn_tests_additional_files "synaptic_elements/test_synaptic_elements.h")
 	
 	list(APPEND relearn_tests_additional_files "synaptic_input/test_synaptic_input.h")

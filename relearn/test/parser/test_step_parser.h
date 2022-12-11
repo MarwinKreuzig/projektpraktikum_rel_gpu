@@ -11,6 +11,7 @@
  */
 
 #include "RelearnTest.hpp"
+#include "RandomAdapter.h"
 
 #include "util/Interval.h"
 
@@ -30,9 +31,9 @@ protected:
         constexpr auto min = std::numeric_limits<int_type>::min();
         constexpr auto max = std::numeric_limits<int_type>::max();
 
-        const auto begin = get_random_integer<int_type>(min, max);
-        const auto end = get_random_integer<int_type>(min, max);
-        const auto frequency = get_random_integer<int_type>(min, max);
+        const auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+        const auto end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+        const auto frequency = RandomAdapter::get_random_integer<int_type>(min, max, mt);
 
         return Interval{ std::min(begin, end), std::max(begin, end), frequency };
     }

@@ -10,6 +10,8 @@
 
 #include "test_mpi_rank.h"
 
+#include "RandomAdapter.h"
+
 #include "util/MPIRank.h"
 
 #include <climits>
@@ -58,7 +60,7 @@ TEST_F(MPIRankTest, testConstructor) {
     auto generator = [this] {
         constexpr auto min = std::numeric_limits<int>::min();
         constexpr auto max = std::numeric_limits<int>::max();
-        return get_random_integer<int>(min, max);
+        return RandomAdapter::get_random_integer(min, max, mt);
     };
 
     for (auto it = 0ULL; it < 1000ULL; it++) {

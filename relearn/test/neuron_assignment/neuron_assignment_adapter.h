@@ -76,4 +76,14 @@ public:
 
         return area_names;
     }
+
+    static std::vector<RelearnTypes::area_name> get_neuron_id_vs_area_name(const std::vector<RelearnTypes::area_id>& neuron_id_vs_area_id, 
+        const std::vector<RelearnTypes::area_name>& area_id_vs_area_name) {
+        std::vector<RelearnTypes::area_name> neuron_id_vs_area_name{};
+
+        for (auto i : neuron_id_vs_area_id) {
+            neuron_id_vs_area_name.emplace_back(area_id_vs_area_name[i]);
+        }
+        return neuron_id_vs_area_name;
+    }
 };
