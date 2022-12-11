@@ -10,6 +10,7 @@
  *
  */
 
+#include "util/MPIRank.h"
 #include "util/RelearnException.h"
 
 #include <functional>
@@ -28,12 +29,12 @@ template <typename RequestType>
 class CommunicationMap {
 
 public:
-    using container_type = std::unordered_map<int, std::vector<RequestType>>;
+    using container_type = std::unordered_map<MPIRank, std::vector<RequestType>>;
     using iterator = typename container_type::iterator;
     using const_iterator = typename container_type::const_iterator;
     using size_type = typename container_type::size_type;
     using requests_size_type = typename std::vector<RequestType>::size_type;
-    using sizes_type = std::unordered_map<int, requests_size_type>;
+    using sizes_type = std::unordered_map<MPIRank, requests_size_type>;
 
     /**
      * @brief Constructs a new communication map
@@ -54,8 +55,9 @@ public:
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
      * @return True iff there is data for the MPI rank
      */
-    [[nodiscard]] bool contains(const int mpi_rank) const {
-        RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::contains: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
+    [[nodiscard]] bool contains(const MPIRank mpi_rank) const {
+        RelearnException::check(mpi_rank.is_initialized(), "CommunicationMap::contains: mpi_rank is not initialized.");
+        RelearnException::check(mpi_rank.get_rank() < number_ranks, "CommunicationMap::contains: rank {} is larger than the number of ranks {}", mpi_rank, number_ranks);
         return requests.find(mpi_rank) != requests.end();
     }
 
@@ -103,8 +105,9 @@ public:
      * @param request The data for the MPI rank
      * @exception Throws a RelearnException
      */
-    void append(const int mpi_rank, const RequestType& request) {
-        RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::append: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
+    void append(const MPIRank mpi_rank, const RequestType& request) {
+        RelearnException::check(mpi_rank.is_initialized(), "CommunicationMap::append: mpi_rank is not initialized.");
+        RelearnException::check(mpi_rank.get_rank() < number_ranks, "CommunicationMap::append: rank {} is larger than the number of ranks {}", mpi_rank, number_ranks);
         requests[mpi_rank].emplace_back(request);
     }
 
@@ -117,8 +120,9 @@ public:
      * @return A reference to the newly created element
      */
     template <class... ValueType>
-    constexpr decltype(auto) emplace_back(const int mpi_rank, ValueType&&... Val) {
-        RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::emplace_back: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
+    constexpr decltype(auto) emplace_back(const MPIRank mpi_rank, ValueType&&... Val) {
+        RelearnException::check(mpi_rank.is_initialized(), "CommunicationMap::emplace_back: mpi_rank is not initialized.");
+        RelearnException::check(mpi_rank.get_rank() < number_ranks, "CommunicationMap::emplace_back: rank {} is larger than the number of ranks {}", mpi_rank, number_ranks);
         return requests[mpi_rank].emplace_back(std::forward<ValueType>(Val)...);
     }
 
@@ -130,8 +134,9 @@ public:
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks,
      *      if the index is too large within the requests for that rank, or if there is no data for the MPI rank at all
      */
-    void set_request(const int mpi_rank, const requests_size_type request_index, const RequestType& request) {
-        RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::set_request: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
+    void set_request(const MPIRank mpi_rank, const requests_size_type request_index, const RequestType& request) {
+        RelearnException::check(mpi_rank.is_initialized(), "CommunicationMap::set_request: mpi_rank is not initialized.");
+        RelearnException::check(mpi_rank.get_rank() < number_ranks, "CommunicationMap::set_request: rank {} is larger than the number of ranks {}", mpi_rank, number_ranks);
         RelearnException::check(contains(mpi_rank), "CommunicationMap::set_request: Does not contain a buffer for rank {}", mpi_rank);
         RelearnException::check(request_index < size(mpi_rank), "CommunicationMap::set_request: The index was too large: {} vs {}", request_index, requests[mpi_rank].size());
 
@@ -146,8 +151,9 @@ public:
      *      if the index is too large within the requests for that rank, or if there is no data for the MPI rank at all
      * @return The data package
      */
-    [[nodiscard]] RequestType get_request(const int mpi_rank, const requests_size_type request_index) const {
-        RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::get_request: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
+    [[nodiscard]] RequestType get_request(const MPIRank mpi_rank, const requests_size_type request_index) const {
+        RelearnException::check(mpi_rank.is_initialized(), "CommunicationMap::get_request: mpi_rank is not initialized.");
+        RelearnException::check(mpi_rank.get_rank() < number_ranks, "CommunicationMap::get_request: rank {} is larger than the number of ranks {}", mpi_rank, number_ranks);
         RelearnException::check(contains(mpi_rank), "CommunicationMap::get_request: There are no requests for rank {}", mpi_rank);
 
         const auto& requests_for_rank = requests.at(mpi_rank);
@@ -163,8 +169,9 @@ public:
      *      or if there is no data for the MPI rank at all
      * @return All data for the specified rank
      */
-    [[nodiscard]] const std::vector<RequestType>& get_requests(const int mpi_rank) const {
-        RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::get_requests: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
+    [[nodiscard]] const std::vector<RequestType>& get_requests(const MPIRank mpi_rank) const {
+        RelearnException::check(mpi_rank.is_initialized(), "CommunicationMap::contains: get_requests is not initialized.");
+        RelearnException::check(mpi_rank.get_rank() < number_ranks, "CommunicationMap::get_requests: rank {} is larger than the number of ranks {}", mpi_rank, number_ranks);
         RelearnException::check(contains(mpi_rank), "CommunicationMap::get_requests: There are no requests for rank {}", mpi_rank);
 
         return requests.at(mpi_rank);
@@ -176,8 +183,9 @@ public:
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
      * @return All data for the specified rank (might be empty)
      */
-    [[nodiscard]] std::optional<std::reference_wrapper<const std::vector<RequestType>>> get_optional_request(const int mpi_rank) const {
-        RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::get_requests: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
+    [[nodiscard]] std::optional<std::reference_wrapper<const std::vector<RequestType>>> get_optional_request(const MPIRank mpi_rank) const {
+        RelearnException::check(mpi_rank.is_initialized(), "CommunicationMap::contains: get_optional_request is not initialized.");
+        RelearnException::check(mpi_rank.get_rank() < number_ranks, "CommunicationMap::get_optional_request: rank {} is larger than the number of ranks {}", mpi_rank, number_ranks);
 
         const auto find_it = requests.find(mpi_rank);
         if (find_it == requests.end()) {
@@ -196,8 +204,9 @@ public:
      * @param size_for_rank The number of elements the buffer should be able to hold
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
      */
-    void resize(const int mpi_rank, const requests_size_type size_for_rank) {
-        RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::resize: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
+    void resize(const MPIRank mpi_rank, const requests_size_type size_for_rank) {
+        RelearnException::check(mpi_rank.is_initialized(), "CommunicationMap::resize: mpi_rank is not initialized.");
+        RelearnException::check(mpi_rank.get_rank() < number_ranks, "CommunicationMap::resize: rank {} is larger than the number of ranks {}", mpi_rank, number_ranks);
         requests[mpi_rank].resize(size_for_rank);
     }
 
@@ -208,13 +217,16 @@ public:
      */
     void resize(std::vector<requests_size_type> sizes) {
         RelearnException::check(sizes.size() <= number_ranks, "CommunicationMap::resize: number of sizes {} is larger than the number of ranks {}", sizes.size(), number_ranks);
-        for (auto mpi_rank = 0; mpi_rank < sizes.size(); mpi_rank++) {
-            if (sizes[mpi_rank] == 0 && !contains(mpi_rank)) {
+
+        for (const auto mpi_rank : MPIRank::range(number_ranks)) {
+            const auto size_for_ranks = sizes[mpi_rank.get_rank()];
+
+            if (size_for_ranks == 0 && !contains(mpi_rank)) {
                 // Don't want to insert an empty element into the container
                 continue;
             }
 
-            requests[mpi_rank].resize(sizes[mpi_rank]);
+            requests[mpi_rank].resize(size_for_ranks);
         }
     }
 
@@ -227,7 +239,7 @@ public:
         requests.clear();
 
         for (const auto& [mpi_rank, size_for_rank] : sizes) {
-            RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "");
+            RelearnException::check(mpi_rank.get_rank() < number_ranks, "");
             requests[mpi_rank].resize(size_for_rank);
         }
     }
@@ -245,8 +257,9 @@ public:
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
      * @return The number of packages for the specified MPI rank. Is 0 if there is no data present
      */
-    [[nodiscard]] requests_size_type size(const int mpi_rank) const {
-        RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::size: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
+    [[nodiscard]] requests_size_type size(const MPIRank mpi_rank) const {
+        RelearnException::check(mpi_rank.is_initialized(), "CommunicationMap::size: mpi_rank is not initialized.");
+        RelearnException::check(mpi_rank.get_rank() < number_ranks, "CommunicationMap::size: rank {} is larger than the number of ranks {}", mpi_rank, number_ranks);
         if (!contains(mpi_rank)) {
             return 0;
         }
@@ -260,8 +273,9 @@ public:
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
      * @return The number of bytes for the packages for the specified MPI rank. Is 0 if there is no data present
      */
-    [[nodiscard]] requests_size_type get_size_in_bytes(const int mpi_rank) const {
-        RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::get_data: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
+    [[nodiscard]] requests_size_type get_size_in_bytes(const MPIRank mpi_rank) const {
+        RelearnException::check(mpi_rank.is_initialized(), "CommunicationMap::get_size_in_bytes: mpi_rank is not initialized.");
+        RelearnException::check(mpi_rank.get_rank() < number_ranks, "CommunicationMap::get_size_in_bytes: rank {} is larger than the number of ranks {}", mpi_rank, number_ranks);
         if (!contains(mpi_rank)) {
             return 0;
         }
@@ -277,8 +291,9 @@ public:
      *      or if there is no data for the specified rank
      * @return A non-owning pointer to the buffer
      */
-    [[nodiscard]] RequestType* get_data(const int mpi_rank) {
-        RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::get_data: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
+    [[nodiscard]] RequestType* get_data(const MPIRank mpi_rank) {
+        RelearnException::check(mpi_rank.is_initialized(), "CommunicationMap::get_data: mpi_rank is not initialized.");
+        RelearnException::check(mpi_rank.get_rank() < number_ranks, "CommunicationMap::get_data: rank {} is larger than the number of ranks {}", mpi_rank, number_ranks);
         RelearnException::check(contains(mpi_rank), "CommunicationMap::get_data: There are no requests for rank {}", mpi_rank);
 
         return requests.at(mpi_rank).data();
@@ -292,8 +307,9 @@ public:
      *      or if there is no data for the specified rank
      * @return A non-owning pointer to the buffer
      */
-    [[nodiscard]] const RequestType* get_data(const int mpi_rank) const {
-        RelearnException::check(0 <= mpi_rank && mpi_rank < number_ranks, "CommunicationMap::get_data const: rank {} is larger than the number of ranks {} (or negative)", mpi_rank, number_ranks);
+    [[nodiscard]] const RequestType* get_data(const MPIRank mpi_rank) const {
+        RelearnException::check(mpi_rank.is_initialized(), "CommunicationMap::get_data const: mpi_rank is not initialized.");
+        RelearnException::check(mpi_rank.get_rank() < number_ranks, "CommunicationMap::get_data const: rank {} is larger than the number of ranks {}", mpi_rank, number_ranks);
         RelearnException::check(contains(mpi_rank), "CommunicationMap::get_data const: There are no requests for rank {}", mpi_rank);
 
         return requests.at(mpi_rank).data();
@@ -305,7 +321,8 @@ public:
      * @exception Throws a RelearnException if mpi_rank is negative or too large with respect to the number of ranks
      * @exception Throws a RelearnException if mpi_rank is negative, the rank does not have saved requests, or the value is too large with respect to the number of ranks
      */
-    [[nodiscard]] std::span<RequestType> get_span(const int mpi_rank) {
+    [[nodiscard]] std::span<RequestType> get_span(const MPIRank mpi_rank) {
+        RelearnException::check(mpi_rank.is_initialized(), "CommunicationMap::get_span: mpi_rank is not initialized.");
         RelearnException::check(contains(mpi_rank), "CommunicationMap::get_span: There are no requests for rank {}", mpi_rank);
         return std::span<RequestType>{ requests.at(mpi_rank) };
     }
@@ -315,7 +332,8 @@ public:
      * @param mpi_rank The MPI rank whose buffer should be queried
      * @exception Throws a RelearnException if mpi_rank is negative, the rank does not have saved requests, or the value is too large with respect to the number of ranks
      */
-    [[nodiscard]] std::span<const RequestType> get_span(const int mpi_rank) const {
+    [[nodiscard]] std::span<const RequestType> get_span(const MPIRank mpi_rank) const {
+        RelearnException::check(mpi_rank.is_initialized(), "CommunicationMap::get_span const: mpi_rank is not initialized.");
         RelearnException::check(contains(mpi_rank), "CommunicationMap::get_span const: There are no requests for rank {}", mpi_rank);
         return std::span<const RequestType>{ requests.at(mpi_rank) };
     }
@@ -329,7 +347,7 @@ public:
         std::vector<requests_size_type> number_requests(number_ranks, 0);
 
         for (const auto& [rank, requests_for_rank] : requests) {
-            number_requests[rank] = requests_for_rank.size();
+            number_requests[rank.get_rank()] = requests_for_rank.size();
         }
 
         return number_requests;

@@ -21,6 +21,7 @@ using MPIWrapper = MPINoWrapper;
 #include "io/LogFiles.h"
 #include "mpi/CommunicationMap.h"
 #include "util/MemoryHolder.h"
+#include "util/MPIRank.h"
 #include "util/RelearnException.h"
 
 #include <array>
@@ -273,27 +274,27 @@ public:
 
         std::vector<AsyncToken> async_tokens{};
 
-        for (auto rank_id = 0; rank_id < number_ranks; rank_id++) {
-            if (!incoming_requests.contains(rank_id)) {
+        for (const auto rank : MPIRank::range(number_ranks)) {
+            if (!incoming_requests.contains(rank)) {
                 continue;
             }
 
-            auto* buffer = incoming_requests.get_data(rank_id);
-            const auto size = incoming_requests.size(rank_id);
+            auto* buffer = incoming_requests.get_data(rank);
+            const auto size = incoming_requests.size(rank);
 
-            const auto token = async_receive(incoming_requests.get_span(rank_id), rank_id);
+            const auto token = async_receive(incoming_requests.get_span(rank), rank.get_rank());
             async_tokens.emplace_back(token);
         }
 
-        for (auto rank_id = 0; rank_id < number_ranks; rank_id++) {
-            if (!outgoing_requests.contains(rank_id)) {
+        for (const auto rank : MPIRank::range(number_ranks)) {
+            if (!outgoing_requests.contains(rank)) {
                 continue;
             }
 
-            const auto* buffer = outgoing_requests.get_data(rank_id);
-            const auto size = outgoing_requests.size(rank_id);
+            const auto* buffer = outgoing_requests.get_data(rank);
+            const auto size = outgoing_requests.size(rank);
 
-            const auto token = async_send(outgoing_requests.get_span(rank_id), rank_id);
+            const auto token = async_send(outgoing_requests.get_span(rank), rank.get_rank());
             async_tokens.emplace_back(token);
         }
 

@@ -57,7 +57,7 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
         const auto& requests = find_target_neurons(id, axon_position, number_vacant_axons, root, ElementType::Dendrite, dendrite_type_needed);
         for (const auto& [target_rank, creation_request] : requests) {
 #pragma omp critical(BHrequests)
-            neuron_requests_outgoing.append(target_rank, creation_request);
+            neuron_requests_outgoing.append(MPIRank(target_rank), creation_request);
         }
     }
 

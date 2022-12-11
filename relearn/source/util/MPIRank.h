@@ -124,3 +124,22 @@ private:
 
 template <>
 struct fmt::formatter<MPIRank> : ostream_formatter { };
+
+namespace std {
+template <>
+struct hash<MPIRank> {
+    using argument_type = MPIRank;
+    using result_type = std::size_t;
+
+    result_type operator()(const argument_type& mpi_rank) const {
+        constexpr auto max = std::numeric_limits<result_type>::max();
+        if (!mpi_rank.is_initialized()) {
+            // All bits are set
+            return max;
+        }
+
+        const auto rank = mpi_rank.get_rank();
+        return result_type(rank);
+    }
+};
+} // namespace std

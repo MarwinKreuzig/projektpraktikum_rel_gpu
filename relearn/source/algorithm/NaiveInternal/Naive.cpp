@@ -57,7 +57,7 @@ std::optional<RankNeuronId> Naive::find_target_neuron(const NeuronID& src_neuron
         root_of_subtree = node_selected;
     }
 
-    RankNeuronId rank_neuron_id{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
+    RankNeuronId rank_neuron_id{ node_selected->get_mpi_rank(), node_selected->get_cell_neuron_id() };
     return rank_neuron_id;
 }
 
@@ -111,7 +111,7 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const number
              * Append request for synapse creation to rank "target_rank"
              * Note that "target_rank" could also be my own rank.
              */
-            synapse_creation_requests_outgoing.append(target_rank, creation_request);
+            synapse_creation_requests_outgoing.append(MPIRank(target_rank), creation_request);
         }
     }
 

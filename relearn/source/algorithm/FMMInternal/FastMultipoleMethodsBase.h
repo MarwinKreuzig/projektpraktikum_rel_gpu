@@ -946,7 +946,7 @@ public:
 
                     // No autapse
                     if (target_id != source_id) {
-                        const auto target_rank = target->get_rank();
+                        const auto target_rank = target->get_mpi_rank();
                         const SynapseCreationRequest creation_request(target_id, source_id, signal_type_needed);
                         request.append(target_rank, creation_request);
                     }

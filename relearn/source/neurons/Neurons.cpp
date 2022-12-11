@@ -362,7 +362,7 @@ CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(
 
         for (const auto& [rank, other_neuron_id] : affected_neuron_ids) {
             SynapseDeletionRequest psd(neuron_id, other_neuron_id, element_type, signal_type);
-            deletion_requests.append(rank, psd);
+            deletion_requests.append(MPIRank(rank), psd);
 
             if (my_rank == rank) {
                 continue;
@@ -452,7 +452,9 @@ std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
 }
 
 size_t Neurons::delete_synapses_commit_deletions(const CommunicationMap<SynapseDeletionRequest>& list) {
-    const int my_rank = MPIWrapper::get_my_rank();
+    const int my_rank_int = MPIWrapper::get_my_rank();
+    const auto my_rank = MPIRank(my_rank_int);
+
     size_t num_synapses_deleted = 0;
 
     for (const auto& [other_rank, requests] : list) {

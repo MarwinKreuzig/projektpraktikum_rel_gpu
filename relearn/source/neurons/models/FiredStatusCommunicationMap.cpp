@@ -56,7 +56,7 @@ void FiredStatusCommunicationMap::set_local_fired_status(const std::vector<Fired
 
                 // Function expects to insert neuron ids in sorted order
                 // Append if it is not already in
-                outgoing_ids.append(target_rank, id);
+                outgoing_ids.append(MPIRank(target_rank), id);
             }
         };
 
@@ -78,7 +78,7 @@ bool FiredStatusCommunicationMap::contains(int rank, NeuronID neuron_id) const {
     RelearnException::check(0 <= rank && rank < number_ranks, "FiredStatusCommunicationMap::contains: rank {} is larger than the number of ranks {} (or negative)", rank, number_ranks);
     RelearnException::check(neuron_id.is_initialized(), "FiredStatusCommunicationMap::contains: The neuron id is not initialized: {}", neuron_id);
 
-    const auto& firings_ids_opt = incoming_ids.get_optional_request(rank);
+    const auto& firings_ids_opt = incoming_ids.get_optional_request(MPIRank(rank));
     if (!firings_ids_opt.has_value()) {
         return false;
     }

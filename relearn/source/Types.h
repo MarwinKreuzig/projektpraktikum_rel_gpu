@@ -12,6 +12,8 @@
 
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/Synapse.h"
+#include "util/MPIRank.h"
+#include "util/TaggedID.h"
 #include "util/Vec3.h"
 
 #include <cstdint>

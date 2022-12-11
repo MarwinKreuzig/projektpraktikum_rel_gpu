@@ -53,7 +53,7 @@ public:
                     number_inhibitory_requests[id]++;
                 }
 
-                cm.append(source_rank.get_rank(), scr);
+                cm.append(source_rank, scr);
             }
         }
 

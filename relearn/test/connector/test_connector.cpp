@@ -126,7 +126,7 @@ TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
 
         for (auto i = 0U; i < number_vacant_excitatory; i++) {
             SynapseCreationRequest scr(id, NeuronID{ i }, SignalType::Excitatory);
-            incoming_requests.append(1, scr);
+            incoming_requests.append(MPIRank(1), scr);
 
             excitatory_requests[id].emplace_back(scr);
         }
@@ -136,7 +136,7 @@ TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
 
         for (auto i = 0U; i < number_vacant_inhibitory; i++) {
             SynapseCreationRequest scr(id, NeuronID{ i }, SignalType::Inhibitory);
-            incoming_requests.append(1, scr);
+            incoming_requests.append(MPIRank(1), scr);
 
             inhibitory_requests[id].emplace_back(scr);
         }
@@ -264,7 +264,7 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     // Extract things from the return value
-    for (auto rank = 0; rank < number_ranks; rank++) {
+    for (const auto rank : MPIRank::range(number_ranks)) {
         const auto found_in_requests = request_sizes.contains(rank);
         if (!found_in_requests) {
             continue;
@@ -289,7 +289,7 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
 
             const auto weight = signal_type == SignalType::Excitatory ? 1 : -1;
 
-            if (rank == my_rank) {
+            if (rank == MPIRank(my_rank)) {
                 expected_local_synapses.emplace_back(target_index, source_index, weight);
             } else {
                 expected_distant_in_synapses.emplace_back(target_index, RankNeuronId{ rank, source_index }, weight);
