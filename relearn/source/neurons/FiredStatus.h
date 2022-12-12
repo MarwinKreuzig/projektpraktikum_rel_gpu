@@ -26,7 +26,7 @@ enum class FiredStatus : char {
  * @param element_type The fired status to print
  * @return The argument out, now altered with the fired status
  */
-inline std::ostream& operator<<(std::ostream& out, const FiredStatus& fired_status) {
+inline std::ostream& operator<<(std::ostream& out, const FiredStatus fired_status) {
     if (fired_status == FiredStatus::Fired) {
         return out << "Fired";
     }

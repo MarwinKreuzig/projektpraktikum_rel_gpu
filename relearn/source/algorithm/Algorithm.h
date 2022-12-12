@@ -36,7 +36,8 @@ public:
      * @param inhibitory_dendrites The model for the inhibitory dendrites
      * @exception Throws a RelearnException if one of the pointers is empty
      */
-    void set_synaptic_elements(std::shared_ptr<SynapticElements> axons, std::shared_ptr<SynapticElements> excitatory_dendrites, std::shared_ptr<SynapticElements> inhibitory_dendrites) {
+    void set_synaptic_elements(std::shared_ptr<SynapticElements> axons,
+        std::shared_ptr<SynapticElements> excitatory_dendrites, std::shared_ptr<SynapticElements> inhibitory_dendrites) {
         const bool axons_full = axons.operator bool();
         const bool excitatory_dendrites_full = excitatory_dendrites.operator bool();
         const bool inhibitory_dendrites_full = inhibitory_dendrites.operator bool();
@@ -59,8 +60,8 @@ public:
      * @exception Can throw a RelearnException
      * @return A tuple with the created synapses that must be committed to the network graph
      */
-    [[nodiscard]] virtual std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
-        const std::unique_ptr<NeuronsExtraInfo>& extra_infos)
+    [[nodiscard]] virtual std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(number_neurons_type number_neurons,
+        const std::vector<UpdateStatus>& disable_flags, const std::unique_ptr<NeuronsExtraInfo>& extra_infos)
         = 0;
 
     /**

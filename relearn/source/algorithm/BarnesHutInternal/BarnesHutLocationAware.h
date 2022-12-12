@@ -20,7 +20,6 @@
 #include "neurons/SignalType.h"
 #include "neurons/UpdateStatus.h"
 #include "neurons/helper/DistantNeuronRequests.h"
-#include "structure/OctreeNode.h"
 
 #include <memory>
 #include <tuple>
@@ -30,10 +29,11 @@
 class NeuronsExtraInfo;
 template <typename T>
 class OctreeImplementation;
-class SynapticElements;
+template <typename T>
+class OctreeNode;
 
 /**
- * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
+ * This class represents the implementation and adaptation of the Barnes–Hut algorithm. The parameters can be set on the fly.
  * It is strongly tied to Octree, and performs MPI communication
  */
 class BarnesHutLocationAware : public ForwardAlgorithm<DistantNeuronRequest, DistantNeuronResponse, BarnesHutCell> {
@@ -88,8 +88,8 @@ protected:
      * @param signal_type The signal type the source neuron searches
      * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank
      */
-    [[nodiscard]] std::vector<std::tuple<MPIRank, DistantNeuronRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position, const counter_type& number_vacant_elements,
-        OctreeNode<AdditionalCellAttributes>* root, ElementType element_type, SignalType signal_type);
+    [[nodiscard]] std::vector<std::tuple<MPIRank, DistantNeuronRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
+        const counter_type& number_vacant_elements, OctreeNode<AdditionalCellAttributes>* root, ElementType element_type, SignalType signal_type);
 
     /**
      * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses

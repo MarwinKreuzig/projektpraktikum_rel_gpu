@@ -27,7 +27,7 @@ enum class TargetCalciumDecay : char {
  * @param element_type The target calcium decay to print
  * @return The argument out, now altered with the target calcium decay
  */
-inline std::ostream& operator<<(std::ostream& out, const TargetCalciumDecay& decay_type) {
+inline std::ostream& operator<<(std::ostream& out, const TargetCalciumDecay decay_type) {
     if (decay_type == TargetCalciumDecay::None) {
         return out << "None";
     }

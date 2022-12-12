@@ -144,7 +144,7 @@ TEST_F(MiscTest, testMinMaxAccSizeAllDisabled) {
 }
 
 TEST_F(MiscTest, testMinMaxAccSizeAllStatic) {
-    std::vector<UpdateStatus> update_status(3, UpdateStatus::STATIC);
+    std::vector<UpdateStatus> update_status(3, UpdateStatus::Static);
 
     ASSERT_THROW(auto val = Util::min_max_acc(std::vector<double>{ 4.0, 1.2, 5.2 }, update_status), RelearnException);
     ASSERT_THROW(auto val = Util::min_max_acc(std::vector<float>{ 0.8f, -1.6f, 65423.8f }, update_status), RelearnException);
@@ -161,7 +161,7 @@ TEST_F(MiscTest, testMinMaxAccDouble) {
 
     std::vector<UpdateStatus> update_status(number_enabled, UpdateStatus::Enabled);
     update_status.resize(number_enabled + number_disabled, UpdateStatus::Disabled);
-    update_status.resize(number_values, UpdateStatus::STATIC);
+    update_status.resize(number_values, UpdateStatus::Static);
 
     RandomAdapter::shuffle(update_status.begin(), update_status.end(), mt);
 
@@ -201,7 +201,7 @@ TEST_F(MiscTest, testMinMaxAccSizet) {
 
     std::vector<UpdateStatus> update_status(number_enabled, UpdateStatus::Enabled);
     update_status.resize(number_enabled + number_disabled, UpdateStatus::Disabled);
-    update_status.resize(number_values, UpdateStatus::STATIC);
+    update_status.resize(number_values, UpdateStatus::Static);
 
     RandomAdapter::shuffle(update_status.begin(), update_status.end(), mt);
 

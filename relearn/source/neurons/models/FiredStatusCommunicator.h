@@ -33,7 +33,7 @@ public:
      * @param number_neurons The number of local neurons
      * @exception Throws a RelearnException if number_ranks <= 0
      */
-    FiredStatusCommunicator(size_t number_ranks, number_neurons_type number_local_neurons)
+    FiredStatusCommunicator(const size_t number_ranks, const number_neurons_type number_local_neurons)
         : number_ranks(number_ranks)
         , number_local_neurons(number_local_neurons) {
         RelearnException::check(number_ranks > 0, "FiredStatusCommunicator::FiredStatusCommunicator: number_ranks is too small: {}", number_ranks);

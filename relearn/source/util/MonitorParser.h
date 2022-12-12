@@ -35,8 +35,8 @@ public:
      *      <mpi_rank>:<neuron_id>
      *      with a non-negative MPI rank. However, if -1 is parsed as the MPI rank, default_rank is used instead.
      * @param description The description to parse
-     * @param default_rank The default MPI rank, must be non-negative
-     * @return An optional that contains the parsed RankNeuronId. Is empty if parsing failed or default_rank < 0.
+     * @param default_rank The default MPI rank
+     * @return An optional that contains the parsed RankNeuronId. Is empty if parsing failed or default_rank is not initialized
      */
     [[nodiscard]] static std::optional<RankNeuronId> parse_description(const std::string_view description, const MPIRank default_rank) {
         if (!default_rank.is_initialized()) {
@@ -77,8 +77,8 @@ public:
      *      <mpi_rank>:<neuron_id> with ; separating the RankNeuronIds
      *      with a non-negative MPI rank. However, if -1 is parsed as the MPI rank, default_rank is used instead.
      * @param description The description of the RankNeuronIds
-     * @param default_rank The default MPI rank, must be non-negative
-     * @exception Throws a RelearnException if default_rank < 0
+     * @param default_rank The default MPI rank, must be initialized
+     * @exception Throws a RelearnException if default_rank is not initialized
      * @return A vector with all successfully parsed RankNeuronIds
      */
     [[nodiscard]] static std::vector<RankNeuronId> parse_multiple_description(const std::string& description, const MPIRank default_rank) {
@@ -146,8 +146,8 @@ public:
     /**
      * @brief Extracts all NeuronIDs from the RankNeuronIds that belong to the given rank
      * @param rank_neuron_ids The rank neuron ids
-     * @param my_rank The current MPI rank, must be non-negative
-     * @exception Throws a RelearnException if my_rank < 0
+     * @param my_rank The current MPI rank, must be initialized
+     * @exception Throws a RelearnException if my_rank is not initialized
      * @return A vector with all successfully parsed RankNeuronIds
      */
     [[nodiscard]] static std::vector<NeuronID> extract_my_ids(const std::vector<RankNeuronId>& rank_neuron_ids, const MPIRank my_rank) {
@@ -196,9 +196,9 @@ public:
      *      <mpi_rank>:<neuron_id> with ; separating the RankNeuronIds
      *      with a non-negative MPI rank. However, if -1 is parsed as the MPI rank, default_rank is used instead.
      * @param description The description of the RankNeuronIds
-     * @param default_rank The default MPI rank, must be non-negative
-     * @param my_rank The current MPI rank, must be non-negative
-     * @exception Throws a RelearnException if default_rank < 0 or my_rank < 0
+     * @param default_rank The default MPI rank, must be initialized
+     * @param my_rank The current MPI rank, must be initialized
+     * @exception Throws a RelearnException if default_rank or my_rank is not initialized
      * @return A vector with all NeuronIDs that shall be monitored at the current rank, sorted and unique
      */
     [[nodiscard]] static std::vector<NeuronID> parse_my_ids(const std::string& description, const MPIRank default_rank, 

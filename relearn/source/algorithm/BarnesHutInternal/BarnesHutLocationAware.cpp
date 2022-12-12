@@ -93,7 +93,7 @@ std::vector<std::tuple<MPIRank, DistantNeuronRequest>> BarnesHutLocationAware::f
     return requests;
 }
 
-[[nodiscard]] std::pair<CommunicationMap<DistantNeuronResponse>, std::pair<LocalSynapses, DistantInSynapses>>
+std::pair<CommunicationMap<DistantNeuronResponse>, std::pair<LocalSynapses, DistantInSynapses>>
 BarnesHutLocationAware::process_requests(const CommunicationMap<DistantNeuronRequest>& neuron_requests) {
     const auto number_ranks = neuron_requests.get_number_ranks();
 

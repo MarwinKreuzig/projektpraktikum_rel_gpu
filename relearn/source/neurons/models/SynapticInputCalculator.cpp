@@ -16,7 +16,7 @@
 
 #include <algorithm>
 
-void SynapticInputCalculator::init(const size_t number_neurons) {
+void SynapticInputCalculator::init(const number_neurons_type number_neurons) {
     RelearnException::check(number_neurons > 0, "SynapticInputCalculator::init: number_neurons was 0");
 
     number_local_neurons = number_neurons;
@@ -25,7 +25,7 @@ void SynapticInputCalculator::init(const size_t number_neurons) {
     fired_status_comm = std::make_unique<FiredStatusCommunicationMap>(MPIWrapper::get_num_ranks(), number_neurons);
 }
 
-void SynapticInputCalculator::create_neurons(const size_t creation_count) {
+void SynapticInputCalculator::create_neurons(const number_neurons_type creation_count) {
     RelearnException::check(number_local_neurons > 0, "SynapticInputCalculator::create_neurons: number_local_neurons was 0");
     RelearnException::check(creation_count > 0, "SynapticInputCalculator::create_neurons: creation_count was 0");
 

@@ -158,6 +158,8 @@ std::vector<std::pair<InteractiveNeuronIO::step_type, InteractiveNeuronIO::numbe
 
 std::function<double(InteractiveNeuronIO::step_type, NeuronID::value_type)> InteractiveNeuronIO::load_stimulus_interrupts(
     const std::filesystem::path& path_to_file, const MPIRank my_rank, std::shared_ptr<LocalAreaTranslator> local_area_translator) {
+    RelearnException::check(my_rank.is_initialized(), "InteractiveNeuronIO::load_stimulus_interrupts: my_rank was virtual");
+    
     std::ifstream file{ path_to_file };
 
     const bool file_is_good = file.good();

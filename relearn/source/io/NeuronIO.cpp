@@ -540,20 +540,6 @@ std::pair<std::tuple<LocalSynapses, DistantOutSynapses>, std::tuple<LocalSynapse
     return { { local_out_synapses_static, distant_out_synapses_static }, { local_out_synapses_plastic, distant_out_synapses_plastic } };
 }
 
-// void NeuronIO::write_out_synapses(const LocalSynapses& local_out_synapses_static, const DistantOutSynapses& distant_out_synapses_static, const LocalSynapses& local_out_synapses_plastic, const DistantOutSynapses& distant_out_synapses_plastic, int my_rank, const std::filesystem::path& file_path) {
-//     std::stringstream ss;
-//     write_out_synapses(local_out_synapses_static, distant_out_synapses_static, local_out_synapses_plastic, distant_out_synapses_plastic, my_rank, ss);
-//     std::ofstream of(file_path, std::ios::binary | std::ios::out);
-//
-//     const auto is_good = of.good();
-//     const auto is_bad = of.bad();
-//
-//     RelearnException::check(is_good && !is_bad, "NeuronIO::write_neurons_to_file: The ofstream failed to open");
-//
-//     of << ss.str();
-//     of.close();
-// }
-
 void NeuronIO::write_out_synapses(const NetworkGraph::NeuronLocalOutNeighborhood& local_out_edges_static, const NetworkGraph::NeuronDistantOutNeighborhood& distant_out_edges_static, 
     const NetworkGraph::NeuronLocalOutNeighborhood& local_out_edges_plastic, const NetworkGraph::NeuronDistantOutNeighborhood& distant_out_edges_plastic, 
     const MPIRank my_rank, const size_t mpi_ranks, const RelearnTypes::number_neurons_type number_local_neurons, const RelearnTypes::number_neurons_type number_total_neurons, 
@@ -653,6 +639,7 @@ void NeuronIO::write_in_synapses(const NetworkGraph::NeuronLocalInNeighborhood& 
         }
     }
 }
+
 void NeuronIO::write_out_synapses(const LocalSynapses& local_out_synapses_static, const DistantOutSynapses& distant_out_synapses_static, const LocalSynapses& local_out_synapses_plastic, 
     const DistantOutSynapses& distant_out_synapses_plastic, MPIRank my_rank, RelearnTypes::number_neurons_type number_neurons, const std::filesystem::path& file_path) {
     NetworkGraph::NeuronLocalOutNeighborhood local_neighborhood_static{};

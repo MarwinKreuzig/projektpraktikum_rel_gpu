@@ -58,22 +58,6 @@ public:
     /**
      * @brief Constructs an object that has enough space to store the given number of neurons
      * @param number_neurons The number of neurons that the object shall handle
-     * @param mpi_rank The mpi rank that handles this portion of the graph
-     * @exception Throws an exception if the allocation of memory fails
-     */
-    [[deprecated]] NetworkGraph(const number_neurons_type number_neurons, const int mpi_rank)
-        : neuron_distant_in_neighborhood(number_neurons)
-        , neuron_distant_out_neighborhood(number_neurons)
-        , neuron_local_in_neighborhood(number_neurons)
-        , neuron_local_out_neighborhood(number_neurons)
-        , number_local_neurons(number_neurons)
-        , my_rank(mpi_rank) {
-        RelearnException::check(my_rank.is_initialized(), "NetworkGraph::NetworkGraph: The mpi rank must be initialized");
-    }
-
-    /**
-     * @brief Constructs an object that has enough space to store the given number of neurons
-     * @param number_neurons The number of neurons that the object shall handle
      * @param mpi_rank The mpi rank that handles this portion of the graph, must be initialized
      * @exception Throws an exception if the allocation of memory fails
      */
@@ -530,7 +514,7 @@ public:
      * @exception Throws an exception if the allocation of memory fails
      * @return A histogram of the connectivity, i.e., <return>[i] == c indicates that c local neurons have i edges in the requested direction
      */
-    [[nodiscard]] std::vector<unsigned int> get_edges_histogram(EdgeDirection edge_direction) const {
+    [[nodiscard]] std::vector<unsigned int> get_edges_histogram(const EdgeDirection edge_direction) const {
         std::vector<unsigned int> result{};
 
         auto largest_number_edges = 0.0;

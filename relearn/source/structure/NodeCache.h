@@ -34,7 +34,7 @@ enum class NodeCacheType : char {
  * @param cache_type The node cache type to print
  * @return The argument out, now altered with the node cache type
  */
-inline std::ostream& operator<<(std::ostream& out, const NodeCacheType& cache_type) {
+inline std::ostream& operator<<(std::ostream& out, const NodeCacheType cache_type) {
     switch (cache_type) {
     case NodeCacheType::Combined:
         return out << "Combined";
@@ -44,6 +44,7 @@ inline std::ostream& operator<<(std::ostream& out, const NodeCacheType& cache_ty
 
     return out << "UNKOWN";
 }
+
 template <>
 struct fmt::formatter<NodeCacheType> : ostream_formatter { };
 
@@ -59,7 +60,7 @@ class NodeCacheCombined {
 
 public:
     using array_type = std::array<node_type, Constants::number_oct>;
-    using NodesCacheKey = std::pair<int, node_type*>;
+    using NodesCacheKey = std::pair<MPIRank, node_type*>;
     using NodesCacheValue = children_type;
     using NodesCache = std::map<NodesCacheKey, NodesCacheValue>;
 
@@ -85,7 +86,7 @@ public:
 
         auto actual_download = [target_rank](node_type* const node) {
             children_type local_children{ nullptr };
-            NodesCacheKey rank_address_pair{ target_rank.get_rank(), node };
+            NodesCacheKey rank_address_pair{ target_rank, node };
 
             const auto& [iterator, inserted] = remote_nodes_cache.insert({ rank_address_pair, local_children });
 
@@ -143,7 +144,7 @@ class NodeCacheSeparate {
 
 public:
     using array_type = std::array<node_type, Constants::number_oct>;
-    using NodesCacheKey = std::pair<int, node_type*>;
+    using NodesCacheKey = std::pair<MPIRank, node_type*>;
     using NodesCacheValue = node_type*;
     using NodesCache = std::map<NodesCacheKey, NodesCacheValue>;
 
@@ -181,7 +182,7 @@ public:
                     continue;
                 }
 
-                NodesCacheKey rank_addr_pair{ target_rank.get_rank(), unusable_child_pointer_on_other_rank };
+                NodesCacheKey rank_addr_pair{ target_rank, unusable_child_pointer_on_other_rank };
                 std::pair<NodesCacheKey, NodesCacheValue> cache_key_val_pair{ rank_addr_pair, nullptr };
 
                 // Get cache entry for "cache_key_val_pair"

@@ -26,10 +26,9 @@
 class NeuronsExtraInfo;
 template <typename T>
 class OctreeImplementation;
-class SynapticElements;
 
 /**
- * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
+ * This class represents the implementation and adaptation of the Barnes–Hut algorithm. The parameters can be set on the fly.
  * In this instance, dendrites search for axons.
  * It is strongly tied to Octree, which might perform MPI communication via NodeCache::download_children()
  */

@@ -36,7 +36,7 @@ public:
      * @param number_neurons The number of local neurons
      * @exception Throws a RelearnException if number_ranks <= 0
      */
-    FiredStatusCommunicationMap(size_t number_ranks, number_neurons_type number_neurons)
+    FiredStatusCommunicationMap(const size_t number_ranks, const number_neurons_type number_neurons)
         : FiredStatusCommunicator(number_ranks, number_neurons)
         , outgoing_ids(number_ranks, std::min(number_neurons_type(number_ranks), number_neurons))
         , incoming_ids(number_ranks, std::min(number_neurons_type(number_ranks), number_neurons)) {
@@ -48,7 +48,8 @@ public:
      *      Potentially uses the out-edges of the network graph
      * @param fired_status The current fired status of the neurons
      * @param disable_flags The current disable flags for the neurons
-     * @param network_graph The network graph that is currently being used
+     * @param network_graph_static The network graph of static connections
+     * @param network_graph_plastic The network graph of plastic connections
      */
     void set_local_fired_status(const std::vector<FiredStatus>& fired_status, const std::vector<UpdateStatus>& disable_flags, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic) override;
 

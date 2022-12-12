@@ -26,7 +26,7 @@ enum class SignalType { Excitatory,
  * @param signal_type The signal type to print
  * @return The argument out, now altered with the signal type
  */
-inline std::ostream& operator<<(std::ostream& out, const SignalType& signal_type) {
+inline std::ostream& operator<<(std::ostream& out, const SignalType signal_type) {
     if (signal_type == SignalType::Excitatory) {
         return out << "Excitatory";
     }

@@ -32,7 +32,7 @@ class OctreeImplementation;
 class SynapticElements;
 
 /**
- * This class represents the implementation and adaptation of the Barnes Hut algorithm. The parameters can be set on the fly.
+ * This class represents the implementation of the trivial O(n^2) algorithm.
  * It is strongly tied to Octree, and might perform MPI communication via NodeCache::download_children()
  */
 class Naive : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, NaiveCell> {
@@ -63,7 +63,6 @@ protected:
 
     /**
      * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses
-     * @param number_neurons The number of local neurons
      * @param creation_requests The requests from all MPI ranks
      * @exception Can throw a RelearnException
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank
