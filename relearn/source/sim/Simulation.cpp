@@ -453,9 +453,9 @@ void Simulation::finalize() const {
     neurons->print_calcium_statistics_to_essentials();
 
     LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
-        "Created synapses: {}\n"
-        "Deleted synapses: {}\n"
-        "Netto synapses: {}",
+        "Created-Synapses: {}\n"
+        "Deleted-Synapses: {}\n"
+        "Netto-Synapses: {}",
         total_synapse_creations,
         total_synapse_deletions,
         netto_creations);

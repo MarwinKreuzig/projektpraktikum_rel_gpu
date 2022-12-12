@@ -49,7 +49,7 @@ void SubdomainFromFile::read_neurons_from_file(const std::filesystem::path& path
 
     partition->set_total_number_neurons(total_number_neurons);
 
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded neurons: {}", total_number_neurons);
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded-Neurons: {}", total_number_neurons);
 
     set_loaded_nodes(std::move(loaded_neurons));
 }

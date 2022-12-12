@@ -45,12 +45,12 @@ std::pair<std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>, std:
         total_out_weight += weight;
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded local synapses: {}", local_synapses.size());
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "The local synapses had a weight of: {}", total_local_weight);
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded in synapses: {}", in_synapses.size());
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "The in synapses had a weight of: {}", total_in_weight);
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded out synapses: {}", out_synapses.size());
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "The out synapses had a weight of: {}", total_out_weight);
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded-Local-Synapses: {}", local_synapses.size());
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded-Local-Synapses-Weight: {}", total_local_weight);
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded-In-Synapses: {}", in_synapses.size());
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded-In-Synapses-Weight: {}", total_in_weight);
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded-Out-Synapses: {}", out_synapses.size());
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded-Out-Synapses-Weight: {}", total_out_weight);
 
     return synapses_pair;
 }

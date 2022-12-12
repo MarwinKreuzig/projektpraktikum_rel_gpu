@@ -622,24 +622,25 @@ int main(int argc, char** argv) {
     // Rank 0 prints start time of simulation
     MPIWrapper::barrier();
     if (MPIRank::root_rank() == my_rank) {
-        LogFiles::write_to_file(LogFiles::EventType::Essentials, true, "Number of ranks: {}", num_ranks);
         LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
-            "START OF SIMULATION: {}\n"
-            "Number of steps: {}\n"
-            "Chosen lower bound for vacant synaptic elements: {}\n"
-            "Chosen upper bound for vacant synaptic elements: {}\n"
-            "Chosen target calcium value: {}\n"
-            "Chosen beta value: {}\n"
-            "Chosen calcium decay: {}\n"
-            "Chosen nu value axons: {}\n"
-            "Chosen nu value dendrites: {}\n"
-            "Chosen retract ratio: {}\n"
-            "Chosen synapse conductance: {}\n"
-            "Chosen background activity base: {}\n"
-            "Chosen background activity mean: {}\n"
-            "Chosen background activity stddev: {}\n"
-            "Chosen kernel type: {}",
+            "Start: {}\n"
+            "Number-of-Ranks: {}\n"
+            "Number of Steps: {}\n"
+            "Lower-Bound: {}\n"
+            "Upper-Bound: {}\n"
+            "Target-Calcium: {}\n"
+            "Beta: {}\n"
+            "Calcium-Decay: {}\n"
+            "Nu-Axons: {}\n"
+            "Np-Dendrites: {}\n"
+            "Retract-Ratio: {}\n"
+            "Synapse-Conductance: {}\n"
+            "Background-Base: {}\n"
+            "Background-Mean: {}\n"
+            "Background-Stddev: {}\n"
+            "Kernel-Type: {}",
             Timers::wall_clock_time(),
+            num_ranks,
             simulation_steps,
             synaptic_elements_init_lb,
             synaptic_elements_init_ub,
@@ -657,24 +658,24 @@ int main(int argc, char** argv) {
 
         if (chosen_kernel_type == KernelType::Gamma) {
             LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
-                "Chosen shape parameter: {}\n"
-                "Chosen scale parameter: {}",
+                "Shape-Parameter: {}\n"
+                "Scale-Parameter: {}",
                 gamma_k,
                 gamma_theta);
         } else if (chosen_kernel_type == KernelType::Gaussian) {
             LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
-                "Chosen translation parameter: {}\n"
-                "Chosen scale parameter: {}",
+                "Translation-Parameter: {}\n"
+                "Scale-Parameter: {}",
                 gaussian_mu,
                 gaussian_sigma);
         } else if (chosen_kernel_type == KernelType::Linear) {
             LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
-                "Chosen cut-off parameter: {}",
+                "Cut-off-Parameter: {}",
                 linear_cutoff);
         } else if (chosen_kernel_type == KernelType::Weibull) {
             LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
-                "Chosen shape parameter: {}\n"
-                "Chosen scale parameter: {}",
+                "Shape-Parameter: {}\n"
+                "Scale-Parameter: {}",
                 weibull_k,
                 weibull_b);
         }

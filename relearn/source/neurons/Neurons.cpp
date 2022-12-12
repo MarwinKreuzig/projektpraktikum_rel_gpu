@@ -880,9 +880,9 @@ void Neurons::print_calcium_statistics_to_essentials() {
     }
 
     LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
-        "Average calcium: {}\n"
-        "Minimum calcium: {}\n"
-        "Maximum calcium: {}",
+        "Average-Calcium: {}\n"
+        "Minimum-Calcium: {}\n"
+        "Maximum-Calcium: {}",
         calcium_statistics.avg,
         calcium_statistics.min,
         calcium_statistics.max);
