@@ -24,7 +24,7 @@ class FileValidator {
 public:
     /**
      * @brief Checks if the specified file contains only synapses between neurons with specified ids (only works locally).
-     * @param path_synapses The path to the file in which the synapses are stored (with the global neuron ids starting at 1)
+     * @param path_synapses The path to the file in which the synapses are stored (with the ids starting at 1)
      * @param neuron_ids The neuron ids between which the synapses should be formed. Must be sorted ascendingly
      * @tparam synapse_weight The type of synapse weight
      * @exception Throws an exception if the allocation of memory fails

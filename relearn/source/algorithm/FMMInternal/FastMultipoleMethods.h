@@ -26,7 +26,7 @@ template <typename T>
 class OctreeImplementation;
 
 /**
- * This class represents the implementation and adaptation of fast multipole methods. The parameters can be set on the fly.
+ * This class represents the implementation and adaptation of fast multipole method. The parameters can be set on the fly.
  * It is strongly tied to Octree, and might perform MPI communication via NodeCache::download_children()
  */
 class FastMultipoleMethods : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, FastMultipoleMethodsCell> {

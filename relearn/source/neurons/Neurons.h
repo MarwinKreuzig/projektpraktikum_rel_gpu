@@ -135,7 +135,7 @@ public:
      */
     void set_static_neurons(const std::vector<NeuronID>& static_neurons) {
         for (const auto& neuronId : static_neurons) {
-            disable_flags[neuronId.get_neuron_id()] = UpdateStatus::STATIC;
+            disable_flags[neuronId.get_neuron_id()] = UpdateStatus::Static;
         }
 
         for (NeuronID neuron_id : NeuronID::range(0, number_neurons)) {
@@ -144,8 +144,8 @@ public:
             // Check for forbidden plastic connection from or to a static neuron
             for (const auto& edge : edges) {
                 const RelearnTypes::neuron_id target = edge.first.get_neuron_id().get_neuron_id();
-                RelearnException::check(disable_flags[source] != UpdateStatus::STATIC, "Plastic connection from a static neuron is forbidden. {} (static)  -> {}", source, target);
-                RelearnException::check(disable_flags[target] != UpdateStatus::STATIC, "Plastic connection to a static neuron is forbidden. {} -> {}(static)", source, target);
+                RelearnException::check(disable_flags[source] != UpdateStatus::Static, "Plastic connection from a static neuron is forbidden. {} (static)  -> {}", source, target);
+                RelearnException::check(disable_flags[target] != UpdateStatus::Static, "Plastic connection to a static neuron is forbidden. {} -> {}(static)", source, target);
             }
         }
     }

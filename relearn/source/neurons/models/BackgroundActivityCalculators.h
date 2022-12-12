@@ -71,7 +71,7 @@ public:
     /**
      * @brief This activity calculator does not provide any input
      * @param step The current update step
-     * @param disable_flags Unused
+     * @param disable_flags Indicates what neurons are disabled, if so, they do not receive input
      */
     void update_input([[maybe_unused]] const step_type step, const std::vector<UpdateStatus>& disable_flags) override {
         const auto number_neurons = get_number_neurons();
@@ -133,7 +133,7 @@ public:
     /**
      * @brief This activity calculator does not provide any input
      * @param step The current update step
-     * @param disable_flags Unused
+     * @param disable_flags Indicates what neurons are disabled, if so, they do not receive input
      */
     void update_input([[maybe_unused]] const step_type step, const std::vector<UpdateStatus>& disable_flags) override {
         const auto number_neurons = get_number_neurons();
@@ -183,9 +183,10 @@ public:
      * @param local_area_translator Translates between local area ids and area names
      * @exception Throws a RelearnException if the file is not present or the second argument of background is <0.0 (if provided)
      */
-    StimulusBackgroundActivityCalculator(const std::filesystem::path& stimulus_file, std::optional<std::pair<double, double>> background, 
+    StimulusBackgroundActivityCalculator(const std::filesystem::path& stimulus_file, std::optional<std::pair<double, double>> background,
         const MPIRank mpi_rank, std::shared_ptr<LocalAreaTranslator> local_area_translator)
-        : file(stimulus_file) {
+        : file(stimulus_file)
+        , my_rank(mpi_rank) {
         if (background.has_value()) {
             auto [mean, stddev] = background.value();
             RelearnException::check(stddev >= 0.0, "StimulusBackgroundActivityCalculator::StimulusBackgroundActivityCalculator: The standard deviation must be larger than 0.0: {}", stddev);
@@ -263,5 +264,5 @@ private:
     double mean_input{ default_background_activity_mean };
     double stddev_input{ default_background_activity_stddev };
     std::vector<RelearnTypes::area_name> neuron_id_vs_area_id;
-    int my_rank;
+    MPIRank my_rank{ MPIRank::uninitialized_rank() };
 };

@@ -84,7 +84,7 @@ public:
      * @param number_neurons The number of neurons for this instance, must be > 0
      * @exception Throws a RelearnException if number_neurons == 0
      */
-    virtual void init(number_neurons_type number_neurons) {
+    virtual void init(const number_neurons_type number_neurons) {
         RelearnException::check(number_neurons > 0, "BackgroundActivityCalculator::init: number_neurons was 0");
 
         number_local_neurons = number_neurons;
@@ -96,7 +96,7 @@ public:
      * @param creation_count The number of neurons to create, must be > 0
      * @exception Throws a RelearnException if creation_count == 0 or if init(...) was not called before
      */
-    virtual void create_neurons(number_neurons_type creation_count) {
+    virtual void create_neurons(const number_neurons_type creation_count) {
         RelearnException::check(number_local_neurons > 0, "BackgroundActivityCalculator::create_neurons: number_local_neurons was 0");
         RelearnException::check(creation_count > 0, "BackgroundActivityCalculator::create_neurons: creation_count was 0");
 

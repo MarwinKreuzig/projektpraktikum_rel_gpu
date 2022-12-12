@@ -32,7 +32,8 @@ class AlgorithmImpl : public Algorithm {
 public:
     /**
      * @brief Constructs the object and sets the necessary octree
-     * @param octree The octree that is used for the algorithm
+     * @param octree The octree that is used for the algorithm, not nullptr
+     * @exception Throws a RelearnException if octree is nullptr
      */
     explicit AlgorithmImpl(const std::shared_ptr<OctreeImplementation<AdditionalCellAttributes>>& octree)
         : global_tree(octree) {

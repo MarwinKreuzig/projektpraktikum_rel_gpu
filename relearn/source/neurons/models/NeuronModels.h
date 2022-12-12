@@ -59,7 +59,7 @@ public:
      * @param synaptic_input_calculator The object that is resonsible for calculating the synaptic input
      * @param background_activity_calculator The object that is resonsible for calculating the background activity
      */
-    NeuronModel(unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
+    NeuronModel(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator)
         : h(h)
         , input_calculator(std::move(synaptic_input_calculator))

@@ -145,78 +145,6 @@ public:
     [[nodiscard]] static std::optional<std::vector<NeuronID>> read_neuron_ids(const std::filesystem::path& file_path);
 
     /**
-     * @brief Reads all local synapses from a file and returns those.
-     *      Checks that no id is larger or equal to number_local_neurons.
-     * @param file_path The path to the file to load
-     * @param number_local_neurons The number of local neurons
-     * @exception Throws a RelearnException if opening the file failed, the weight of one synapse is 0, or a loaded id is not from [1, number_local_neurons].
-     * @return All local synapses
-     */
-    [[nodiscard]] static std::pair<LocalSynapses, LocalSynapses> read_local_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons);
-
-    /**
-     * @brief Write all local synapses to the specified file
-     * @param local_synapses The local synapses
-     * @param file_path The path to the file
-     * @exception Throws a RelearnException if opening the file failed
-     */
-    static void write_local_synapses(const LocalSynapses& local_synapses, const std::filesystem::path& file_path);
-
-    /**
-     * @brief Reads all distant in-synapses from a file and returns those.
-     *      Checks that no target id is larger or equal to number_local_neurons and that no source rank is larger or equal to number_mpi_ranks.
-     * @param file_path The path to the file to load
-     * @param number_local_neurons The number of local neurons
-     * @param my_rank The current MPI rank
-     * @param number_mpi_ranks The number of MPI ranks
-     * @exception Throws a RelearnException if
-     *      (1) opening the file failed
-     *      (2) the weight of one synpapse is 0
-     *      (3) a target rank is not my_rank
-     *      (4) a source rank is not from [0, number_mpi_ranks)
-     *      (5) a source rank is equal to my_rank
-     *      (6) or a target id is not from [0, number_local_neurons)
-     * @return All distant in-synapses
-     */
-    static std::pair<DistantInSynapses, DistantInSynapses> read_distant_in_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons, MPIRank my_rank, size_t number_mpi_ranks);
-
-    /**
-     * @brief Writes all distant in-synapses to the specified file
-     * @param distant_in_synapses The distant in-synapses
-     * @param my_rank The current MPI rank
-     * @param file_path The path to the file
-     * @exception Throws a RelearnException if opening the file failed or if a source rank is equal to my_rank
-     */
-    static void write_distant_in_synapses(const DistantInSynapses& distant_in_synapses, MPIRank my_rank, const std::filesystem::path& file_path);
-
-    /**
-     * @brief Reads all distant out-synapses from a file and returns those.
-     *      Checks that no source id is larger or equal to number_local_neurons and that no target rank is larger or equal to number_mpi_ranks.
-     * @param file_path The path to the file to load
-     * @param number_local_neurons The number of local neurons
-     * @param my_rank The current MPI rank
-     * @param number_mpi_ranks The number of MPI ranks
-     * @exception Throws a RelearnException if
-     *      (1) opening the file failed
-     *      (2) the weight of one synpapse is 0
-     *      (3) a source rank is not my_rank
-     *      (4) a target rank is not from [0, number_mpi_ranks)
-     *      (5) a target rank is equal to my_rank
-     *      (6) or a source id is not from [0, number_local_neurons)
-     * @return All distant out-synapses
-     */
-    static std::pair<DistantOutSynapses, DistantOutSynapses> read_distant_out_synapses(const std::filesystem::path& file_path, number_neurons_type number_local_neurons, MPIRank my_rank, size_t number_mpi_ranks);
-
-    /**
-     * @brief Writes all distant out-synapses to the specified file
-     * @param distant_out_synapses The distant out-synapses
-     * @param my_rank The current MPI rank
-     * @param file_path The path to the file
-     * @exception Throws a RelearnException if opening the file failed or if a target rank is equal to my_rank
-     */
-    static void write_distant_out_synapses(const DistantOutSynapses& distant_out_synapses, MPIRank my_rank, const std::filesystem::path& file_path);
-
-    /**
      * @brief Reads all in-synapses from a file and returns those.
      *      Checks that no target id is larger or equal to number_local_neurons and that no source rank is larger or equal to number_mpi_ranks.
      * @param file_path The path to the file to load
@@ -249,6 +177,41 @@ public:
         const DistantInSynapses& distant_in_synapses_plastic, MPIRank my_rank, RelearnTypes::number_neurons_type num_neurons, const std::filesystem::path& file_path);
 
     /**
+     * @brief Writes all out-synapses to the specified stream
+     * @param local_out_edges_static The local out-synapses that are static
+     * @param distant_out_edges_static The distant out-synapses that are static
+     * @param local_out_edges_plastic The local out-synapses that are plastic
+     * @param distant_out_edges_plastic The distant out-synapses that are plastic
+     * @param my_rank The current MPI rank
+     * @param mpi_ranks Nunber of used mpi ranks
+     * @param number_local_neurons Number of local neurons on the current mpi rank
+     * @param number_total_neurons Number of neurons over all ranks
+     * @param step The current step of the simulation
+     * @param ss StringStream to which the output is written
+     */
+    static void write_out_synapses(const NetworkGraph::NeuronLocalOutNeighborhood& local_out_edges_static, const NetworkGraph::NeuronDistantOutNeighborhood& distant_out_edges_static,
+        const NetworkGraph::NeuronLocalOutNeighborhood& local_out_edges_plastic, const NetworkGraph::NeuronDistantOutNeighborhood& distant_out_edges_plastic,
+        MPIRank my_rank, size_t mpi_ranks, RelearnTypes::number_neurons_type number_local_neurons, RelearnTypes::number_neurons_type number_total_neurons, std::stringstream& ss, size_t step);
+
+    /**
+     * @brief Writes all in-synapses to the specified stream
+     * @param local_in_edges_static The local in-synapses that are static
+     * @param distant_in_edges_static The distant in-synapses that are static
+     * @param local_in_edges_plastic The local in-synapses that are plastic
+     * @param distant_in_edges_plastic The distant out-synapses that are plastic
+     * @param my_rank The current MPI rank
+     * @param mpi_ranks Nunber of used mpi ranks
+     * @param number_local_neurons Number of local neurons on the current mpi rank
+     * @param number_total_neurons Number of neurons over all ranks
+     * @param step The current step of the simulation
+     * @param ss StringStream to which the output is written
+     */
+    static void write_in_synapses(const NetworkGraph::NeuronLocalInNeighborhood& local_in_edges_static, const NetworkGraph::NeuronDistantInNeighborhood& distant_in_edges_static,
+        const NetworkGraph::NeuronLocalInNeighborhood& local_in_edges_plastic, const NetworkGraph::NeuronDistantInNeighborhood& distant_in_edges_plastic,
+        MPIRank my_rank, size_t mpi_ranks, RelearnTypes::number_neurons_type number_local_neurons, RelearnTypes::number_neurons_type number_total_neurons, std::stringstream& ss, size_t step);
+
+
+    /**
      * @brief Reads all out-synapses from a file and returns those.
      *      Checks that no source id is larger or equal to number_local_neurons and that no target rank is larger or equal to number_mpi_ranks.
      * @param file_path The path to the file to load
@@ -277,39 +240,7 @@ public:
      * @param file_path The path to the file
      * @exception Throws a RelearnException if opening the file failed or if the target rank of a distant out-synapse is equal to my_rank
      */
-    static void write_out_synapses(const LocalSynapses& local_out_synapses_static, const DistantOutSynapses& distant_out_synapses_static, const LocalSynapses& local_out_synapses_plastic, const DistantOutSynapses& distant_out_synapses_plastic, MPIRank my_rank, RelearnTypes::number_neurons_type num_neurons, const std::filesystem::path& file_path);
-
-    /**
-     * @brief Writes all out-synapses to the specified stream
-     * @param local_out_edges_static The local out-synapses that are static
-     * @param distant_out_edges_static The distant out-synapses that are static
-     * @param local_out_edges_plastic The local out-synapses that are plastic
-     * @param distant_out_edges_plastic The distant out-synapses that are plastic
-     * @param my_rank The current MPI rank
-     * @param mpi_ranks Nunber of used mpi ranks
-     * @param number_local_neurons Number of local neurons on the current mpi rank
-     * @param number_total_neurons Number of neurons over all ranks
-     * @param step The current step of the simulation
-     * @param ss StringStream to which the output is written
-     */
-    static void write_out_synapses(const NetworkGraph::NeuronLocalOutNeighborhood& local_out_edges_static, const NetworkGraph::NeuronDistantOutNeighborhood& distant_out_edges_static, 
-        const NetworkGraph::NeuronLocalOutNeighborhood& local_out_edges_plastic, const NetworkGraph::NeuronDistantOutNeighborhood& distant_out_edges_plastic, 
-        MPIRank my_rank, uint64_t mpi_ranks, RelearnTypes::number_neurons_type number_local_neurons, RelearnTypes::number_neurons_type number_total_neurons, std::stringstream& ss, size_t step);
-
-    /**
-     * @brief Writes all in-synapses to the specified stream
-     * @param local_in_edges_static The local in-synapses that are static
-     * @param distant_in_edges_static The distant in-synapses that are static
-     * @param local_in_edges_plastic The local in-synapses that are plastic
-     * @param distant_in_edges_plastic The distant out-synapses that are plastic
-     * @param my_rank The current MPI rank
-     * @param mpi_ranks Nunber of used mpi ranks
-     * @param number_local_neurons Number of local neurons on the current mpi rank
-     * @param number_total_neurons Number of neurons over all ranks
-     * @param step The current step of the simulation
-     * @param ss StringStream to which the output is written
-     */
-    static void write_in_synapses(const NetworkGraph::NeuronLocalInNeighborhood& local_in_edges_static, const NetworkGraph::NeuronDistantInNeighborhood& distant_in_edges_static, 
-        const NetworkGraph::NeuronLocalInNeighborhood& local_in_edges_plastic, const NetworkGraph::NeuronDistantInNeighborhood& distant_in_edges_plastic, 
-        MPIRank my_rank, uint64_t mpi_ranks, RelearnTypes::number_neurons_type number_local_neurons, RelearnTypes::number_neurons_type number_total_neurons, std::stringstream& ss, size_t step);
+    static void write_out_synapses(const LocalSynapses& local_out_synapses_static, const DistantOutSynapses& distant_out_synapses_static, 
+        const LocalSynapses& local_out_synapses_plastic, const DistantOutSynapses& distant_out_synapses_plastic, 
+        MPIRank my_rank, RelearnTypes::number_neurons_type num_neurons, const std::filesystem::path& file_path);
 };

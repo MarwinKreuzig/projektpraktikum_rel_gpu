@@ -53,11 +53,11 @@ public:
 
     /**
      * @brief Returns the associated MPI rank
-     * @return The MPI rank
-     * @exception Throws a RelearnException if the rank is negative
+     * @return The MPI rank, must be initialized
+     * @exception Throws a RelearnException if the rank is not initialized
      */
     [[nodiscard]] constexpr MPIRank get_rank() const {
-        RelearnException::check(rank.is_initialized(), "RankNeuronId::get_rank: It was negative: {}", rank);
+        RelearnException::check(rank.is_initialized(), "RankNeuronId::get_rank: The rank was not initialized");
         return rank;
     }
 
@@ -92,7 +92,7 @@ public:
     }
 
     template <std::size_t Index>
-    [[nodiscard]] constexpr auto /*const&*/ get() const& {
+    [[nodiscard]] constexpr auto const& get() const& {
         if constexpr (Index == 0) {
             return rank;
         }

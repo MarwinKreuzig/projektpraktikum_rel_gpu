@@ -51,9 +51,9 @@ public:
 
     /**
      * @brief Constructs a new object and uses the number of MPI ranks and the current MPI rank as foundation for the calculations
-     * @param num_ranks The number of MPI ranks
-     * @param my_rank The current MPI rank
-     * @exception Throws a RelearnException if 0 <= my_rank < num_ranks is violated, if the number of MPI ranks is not of the form 2^k
+     * @param num_ranks The number of MPI ranks, must be of the form 2^k
+     * @param my_rank The current MPI rank, must be initialized
+     * @exception Throws a RelearnException if my_rank is not initialized or if the number of MPI ranks is not of the form 2^k
      */
     Partition(size_t num_ranks, MPIRank my_rank);
 
@@ -67,15 +67,14 @@ public:
 
     /**
      * @brief Prints the current local_subdomains as messages on the rank
-     * @param rank The rank that should print the local_subdomains
      */
-    void print_my_subdomains_info_rank(int rank);
+    void print_my_subdomains_info_rank();
 
     /**
      * @brief Sets the total number of neurons
      * @param total_num The total number of neurons
      */
-    void set_total_number_neurons(const size_t total_num) noexcept {
+    void set_total_number_neurons(const number_neurons_type total_num) noexcept {
         total_number_neurons = total_num;
     }
 
@@ -300,7 +299,11 @@ public:
         return std::make_pair(local_subdomains[local_subdomain_index].minimum_position, local_subdomains[local_subdomain_index].maximum_position);
     }
 
-    [[nodiscard]] const std::vector<std::pair<box_size_type, box_size_type>> get_all_local_subdomain_boundaries() const {
+    /**
+     * @brief Returns the boundaries of the local subdomains
+     * @return The boundaries as pairs of (1) min and (2) max
+     */
+    [[nodiscard]] std::vector<std::pair<box_size_type, box_size_type>> get_all_local_subdomain_boundaries() const {
         std::vector<std::pair<box_size_type, box_size_type>> subdomain_boundaries{};
         subdomain_boundaries.reserve(local_subdomains.size());
         for (auto local_subdomain_index = 0; local_subdomain_index < local_subdomains.size(); local_subdomain_index++) {

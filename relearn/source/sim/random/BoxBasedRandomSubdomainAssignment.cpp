@@ -22,6 +22,14 @@ BoxBasedRandomSubdomainAssignment::place_neurons_in_box(const box_size_type& off
     const auto& [min, max] = partition->get_simulation_box_size();
     const auto& simulation_box_length_ = (max - min).get_maximum();
 
+    const auto& [length_x, length_y, length_z] = length_of_box;
+
+    RelearnException::check(length_x > 0.0, "BoxBasedRandomSubdomainAssignment::place_neurons_in_box: length_of_box.x was not positive: {}", length_x);
+    RelearnException::check(length_y > 0.0, "BoxBasedRandomSubdomainAssignment::place_neurons_in_box: length_of_box.y was not positive: {}", length_y);
+    RelearnException::check(length_z > 0.0, "BoxBasedRandomSubdomainAssignment::place_neurons_in_box: length_of_box.z was not positive: {}", length_z);
+
+    RelearnException::check(offset.check_in_box(min, max), "BoxBasedRandomSubdomainAssignment::place_neurons_in_box: The offset was not within the box.");
+
     RelearnException::check(length_of_box.get_x() <= simulation_box_length_ && length_of_box.get_y() <= simulation_box_length_ && length_of_box.get_z() <= simulation_box_length_,
         "BoxBasedRandomSubdomainAssignment::place_neurons_in_area: Requesting to fill neurons where no simulationbox is");
 

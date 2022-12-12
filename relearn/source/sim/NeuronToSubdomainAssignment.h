@@ -96,7 +96,7 @@ public:
      * @brief Returns the total number of placed neurons across all MPI ranks
      * @return The total number of placed neurons across all MPI ranks
      */
-    [[nodiscard]] number_neurons_type get_total_number_placed_neurons() const {
+    [[nodiscard]] number_neurons_type get_total_number_placed_neurons() const noexcept {
         return total_number_neurons;
     }
 
@@ -120,7 +120,7 @@ public:
      * @brief Returns the total number of neurons in the local subdomains
      * @return The total number of neurons in the local subdomains
      */
-    [[nodiscard]] number_neurons_type get_number_neurons_in_subdomains() const {
+    [[nodiscard]] number_neurons_type get_number_neurons_in_subdomains() const noexcept {
         const auto total_number_neurons_in_subdomains = loaded_neurons.size();
         return total_number_neurons_in_subdomains;
     }
