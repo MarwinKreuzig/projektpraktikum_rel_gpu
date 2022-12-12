@@ -632,6 +632,8 @@ int main(int argc, char** argv) {
             "Chosen log path: {}\n"
             "Chosen algorithm: {}\n"
             "Chosen neuron model: {}\n"
+            "Chosen first plasticity step: {}\n"
+            "Chosen last plasticity step: {}\n"
             "Chosen kernel type: {}",
             Timers::wall_clock_time(),
             simulation_steps,
@@ -650,6 +652,8 @@ int main(int argc, char** argv) {
             log_path.string(),
             chosen_algorithm,
             chosen_neuron_model,
+            first_plasticity_step,
+            last_plasticity_step,
             chosen_kernel_type);
 
         if (chosen_kernel_type == KernelType::Gamma) {
