@@ -91,7 +91,7 @@ public:
         RelearnException::check(root_rank.is_initialized(), "In MPIWrapper::reduce, root_rank was negative");
 
         std::array<T, size> dst{};
-        reduce(src.data(), dst.data(), src.size() * sizeof(T), function, root_rank);
+        reduce(src.data(), dst.data(), src.size() * sizeof(T), function, root_rank.get_rank());
 
         return dst;
     }
@@ -161,8 +161,6 @@ public:
 
 private:
     MPINoWrapper() = default;
-
-    static inline size_t num_neurons{}; // Total number of neurons
 
     template <typename AdditionalCellAttributes>
     static inline std::vector<OctreeNode<AdditionalCellAttributes>> base_ptr{ 0 }; // Start address of MPI-allocated memory
