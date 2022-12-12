@@ -121,7 +121,8 @@ public:
      * @return constexpr auto vector of TaggedIDs
      */
     [[nodiscard]] static constexpr auto range(size_t begin, size_t end) {
-        std::vector<TaggedID<T>> ids;
+        std::vector<TaggedID<T>> ids{};
+        ids.reserve(end - begin);
         for (auto i = begin; i < end; i++) {
             ids.emplace_back(i);
         }

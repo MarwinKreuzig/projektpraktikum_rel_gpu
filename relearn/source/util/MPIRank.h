@@ -45,7 +45,7 @@ public:
      * @param size size of the vector
      * @return constexpr auto vector of MPIRanks
      */
-    [[nodiscard]] static constexpr std::vector<MPIRank> range(size_t size) {
+    [[nodiscard]] static std::vector<MPIRank> range(size_t size) {
         return range(0, size);
     }
 
@@ -56,7 +56,7 @@ public:
      * @param end end of the vector
      * @return constexpr auto vector of MPIRanks
      */
-    [[nodiscard]] static constexpr std::vector<MPIRank> range(size_t begin, size_t end) {
+    [[nodiscard]] static std::vector<MPIRank> range(size_t begin, size_t end) {
         std::vector<MPIRank> ids{};
         ids.reserve(end - begin);
 
