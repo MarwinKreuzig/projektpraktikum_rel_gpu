@@ -294,10 +294,10 @@ int main(int argc, char** argv) {
     app.add_option("--um-per-neuron", um_per_neuron, "The micrometer per neuron in one dimension, must be from (0.0, \\inf). Requires --num-neurons or --num-neurons-per-rank to take effect.");
 
     std::filesystem::path file_positions{};
-    auto* const opt_file_positions = app.add_option("-f,--file", file_positions, "File with neuron positions. This option only works with one MPI rank!");
+    auto* const opt_file_positions = app.add_option("-f,--file", file_positions, "File or directory with neuron positions.");
 
     std::filesystem::path file_network{};
-    auto* const opt_file_network = app.add_option("-g,--graph", file_network, "Foldet that contains the files with the networks. The network files must be names rank_0_in_network.txt and rank_0_out_network.txt. This option only works with one MPI rank!");
+    auto* const opt_file_network = app.add_option("-g,--graph", file_network, "Folder that contains the files with the networks. The network files must be names rank_0_in_network.txt and rank_0_out_network.txt. This option only works with one MPI rank!");
 
     std::filesystem::path file_enable_interrupts{};
     auto* const opt_file_enable_interrupts = app.add_option("--enable-interrupts", file_enable_interrupts, "File with the enable interrupts.");
@@ -347,7 +347,7 @@ int main(int argc, char** argv) {
     std::string static_neurons_str{};
     auto* opt_static_neurons = app.add_option("--static-neurons", static_neurons_str, "String with neuron ids for static neurons. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;... where <mpi_rank> can be -1 to indicate \"on every rank\". Alternatively use area names instead of neuron ids");
 
-    std::string file_external_stimulation{};
+    std::filesystem::path file_external_stimulation{};
     auto* opt_file_external_stimulation = app.add_option("--external-stimulation", file_external_stimulation, "File with the external stimulation.");
 
     auto* const opt_background_activity = app.add_option("--background-activity", chosen_background_activity_calculator_type, "The type of background activity");
@@ -609,7 +609,11 @@ int main(int argc, char** argv) {
     // Rank 0 prints start time of simulation
     MPIWrapper::barrier();
     if (0 == my_rank) {
-        LogFiles::write_to_file(LogFiles::EventType::Essentials, true, "Number of ranks: {}", num_ranks);
+        LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
+            "Number of ranks: {}\n"
+            "Number OpenMP threads: {}",
+            num_ranks, openmp_threads);
+
         LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
             "START OF SIMULATION: {}\n"
             "Number of steps: {}\n"
@@ -625,6 +629,9 @@ int main(int argc, char** argv) {
             "Chosen background activity base: {}\n"
             "Chosen background activity mean: {}\n"
             "Chosen background activity stddev: {}\n"
+            "Chosen log path: {}\n"
+            "Chosen algorithm: {}\n"
+            "Chosen neuron model: {}\n"
             "Chosen kernel type: {}",
             Timers::wall_clock_time(),
             simulation_steps,
@@ -640,6 +647,9 @@ int main(int argc, char** argv) {
             base_background_activity,
             background_activity_mean,
             background_activity_stddev,
+            log_path.string(),
+            chosen_algorithm,
+            chosen_neuron_model,
             chosen_kernel_type);
 
         if (chosen_kernel_type == KernelType::Gamma) {
@@ -665,6 +675,33 @@ int main(int argc, char** argv) {
                 weibull_k,
                 weibull_b);
         }
+
+        if (static_cast<bool>(*opt_num_neurons)) {
+            LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
+                "Chosen number neurons: {}\n"
+                "Chosen fraction excitatory neurons: {}\n"
+                "Chosen um per neuron: {}",
+                number_neurons, fraction_excitatory_neurons, um_per_neuron);
+        } else if (static_cast<bool>(*opt_num_neurons_per_rank)) {
+            LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
+                "Chosen number neurons per rank: {}\n"
+                "Chosen fraction excitatory neurons: {}\n"
+                "Chosen um per neuron: {}",
+                number_neurons_per_rank, fraction_excitatory_neurons, um_per_neuron);
+        } else {
+            LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
+                "Chosen positions directory: {}",
+                file_positions.string());
+
+            LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
+                "Chosen network directory: {}",
+                file_network.string());
+        }
+        LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
+            "Chosen external stimulation file: {}\n"
+            "Chosen static neurons: {}",
+            file_external_stimulation.string(),
+            static_neurons_str);
     }
 
     LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "#step: creations deletions netto");

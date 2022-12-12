@@ -24,6 +24,33 @@ enum class NeuronModelEnum {
     AEIF,
     FitzHughNagumo
 };
+/**
+ * @brief Pretty-prints the algorithm to the chosen stream
+ * @param out The stream to which to print the algorithm
+ * @param neuron_model_enum The algorithm to print
+ * @return The argument out, now altered with the algorithm
+ */
+inline std::ostream& operator<<(std::ostream& out, const NeuronModelEnum& neuron_model_enum) {
+    if (neuron_model_enum == NeuronModelEnum::Poisson) {
+        return out << "Poisson";
+    }
+
+    if (neuron_model_enum == NeuronModelEnum::Izhikevich) {
+        return out << "Izhikevich";
+    }
+
+    if (neuron_model_enum == NeuronModelEnum::AEIF) {
+        return out << "AEIF";
+    }
+
+    if (neuron_model_enum == NeuronModelEnum::FitzHughNagumo) {
+        return out << "FitzHughNagumo";
+    }
+
+    return out;
+}
+template <>
+struct fmt::formatter<NeuronModelEnum> : ostream_formatter { };
 
 namespace RelearnTypes {
 // In the future, these might become different types
@@ -52,5 +79,3 @@ using LocalSynapses = std::vector<LocalSynapse>;
 using DistantInSynapses = std::vector<DistantInSynapse>;
 using DistantOutSynapses = std::vector<DistantOutSynapse>;
 using DistantSynapses = std::vector<DistantSynapse>;
-
-using ExternalStimulusFunction = std::function<std::vector<std::pair<size_t, double>>(size_t)>;
