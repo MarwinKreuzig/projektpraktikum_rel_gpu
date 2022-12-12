@@ -60,31 +60,15 @@ void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size) {
     std::memcpy(buffer, own_data, size);
 }
 
-[[nodiscard]] size_t MPINoWrapper::get_num_ranks() {
+size_t MPINoWrapper::get_num_ranks() {
     return 1;
 }
 
-[[nodiscard]] MPIRank MPINoWrapper::get_my_rank() {
+MPIRank MPINoWrapper::get_my_rank() {
     return MPIRank::root_rank();
 }
 
-[[nodiscard]] size_t MPINoWrapper::get_num_neurons() {
-    return num_neurons;
-}
-
-[[nodiscard]] size_t MPINoWrapper::get_my_num_neurons() {
-    return num_neurons;
-}
-
-[[nodiscard]] size_t MPINoWrapper::get_my_neuron_id_start() {
-    return 0;
-}
-
-[[nodiscard]] size_t MPINoWrapper::get_my_neuron_id_end() {
-    return num_neurons;
-}
-
-[[nodiscard]] std::string MPINoWrapper::get_my_rank_str() {
+std::string MPINoWrapper::get_my_rank_str() {
     return my_rank_str;
 }
 

@@ -162,8 +162,6 @@ public:
 private:
     MPINoWrapper() = default;
 
-    static inline size_t num_neurons{}; // Total number of neurons
-
     template <typename AdditionalCellAttributes>
     static inline std::vector<OctreeNode<AdditionalCellAttributes>> base_ptr{ 0 }; // Start address of MPI-allocated memory
 
