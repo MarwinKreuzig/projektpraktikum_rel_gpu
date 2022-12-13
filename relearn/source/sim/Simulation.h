@@ -13,6 +13,7 @@
 #include "Config.h"
 #include "Types.h"
 #include "algorithm/AlgorithmEnum.h"
+#include "sim/Essentials.h"
 #include "util/StatisticalMeasures.h"
 
 #include <cstddef>
@@ -49,10 +50,11 @@ public:
     using number_neurons_type = RelearnTypes::number_neurons_type;
 
     /**
-     * @brief Constructs a new object with the given partition.
+     * @brief Constructs a new object with the given partition and essentials.
+     * @param essentials The essentials container for this simulation
      * @param partition The partition for this simulation
      */
-    explicit Simulation(std::shared_ptr<Partition> partition);
+    Simulation(std::unique_ptr<Essentials> essentials, std::shared_ptr<Partition> partition);
 
     /**
      * @brief Registers a monitor for the given neuron id.
@@ -238,6 +240,8 @@ public:
     }
 
 private:
+    std::unique_ptr<Essentials> essentials{};
+
     std::shared_ptr<Partition> partition{};
 
     std::unique_ptr<NeuronToSubdomainAssignment> neuron_to_subdomain_assignment{};

@@ -30,8 +30,9 @@
 #include <sstream>
 #include <utility>
 
-Simulation::Simulation(std::shared_ptr<Partition> partition)
-    : partition(std::move(partition)) {
+Simulation::Simulation(std::unique_ptr<Essentials> essentials, std::shared_ptr<Partition> partition)
+    : essentials(std::move(essentials))
+    , partition(std::move(partition)) {
 
     monitors = std::make_shared<std::vector<NeuronMonitor>>();
     area_monitors = std::make_shared<std::unordered_map<RelearnTypes::area_id, AreaMonitor>>();
@@ -214,7 +215,7 @@ void Simulation::initialize() {
 
     auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
 
-    const auto& [synapses_static, synapses_plastic] = synapse_loader->load_synapses();
+    const auto& [synapses_static, synapses_plastic] = synapse_loader->load_synapses(essentials);
     const auto& [local_synapses_static, in_synapses_static, out_synapses_static] = synapses_static;
     const auto& [local_synapses_plastic, in_synapses_plastic, out_synapses_plastic] = synapses_plastic;
 
@@ -441,6 +442,8 @@ void Simulation::simulate(const step_type number_steps) {
 }
 
 void Simulation::finalize() const {
+    Timers::print(essentials);
+
     const auto netto_creations = total_synapse_creations - total_synapse_deletions;
     const auto previous_netto_creations = delta_synapse_creations - delta_synapse_deletions;
 
@@ -450,15 +453,16 @@ void Simulation::finalize() const {
         delta_synapse_creations, delta_synapse_deletions, previous_netto_creations,
         Timers::wall_clock_time());
 
-    neurons->print_calcium_statistics_to_essentials();
+    neurons->print_calcium_statistics_to_essentials(essentials);
 
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
-        "Created-Synapses: {}\n"
-        "Deleted-Synapses: {}\n"
-        "Netto-Synapses: {}",
-        total_synapse_creations,
-        total_synapse_deletions,
-        netto_creations);
+    essentials->insert("Created-Synapses", total_synapse_creations);
+    essentials->insert("Deleted-Synapses", total_synapse_deletions);
+    essentials->insert("Netto-Synapses", netto_creations);
+
+    std::stringstream ss{};
+    essentials->print(ss);
+
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, ss.str());
 
     // Print final network graph
     neurons->print_network_graph_to_log_file(step, false);

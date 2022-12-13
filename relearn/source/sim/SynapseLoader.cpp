@@ -11,7 +11,7 @@
 #include "SynapseLoader.h"
 
 #include "Types.h"
-#include "io/LogFiles.h"
+#include "sim/Essentials.h"
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
 #include "util/Timers.h"
@@ -21,7 +21,8 @@
 #include <sstream>
 #include <string>
 
-std::pair<std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>, std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>> SynapseLoader::load_synapses() {
+std::pair<std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>, std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>> 
+SynapseLoader::load_synapses(const std::unique_ptr<Essentials>& essentials) {
     Timers::start(TimerRegion::LOAD_SYNAPSES);
 
     const auto& synapses_pair = internal_load_synapses();
@@ -45,12 +46,12 @@ std::pair<std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>, std:
         total_out_weight += weight;
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded-Local-Synapses: {}", local_synapses.size());
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded-Local-Synapses-Weight: {}", total_local_weight);
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded-In-Synapses: {}", in_synapses.size());
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded-In-Synapses-Weight: {}", total_in_weight);
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded-Out-Synapses: {}", out_synapses.size());
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded-Out-Synapses-Weight: {}", total_out_weight);
+    essentials->insert("Loaded-Local-Synapses: {}", local_synapses.size());
+    essentials->insert("Loaded-Local-Synapses-Weight: {}", total_local_weight);
+    essentials->insert("Loaded-In-Synapses: {}", in_synapses.size());
+    essentials->insert("Loaded-In-Synapses-Weight: {}", total_in_weight);
+    essentials->insert("Loaded-Out-Synapses: {}", out_synapses.size());
+    essentials->insert("Loaded-Out-Synapses-Weight: {}", total_out_weight);
 
     return synapses_pair;
 }

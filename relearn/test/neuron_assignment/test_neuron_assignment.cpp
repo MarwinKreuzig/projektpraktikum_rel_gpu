@@ -17,6 +17,7 @@
 #include "neuron_assignment_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
+#include "sim/Essentials.h"
 #include "sim/random/SubdomainFromNeuronDensity.h"
 #include "sim/random/SubdomainFromNeuronPerRank.h"
 #include "sim/file/MultipleSubdomainsFromFile.h"
@@ -582,7 +583,7 @@ TEST_F(NeuronAssignmentTest, testFileLoadNetworkSingleSubdomain) {
 
     const auto loader = sff.get_synapse_loader();
 
-    const auto& [static_synapses, plastic_synapses] = loader->load_synapses();
+    const auto& [static_synapses, plastic_synapses] = loader->load_synapses(std::make_unique<Essentials>());
 
     const auto& [local_synapses, in_synapses, out_synapses] = plastic_synapses;
 
@@ -619,7 +620,7 @@ TEST_F(NeuronAssignmentTest, testFileGivenInputONCE) {
 
     const auto sl = sff.get_synapse_loader();
 
-    const auto& [static_synapses, plastic_synapses] = sl->load_synapses();
+    const auto& [static_synapses, plastic_synapses] = sl->load_synapses(std::make_unique<Essentials>());
 
     const auto& [local_synapses, in_synapses, out_synapses] = plastic_synapses;
 

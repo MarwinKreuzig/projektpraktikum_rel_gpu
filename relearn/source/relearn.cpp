@@ -27,6 +27,7 @@
 #include "neurons/models/SynapticElements.h"
 #include "neurons/models/SynapticInputCalculator.h"
 #include "neurons/models/SynapticInputCalculators.h"
+#include "sim/Essentials.h"
 #include "sim/Simulation.h"
 #include "sim/file/MultipleSubdomainsFromFile.h"
 #include "sim/file/SubdomainFromFile.h"
@@ -619,65 +620,42 @@ int main(int argc, char** argv) {
     RandomHolder::seed(RandomHolderKey::Partition, static_cast<unsigned int>(my_rank.is_initialized()));
     RandomHolder::seed(RandomHolderKey::Algorithm, random_seed);
 
+    auto essentials = std::make_unique<Essentials>();
+
     // Rank 0 prints start time of simulation
     MPIWrapper::barrier();
     if (MPIRank::root_rank() == my_rank) {
-        LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
-            "Start: {}\n"
-            "Number-of-Ranks: {}\n"
-            "Number of Steps: {}\n"
-            "Lower-Bound: {}\n"
-            "Upper-Bound: {}\n"
-            "Target-Calcium: {}\n"
-            "Beta: {}\n"
-            "Calcium-Decay: {}\n"
-            "Nu-Axons: {}\n"
-            "Np-Dendrites: {}\n"
-            "Retract-Ratio: {}\n"
-            "Synapse-Conductance: {}\n"
-            "Background-Base: {}\n"
-            "Background-Mean: {}\n"
-            "Background-Stddev: {}\n"
-            "Kernel-Type: {}",
-            Timers::wall_clock_time(),
-            num_ranks,
-            simulation_steps,
-            synaptic_elements_init_lb,
-            synaptic_elements_init_ub,
-            target_calcium,
-            beta,
-            calcium_decay,
-            nu_axon,
-            nu_dend,
-            retract_ratio,
-            synapse_conductance,
-            base_background_activity,
-            background_activity_mean,
-            background_activity_stddev,
-            chosen_kernel_type);
+        essentials->insert("Start", Timers::wall_clock_time());
+        essentials->insert("Number-of-Ranks", num_ranks);
+        essentials->insert("Number-of-Steps", simulation_steps);
+        essentials->insert("Initial-Elements-Lower-Bound", synaptic_elements_init_lb);
+        essentials->insert("Initial-Elements-Upper-Bound", synaptic_elements_init_ub);
+        essentials->insert("Calcium-Target", target_calcium);
+        essentials->insert("Beta", beta);
+        essentials->insert("Calcium-Decay", calcium_decay);
+        essentials->insert("Nu-Axons", nu_axon);
+        essentials->insert("Nu-Dendrites", nu_dend);
+        essentials->insert("Retract-Ratio", retract_ratio);
+        essentials->insert("Synapse-Conductance", synapse_conductance);
+        essentials->insert("Background-Base", base_background_activity);
+        essentials->insert("Background-Mean", background_activity_mean);
+        essentials->insert("Background-Stddev", background_activity_stddev);
 
         if (chosen_kernel_type == KernelType::Gamma) {
-            LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
-                "Shape-Parameter: {}\n"
-                "Scale-Parameter: {}",
-                gamma_k,
-                gamma_theta);
+            essentials->insert("Kernel-Type",  "Gamma");
+            essentials->insert("Kernel-Shape-Parameter", gamma_k);
+            essentials->insert("Kernel-Scale-Parameter", gamma_theta);
         } else if (chosen_kernel_type == KernelType::Gaussian) {
-            LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
-                "Translation-Parameter: {}\n"
-                "Scale-Parameter: {}",
-                gaussian_mu,
-                gaussian_sigma);
+            essentials->insert("Kernel-Type", "Gaussian");
+            essentials->insert("TKernel-ranslation-Parameter", gaussian_mu);
+            essentials->insert("Kernel-Scale-Parameter", gaussian_sigma);
         } else if (chosen_kernel_type == KernelType::Linear) {
-            LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
-                "Cut-off-Parameter: {}",
-                linear_cutoff);
+            essentials->insert("Kernel-Type", "Linear");
+            essentials->insert("Kernel-Cut-off-Parameter", linear_cutoff);
         } else if (chosen_kernel_type == KernelType::Weibull) {
-            LogFiles::write_to_file(LogFiles::EventType::Essentials, true,
-                "Shape-Parameter: {}\n"
-                "Scale-Parameter: {}",
-                weibull_k,
-                weibull_b);
+            essentials->insert("Kernel-Type", "Weibull");
+            essentials->insert("Kernel-Shape-Parameter", weibull_k);
+            essentials->insert("Kernel-Scale-Parameter", weibull_b);
         }
     }
 
@@ -768,7 +746,7 @@ int main(int argc, char** argv) {
     auto inhibitory_dendrites_model = std::make_shared<SynapticElements>(ElementType::Dendrite, min_calcium_inhibitory_dendrites,
         nu_dend, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
-    Simulation sim(partition);
+    Simulation sim(std::move(essentials), partition);
     sim.set_neuron_model(std::move(neuron_model));
     sim.set_calcium_calculator(std::move(calcium_calculator));
     sim.set_axons(std::move(axons_model));
@@ -854,8 +832,6 @@ int main(int argc, char** argv) {
 
     auto simulate = [&sim, &simulation_steps]() {
         sim.simulate(simulation_steps);
-
-        Timers::print();
 
         MPIWrapper::barrier();
 

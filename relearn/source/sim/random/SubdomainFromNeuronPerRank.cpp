@@ -10,6 +10,7 @@
 
 #include "SubdomainFromNeuronPerRank.h"
 
+#include "sim/Essentials.h"
 #include "sim/random/RandomSynapseLoader.h"
 #include "structure/Partition.h"
 #include "util/Random.h"
@@ -52,6 +53,11 @@ SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank(const SubdomainFromNeuron
     set_ratio_placed_excitatory_neurons(0.0);
 
     synapse_loader = std::make_shared<RandomSynapseLoader>(std::move(partition));
+}
+
+void SubdomainFromNeuronPerRank::print_essentials(const std::unique_ptr<Essentials>& essentials) {
+    essentials->insert("Neurons-Placed", get_total_number_placed_neurons());
+    essentials->insert("Neurons-Placed-Per-Rank", number_neurons_per_rank);
 }
 
 void SubdomainFromNeuronPerRank::fill_all_subdomains() {

@@ -17,6 +17,7 @@
 #include "neurons/LocalAreaTranslator.h"
 #include "neurons/NetworkGraph.h"
 #include "io/NeuronIO.h"
+#include "sim/Essentials.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
 #include "util/Random.h"
@@ -870,7 +871,7 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const step_type step)
         dendrites_excitatory_connected_statistics.std);
 }
 
-void Neurons::print_calcium_statistics_to_essentials() {
+void Neurons::print_calcium_statistics_to_essentials(const std::unique_ptr<Essentials>& essentials) {
     const auto& calcium = calcium_calculator->get_calcium();
     const StatisticalMeasures& calcium_statistics = global_statistics(calcium, MPIRank::root_rank(), disable_flags);
 
@@ -879,13 +880,9 @@ void Neurons::print_calcium_statistics_to_essentials() {
         return;
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
-        "Average-Calcium: {}\n"
-        "Minimum-Calcium: {}\n"
-        "Maximum-Calcium: {}",
-        calcium_statistics.avg,
-        calcium_statistics.min,
-        calcium_statistics.max);
+    essentials->insert("Calcium-Minimum", calcium_statistics.min);
+    essentials->insert("Calcium-Average", calcium_statistics.avg);
+    essentials->insert("Calcium-Maximum", calcium_statistics.max);
 }
 
 void Neurons::print_network_graph_to_log_file(const step_type step, bool with_prefix) const {

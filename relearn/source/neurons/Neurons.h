@@ -33,6 +33,7 @@
 #include <tuple>
 #include <vector>
 
+class Essentials;
 class LocalAreaTranslator;
 class NetworkGraph;
 class NeuronMonitor;
@@ -242,7 +243,7 @@ public:
      */
     void set_fired(std::vector<FiredStatus> fired) {
         RelearnException::check(fired.size() == number_neurons, "Neurons::set_fired: The sizes didn't match: {} vs {}", fired.size(), number_neurons);
-        
+
         for (const auto neuron_id : NeuronID::range(number_neurons)) {
             neuron_model->set_fired(neuron_id, fired[neuron_id.get_neuron_id()]);
         }
@@ -358,10 +359,11 @@ public:
     void print_neurons_overview_to_log_file_on_rank_0(step_type step) const;
 
     /**
-     * @brief Prints the calcium statistics to LogFiles::EventType::Essentials
+     * @brief Inserts the calcium statistics in the essentials
      *      Performs communication with MPI
+     * @param essentials The essentials
      */
-    void print_calcium_statistics_to_essentials();
+    void print_calcium_statistics_to_essentials(const std::unique_ptr<Essentials>& essentials);
 
     /**
      * @brief Prints the network graph to LogFiles::EventType::Network. Stores current step in file name and log

@@ -11,9 +11,9 @@
 #include "MultipleSubdomainsFromFile.h"
 
 #include "Config.h"
-#include "io/LogFiles.h"
 #include "io/NeuronIO.h"
 #include "mpi/MPIWrapper.h"
+#include "sim/Essentials.h"
 #include "sim/file/MultipleFilesSynapseLoader.h"
 #include "structure/Partition.h"
 #include "util/StringUtil.h"
@@ -30,6 +30,10 @@ MultipleSubdomainsFromFile::MultipleSubdomainsFromFile(const std::filesystem::pa
     synapse_loader = std::make_shared<MultipleFilesSynapseLoader>(std::move(partition), std::move(path_to_synapses));
 
     read_neurons_from_file(path_to_file);
+}
+
+void MultipleSubdomainsFromFile::print_essentials(const std::unique_ptr<Essentials>& essentials) {
+    essentials->insert("Neurons-Placed", get_total_number_placed_neurons());
 }
 
 void MultipleSubdomainsFromFile::read_neurons_from_file(const std::filesystem::path& path_to_neurons) {
@@ -100,8 +104,6 @@ void MultipleSubdomainsFromFile::read_neurons_from_file(const std::filesystem::p
     set_ratio_placed_excitatory_neurons(ratio_excitatory_neurons);
 
     partition->set_total_number_neurons(total_number_neurons);
-
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded-Neurons: {}", total_number_neurons);
 
     set_loaded_nodes(std::move(nodes));
 }

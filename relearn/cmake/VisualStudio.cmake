@@ -88,6 +88,7 @@ if(WIN32)
 	list(APPEND relearn_lib_additional_files "neurons/models/SynapticInputCalculators.h")
 	
 	# sim
+	list(APPEND relearn_lib_additional_files "sim/Essentials.h")
 	list(APPEND relearn_lib_additional_files "sim/LoadedNeuron.h")
 	list(APPEND relearn_lib_additional_files "sim/NeuronToSubdomainAssignment.h")
 	list(APPEND relearn_lib_additional_files "sim/Simulation.h")

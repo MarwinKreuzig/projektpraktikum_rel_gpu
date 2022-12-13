@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 
+class Essentials;
 class Partition;
 
 /**
@@ -56,6 +57,12 @@ public:
      * @exception Can throw a RelearnException
      */
     void initialize();
+
+    /**
+     * @brief Prints relevant metrics to the essentials
+     * @param essentials The essentials
+     */
+    virtual void print_essentials(const std::unique_ptr<Essentials>& essentials) = 0;
 
     /**
      * @brief Returns the associated SynapseLoader (some type that inherites from SynapseLoader)
