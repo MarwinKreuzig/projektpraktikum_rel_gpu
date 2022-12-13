@@ -46,12 +46,12 @@ SynapseLoader::load_synapses(const std::unique_ptr<Essentials>& essentials) {
         total_out_weight += weight;
     }
 
-    essentials->insert("Loaded-Local-Synapses: {}", local_synapses.size());
-    essentials->insert("Loaded-Local-Synapses-Weight: {}", total_local_weight);
-    essentials->insert("Loaded-In-Synapses: {}", in_synapses.size());
-    essentials->insert("Loaded-In-Synapses-Weight: {}", total_in_weight);
-    essentials->insert("Loaded-Out-Synapses: {}", out_synapses.size());
-    essentials->insert("Loaded-Out-Synapses-Weight: {}", total_out_weight);
+    essentials->insert("Loaded-Local-Synapses", local_synapses.size());
+    essentials->insert("Loaded-Local-Synapses-Weight", total_local_weight);
+    essentials->insert("Loaded-In-Synapses", in_synapses.size());
+    essentials->insert("Loaded-In-Synapses-Weight", total_in_weight);
+    essentials->insert("Loaded-Out-Synapses", out_synapses.size());
+    essentials->insert("Loaded-Out-Synapses-Weight", total_out_weight);
 
     return synapses_pair;
 }

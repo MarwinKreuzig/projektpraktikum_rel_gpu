@@ -161,5 +161,5 @@ void Timers::print(const std::unique_ptr<Essentials>& essentials) {
     LogFiles::write_to_file(LogFiles::EventType::Timers, true, sstring.str());
 
     const auto average_simulation_time = timers_global[3 * get_timer_index(TimerRegion::SIMULATION_LOOP) + 1];
-    essentials->insert("Simulation-Time-Seconds: {}", average_simulation_time);
+    essentials->insert("Simulation-Time-Seconds", average_simulation_time);
 }
