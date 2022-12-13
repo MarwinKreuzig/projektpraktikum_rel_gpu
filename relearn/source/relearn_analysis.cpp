@@ -23,7 +23,7 @@
 
 void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, unsigned int number_bins) {
     const auto number_ranks = MPIWrapper::get_num_ranks();
-    const auto my_rank = MPIWrapper::get_my_rank();
+    const auto my_rank = MPIWrapper::get_my_rank().get_rank();
 
     const auto& [ids, positions, area_ids, area_names, signal_types, infos] = NeuronIO::read_neurons_componentwise(neuron_file);
     const auto number_neurons = positions.size();

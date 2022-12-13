@@ -71,24 +71,29 @@ void MPIWrapper::init(int argc, char** argv) {
     // Number of ranks must be 2^n so that
     // the connectivity update works correctly
     const std::bitset<sizeof(int) * 8> bitset_num_ranks(num_ranks);
-    if (1 != bitset_num_ranks.count() && (0 == my_rank)) {
+    if (1 != bitset_num_ranks.count() && (MPIRank::root_rank() == my_rank)) {
         RelearnException::fail("MPIWrapper::init: Number of ranks must be of the form 2^n");
     }
 
     register_custom_function();
 
     const unsigned int num_digits = Util::num_digits(num_ranks - 1);
-    my_rank_str = fmt::format("{1:0>{0}}", num_digits, my_rank);
+    my_rank_str = fmt::format("{1:0>{0}}", num_digits, my_rank.get_rank());
 
     LogFiles::print_message_rank(0, "I'm using the MPIWrapper");
 }
 
 void MPIWrapper::init_globals() {
+    int num_ranks_int{};
     // NOLINTNEXTLINE
-    MPI_Comm_size(MPI_COMM_WORLD, &num_ranks);
+    MPI_Comm_size(MPI_COMM_WORLD, &num_ranks_int);
 
+    int my_rank_int{};
     // NOLINTNEXTLINE
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank_int);
+
+    num_ranks = static_cast<size_t>(num_ranks_int);
+    my_rank = MPIRank(my_rank_int);
 }
 
 size_t MPIWrapper::init_window(const size_t size_requested, const size_t octree_node_size) {
@@ -130,12 +135,12 @@ void MPIWrapper::barrier() {
     RelearnException::check(errorcode == 0, "MPIWrapper::barrier: Error code received: {}", errorcode);
 }
 
-double MPIWrapper::reduce(double value, const ReduceFunction function, const int root_rank) {
-    RelearnException::check(root_rank >= 0, "MPIWrapper::reduce: root_rank was negative");
+double MPIWrapper::reduce(double value, const ReduceFunction function, const MPIRank root_rank) {
+    RelearnException::check(root_rank.is_initialized(), "MPIWrapper::reduce: root_rank was negative");
     const auto mpi_reduce_function = translate_reduce_function(function);
 
     double result = 0.0;
-    const int errorcode = MPI_Reduce(&value, &result, 1, MPI_DOUBLE, *mpi_reduce_function, root_rank, MPI_COMM_WORLD);
+    const int errorcode = MPI_Reduce(&value, &result, 1, MPI_DOUBLE, *mpi_reduce_function, root_rank.get_rank(), MPI_COMM_WORLD);
     RelearnException::check(errorcode == 0, "MPIWrapper::reduce: Error code received: {}", errorcode);
 
     bytes_sent.fetch_add(sizeof(double), std::memory_order::relaxed);
@@ -181,7 +186,7 @@ void MPIWrapper::reduce_double(const double* src, double* dst, const size_t size
     RelearnException::check(errorcode == 0, "MPIWrapper::reduce_double: Error code received: {}", errorcode);
 
     bytes_sent.fetch_add(sizeof(double) * size, std::memory_order::relaxed);
-    if (my_rank == root_rank) {
+    if (my_rank.get_rank() == root_rank) {
         bytes_received.fetch_add(sizeof(double) * size, std::memory_order::relaxed);
     }
 }
@@ -195,7 +200,7 @@ void MPIWrapper::reduce_int64(const int64_t* src, int64_t* dst, const size_t siz
     RelearnException::check(errorcode == 0, "MPIWrapper::reduce_int64: Error code received: {}", errorcode);
 
     bytes_sent.fetch_add(sizeof(int64_t) * size, std::memory_order::relaxed);
-    if (my_rank == root_rank) {
+    if (my_rank.get_rank() == root_rank) {
         bytes_received.fetch_add(sizeof(int64_t) * size, std::memory_order::relaxed);
     }
 }
@@ -261,7 +266,7 @@ void MPIWrapper::reduce(const void* src, void* dst, const int size, const Reduce
     RelearnException::check(errorcode == 0, "MPIWrapper::reduce: Error code received: {}", errorcode);
 
     bytes_sent.fetch_add(size, std::memory_order::relaxed);
-    if (my_rank == root_rank) {
+    if (my_rank.get_rank() == root_rank) {
         bytes_received.fetch_add(size, std::memory_order::relaxed);
     }
 }
@@ -300,18 +305,18 @@ void MPIWrapper::get(void* origin, const size_t size, const int target_rank, con
     bytes_remote.fetch_add(size, std::memory_order::relaxed);
 }
 
-int MPIWrapper::get_num_ranks() {
-    RelearnException::check(num_ranks >= 0, "MPIWrapper::get_num_ranks: MPIWrapper is not initialized");
+size_t MPIWrapper::get_num_ranks() {
+    RelearnException::check(num_ranks >= 1, "MPIWrapper::get_num_ranks: MPIWrapper is not initialized");
     return num_ranks;
 }
 
-int MPIWrapper::get_my_rank() {
-    RelearnException::check(my_rank >= 0, "MPIWrapper::get_my_rank: MPIWrapper is not initialized");
+MPIRank MPIWrapper::get_my_rank() {
+    RelearnException::check(my_rank.is_initialized(), "MPIWrapper::get_my_rank: MPIWrapper is not initialized");
     return my_rank;
 }
 
 std::string MPIWrapper::get_my_rank_str() {
-    RelearnException::check(my_rank >= 0, "MPIWrapper::get_my_rank_str: MPIWrapper is not initialized");
+    RelearnException::check(my_rank.is_initialized(), "MPIWrapper::get_my_rank_str: MPIWrapper is not initialized");
     return my_rank_str;
 }
 
@@ -355,19 +360,19 @@ void MPIWrapper::free_custom_function() {
     minsummax.reset();
 }
 
-void MPIWrapper::lock_window(const int rank, const MPI_Locktype lock_type) {
-    RelearnException::check(rank >= 0, "MPIWrapper::lock_window: rank was: {}", rank);
+void MPIWrapper::lock_window(const MPIRank rank, const MPI_Locktype lock_type) {
+    RelearnException::check(rank.is_initialized(), "MPIWrapper::lock_window: rank was: {}", rank);
     const auto lock_type_int = translate_lock_type(lock_type);
 
     const auto window = *mpi_window; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
-    const int errorcode = MPI_Win_lock(lock_type_int, rank, MPI_MODE_NOCHECK, window);
+    const int errorcode = MPI_Win_lock(lock_type_int, rank.get_rank(), MPI_MODE_NOCHECK, window);
     RelearnException::check(errorcode == 0, "MPIWrapper::lock_window: Error code received: {}", errorcode);
 }
 
-void MPIWrapper::unlock_window(const int rank) {
-    RelearnException::check(rank >= 0, "MPIWrapper::unlock_window: rank was: {}", rank);
+void MPIWrapper::unlock_window(const MPIRank rank) {
+    RelearnException::check(rank.is_initialized(), "MPIWrapper::unlock_window: rank was: {}", rank);
     const auto window = *mpi_window; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
-    const int errorcode = MPI_Win_unlock(rank, window);
+    const int errorcode = MPI_Win_unlock(rank.get_rank(), window);
     RelearnException::check(errorcode == 0, "MPIWrapper::unlock_window: Error code received: {}", errorcode);
 }
 

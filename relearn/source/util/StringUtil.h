@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -8,17 +10,13 @@
  *
  */
 
-#pragma once
-
 #include "RelearnException.h"
 
+#include <cctype>
 #include <filesystem>
-#include <functional>
 #include <iomanip>
-#include <map>
 #include <sstream>
 #include <string>
-#include <utility>
 #include <vector>
 
 /**
@@ -59,7 +57,7 @@ public:
     static void stack_vectors(std::vector<std::vector<T>>& first, const std::vector<std::vector<T>>& second) {
         RelearnException::check(first.size() == second.size(), "StringUtil::stack_vectors: Cannot stack vectors with different size {} != {} ", first.size(), second.size());
 
-        for (int i = 0; i < first.size(); i++) {
+        for (size_t i = 0; i < first.size(); i++) {
             first[i].insert(first[i].end(), second[i].begin(), second[i].end());
         }
     }

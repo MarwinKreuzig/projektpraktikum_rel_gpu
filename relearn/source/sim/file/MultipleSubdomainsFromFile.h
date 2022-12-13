@@ -44,6 +44,12 @@ public:
 
     ~MultipleSubdomainsFromFile() override = default;
 
+    /**
+     * @brief Prints relevant metrics to the essentials
+     * @param essentials The essentials
+     */
+    void print_essentials(const std::unique_ptr<Essentials>& essentials) override;
+
 protected:
     void fill_all_subdomains() override {
         // This method is empty as the loading actually happens in the constructor

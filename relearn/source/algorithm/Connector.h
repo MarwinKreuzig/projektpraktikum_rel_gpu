@@ -73,7 +73,7 @@ public:
         DistantInSynapses distant_synapses{};
         distant_synapses.reserve(total_number_requests);
 
-        std::vector<std::pair<int, unsigned int>> indices{};
+        std::vector<std::pair<MPIRank, unsigned int>> indices{};
         indices.reserve(total_number_requests);
 
         for (const auto& [source_rank, requests] : creation_requests) {
@@ -142,7 +142,7 @@ public:
         RelearnException::check(creation_requests.size() == creation_responses.size(),
             "ForwardConnector::process_responses: Requests and Responses had different sizes");
 
-        for (auto rank = 0; rank < creation_requests.size(); rank++) {
+        for (const auto rank : MPIRank::range(creation_requests.size())) {
             RelearnException::check(creation_requests.size(rank) == creation_responses.size(rank),
                 "ForwardConnector::process_responses: Requests and Responses for rank {} had different sizes", rank);
         }
@@ -232,7 +232,7 @@ public:
         DistantOutSynapses distant_synapses{};
         distant_synapses.reserve(total_number_requests);
 
-        std::vector<std::pair<int, unsigned int>> indices{};
+        std::vector<std::pair<MPIRank, unsigned int>> indices{};
         indices.reserve(total_number_requests);
 
         for (const auto& [source_rank, requests] : creation_requests) {

@@ -21,6 +21,7 @@ using MPIWrapper = MPINoWrapper;
 #include "io/LogFiles.h"
 #include "mpi/CommunicationMap.h"
 #include "util/MemoryHolder.h"
+#include "util/MPIRank.h"
 #include "util/RelearnException.h"
 
 #include <array>
@@ -119,7 +120,7 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs or if root_rank is < 0
      * @return On the MPI rank root_rank: The result of the reduction; A dummy value on every other MPI rank
      */
-    [[nodiscard]] static double reduce(double value, ReduceFunction function, int root_rank);
+    [[nodiscard]] static double reduce(double value, ReduceFunction function, MPIRank root_rank);
 
     /**
      * @brief Reduces a value for every MPI rank with a reduction function such that every rank has the final result
@@ -148,11 +149,11 @@ public:
      * @return On the MPI rank root_rank: The results of the componentwise reduction; A dummy value on every other MPI rank
      */
     template <size_t size>
-    [[nodiscard]] static std::array<double, size> reduce(const std::array<double, size>& src, const ReduceFunction function, const int root_rank) {
-        RelearnException::check(root_rank >= 0, "MPIWrapper::reduce: root_rank was negative");
+    [[nodiscard]] static std::array<double, size> reduce(const std::array<double, size>& src, const ReduceFunction function, const MPIRank root_rank) {
+        RelearnException::check(root_rank.is_initialized(), "MPIWrapper::reduce: root_rank was negative");
 
         std::array<double, size> dst{ 0.0 };
-        reduce_double(src.data(), dst.data(), size, function, root_rank);
+        reduce_double(src.data(), dst.data(), size, function, root_rank.get_rank());
 
         return dst;
     }
@@ -166,11 +167,11 @@ public:
      * @return On the MPI rank root_rank: The results of the componentwise reduction; A dummy value on every other MPI rank
      */
     template <size_t size>
-    [[nodiscard]] static std::array<int64_t, size> reduce(const std::array<int64_t, size>& src, const ReduceFunction function, const int root_rank) {
-        RelearnException::check(root_rank >= 0, "MPIWrapper::reduce: root_rank was negative");
+    [[nodiscard]] static std::array<int64_t, size> reduce(const std::array<int64_t, size>& src, const ReduceFunction function, const MPIRank root_rank) {
+        RelearnException::check(root_rank.is_initialized(), "MPIWrapper::reduce: root_rank was negative");
 
         std::array<int64_t, size> dst{ 0 };
-        reduce_int64(src.data(), dst.data(), size, function, root_rank);
+        reduce_int64(src.data(), dst.data(), size, function, root_rank.get_rank());
 
         return dst;
     }
@@ -231,21 +232,21 @@ public:
         }
 
         std::vector<AsyncToken> async_tokens{};
-        for (auto rank = 0; rank < num_ranks; rank++) {
+        for (const auto rank : MPIRank::range(num_ranks)) {
             if (rank == my_rank) {
                 continue;
             }
 
-            const auto token = async_receive(std::span{ retrieved_data[rank] }, rank);
+            const auto token = async_receive(std::span{ retrieved_data[rank.get_rank()] }, rank.get_rank());
             async_tokens.emplace_back(token);
         }
 
-        for (auto rank = 0; rank < num_ranks; rank++) {
+        for (const auto rank : MPIRank::range(num_ranks)) {
             if (rank == my_rank) {
                 continue;
             }
 
-            const auto token = async_send(std::span{ values[rank] }, rank);
+            const auto token = async_send(std::span{ values[rank.get_rank()] }, rank.get_rank());
             async_tokens.emplace_back(token);
         }
 
@@ -273,27 +274,27 @@ public:
 
         std::vector<AsyncToken> async_tokens{};
 
-        for (auto rank_id = 0; rank_id < number_ranks; rank_id++) {
-            if (!incoming_requests.contains(rank_id)) {
+        for (const auto rank : MPIRank::range(number_ranks)) {
+            if (!incoming_requests.contains(rank)) {
                 continue;
             }
 
-            auto* buffer = incoming_requests.get_data(rank_id);
-            const auto size = incoming_requests.size(rank_id);
+            auto* buffer = incoming_requests.get_data(rank);
+            const auto size = incoming_requests.size(rank);
 
-            const auto token = async_receive(incoming_requests.get_span(rank_id), rank_id);
+            const auto token = async_receive(incoming_requests.get_span(rank), rank.get_rank());
             async_tokens.emplace_back(token);
         }
 
-        for (auto rank_id = 0; rank_id < number_ranks; rank_id++) {
-            if (!outgoing_requests.contains(rank_id)) {
+        for (const auto rank : MPIRank::range(number_ranks)) {
+            if (!outgoing_requests.contains(rank)) {
                 continue;
             }
 
-            const auto* buffer = outgoing_requests.get_data(rank_id);
-            const auto size = outgoing_requests.size(rank_id);
+            const auto* buffer = outgoing_requests.get_data(rank);
+            const auto size = outgoing_requests.size(rank);
 
-            const auto token = async_send(outgoing_requests.get_span(rank_id), rank_id);
+            const auto token = async_send(outgoing_requests.get_span(rank), rank.get_rank());
             async_tokens.emplace_back(token);
         }
 
@@ -312,17 +313,17 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs, if number_elements <= 0, or if target_rank < 0
      */
     template <typename AdditionalCellAttributes>
-    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const OctreeNode<AdditionalCellAttributes>* src, const int number_elements) {
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const MPIRank target_rank, const OctreeNode<AdditionalCellAttributes>* src, const int number_elements) {
         RelearnException::check(number_elements > 0, "MPIWrapper::download_octree_node: number_elements is not positive");
-        RelearnException::check(target_rank >= 0, "MPIWrapper::download_octree_node: target_rank is negative");
+        RelearnException::check(target_rank.is_initialized(), "MPIWrapper::download_octree_node: target_rank is not initialized");
 
         const auto& base_ptrs = get_base_pointers();
-        RelearnException::check(target_rank < base_ptrs.size(), "MPIWrapper::download_octree_node: target_rank is larger than the pointers");
-        const auto displacement = int64_t(src) - base_ptrs[target_rank];
+        RelearnException::check(target_rank.get_rank() < base_ptrs.size(), "MPIWrapper::download_octree_node: target_rank is larger than the pointers");
+        const auto displacement = int64_t(src) - base_ptrs[target_rank.get_rank()];
 
-        RelearnException::check(displacement >= 0, "MPIWrapper::download_octree_node: displacement is too small: {:X} - {:X}", int64_t(src), base_ptrs[target_rank]);
+        RelearnException::check(displacement >= 0, "MPIWrapper::download_octree_node: displacement is too small: {:X} - {:X}", int64_t(src), base_ptrs[target_rank.get_rank()]);
 
-        get(dst, sizeof(OctreeNode<AdditionalCellAttributes>), target_rank, displacement, number_elements);
+        get(dst, sizeof(OctreeNode<AdditionalCellAttributes>), target_rank.get_rank(), displacement, number_elements);
     }
 
     /**
@@ -334,14 +335,14 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs, if number_elements <= 0, if offset < 0, or if target_rank < 0
      */
     template <typename AdditionalCellAttributes>
-    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const uint64_t offset, const int number_elements) {
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const MPIRank target_rank, const uint64_t offset, const int number_elements) {
         RelearnException::check(number_elements > 0, "MPIWrapper::download_octree_node: number_elements is not positive");
-        RelearnException::check(target_rank >= 0, "MPIWrapper::download_octree_node: target_rank is negative");
+        RelearnException::check(target_rank.is_initialized(), "MPIWrapper::download_octree_node: target_rank is not initialized");
 
         const auto& base_ptrs = get_base_pointers();
-        RelearnException::check(target_rank < base_ptrs.size(), "MPIWrapper::download_octree_node: target_rank is larger than the pointers");
+        RelearnException::check(target_rank.get_rank() < base_ptrs.size(), "MPIWrapper::download_octree_node: target_rank is larger than the pointers");
 
-        get(dst, sizeof(OctreeNode<AdditionalCellAttributes>), target_rank, offset, number_elements);
+        get(dst, sizeof(OctreeNode<AdditionalCellAttributes>), target_rank.get_rank(), offset, number_elements);
     }
 
     /**
@@ -349,29 +350,14 @@ public:
      * @exception Throws a RelearnException if the MPIWrapper is not initialized
      * @return The number of MPI ranks
      */
-    [[nodiscard]] static int get_num_ranks();
-
-    /**
-     * @brief Get a range of all ranks [0, num_ranks)
-     *
-     * @return auto the range of all ranks
-     */
-    [[nodiscard]] static const std::vector<int>& get_ranks() {
-        static std::vector<int> ranks = []() {
-            std::vector<int> r(get_num_ranks());
-            std::iota(r.begin(), r.end(), 0);
-            return r;
-        }();
-
-        return ranks;
-    }
+    [[nodiscard]] static size_t get_num_ranks();
 
     /**
      * @brief Returns the current MPI rank's id
      * @exception Throws a RelearnException if the MPIWrapper is not initialized
      * @return The current MPI rank's id
      */
-    [[nodiscard]] static int get_my_rank();
+    [[nodiscard]] static MPIRank get_my_rank();
 
     /**
      * @brief Returns the current MPI rank's id as string
@@ -386,14 +372,14 @@ public:
      * @param lock_type The type of locking
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
-    static void lock_window(int rank, MPI_Locktype lock_type);
+    static void lock_window(MPIRank rank, MPI_Locktype lock_type);
 
     /**
      * @brief Unlocks the memory window on another MPI rank
      * @param The other MPI rank
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
-    static void unlock_window(int rank);
+    static void unlock_window(MPIRank rank);
 
     /**
      * @brief Returns an approximation of how many bytes were sent.
@@ -498,8 +484,8 @@ private:
      */
     static void wait_all_tokens(const std::vector<AsyncToken>& tokens);
 
-    static inline int num_ranks{ -1 }; // Number of ranks in MPI_COMM_WORLD
-    static inline int my_rank{ -1 }; // My rank in MPI_COMM_WORLD
+    static inline size_t num_ranks{ 0 }; // Number of ranks in MPI_COMM_WORLD
+    static inline MPIRank my_rank{ MPIRank::uninitialized_rank() }; // My rank in MPI_COMM_WORLD
 
     static inline int thread_level_provided{ -1 }; // Thread level provided by MPI
 

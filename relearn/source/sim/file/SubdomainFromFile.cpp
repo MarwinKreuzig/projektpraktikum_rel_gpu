@@ -13,6 +13,7 @@
 #include "Config.h"
 #include "io/LogFiles.h"
 #include "io/NeuronIO.h"
+#include "sim/Essentials.h"
 #include "sim/file/FileSynapseLoader.h"
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
@@ -21,13 +22,17 @@
 
 SubdomainFromFile::SubdomainFromFile(const std::filesystem::path& path_to_neurons, std::optional<std::filesystem::path> path_to_synapses, std::shared_ptr<Partition> partition)
     : NeuronToSubdomainAssignment(partition) {
-    RelearnException::check(partition->get_my_mpi_rank() == 0 && partition->get_number_mpi_ranks() == 1, "SubdomainFromFile::SubdomainFromFile: Can only be used for 1 MPI rank.");
+    RelearnException::check(partition->get_my_mpi_rank() == MPIRank::root_rank() && partition->get_number_mpi_ranks() == 1, "SubdomainFromFile::SubdomainFromFile: Can only be used for 1 MPI rank.");
 
     LogFiles::write_to_file(LogFiles::EventType::Cout, false, "Loading: {} \n", path_to_neurons);
 
     synapse_loader = std::make_shared<FileSynapseLoader>(std::move(partition), std::move(path_to_synapses));
 
     read_neurons_from_file(path_to_neurons);
+}
+
+void SubdomainFromFile::print_essentials(const std::unique_ptr<Essentials>& essentials) {
+    essentials->insert("Neurons-Loaded", get_total_number_placed_neurons());
 }
 
 void SubdomainFromFile::read_neurons_from_file(const std::filesystem::path& path_to_neurons) {
@@ -48,8 +53,6 @@ void SubdomainFromFile::read_neurons_from_file(const std::filesystem::path& path
     set_ratio_placed_excitatory_neurons(ratio_excitatory_neurons);
 
     partition->set_total_number_neurons(total_number_neurons);
-
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded neurons: {}", total_number_neurons);
 
     set_loaded_nodes(std::move(loaded_neurons));
 }

@@ -14,6 +14,7 @@
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
 #include "neurons/helper/SynapseCreationRequests.h"
+#include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
 #include <cstdint>
@@ -30,12 +31,22 @@
  */
 class DistantNeuronRequest {
 public:
+    /**
+     * A target neuron can be one of the following:
+     * (a) The target is on the branch node level
+     * (b) The target is a leaf node
+     * (c) The target is a virtual node
+     */
     enum class TargetNeuronType : char {
         BranchNode = 0,
         Leaf = 1,
         VirtualNode = 2
     };
 
+    /**
+     * @brief Constructs an object with default-constructed members.
+     *      This constructor is present for resizing vectors, etc.
+     */
     constexpr DistantNeuronRequest() = default;
 
     /**
@@ -43,19 +54,22 @@ public:
      *      (a) The target node is a branch node -- target_neuron_type should be TargetNeuronType::BranchNode and target_neuron_identifier the index of it when considering all branch nodes
      *      (b) The target node is a leaf node -- target_neuron_type should be TargetNeuronType::Leaf and target_neuron_identifier the index of it in the local neurons
      *      (c) The target node is a virtual node -- target_neuron_type should be TargetNeuronType::VirtualNode and target_neuron_identifier the RMA offset
-     * @param source_id The RankNeuronId of the source
+     * @param source_id The RankNeuronId of the source, must be an actual neuron id
      * @param source_position The position of the source
      * @param target_neuron_identifier The identifier of the target node
      * @param target_neuron_type The type of the target node
      * @param signal_type The signal type
+     * @exception Throws a RelearnExpcetion if source_id is virtual or uninitialized
      */
     constexpr DistantNeuronRequest(const NeuronID& source_id, const RelearnTypes::position_type& source_position,
-        const NeuronID::value_type target_neuron_identifier, const TargetNeuronType target_neuron_type, const SignalType signal_type) noexcept
+        const NeuronID::value_type target_neuron_identifier, const TargetNeuronType target_neuron_type, const SignalType signal_type)
         : source_id(source_id)
         , source_position(source_position)
         , target_neuron_identifier(target_neuron_identifier)
         , target_neuron_type(target_neuron_type)
-        , signal_type(signal_type) { }
+        , signal_type(signal_type) { 
+        RelearnException::check(source_id.is_local(), "DistantNeuronRequest::DistantNeuronRequest: The source neuron must be initialized and non-virtual.");
+    }
 
     /**
      * @brief Returns the source of the request
@@ -132,16 +146,23 @@ private:
  */
 class DistantNeuronResponse {
 public:
+    /**
+     * @brief Constructs an object with default-constructed members.
+     *      This constructor is present for resizing vectors, etc.
+     */
     constexpr DistantNeuronResponse() = default;
 
     /**
      * @brief Constructs a new response with the arguments
-     * @param source The RankNeuronId of the source
+     * @param source The RankNeuronId of the source, must be an actual neuron id
      * @param creation_response The response if a synapse was succesfully created
+     * @exception Throws a RelearnException if source_id is virtual or not initialized
      */
-    constexpr DistantNeuronResponse(const NeuronID& source_id, const SynapseCreationResponse creation_response)
+    constexpr DistantNeuronResponse(const NeuronID& source_id, const SynapseCreationResponse& creation_response)
         : source_id(source_id)
-        , creation_response(creation_response) { }
+        , creation_response(creation_response) {
+        RelearnException::check(source_id.is_local(), "DistantNeuronRequest::DistantNeuronRequest: The source neuron must be initialized and non-virtual.");
+    }
 
     /**
      * @brief Returns the source of the response

@@ -19,7 +19,7 @@
 FileSynapseLoader::FileSynapseLoader(std::shared_ptr<Partition> partition, std::optional<std::filesystem::path> path_to_synapses)
     : SynapseLoader(std::move(partition))
     , optional_path_to_file(std::move(path_to_synapses)) {
-    RelearnException::check(this->partition->get_number_mpi_ranks() == 1 && this->partition->get_my_mpi_rank() == 0,
+    RelearnException::check(this->partition->get_number_mpi_ranks() == 1 && this->partition->get_my_mpi_rank() == MPIRank::root_rank(),
         "FileSynapseLoader::FileSynapseLoader: Can only use this class with 1 MPI rank.");
 }
 
@@ -35,11 +35,11 @@ FileSynapseLoader::synapses_pair_type FileSynapseLoader::internal_load_synapses(
 
     const auto number_local_neurons = partition->get_number_local_neurons();
 
-    auto [in_synapses_static, in_synapses_plastic] = NeuronIO::read_in_synapses(actual_path / expected_in_name, number_local_neurons, 0, 1);
+    auto [in_synapses_static, in_synapses_plastic] = NeuronIO::read_in_synapses(actual_path / expected_in_name, number_local_neurons, MPIRank::root_rank(), 1);
     auto [read_local_in_synapses_static, read_distant_in_synapses_static] = in_synapses_static;
     auto [read_local_in_synapses_plastic, read_distant_in_synapses_plastic] = in_synapses_plastic;
 
-    auto [out_synapses_static, out_synapses_plastic] = NeuronIO::read_out_synapses(actual_path / expected_out_name, number_local_neurons, 0, 1);
+    auto [out_synapses_static, out_synapses_plastic] = NeuronIO::read_out_synapses(actual_path / expected_out_name, number_local_neurons, MPIRank::root_rank(), 1);
     auto [read_local_out_synapses_static, read_distant_out_synapses_static] = out_synapses_static;
     auto [read_local_out_synapses_plastic, read_distant_out_synapses_plastic] = out_synapses_plastic;
 

@@ -48,40 +48,79 @@ file(
 add_executable(relearn_tests ${SRC_TST})
 target_sources(
   relearn_tests
-  PRIVATE test_background_activity.cpp
-          test_barnes_hut.cpp
-          test_calcium_calculator.cpp
-          test_cell.cpp
-          test_connector.cpp
-          test_fast_gauss.cpp
-          test_kernel.cpp
-          test_kernel_gamma.cpp
-          test_kernel_gaussian.cpp
-          test_kernel_linear.cpp
-          test_kernel_weibull.cpp
-          test_local_area_translator.cpp
-          test_misc.cpp
-          test_monitor_parser.cpp
-          test_mpi_rank.cpp
-          test_network_graph.cpp
-          test_neuron_assignment.cpp
-          test_neuron_extra_info.cpp
-          test_neuron_io.cpp
-          test_neuron_models.cpp
-          test_neurons.cpp
-          test_octree.cpp
-          test_partition.cpp
-          test_rank_neuron_id.cpp
-          test_space_filling_curve.cpp
-          test_step_parser.cpp
-          test_synaptic_elements.cpp
-          test_synaptic_input.cpp
-          test_tagged_id.cpp
-          test_vector.cpp
-          ${CMAKE_BINARY_DIR}/test_get_relearn_path.cpp
-          RelearnTest.cpp)
+  PRIVATE ${CMAKE_BINARY_DIR}/test_get_relearn_path.cpp
+          RelearnTest.cpp
+		  
+		  background_activity/test_background_activity.cpp
+		  
+		  barnes_hut/test_barnes_hut.cpp
+		  
+		  calcium_calculator/test_calcium_calculator.cpp
+		  
+		  cell/test_cell.cpp
+		  
+		  connector/test_connector.cpp
+		  
+		  fast_multipole_method/test_fast_multipole_method.cpp
+		  
+		  helper/test_distant_neuron_request.cpp
+		  helper/test_rank_neuron_id.cpp
+		  helper/test_synapse_creation_request.cpp
+		  helper/test_synapse_deletion_request.cpp
+			  
+		  interval/test_interval.cpp
+		  
+		  kernel/test_kernel.cpp
+		  kernel/test_kernel_gamma.cpp
+		  kernel/test_kernel_gaussian.cpp
+		  kernel/test_kernel_linear.cpp
+		  kernel/test_kernel_weibull.cpp
+		  
+		  local_area_translator/test_local_area_translator.cpp
+		  
+		  misc/test_misc.cpp
+		  
+		  mpi/test_mpi_rank.cpp
+		  
+		  network_graph/test_network_graph.cpp
+		  
+          neuron_assignment/test_neuron_assignment.cpp
+		  
+          neuron_extra_info/test_neuron_extra_info.cpp
+		  
+          neuron_io/test_neuron_io.cpp
+		  
+          neuron_models/test_neuron_models.cpp
+		  
+          neurons/test_neurons.cpp
+		  
+          octree/test_octree.cpp
+		  
+		  parser/test_monitor_parser.cpp
+		  parser/test_step_parser.cpp
+		  
+		  partition/test_partition.cpp
+		  
+          space_filling_curve/test_space_filling_curve.cpp
+		  
+          synaptic_elements/test_synaptic_elements.cpp
+		  
+          synaptic_input/test_synaptic_input.cpp
+		  
+          tagged_id/test_tagged_id.cpp
+			  
+		  vector/test_vector.cpp
+		  
+		  # for visual studio
+		  ${relearn_tests_additional_files})
+		  
+		  
+target_include_directories(relearn_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(relearn_tests PRIVATE project_options project_libraries)
 target_link_libraries(relearn_tests PRIVATE relearn_lib)
 target_link_libraries(relearn_tests PRIVATE gtest_main)
 add_test(NAME SerialTests COMMAND relearn_tests)
 add_dependencies(check relearn_tests)
+
+get_target_property(relearn_tests_sources relearn_tests SOURCES)
+source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${relearn_tests_sources})

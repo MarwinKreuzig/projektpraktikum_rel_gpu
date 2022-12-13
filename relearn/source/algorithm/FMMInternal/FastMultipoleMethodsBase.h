@@ -107,18 +107,18 @@ public:
     };
 
     /**
-     * @brief Calculates the n-th Hermite function at the point t, if t is one of the real numbers.
+     * @brief Calculates the n-th Hermite function at the point t
      * @param n Order of the Hermite function.
      * @param t Point of evaluation.
      * @return Value of the Hermite function of the n-th order at the point t.
      */
     static double h(unsigned int n, double t) {
-        double t_squared = t * t;
+        const auto t_squared = t * t;
 
-        double fac_1 = std::exp(-t_squared);
-        double fac_2 = std::hermite(n, t);
+        const auto fac_1 = std::exp(-t_squared);
+        const auto fac_2 = std::hermite(n, t);
 
-        double product = fac_1 * fac_2;
+        const auto product = fac_1 * fac_2;
 
         return product;
     }
@@ -130,11 +130,11 @@ public:
      * @return Value of the Hermite function.
      */
     static double h_multiindex(const Vec3u& multi_index, const Vec3d& vector) {
-        double h1 = h(multi_index.get_x(), vector.get_x());
-        double h2 = h(multi_index.get_y(), vector.get_y());
-        double h3 = h(multi_index.get_z(), vector.get_z());
+        const auto h1 = h(multi_index.get_x(), vector.get_x());
+        const auto h2 = h(multi_index.get_y(), vector.get_y());
+        const auto h3 = h(multi_index.get_z(), vector.get_z());
 
-        double h_total = h1 * h2 * h3;
+        const auto h_total = h1 * h2 * h3;
 
         return h_total;
     }
@@ -946,7 +946,7 @@ public:
 
                     // No autapse
                     if (target_id != source_id) {
-                        const auto target_rank = target->get_rank();
+                        const auto target_rank = target->get_mpi_rank();
                         const SynapseCreationRequest creation_request(target_id, source_id, signal_type_needed);
                         request.append(target_rank, creation_request);
                     }

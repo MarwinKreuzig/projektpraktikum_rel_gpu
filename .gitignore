@@ -357,6 +357,5 @@ ASALocalRun/
 /output-clang-tidy/
 /relearn/googletest/
 /build
-/relearn/build-wsl
 **/out
-/relearn/build-coverage
+/relearn/build*

@@ -11,6 +11,7 @@
  */
 
 #include "Types.h"
+#include "util/MPIRank.h"
 #include "util/TaggedID.h"
 
 #include <cstdint>
@@ -82,11 +83,11 @@ public:
      *      <interval_description> <stimulus intensity> <neuron_id>*
      *      A neuron id must have the format: <rank>:<local_neuron_id> or must be an area name
      * @param path_to_file The path to the stimulus interrupts file
-     * @param my_rank The mpi rank of the current process
+     * @param my_rank The mpi rank of the current process, must be initialized
      * @param local_area_translator Translates between the local area id on the current mpi rank and its area name
-     * @exception Throws a RelearnException if opening the file fails
+     * @exception Throws a RelearnException if opening the file fails or my_rank is not initialized
      * @return A function that specified for a given simulation step and a given neuron id, how much background it receives
      */
     [[nodiscard]] static std::function<double(step_type, NeuronID::value_type)> load_stimulus_interrupts(
-        const std::filesystem::path& path_to_file, int my_rank, std::shared_ptr<LocalAreaTranslator> local_area_translator);
+        const std::filesystem::path& path_to_file, MPIRank my_rank, std::shared_ptr<LocalAreaTranslator> local_area_translator);
 };

@@ -13,6 +13,7 @@
 #include "Config.h"
 #include "Types.h"
 #include "algorithm/AlgorithmEnum.h"
+#include "sim/Essentials.h"
 #include "util/StatisticalMeasures.h"
 
 #include <cstddef>
@@ -49,10 +50,11 @@ public:
     using number_neurons_type = RelearnTypes::number_neurons_type;
 
     /**
-     * @brief Constructs a new object with the given partition.
+     * @brief Constructs a new object with the given partition and essentials.
+     * @param essentials The essentials container for this simulation
      * @param partition The partition for this simulation
      */
-    explicit Simulation(std::shared_ptr<Partition> partition);
+    Simulation(std::unique_ptr<Essentials> essentials, std::shared_ptr<Partition> partition);
 
     /**
      * @brief Registers a monitor for the given neuron id.
@@ -124,6 +126,13 @@ public:
      * @param algorithm The desired algorithm
      */
     void set_algorithm(AlgorithmEnum algorithm) noexcept;
+
+    /**
+     * @brief Sets the percentage of neurons that fired in the 0th simulation step.
+     * @param percentage The percentage, must be 0.0 <= percentage <= 1.0
+     * @exception Throws a RelearnException if the percentage is out of bounds
+     */
+    void set_percentage_initial_fired_neurons(double percentage);
 
     /**
      * @brief Sets the subdomain assignment that determines how the neurons are loaded.
@@ -231,6 +240,8 @@ public:
     }
 
 private:
+    std::unique_ptr<Essentials> essentials{};
+
     std::shared_ptr<Partition> partition{};
 
     std::unique_ptr<NeuronToSubdomainAssignment> neuron_to_subdomain_assignment{};
@@ -263,6 +274,8 @@ private:
 
     std::function<double(int, NeuronID::value_type)> target_calcium_calculator{};
     std::function<double(int, NeuronID::value_type)> initial_calcium_initiator{};
+
+    double percentage_initially_fired{ 0.0 };
 
     double accept_criterion{ 0.0 };
 

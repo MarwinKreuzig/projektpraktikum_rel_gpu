@@ -6,22 +6,24 @@ option(ENABLE_INCLUDE_WHAT_YOU_USE
 if(ENABLE_CPPCHECK)
   find_program(CPPCHECK cppcheck)
   if(CPPCHECK)
+	if(DEFINED CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES)
+		set(ADDITIONAL_CPPCHECK_FLAG -i ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+	endif()
+  
     set(CMAKE_CXX_CPPCHECK
         ${CPPCHECK}
         --suppress=missingInclude
         --enable=all
         --inline-suppr
         --inconclusive
-        -i
-        ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+        ${ADDITIONAL_CPPCHECK_FLAG})
     set(CMAKE_CUDA_CPPCHECK
         ${CPPCHECK}
         --suppress=missingInclude
         --enable=all
         --inline-suppr
         --inconclusive
-        -i
-        ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+        ${ADDITIONAL_CPPCHECK_FLAG})
   else()
     message(SEND_ERROR "cppcheck requested but executable not found")
   endif()

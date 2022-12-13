@@ -14,8 +14,11 @@
 
 #include <chrono>
 #include <iosfwd>
+#include <memory>
 #include <string>
 #include <vector>
+
+class Essentials;
 
 /**
  * This type allows type-safe specification of a specific timer
@@ -141,9 +144,10 @@ public:
 
     /**
      * @brief Prints all timers with min, max, and sum across all MPI ranks to LogFiles::EventType::Timers.
-     * Performs MPI communication.
+     *      Performs MPI communication.
+     * @param essentials The essentials
      */
-    static void print();
+    static void print(const std::unique_ptr<Essentials>& essentials);
 
     /**
      * @brief Returns the current time as a string

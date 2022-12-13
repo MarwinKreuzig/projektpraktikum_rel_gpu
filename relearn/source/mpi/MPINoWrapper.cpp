@@ -1,5 +1,15 @@
 #include "MPINoWrapper.h"
 
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
+
 #if !RELEARN_MPI_FOUND
 
 #include "algorithm/Cells.h"
@@ -26,7 +36,7 @@ void MPINoWrapper::init(int argc, char** argv) {
 void MPINoWrapper::barrier() {
 }
 
-[[nodiscard]] double MPINoWrapper::reduce(double value, ReduceFunction /*function*/, int /*root_rank*/) {
+[[nodiscard]] double MPINoWrapper::reduce(double value, ReduceFunction /*function*/, MPIRank /*root_rank*/) {
     return value;
 }
 
@@ -50,40 +60,24 @@ void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size) {
     std::memcpy(buffer, own_data, size);
 }
 
-[[nodiscard]] int MPINoWrapper::get_num_ranks() {
-    return num_ranks;
+size_t MPINoWrapper::get_num_ranks() {
+    return 1;
 }
 
-[[nodiscard]] int MPINoWrapper::get_my_rank() {
-    return my_rank;
+MPIRank MPINoWrapper::get_my_rank() {
+    return MPIRank::root_rank();
 }
 
-[[nodiscard]] size_t MPINoWrapper::get_num_neurons() {
-    return num_neurons;
-}
-
-[[nodiscard]] size_t MPINoWrapper::get_my_num_neurons() {
-    return num_neurons;
-}
-
-[[nodiscard]] size_t MPINoWrapper::get_my_neuron_id_start() {
-    return 0;
-}
-
-[[nodiscard]] size_t MPINoWrapper::get_my_neuron_id_end() {
-    return num_neurons;
-}
-
-[[nodiscard]] std::string MPINoWrapper::get_my_rank_str() {
+std::string MPINoWrapper::get_my_rank_str() {
     return my_rank_str;
 }
 
-void MPINoWrapper::lock_window(int rank, MPI_Locktype /*lock_type*/) {
-    RelearnException::check(rank >= 0, "rank was: %d", rank);
+void MPINoWrapper::lock_window(MPIRank rank, MPI_Locktype /*lock_type*/) {
+    RelearnException::check(rank.is_initialized(), "rank was: %d", rank);
 }
 
-void MPINoWrapper::unlock_window(int rank) {
-    RelearnException::check(rank >= 0, "rank was: %d", rank);
+void MPINoWrapper::unlock_window(MPIRank rank) {
+    RelearnException::check(rank.is_initialized(), "rank was: %d", rank);
 }
 
 void MPINoWrapper::finalize() {

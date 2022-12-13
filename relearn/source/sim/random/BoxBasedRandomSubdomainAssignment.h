@@ -24,14 +24,25 @@
 
 class Partition;
 
+/**
+ * This class provides the functionality to place neurons within small boxes, i.e.,
+ * it divides the simulation space into small boxes of a given side length and places one or none neuron inside each box.
+ * The position within the box is drawn uniformely at random.
+ */
 class BoxBasedRandomSubdomainAssignment : public NeuronToSubdomainAssignment {
 public:
     using number_neurons_type = RelearnTypes::number_neurons_type;
 
+    /**
+     * @brief Construct a new object with the given parameter
+     * @param partition The partition, not nullptr
+     * @param fraction_excitatory_neurons The fraction of excitatory neurons, must be from [0.0, 1.0]
+     * @param um_per_neuron The box side length in micrometer
+     */
     BoxBasedRandomSubdomainAssignment(std::shared_ptr<Partition> partition, const double fraction_excitatory_neurons, const double um_per_neuron)
         : NeuronToSubdomainAssignment(std::move(partition))
         , um_per_neuron_(um_per_neuron) {
-
+        RelearnException::check(this->partition.operator bool(), "BoxBasedRandomSubdomainAssignment::BoxBasedRandomSubdomainAssignment: partition was nullptr");
         RelearnException::check(fraction_excitatory_neurons >= 0.0 && fraction_excitatory_neurons <= 1.0,
             "BoxBasedRandomSubdomainAssignment::BoxBasedRandomSubdomainAssignment: The requested fraction of excitatory neurons is not in [0.0, 1.0]: {}", fraction_excitatory_neurons);
         RelearnException::check(um_per_neuron > 0.0, "BoxBasedRandomSubdomainAssignment::BoxBasedRandomSubdomainAssignment: The requested um per neuron is <= 0.0: {}", um_per_neuron);
@@ -69,6 +80,14 @@ public:
         return um_per_neuron_;
     }
 
+    /**
+     * @brief Places a given number of neurons within a box
+     * @param offset 
+     * @param length_of_box The length of the box, must be positive in each component
+     * @param number_neurons 
+     * @param first_id 
+     * @return 
+     */
     std::pair<std::vector<LoadedNeuron>, number_neurons_type> place_neurons_in_box(const box_size_type& offset, const box_size_type& length_of_box,
         number_neurons_type number_neurons, NeuronID::value_type first_id);
 

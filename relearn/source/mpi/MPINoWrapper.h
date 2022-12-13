@@ -1,5 +1,15 @@
 #pragma once
 
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
+
 #include "Config.h"
 
 #if !RELEARN_MPI_FOUND
@@ -7,6 +17,7 @@
 #include "io/LogFiles.h"
 #include "mpi/CommunicationMap.h"
 #include "util/MemoryHolder.h"
+#include "util/MPIRank.h"
 #include "util/RelearnException.h"
 
 #include <array>
@@ -67,7 +78,7 @@ public:
 
     static void barrier();
 
-    [[nodiscard]] static double reduce(double value, ReduceFunction function, int root_rank);
+    [[nodiscard]] static double reduce(double value, ReduceFunction function, MPIRank root_rank);
 
     [[nodiscard]] static double all_reduce_double(double value, ReduceFunction function);
 
@@ -76,11 +87,11 @@ public:
     [[nodiscard]] static std::vector<size_t> all_to_all(const std::vector<size_t>& src);
 
     template <typename T, size_t size>
-    [[nodiscard]] static std::array<T, size> reduce(const std::array<T, size>& src, ReduceFunction function, int root_rank) {
-        RelearnException::check(root_rank >= 0, "In MPIWrapper::reduce, root_rank was negative");
+    [[nodiscard]] static std::array<T, size> reduce(const std::array<T, size>& src, ReduceFunction function, MPIRank root_rank) {
+        RelearnException::check(root_rank.is_initialized(), "In MPIWrapper::reduce, root_rank was negative");
 
         std::array<T, size> dst{};
-        reduce(src.data(), dst.data(), src.size() * sizeof(T), function, root_rank);
+        reduce(src.data(), dst.data(), src.size() * sizeof(T), function, root_rank.get_rank());
 
         return dst;
     }
@@ -102,14 +113,14 @@ public:
     }
 
     template <typename AdditionalCellAttributes>
-    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const OctreeNode<AdditionalCellAttributes>* src, const int number_elements) {
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const MPIRank target_rank, const OctreeNode<AdditionalCellAttributes>* src, const int number_elements) {
         for (auto i = 0; i < number_elements; i++) {
             dst[i] = src[i];
         }
     }
 
     template <typename AdditionalCellAttributes>
-    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const int target_rank, const uint64_t offset, const int number_elements) {
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const MPIRank target_rank, const uint64_t offset, const int number_elements) {
         RelearnException::fail("MPINoWrapper::download_octree_node: Cannot perform the offset version without MPI.");
     }
 
@@ -117,21 +128,9 @@ public:
         return base_pointers;
     }
 
-    [[nodiscard]] static int get_num_ranks();
+    [[nodiscard]] static size_t get_num_ranks();
 
-    [[nodiscard]] static std::vector<int> get_ranks() {
-        return { 0 };
-    }
-
-    [[nodiscard]] static int get_my_rank();
-
-    [[nodiscard]] static size_t get_num_neurons();
-
-    [[nodiscard]] static size_t get_my_num_neurons();
-
-    [[nodiscard]] static size_t get_my_neuron_id_start();
-
-    [[nodiscard]] static size_t get_my_neuron_id_end();
+    [[nodiscard]] static MPIRank get_my_rank();
 
     [[nodiscard]] static std::string get_my_rank_str();
 
@@ -142,9 +141,9 @@ public:
         return return_value;
     }
 
-    static void lock_window(int rank, MPI_Locktype lock_type);
+    static void lock_window(MPIRank rank, MPI_Locktype lock_type);
 
-    static void unlock_window(int rank);
+    static void unlock_window(MPIRank rank);
 
     static uint64_t get_number_bytes_sent() noexcept {
         return 0;
@@ -162,11 +161,6 @@ public:
 
 private:
     MPINoWrapper() = default;
-
-    static inline const int num_ranks{ 1 }; // Number of ranks in MPI_COMM_WORLD
-    static inline const int my_rank{ 0 }; // My rank in MPI_COMM_WORLD
-
-    static inline size_t num_neurons{}; // Total number of neurons
 
     template <typename AdditionalCellAttributes>
     static inline std::vector<OctreeNode<AdditionalCellAttributes>> base_ptr{ 0 }; // Start address of MPI-allocated memory

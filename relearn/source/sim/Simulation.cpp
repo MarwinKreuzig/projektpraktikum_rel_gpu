@@ -30,8 +30,9 @@
 #include <sstream>
 #include <utility>
 
-Simulation::Simulation(std::shared_ptr<Partition> partition)
-    : partition(std::move(partition)) {
+Simulation::Simulation(std::unique_ptr<Essentials> essentials, std::shared_ptr<Partition> partition)
+    : essentials(std::move(essentials))
+    , partition(std::move(partition)) {
 
     monitors = std::make_shared<std::vector<NeuronMonitor>>();
     area_monitors = std::make_shared<std::unordered_map<RelearnTypes::area_id, AreaMonitor>>();
@@ -44,8 +45,8 @@ void Simulation::register_neuron_monitor(const NeuronID& neuron_id) {
 
 void Simulation::set_acceptance_criterion_for_barnes_hut(const double value) {
     // Needed to avoid creating autapses
-    RelearnException::check(value <= BarnesHut::max_theta,
-        "Simulation::set_acceptance_criterion_for_barnes_hut: Acceptance criterion must be smaller or equal to {} but was {}", BarnesHut::max_theta, value);
+    RelearnException::check(value <= Constants::bh_max_theta,
+        "Simulation::set_acceptance_criterion_for_barnes_hut: Acceptance criterion must be smaller or equal to {} but was {}", Constants::bh_max_theta, value);
     RelearnException::check(value > 0.0, "Simulation::set_acceptance_criterion_for_barnes_hut: Acceptance criterion must larger than 0.0, but it was {}", value);
 
     accept_criterion = value;
@@ -95,6 +96,12 @@ void Simulation::set_algorithm(const AlgorithmEnum algorithm) noexcept {
     algorithm_enum = algorithm;
 }
 
+void Simulation::set_percentage_initial_fired_neurons(double percentage) {
+    RelearnException::check(percentage >= 0.0, "Simulation::set_percentage_initial_fired_neurons: percentage is too low: {}", percentage);
+    RelearnException::check(percentage <= 1.0, "Simulation::set_percentage_initial_fired_neurons: percentage is too high: {}", percentage);
+    percentage_initially_fired = percentage;
+}
+
 void Simulation::set_subdomain_assignment(std::unique_ptr<NeuronToSubdomainAssignment>&& subdomain_assignment) noexcept {
     neuron_to_subdomain_assignment = std::move(subdomain_assignment);
 }
@@ -114,7 +121,7 @@ void Simulation::initialize() {
     const auto number_local_neurons = partition->get_number_local_neurons();
 
     const auto my_rank = MPIWrapper::get_my_rank();
-    RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank);
+    RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank.get_rank());
 
     neurons = std::make_shared<Neurons>(partition, std::move(neuron_models), std::move(calcium_calculator), axons, dendrites_ex, dendrites_in);
     neurons->init(number_local_neurons);
@@ -133,7 +140,7 @@ void Simulation::initialize() {
     RelearnException::check(local_area_translator->get_number_neurons_in_total() == number_local_neurons, "Simulation::initialize: neuron_id_vs_area_id had the wrong size {} != {}", local_area_translator->get_number_neurons_in_total(), number_local_neurons);
     RelearnException::check(signal_types.size() == number_local_neurons, "Simulation::initialize: signal_types had the wrong size");
 
-    partition->print_my_subdomains_info_rank(-1);
+    partition->print_my_subdomains_info_rank();
 
     LogFiles::print_message_rank(0, "Neurons created");
 
@@ -203,12 +210,12 @@ void Simulation::initialize() {
 
     for (size_t area_id = 0; area_id < local_area_translator->get_number_of_areas(); area_id++) {
         const auto& area_name = local_area_translator->get_area_name_for_area_id(area_id);
-        area_monitors->insert(std::make_pair(area_id, AreaMonitor(this, area_id, area_name, my_rank)));
+        area_monitors->insert(std::make_pair(area_id, AreaMonitor(this, area_id, area_name, my_rank.get_rank())));
     }
 
     auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
 
-    const auto& [synapses_static, synapses_plastic] = synapse_loader->load_synapses();
+    const auto& [synapses_static, synapses_plastic] = synapse_loader->load_synapses(essentials);
     const auto& [local_synapses_static, in_synapses_static, out_synapses_static] = synapses_static;
     const auto& [local_synapses_plastic, in_synapses_plastic, out_synapses_plastic] = synapses_plastic;
 
@@ -222,6 +229,15 @@ void Simulation::initialize() {
     LogFiles::print_message_rank(0, "Synaptic elements initialized");
 
     neurons->init_synaptic_elements();
+
+    const auto fired_neurons = static_cast<size_t>(number_local_neurons * percentage_initially_fired);
+    std::vector<FiredStatus> initial_fired(fired_neurons, FiredStatus::Fired);
+    initial_fired.resize(number_local_neurons, FiredStatus::Inactive);
+
+    RandomHolder::shuffle(RandomHolderKey::Neurons, initial_fired.begin(), initial_fired.end());
+
+    neurons->set_fired(std::move(initial_fired));
+
     neurons->debug_check_counts();
     neurons->print_neurons_overview_to_log_file_on_rank_0(0);
     neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, 0, 0, 0);
@@ -276,7 +292,7 @@ void Simulation::simulate(const step_type number_steps) {
             RelearnException::check(received_data.size() == MPIWrapper::get_num_ranks(), "Simulation::simulate: MPI Communication for area monitor failed {} != {}", received_data.size() != MPIWrapper::get_num_ranks());
             for (int rank = 0; rank < received_data.size(); rank++) {
                 const auto& received_data_single = received_data[rank];
-                if (rank == my_rank) {
+                if (MPIRank(rank) == my_rank) {
                     RelearnException::check(received_data_single.empty(), "Simulation::simulate: Send MPI {} messages to myself", received_data_single.size());
                 }
                 for (const AreaMonitor::AreaConnection& connection : received_data_single) {
@@ -337,7 +353,7 @@ void Simulation::simulate(const step_type number_steps) {
 
             // Get total number of synapses deleted and created
             const std::array<int64_t, 3> local_cnts = { static_cast<int64_t>(num_axons_deleted), static_cast<int64_t>(num_dendrites_deleted), static_cast<int64_t>(num_synapses_created) };
-            const std::array<int64_t, 3> global_cnts = MPIWrapper::reduce(local_cnts, MPIWrapper::ReduceFunction::Sum, 0);
+            const std::array<int64_t, 3> global_cnts = MPIWrapper::reduce(local_cnts, MPIWrapper::ReduceFunction::Sum, MPIRank::root_rank());
 
             const auto local_deletions = local_cnts[0] + local_cnts[1];
             const auto local_creations = local_cnts[2];
@@ -345,7 +361,7 @@ void Simulation::simulate(const step_type number_steps) {
             const auto global_deletions = global_cnts[0] + global_cnts[1];
             const auto global_creations = global_cnts[2];
 
-            if (0 == my_rank) {
+            if (MPIRank::root_rank() == my_rank) {
                 total_synapse_deletions += global_deletions;
                 total_synapse_creations += global_creations;
             }
@@ -390,7 +406,7 @@ void Simulation::simulate(const step_type number_steps) {
         }
 
         if (step % Config::console_update_step == 0) {
-            if (my_rank != 0) {
+            if (my_rank != MPIRank::root_rank()) {
                 continue;
             }
 
@@ -426,6 +442,8 @@ void Simulation::simulate(const step_type number_steps) {
 }
 
 void Simulation::finalize() const {
+    Timers::print(essentials);
+
     const auto netto_creations = total_synapse_creations - total_synapse_deletions;
     const auto previous_netto_creations = delta_synapse_creations - delta_synapse_deletions;
 
@@ -435,15 +453,16 @@ void Simulation::finalize() const {
         delta_synapse_creations, delta_synapse_deletions, previous_netto_creations,
         Timers::wall_clock_time());
 
-    neurons->print_calcium_statistics_to_essentials();
+    neurons->print_calcium_statistics_to_essentials(essentials);
 
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
-        "Created synapses: {}\n"
-        "Deleted synapses: {}\n"
-        "Netto synapses: {}",
-        total_synapse_creations,
-        total_synapse_deletions,
-        netto_creations);
+    essentials->insert("Created-Synapses", total_synapse_creations);
+    essentials->insert("Deleted-Synapses", total_synapse_deletions);
+    essentials->insert("Netto-Synapses", netto_creations);
+
+    std::stringstream ss{};
+    essentials->print(ss);
+
+    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, ss.str());
 
     // Print final network graph
     neurons->print_network_graph_to_log_file(step, false);

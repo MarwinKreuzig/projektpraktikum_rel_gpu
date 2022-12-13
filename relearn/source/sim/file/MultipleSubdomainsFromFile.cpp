@@ -11,9 +11,9 @@
 #include "MultipleSubdomainsFromFile.h"
 
 #include "Config.h"
-#include "io/LogFiles.h"
 #include "io/NeuronIO.h"
 #include "mpi/MPIWrapper.h"
+#include "sim/Essentials.h"
 #include "sim/file/MultipleFilesSynapseLoader.h"
 #include "structure/Partition.h"
 #include "util/StringUtil.h"
@@ -25,11 +25,15 @@ MultipleSubdomainsFromFile::MultipleSubdomainsFromFile(const std::filesystem::pa
     std::optional<std::filesystem::path> path_to_synapses, std::shared_ptr<Partition> partition)
     : NeuronToSubdomainAssignment(partition) {
     RelearnException::check(partition->get_number_mpi_ranks() > 1, "MultipleSubdomainsFromFile::MultipleSubdomainsFromFile: There was only one MPI rank.");
-    std::filesystem::path path_to_file = StringUtil::find_file_for_rank(path_to_neurons, partition->get_my_mpi_rank(), "rank_", "_positions.txt", 5U);
+    std::filesystem::path path_to_file = StringUtil::find_file_for_rank(path_to_neurons, partition->get_my_mpi_rank().get_rank(), "rank_", "_positions.txt", 5U);
 
     synapse_loader = std::make_shared<MultipleFilesSynapseLoader>(std::move(partition), std::move(path_to_synapses));
 
     read_neurons_from_file(path_to_file);
+}
+
+void MultipleSubdomainsFromFile::print_essentials(const std::unique_ptr<Essentials>& essentials) {
+    essentials->insert("Neurons-Placed", get_total_number_placed_neurons());
 }
 
 void MultipleSubdomainsFromFile::read_neurons_from_file(const std::filesystem::path& path_to_neurons) {
@@ -52,8 +56,8 @@ void MultipleSubdomainsFromFile::read_neurons_from_file(const std::filesystem::p
     };
 
     auto check = [](double value) -> bool {
-        const auto min = MPIWrapper::reduce(value, MPIWrapper::ReduceFunction::Min, 0);
-        const auto max = MPIWrapper::reduce(value, MPIWrapper::ReduceFunction::Max, 0);
+        const auto min = MPIWrapper::reduce(value, MPIWrapper::ReduceFunction::Min, MPIRank::root_rank());
+        const auto max = MPIWrapper::reduce(value, MPIWrapper::ReduceFunction::Max, MPIRank::root_rank());
         return min == max;
     };
 
@@ -100,8 +104,6 @@ void MultipleSubdomainsFromFile::read_neurons_from_file(const std::filesystem::p
     set_ratio_placed_excitatory_neurons(ratio_excitatory_neurons);
 
     partition->set_total_number_neurons(total_number_neurons);
-
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Loaded neurons: {}", total_number_neurons);
 
     set_loaded_nodes(std::move(nodes));
 }

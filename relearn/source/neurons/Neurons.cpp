@@ -17,6 +17,7 @@
 #include "neurons/LocalAreaTranslator.h"
 #include "neurons/NetworkGraph.h"
 #include "io/NeuronIO.h"
+#include "sim/Essentials.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
 #include "util/Random.h"
@@ -84,7 +85,7 @@ void Neurons::init_synaptic_elements() {
     check_signal_types(network_graph_plastic, axons->get_signal_types(), MPIWrapper::get_my_rank());
 }
 
-void Neurons::check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, const std::vector<SignalType>& signal_types, const int my_rank) {
+void Neurons::check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, const std::vector<SignalType>& signal_types, const MPIRank my_rank) {
     for (const auto& neuron_id : NeuronID::range(signal_types.size())) {
         const auto& signal_type = signal_types[neuron_id.get_neuron_id()];
         const auto& out_edges = network_graph->get_all_out_edges(neuron_id);
@@ -115,7 +116,7 @@ Neurons::number_neurons_type Neurons::disable_neurons(const std::vector<NeuronID
     RelearnTypes::synapse_weight weight_deleted_out_inh_edges_to_outside = 0;
 
     for (const auto& neuron_id : neuron_ids) {
-        RelearnException::check(disable_flags[neuron_id.get_neuron_id()] != UpdateStatus::STATIC, "Neurons::disable_neurons:: You cannot disable a static neuron");
+        RelearnException::check(disable_flags[neuron_id.get_neuron_id()] != UpdateStatus::Static, "Neurons::disable_neurons:: You cannot disable a static neuron");
         const auto local_out_edges = network_graph_plastic->get_local_out_edges(neuron_id);
         const auto distant_out_edges = network_graph_plastic->get_distant_out_edges(neuron_id);
 
@@ -260,7 +261,7 @@ void Neurons::update_number_synaptic_elements_delta() {
     dendrites_inh->update_number_elements_delta(calcium, target_calcium, disable_flags);
 }
 
-StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, const int root, const std::vector<UpdateStatus>& disable_flags) const {
+StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, const MPIRank root, const std::vector<UpdateStatus>& disable_flags) const {
     const auto [d_my_min, d_my_max, d_my_acc, d_num_values] = Util::min_max_acc(local_values, disable_flags);
     const double my_avg = d_my_acc / static_cast<double>(d_num_values);
 
@@ -452,7 +453,8 @@ std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
 }
 
 size_t Neurons::delete_synapses_commit_deletions(const CommunicationMap<SynapseDeletionRequest>& list) {
-    const int my_rank = MPIWrapper::get_my_rank();
+    const auto my_rank = MPIWrapper::get_my_rank();
+
     size_t num_synapses_deleted = 0;
 
     for (const auto& [other_rank, requests] : list) {
@@ -572,37 +574,37 @@ void Neurons::debug_check_counts() {
 StatisticalMeasures Neurons::get_statistics(const NeuronAttribute attribute) const {
     switch (attribute) {
     case NeuronAttribute::Calcium:
-        return global_statistics(calcium_calculator->get_calcium(), 0, disable_flags);
+        return global_statistics(calcium_calculator->get_calcium(), MPIRank::root_rank(), disable_flags);
 
     case NeuronAttribute::X:
-        return global_statistics(neuron_model->get_x(), 0, disable_flags);
+        return global_statistics(neuron_model->get_x(), MPIRank::root_rank(), disable_flags);
 
     case NeuronAttribute::Fired:
-        return global_statistics_integral(neuron_model->get_fired(), 0, disable_flags);
+        return global_statistics_integral(neuron_model->get_fired(), MPIRank::root_rank(), disable_flags);
 
     case NeuronAttribute::SynapticInput:
-        return global_statistics(neuron_model->get_synaptic_input(), 0, disable_flags);
+        return global_statistics(neuron_model->get_synaptic_input(), MPIRank::root_rank(), disable_flags);
 
     case NeuronAttribute::BackgroundActivity:
-        return global_statistics(neuron_model->get_background_activity(), 0, disable_flags);
+        return global_statistics(neuron_model->get_background_activity(), MPIRank::root_rank(), disable_flags);
 
     case NeuronAttribute::Axons:
-        return global_statistics(axons->get_grown_elements(), 0, disable_flags);
+        return global_statistics(axons->get_grown_elements(), MPIRank::root_rank(), disable_flags);
 
     case NeuronAttribute::AxonsConnected:
-        return global_statistics_integral(axons->get_connected_elements(), 0, disable_flags);
+        return global_statistics_integral(axons->get_connected_elements(), MPIRank::root_rank(), disable_flags);
 
     case NeuronAttribute::DendritesExcitatory:
-        return global_statistics(dendrites_exc->get_grown_elements(), 0, disable_flags);
+        return global_statistics(dendrites_exc->get_grown_elements(), MPIRank::root_rank(), disable_flags);
 
     case NeuronAttribute::DendritesExcitatoryConnected:
-        return global_statistics_integral(dendrites_exc->get_connected_elements(), 0, disable_flags);
+        return global_statistics_integral(dendrites_exc->get_connected_elements(), MPIRank::root_rank(), disable_flags);
 
     case NeuronAttribute::DendritesInhibitory:
-        return global_statistics(dendrites_inh->get_grown_elements(), 0, disable_flags);
+        return global_statistics(dendrites_inh->get_grown_elements(), MPIRank::root_rank(), disable_flags);
 
     case NeuronAttribute::DendritesInhibitoryConnected:
-        return global_statistics_integral(dendrites_inh->get_connected_elements(), 0, disable_flags);
+        return global_statistics_integral(dendrites_inh->get_connected_elements(), MPIRank::root_rank(), disable_flags);
     }
 
     RelearnException::fail("Neurons::get_statistics: Got an unsupported attribute: {}", static_cast<int>(attribute));
@@ -681,10 +683,10 @@ void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const st
         static_cast<int64_t>(sum_dendrites_deleted),
         static_cast<int64_t>(sum_synapses_created) };
 
-    std::array<int64_t, 7> sums_global = MPIWrapper::reduce(sums_local, MPIWrapper::ReduceFunction::Sum, 0);
+    std::array<int64_t, 7> sums_global = MPIWrapper::reduce(sums_local, MPIWrapper::ReduceFunction::Sum, MPIRank::root_rank());
 
     // Output data
-    if (0 == MPIWrapper::get_my_rank()) {
+    if (MPIRank::root_rank() == MPIWrapper::get_my_rank()) {
         const int cwidth = 20; // Column width
 
         // Write headers to file if not already done so
@@ -724,7 +726,7 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const step_type step)
     const StatisticalMeasures& dendrites_excitatory_statistics = get_statistics(NeuronAttribute::DendritesExcitatory);
     const StatisticalMeasures& dendrites_excitatory_connected_statistics = get_statistics(NeuronAttribute::DendritesExcitatoryConnected);
 
-    if (0 != MPIWrapper::get_my_rank()) {
+    if (MPIRank::root_rank() != MPIWrapper::get_my_rank()) {
         // All ranks must compute the statistics, but only one should print them
         return;
     }
@@ -869,22 +871,18 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const step_type step)
         dendrites_excitatory_connected_statistics.std);
 }
 
-void Neurons::print_calcium_statistics_to_essentials() {
+void Neurons::print_calcium_statistics_to_essentials(const std::unique_ptr<Essentials>& essentials) {
     const auto& calcium = calcium_calculator->get_calcium();
-    const StatisticalMeasures& calcium_statistics = global_statistics(calcium, 0, disable_flags);
+    const StatisticalMeasures& calcium_statistics = global_statistics(calcium, MPIRank::root_rank(), disable_flags);
 
-    if (0 != MPIWrapper::get_my_rank()) {
+    if (MPIRank::root_rank() != MPIWrapper::get_my_rank()) {
         // All ranks must compute the statistics, but only one should print them
         return;
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false,
-        "Average calcium: {}\n"
-        "Minimum calcium: {}\n"
-        "Maximum calcium: {}",
-        calcium_statistics.avg,
-        calcium_statistics.min,
-        calcium_statistics.max);
+    essentials->insert("Calcium-Minimum", calcium_statistics.min);
+    essentials->insert("Calcium-Average", calcium_statistics.avg);
+    essentials->insert("Calcium-Maximum", calcium_statistics.max);
 }
 
 void Neurons::print_network_graph_to_log_file(const step_type step, bool with_prefix) const {
@@ -898,8 +896,13 @@ void Neurons::print_network_graph_to_log_file(const step_type step, bool with_pr
     std::stringstream ss_in_network{};
     std::stringstream ss_out_network{};
 
-    NeuronIO::write_out_synapses(network_graph_static->get_all_local_out_edges(), network_graph_static->get_all_distant_out_edges(), network_graph_plastic->get_all_local_out_edges(), network_graph_plastic->get_all_distant_out_edges(), MPIWrapper::get_my_rank(), partition->get_number_mpi_ranks(), partition->get_number_local_neurons(), partition->get_total_number_neurons(), ss_out_network, step);
-    NeuronIO::write_in_synapses(network_graph_static->get_all_local_in_edges(), network_graph_static->get_all_distant_in_edges(), network_graph_plastic->get_all_local_in_edges(), network_graph_plastic->get_all_distant_in_edges(), MPIWrapper::get_my_rank(), partition->get_number_mpi_ranks(), partition->get_number_local_neurons(), partition->get_total_number_neurons(), ss_in_network, step);
+    NeuronIO::write_out_synapses(network_graph_static->get_all_local_out_edges(), network_graph_static->get_all_distant_out_edges(), 
+        network_graph_plastic->get_all_local_out_edges(), network_graph_plastic->get_all_distant_out_edges(), MPIWrapper::get_my_rank(),
+        partition->get_number_mpi_ranks(), partition->get_number_local_neurons(), partition->get_total_number_neurons(), ss_out_network, step);
+    
+    NeuronIO::write_in_synapses(network_graph_static->get_all_local_in_edges(), network_graph_static->get_all_distant_in_edges(), 
+        network_graph_plastic->get_all_local_in_edges(), network_graph_plastic->get_all_distant_in_edges(), MPIWrapper::get_my_rank(), 
+        partition->get_number_mpi_ranks(), partition->get_number_local_neurons(), partition->get_total_number_neurons(), ss_in_network, step);
 
     LogFiles::write_to_file(LogFiles::EventType::InNetwork, false, ss_in_network.str());
     LogFiles::write_to_file(LogFiles::EventType::OutNetwork, false, ss_out_network.str());
@@ -907,7 +910,8 @@ void Neurons::print_network_graph_to_log_file(const step_type step, bool with_pr
 
 void Neurons::print_positions_to_log_file() {
     std::stringstream ss;
-    NeuronIO::write_neurons_componentwise(NeuronID::range(number_neurons), extra_info->get_positions(), local_area_translator, axons->get_signal_types(), ss, partition->get_total_number_neurons(), partition->get_simulation_box_size(), partition->get_all_local_subdomain_boundaries());
+    NeuronIO::write_neurons_componentwise(NeuronID::range(number_neurons), extra_info->get_positions(), local_area_translator,
+        axons->get_signal_types(), ss, partition->get_total_number_neurons(), partition->get_simulation_box_size(), partition->get_all_local_subdomain_boundaries());
     LogFiles::write_to_file(LogFiles::EventType::Positions, false, ss.str());
 }
 

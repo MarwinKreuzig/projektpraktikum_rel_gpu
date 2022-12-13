@@ -57,7 +57,7 @@ std::optional<RankNeuronId> Naive::find_target_neuron(const NeuronID& src_neuron
         root_of_subtree = node_selected;
     }
 
-    RankNeuronId rank_neuron_id{ node_selected->get_rank(), node_selected->get_cell_neuron_id() };
+    RankNeuronId rank_neuron_id{ node_selected->get_mpi_rank(), node_selected->get_cell_neuron_id() };
     return rank_neuron_id;
 }
 

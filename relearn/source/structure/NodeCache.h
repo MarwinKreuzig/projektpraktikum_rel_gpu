@@ -34,7 +34,7 @@ enum class NodeCacheType : char {
  * @param cache_type The node cache type to print
  * @return The argument out, now altered with the node cache type
  */
-inline std::ostream& operator<<(std::ostream& out, const NodeCacheType& cache_type) {
+inline std::ostream& operator<<(std::ostream& out, const NodeCacheType cache_type) {
     switch (cache_type) {
     case NodeCacheType::Combined:
         return out << "Combined";
@@ -44,6 +44,7 @@ inline std::ostream& operator<<(std::ostream& out, const NodeCacheType& cache_ty
 
     return out << "UNKOWN";
 }
+
 template <>
 struct fmt::formatter<NodeCacheType> : ostream_formatter { };
 
@@ -59,7 +60,7 @@ class NodeCacheCombined {
 
 public:
     using array_type = std::array<node_type, Constants::number_oct>;
-    using NodesCacheKey = std::pair<int, node_type*>;
+    using NodesCacheKey = std::pair<MPIRank, node_type*>;
     using NodesCacheValue = children_type;
     using NodesCache = std::map<NodesCacheKey, NodesCacheValue>;
 
@@ -79,7 +80,7 @@ public:
      * @return The downloaded children (perfect copies of the actual children), does not transfer ownership
      */
     [[nodiscard]] static std::array<node_type*, Constants::number_oct> download_children(node_type* const node) {
-        const auto target_rank = node->get_rank();
+        const auto target_rank = node->get_mpi_rank();
         RelearnException::check(node->get_cell_neuron_id().is_virtual(), "NodeCache::download_children: Tried to download from a non-virtual node");
         RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "NodeCache::download_children: Tried to download a local node");
 
@@ -143,7 +144,7 @@ class NodeCacheSeparate {
 
 public:
     using array_type = std::array<node_type, Constants::number_oct>;
-    using NodesCacheKey = std::pair<int, node_type*>;
+    using NodesCacheKey = std::pair<MPIRank, node_type*>;
     using NodesCacheValue = node_type*;
     using NodesCache = std::map<NodesCacheKey, NodesCacheValue>;
 
@@ -163,7 +164,7 @@ public:
      * @return The downloaded children (perfect copies of the actual children), does not transfer ownership
      */
     [[nodiscard]] static std::array<node_type*, Constants::number_oct> download_children(node_type* const node) {
-        const auto target_rank = node->get_rank();
+        const auto target_rank = node->get_mpi_rank();
         RelearnException::check(target_rank != MPIWrapper::get_my_rank(), "NodeCache::download_children: Tried to download a local node");
 
         auto actual_download = [target_rank](node_type* node) {

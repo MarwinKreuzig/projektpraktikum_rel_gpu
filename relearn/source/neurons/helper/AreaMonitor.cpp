@@ -1,3 +1,13 @@
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
+
 #include "AreaMonitor.h"
 
 #include "mpi/MPIWrapper.h"
@@ -24,7 +34,7 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
     const auto in_edges = sim->get_network_graph()->get_all_in_edges(neuron_id);
 
     for (const auto& [rank_neuron_id, weight] : in_edges) {
-        if (rank_neuron_id.get_rank() == my_rank) {
+        if (rank_neuron_id.get_rank().get_rank() == my_rank) {
             // Other area is on the same rank. Notify the responsible area monitor directly
             const auto& other_neuron_id = rank_neuron_id.get_neuron_id();
             const auto other_area_id = sim->get_neurons()->get_local_area_translator()->get_area_id_for_neuron_id(other_neuron_id.get_neuron_id());
@@ -36,7 +46,7 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
             const NeuronID other_neuron_id = rank_neuron_id.get_neuron_id();
             const SignalType signal_type = (weight > 0) ? SignalType::Excitatory : SignalType::Inhibitory;
             RelearnException::check(mpi_data.size() == MPIWrapper::get_num_ranks(), "AreaMonitor::record_data: mpi_data has wrong size {} != {}", mpi_data.size(), MPIWrapper::get_num_ranks());
-            mpi_data[rank_neuron_id.get_rank()].emplace_back(AreaConnection(my_rank, area_id, other_neuron_id, signal_type));
+            mpi_data[rank_neuron_id.get_rank().get_rank()].emplace_back(AreaConnection(my_rank, area_id, other_neuron_id, signal_type));
         }
     }
 

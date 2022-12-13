@@ -59,7 +59,7 @@ public:
      * @param synaptic_input_calculator The object that is resonsible for calculating the synaptic input
      * @param background_activity_calculator The object that is resonsible for calculating the background activity
      */
-    NeuronModel(unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
+    NeuronModel(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator)
         : h(h)
         , input_calculator(std::move(synaptic_input_calculator))
@@ -250,6 +250,22 @@ public:
         }
     }
 
+    /**
+     * @brief Sets if a neuron fired for the specified neuron. Does not perform bound-checking
+     * @param neuron_id The local neuron id
+     * @param new_value True iff the neuron fired in the current simulation step
+     */
+    void set_fired(const NeuronID& neuron_id, const FiredStatus new_value) {
+        const auto local_neuron_id = neuron_id.get_neuron_id();
+        fired[local_neuron_id] = new_value;
+
+        if (new_value == FiredStatus::Fired) {
+            for (int i = 0; i < number_fire_recorders; i++) {
+                fired_recorder[i][local_neuron_id]++;
+            }
+        }
+    }
+
     static constexpr unsigned int default_h{ 10 };
     static constexpr unsigned int min_h{ 1 };
     static constexpr unsigned int max_h{ 1000 };
@@ -278,22 +294,6 @@ protected:
     void set_x(const NeuronID& neuron_id, const double new_value) {
         const auto local_neuron_id = neuron_id.get_neuron_id();
         x[local_neuron_id] = new_value;
-    }
-
-    /**
-     * @brief Sets if a neuron fired for the specified neuron. Does not perform bound-checking
-     * @param neuron_id The local neuron id
-     * @param new_value True iff the neuron fired in the current simulation step
-     */
-    void set_fired(const NeuronID& neuron_id, const FiredStatus new_value) {
-        const auto local_neuron_id = neuron_id.get_neuron_id();
-        fired[local_neuron_id] = new_value;
-
-        if (new_value == FiredStatus::Fired) {
-            for (int i = 0; i < number_fire_recorders; i++) {
-                fired_recorder[i][local_neuron_id]++;
-            }
-        }
     }
 
     [[nodiscard]] double get_synaptic_input(const NeuronID& neuron_id) const {

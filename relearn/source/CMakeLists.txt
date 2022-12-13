@@ -46,10 +46,10 @@ target_sources(
           # structure
           structure/Partition.cpp
           # util
-        util/StringUtil.cpp
-		util/RelearnException.cpp
+		  util/StringUtil.cpp
+		  util/RelearnException.cpp
           util/Timers.cpp
-		  
+		  # for visual studio
 		  ${relearn_lib_additional_files})
 
 target_include_directories(relearn_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

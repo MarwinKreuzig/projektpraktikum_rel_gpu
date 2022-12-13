@@ -33,6 +33,7 @@
 #include <tuple>
 #include <vector>
 
+class Essentials;
 class LocalAreaTranslator;
 class NetworkGraph;
 class NeuronMonitor;
@@ -135,19 +136,19 @@ public:
      */
     void set_static_neurons(const std::vector<NeuronID>& static_neurons) {
         for (const auto& neuronId : static_neurons) {
-            disable_flags[neuronId.get_neuron_id()] = UpdateStatus::STATIC;
+            disable_flags[neuronId.get_neuron_id()] = UpdateStatus::Static;
         }
 
         for (NeuronID neuron_id : NeuronID::range(0, number_neurons)) {
             const auto neuron_id_id = neuron_id.get_neuron_id();
             NetworkGraph::DistantEdges edges_out = network_graph_plastic->get_all_out_edges(neuron_id);
             if (!edges_out.empty()) {
-                RelearnException::check(disable_flags[neuron_id_id] != UpdateStatus::STATIC, "Plastic connection from a static neuron is forbidden. {} (static)  -> ?", neuron_id_id);
+                RelearnException::check(disable_flags[neuron_id_id] != UpdateStatus::Static, "Plastic connection from a static neuron is forbidden. {} (static)  -> ?", neuron_id_id);
             }
 
             NetworkGraph::DistantEdges edges_in = network_graph_plastic->get_all_in_edges(neuron_id);
             if (!edges_in.empty()) {
-                RelearnException::check(disable_flags[neuron_id_id] != UpdateStatus::STATIC, "Plastic connection from a static neuron is forbidden. ? -> {} (static)", neuron_id_id);
+                RelearnException::check(disable_flags[neuron_id_id] != UpdateStatus::Static, "Plastic connection from a static neuron is forbidden. ? -> {} (static)", neuron_id_id);
             }
         }
     }
@@ -235,6 +236,19 @@ public:
      */
     void set_signal_types(std::vector<SignalType> signal_types) {
         axons->set_signal_types(std::move(signal_types));
+    }
+
+    /**
+     * @brief Manually sets the fired status of the neurons
+     * @param fired The fired status of the neurons
+     * @exception Throws a RelearnException if fired.size() is not equal to the number of local neurons
+     */
+    void set_fired(std::vector<FiredStatus> fired) {
+        RelearnException::check(fired.size() == number_neurons, "Neurons::set_fired: The sizes didn't match: {} vs {}", fired.size(), number_neurons);
+
+        for (const auto neuron_id : NeuronID::range(number_neurons)) {
+            neuron_model->set_fired(neuron_id, fired[neuron_id.get_neuron_id()]);
+        }
     }
 
     /**
@@ -347,10 +361,11 @@ public:
     void print_neurons_overview_to_log_file_on_rank_0(step_type step) const;
 
     /**
-     * @brief Prints the calcium statistics to LogFiles::EventType::Essentials
+     * @brief Inserts the calcium statistics in the essentials
      *      Performs communication with MPI
+     * @param essentials The essentials
      */
-    void print_calcium_statistics_to_essentials();
+    void print_calcium_statistics_to_essentials(const std::unique_ptr<Essentials>& essentials);
 
     /**
      * @brief Prints the network graph to LogFiles::EventType::Network. Stores current step in file name and log
@@ -414,13 +429,13 @@ public:
      * @param signal_types Vector of SignalTypes. Neuron i has signal_type[i]
      * @throws RelearnException If signal_type does not match weight
      */
-    static void check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, const std::vector<SignalType>& signal_types, const int my_rank);
+    static void check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, const std::vector<SignalType>& signal_types, const MPIRank my_rank);
 
 private:
-    [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, int root, const std::vector<UpdateStatus>& disable_flags) const;
+    [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, MPIRank root, const std::vector<UpdateStatus>& disable_flags) const;
 
     template <typename T>
-    [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::vector<T>& local_values, const int root, const std::vector<UpdateStatus>& disable_flags) const {
+    [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::vector<T>& local_values, const MPIRank root, const std::vector<UpdateStatus>& disable_flags) const {
         std::vector<double> converted_values;
         converted_values.reserve(local_values.size());
 

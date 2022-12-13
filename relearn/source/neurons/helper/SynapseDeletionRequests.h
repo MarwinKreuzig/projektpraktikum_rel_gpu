@@ -10,33 +10,35 @@
  *
  */
 
-#include "Config.h"
 #include "neurons/ElementType.h"
 #include "neurons/SignalType.h"
 #include "util/RelearnException.h"
+#include "util/TaggedID.h"
 
+#include <cstddef>
 #include <utility>
 
 /**
  * This type represents a synapse deletion request.
- * It is exchanged via MPI ranks but does not perform MPI communication on its own.
- * A synapse is represented as
- *      (initiator_neuron_id, initiator_element_type, signal_type) <---> (affected_neuron_id, !initiator_element_type, signal_type)
+ * It is exchanged between MPI ranks but does not perform MPI communication on its own.
+ * A synapse deletion is represented as
+ *      (initiator_neuron_id, initiator_element_type, signal_type) ---> (affected_neuron_id, !initiator_element_type, signal_type)
  */
 class SynapseDeletionRequest {
 public:
     /**
-     * Creates a new object
+     * Creates a new object with default-constructed members.
+     *      This constructor is present for resizing vectors, etc.
      */
     constexpr SynapseDeletionRequest() = default;
 
     /**
      * @brief Creates a new deletion request with the passed arguments
-     * @param initiator_neuron The neuron that initiaed the request
-     * @param affected_neuron The neuron that is affected by the request (the other end of the synapse)
+     * @param initiator_neuron The neuron that initiated the request, must be an actual neuron id
+     * @param affected_neuron The neuron that is affected by the request (the other end of the synapse), must be an actual neuron id
      * @param element_type The element type that initiated the request
      * @param signal_type The signal type of the synapse
-     * @exception Throws a RelearnException if any neuron id is invalid
+     * @exception Throws a RelearnException if any neuron id is invalid or virtual
      */
     constexpr SynapseDeletionRequest(const NeuronID& initiator_neuron, const NeuronID& affected_neuron,
         const ElementType element_type, const SignalType signal_type)
@@ -47,14 +49,6 @@ public:
         RelearnException::check(initiator_neuron.is_local(), "SynapseDeletionRequest::SynapseDeletionRequest(): initiator_neuron is not local: {}", initiator_neuron);
         RelearnException::check(affected_neuron.is_local(), "SynapseDeletionRequest::SynapseDeletionRequest(): affected_neuron is not local: {}", affected_neuron);
     }
-
-    constexpr SynapseDeletionRequest(const SynapseDeletionRequest& other) = default;
-    constexpr SynapseDeletionRequest(SynapseDeletionRequest&& other) = default;
-
-    constexpr SynapseDeletionRequest& operator=(const SynapseDeletionRequest& other) = default;
-    constexpr SynapseDeletionRequest& operator=(SynapseDeletionRequest&& other) = default;
-
-    constexpr ~SynapseDeletionRequest() = default;
 
     /**
      * @brief Returns the initiator neuron id, i.e., the neuron which started the deletion
@@ -89,7 +83,7 @@ public:
     }
 
     template <std::size_t Index>
-    [[nodiscard]] auto& get() & {
+    [[nodiscard]] constexpr auto& get() & {
         if constexpr (Index == 0) {
             return initiator_neuron_id;
         }
@@ -105,7 +99,7 @@ public:
     }
 
     template <std::size_t Index>
-    [[nodiscard]] auto const& get() const& {
+    [[nodiscard]] constexpr auto const& get() const& {
         if constexpr (Index == 0) {
             return initiator_neuron_id;
         }
@@ -121,7 +115,7 @@ public:
     }
 
     template <std::size_t Index>
-    [[nodiscard]] auto&& get() && {
+    [[nodiscard]] constexpr auto&& get() && {
         if constexpr (Index == 0) {
             return initiator_neuron_id;
         }

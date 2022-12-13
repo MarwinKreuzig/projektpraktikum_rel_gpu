@@ -41,7 +41,7 @@ enum class ElementType { Axon,
  * @param element_type The element type to print
  * @return The argument out, now altered with the element type
  */
-inline std::ostream& operator<<(std::ostream& out, const ElementType& element_type) {
+inline std::ostream& operator<<(std::ostream& out, const ElementType element_type) {
     if (element_type == ElementType::Axon) {
         return out << "Axon";
     }

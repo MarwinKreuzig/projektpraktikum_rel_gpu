@@ -21,7 +21,7 @@ bool LogFiles::do_i_print(const int rank) {
         return false;
     }
 
-    return rank == MPIWrapper::get_my_rank() || rank == -1;
+    return rank == MPIWrapper::get_my_rank().get_rank() || rank == -1;
 }
 
 std::string LogFiles::get_my_rank_str() {
@@ -33,7 +33,7 @@ void LogFiles::init() {
         return;
     }
 
-    if (0 == MPIWrapper::get_my_rank()) {
+    if (MPIRank::root_rank() == MPIWrapper::get_my_rank()) {
         if (!std::filesystem::exists(output_path)) {
             std::filesystem::create_directory(output_path);
         }
@@ -106,14 +106,13 @@ void LogFiles::save_and_open_new(EventType type, const std::string& new_file_nam
     const auto iterator = log_files.find(type);
     RelearnException::check(iterator != log_files.end(), "The LogFiles don't contain the requested type");
 
-
-    auto complete_path = (directory_prefix.empty() ? output_path : (output_path / directory_prefix) ) / (general_prefix + get_specific_file_prefix() + "_" + new_file_name + ".txt");
+    auto complete_path = (directory_prefix.empty() ? output_path : (output_path / directory_prefix)) / (general_prefix + get_specific_file_prefix() + "_" + new_file_name + ".txt");
 
     iterator->second->flush();
 
     spdlog::drop(iterator->second->name());
 
-    auto new_logger = spdlog::basic_logger_mt(new_file_name, complete_path);
+    auto new_logger = spdlog::basic_logger_mt(new_file_name, complete_path.string());
     new_logger->set_pattern("%v");
     iterator->second = std::move(new_logger);
 }
@@ -124,8 +123,8 @@ void LogFiles::add_logfile(const EventType type, const std::string& file_name, c
     }
 
     if (do_i_print(rank)) {
-        auto complete_path = (directory_prefix.empty() ? output_path : (output_path / directory_prefix) ) / (general_prefix + get_specific_file_prefix() + "_" + file_name + file_ending);
-        auto logger = spdlog::basic_logger_mt(file_name, complete_path);
+        auto complete_path = (directory_prefix.empty() ? output_path : (output_path / directory_prefix)) / (general_prefix + get_specific_file_prefix() + "_" + file_name + file_ending);
+        auto logger = spdlog::basic_logger_mt(file_name, complete_path.string());
         logger->set_pattern("%v");
         log_files.emplace(type, std::move(logger));
     }

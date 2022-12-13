@@ -13,7 +13,7 @@
 #include "mpi/MPIWrapper.h"
 #include "util/Timers.h"
 
-void CalciumCalculator::init(number_neurons_type number_neurons) {
+void CalciumCalculator::init(const number_neurons_type number_neurons) {
     RelearnException::check(number_neurons > 0, "CalciumCalculator::init: number_neurons was 0");
     RelearnException::check(initial_calcium_initiator.operator bool(), "CalciumCalculator::init: initial_calcium_initiator is empty");
     RelearnException::check(target_calcium_calculator.operator bool(), "CalciumCalculator::init: target_calcium_calculator is empty");
@@ -29,7 +29,7 @@ void CalciumCalculator::init(number_neurons_type number_neurons) {
     }
 }
 
-void CalciumCalculator::create_neurons(number_neurons_type number_neurons) {
+void CalciumCalculator::create_neurons(const number_neurons_type number_neurons) {
     RelearnException::check(number_neurons > 0, "CalciumCalculator::create_neurons: number_neurons was 0");
     RelearnException::check(initial_calcium_initiator.operator bool(), "CalciumCalculator::create_neurons: initial_calcium_initiator is empty");
     RelearnException::check(target_calcium_calculator.operator bool(), "CalciumCalculator::create_neurons: target_calcium_calculator is empty");
@@ -48,7 +48,7 @@ void CalciumCalculator::create_neurons(number_neurons_type number_neurons) {
     }
 }
 
-void CalciumCalculator::update_calcium(step_type step, const std::vector<UpdateStatus>& disable_flags, const std::vector<FiredStatus>& fired_status) {
+void CalciumCalculator::update_calcium(const step_type step, const std::vector<UpdateStatus>& disable_flags, const std::vector<FiredStatus>& fired_status) {
     const auto disable_size = disable_flags.size();
     const auto fired_size = fired_status.size();
     const auto calcium_size = calcium.size();
@@ -105,7 +105,7 @@ void CalciumCalculator::update_target_calcium(const step_type step, const std::v
 
     if (decay_type == TargetCalciumDecay::Absolute) {
 #pragma omp parallel for default(none) shared(disable_flags)
-        for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
+        for (auto neuron_id = 0; neuron_id < target_calcium.size(); ++neuron_id) {
             if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
                 continue;
             }
@@ -117,7 +117,7 @@ void CalciumCalculator::update_target_calcium(const step_type step, const std::v
 
     if (decay_type == TargetCalciumDecay::Relative) {
 #pragma omp parallel for default(none) shared(disable_flags)
-        for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
+        for (auto neuron_id = 0; neuron_id < target_calcium.size(); ++neuron_id) {
             if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
                 continue;
             }

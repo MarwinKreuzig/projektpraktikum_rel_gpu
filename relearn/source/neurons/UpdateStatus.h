@@ -17,7 +17,7 @@
  */
 enum class UpdateStatus : char { Disabled = 0,
     Enabled = 1,
-    STATIC = 2 };
+    Static = 2 };
 
 /**
  * @brief Pretty-prints the update status to the chosen stream
@@ -25,7 +25,7 @@ enum class UpdateStatus : char { Disabled = 0,
  * @param update_status The update status to print
  * @return The argument out, now altered with the update status
  */
-inline std::ostream& operator<<(std::ostream& out, const UpdateStatus& update_status) {
+inline std::ostream& operator<<(std::ostream& out, const UpdateStatus update_status) {
     if (update_status == UpdateStatus::Disabled) {
         return out << "Disabled";
     }
@@ -34,7 +34,7 @@ inline std::ostream& operator<<(std::ostream& out, const UpdateStatus& update_st
         return out << "Enabled";
     }
 
-    if (update_status == UpdateStatus::STATIC) {
+    if (update_status == UpdateStatus::Static) {
         return out << "Static";
     }
 

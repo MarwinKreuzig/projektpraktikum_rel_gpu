@@ -36,7 +36,7 @@ public:
      * @param number_neurons The number of neurons, greater than 0
      * @exception Throws an RelearnAxception if number_neurons is 0 or if called multiple times.
      */
-    void init(number_neurons_type number_neurons) {
+    void init(const number_neurons_type number_neurons) {
         RelearnException::check(size == 0, "NeuronsExtraInfo::init: NeuronsExtraInfo initialized two times");
         size = number_neurons;
     }

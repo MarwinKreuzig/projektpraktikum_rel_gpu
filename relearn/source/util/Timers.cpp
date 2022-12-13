@@ -13,6 +13,7 @@
 #include "Config.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
+#include "sim/Essentials.h"
 
 #include <array>
 #include <ctime>
@@ -49,7 +50,7 @@ std::string Timers::wall_clock_time() {
 #endif
 }
 
-void Timers::print() {
+void Timers::print(const std::unique_ptr<Essentials>& essentials) {
     /**
      * Print timers and memory usage
      */
@@ -77,8 +78,8 @@ void Timers::print() {
 
     LogFiles::write_to_file(LogFiles::EventType::TimersLocal, false, local_timer_output.str());
 
-    auto timers_global = MPIWrapper::reduce(timers_local, MPIWrapper::ReduceFunction::MinSumMax, 0);
-    if (0 != MPIWrapper::get_my_rank()) {
+    auto timers_global = MPIWrapper::reduce(timers_local, MPIWrapper::ReduceFunction::MinSumMax, MPIRank::root_rank());
+    if (MPIRank::root_rank() != MPIWrapper::get_my_rank()) {
         return;
     }
 
@@ -160,5 +161,5 @@ void Timers::print() {
     LogFiles::write_to_file(LogFiles::EventType::Timers, true, sstring.str());
 
     const auto average_simulation_time = timers_global[3 * get_timer_index(TimerRegion::SIMULATION_LOOP) + 1];
-    LogFiles::write_to_file(LogFiles::EventType::Essentials, false, "Simulation time [sec]: {}", average_simulation_time);
+    essentials->insert("Simulation-Time-Seconds", average_simulation_time);
 }

@@ -10,6 +10,7 @@
 
 #include "SubdomainFromNeuronDensity.h"
 
+#include "sim/Essentials.h"
 #include "sim/random/RandomSynapseLoader.h"
 #include "structure/Partition.h"
 #include "util/Random.h"
@@ -18,7 +19,7 @@
 SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const SubdomainFromNeuronDensity::number_neurons_type number_neurons, const double fraction_excitatory_neurons, const double um_per_neuron, std::shared_ptr<Partition> partition)
     : BoxBasedRandomSubdomainAssignment(partition, fraction_excitatory_neurons, um_per_neuron) {
 
-    RelearnException::check(partition->get_my_mpi_rank() == 0 && partition->get_number_mpi_ranks() == 1, "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: Can only be used for 1 MPI rank.");
+    RelearnException::check(partition->get_my_mpi_rank() == MPIRank::root_rank() && partition->get_number_mpi_ranks() == 1, "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: Can only be used for 1 MPI rank.");
     RelearnException::check(number_neurons > 0, "SubdomainFromNeuronDensity::SubdomainFromNeuronDensity: There must be more than 0 neurons.");
 
     RandomHolder::seed(RandomHolderKey::Subdomain, 0);
@@ -36,6 +37,10 @@ SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const SubdomainFromNeuron
     set_ratio_placed_excitatory_neurons(0.0);
 
     synapse_loader = std::make_shared<RandomSynapseLoader>(std::move(partition));
+}
+
+void SubdomainFromNeuronDensity::print_essentials(const std::unique_ptr<Essentials>& essentials) {
+    essentials->insert("Neurons-Placed", get_total_number_placed_neurons());
 }
 
 void SubdomainFromNeuronDensity::fill_all_subdomains() {

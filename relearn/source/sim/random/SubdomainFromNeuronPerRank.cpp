@@ -10,6 +10,7 @@
 
 #include "SubdomainFromNeuronPerRank.h"
 
+#include "sim/Essentials.h"
 #include "sim/random/RandomSynapseLoader.h"
 #include "structure/Partition.h"
 #include "util/Random.h"
@@ -23,7 +24,7 @@ SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank(const SubdomainFromNeuron
 
     RelearnException::check(number_neurons_per_rank >= 1, "SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank: There must be at least one neuron per mpi rank!");
 
-    const auto my_rank = static_cast<unsigned int>(partition->get_my_mpi_rank());
+    const auto my_rank = static_cast<unsigned int>(partition->get_my_mpi_rank().get_rank());
     const auto number_ranks = partition->get_number_mpi_ranks();
     const auto number_local_subdomains = partition->get_number_local_subdomains();
 
@@ -52,6 +53,11 @@ SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank(const SubdomainFromNeuron
     set_ratio_placed_excitatory_neurons(0.0);
 
     synapse_loader = std::make_shared<RandomSynapseLoader>(std::move(partition));
+}
+
+void SubdomainFromNeuronPerRank::print_essentials(const std::unique_ptr<Essentials>& essentials) {
+    essentials->insert("Neurons-Placed", get_total_number_placed_neurons());
+    essentials->insert("Neurons-Placed-Per-Rank", number_neurons_per_rank);
 }
 
 void SubdomainFromNeuronPerRank::fill_all_subdomains() {
