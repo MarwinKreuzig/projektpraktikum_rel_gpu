@@ -642,13 +642,13 @@ int main(int argc, char** argv) {
         essentials->insert("Background-Stddev", background_activity_stddev);
 
         essentials->insert("Log-path", log_path.string());
-        essentials->insert("Algorithm", chosen_algorithm);
-        essentials->insert("Neuron-model", chosen_neuron_model);
+        essentials->insert("Algorithm", string(chosen_algorithm));
+        essentials->insert("Neuron-model", string(chosen_neuron_model));
         essentials->insert("First-plasticity-step", first_plasticity_step);
         essentials->insert("Last-plasticity-step", last_plasticity_step);
 
         if (chosen_kernel_type == KernelType::Gamma) {
-            essentials->insert("Kernel-Type",  "Gamma");
+            essentials->insert("Kernel-Type", "Gamma");
             essentials->insert("Kernel-Shape-Parameter", gamma_k);
             essentials->insert("Kernel-Scale-Parameter", gamma_theta);
         } else if (chosen_kernel_type == KernelType::Gaussian) {

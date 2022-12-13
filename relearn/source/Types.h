@@ -26,6 +26,25 @@ enum class NeuronModelEnum {
     AEIF,
     FitzHughNagumo
 };
+inline std::string string(const NeuronModelEnum& neuron_model_enum) {
+    if (neuron_model_enum == NeuronModelEnum::Poisson) {
+        return "Poisson";
+    }
+
+    if (neuron_model_enum == NeuronModelEnum::Izhikevich) {
+        return "Izhikevich";
+    }
+
+    if (neuron_model_enum == NeuronModelEnum::AEIF) {
+        return "AEIF";
+    }
+
+    if (neuron_model_enum == NeuronModelEnum::FitzHughNagumo) {
+        return "FitzHughNagumo";
+    }
+
+    return "";
+}
 /**
  * @brief Pretty-prints the algorithm to the chosen stream
  * @param out The stream to which to print the algorithm
@@ -33,23 +52,7 @@ enum class NeuronModelEnum {
  * @return The argument out, now altered with the algorithm
  */
 inline std::ostream& operator<<(std::ostream& out, const NeuronModelEnum& neuron_model_enum) {
-    if (neuron_model_enum == NeuronModelEnum::Poisson) {
-        return out << "Poisson";
-    }
-
-    if (neuron_model_enum == NeuronModelEnum::Izhikevich) {
-        return out << "Izhikevich";
-    }
-
-    if (neuron_model_enum == NeuronModelEnum::AEIF) {
-        return out << "AEIF";
-    }
-
-    if (neuron_model_enum == NeuronModelEnum::FitzHughNagumo) {
-        return out << "FitzHughNagumo";
-    }
-
-    return out;
+    return out << string(neuron_model_enum);
 }
 template <>
 struct fmt::formatter<NeuronModelEnum> : ostream_formatter { };
