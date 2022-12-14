@@ -377,6 +377,9 @@ int main(int argc, char** argv) {
     double synapse_conductance{ SynapticInputCalculator::default_conductance };
     app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transfered to its neighbors when a neuron spikes. Default is 0.03");
 
+    double logarithmic_scale{ LogarithmicSynapticInputCalculator::default_scaling };
+    auto* const opt_logarithmic_scale = app.add_option("--logarithmic-scale", logarithmic_scale, "The logarithmic scale factor for the input via synapses. Default is 1.0");
+
     auto* const opt_synapse_input_calculator_type = app.add_option("--synapse-input-calculator-type", chosen_synapse_input_calculator_type, "The type calculator that transforms the synapse input.");
     opt_synapse_input_calculator_type->transform(CLI::CheckedTransformer(cli_parse_synapse_input_calculator_type, CLI::ignore_case));
 
@@ -494,6 +497,10 @@ int main(int argc, char** argv) {
 
     if (static_cast<bool>(*opt_num_neurons)) {
         RelearnException::check(num_ranks == 1, "The option --num-neurons can only be used for one MPI rank. There are {} ranks.", num_ranks);
+    }
+
+    if (static_cast<bool>(*opt_logarithmic_scale)) {
+        RelearnException::check(chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic, "The option --logarithmic-scale can only be used if the synapse input is scaled logarithmically");
     }
 
     RelearnException::check(fraction_excitatory_neurons >= 0.0 && fraction_excitatory_neurons <= 1.0, "The fraction of excitatory neurons must be from [0.0, 1.0]");
@@ -641,6 +648,13 @@ int main(int argc, char** argv) {
         essentials->insert("Background-Mean", background_activity_mean);
         essentials->insert("Background-Stddev", background_activity_stddev);
 
+        if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic) {
+            essentials->insert("Synapse-Input", "Logarithmic");
+            essentials->insert("Synapse-Input-Scaling", logarithmic_scale);
+        } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
+            essentials->insert("Synapse-Input", "Linear");
+        }
+
         if (chosen_kernel_type == KernelType::Gamma) {
             essentials->insert("Kernel-Type",  "Gamma");
             essentials->insert("Kernel-Shape-Parameter", gamma_k);
@@ -693,7 +707,7 @@ int main(int argc, char** argv) {
     if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
         input_calculator = std::make_unique<LinearSynapticInputCalculator>(synapse_conductance);
     } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic) {
-        input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance);
+        input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, logarithmic_scale);
     } else {
         RelearnException::fail("Chose a synaptic input calculator that is not implemented");
     }

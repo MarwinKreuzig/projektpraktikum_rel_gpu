@@ -55,7 +55,7 @@ void LogarithmicSynapticInputCalculator::update_synaptic_input(const NetworkGrap
 
         // Avoid negative numbers
         const auto shifted_input = total_input + 1;
-        const auto logarithmic_input = std::log10(shifted_input);
+        const auto logarithmic_input = scale_factor * std::log10(shifted_input);
 
         set_synaptic_input(neuron_id, logarithmic_input);
     }
