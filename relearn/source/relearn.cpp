@@ -374,7 +374,7 @@ int main(int argc, char** argv) {
     auto* const opt_stddev_background_activity = app.add_option("--background-activity-stddev", background_activity_stddev,
         "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as N(mean, stddev)");
 
-    double synapse_conductance{ SynapticInputCalculator::default_k };
+    double synapse_conductance{ SynapticInputCalculator::default_conductance };
     app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transfered to its neighbors when a neuron spikes. Default is 0.03");
 
     auto* const opt_synapse_input_calculator_type = app.add_option("--synapse-input-calculator-type", chosen_synapse_input_calculator_type, "The type calculator that transforms the synapse input.");

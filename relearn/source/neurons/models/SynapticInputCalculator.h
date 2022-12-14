@@ -61,10 +61,10 @@ public:
     /**
      * @brief Construcs a new instance of type SynapticInputCalculator with 0 neurons and the passed values for all parameters.
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
-     * @param k The factor by which the input of a neighboring spiking neuron is weighted
+     * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
      */
-    SynapticInputCalculator(const double k)
-        : k(k) { }
+    SynapticInputCalculator(const double synapse_conductance)
+        : synapse_conductance(synapse_conductance) { }
 
     /**
      * @brief Creates a clone of this instance (without neurons), copies all parameters
@@ -137,11 +137,11 @@ public:
     }
 
     /**
-     * @brief Returns k (The factor by which the input of a neighboring spiking neuron is weighted)
-     * @return k (The factor by which the input of a neighboring spiking neuron is weighted)
+     * @brief Returns the synapse conductance (The factor by which the input of a neighboring spiking neuron is weighted)
+     * @return The synapse conductance
      */
-    [[nodiscard]] double get_k() const noexcept {
-        return k;
+    [[nodiscard]] double get_synapse_conductance() const noexcept {
+        return synapse_conductance;
     }
 
     /**
@@ -158,14 +158,14 @@ public:
      */
     [[nodiscard]] virtual std::vector<ModelParameter> get_parameter() {
         return {
-            Parameter<double>{ "k", k, min_k, max_k },
+            Parameter<double>{ "synapse_conductance", synapse_conductance, min_conductance, max_conductance },
         };
     }
 
-    static constexpr double default_k{ 0.03 };
+    static constexpr double default_conductance{ 0.03 };
 
-    static constexpr double min_k{ 0.0 };
-    static constexpr double max_k{ 10.0 };
+    static constexpr double min_conductance{ 0.0 };
+    static constexpr double max_conductance{ 10.0 };
 
 protected:
     /**
@@ -202,7 +202,7 @@ protected:
 private:
     number_neurons_type number_local_neurons{};
 
-    double k{ default_k }; // Proportionality factor for synapses in Hz
+    double synapse_conductance{ default_conductance }; // Proportionality factor for synapses in Hz
 
     std::vector<double> synaptic_input{};
 

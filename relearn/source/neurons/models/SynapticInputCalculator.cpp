@@ -50,7 +50,7 @@ double SynapticInputCalculator::get_local_synaptic_input(const NetworkGraph& net
     for (const auto& [src_neuron_id, edge_val] : local_in_edges) {
         const auto spike = fired[src_neuron_id.get_neuron_id()];
         if (spike == FiredStatus::Fired) {
-            local_input += k * edge_val;
+            local_input += synapse_conductance * edge_val;
         }
     }
 
@@ -68,7 +68,7 @@ double SynapticInputCalculator::get_distant_synaptic_input(const NetworkGraph& n
 
         const auto contains_id = fired_status_comm->contains(rank, initiator_neuron_id);
         if (contains_id) {
-            distant_input += k * edge_val;
+            distant_input += synapse_conductance * edge_val;
         }
     }
 

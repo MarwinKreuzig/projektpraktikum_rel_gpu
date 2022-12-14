@@ -22,17 +22,17 @@ public:
     /**
      * @brief Construcs a new instance of type LinearSynapticInputCalculator with 0 neurons and the passed values for all parameters.
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
-     * @param k The factor by which the input of a neighboring spiking neuron is weighted
+     * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
      */
-    LinearSynapticInputCalculator(const double k)
-        : SynapticInputCalculator(k){};
+    LinearSynapticInputCalculator(const double synapse_conductance)
+        : SynapticInputCalculator(synapse_conductance){};
 
     /**
      * @brief Creates a clone of this instance (without neurons), copies all parameters
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<SynapticInputCalculator> clone() const final {
-        return std::make_unique<LinearSynapticInputCalculator>(get_k());
+        return std::make_unique<LinearSynapticInputCalculator>(get_synapse_conductance());
     }
 
 protected:
@@ -47,17 +47,17 @@ public:
     /**
      * @brief Construcs a new instance of type LogarithmicSynapticInputCalculator with 0 neurons and the passed values for all parameters.
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
-     * @param k The factor by which the input of a neighboring spiking neuron is weighted
+     * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
      */
-    LogarithmicSynapticInputCalculator(const double k)
-        : SynapticInputCalculator(k){};
+    LogarithmicSynapticInputCalculator(const double synapse_conductance)
+        : SynapticInputCalculator(synapse_conductance){};
 
     /**
      * @brief Creates a clone of this instance (without neurons), copies all parameters
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<SynapticInputCalculator> clone() const final {
-        return std::make_unique<LogarithmicSynapticInputCalculator>(get_k());
+        return std::make_unique<LogarithmicSynapticInputCalculator>(get_synapse_conductance());
     }
 
 protected:
