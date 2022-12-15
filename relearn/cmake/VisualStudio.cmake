@@ -1,7 +1,11 @@
+set(relearn_benchmark_additional_files "" CACHE INTERNAL "")
 set(relearn_lib_additional_files "" CACHE INTERNAL "")
 set(relearn_tests_additional_files "" CACHE INTERNAL "")
 	
 if(WIN32)
+	list(APPEND relearn_benchmark_additional_files "main.h")
+	list(APPEND relearn_benchmark_additional_files "AdapterNeuronModel.h")
+
 	# root files
 	list(APPEND relearn_lib_additional_files "Config.h")
 	list(APPEND relearn_lib_additional_files "Types.h")
