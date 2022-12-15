@@ -28,6 +28,7 @@
 #include <utility>
 #include <vector>
 
+template<typename T>
 class AdapterNeuronModel;
 class AreaMonitor;
 class NetworkGraph;
@@ -41,6 +42,7 @@ class NeuronMonitor;
  */
 class NeuronModel {
     friend class AreaMonitor;
+    template <typename T>
     friend class AdapterNeuronModel;
     friend class NeuronMonitor;
 
@@ -333,6 +335,9 @@ namespace models {
  * This class inherits from NeuronModel and implements a poisson spiking model
  */
 class PoissonModel : public NeuronModel {
+    template <typename T>
+    friend class AdapterNeuronModel;
+
 public:
     /**
      * @brief Construcs a new instance of type PoissonModel with 0 neurons and default values for all parameters
@@ -462,6 +467,9 @@ private:
  *      u(t) += d
  */
 class IzhikevichModel : public NeuronModel {
+    template <typename T>
+    friend class AdapterNeuronModel;
+
 public:
     /**
      * @brief Construcs a new instance of type IzhikevichModel with 0 neurons and default values for all parameters
@@ -661,6 +669,9 @@ private:
  *      d/dt w(t) = phi * (v(t) + a - b * w(t))
  */
 class FitzHughNagumoModel : public NeuronModel {
+    template <typename T>
+    friend class AdapterNeuronModel;
+
 public:
     /**
      * @brief Construcs a new instance of type FitzHughNagumoModel with 0 neurons and default values for all parameters
@@ -794,6 +805,9 @@ private:
  *      w(t) += b
  */
 class AEIFModel : public NeuronModel {
+    template <typename T>
+    friend class AdapterNeuronModel;
+
 public:
     /**
      * @brief Construcs a new instance of type AEIFModel with 0 neurons and default values for all parameters
