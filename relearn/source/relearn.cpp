@@ -242,7 +242,6 @@ int main(int argc, char** argv) {
         { "null", BackgroundActivityCalculatorType::Null },
         { "constant", BackgroundActivityCalculatorType::Constant },
         { "normal", BackgroundActivityCalculatorType::Normal },
-        { "stimulus", BackgroundActivityCalculatorType::Stimulus },
     };
 
     RelearnTypes::step_type simulation_steps{};
@@ -570,13 +569,15 @@ int main(int argc, char** argv) {
         RelearnException::check(background_activity_stddev > 0.0, "When choosing the normal-background calculator, the standard deviation must be set to > 0.0.");
 
         background_activity_calculator = std::make_unique<NormalBackgroundActivityCalculator>(background_activity_mean, background_activity_stddev);
-    } else if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Stimulus) {
-        RelearnException::check(static_cast<bool>(*opt_file_external_stimulation), "Setting the background activity to stimulus but not providing a file is not supported.");
-        RelearnException::check(background_activity_stddev >= 0.0, "When choosing the stimulus-background calculator, the standard deviation must be set to >= 0.0.");
-
-        background_activity_calculator = std::make_unique<StimulusBackgroundActivityCalculator>(file_external_stimulation, std::optional{ std::pair{ background_activity_mean, background_activity_stddev } }, my_rank, subdomain->get_local_area_translator());
     } else {
         RelearnException::fail("Chose a background activity calculator that is not implemented");
+    }
+
+    std::unique_ptr<Stimulus> stimulus_calculator{};
+    if (static_cast<bool>(*opt_file_external_stimulation)) {
+        stimulus_calculator = std::make_unique<Stimulus>(file_external_stimulation, my_rank, subdomain->get_local_area_translator());
+    } else {
+        stimulus_calculator = std::make_unique<Stimulus>();
     }
 
     RelearnException::check(nu_axon >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
@@ -714,18 +715,18 @@ int main(int argc, char** argv) {
 
     std::unique_ptr<NeuronModel> neuron_model{};
     if (chosen_neuron_model == NeuronModelEnum::Poisson) {
-        neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
+        neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
             models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
     } else if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
-        neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
+        neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
             models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
             models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
             models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
     } else if (chosen_neuron_model == NeuronModelEnum::FitzHughNagumo) {
-        neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
+        neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
             models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
     } else if (chosen_neuron_model == NeuronModelEnum::AEIF) {
-        neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
+        neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
             models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
             models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
             models::AEIFModel::default_V_spike);

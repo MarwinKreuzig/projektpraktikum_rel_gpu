@@ -25,7 +25,6 @@ enum class BackgroundActivityCalculatorType : char {
     Null,
     Constant,
     Normal,
-    Stimulus,
 };
 
 /**
@@ -45,10 +44,6 @@ inline std::ostream& operator<<(std::ostream& out, const BackgroundActivityCalcu
 
     if (calculator_type == BackgroundActivityCalculatorType::Normal) {
         return out << "Normal";
-    }
-
-    if (calculator_type == BackgroundActivityCalculatorType::Stimulus) {
-        return out << "Stimulus";
     }
 
     return out;

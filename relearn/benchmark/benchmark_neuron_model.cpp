@@ -21,7 +21,7 @@ static void BM_NeuronModel_UpdateActivity(benchmark::State& state) {
         auto synaptic_input = InputFactory::construct_linear_input();
         auto background = BackgroundFactory::construct_null_background();
 
-        auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background));
+        auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), std::make_unique<Stimulus>());
         model->init(number_neurons);
 
         AdapterNeuronModel<NeuronModelType> adapter{ *model };
@@ -57,7 +57,7 @@ static void BM_NeuronModel_UpdateActivityBenchmark(benchmark::State& state) {
         auto synaptic_input = InputFactory::construct_linear_input();
         auto background = BackgroundFactory::construct_null_background();
 
-        auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background));
+        auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), std::make_unique<Stimulus>());
         model->init(number_neurons);
 
         AdapterNeuronModel<NeuronModelType> adapter{ *model };

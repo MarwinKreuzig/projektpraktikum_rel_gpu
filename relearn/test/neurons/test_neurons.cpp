@@ -105,6 +105,7 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
     auto model = std::make_unique<models::PoissonModel>(models::PoissonModel::default_h,
         std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_conductance),
         std::make_unique<NullBackgroundActivityCalculator>(),
+        std::make_unique<Stimulus>(),
         models::PoissonModel::default_x_0,
         models::PoissonModel::default_tau_x,
         models::PoissonModel::default_refrac_time);

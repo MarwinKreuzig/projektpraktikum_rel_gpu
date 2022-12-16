@@ -36,6 +36,7 @@ enum class TimerRegion : unsigned int {
     CALC_SERIAL_ACTIVITY,
     CALC_SYNAPTIC_BACKGROUND,
     CALC_SYNAPTIC_INPUT,
+    CALC_STIMULUS,
     CALC_ACTIVITY,
 
     UPDATE_CALCIUM,
@@ -77,7 +78,7 @@ enum class TimerRegion : unsigned int {
 /**
  * This number is used as a shortcut to count the number of values valid for TimerRegion
  */
-constexpr size_t NUMBER_TIMERS = 37;
+constexpr size_t NUMBER_TIMERS = 38;
 
 /**
  * This class is used to collect all sorts of different timers (see TimerRegion).
