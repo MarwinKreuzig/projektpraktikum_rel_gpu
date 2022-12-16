@@ -342,8 +342,7 @@ namespace models {
  * This class inherits from NeuronModel and implements a poisson spiking model
  */
 class PoissonModel : public NeuronModel {
-    template <typename T>
-    friend class AdapterNeuronModel;
+    friend class AdapterNeuronModel<PoissonModel>;
 
 public:
     /**
@@ -476,8 +475,7 @@ private:
  *      u(t) += d
  */
 class IzhikevichModel : public NeuronModel {
-    template <typename T>
-    friend class AdapterNeuronModel;
+    friend class AdapterNeuronModel<IzhikevichModel>;
 
 public:
     /**
@@ -680,8 +678,7 @@ private:
  *      d/dt w(t) = phi * (v(t) + a - b * w(t))
  */
 class FitzHughNagumoModel : public NeuronModel {
-    template <typename T>
-    friend class AdapterNeuronModel;
+    friend class AdapterNeuronModel<FitzHughNagumoModel>;
 
 public:
     /**
@@ -818,8 +815,7 @@ private:
  *      w(t) += b
  */
 class AEIFModel : public NeuronModel {
-    template <typename T>
-    friend class AdapterNeuronModel;
+    friend class AdapterNeuronModel<AEIFModel>;
 
 public:
     /**
