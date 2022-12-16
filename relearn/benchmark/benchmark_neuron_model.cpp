@@ -2,6 +2,10 @@
 
 #include "AdapterNeuronModel.h"
 
+#include "factory/background_factory.h"
+#include "factory/input_factory.h"
+#include "factory/neuron_model_factory.h"
+
 #include <numeric>
 
 constexpr auto static_number_neurons = 10000000;
@@ -14,10 +18,10 @@ static void BM_NeuronModel_UpdateActivity(benchmark::State& state) {
     for (auto _ : state) {
         state.PauseTiming();
 
-        auto synaptic_input = FactoryNeuronModel::construct_linear_input();
-        auto background = FactoryNeuronModel::construct_null_background();
+        auto synaptic_input = InputFactory::construct_linear_input();
+        auto background = BackgroundFactory::construct_null_background();
 
-        auto model = FactoryNeuronModel::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background));
+        auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background));
         model->init(number_neurons);
 
         AdapterNeuronModel<NeuronModelType> adapter{ *model };
@@ -50,10 +54,10 @@ static void BM_NeuronModel_UpdateActivityBenchmark(benchmark::State& state) {
     for (auto _ : state) {
         state.PauseTiming();
 
-        auto synaptic_input = FactoryNeuronModel::construct_linear_input();
-        auto background = FactoryNeuronModel::construct_null_background();
+        auto synaptic_input = InputFactory::construct_linear_input();
+        auto background = BackgroundFactory::construct_null_background();
 
-        auto model = FactoryNeuronModel::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background));
+        auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background));
         model->init(number_neurons);
 
         AdapterNeuronModel<NeuronModelType> adapter{ *model };
