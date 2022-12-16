@@ -104,6 +104,36 @@ void AEIFModel::update_activity(const NeuronID& neuron_id) {
     set_x(neuron_id, x);
 }
 
+void AEIFModel::update_activity_benchmark(const NeuronID& neuron_id) {
+    const auto h = get_h();
+
+    const auto synaptic_input = get_synaptic_input(neuron_id);
+    const auto background = get_background_activity(neuron_id);
+    const auto input = synaptic_input + background;
+
+    auto x = get_x(neuron_id);
+
+    auto has_spiked = FiredStatus::Inactive;
+
+    const auto local_neuron_id = neuron_id.get_neuron_id();
+    const auto scale = 1.0 / h;
+
+    for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
+        x += iter_x(x, w[local_neuron_id], input) * scale;
+        w[local_neuron_id] += iter_refrac(w[local_neuron_id], x) * scale;
+
+        if (x >= V_spike) {
+            x = E_L;
+            w[local_neuron_id] += b;
+            has_spiked = FiredStatus::Fired;
+            break;
+        }
+    }
+
+    set_fired(neuron_id, has_spiked);
+    set_x(neuron_id, x);
+}
+
 void AEIFModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {
     for (auto neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
         const auto id = NeuronID{ neuron_id };

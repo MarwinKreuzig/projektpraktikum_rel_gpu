@@ -281,6 +281,13 @@ protected:
     virtual void update_activity(const NeuronID& neuron_id) = 0;
 
     /**
+     * @brief This method exists in case some benchmarks are to be performed and need a comparison
+     */
+    virtual void update_activity_benchmark(const NeuronID& neuron_id) {
+        update_activity(neuron_id);
+    }
+
+    /**
      * @brief Provides a hook to initialize all neurons with local id in [start_id, end_id)
      *      This method exists because of the order of operations when creating neurons
      * @param start_id The first local neuron id to initialize
@@ -442,6 +449,8 @@ public:
 
 protected:
     void update_activity(const NeuronID& neuron_id) final;
+
+    void update_activity_benchmark(const NeuronID& neuron_id) final;
 
     void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
 
@@ -639,6 +648,8 @@ public:
 protected:
     void update_activity(const NeuronID& neuron_id) final;
 
+    void update_activity_benchmark(const NeuronID& neuron_id) final;
+
     void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
 
 private:
@@ -778,6 +789,8 @@ public:
 
 protected:
     void update_activity(const NeuronID& neuron_id) final;
+
+    void update_activity_benchmark(const NeuronID& neuron_id) final;
 
     void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
 
@@ -989,6 +1002,8 @@ public:
 
 protected:
     void update_activity(const NeuronID& neuron_id) final;
+
+    void update_activity_benchmark(const NeuronID& neuron_id) final;
 
     void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
 

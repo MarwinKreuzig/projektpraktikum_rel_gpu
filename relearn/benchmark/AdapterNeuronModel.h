@@ -38,6 +38,10 @@ public:
     void update_activity(NeuronID id) {
         model.update_activity(id);
     }
+
+    void update_activity_benchmark(NeuronID id) {
+        model.update_activity_benchmark(id);
+    }
 };
 
 class FactoryNeuronModel {
