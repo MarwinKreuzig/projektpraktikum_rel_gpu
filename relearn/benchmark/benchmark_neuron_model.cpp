@@ -8,9 +8,6 @@
 
 #include <numeric>
 
-constexpr auto static_number_neurons = 10000000;
-constexpr auto static_number_synapses = 20;
-
 template <typename NeuronModelType>
 static void BM_NeuronModel_UpdateActivity(benchmark::State& state) {
     const auto number_neurons = state.range(0);

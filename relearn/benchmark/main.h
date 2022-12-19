@@ -10,6 +10,9 @@
 
 constexpr bool excessive_testing = false;
 
+constexpr auto static_number_neurons = 1000000;
+constexpr auto static_number_synapses = 20;
+
 LocalSynapses generate_local_synapses(uint64_t number_neurons, uint64_t number_synapses);
 
 DistantInSynapses generate_distant_in_synapses(uint64_t number_neurons, uint64_t number_synapses);

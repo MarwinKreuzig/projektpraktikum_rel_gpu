@@ -110,7 +110,7 @@ private:
 };
 
 /**
- * This class provides a normally distributed input, i.e., according to some N(expected, standard deviation) + base
+ * This class provides a normally distributed input, i.e., according to some N(expected, standard deviation)
  */
 class NormalBackgroundActivityCalculator : public BackgroundActivityCalculator {
 public:
