@@ -27,6 +27,7 @@ class NeuronMonitor;
 enum class SynapticInputCalculatorType : char {
     Linear,
     Logarithmic,
+    HyperbolicTangent,
 };
 
 /**
@@ -42,6 +43,10 @@ inline std::ostream& operator<<(std::ostream& out, const SynapticInputCalculator
 
     if (calculator_type == SynapticInputCalculatorType::Logarithmic) {
         return out << "Logarithmic";
+    }
+
+    if (calculator_type == SynapticInputCalculatorType::HyperbolicTangent) {
+        return out << "Hyperbolic-Tangent";
     }
 
     return out;
