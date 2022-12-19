@@ -23,15 +23,15 @@ public:
         : model(neuron_model) {
     }
 
-    const std::vector<double>& get_background() {
+    std::span<const double> get_background() {
         return model.get_background_activity();
     }
 
-    const std::vector<double>& get_synaptic_input() {
+    std::span<const double> get_synaptic_input() {
         return model.get_synaptic_input();
     }
 
-    const std::vector<double>& get_x() {
+    std::span<const double> get_x() {
         return model.get_x();
     }
 

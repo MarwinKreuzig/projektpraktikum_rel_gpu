@@ -119,37 +119,37 @@ TEST_F(MiscTest, testFactorial) {
 }
 
 TEST_F(MiscTest, testMinMaxAccEmpty) {
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<double>{}, std::vector<UpdateStatus>{}), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<float>{}, std::vector<UpdateStatus>{}), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<int>{}, std::vector<UpdateStatus>{}), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<size_t>{}, std::vector<UpdateStatus>{}), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const double>{}, {}), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const float>{}, {}), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const int>{}, {}), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const size_t>{}, {}), RelearnException);
 }
 
 TEST_F(MiscTest, testMinMaxAccSizeMismatch) {
     std::vector<UpdateStatus> update_status(3, UpdateStatus::Enabled);
 
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<double>{ 4.0, 1.2 }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<float>{ 0.8f }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<int>{ 5, -4, 8, -6, 9 }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<size_t>{ 10, 422, 5223, 554315 }, update_status), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const double>{ { 4.0, 1.2 } }, update_status), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const float>{ { 0.8f } }, update_status), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const int>{ { 5, -4, 8, -6, 9 } }, update_status), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const size_t>{ { 10, 422, 5223, 554315 } }, update_status), RelearnException);
 }
 
 TEST_F(MiscTest, testMinMaxAccSizeAllDisabled) {
     std::vector<UpdateStatus> update_status(3, UpdateStatus::Disabled);
 
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<double>{ 4.0, 1.2, 5.2 }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<float>{ 0.8f, -1.6f, 65423.8f }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<int>{ 5, -4, 8 }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<size_t>{ 10, 422, 5223 }, update_status), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const double>{ { 4.0, 1.2, 5.2 } }, update_status), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const float>{ { 0.8f, -1.6f, 65423.8f } }, update_status), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const int>{ { 5, -4, 8 } }, update_status), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const size_t>{ { 10, 422, 5223 } }, update_status), RelearnException);
 }
 
 TEST_F(MiscTest, testMinMaxAccSizeAllStatic) {
     std::vector<UpdateStatus> update_status(3, UpdateStatus::Static);
 
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<double>{ 4.0, 1.2, 5.2 }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<float>{ 0.8f, -1.6f, 65423.8f }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<int>{ 5, -4, 8 }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::vector<size_t>{ 10, 422, 5223 }, update_status), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const double>{ { 4.0, 1.2, 5.2 } }, update_status), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const float>{ { 0.8f, -1.6f, 65423.8f } }, update_status), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const int>{ { 5, -4, 8 } }, update_status), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const size_t>{ { 10, 422, 5223 } }, update_status), RelearnException);
 }
 
 TEST_F(MiscTest, testMinMaxAccDouble) {
@@ -184,7 +184,7 @@ TEST_F(MiscTest, testMinMaxAccDouble) {
         values.emplace_back(random_value);
     }
 
-    const auto [minimum, maximum, accumulated, num] = Util::min_max_acc(values, update_status);
+    const auto [minimum, maximum, accumulated, num] = Util::min_max_acc(std::span<const double>{ values }, update_status);
 
     ASSERT_EQ(minimum, min);
     ASSERT_EQ(maximum, max);
@@ -224,7 +224,7 @@ TEST_F(MiscTest, testMinMaxAccSizet) {
         values.emplace_back(random_value);
     }
 
-    const auto [minimum, maximum, accumulated, num] = Util::min_max_acc(values, update_status);
+    const auto [minimum, maximum, accumulated, num] = Util::min_max_acc(std::span<const size_t>{ values }, update_status);
 
     ASSERT_EQ(minimum, min);
     ASSERT_EQ(maximum, max);

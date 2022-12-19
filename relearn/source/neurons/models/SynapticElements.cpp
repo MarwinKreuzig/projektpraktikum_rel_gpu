@@ -10,7 +10,7 @@
 
 #include "SynapticElements.h"
 
-unsigned int SynapticElements::update_number_elements(const NeuronID& neuron_id) {
+unsigned int SynapticElements::update_number_elements(const NeuronID neuron_id) {
     const auto local_neuron_id = neuron_id.get_neuron_id();
 
     RelearnException::check(local_neuron_id < size, "SynapticElements::update_number_elements: {} is too large! {}", neuron_id, size);

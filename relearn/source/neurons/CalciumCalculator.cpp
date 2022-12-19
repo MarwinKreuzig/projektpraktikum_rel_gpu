@@ -48,7 +48,7 @@ void CalciumCalculator::create_neurons(const number_neurons_type number_neurons)
     }
 }
 
-void CalciumCalculator::update_calcium(const step_type step, const std::vector<UpdateStatus>& disable_flags, const std::vector<FiredStatus>& fired_status) {
+void CalciumCalculator::update_calcium(const step_type step, const std::span<const UpdateStatus> disable_flags, const std::span<const FiredStatus> fired_status) {
     const auto disable_size = disable_flags.size();
     const auto fired_size = fired_status.size();
     const auto calcium_size = calcium.size();
@@ -66,7 +66,7 @@ void CalciumCalculator::update_calcium(const step_type step, const std::vector<U
     Timers::stop_and_add(TimerRegion::UPDATE_TARGET_CALCIUM);
 }
 
-void CalciumCalculator::update_current_calcium(const std::vector<UpdateStatus>& disable_flags, const std::vector<FiredStatus>& fired_status) noexcept {
+void CalciumCalculator::update_current_calcium(const std::span<const UpdateStatus> disable_flags, std::span<const FiredStatus> fired_status) noexcept {
     const auto val = (1.0 / static_cast<double>(h));
 
 #pragma omp parallel for default(none) shared(disable_flags, fired_status, val)
@@ -90,7 +90,7 @@ void CalciumCalculator::update_current_calcium(const std::vector<UpdateStatus>& 
     }
 }
 
-void CalciumCalculator::update_target_calcium(const step_type step, const std::vector<UpdateStatus>& disable_flags) noexcept {
+void CalciumCalculator::update_target_calcium(const step_type step, const std::span<const UpdateStatus> disable_flags) noexcept {
     if (decay_type == TargetCalciumDecay::None) {
         return;
     }

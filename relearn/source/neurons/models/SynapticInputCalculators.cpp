@@ -15,7 +15,7 @@
 
 #include <cmath>
 
-void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::vector<FiredStatus>& fired, const std::vector<UpdateStatus>& disable_flags) {
+void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::span<const FiredStatus> fired, const std::span<const UpdateStatus> disable_flags) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
     const auto number_local_neurons = get_number_neurons();
@@ -38,7 +38,7 @@ void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& ne
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
 }
 
-void LogarithmicSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::vector<FiredStatus>& fired, const std::vector<UpdateStatus>& disable_flags) {
+void LogarithmicSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::span<const FiredStatus> fired, const std::span<const UpdateStatus> disable_flags) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
     const auto number_local_neurons = get_number_neurons();
@@ -65,7 +65,7 @@ void LogarithmicSynapticInputCalculator::update_synaptic_input(const NetworkGrap
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
 }
 
-void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::vector<FiredStatus>& fired, const std::vector<UpdateStatus>& disable_flags) {
+void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::span<const FiredStatus> fired, const std::span<const UpdateStatus> disable_flags) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
     const auto number_local_neurons = get_number_neurons();

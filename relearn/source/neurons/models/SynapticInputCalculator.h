@@ -100,8 +100,8 @@ public:
      * @param disable_flags Which neurons are disabled
      * @exception Throws a RelearnException if the number of local neurons didn't match the sizes of the arguments
      */
-    void update_input([[maybe_unused]] const step_type step, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, 
-        const std::vector<FiredStatus>& fired, const std::vector<UpdateStatus>& disable_flags) {
+    void update_input([[maybe_unused]] const step_type step, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic,
+        const std::span<const FiredStatus> fired, const std::span<const UpdateStatus> disable_flags) {
         RelearnException::check(number_local_neurons > 0, "SynapticInputCalculator::update_input: There were no local neurons.");
         RelearnException::check(fired.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of fired did not match number of local neurons: {} vs {}", fired.size(), number_local_neurons);
         RelearnException::check(disable_flags.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of disable_flags did not match number of local neurons: {} vs {}", disable_flags.size(), number_local_neurons);
@@ -118,7 +118,7 @@ public:
      * @exception Throws a RelearnException if the neuron_id is too large for the stored number of neurons
      * @return The synaptic input for the given neuron
      */
-    [[nodiscard]] double get_synaptic_input(const NeuronID& neuron_id) const {
+    [[nodiscard]] double get_synaptic_input(const NeuronID neuron_id) const {
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::get_x: id is too large: {}", neuron_id);
@@ -129,7 +129,7 @@ public:
      * @brief Returns the calculated synaptic input for all. Changes after calls to update_input(...)
      * @return The synaptic input for all neurons
      */
-    [[nodiscard]] const std::vector<double>& get_synaptic_input() const noexcept {
+    [[nodiscard]] std::span<const double> get_synaptic_input() const noexcept {
         return synaptic_input;
     }
 
@@ -180,8 +180,9 @@ protected:
      * @param fired If the local neurons fired
      * @param disable_flags Which local neurons are disabled
      */
-    virtual void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, 
-        const std::vector<FiredStatus>& fired, const std::vector<UpdateStatus>& disable_flags) = 0;
+    virtual void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic,
+        std::span<const FiredStatus> fired, std::span<const UpdateStatus> disable_flags)
+        = 0;
 
     /**
      * @brief Sets the synaptic input for the given neuron
@@ -200,9 +201,9 @@ protected:
      */
     void set_synaptic_input(double value) noexcept;
 
-    [[nodiscard]] double get_local_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus>& fired, const NeuronID& neuron_id);
+    [[nodiscard]] double get_local_synaptic_input(const NetworkGraph& network_graph, std::span<const FiredStatus> fired, NeuronID neuron_id);
 
-    [[nodiscard]] double get_distant_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus>& fired, const NeuronID& neuron_id);
+    [[nodiscard]] double get_distant_synaptic_input(const NetworkGraph& network_graph, std::span<const FiredStatus> fired, NeuronID neuron_id);
 
 private:
     number_neurons_type number_local_neurons{};

@@ -45,7 +45,7 @@ public:
         stimulus.resize(new_size, 0.0);
     }
 
-    void update_stimulus(const RelearnTypes::step_type step, const std::vector<UpdateStatus>& disable_flags) {
+    void update_stimulus(const RelearnTypes::step_type step, const std::span<const UpdateStatus> disable_flags) {
         if (!stimulus_function.operator bool()) {
             return;
         }

@@ -56,7 +56,7 @@ void FitzHughNagumoModel::create_neurons(number_neurons_type creation_count) {
     init_neurons(old_size, creation_count);
 }
 
-void FitzHughNagumoModel::update_activity(const NeuronID& neuron_id) {
+void FitzHughNagumoModel::update_activity(const NeuronID neuron_id) {
     const auto h = get_h();
 
     const auto synaptic_input = get_synaptic_input(neuron_id);
@@ -82,7 +82,7 @@ void FitzHughNagumoModel::update_activity(const NeuronID& neuron_id) {
     set_x(neuron_id, x);
 }
 
-void FitzHughNagumoModel::update_activity_benchmark(const NeuronID& neuron_id) {
+void FitzHughNagumoModel::update_activity_benchmark(const NeuronID neuron_id) {
     const auto h = get_h();
 
     const auto synaptic_input = get_synaptic_input(neuron_id);

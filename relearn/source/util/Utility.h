@@ -13,14 +13,14 @@
 #include "neurons/UpdateStatus.h"
 #include "util/RelearnException.h"
 
+#include <span>
 #include <tuple>
 #include <type_traits>
-#include <vector>
 
 namespace Util {
 
 /**
- * @brief Calculates the minimum, maximum, and sum over all values in the vector, for which the disable flags are not enabled
+ * @brief Calculates the minimum, maximum, and sum over all values in the span, for which the disable flags are not enabled
  * @tparam T Must be a arithmetic (floating point or integral)
  * @param values The values that should be reduced
  * @param disable_flags The flags that indicate which values to skip
@@ -28,7 +28,7 @@ namespace Util {
  * @return Returns a tuple with (1) minimum and (2) maximum value from values, (3) the sum of all enabled values and (4) the number of enabled values
  */
 template <typename T>
-std::tuple<T, T, T, size_t> min_max_acc(const std::vector<T>& values, const std::vector<UpdateStatus>& disable_flags) {
+std::tuple<T, T, T, size_t> min_max_acc(const std::span<const T>& values, const std::span<const UpdateStatus> disable_flags) {
     static_assert(std::is_arithmetic<T>::value);
 
     RelearnException::check(!values.empty(), "Util::min_max_acc: values are empty");
