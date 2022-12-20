@@ -352,14 +352,14 @@ void Simulation::simulate(const step_type number_steps) {
             Timers::stop_and_add(TimerRegion::UPDATE_CONNECTIVITY);
 
             // Get total number of synapses deleted and created
-            const std::array<int64_t, 3> local_cnts = { static_cast<int64_t>(num_axons_deleted), static_cast<int64_t>(num_dendrites_deleted), static_cast<int64_t>(num_synapses_created) };
-            const std::array<int64_t, 3> global_cnts = MPIWrapper::reduce(local_cnts, MPIWrapper::ReduceFunction::Sum, MPIRank::root_rank());
+            const std::array<int64_t, 3> local_counts = { static_cast<int64_t>(num_axons_deleted), static_cast<int64_t>(num_dendrites_deleted), static_cast<int64_t>(num_synapses_created) };
+            const std::array<int64_t, 3> global_counts = MPIWrapper::reduce(local_counts, MPIWrapper::ReduceFunction::Sum, MPIRank::root_rank());
 
-            const auto local_deletions = local_cnts[0] + local_cnts[1];
-            const auto local_creations = local_cnts[2];
+            const auto local_deletions = local_counts[0] + local_counts[1];
+            const auto local_creations = local_counts[2];
 
-            const auto global_deletions = global_cnts[0] + global_cnts[1];
-            const auto global_creations = global_cnts[2];
+            const auto global_deletions = global_counts[0] + global_counts[1];
+            const auto global_creations = global_counts[2];
 
             if (MPIRank::root_rank() == my_rank) {
                 total_synapse_deletions += global_deletions;
@@ -410,11 +410,11 @@ void Simulation::simulate(const step_type number_steps) {
                 continue;
             }
 
-            const auto netto_creations = total_synapse_creations - total_synapse_deletions;
+            const auto net_creations = total_synapse_creations - total_synapse_deletions;
 
             LogFiles::write_to_file(LogFiles::EventType::Cout, true,
-                "[Step: {}\t] Total up to now     (creations, deletions, netto):\t{}\t\t{}\t\t{}",
-                step, total_synapse_creations, total_synapse_deletions, netto_creations);
+                "[Step: {}\t] Total up to now     (creations, deletions, net):\t{}\t\t{}\t\t{}",
+                step, total_synapse_creations, total_synapse_deletions, net_creations);
         }
     }
 
@@ -444,20 +444,20 @@ void Simulation::simulate(const step_type number_steps) {
 void Simulation::finalize() const {
     Timers::print(essentials);
 
-    const auto netto_creations = total_synapse_creations - total_synapse_deletions;
-    const auto previous_netto_creations = delta_synapse_creations - delta_synapse_deletions;
+    const auto net_creations = total_synapse_creations - total_synapse_deletions;
+    const auto previous_net_creations = delta_synapse_creations - delta_synapse_deletions;
 
     LogFiles::print_message_rank(0,
-        "Total up to now     (creations, deletions, netto): {}\t{}\t{}\nDiff. from previous (creations, deletions, netto): {}\t{}\t{}\nEND: {}",
-        total_synapse_creations, total_synapse_deletions, netto_creations,
-        delta_synapse_creations, delta_synapse_deletions, previous_netto_creations,
+        "Total up to now     (creations, deletions, net): {}\t{}\t{}\nDiff. from previous (creations, deletions, net): {}\t{}\t{}\nEND: {}",
+        total_synapse_creations, total_synapse_deletions, net_creations,
+        delta_synapse_creations, delta_synapse_deletions, previous_net_creations,
         Timers::wall_clock_time());
 
     neurons->print_calcium_statistics_to_essentials(essentials);
 
     essentials->insert("Created-Synapses", total_synapse_creations);
     essentials->insert("Deleted-Synapses", total_synapse_deletions);
-    essentials->insert("Netto-Synapses", netto_creations);
+    essentials->insert("net-Synapses", net_creations);
 
     std::stringstream ss{};
     essentials->print(ss);

@@ -60,22 +60,22 @@ public:
      * @param model_ptr The electrical model for the neurons, must not be empty
      * @param calculator_ptr The calcium calculator, must not be empty
      * @param axons_ptr The model for the axons, must not be empty
-     * @param dend_ex_ptr The model for the excitatory dendrites, must not be empty
-     * @param dend_in_ptr The model for the inhibitory dendrites, must not be empty
+     * @param dendrites_ex_ptr The model for the excitatory dendrites, must not be empty
+     * @param dendrites_in_ptr The model for the inhibitory dendrites, must not be empty
      * @exception Throws a RelearnException if any of the pointers is empty
      */
     Neurons(std::shared_ptr<Partition> partition,
         std::unique_ptr<NeuronModel> model_ptr,
         std::unique_ptr<CalciumCalculator> calculator_ptr,
         std::shared_ptr<Axons> axons_ptr,
-        std::shared_ptr<DendritesExcitatory> dend_ex_ptr,
-        std::shared_ptr<DendritesInhibitory> dend_in_ptr)
+        std::shared_ptr<DendritesExcitatory> dendrites_ex_ptr,
+        std::shared_ptr<DendritesInhibitory> dendrites_in_ptr)
         : partition(std::move(partition))
         , neuron_model(std::move(model_ptr))
         , calcium_calculator(std::move(calculator_ptr))
         , axons(std::move(axons_ptr))
-        , dendrites_exc(std::move(dend_ex_ptr))
-        , dendrites_inh(std::move(dend_in_ptr)) {
+        , dendrites_exc(std::move(dendrites_ex_ptr))
+        , dendrites_inh(std::move(dendrites_in_ptr)) {
 
         const bool all_filled = this->partition && neuron_model && calcium_calculator && axons && dendrites_exc && dendrites_inh;
         RelearnException::check(all_filled, "Neurons::Neurons: Neurons was constructed with some null arguments");

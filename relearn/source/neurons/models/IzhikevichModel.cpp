@@ -85,7 +85,7 @@ void IzhikevichModel::update_activity(const NeuronID& neuron_id) {
 
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
         x += iter_x(x, u[local_neuron_id], input) / h;
-        u[local_neuron_id] += iter_refrac(u[local_neuron_id], x) / h;
+        u[local_neuron_id] += iter_refraction(u[local_neuron_id], x) / h;
 
         if (spiked(x)) {
             x = c;
@@ -102,7 +102,7 @@ void IzhikevichModel::update_activity(const NeuronID& neuron_id) {
 void IzhikevichModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {
     for (auto neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
         const auto id = NeuronID{ neuron_id };
-        u[neuron_id] = iter_refrac(b * c, c);
+        u[neuron_id] = iter_refraction(b * c, c);
         set_x(id, c);
     }
 }
@@ -111,7 +111,7 @@ void IzhikevichModel::init_neurons(const number_neurons_type start_id, const num
     return k1 * x * x + k2 * x + k3 - u + input;
 }
 
-[[nodiscard]] double IzhikevichModel::iter_refrac(const double u, const double x) const noexcept {
+[[nodiscard]] double IzhikevichModel::iter_refraction(const double u, const double x) const noexcept {
     return a * (b * x - u);
 }
 

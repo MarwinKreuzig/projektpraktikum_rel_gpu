@@ -68,7 +68,7 @@ void FitzHughNagumoModel::update_activity(const NeuronID& neuron_id) {
 
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
         x += iter_x(x, w[local_neuron_id], input) / h;
-        w[local_neuron_id] += iter_refrac(w[local_neuron_id], x) / h;
+        w[local_neuron_id] += iter_refraction(w[local_neuron_id], x) / h;
     }
 
     if (FitzHughNagumoModel::spiked(x, w[local_neuron_id])) {
@@ -92,7 +92,7 @@ double FitzHughNagumoModel::iter_x(const double x, const double w, const double 
     return x - x * x * x / 3 - w + input;
 }
 
-double FitzHughNagumoModel::iter_refrac(const double w, const double x) const noexcept {
+double FitzHughNagumoModel::iter_refraction(const double w, const double x) const noexcept {
     return phi * (x + a - b * w);
 }
 

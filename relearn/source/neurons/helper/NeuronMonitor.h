@@ -283,10 +283,10 @@ public:
     }
 
     /**
-     * @brief Returns the stored informations
+     * @brief Returns the stored information
      * @return An std::vector of NeuronInformation
      */
-    [[nodiscard]] const std::vector<NeuronInformation>& get_informations() const noexcept {
+    [[nodiscard]] const std::vector<NeuronInformation>& get_information() const noexcept {
         return informations;
     }
 

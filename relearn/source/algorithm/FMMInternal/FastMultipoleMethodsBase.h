@@ -53,7 +53,7 @@ inline std::ostream& operator<<(std::ostream& out, const CalculationType& calc_t
  * This class represents a mathematical three-dimensional multi-index, which is required for the
  * series expansions and coefficient calculations.
  */
-class Multiindex {
+class MultiIndex {
     friend class FMMTest;
 
 public:
@@ -371,7 +371,7 @@ public:
         Timers::start(TimerRegion::CALC_HERMITE_COEFFICIENTS);
 
         const auto sigma = GaussianDistributionKernel::get_sigma();
-        const auto& indices = Multiindex::get_indices();
+        const auto& indices = MultiIndex::get_indices();
 
         std::vector<double> hermite_coefficients{};
         hermite_coefficients.reserve(Constants::p3);
@@ -430,7 +430,7 @@ public:
         Timers::start(TimerRegion::CALC_TAYLOR_COEFFICIENTS);
 
         const auto sigma = GaussianDistributionKernel::get_sigma();
-        const auto& indices = Multiindex::get_indices();
+        const auto& indices = MultiIndex::get_indices();
 
         std::vector<double> taylor_coefficients{ 0.0 };
         taylor_coefficients.reserve(Constants::p3);
@@ -502,8 +502,8 @@ public:
 
         const auto& source_center = opt_source_center.value();
 
-        constexpr const auto indices = Multiindex::get_indices();
-        constexpr const auto number_coefficients = Multiindex::get_number_of_indices();
+        constexpr const auto indices = MultiIndex::get_indices();
+        constexpr const auto number_coefficients = MultiIndex::get_number_of_indices();
 
         double total_attraction = 0.0;
 
@@ -559,7 +559,7 @@ public:
         const auto& target_center = opt_target_center.value();
         const auto& taylor_coefficients = calc_taylor_coefficients(source, target_center, other_element_type, signal_type_needed);
 
-        const auto& indices = Multiindex::get_indices();
+        const auto& indices = MultiIndex::get_indices();
         const auto& target_children = get_children_to_array(target);
 
         auto result = 0.0;

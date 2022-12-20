@@ -37,5 +37,6 @@ inline std::ostream& operator<<(std::ostream& out, const SignalType signal_type)
 
     return out;
 }
+
 template <>
 struct fmt::formatter<SignalType> : ostream_formatter { };

@@ -42,7 +42,7 @@ inline std::ostream& operator<<(std::ostream& out, const NodeCacheType cache_typ
         return out << "Separate";
     }
 
-    return out << "UNKOWN";
+    return out << "UNKNOWN";
 }
 
 template <>
@@ -264,7 +264,7 @@ public:
             return;
         }
 
-        RelearnException::fail("NodeCache::clear: {} is an unkown cache type!", currently_used_cache);
+        RelearnException::fail("NodeCache::clear: {} is an unknown cache type!", currently_used_cache);
     }
 
     /**
@@ -282,7 +282,7 @@ public:
             return NodeCacheSeparate<AdditionalCellAttributes>::download_children(node);
         }
 
-        RelearnException::fail("NodeCache::download_children: {} is an unkown cache type!", currently_used_cache);
+        RelearnException::fail("NodeCache::download_children: {} is an unknown cache type!", currently_used_cache);
 
         return {};
     }

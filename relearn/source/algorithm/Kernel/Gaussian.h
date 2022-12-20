@@ -26,8 +26,8 @@ public:
     using counter_type = RelearnTypes::counter_type;
     using position_type = RelearnTypes::position_type;
 
-    static constexpr double default_mu = 0.0; // In Sebastians work: 0.0
-    static constexpr double default_sigma = 750.0; // In Sebastians work: 750.0
+    static constexpr double default_mu = 0.0; // In Sebastian's work: 0.0
+    static constexpr double default_sigma = 750.0; // In Sebastian's work: 750.0
 
     /**
      * @brief Sets the variance sigma, must be greater than 0.0

@@ -79,7 +79,7 @@ public:
             return AcceptanceStatus::Discard;
         }
 
-        // Always accept a leaf noce
+        // Always accept a leaf node
         if (const auto is_leaf = target_node->is_leaf(); is_leaf) {
             return AcceptanceStatus::Accept;
         }

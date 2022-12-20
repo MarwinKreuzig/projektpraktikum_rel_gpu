@@ -71,10 +71,10 @@ public:
     // Print to cout every <console_update_step> ms
     inline static std::uint32_t console_update_step = 100; // NOLINT
 
-    // Capture individual neuron informations ever <monitor_step> ms
+    // Capture individual neuron information ever <monitor_step> ms
     inline static std::uint32_t monitor_step = 100; // NOLINT
 
-    // Capture ensemble informations ever <monitor_area_step> ms
+    // Capture ensemble information ever <monitor_area_step> ms
     inline static std::uint32_t monitor_area_step = 100; // NOLINT
 
     // Capture the global statistics every <statistics_step> ms
@@ -86,7 +86,7 @@ public:
     // Capture the network every <network_log_step> ms
     inline static std::uint32_t network_log_step = 10000; // NOLINT
 
-    // Capture the syanptic input every <synaptic_input_log_step> ms
+    // Capture the synAptic input every <synaptic_input_log_step> ms
     inline static std::uint32_t synaptic_input_log_step = 10000; // NOLINT
 
     // Capture the average local euclidean distance every <distance_step> ms

@@ -67,8 +67,8 @@ TEST_F(NeuronsTest, testSignalTypeCheck) {
         if (signal_types[src.get_neuron_id()] == SignalType::Excitatory) {
             weight = -weight;
         }
-        const auto& out_egdes = network_graph->get_all_out_edges(src);
-        for (const auto& [out_tgt_rni, out_weight] : out_egdes) {
+        const auto& out_edges = network_graph->get_all_out_edges(src);
+        for (const auto& [out_tgt_rni, out_weight] : out_edges) {
             if (tgt_rni == out_tgt_rni) {
                 weight = weight - out_weight;
             }
@@ -107,7 +107,7 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
         std::make_unique<NullBackgroundActivityCalculator>(),
         models::PoissonModel::default_x_0,
         models::PoissonModel::default_tau_x,
-        models::PoissonModel::default_refrac_time);
+        models::PoissonModel::default_refractory_time);
     auto calcium = std::make_unique<CalciumCalculator>();
     calcium->set_initial_calcium_calculator([](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
     calcium->set_target_calcium_calculator([](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });

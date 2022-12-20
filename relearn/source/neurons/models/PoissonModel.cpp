@@ -21,11 +21,11 @@ PoissonModel::PoissonModel(
     std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
     const double x_0,
     const double tau_x,
-    const unsigned int refrac_time)
-    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator)}
+    const unsigned int refractory_time)
+    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator) }
     , x_0{ x_0 }
     , tau_x{ tau_x }
-    , refrac_time{ refrac_time } {
+    , refrac_time{ refractory_time } {
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> PoissonModel::clone() const {
@@ -37,7 +37,7 @@ PoissonModel::PoissonModel(
     auto res{ NeuronModel::get_parameter() };
     res.emplace_back(Parameter<double>{ "x_0", x_0, PoissonModel::min_x_0, PoissonModel::max_x_0 });
     res.emplace_back(Parameter<double>{ "tau_x", tau_x, PoissonModel::min_tau_x, PoissonModel::max_tau_x });
-    res.emplace_back(Parameter<unsigned int>{ "refrac_time", refrac_time, PoissonModel::min_refrac_time, PoissonModel::max_refrac_time });
+    res.emplace_back(Parameter<unsigned int>{ "refractory_time", refrac_time, PoissonModel::min_refractory_time, PoissonModel::max_refractory_time });
     return res;
 }
 
@@ -47,14 +47,14 @@ PoissonModel::PoissonModel(
 
 void PoissonModel::init(const number_neurons_type number_neurons) {
     NeuronModel::init(number_neurons);
-    refrac.resize(number_neurons, 0);
+    refractory_time.resize(number_neurons, 0);
     init_neurons(0, number_neurons);
 }
 
 void PoissonModel::create_neurons(const number_neurons_type creation_count) {
     const auto old_size = NeuronModel::get_number_neurons();
     NeuronModel::create_neurons(creation_count);
-    refrac.resize(old_size + creation_count, 0);
+    refractory_time.resize(old_size + creation_count, 0);
     init_neurons(old_size, creation_count);
 }
 
@@ -75,12 +75,12 @@ void PoissonModel::update_activity(const NeuronID& neuron_id) {
     const auto local_neuron_id = neuron_id.get_neuron_id();
 
     // Neuron ready to fire again
-    if (refrac[local_neuron_id] == 0) {
+    if (refractory_time[local_neuron_id] == 0) {
         const auto threshold = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
         const bool f = x >= threshold;
         if (f) {
             set_fired(neuron_id, FiredStatus::Fired);
-            refrac[local_neuron_id] = refrac_time;
+            refractory_time[local_neuron_id] = refrac_time;
         } else {
             set_fired(neuron_id, FiredStatus::Inactive);
         }
@@ -88,7 +88,7 @@ void PoissonModel::update_activity(const NeuronID& neuron_id) {
     // Neuron now/still in refractory state
     else {
         set_fired(neuron_id, FiredStatus::Inactive); // Set neuron inactive
-        --refrac[local_neuron_id]; // Decrease refractory time
+        --refractory_time[local_neuron_id]; // Decrease refractory time
     }
 
     set_x(neuron_id, x);

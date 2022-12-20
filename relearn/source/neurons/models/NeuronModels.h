@@ -347,7 +347,7 @@ public:
      * @param background_activity_calculator See NeuronModel(...)
      * @param x_0 The resting membrane potential
      * @param tau_x The dampening factor by which the membrane potential decreases
-     * @param refrac_time The number of steps a neuron doesn't spike after spiking
+     * @param refractory_time The number of steps a neuron doesn't spike after spiking
      */
     PoissonModel(
         unsigned int h,
@@ -355,7 +355,7 @@ public:
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
         double x_0,
         double tau_x,
-        unsigned int refrac_time);
+        unsigned int refractory_time);
 
     /**
      * @brief Clones this instance and creates a new PoissonModel with the same parameters and 0 local neurons
@@ -363,15 +363,15 @@ public:
     [[nodiscard]] std::unique_ptr<NeuronModel> clone() const final;
 
     /**
-     * @brief Returns the refrac time (The number of steps a neuron doesn't spike after spiking)
+     * @brief Returns the refractory_time time (The number of steps a neuron doesn't spike after spiking)
      * @exception Throws a RelearnException if neuron_id is too large
-     * @return The refrac time (The number of steps a neuron doesn't spike after spiking)
+     * @return The refractory_time time (The number of steps a neuron doesn't spike after spiking)
      */
     [[nodiscard]] double get_secondary_variable(const NeuronID& neuron_id) const final {
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < get_number_neurons(), "PoissonModel::get_secondary_variable: id is too large: {}", neuron_id);
-        return refrac[local_neuron_id];
+        return refractory_time[local_neuron_id];
     }
 
     /**
@@ -412,7 +412,7 @@ public:
 
     /**
      * @brief Initializes the model to include number_neurons many local neurons.
-     *      Sets the initial refrac counter to 0
+     *      Sets the initial refractory_time counter to 0
      * @param number_neurons The number of local neurons to store in this class
      */
     void init(number_neurons_type number_neurons) final;
@@ -425,15 +425,15 @@ public:
 
     static constexpr double default_x_0{ 0.05 };
     static constexpr double default_tau_x{ 5.0 };
-    static constexpr unsigned int default_refrac_time{ 4 }; // In Sebastians work: 4
+    static constexpr unsigned int default_refractory_time{ 4 }; // In Sebastians work: 4
 
     static constexpr double min_x_0{ 0.0 };
     static constexpr double min_tau_x{ 0.0 };
-    static constexpr unsigned int min_refrac_time{ 0 };
+    static constexpr unsigned int min_refractory_time{ 0 };
 
     static constexpr double max_x_0{ 1.0 };
     static constexpr double max_tau_x{ 1000.0 };
-    static constexpr unsigned int max_refrac_time{ 1000 };
+    static constexpr unsigned int max_refractory_time{ 1000 };
 
 protected:
     void update_activity(const NeuronID& neuron_id) final;
@@ -445,11 +445,11 @@ private:
         return ((x_0 - x) / tau_x + input);
     }
 
-    std::vector<unsigned int> refrac{}; // refractory time
+    std::vector<unsigned int> refractory_time{}; // refractory time
 
     double x_0{ default_x_0 }; // Background or resting activity
     double tau_x{ default_tau_x }; // Decay time of firing rate in msec
-    unsigned int refrac_time{ default_refrac_time }; // Length of refractory period in msec. After an action potential a neuron cannot fire for this time
+    unsigned int refrac_time{ default_refractory_time }; // Length of refractory period in msec. After an action potential a neuron cannot fire for this time
 };
 
 /**
@@ -636,13 +636,13 @@ protected:
 private:
     [[nodiscard]] double iter_x(double x, double u, double input) const noexcept;
 
-    [[nodiscard]] double iter_refrac(double u, double x) const noexcept;
+    [[nodiscard]] double iter_refraction(double u, double x) const noexcept;
 
     [[nodiscard]] bool spiked(double x) const noexcept;
 
     std::vector<double> u{}; // membrane recovery
 
-    double a{ default_a }; // time-scale of membrane recovery u
+    double a{ default_a }; // timescale of membrane recovery u
     double b{ default_b }; // sensitivity of membrane recovery to membrane potential v (x)
     double c{ default_c }; // after-spike reset value for membrane potential v (x)
     double d{ default_d }; // after-spike reset of membrane recovery u
@@ -773,7 +773,7 @@ protected:
 private:
     [[nodiscard]] static double iter_x(double x, double w, double input) noexcept;
 
-    [[nodiscard]] double iter_refrac(double w, double x) const noexcept;
+    [[nodiscard]] double iter_refraction(double w, double x) const noexcept;
 
     [[nodiscard]] static bool spiked(double x, double w) noexcept;
 
@@ -983,17 +983,17 @@ private:
 
     [[nodiscard]] double iter_x(double x, double w, double input) const noexcept;
 
-    [[nodiscard]] double iter_refrac(double w, double x) const noexcept;
+    [[nodiscard]] double iter_refraction(double w, double x) const noexcept;
 
     std::vector<double> w{}; // adaption variable
 
-    double C{ default_C }; // membrance capacitance
+    double C{ default_C }; // membrane capacitance
     double g_L{ default_g_L }; // leak conductance
     double E_L{ default_E_L }; // leak reversal potential
     double V_T{ default_V_T }; // spike threshold
     double d_T{ default_d_T }; // slope factor
     double tau_w{ default_tau_w }; // adaptation time constant
-    double a{ default_a }; // subthreshold
+    double a{ default_a }; // sub-threshold
     double b{ default_b }; // spike-triggered adaptation
 
     double V_spike{ default_V_spike }; // spike trigger

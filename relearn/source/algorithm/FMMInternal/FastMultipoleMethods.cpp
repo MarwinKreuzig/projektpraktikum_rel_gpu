@@ -25,7 +25,7 @@ CommunicationMap<SynapseCreationRequest> FastMultipoleMethods::find_target_neuro
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks, size_hint);
 
     auto* root = get_octree_root();
-    RelearnException::check(root != nullptr, "FastMultpoleMethods::find_target_neurons: root was nullptr");
+    RelearnException::check(root != nullptr, "FastMultIpoleMethods::find_target_neurons: root was nullptr");
 
     // Get number of dendrites
     const auto total_number_dendrites_ex = root->get_cell().get_number_excitatory_dendrites();

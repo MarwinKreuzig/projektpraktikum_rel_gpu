@@ -487,11 +487,11 @@ public:
      * @exception Throws a RelearnException if the internal data structures are corrupted
      * @return The connection histogram
      */
-    [[nodiscard]] std::map<std::pair<unsigned int, unsigned int>, uint64_t> get_historgram() const {
-        RelearnException::check(size == grown_elements.size(), "SynapticElements::get_historgram: size did not match the number of grown elements");
-        RelearnException::check(size == deltas_since_last_update.size(), "SynapticElements::get_historgram: size did not match the number of deltas");
-        RelearnException::check(size == connected_elements.size(), "SynapticElements::get_historgram: size did not match the number of connected elements");
-        RelearnException::check(size == signal_types.size(), "SynapticElements::get_historgram: size did not match the number of signal types");
+    [[nodiscard]] std::map<std::pair<unsigned int, unsigned int>, uint64_t> get_histogram() const {
+        RelearnException::check(size == grown_elements.size(), "SynapticElements::get_histogram: size did not match the number of grown elements");
+        RelearnException::check(size == deltas_since_last_update.size(), "SynapticElements::get_histogram: size did not match the number of deltas");
+        RelearnException::check(size == connected_elements.size(), "SynapticElements::get_histogram: size did not match the number of connected elements");
+        RelearnException::check(size == signal_types.size(), "SynapticElements::get_histogram: size did not match the number of signal types");
 
         std::map<std::pair<unsigned int, unsigned int>, uint64_t> result{};
 
@@ -520,10 +520,10 @@ private:
     [[nodiscard]] unsigned int update_number_elements(const NeuronID& neuron_id);
 
 public:
-    static constexpr double default_eta_Axons{ 0.4 }; // In Sebastians work: 0.0
-    static constexpr double default_eta_Dendrites_exc{ 0.1 }; // In Sebastians work: 0.0
-    static constexpr double default_eta_Dendrites_inh{ 0.0 }; // In Sebastians work: 0.0
-    static constexpr double default_nu{ 1e-5 }; // In Sebastians work: 1e-5
+    static constexpr double default_eta_Axons{ 0.4 }; // In Sebastian's work: 0.0
+    static constexpr double default_eta_Dendrites_exc{ 0.1 }; // In Sebastian's work: 0.0
+    static constexpr double default_eta_Dendrites_inh{ 0.0 }; // In Sebastian's work: 0.0
+    static constexpr double default_nu{ 1e-5 }; // In Sebastian's work: 1e-5
     static constexpr double default_vacant_retract_ratio{ 0.0 };
     static constexpr double default_vacant_elements_initially_lower_bound{ 0.0 };
     static constexpr double default_vacant_elements_initially_upper_bound{ 0.0 };

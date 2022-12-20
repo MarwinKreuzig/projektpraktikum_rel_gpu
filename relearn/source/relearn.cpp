@@ -393,7 +393,7 @@ int main(int argc, char** argv) {
     app.add_option("--target-calcium-decay-step", target_calcium_decay_step, "The decay step for the target calcium values.");
 
     double target_calcium_decay_amount{ 0.0 };
-    app.add_option("--target-calcum-amount", target_calcium_decay_amount, "The decay amount for the target calcium values.");
+    app.add_option("--target-calcium-amount", target_calcium_decay_amount, "The decay amount for the target calcium values.");
 
     auto* const opt_decay_type = app.add_option("--decay-type", target_calcium_decay_type, "The decay type for the target calcium values.");
     opt_decay_type->transform(CLI::CheckedTransformer(cli_parse_decay_type, CLI::ignore_case));
@@ -411,7 +411,7 @@ int main(int argc, char** argv) {
     app.add_option("--beta", beta, "The amount of calcium ions gathered when a neuron fires. Default is 0.001.");
 
     unsigned int h{ NeuronModel::default_h };
-    app.add_option("--integration-step-size", h, "The step size for the numerical integration of the electrical acticity. Default is 10.");
+    app.add_option("--integration-step-size", h, "The step size for the numerical integration of the electrical activity. Default is 10.");
 
     double retract_ratio{ SynapticElements::default_vacant_retract_ratio };
     app.add_option("--retract-ratio", retract_ratio, "The ratio by which vacant synapses retract.");
@@ -653,7 +653,7 @@ int main(int argc, char** argv) {
             essentials->insert("Kernel-Scale-Parameter", gamma_theta);
         } else if (chosen_kernel_type == KernelType::Gaussian) {
             essentials->insert("Kernel-Type", "Gaussian");
-            essentials->insert("TKernel-ranslation-Parameter", gaussian_mu);
+            essentials->insert("TKernel-Translation-Parameter", gaussian_mu);
             essentials->insert("Kernel-Scale-Parameter", gaussian_sigma);
         } else if (chosen_kernel_type == KernelType::Linear) {
             essentials->insert("Kernel-Type", "Linear");
@@ -673,23 +673,23 @@ int main(int argc, char** argv) {
                 essentials->insert("Fraction-excitatory-neurons",fraction_excitatory_neurons);
                 essentials->insert("um-per-neuron",um_per_neuron);
         } else {
-                essentials->insert("positions directory",file_positions.string());
+                essentials->insert("positions directory", file_positions.string());
 
                 essentials->insert("network directory",
-                file_network.string());
+                    file_network.string());
         }
         essentials->insert("external stimulation file", file_external_stimulation.string());
         essentials->insert("static neurons",
             static_neurons_str);
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "#step: creations deletions netto");
-    LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateCSV, false, "#step;creations;deletions;netto");
-    LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false, "#step: creations deletions netto");
+    LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "#step: creations deletions net");
+    LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateCSV, false, "#step;creations;deletions;net");
+    LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false, "#step: creations deletions net");
 
     Timers::start(TimerRegion::INITIALIZATION);
 
-    // Set the correct kernel and initalize the MPIWrapper to return the correct type
+    // Set the correct kernel and initialize the MPIWrapper to return the correct type
     if (chosen_algorithm == AlgorithmEnum::BarnesHut || chosen_algorithm == AlgorithmEnum::BarnesHutLocationAware) {
         Kernel<BarnesHutCell>::set_kernel_type(chosen_kernel_type);
         NodeCache<BarnesHutCell>::set_cache_type(chosen_cache_type);
@@ -725,7 +725,7 @@ int main(int argc, char** argv) {
     std::unique_ptr<NeuronModel> neuron_model{};
     if (chosen_neuron_model == NeuronModelEnum::Poisson) {
         neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
-            models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
+            models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refractory_time);
     } else if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
         neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
             models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
@@ -754,7 +754,7 @@ int main(int argc, char** argv) {
         calcium_calculator->set_initial_calcium_calculator(std::move(initial_calcium_calculator));
         calcium_calculator->set_target_calcium_calculator(std::move(target_calcium_calculator));
     } else {
-        auto initial_calcium_calculator = [inital = initial_calcium](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return inital; };
+        auto initial_calcium_calculator = [initial = initial_calcium](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return initial; };
         calcium_calculator->set_initial_calcium_calculator(std::move(initial_calcium_calculator));
 
         auto target_calcium_calculator = [target = target_calcium](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return target; };

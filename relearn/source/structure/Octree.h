@@ -473,7 +473,7 @@ protected:
             exchange_branch_nodes[i] = *branch_nodes[i];
         }
 
-        // Allgather in-place branch nodes from every rank
+        // All-gather in-place branch nodes from every rank
         const auto number_local_branch_nodes = number_branch_nodes / MPIWrapper::get_num_ranks();
         RelearnException::check(number_local_branch_nodes < static_cast<size_t>(std::numeric_limits<int>::max()),
             "OctreeImplementation::synchronize_local_trees: Too many branch nodes: {}", number_local_branch_nodes);

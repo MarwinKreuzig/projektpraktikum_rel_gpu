@@ -31,7 +31,7 @@ BoxBasedRandomSubdomainAssignment::place_neurons_in_box(const box_size_type& off
     RelearnException::check(offset.check_in_box(min, max), "BoxBasedRandomSubdomainAssignment::place_neurons_in_box: The offset was not within the box.");
 
     RelearnException::check(length_of_box.get_x() <= simulation_box_length_ && length_of_box.get_y() <= simulation_box_length_ && length_of_box.get_z() <= simulation_box_length_,
-        "BoxBasedRandomSubdomainAssignment::place_neurons_in_area: Requesting to fill neurons where no simulationbox is");
+        "BoxBasedRandomSubdomainAssignment::place_neurons_in_area: Requesting to fill neurons where no simulation box is");
 
     const auto um_per_neuron_ = get_um_per_neuron();
 

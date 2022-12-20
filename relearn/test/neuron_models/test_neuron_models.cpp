@@ -165,8 +165,8 @@
 //                continue;
 //            }
 //
-//            const auto transfered = conductance * weight;
-//            expected_input[neuron_id] += transfered;
+//            const auto transferred = conductance * weight;
+//            expected_input[neuron_id] += transferred;
 //        }
 //    }
 //
@@ -200,7 +200,7 @@
 //    ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 //
 //    const auto expected_x0 = PoissonModel::default_x_0;
-//    const auto expected_refrac = PoissonModel::default_refrac_time;
+//    const auto expected_refrac = PoissonModel::default_refractory_time;
 //    const auto expected_tau_x = PoissonModel::default_tau_x;
 //
 //    ASSERT_EQ(expected_x0, model->get_x_0());
@@ -320,7 +320,7 @@
 //    uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModel::min_background_activity_stddev, NeuronModel::max_background_activity_stddev);
 //
 //    uniform_real_distribution<double> urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
-//    uniform_int_distribution<unsigned int> urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
+//    uniform_int_distribution<unsigned int> urd_desired_refrac(PoissonModel::min_refractory_time, PoissonModel::max_refractory_time);
 //    uniform_real_distribution<double> urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
 //
 //    const auto expected_k = urd_desired_k(mt);
@@ -509,7 +509,7 @@
 //    uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModel::min_background_activity_stddev, NeuronModel::max_background_activity_stddev);
 //
 //    uniform_real_distribution<double> urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
-//    uniform_int_distribution<unsigned int> urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
+//    uniform_int_distribution<unsigned int> urd_desired_refrac(PoissonModel::min_refractory_time, PoissonModel::max_refractory_time);
 //    uniform_real_distribution<double> urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
 //
 //    const auto expected_k = urd_desired_k(mt);
@@ -765,7 +765,7 @@
 //    uniform_real_distribution<double> urd_desired_background_activity_stddev(NeuronModel::min_background_activity_stddev, NeuronModel::max_background_activity_stddev);
 //
 //    uniform_real_distribution<double> urd_desired_x0(PoissonModel::min_x_0, PoissonModel::max_x_0);
-//    uniform_int_distribution<unsigned int> urd_desired_refrac(PoissonModel::min_refrac_time, PoissonModel::max_refrac_time);
+//    uniform_int_distribution<unsigned int> urd_desired_refrac(PoissonModel::min_refractory_time, PoissonModel::max_refractory_time);
 //    uniform_real_distribution<double> urd_desired_tau_x(PoissonModel::min_tau_x, PoissonModel::max_tau_x);
 //
 //    const auto expected_k = urd_desired_k(mt);
@@ -1116,7 +1116,7 @@
 //        NeuronModel::default_k,
 //        NeuronModel::default_h,
 //        0.5, 0.0, 0.0,
-//        PoissonModel::default_x_0, PoissonModel::default_tau_x, PoissonModel::default_refrac_time);
+//        PoissonModel::default_x_0, PoissonModel::default_tau_x, PoissonModel::default_refractory_time);
 //
 //    const auto number_neurons = get_random_number_neurons();
 //
