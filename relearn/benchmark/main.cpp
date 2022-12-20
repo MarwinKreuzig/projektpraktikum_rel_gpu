@@ -1,5 +1,6 @@
 #include "main.h"
 
+#include "mpi/MPIWrapper.h"
 #include "util/Random.h"
 
 LocalSynapses generate_local_synapses(uint64_t number_neurons, uint64_t number_synapses) {
@@ -79,4 +80,13 @@ DistantOutSynapses generate_distant_out_synapses(uint64_t number_neurons, uint64
     return synapses;
 }
 
-BENCHMARK_MAIN();
+  int main(int argc, char** argv) {
+    MPIWrapper::init(argc, argv);
+
+    ::benchmark::Initialize(&argc, argv);
+    if (::benchmark::ReportUnrecognizedArguments(argc, argv))
+        return 1;
+    ::benchmark::RunSpecifiedBenchmarks();
+    ::benchmark::Shutdown();
+    return 0;
+}

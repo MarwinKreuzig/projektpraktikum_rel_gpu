@@ -1,16 +1,27 @@
 #pragma once
 
-#include "main.h"
-#include "neurons/models/NeuronModels.h"
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
+
+#include "neurons/FiredStatus.h"
 
 #include <vector>
 
+template <typename NeuronModelType>
 class AdapterNeuronModel {
-    NeuronModel& model;
+    NeuronModelType& model;
 
 public:
-    AdapterNeuronModel(NeuronModel& neuron_model)
-        : model(neuron_model) { }
+    AdapterNeuronModel(NeuronModelType& neuron_model)
+        : model(neuron_model) {
+    }
 
     const std::vector<double>& get_background() {
         return model.get_background_activity();
@@ -24,25 +35,17 @@ public:
         return model.get_x();
     }
 
-    void set_fired_status(FiredStatus fs) {
+    void set_fired_status(const FiredStatus fs) {
         for (auto& fired_status : model.fired) {
             fired_status = fs;
         }
     }
 
-    void calculate_serial_initialize(const std::vector<UpdateStatus>& disable_flags) {
-        //model.update_electrical_activity_serial_initialize(disable_flags);
+    void update_activity(NeuronID id) {
+        model.update_activity(id);
     }
 
-    void calculate_background_activity(const std::vector<UpdateStatus>& disable_flags) {
-        // model.update_electrical_activity_calculate_background(disable_flags);
-    }
-
-    void calculate_input(const NetworkGraph& network_graph, const CommunicationMap<NeuronID>& firing_neuron_ids_incoming, const std::vector<UpdateStatus>& disable_flags) {
-        // model.update_electrical_activity_calculate_input(network_graph_plastic, disable_flags);
-    }
-
-    void update_activity(const std::vector<UpdateStatus>& disable_flags) {
-        // model.update_electrical_activity_update_activity(disable_flags);
+    void update_activity_benchmark(NeuronID id) {
+        model.update_activity_benchmark(id);
     }
 };

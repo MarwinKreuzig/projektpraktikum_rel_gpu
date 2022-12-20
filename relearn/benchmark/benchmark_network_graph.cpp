@@ -131,11 +131,11 @@ void CustomArgs(benchmark::internal::Benchmark* b) {
     }
 }
 
-BENCHMARK(BM_NetworkGraph_InsertLocal)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(number_iterations);
-BENCHMARK(BM_NetworkGraph_RemoveLocal)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(number_iterations);
-
-BENCHMARK(BM_NetworkGraph_InsertDistantIn)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(number_iterations);
-BENCHMARK(BM_NetworkGraph_RemoveDistantIn)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(number_iterations);
-
-BENCHMARK(BM_NetworkGraph_InsertDistantOut)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(number_iterations);
-BENCHMARK(BM_NetworkGraph_RemoveDistantOut)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(number_iterations);
+//BENCHMARK(BM_NetworkGraph_InsertLocal)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(number_iterations);
+//BENCHMARK(BM_NetworkGraph_RemoveLocal)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(number_iterations);
+//
+//BENCHMARK(BM_NetworkGraph_InsertDistantIn)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(number_iterations);
+//BENCHMARK(BM_NetworkGraph_RemoveDistantIn)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(number_iterations);
+//
+//BENCHMARK(BM_NetworkGraph_InsertDistantOut)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(number_iterations);
+//BENCHMARK(BM_NetworkGraph_RemoveDistantOut)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(number_iterations);

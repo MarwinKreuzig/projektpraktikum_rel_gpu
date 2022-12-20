@@ -129,6 +129,7 @@ void Timers::print(const std::unique_ptr<Essentials>& essentials) {
     print_timer("      Calculate serial activity setup          : ", TimerRegion::CALC_SERIAL_ACTIVITY);
     print_timer("      Calculate synaptic background            : ", TimerRegion::CALC_SYNAPTIC_BACKGROUND);
     print_timer("      Calculate synaptic input                 : ", TimerRegion::CALC_SYNAPTIC_INPUT);
+    print_timer("      Calculate synaptic input                 : ", TimerRegion::CALC_STIMULUS);
     print_timer("      Calculate activity                       : ", TimerRegion::CALC_ACTIVITY);
     print_timer("      Calculate calcium                        : ", TimerRegion::UPDATE_CALCIUM);
     print_timer("      Calculate target calcium                 : ", TimerRegion::UPDATE_TARGET_CALCIUM);

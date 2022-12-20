@@ -19,18 +19,19 @@ PoissonModel::PoissonModel(
     const unsigned int h,
     std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
     std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
+    std::unique_ptr<Stimulus>&& stimulus_calculator,
     const double x_0,
     const double tau_x,
-    const unsigned int refractory_time)
-    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator) }
+    const unsigned int refractory_period)
+    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator) }
     , x_0{ x_0 }
     , tau_x{ tau_x }
-    , refractory_period{ refractory_time } {
+    , refractory_period{ refractory_period } {
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> PoissonModel::clone() const {
     return std::make_unique<PoissonModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(),
-        x_0, tau_x, refractory_period);
+        get_stimulus_calculator()->clone(), x_0, tau_x, refractory_period);
 }
 
 [[nodiscard]] std::vector<ModelParameter> PoissonModel::get_parameter() {
@@ -63,13 +64,51 @@ void PoissonModel::update_activity(const NeuronID& neuron_id) {
 
     const auto synaptic_input = get_synaptic_input(neuron_id);
     const auto background = get_background_activity(neuron_id);
-    const auto input = synaptic_input + background;
+    const auto stimulus = get_stimulus(neuron_id);
+    const auto input = synaptic_input + background + stimulus;
 
     auto x = get_x(neuron_id);
 
     for (unsigned int integration_steps = 0; integration_steps < h; integration_steps++) {
         // Update the membrane potential
         x += iter_x(x, input) / h;
+    }
+
+    const auto local_neuron_id = neuron_id.get_neuron_id();
+
+    // Neuron ready to fire again
+    if (refractory_time[local_neuron_id] == 0) {
+        const auto threshold = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
+        const bool f = x >= threshold;
+        if (f) {
+            set_fired(neuron_id, FiredStatus::Fired);
+            refractory_time[local_neuron_id] = refractory_period;
+        } else {
+            set_fired(neuron_id, FiredStatus::Inactive);
+        }
+    }
+    // Neuron now/still in refractory state
+    else {
+        set_fired(neuron_id, FiredStatus::Inactive); // Set neuron inactive
+        --refractory_time[local_neuron_id]; // Decrease refractory time
+    }
+
+    set_x(neuron_id, x);
+}
+
+void PoissonModel::update_activity_benchmark(const NeuronID& neuron_id) {
+    const auto h = get_h();
+
+    const auto synaptic_input = get_synaptic_input(neuron_id);
+    const auto background = get_background_activity(neuron_id);
+    const auto input = synaptic_input + background;
+
+    auto x = get_x(neuron_id);
+    const auto scale = 1.0 / h;
+
+    for (unsigned int integration_steps = 0; integration_steps < h; integration_steps++) {
+        // Update the membrane potential
+        x += iter_x(x, input) * scale;
     }
 
     const auto local_neuron_id = neuron_id.get_neuron_id();

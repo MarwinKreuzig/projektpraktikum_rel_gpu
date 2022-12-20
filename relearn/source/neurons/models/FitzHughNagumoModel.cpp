@@ -16,10 +16,11 @@ FitzHughNagumoModel::FitzHughNagumoModel(
     const unsigned int h,
     std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
     std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
+    std::unique_ptr<Stimulus>&& stimulus_calculator,
     const double a,
     const double b,
     const double phi)
-    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator) }
+    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator) }
     , a{ a }
     , b{ b }
     , phi{ phi } {
@@ -27,7 +28,7 @@ FitzHughNagumoModel::FitzHughNagumoModel(
 
 std::unique_ptr<NeuronModel> FitzHughNagumoModel::clone() const {
     return std::make_unique<FitzHughNagumoModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(),
-        a, b, phi);
+        get_stimulus_calculator()->clone(), a, b, phi);
 }
 
 std::vector<ModelParameter> FitzHughNagumoModel::get_parameter() {
@@ -60,7 +61,8 @@ void FitzHughNagumoModel::update_activity(const NeuronID& neuron_id) {
 
     const auto synaptic_input = get_synaptic_input(neuron_id);
     const auto background = get_background_activity(neuron_id);
-    const auto input = synaptic_input + background;
+    const auto stimulus = get_stimulus(neuron_id);
+    const auto input = synaptic_input + background + stimulus;
 
     auto x = get_x(neuron_id);
 
@@ -69,6 +71,32 @@ void FitzHughNagumoModel::update_activity(const NeuronID& neuron_id) {
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
         x += iter_x(x, w[local_neuron_id], input) / h;
         w[local_neuron_id] += iter_refraction(w[local_neuron_id], x) / h;
+    }
+
+    if (FitzHughNagumoModel::spiked(x, w[local_neuron_id])) {
+        set_fired(neuron_id, FiredStatus::Fired);
+    } else {
+        set_fired(neuron_id, FiredStatus::Inactive);
+    }
+
+    set_x(neuron_id, x);
+}
+
+void FitzHughNagumoModel::update_activity_benchmark(const NeuronID& neuron_id) {
+    const auto h = get_h();
+
+    const auto synaptic_input = get_synaptic_input(neuron_id);
+    const auto background = get_background_activity(neuron_id);
+    const auto input = synaptic_input + background;
+
+    auto x = get_x(neuron_id);
+
+    const auto local_neuron_id = neuron_id.get_neuron_id();
+    const auto scale = 1.0 / h;
+
+    for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
+        x += iter_x(x, w[local_neuron_id], input) * scale;
+        w[local_neuron_id] += iter_refrac(w[local_neuron_id], x) * scale;
     }
 
     if (FitzHughNagumoModel::spiked(x, w[local_neuron_id])) {

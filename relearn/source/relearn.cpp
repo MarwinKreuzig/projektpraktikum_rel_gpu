@@ -235,6 +235,7 @@ int main(int argc, char** argv) {
     std::map<std::string, SynapticInputCalculatorType> cli_parse_synapse_input_calculator_type{
         { "linear", SynapticInputCalculatorType::Linear },
         { "logarithmic", SynapticInputCalculatorType::Logarithmic },
+        { "hyptan", SynapticInputCalculatorType::HyperbolicTangent },
     };
 
     BackgroundActivityCalculatorType chosen_background_activity_calculator_type = BackgroundActivityCalculatorType::Null;
@@ -242,7 +243,6 @@ int main(int argc, char** argv) {
         { "null", BackgroundActivityCalculatorType::Null },
         { "constant", BackgroundActivityCalculatorType::Constant },
         { "normal", BackgroundActivityCalculatorType::Normal },
-        { "stimulus", BackgroundActivityCalculatorType::Stimulus },
     };
 
     RelearnTypes::step_type simulation_steps{};
@@ -374,8 +374,11 @@ int main(int argc, char** argv) {
     auto* const opt_stddev_background_activity = app.add_option("--background-activity-stddev", background_activity_stddev,
         "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as N(mean, stddev)");
 
-    double synapse_conductance{ SynapticInputCalculator::default_k };
+    double synapse_conductance{ SynapticInputCalculator::default_conductance };
     app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transferred to its neighbors when a neuron spikes. Default is 0.03");
+
+    double input_scale{ LogarithmicSynapticInputCalculator::default_scaling };
+    auto* const opt_input_scale = app.add_option("--input-scale", input_scale, "The scale factor for the input via synapses. Default is 1.0");
 
     auto* const opt_synapse_input_calculator_type = app.add_option("--synapse-input-calculator-type", chosen_synapse_input_calculator_type, "The type calculator that transforms the synapse input.");
     opt_synapse_input_calculator_type->transform(CLI::CheckedTransformer(cli_parse_synapse_input_calculator_type, CLI::ignore_case));
@@ -496,6 +499,12 @@ int main(int argc, char** argv) {
         RelearnException::check(num_ranks == 1, "The option --num-neurons can only be used for one MPI rank. There are {} ranks.", num_ranks);
     }
 
+    if (static_cast<bool>(*opt_input_scale)) {
+        const auto valid_input_type = chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic || chosen_synapse_input_calculator_type == SynapticInputCalculatorType::HyperbolicTangent;
+
+        RelearnException::check(valid_input_type, "The option --input-scale can only be used if the synapse input is scaled logarithmically or hyperbolic tangently");
+    }
+
     RelearnException::check(fraction_excitatory_neurons >= 0.0 && fraction_excitatory_neurons <= 1.0, "The fraction of excitatory neurons must be from [0.0, 1.0]");
     RelearnException::check(um_per_neuron > 0.0, "The micrometer per neuron must be greater than 0.0.");
 
@@ -563,13 +572,15 @@ int main(int argc, char** argv) {
         RelearnException::check(background_activity_stddev > 0.0, "When choosing the normal-background calculator, the standard deviation must be set to > 0.0.");
 
         background_activity_calculator = std::make_unique<NormalBackgroundActivityCalculator>(background_activity_mean, background_activity_stddev);
-    } else if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Stimulus) {
-        RelearnException::check(static_cast<bool>(*opt_file_external_stimulation), "Setting the background activity to stimulus but not providing a file is not supported.");
-        RelearnException::check(background_activity_stddev >= 0.0, "When choosing the stimulus-background calculator, the standard deviation must be set to >= 0.0.");
-
-        background_activity_calculator = std::make_unique<StimulusBackgroundActivityCalculator>(file_external_stimulation, std::optional{ std::pair{ background_activity_mean, background_activity_stddev } }, my_rank, subdomain->get_local_area_translator());
     } else {
         RelearnException::fail("Chose a background activity calculator that is not implemented");
+    }
+
+    std::unique_ptr<Stimulus> stimulus_calculator{};
+    if (static_cast<bool>(*opt_file_external_stimulation)) {
+        stimulus_calculator = std::make_unique<Stimulus>(file_external_stimulation, my_rank, subdomain->get_local_area_translator());
+    } else {
+        stimulus_calculator = std::make_unique<Stimulus>();
     }
 
     RelearnException::check(nu_axon >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
@@ -647,6 +658,16 @@ int main(int argc, char** argv) {
         essentials->insert("First-plasticity-step", first_plasticity_step);
         essentials->insert("Last-plasticity-step", last_plasticity_step);
 
+        if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic) {
+            essentials->insert("Synapse-Input", "Logarithmic");
+            essentials->insert("Synapse-Input-Scaling", input_scale);
+        } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
+            essentials->insert("Synapse-Input", "Linear");
+        }
+        if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::HyperbolicTangent) {
+            essentials->insert("Synapse-Input", "Hyperbolic-Tangent");
+        }
+
         if (chosen_kernel_type == KernelType::Gamma) {
             essentials->insert("Kernel-Type", "Gamma");
             essentials->insert("Kernel-Shape-Parameter", gamma_k);
@@ -717,25 +738,27 @@ int main(int argc, char** argv) {
     if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
         input_calculator = std::make_unique<LinearSynapticInputCalculator>(synapse_conductance);
     } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic) {
-        input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance);
+        input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, input_scale);
+    } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::HyperbolicTangent) {
+        input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(synapse_conductance, input_scale);
     } else {
         RelearnException::fail("Chose a synaptic input calculator that is not implemented");
     }
 
     std::unique_ptr<NeuronModel> neuron_model{};
     if (chosen_neuron_model == NeuronModelEnum::Poisson) {
-        neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
+        neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
             models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refractory_period);
     } else if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
-        neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
+        neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
             models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
             models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
             models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
     } else if (chosen_neuron_model == NeuronModelEnum::FitzHughNagumo) {
-        neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
+        neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
             models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
     } else if (chosen_neuron_model == NeuronModelEnum::AEIF) {
-        neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
+        neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
             models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
             models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
             models::AEIFModel::default_V_spike);
