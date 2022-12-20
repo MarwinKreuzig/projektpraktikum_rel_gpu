@@ -117,7 +117,7 @@ public:
     /**
      * @brief Inserts a neuron with the specified id and the specified position into the subtree that is induced by this object.
      * @param position The position of the new neuron
-     * @param neuron_id The id of the new neuron (can be Constants::uninitialized to inidicate a virtual neuron), <= Constants::uninitialized
+     * @param neuron_id The id of the new neuron (can be Constants::uninitialized to indicate a virtual neuron), <= Constants::uninitialized
      * @param level_of_branch_nodes The level of the branch nodes in the Octree, is optional
      * @exception Throws a RelearnException if one of the following happens:
      *      (a) The position is not within the cell's boundaries

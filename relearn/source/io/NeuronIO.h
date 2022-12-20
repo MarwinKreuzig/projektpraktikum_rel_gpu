@@ -153,7 +153,7 @@ public:
      * @param number_mpi_ranks The number of MPI ranks
      * @exception Throws a RelearnException if
      *      (1) opening the file failed
-     *      (2) the weight of one synpapse is 0
+     *      (2) the weight of one synapse is 0
      *      (3) a target rank is not my_rank
      *      (4) a source rank is not from [0, number_mpi_ranks)
      *      (5) or a target id is not from [0, number_local_neurons)
@@ -183,7 +183,7 @@ public:
      * @param local_out_edges_plastic The local out-synapses that are plastic
      * @param distant_out_edges_plastic The distant out-synapses that are plastic
      * @param my_rank The current MPI rank
-     * @param mpi_ranks Nunber of used mpi ranks
+     * @param mpi_ranks Number of used mpi ranks
      * @param number_local_neurons Number of local neurons on the current mpi rank
      * @param number_total_neurons Number of neurons over all ranks
      * @param step The current step of the simulation
@@ -200,7 +200,7 @@ public:
      * @param local_in_edges_plastic The local in-synapses that are plastic
      * @param distant_in_edges_plastic The distant out-synapses that are plastic
      * @param my_rank The current MPI rank
-     * @param mpi_ranks Nunber of used mpi ranks
+     * @param mpi_ranks Number of used mpi ranks
      * @param number_local_neurons Number of local neurons on the current mpi rank
      * @param number_total_neurons Number of neurons over all ranks
      * @param step The current step of the simulation
@@ -209,7 +209,6 @@ public:
     static void write_in_synapses(const NetworkGraph::NeuronLocalInNeighborhood& local_in_edges_static, const NetworkGraph::NeuronDistantInNeighborhood& distant_in_edges_static,
         const NetworkGraph::NeuronLocalInNeighborhood& local_in_edges_plastic, const NetworkGraph::NeuronDistantInNeighborhood& distant_in_edges_plastic,
         MPIRank my_rank, size_t mpi_ranks, RelearnTypes::number_neurons_type number_local_neurons, RelearnTypes::number_neurons_type number_total_neurons, std::stringstream& ss, size_t step);
-
 
     /**
      * @brief Reads all out-synapses from a file and returns those.
@@ -220,7 +219,7 @@ public:
      * @param number_mpi_ranks The number of MPI ranks
      * @exception Throws a RelearnException if
      *      (1) opening the file failed
-     *      (2) the weight of one synpapse is 0
+     *      (2) the weight of one synapse is 0
      *      (3) a source rank is not my_rank
      *      (4) a target rank is not from [0, number_mpi_ranks)
      *      (5) or a source id is not from [0, number_local_neurons)

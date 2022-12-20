@@ -24,7 +24,7 @@
 
 /**
  * This class commits SynapseCreationRequests and SynapseCreationResponses to the synaptic elements.
- * It assumes that a request is made by an axon and targets a dendrite. It does not perform communicaton with MPI.
+ * It assumes that a request is made by an axon and targets a dendrite. It does not perform communication with MPI.
  */
 class ForwardConnector {
 public:
@@ -124,7 +124,7 @@ public:
     }
 
     /**
-     * @brief Processes all incoming responses from the MPI ranks locally, and commits the changes to the synapti elements.
+     * @brief Processes all incoming responses from the MPI ranks locally, and commits the changes to the synaptic elements.
      *      A response is from a request from an axon to a dendrite
      * @param creation_requests The requests from this MPI rank
      * @param creation_responses The responses from the other MPI ranks
@@ -194,7 +194,7 @@ public:
 
 /**
  * This class commits SynapseCreationRequests and SynapseCreationResponses to the synaptic elements.
- * It assumes that a request is made by a dendrite and targets an axon. It does not perform communicaton with MPI.
+ * It assumes that a request is made by a dendrite and targets an axon. It does not perform communication with MPI.
  */
 class BackwardConnector {
 public:
@@ -279,7 +279,7 @@ public:
     }
 
     /**
-     * @brief Processes all incoming responses from the MPI ranks locally, and commits the changes to the synapti elements.
+     * @brief Processes all incoming responses from the MPI ranks locally, and commits the changes to the synaptic elements.
      *      A response is from a request from a dendrite to an axon
      * @param creation_requests The requests from this MPI rank
      * @param creation_responses The responses from the other MPI ranks

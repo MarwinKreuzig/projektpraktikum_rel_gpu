@@ -67,7 +67,7 @@ public:
 
     /**
      * @brief Returns the multi-index as a matrix with the dimensions (p^3, 3).
-     * @return Returns a array of arrays wich represents the corresponding multi-index.
+     * @return Returns a array of arrays which represents the corresponding multi-index.
      */
     static constexpr std::array<Vec3u, Constants::p3> get_indices() noexcept {
         std::array<Vec3u, Constants::p3> result{};
@@ -129,7 +129,7 @@ public:
      * @param vector A 3D vector.
      * @return Value of the Hermite function.
      */
-    static double h_multiindex(const Vec3u& multi_index, const Vec3d& vector) {
+    static double h_multi_index(const Vec3u& multi_index, const Vec3d& vector) {
         const auto h1 = h(multi_index.get_x(), vector.get_x());
         const auto h2 = h(multi_index.get_y(), vector.get_y());
         const auto h3 = h(multi_index.get_z(), vector.get_z());
@@ -457,13 +457,13 @@ public:
                 RelearnException::check(child_pos.has_value(), "FastMultipoleMethodsBase::calc_taylor_coefficients: source child has no position.");
 
                 const auto& temp_vec = (child_pos.value() - target_center) / sigma;
-                child_attraction += number_elements * h_multiindex(current_index, temp_vec);
+                child_attraction += number_elements * h_multi_index(current_index, temp_vec);
             }
 
             const auto coefficient = child_attraction / current_index.get_componentwise_factorial();
-            const auto absolute_multiindex = current_index.calculate_1_norm();
+            const auto absolute_multi_index = current_index.calculate_1_norm();
 
-            if (absolute_multiindex % 2 == 0) {
+            if (absolute_multi_index % 2 == 0) {
                 // NOLINTNEXTLINE
                 taylor_coefficients[index] = coefficient;
             } else {
@@ -527,7 +527,7 @@ public:
             double child_attraction = 0.0;
             for (auto a = 0; a < number_coefficients; a++) {
                 // NOLINTNEXTLINE
-                child_attraction += coefficients_buffer[a] * h_multiindex(indices[a], temp_vec);
+                child_attraction += coefficients_buffer[a] * h_multi_index(indices[a], temp_vec);
             }
 
             total_attraction += number_searched_elements * child_attraction;
@@ -744,7 +744,7 @@ public:
      * @param element_type Specified for which type of synaptic element is searching
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @param stack Reference to the stack on which the pairs must be pushed back.
-     * @param source_children Refernce on the children of the source node.
+     * @param source_children Reference on the children of the source node.
      */
     static void make_stack_entries_for_leaf(OctreeNode<AdditionalCellAttributes>* target_node, const SignalType signal_type_needed, const ElementType element_type,
         Stack<stack_entry>& stack, const std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct>& source_children) {
@@ -794,7 +794,7 @@ public:
      * @param branch_level The level in the octree on which the branch nodes are
      * @param element_type The searching element type
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
-     * @return Returns the initalised stack.
+     * @return Returns the initialised stack.
      */
     static Stack<stack_entry> init_stack(OctreeNode<AdditionalCellAttributes>* root, const std::vector<OctreeNode<AdditionalCellAttributes>*>& local_roots,
         const std::uint16_t branch_level, const ElementType element_type, const SignalType signal_type_needed) {

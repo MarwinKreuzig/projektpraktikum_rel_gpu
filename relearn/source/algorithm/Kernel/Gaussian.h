@@ -32,7 +32,7 @@ public:
     /**
      * @brief Sets the variance sigma, must be greater than 0.0
      * @param sigma The variance, > 0.0
-     * @exception Throws a RelearnExeption if sigma <= 0.0
+     * @exception Throws a RelearnException if sigma <= 0.0
      */
     static void set_sigma(const double sigma) {
         RelearnException::check(sigma > 0.0, "In GaussianDistributionKernel::set_sigma, sigma was not greater than 0.0");

@@ -104,7 +104,7 @@ public:
 
     /**
      * @brief Initializes the object to contain number_neurons elements.
-     *      Creates initially free elements, uniformely and independently drawn from [initial_vacant_elements_lb, initial_vacant_elements_ub].
+     *      Creates initially free elements, uniformly and independently drawn from [initial_vacant_elements_lb, initial_vacant_elements_ub].
      *      Sets the number of connected elements to 0 for all neurons
      * @param number_neurons The number of that should be stored
      * @exception Throws a RelearnException if initial_vacant_elements_ub < initial_vacant_elements_lb
@@ -129,7 +129,7 @@ public:
 
     /**
      * @brief Creates additional creation_count elements.
-     *      For those, creates initially free elements, uniformely and independently drawn from [initial_vacant_elements_lb, initial_vacant_elements_ub].
+     *      For those, creates initially free elements, uniformly and independently drawn from [initial_vacant_elements_lb, initial_vacant_elements_ub].
      *      For those, sets the number of connected elements to 0 for all neurons.
      *      All previous elements are not changed.
      * @param number_neurons The number of that should be created
@@ -253,7 +253,7 @@ public:
 
         if (delta > 0) {
             const auto number_free_elements = get_free_elements(neuron_id);
-            RelearnException::check(number_free_elements >= static_cast<unsigned int>(delta), "SynapticElements::update_connected_elements: There are not enogh free elements {}: {} vs {}", neuron_id, delta, number_free_elements);
+            RelearnException::check(number_free_elements >= static_cast<unsigned int>(delta), "SynapticElements::update_connected_elements: There are not enough free elements {}: {} vs {}", neuron_id, delta, number_free_elements);
         }
 
         connected_elements[local_neuron_id] += delta;
@@ -481,7 +481,7 @@ public:
     }
 
     /**
-     * @brief Calculates and returns the historgram of the synaptic elements, i.e.,
+     * @brief Calculates and returns the histogram of the synaptic elements, i.e.,
      *      a mapping (x, y) -> z which indicates that there are z neurons
      *      that have x connected elements and y total elements (rounded down).
      * @exception Throws a RelearnException if the internal data structures are corrupted

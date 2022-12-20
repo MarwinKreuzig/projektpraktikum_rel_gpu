@@ -31,7 +31,7 @@ public:
      * @param path_to_neurons The path to the file with the neurons to load
      * @param path_to_synapses The file path to the synapses, can be empty if none should be loaded
      * @param partition The partition
-     * @exception Throws a RelearnException if some erros occurred while processing the file
+     * @exception Throws a RelearnException if some errors occurred while processing the file
      */
     SubdomainFromFile(const std::filesystem::path& path_to_neurons, std::optional<std::filesystem::path> path_to_synapses, std::shared_ptr<Partition> partition);
 

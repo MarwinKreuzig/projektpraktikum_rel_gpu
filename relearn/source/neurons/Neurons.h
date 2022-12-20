@@ -205,8 +205,8 @@ public:
     }
 
     /**
-     * @brief Returns a constant reference to the extra informations
-     * @return The extra informations for the neurons
+     * @brief Returns a constant reference to the extra information
+     * @return The extra information for the neurons
      */
     [[nodiscard]] const std::unique_ptr<NeuronsExtraInfo>& get_extra_info() const noexcept {
         return extra_info;

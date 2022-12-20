@@ -25,19 +25,19 @@ PoissonModel::PoissonModel(
     : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator) }
     , x_0{ x_0 }
     , tau_x{ tau_x }
-    , refrac_time{ refractory_time } {
+    , refractory_period{ refractory_time } {
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> PoissonModel::clone() const {
     return std::make_unique<PoissonModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(),
-        x_0, tau_x, refrac_time);
+        x_0, tau_x, refractory_period);
 }
 
 [[nodiscard]] std::vector<ModelParameter> PoissonModel::get_parameter() {
     auto res{ NeuronModel::get_parameter() };
     res.emplace_back(Parameter<double>{ "x_0", x_0, PoissonModel::min_x_0, PoissonModel::max_x_0 });
     res.emplace_back(Parameter<double>{ "tau_x", tau_x, PoissonModel::min_tau_x, PoissonModel::max_tau_x });
-    res.emplace_back(Parameter<unsigned int>{ "refractory_time", refrac_time, PoissonModel::min_refractory_time, PoissonModel::max_refractory_time });
+    res.emplace_back(Parameter<unsigned int>{ "refractory_time", refractory_period, PoissonModel::min_refractory_time, PoissonModel::max_refractory_time });
     return res;
 }
 
@@ -80,7 +80,7 @@ void PoissonModel::update_activity(const NeuronID& neuron_id) {
         const bool f = x >= threshold;
         if (f) {
             set_fired(neuron_id, FiredStatus::Fired);
-            refractory_time[local_neuron_id] = refrac_time;
+            refractory_time[local_neuron_id] = refractory_period;
         } else {
             set_fired(neuron_id, FiredStatus::Inactive);
         }

@@ -98,10 +98,10 @@ void print_sizes() {
     constexpr auto sizeof_bh_cell = sizeof(Cell<BarnesHutCell>);
     constexpr auto sizeof_naive_cell = sizeof(Cell<NaiveCell>);
 
-    constexpr auto sizeof_octreenode = sizeof(OctreeNode<empty_t>);
-    constexpr auto sizeof_fmm_octreenode = sizeof(OctreeNode<FastMultipoleMethodsCell>);
-    constexpr auto sizeof_bh_octreenode = sizeof(OctreeNode<BarnesHutCell>);
-    constexpr auto sizeof_naive_octreenode = sizeof(OctreeNode<NaiveCell>);
+    constexpr auto sizeof_octree_node = sizeof(OctreeNode<empty_t>);
+    constexpr auto sizeof_fmm_octree_node = sizeof(OctreeNode<FastMultipoleMethodsCell>);
+    constexpr auto sizeof_bh_octree_node = sizeof(OctreeNode<BarnesHutCell>);
+    constexpr auto sizeof_naive_octree_node = sizeof(OctreeNode<NaiveCell>);
 
     constexpr auto sizeof_neuron_id = sizeof(NeuronID);
     constexpr auto sizeof_rank_neuron_id = sizeof(RankNeuronId);
@@ -139,10 +139,10 @@ void print_sizes() {
     ss << "Size of Cell<BarnesHutCell>: " << sizeof_bh_cell << '\n';
     ss << "Size of Cell<NaiveCell>: " << sizeof_naive_cell << '\n';
 
-    ss << "Size of OctreeNode<empty_t>: " << sizeof_octreenode << '\n';
-    ss << "Size of OctreeNode<FastMultipoleMethodsCell>: " << sizeof_fmm_octreenode << '\n';
-    ss << "Size of OctreeNode<BarnesHutCell>: " << sizeof_bh_octreenode << '\n';
-    ss << "Size of OctreeNode<NaiveCell>: " << sizeof_naive_octreenode << '\n';
+    ss << "Size of OctreeNode<empty_t>: " << sizeof_octree_node << '\n';
+    ss << "Size of OctreeNode<FastMultipoleMethodsCell>: " << sizeof_fmm_octree_node << '\n';
+    ss << "Size of OctreeNode<BarnesHutCell>: " << sizeof_bh_octree_node << '\n';
+    ss << "Size of OctreeNode<NaiveCell>: " << sizeof_naive_octree_node << '\n';
 
     ss << "Size of NeuronID: " << sizeof_neuron_id << '\n';
     ss << "Size of RankNeuronID: " << sizeof_rank_neuron_id << '\n';
@@ -375,7 +375,7 @@ int main(int argc, char** argv) {
         "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as N(mean, stddev)");
 
     double synapse_conductance{ SynapticInputCalculator::default_k };
-    app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transfered to its neighbors when a neuron spikes. Default is 0.03");
+    app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transferred to its neighbors when a neuron spikes. Default is 0.03");
 
     auto* const opt_synapse_input_calculator_type = app.add_option("--synapse-input-calculator-type", chosen_synapse_input_calculator_type, "The type calculator that transforms the synapse input.");
     opt_synapse_input_calculator_type->transform(CLI::CheckedTransformer(cli_parse_synapse_input_calculator_type, CLI::ignore_case));
@@ -588,7 +588,7 @@ int main(int argc, char** argv) {
     omp_set_num_threads(openmp_threads);
 
     /**
-     * Initialize the simuliation log files
+     * Initialize the simulation log files
      */
     if (static_cast<bool>(*opt_log_path)) {
         LogFiles::set_output_path(log_path);
@@ -725,7 +725,7 @@ int main(int argc, char** argv) {
     std::unique_ptr<NeuronModel> neuron_model{};
     if (chosen_neuron_model == NeuronModelEnum::Poisson) {
         neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
-            models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refractory_time);
+            models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refractory_period);
     } else if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
         neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
             models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,

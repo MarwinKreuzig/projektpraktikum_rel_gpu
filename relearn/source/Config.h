@@ -62,7 +62,7 @@ public:
     // Update connectivity starting at <first_plasticity_update> ms
     inline static std::uint32_t first_plasticity_update = 0; // NOLINT
 
-    // End the connectivity updates at <last_plascitiy_update> ms
+    // End the connectivity updates at <last_plasticity_update> ms
     inline static std::uint32_t last_plasticity_update = -1; // NOLINT
 
     // Print details every <logfile_update_step> ms
@@ -86,7 +86,7 @@ public:
     // Capture the network every <network_log_step> ms
     inline static std::uint32_t network_log_step = 10000; // NOLINT
 
-    // Capture the synAptic input every <synaptic_input_log_step> ms
+    // Capture the synaptic input every <synaptic_input_log_step> ms
     inline static std::uint32_t synaptic_input_log_step = 10000; // NOLINT
 
     // Capture the average local euclidean distance every <distance_step> ms

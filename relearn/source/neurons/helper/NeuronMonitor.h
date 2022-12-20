@@ -20,7 +20,7 @@
 
 /**
  * An object of type NeuronInformation functions as a snapshot of one neuron at one point in the simulation.
- * It stores all necessary superficial informations as a plain-old-data class.
+ * It stores all necessary superficial information as a plain-old-data class.
  */
 class NeuronInformation {
 public:
@@ -238,7 +238,7 @@ public:
     /**
      * @brief Captures the current state of the monitored neuron
      * @param current_step The current step of the recording
-     * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons or if the std::shared_ptr is empty
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons or if the std::shared_ptr is empty
      */
     void record_data(const RelearnTypes::step_type current_step) {
         RelearnException::check(neurons_to_monitor.operator bool(), "NeuronMonitor::record_data: The shared pointer is empty");
@@ -262,24 +262,24 @@ public:
         const auto inhibitory_dendrites_grown = neurons_to_monitor->dendrites_inh->grown_elements[local_neuron_id];
         const auto inhibitory_dendrites_connected = neurons_to_monitor->dendrites_inh->connected_elements[local_neuron_id];
 
-        informations.emplace_back(current_step, calcium, target_calcium, x, fired, fired_fraction, secondary, 
-            synaptic_input, background_activity, axons, axons_connected, excitatory_dendrites_grown, 
+        information.emplace_back(current_step, calcium, target_calcium, x, fired, fired_fraction, secondary,
+            synaptic_input, background_activity, axons, axons_connected, excitatory_dendrites_grown,
             excitatory_dendrites_connected, inhibitory_dendrites_grown, inhibitory_dendrites_connected);
     }
 
     /**
-     * @brief Increases the capacity for stored NeuronInformations by reserving
+     * @brief Increases the capacity for stored NeuronInformation by reserving
      * @param neuron_id The amount by which the storage should be increased
      */
     void increase_monitoring_capacity(const size_t increase_by) noexcept {
-        informations.reserve(informations.size() + increase_by);
+        information.reserve(information.size() + increase_by);
     }
 
     /**
      * @brief Clears the recorded data
      */
     void clear() noexcept {
-        informations.clear();
+        information.clear();
     }
 
     /**
@@ -287,7 +287,7 @@ public:
      * @return An std::vector of NeuronInformation
      */
     [[nodiscard]] const std::vector<NeuronInformation>& get_information() const noexcept {
-        return informations;
+        return information;
     }
 
     void init_print_file();
@@ -297,5 +297,5 @@ public:
 private:
     NeuronID target_neuron_id{ NeuronID::uninitialized_id() };
 
-    std::vector<NeuronInformation> informations{};
+    std::vector<NeuronInformation> information{};
 };

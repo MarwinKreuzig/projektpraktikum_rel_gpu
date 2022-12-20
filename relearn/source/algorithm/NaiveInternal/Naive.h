@@ -88,7 +88,7 @@ private:
      * @param axon_position The neuron's position that wants to connect. Is used in probability computations
      * @param dendrite_type_needed The signal type that is searched.
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
-     *      If the algorihtm found a matching neuron, it's id and MPI rank are returned.
+     *      If the algorithm found a matching neuron, it's id and MPI rank are returned.
      */
     [[nodiscard]] std::optional<RankNeuronId> find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_position, SignalType dendrite_type_needed);
 

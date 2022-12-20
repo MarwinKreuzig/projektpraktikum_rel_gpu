@@ -52,7 +52,7 @@ struct Interval {
     }
 
     /**
-     * @brief Checks if two intervals intersect (ignoring the frequences)
+     * @brief Checks if two intervals intersect (ignoring the frequencies)
      * @param first The first interval
      * @param second The second interval
      * @return True iff the intervals intersect

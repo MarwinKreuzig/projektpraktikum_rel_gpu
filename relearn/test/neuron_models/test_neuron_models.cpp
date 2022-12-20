@@ -200,11 +200,11 @@
 //    ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 //
 //    const auto expected_x0 = PoissonModel::default_x_0;
-//    const auto expected_refrac = PoissonModel::default_refractory_time;
+//    const auto expected_refrac = PoissonModel::default_refractory_period;
 //    const auto expected_tau_x = PoissonModel::default_tau_x;
 //
 //    ASSERT_EQ(expected_x0, model->get_x_0());
-//    ASSERT_EQ(expected_refrac, model->get_refrac_time());
+//    ASSERT_EQ(expected_refrac, model->get_refractory_time());
 //    ASSERT_EQ(expected_tau_x, model->get_tau_x());
 //}
 //
@@ -343,7 +343,7 @@
 //    ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 //
 //    ASSERT_EQ(expected_x0, model->get_x_0());
-//    ASSERT_EQ(expected_refrac, model->get_refrac_time());
+//    ASSERT_EQ(expected_refrac, model->get_refractory_time());
 //    ASSERT_EQ(expected_tau_x, model->get_tau_x());
 //}
 //
@@ -536,7 +536,7 @@
 //    ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 //
 //    ASSERT_EQ(expected_x0, model->get_x_0());
-//    ASSERT_EQ(expected_refrac, model->get_refrac_time());
+//    ASSERT_EQ(expected_refrac, model->get_refractory_time());
 //    ASSERT_EQ(expected_tau_x, model->get_tau_x());
 //
 //    ASSERT_EQ(expected_k, cast_cloned_model->get_k());
@@ -546,7 +546,7 @@
 //    ASSERT_EQ(expected_background_activity_stddev, cast_cloned_model->get_background_activity_stddev());
 //
 //    ASSERT_EQ(expected_x0, cast_cloned_model->get_x_0());
-//    ASSERT_EQ(expected_refrac, cast_cloned_model->get_refrac_time());
+//    ASSERT_EQ(expected_refrac, cast_cloned_model->get_refractory_time());
 //    ASSERT_EQ(expected_tau_x, cast_cloned_model->get_tau_x());
 //}
 //
@@ -788,7 +788,7 @@
 //    ASSERT_EQ(expected_background_activity_stddev, model->get_background_activity_stddev());
 //
 //    ASSERT_EQ(expected_x0, model->get_x_0());
-//    ASSERT_EQ(expected_refrac, model->get_refrac_time());
+//    ASSERT_EQ(expected_refrac, model->get_refractory_time());
 //    ASSERT_EQ(expected_tau_x, model->get_tau_x());
 //}
 //
@@ -1116,7 +1116,7 @@
 //        NeuronModel::default_k,
 //        NeuronModel::default_h,
 //        0.5, 0.0, 0.0,
-//        PoissonModel::default_x_0, PoissonModel::default_tau_x, PoissonModel::default_refractory_time);
+//        PoissonModel::default_x_0, PoissonModel::default_tau_x, PoissonModel::default_refractory_period);
 //
 //    const auto number_neurons = get_random_number_neurons();
 //

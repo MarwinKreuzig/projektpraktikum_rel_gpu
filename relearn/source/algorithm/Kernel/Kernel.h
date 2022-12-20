@@ -32,8 +32,8 @@
 #include <vector>
 
 /**
- * This enum reflects the different probabilty kernels, it must
- * be kept in sync with the classes to allow a seemless integration
+ * This enum reflects the different probability kernels, it must
+ * be kept in sync with the classes to allow a seamless integration
  */
 enum class KernelType {
     Gaussian,

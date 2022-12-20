@@ -136,7 +136,7 @@ private:
 
 /**
  * This type represents the (spatial) Octree in which the neurons are organised.
- * It offers general informations about the structure, the functionality to insert new neurons,
+ * It offers general information about the structure, the functionality to insert new neurons,
  * update from the bottom up, and synchronize parts with MPI.
  * It is templated by the additional cell attributes that the algorithm will need the cell to have.
  */
@@ -161,7 +161,7 @@ public:
 
     /**
      * @brief Returns the root of the Octree
-     * @return The root of the Octree. Ownership is not transfered
+     * @return The root of the Octree. Ownership is not transferred
      */
     [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_root() const noexcept {
         return root;
@@ -171,7 +171,7 @@ public:
      * @brief Returns the branch node with the specified local id
      * @param local_id The (1d-) id of the branch node that should be set
      * @exception Throws a RelearnException if local_id is too large
-     * @return The branch node with the specified local id. Ownership is not transfered
+     * @return The branch node with the specified local id. Ownership is not transferred
      */
     [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_local_root(const size_t local_id) {
         RelearnException::check(local_id < branch_nodes.size(), "Octree::get_local_root: local_id was {}", local_id);

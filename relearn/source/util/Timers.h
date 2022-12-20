@@ -157,7 +157,7 @@ public:
 
 private:
     /**
-     * @brief Returns the elapsed time for the respecive timer
+     * @brief Returns the elapsed time for the respective timer
      * @param timer The timer for which to return the elapsed time
      * @exception Throws a RelearnException if the timer casts to an index that is >= NUMBER_TIMERS
      * @return The elapsed time

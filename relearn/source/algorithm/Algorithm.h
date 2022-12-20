@@ -30,7 +30,7 @@ public:
     using number_neurons_type = RelearnTypes::number_neurons_type;
 
     /**
-     * @brief Registeres the synaptic elements with the algorithm
+     * @brief Registers the synaptic elements with the algorithm
      * @param axons The model for the axons
      * @param excitatory_dendrites The model for the excitatory dendrites
      * @param inhibitory_dendrites The model for the inhibitory dendrites

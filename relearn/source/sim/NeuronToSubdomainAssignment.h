@@ -65,7 +65,7 @@ public:
     virtual void print_essentials(const std::unique_ptr<Essentials>& essentials) = 0;
 
     /**
-     * @brief Returns the associated SynapseLoader (some type that inherites from SynapseLoader)
+     * @brief Returns the associated SynapseLoader (some type that inherits from SynapseLoader)
      * @exception Throws a RelearnException if synapse_loader is nullptr
      * @return The associated SynapseLoader
      */

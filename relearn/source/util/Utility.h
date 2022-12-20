@@ -93,8 +93,8 @@ constexpr unsigned int num_digits(T val) noexcept {
 /**
  * @brief Calculates the faculty.
  * @param value
- * @tparam T Type of which a faculty should be calculated. Must fullfill std::is_unsigned_v<T>
- * @return Returns the faculty of the paramter value.
+ * @tparam T Type of which a faculty should be calculated. Must fulfill std::is_unsigned_v<T>
+ * @return Returns the faculty of the parameter value.
  */
 template <typename T>
 static constexpr T factorial(T value) noexcept {

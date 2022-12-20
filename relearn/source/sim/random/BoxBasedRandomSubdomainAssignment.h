@@ -27,7 +27,7 @@ class Partition;
 /**
  * This class provides the functionality to place neurons within small boxes, i.e.,
  * it divides the simulation space into small boxes of a given side length and places one or none neuron inside each box.
- * The position within the box is drawn uniformely at random.
+ * The position within the box is drawn uniformly at random.
  */
 class BoxBasedRandomSubdomainAssignment : public NeuronToSubdomainAssignment {
 public:

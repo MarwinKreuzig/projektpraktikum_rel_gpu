@@ -19,7 +19,7 @@ namespace detail {
  * @brief Implementation of std::shuffle with a portable random number distribution
  *
  * Original source: libcxx from the LLVM Project
- * Modified: names, formating, variable scopes, random distribution
+ * Modified: names, formatting, variable scopes, random distribution
  *
  * @tparam RandomAccessIterator iterator type for the range
  * @tparam UniformRandomNumberGenerator type of the random number generator

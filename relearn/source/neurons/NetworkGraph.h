@@ -26,7 +26,7 @@
 
 /**
  * An object of type NetworkGraph stores the synaptic connections between neurons, that are relevant for the current MPI rank.
- * The neurons are refered to by indices in the range [0, num_local_neurons).
+ * The neurons are referred to by indices in the range [0, num_local_neurons).
  * The class does not perform any communication or synchronization with other MPI ranks when messing with edges;
  * it only does so when calling NetworkGraph::translate_global_to_local, and in that, it does not
  * mess with edges.
@@ -106,7 +106,7 @@ public:
     }
 
     /**
-     * @brief Returns a constant reference to all distant out-edges to a neuron, i.e., a view on all neurons that the specified one connectes to via a synapse
+     * @brief Returns a constant reference to all distant out-edges to a neuron, i.e., a view on all neurons that the specified one connects to via a synapse
      *      and belong to another MPI rank
      * @param neuron_id The id of the neuron
      * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
@@ -138,7 +138,7 @@ public:
     }
 
     /**
-     * @brief Returns a constant reference to all local out-edges to a neuron, i.e., a view on all neurons that the specified one connectes to via a synapse
+     * @brief Returns a constant reference to all local out-edges to a neuron, i.e., a view on all neurons that the specified one connects to via a synapse
      *      and belong to the current MPI rank
      * @param neuron_id The id of the neuron
      * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
@@ -190,7 +190,7 @@ public:
      *      All local in-edges are added with the current MPI rank.
      * @param neuron_id The id of the neuron
      * @param signal_type The type of neurons that should be returned
-     * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      *      Throws an exception if the allocation of memory fails
      * @return A copy of all in-edges from a certain neuron signal type
      */
@@ -225,11 +225,11 @@ public:
     }
 
     /**
-     * @brief Returns a copy of all out-edges from a neuron, i.e., a copy of all neurons that the specified one connectes to via a synapse, of a specified type
+     * @brief Returns a copy of all out-edges from a neuron, i.e., a copy of all neurons that the specified one connects to via a synapse, of a specified type
      *      All local in-edges are added with the current MPI rank.
      * @param neuron_id The id of the neuron
      * @param signal_type The type of neurons that should be returned
-     * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      *      Throws an exception if the allocation of memory fails
      * @return A copy of all out-edges to a certain neuron signal type
      */
@@ -268,7 +268,7 @@ public:
      *      All local in-edges are added with the current MPI rank.
      * @param neuron_id The id of the neuron
      * @param signal_type The type of neurons that should be returned
-     * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      *      Throws an exception if the allocation of memory fails
      * @return A copy of all in-edges
      */
@@ -291,11 +291,11 @@ public:
     }
 
     /**
-     * @brief Returns a copy of all out-edges from a neuron, i.e., a copy of all neurons that the specified one connectes to via a synapse
+     * @brief Returns a copy of all out-edges from a neuron, i.e., a copy of all neurons that the specified one connects to via a synapse
      *      All local in-edges are added with the current MPI rank.
      * @param neuron_id The id of the neuron
      * @param signal_type The type of neurons that should be returned
-     * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      *      Throws an exception if the allocation of memory fails
      * @return A copy of all out-edges
      */
@@ -318,9 +318,9 @@ public:
     }
 
     /**
-     * @brief Returns the number of all in-edges to a neuron (countings multiplicities) from excitatory neurons
+     * @brief Returns the number of all in-edges to a neuron (counting multiplicities) from excitatory neurons
      * @param neuron_id The id of the neuron
-     * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      * @return The number of incoming synapses that the specified neuron formed from excitatory neurons
      */
     [[nodiscard]] synapse_weight get_number_excitatory_in_edges(const NeuronID& neuron_id) const {
@@ -345,9 +345,9 @@ public:
     }
 
     /**
-     * @brief Returns the number of all in-edges to a neuron (countings multiplicities) from inhibitory neurons
+     * @brief Returns the number of all in-edges to a neuron (counting multiplicities) from inhibitory neurons
      * @param neuron_id The id of the neuron
-     * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      * @return The number of incoming synapses that the specified neuron formed from inhibitory neurons
      */
     [[nodiscard]] synapse_weight get_number_inhibitory_in_edges(const NeuronID& neuron_id) const {
@@ -372,9 +372,9 @@ public:
     }
 
     /**
-     * @brief Returns the number of all out-edges from a neuron (countings multiplicities)
+     * @brief Returns the number of all out-edges from a neuron (counting multiplicities)
      * @param neuron_id The id of the neuron
-     * @exception Throws a ReleanException if neuron_id is larger or equal to the number of neurons stored
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      * @return The number of outgoing synapses that the specified neuron formed
      */
     [[nodiscard]] synapse_weight get_number_out_edges(const NeuronID& neuron_id) const {
@@ -395,7 +395,7 @@ public:
     }
 
     /**
-     * @brief Adds a local synapse to the networgh graph
+     * @brief Adds a local synapse to the network graph
      * @param synapse The local synapse
      * @exception Throws a RelearnException if
      *      (a) The target is larger than the number neurons
@@ -420,7 +420,7 @@ public:
     }
 
     /**
-     * @brief Adds a distant in-synapse to the networgh graph (it might actually come from the same node, that's no problem)
+     * @brief Adds a distant in-synapse to the network graph (it might actually come from the same node, that's no problem)
      * @param synapse The distant in-synapse, must come from another rank
      * @exception Throws a RelearnException if
      *      (a) The target is larger than the number neurons
@@ -442,7 +442,7 @@ public:
     }
 
     /**
-     * @brief Adds a distant out-synapse to the networgh graph (it might actually come from the same node, that's no problem)
+     * @brief Adds a distant out-synapse to the network graph (it might actually come from the same node, that's no problem)
      * @param synapse The distant out-synapse, must come from another rank
      * @exception Throws a RelearnException if
      *      (a) The target rank is the same as the current rank

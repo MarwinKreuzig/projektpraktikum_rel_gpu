@@ -49,15 +49,15 @@ public:
     using step_type = RelearnTypes::step_type;
 
     /**
-     * @brief Construcs a new instance of type NeuronModel with 0 neurons and default values for all parameters
+     * @brief Constructs a new instance of type NeuronModel with 0 neurons and default values for all parameters
      */
     NeuronModel() = default;
 
     /**
-     * @brief Construcs a new instance of type NeuronModel with 0 neurons.
+     * @brief Constructs a new instance of type NeuronModel with 0 neurons.
      * @param h The step size for the numerical integration
-     * @param synaptic_input_calculator The object that is resonsible for calculating the synaptic input
-     * @param background_activity_calculator The object that is resonsible for calculating the background activity
+     * @param synaptic_input_calculator The object that is responsible for calculating the synaptic input
+     * @param background_activity_calculator The object that is responsible for calculating the background activity
      */
     NeuronModel(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator)
@@ -335,13 +335,13 @@ namespace models {
 class PoissonModel : public NeuronModel {
 public:
     /**
-     * @brief Construcs a new instance of type PoissonModel with 0 neurons and default values for all parameters
+     * @brief Constructs a new instance of type PoissonModel with 0 neurons and default values for all parameters
      */
     PoissonModel() = default;
 
     /**
-     * @brief Construcs a new instance of type PoissonModel with 0 neurons and the passed values for all parameters.
-     *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
+     * @brief Constructs a new instance of type PoissonModel with 0 neurons and the passed values for all parameters.
+     *      Does not check the parameters against the min and max values defined below in order to allow other values besides in the GUI
      * @param h See NeuronModel(...)
      * @param synaptic_input_calculator See NeuronModel(...)
      * @param background_activity_calculator See NeuronModel(...)
@@ -403,11 +403,11 @@ public:
     }
 
     /**
-     * @brief Returns refrac_time (The number of steps a neuron doesn't spike after spiking)
-     * @return refrac_time (The number of steps a neuron doesn't spike after spiking)
+     * @brief Returns refractory_period (The number of steps a neuron doesn't spike after spiking)
+     * @return refractory_period (The number of steps a neuron doesn't spike after spiking)
      */
-    [[nodiscard]] unsigned int get_refrac_time() const noexcept {
-        return refrac_time;
+    [[nodiscard]] unsigned int get_refractory_time() const noexcept {
+        return refractory_period;
     }
 
     /**
@@ -425,7 +425,7 @@ public:
 
     static constexpr double default_x_0{ 0.05 };
     static constexpr double default_tau_x{ 5.0 };
-    static constexpr unsigned int default_refractory_time{ 4 }; // In Sebastians work: 4
+    static constexpr unsigned int default_refractory_period{ 4 }; // In Sebastian's work: 4
 
     static constexpr double min_x_0{ 0.0 };
     static constexpr double min_tau_x{ 0.0 };
@@ -449,7 +449,7 @@ private:
 
     double x_0{ default_x_0 }; // Background or resting activity
     double tau_x{ default_tau_x }; // Decay time of firing rate in msec
-    unsigned int refrac_time{ default_refractory_time }; // Length of refractory period in msec. After an action potential a neuron cannot fire for this time
+    unsigned int refractory_period{ default_refractory_period }; // Length of refractory period in msec. After an action potential a neuron cannot fire for this time
 };
 
 /**
@@ -464,13 +464,13 @@ private:
 class IzhikevichModel : public NeuronModel {
 public:
     /**
-     * @brief Construcs a new instance of type IzhikevichModel with 0 neurons and default values for all parameters
+     * @brief Constructs a new instance of type IzhikevichModel with 0 neurons and default values for all parameters
      */
     IzhikevichModel() = default;
 
     /**
-     * @brief Construcs a new instance of type IzhikevichModel with 0 neurons and the passed values for all parameters.
-     *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
+     * @brief Constructs a new instance of type IzhikevichModel with 0 neurons and the passed values for all parameters.
+     *      Does not check the parameters against the min and max values defined below in order to allow other values besides in the GUI
      * @param h See NeuronModel(...)
      * @param synaptic_input_calculator See NeuronModel(...)
      * @param background_activity_calculator See NeuronModel(...)
@@ -502,9 +502,9 @@ public:
     [[nodiscard]] std::unique_ptr<NeuronModel> clone() const final;
 
     /**
-     * @brief Returns the dampending variable u
+     * @brief Returns the dampening variable u
      * @exception Throws a RelearnException if neuron_id is too large
-     * @return The dampending variable u
+     * @return The dampening variable u
      */
     [[nodiscard]] double get_secondary_variable(const NeuronID& neuron_id) const final {
         const auto local_neuron_id = neuron_id.get_neuron_id();
@@ -663,13 +663,13 @@ private:
 class FitzHughNagumoModel : public NeuronModel {
 public:
     /**
-     * @brief Construcs a new instance of type FitzHughNagumoModel with 0 neurons and default values for all parameters
+     * @brief Constructs a new instance of type FitzHughNagumoModel with 0 neurons and default values for all parameters
      */
     FitzHughNagumoModel() = default;
 
     /**
-     * @brief Construcs a new instance of type IzhikevichModel with 0 neurons and the passed values for all parameters.
-     *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
+     * @brief Constructs a new instance of type IzhikevichModel with 0 neurons and the passed values for all parameters.
+     *      Does not check the parameters against the min and max values defined below in order to allow other values besides in the GUI
      * @param h See NeuronModel(...)
      * @param synaptic_input_calculator See NeuronModel(...)
      * @param background_activity_calculator See NeuronModel(...)
@@ -691,9 +691,9 @@ public:
     [[nodiscard]] std::unique_ptr<NeuronModel> clone() const final;
 
     /**
-     * @brief Returns the dampending variable w
+     * @brief Returns the dampening variable w
      * @exception Throws a RelearnException if neuron_id is too large
-     * @return The dampending variable w
+     * @return The dampening variable w
      */
     [[nodiscard]] double get_secondary_variable(const NeuronID& neuron_id) const final {
         const auto local_neuron_id = neuron_id.get_neuron_id();
@@ -796,13 +796,13 @@ private:
 class AEIFModel : public NeuronModel {
 public:
     /**
-     * @brief Construcs a new instance of type AEIFModel with 0 neurons and default values for all parameters
+     * @brief Constructs a new instance of type AEIFModel with 0 neurons and default values for all parameters
      */
     AEIFModel() = default;
 
     /**
-     * @brief Construcs a new instance of type IzhikevichModel with 0 neurons and the passed values for all parameters.
-     *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
+     * @brief Constructs a new instance of type IzhikevichModel with 0 neurons and the passed values for all parameters.
+     *      Does not check the parameters against the min and max values defined below in order to allow other values besides in the GUI
      * @param h See NeuronModel(...)
      * @param synaptic_input_calculator See NeuronModel(...)
      * @param background_activity_calculator See NeuronModel(...)
@@ -812,7 +812,7 @@ public:
      * @param V_T The spiking threshold in the equation
      * @param d_T The slope factor
      * @param tau_w The dampening factor for w(t)
-     * @param a The subthreshold adaptation
+     * @param a The sub-threshold adaptation
      * @param b The additional dampening for w(t) in case of spiking
      * @param V_spike The spiking threshold in the spiking check
      */
@@ -836,9 +836,9 @@ public:
     [[nodiscard]] std::unique_ptr<NeuronModel> clone() const final;
 
     /**
-     * @brief Returns the dampending variable w
+     * @brief Returns the dampening variable w
      * @exception Throws a RelearnException if neuron_id is too large
-     * @return The dampending variable w
+     * @return The dampening variable w
      */
     [[nodiscard]] double get_secondary_variable(const NeuronID& neuron_id) const final {
         const auto local_neuron_id = neuron_id.get_neuron_id();
@@ -908,8 +908,8 @@ public:
     }
 
     /**
-     * @brief Returns a (The subthreshold adaptation)
-     * @return a (The subthreshold adaptation)
+     * @brief Returns a (The sub-threshold adaptation)
+     * @return a (The sub-threshold adaptation)
      */
     [[nodiscard]] double get_a() const noexcept {
         return a;

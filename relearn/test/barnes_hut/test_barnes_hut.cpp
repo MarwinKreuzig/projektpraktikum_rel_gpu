@@ -461,8 +461,8 @@ TEST_F(BarnesHutInvertedTest, testBarnesHutACParent) {
     node.set_cell_size(scaled_minimum, scaled_maximum);
     node.set_cell_neuron_position(node_position);
 
-    const auto& cell_dimenstions = scaled_maximum - scaled_minimum;
-    const auto& maximum_cell_dimension = cell_dimenstions.get_maximum();
+    const auto& cell_dimensions = scaled_maximum - scaled_minimum;
+    const auto& maximum_cell_dimension = cell_dimensions.get_maximum();
 
     const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 

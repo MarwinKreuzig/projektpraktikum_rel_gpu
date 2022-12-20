@@ -44,7 +44,7 @@ public:
     }
 
     /**
-     * @brief Provides a lexiographical ordering of RankNeuronId
+     * @brief Provides a lexicographical ordering of RankNeuronId
      * @param first The first object
      * @param second The second object
      * @return A strong ordering on RankNeuronId

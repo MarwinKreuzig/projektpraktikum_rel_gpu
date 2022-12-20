@@ -85,7 +85,7 @@ private:
     RelearnException() = default;
 
     /**
-     * @brief Construcs an instance with the associated message
+     * @brief Constructs an instance with the associated message
      * @param mes The message of the exception
      */
     explicit RelearnException(std::string&& mes)

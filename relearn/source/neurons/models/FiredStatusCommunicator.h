@@ -28,7 +28,7 @@ public:
     using number_neurons_type = RelearnTypes::number_neurons_type;
 
     /**
-     * @brief Constructs a new object with the given number of ranks and local neurons (mainly used for preallocating memory)
+     * @brief Constructs a new object with the given number of ranks and local neurons (mainly used for pre-allocating memory)
      * @param number_ranks The number of MPI ranks
      * @param number_neurons The number of local neurons
      * @exception Throws a RelearnException if number_ranks <= 0

@@ -33,7 +33,7 @@ public:
     constexpr SynapseCreationRequest() = default;
 
     /**
-     * @brief Constructs a new reqest with the arguments
+     * @brief Constructs a new request with the arguments
      * @param target The neuron target id of the request
      * @param source The neuron source id of the request
      * @param signal_type The signal type

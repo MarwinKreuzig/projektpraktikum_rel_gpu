@@ -178,7 +178,7 @@ public:
     /**
      * @brief Creates a new instance for calculating the background activity based on a stimulus file and optionally a normal distribution
      * @param stimulus_file The path to the stimulus file
-     * @param background Optionally a pair of the mean and standarddeviation (if the latter is 0.0, the input will be the mean)
+     * @param background Optionally a pair of the mean and standard-deviation (if the latter is 0.0, the input will be the mean)
      * @param mpi_rank The mpi rank of the process
      * @param local_area_translator Translates between local area ids and area names
      * @exception Throws a RelearnException if the file is not present or the second argument of background is <0.0 (if provided)
@@ -202,7 +202,7 @@ public:
     /**
      * @brief Creates a new instance for calculating the background activity based on a stimulus function and optionally a normal distribution
      * @param stimulus_function The path to the stimulus function
-     * @param background Optionally a pair of the mean and standarddeviation (if the latter is 0.0, the input will be the mean)
+     * @param background Optionally a pair of the mean and standard-deviation (if the latter is 0.0, the input will be the mean)
      * @exception Throws a RelearnException if the file is not present or the second argument of background is <0.0 (if provided)
      */
     StimulusBackgroundActivityCalculator(std::function<double(step_type, NeuronID::value_type)> stimulus_function, std::optional<std::pair<double, double>> background)

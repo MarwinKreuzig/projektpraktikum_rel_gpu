@@ -355,7 +355,7 @@ public:
 
     /**
      * @brief Returns the number of requests for each stored MPI rank (leaves out those that are not stored)
-     * @return Returhs the number of requestes for the stored MPI rank, i.e.,
+     * @return Returns the number of requests for the stored MPI rank, i.e.,
      *      <return>[i] = k indicates that there are k requests for rank i
      */
     [[nodiscard]] sizes_type get_request_sizes() const noexcept {

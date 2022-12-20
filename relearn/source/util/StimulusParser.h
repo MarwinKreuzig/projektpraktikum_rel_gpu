@@ -97,7 +97,7 @@ public:
     /**
      * @brief Parses all lines as stimuli and discards those that fail or are for another mpi rank
      * @param lines The lines to parse
-     * @param my_rank The mpi rank of the current propcess
+     * @param my_rank The mpi rank of the current process
      * @return All successfully parsed stimuli
      */
     [[nodiscard]] static std::vector<Stimulus> parse_lines(const std::vector<std::string>& lines, const int my_rank) {

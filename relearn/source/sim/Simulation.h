@@ -215,7 +215,7 @@ public:
     }
 
     /**
-     * @brief Returns the statistics observered for the requested attribute
+     * @brief Returns the statistics observed for the requested attribute
      * @param neuron_attribute_to_observe The statistics
      * @exception Throws a RelearnException if the statistics have not been observed
      * @return A constants reference to the statistics

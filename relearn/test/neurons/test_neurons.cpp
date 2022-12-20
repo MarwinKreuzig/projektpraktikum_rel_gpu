@@ -107,7 +107,7 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
         std::make_unique<NullBackgroundActivityCalculator>(),
         models::PoissonModel::default_x_0,
         models::PoissonModel::default_tau_x,
-        models::PoissonModel::default_refractory_time);
+        models::PoissonModel::default_refractory_period);
     auto calcium = std::make_unique<CalciumCalculator>();
     calcium->set_initial_calcium_calculator([](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
     calcium->set_target_calcium_calculator([](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
