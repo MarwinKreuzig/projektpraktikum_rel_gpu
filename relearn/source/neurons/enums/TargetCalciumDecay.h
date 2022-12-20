@@ -10,6 +10,8 @@
  *
  */
 
+#include "fmt/ostream.h"
+
 #include <ostream>
 
 /**
@@ -42,3 +44,6 @@ inline std::ostream& operator<<(std::ostream& out, const TargetCalciumDecay deca
 
     return out;
 }
+
+template <>
+struct fmt::formatter<TargetCalciumDecay> : ostream_formatter { };

@@ -10,14 +10,18 @@
  *
  */
 
+#include "fmt/ostream.h"
+
 #include <ostream>
 
 /**
  * An instance of this enum signals if a neuron should be updated or not.
  */
-enum class UpdateStatus : char { Disabled = 0,
+enum class UpdateStatus : char {
+    Disabled = 0,
     Enabled = 1,
-    Static = 2 };
+    Static = 2
+};
 
 /**
  * @brief Pretty-prints the update status to the chosen stream
@@ -40,3 +44,6 @@ inline std::ostream& operator<<(std::ostream& out, const UpdateStatus update_sta
 
     return out;
 }
+
+template <>
+struct fmt::formatter<UpdateStatus> : ostream_formatter { };

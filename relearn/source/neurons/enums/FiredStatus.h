@@ -10,6 +10,8 @@
  *
  */
 
+#include "fmt/ostream.h"
+
 #include <ostream>
 
 /**
@@ -37,3 +39,6 @@ inline std::ostream& operator<<(std::ostream& out, const FiredStatus fired_statu
 
     return out;
 }
+
+template <>
+struct fmt::formatter<FiredStatus> : ostream_formatter { };
