@@ -122,7 +122,7 @@ void AEIFModel::update_activity_benchmark(const NeuronID& neuron_id) {
 
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
         x += iter_x(x, w[local_neuron_id], input) * scale;
-        w[local_neuron_id] += iter_refrac(w[local_neuron_id], x) * scale;
+        w[local_neuron_id] += iter_refraction(w[local_neuron_id], x) * scale;
 
         if (x >= V_spike) {
             x = E_L;

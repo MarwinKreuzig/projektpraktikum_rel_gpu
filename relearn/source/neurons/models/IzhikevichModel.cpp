@@ -117,7 +117,7 @@ void IzhikevichModel::update_activity_benchmark(const NeuronID& neuron_id) {
 
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
         x += iter_x(x, u[local_neuron_id], input) * scale;
-        u[local_neuron_id] += iter_refrac(u[local_neuron_id], x) * scale;
+        u[local_neuron_id] += iter_refraction(u[local_neuron_id], x) * scale;
 
         if (spiked(x)) {
             x = c;
