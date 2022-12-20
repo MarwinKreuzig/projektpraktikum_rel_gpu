@@ -19,15 +19,15 @@ target_sources(
           # neurons
 		  neurons/helper/AreaMonitor.cpp
           neurons/helper/NeuronMonitor.cpp
+          neurons/input/FiredStatusCommunicationMap.cpp
+          neurons/input/SynapticInputCalculator.cpp
+          neurons/input/SynapticInputCalculators.cpp
           neurons/models/AEIFModel.cpp
-          neurons/models/FiredStatusCommunicationMap.cpp
           neurons/models/FitzHughNagumoModel.cpp
           neurons/models/IzhikevichModel.cpp
           neurons/models/NeuronModels.cpp
           neurons/models/PoissonModel.cpp
           neurons/models/SynapticElements.cpp
-          neurons/models/SynapticInputCalculator.cpp
-          neurons/models/SynapticInputCalculators.cpp
           neurons/CalciumCalculator.cpp
           neurons/Neurons.cpp
           neurons/NeuronsExtraInfo.cpp

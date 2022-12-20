@@ -10,7 +10,7 @@
  *
  */
 
-#include "neurons/models/SynapticInputCalculator.h"
+#include "neurons/input/SynapticInputCalculator.h"
 
 class NetworkGraph;
 

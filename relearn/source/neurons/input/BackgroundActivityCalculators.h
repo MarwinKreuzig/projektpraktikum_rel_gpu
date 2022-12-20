@@ -10,7 +10,7 @@
  *
  */
 
-#include "neurons/models/BackgroundActivityCalculator.h"
+#include "neurons/input/BackgroundActivityCalculator.h"
 
 #include "io/InteractiveNeuronIO.h"
 #include "util/Random.h"

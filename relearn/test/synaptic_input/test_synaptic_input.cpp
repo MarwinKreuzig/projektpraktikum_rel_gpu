@@ -15,8 +15,8 @@
 #include "network_graph/network_graph_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
-#include "neurons/models/SynapticInputCalculator.h"
-#include "neurons/models/SynapticInputCalculators.h"
+#include "neurons/input/SynapticInputCalculator.h"
+#include "neurons/input/SynapticInputCalculators.h"
 
 #include <memory>
 

@@ -11,7 +11,6 @@
 #include "NeuronModels.h"
 
 #include "util/Random.h"
-#include "util/Timers.h"
 
 using models::PoissonModel;
 

@@ -12,7 +12,7 @@
 
 #include "mpi/MPIWrapper.h"
 #include "neurons/NetworkGraph.h"
-#include "neurons/models/FiredStatusCommunicationMap.h"
+#include "neurons/input/FiredStatusCommunicationMap.h"
 
 #include <algorithm>
 

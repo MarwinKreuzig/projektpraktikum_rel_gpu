@@ -12,8 +12,8 @@
 
 #include "tagged_id/tagged_id_adapter.h"
 
-#include "neurons/models/BackgroundActivityCalculator.h"
-#include "neurons/models/BackgroundActivityCalculators.h"
+#include "neurons/input/BackgroundActivityCalculator.h"
+#include "neurons/input/BackgroundActivityCalculators.h"
 
 #include <algorithm>
 #include <memory>
