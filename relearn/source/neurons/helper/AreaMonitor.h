@@ -12,7 +12,7 @@
 
 #include "Types.h"
 #include "neurons/LocalAreaTranslator.h"
-#include "neurons/SignalType.h"
+#include "neurons/enums/SignalType.h"
 #include "util/TaggedID.h"
 
 #include <boost/functional/hash.hpp>

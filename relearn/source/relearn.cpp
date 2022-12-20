@@ -18,7 +18,7 @@
 #include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/CalciumCalculator.h"
-#include "neurons/ElementType.h"
+#include "neurons/enums/ElementType.h"
 #include "neurons/LocalAreaTranslator.h"
 #include "neurons/helper/NeuronMonitor.h"
 #include "neurons/input/BackgroundActivityCalculator.h"

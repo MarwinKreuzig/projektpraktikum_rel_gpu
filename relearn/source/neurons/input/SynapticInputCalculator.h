@@ -11,8 +11,8 @@
  */
 
 #include "Types.h"
-#include "neurons/FiredStatus.h"
-#include "neurons/UpdateStatus.h"
+#include "neurons/enums/FiredStatus.h"
+#include "neurons/enums/UpdateStatus.h"
 #include "neurons/input/FiredStatusCommunicator.h"
 #include "neurons/models/ModelParameter.h"
 #include "util/RelearnException.h"

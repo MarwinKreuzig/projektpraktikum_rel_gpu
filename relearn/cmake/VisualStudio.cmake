@@ -65,15 +65,17 @@ if(WIN32)
 	
 	# neurons
 	list(APPEND relearn_lib_additional_files "neurons/CalciumCalculator.h")
-	list(APPEND relearn_lib_additional_files "neurons/ElementType.h")
-	list(APPEND relearn_lib_additional_files "neurons/FiredStatus.h")
 	list(APPEND relearn_lib_additional_files "neurons/LocalAreaTranslator.h")
 	list(APPEND relearn_lib_additional_files "neurons/NetworkGraph.h")
 	list(APPEND relearn_lib_additional_files "neurons/Neurons.h")
 	list(APPEND relearn_lib_additional_files "neurons/NeuronsExtraInfo.h")
-	list(APPEND relearn_lib_additional_files "neurons/SignalType.h")
-	list(APPEND relearn_lib_additional_files "neurons/TargetCalciumDecay.h")
-	list(APPEND relearn_lib_additional_files "neurons/UpdateStatus.h")
+	
+	# enums
+	list(APPEND relearn_lib_additional_files "neurons/enums/ElementType.h")
+	list(APPEND relearn_lib_additional_files "neurons/enums/FiredStatus.h")
+	list(APPEND relearn_lib_additional_files "neurons/enums/SignalType.h")
+	list(APPEND relearn_lib_additional_files "neurons/enums/TargetCalciumDecay.h")
+	list(APPEND relearn_lib_additional_files "neurons/enums/UpdateStatus.h")	
 	
 	# helper
 	list(APPEND relearn_lib_additional_files "neurons/helper/AreaMonitor.h")

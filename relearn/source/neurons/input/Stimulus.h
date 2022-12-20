@@ -13,7 +13,7 @@
 #include "Types.h"
 #include "io/InteractiveNeuronIO.h"
 #include "neurons/LocalAreaTranslator.h"
-#include "neurons/UpdateStatus.h"
+#include "neurons/enums/UpdateStatus.h"
 #include "util/MPIRank.h"
 #include "util/TaggedID.h"
 #include "util/Timers.h"

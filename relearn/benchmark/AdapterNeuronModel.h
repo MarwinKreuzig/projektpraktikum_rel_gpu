@@ -10,7 +10,7 @@
  *
  */
 
-#include "neurons/FiredStatus.h"
+#include "neurons/enums/FiredStatus.h"
 
 #include <vector>
 

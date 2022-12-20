@@ -11,7 +11,7 @@
  */
 
 #include "Types.h"
-#include "neurons/UpdateStatus.h"
+#include "neurons/enums/UpdateStatus.h"
 #include "neurons/models/ModelParameter.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"

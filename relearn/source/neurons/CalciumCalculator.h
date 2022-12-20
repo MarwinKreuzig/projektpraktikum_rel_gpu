@@ -11,9 +11,9 @@
  */
 
 #include "Types.h"
-#include "neurons/FiredStatus.h"
-#include "neurons/TargetCalciumDecay.h"
-#include "neurons/UpdateStatus.h"
+#include "neurons/enums/FiredStatus.h"
+#include "neurons/enums/TargetCalciumDecay.h"
+#include "neurons/enums/UpdateStatus.h"
 #include "util/MPIRank.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"

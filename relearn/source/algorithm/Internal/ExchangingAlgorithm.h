@@ -15,7 +15,7 @@
 #include "Types.h"
 #include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
-#include "neurons/UpdateStatus.h"
+#include "neurons/enums/UpdateStatus.h"
 #include "structure/Octree.h"
 #include "util/Timers.h"
 

@@ -14,7 +14,7 @@
 
 #include "Types.h"
 #include "algorithm/NaiveInternal/NaiveCell.h"
-#include "neurons/SignalType.h"
+#include "neurons/enums/SignalType.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "structure/OctreeNode.h"

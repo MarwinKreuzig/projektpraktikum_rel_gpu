@@ -8,14 +8,17 @@ target_sources(
           algorithm/FMMInternal/FastMultipoleMethods.cpp
           algorithm/FMMInternal/FastMultipoleMethodsInverted.cpp
           algorithm/NaiveInternal/Naive.cpp
+
           # io
           io/CalciumIO.cpp
           io/InteractiveNeuronIO.cpp
           io/LogFiles.cpp
           io/NeuronIO.cpp
+
           # mpi
           mpi/MPINoWrapper.cpp
           mpi/MPIWrapper.cpp
+
           # neurons
 		  neurons/helper/AreaMonitor.cpp
           neurons/helper/NeuronMonitor.cpp
@@ -31,6 +34,7 @@ target_sources(
           neurons/CalciumCalculator.cpp
           neurons/Neurons.cpp
           neurons/NeuronsExtraInfo.cpp
+
           # sim
           sim/file/FileSynapseLoader.cpp
           sim/file/MultipleFilesSynapseLoader.cpp
@@ -43,12 +47,15 @@ target_sources(
           sim/NeuronToSubdomainAssignment.cpp
           sim/Simulation.cpp
           sim/SynapseLoader.cpp
+
           # structure
           structure/Partition.cpp
+
           # util
 		  util/StringUtil.cpp
 		  util/RelearnException.cpp
           util/Timers.cpp
+
 		  # for visual studio
 		  ${relearn_lib_additional_files})
 
