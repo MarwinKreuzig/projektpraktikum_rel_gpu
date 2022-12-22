@@ -10,6 +10,8 @@
  *
  */
 
+#include <fmt/core.h>
+#include <fmt/ostream.h>
 #include <ostream>
 
 /**
@@ -29,19 +31,9 @@ enum class AlgorithmEnum {
  * @return True iff the specified algorithm implements the Barnes-Hut algorithm
  */
 constexpr inline bool is_barnes_hut(const AlgorithmEnum algorithm_enum) {
-    if (algorithm_enum == AlgorithmEnum::BarnesHut) {
-        return true;
-    }
-
-    if (algorithm_enum == AlgorithmEnum::BarnesHutInverted) {
-        return true;
-    }
-
-    if (algorithm_enum == AlgorithmEnum::BarnesHutLocationAware) {
-        return true;
-    }
-
-    return false;
+    return algorithm_enum == AlgorithmEnum::BarnesHut
+        || algorithm_enum == AlgorithmEnum::BarnesHutInverted
+        || algorithm_enum == AlgorithmEnum::BarnesHutLocationAware;
 }
 
 /**
@@ -54,27 +46,20 @@ constexpr inline bool is_fast_multipole_method(const AlgorithmEnum algorithm_enu
 }
 
 inline std::string stringify(const AlgorithmEnum& algorithm_enum) {
-    if (algorithm_enum == AlgorithmEnum::Naive) {
+    switch (algorithm_enum) {
+    case AlgorithmEnum::Naive:
         return "Naive";
-    }
-
-    if (algorithm_enum == AlgorithmEnum::BarnesHut) {
+    case AlgorithmEnum::BarnesHut:
         return "BarnesHut";
-    }
-
-    if (algorithm_enum == AlgorithmEnum::BarnesHutInverted) {
+    case AlgorithmEnum::BarnesHutInverted:
         return "BarnesHutInverted";
-    }
-
-    if (algorithm_enum == AlgorithmEnum::BarnesHutLocationAware) {
+    case AlgorithmEnum::BarnesHutLocationAware:
         return "BarnesHutLocationAware";
-    }
-
-    if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
+    case AlgorithmEnum::FastMultipoleMethods:
         return "FastMultipoleMethods";
+    default:
+        return "";
     }
-
-    return "";
 }
 /**
  * @brief Pretty-prints the algorithm to the chosen stream
@@ -87,4 +72,4 @@ inline std::ostream& operator<<(std::ostream& out, const AlgorithmEnum& algorith
 }
 
 template <>
-struct fmt::formatter<AlgorithmEnum> : ostream_formatter { };
+struct fmt::formatter<AlgorithmEnum> : fmt::ostream_formatter { };

@@ -11,7 +11,6 @@
 #include "main.h"
 
 #include "AdapterNeuronModel.h"
-
 #include "factory/background_factory.h"
 #include "factory/extra_info_factory.h"
 #include "factory/input_factory.h"

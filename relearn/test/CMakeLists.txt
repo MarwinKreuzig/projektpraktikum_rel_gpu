@@ -28,7 +28,9 @@ if(${COVERAGE_REPORT_AVAILABLE})
             coverage-report)
 endif()
 
-# # googletest
+# # googletest# benchmark# dont clutter the compile_commands file with libraries
+set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
+
 FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest
@@ -39,6 +41,13 @@ set(gtest_force_shared_crt
     ON
     CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+get_target_property(gtest_main_includes gtest_main
+                    INTERFACE_INCLUDE_DIRECTORIES)
+set_target_properties(gtest_main PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                                            "${gtest_main_includes}")
 
 file(
   WRITE ${CMAKE_BINARY_DIR}/test_get_relearn_path.cpp

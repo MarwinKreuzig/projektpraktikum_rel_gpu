@@ -23,8 +23,8 @@ void NeuronModel::init(number_neurons_type number_neurons) {
 
     x.resize(number_neurons, 0.0);
     fired.resize(number_neurons, FiredStatus::Inactive);
-    for (auto i = 0; i < number_fire_recorders; i++) {
-        fired_recorder[i].resize(number_local_neurons, 0U);
+    for (auto& recorder : fired_recorder) {
+        recorder.resize(number_local_neurons, 0U);
     }
 
     input_calculator->init(number_neurons);
@@ -42,8 +42,8 @@ void NeuronModel::create_neurons(number_neurons_type creation_count) {
 
     x.resize(new_size, 0.0);
     fired.resize(new_size, FiredStatus::Inactive);
-    for (auto i = 0; i < number_fire_recorders; i++) {
-        fired_recorder[i].resize(new_size, 0U);
+    for (auto& recorder : fired_recorder) {
+        recorder.resize(new_size, 0U);
     }
 
     input_calculator->create_neurons(creation_count);

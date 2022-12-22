@@ -1103,6 +1103,8 @@ TEST_F(SynapticElementsTest, testUpdateNumberElementsException) {
     auto random_elements = SynapticElementsAdapter::create_random_synaptic_elements(
         number_neurons, element_type, 0.0, mt);
 
+    auto random_synaptic_elements
+        = SynapticElementsAdapter::create_random_synaptic_elements(number_neurons, element_type, 0.0, mt);
     auto& synaptic_elements = std::get<0>(random_elements);
     auto& grown_elements = std::get<1>(random_elements);
     auto& connected_elements = std::get<2>(random_elements);

@@ -15,6 +15,8 @@
 #include <utility>
 #include <vector>
 
+#include "util/RelearnException.h"
+
 /**
  * This class provides a stack-like interface, uses an std::vector as container, and allows to reserve space before.
  * @tparam T The type of elements on the stack

@@ -289,8 +289,8 @@ public:
 
             RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::disable_neurons: There is a too large id: {} vs {}", neuron_id, number_local_neurons);
             fired[local_neuron_id] = FiredStatus::Inactive;
-            for (auto i = 0; i < number_fire_recorders; i++) {
-                fired_recorder[i][local_neuron_id] = 0U;
+            for (auto& recorder : fired_recorder) {
+                recorder[local_neuron_id] = 0U;
             }
         }
     }
@@ -305,8 +305,8 @@ public:
         fired[local_neuron_id] = new_value;
 
         if (new_value == FiredStatus::Fired) {
-            for (int i = 0; i < number_fire_recorders; i++) {
-                fired_recorder[i][local_neuron_id]++;
+            for (auto& recorder : fired_recorder) {
+                recorder[local_neuron_id]++;
             }
         }
     }

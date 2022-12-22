@@ -63,7 +63,7 @@ if(WIN32)
  #    add_subdirectory(${boostrandom_SOURCE_DIR} ${boostrandom_BINARY_DIR})
  #  endif()
 
-  include_directories("external/")
+  target_include_directories(project_options INTERFACE SYSTEM external)
   # target_link_libraries(project_libraries INTERFACE boostorg::random)
 else()
   set(BOOST_ENABLE_CMAKE ON)

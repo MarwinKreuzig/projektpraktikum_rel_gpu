@@ -218,15 +218,15 @@ public:
     void resize(std::vector<requests_size_type> sizes) {
         RelearnException::check(sizes.size() <= number_ranks, "CommunicationMap::resize: number of sizes {} is larger than the number of ranks {}", sizes.size(), number_ranks);
 
-        for (const auto mpi_rank : MPIRank::range(number_ranks)) {
-            const auto size_for_ranks = sizes[mpi_rank.get_rank()];
-
-            if (size_for_ranks == 0 && !contains(mpi_rank)) {
+        for (auto mpi_rank = 0; mpi_rank < number_ranks; ++mpi_rank) {
+            const auto size_for_ranks = sizes[mpi_rank];
+            const auto rank = MPIRank{ mpi_rank };
+            if (size_for_ranks == 0 && !contains(rank)) {
                 // Don't want to insert an empty element into the container
                 continue;
             }
 
-            requests[mpi_rank].resize(size_for_ranks);
+            requests[rank].resize(size_for_ranks);
         }
     }
 

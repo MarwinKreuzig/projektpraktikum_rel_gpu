@@ -1,4 +1,6 @@
-# benchmark
+# benchmark# dont clutter the compile_commands file with libraries
+set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
+
 set(BENCHMARK_ENABLE_TESTING
     OFF
     CACHE INTERNAL "")
@@ -8,6 +10,12 @@ FetchContent_Declare(
   GIT_TAG v1.6.1)
 
 FetchContent_MakeAvailable(googlebenchmark)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+get_target_property(googlebenchmark_includes benchmark
+                    INTERFACE_INCLUDE_DIRECTORIES)
+set_target_properties(benchmark PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                                           "${googlebenchmark_includes}")
 
 add_executable(
   relearn_benchmarks

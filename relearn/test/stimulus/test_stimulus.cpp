@@ -240,7 +240,7 @@ TEST_F(StimulusTest, testEmptyNeurons) {
 TEST_F(StimulusTest, testNoFile) {
     const auto local_area_translator = NeuronAssignmentAdapter::get_randomized_area_translator(mt);
     std::filesystem::path path = "stimulus.tmp";
-    ASSERT_THROW(auto val = InteractiveNeuronIO::load_stimulus_interrupts(path, MPIRank(0), local_area_translator), RelearnException);
+    ASSERT_THROW(std::ignore = InteractiveNeuronIO::load_stimulus_interrupts(path, MPIRank(0), local_area_translator), RelearnException);
 }
 
 TEST_F(StimulusTest, testEmptyFile) {
@@ -267,7 +267,7 @@ TEST_F(StimulusTest, testInvalidNeuronId) {
 
     write_stimuli_to_file(path, { std::make_tuple(interval.begin, interval.end, 1U, intensity, rank_ids) });
 
-    ASSERT_THROW(auto val = InteractiveNeuronIO::load_stimulus_interrupts(path, MPIRank(0), local_area_translator), RelearnException);
+    ASSERT_THROW(std::ignore = InteractiveNeuronIO::load_stimulus_interrupts(path, MPIRank(0), local_area_translator), RelearnException);
 }
 
 TEST_F(StimulusTest, testInvalidAreaName) {

@@ -289,6 +289,9 @@ public:
             presentation = *it++; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             ctx.advance_to(it);
         }
+        if (it != end && *it != '}') {
+            throw format_error("unrecognized format for NeuronID");
+        }
 
         return fmt::formatter<typename NeuronID::value_type>::parse(ctx);
     }
@@ -317,6 +320,7 @@ public:
                 id.is_initialized(), id.is_virtual());
             break;
         default:
+            // unreachable
             throw format_error("unrecognized format for NeuronID");
         }
 
