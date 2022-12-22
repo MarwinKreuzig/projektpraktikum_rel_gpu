@@ -2,7 +2,7 @@
 
 #include "factory/background_factory.h"
 
-#include "neurons/UpdateStatus.h"
+#include "neurons/enums/UpdateStatus.h"
 
 static void BM_null_background_activity_0(benchmark::State& state) {
     const auto number_neurons = state.range(0);
