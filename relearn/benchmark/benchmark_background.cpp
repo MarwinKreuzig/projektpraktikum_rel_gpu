@@ -184,9 +184,9 @@ static void BM_normal_background_activity_100(benchmark::State& state) {
     }
 }
 
-BENCHMARK(BM_null_background_activity_0)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-BENCHMARK(BM_null_background_activity_100)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-BENCHMARK(BM_constant_background_activity_0)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-BENCHMARK(BM_constant_background_activity_100)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-BENCHMARK(BM_normal_background_activity_0)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-BENCHMARK(BM_normal_background_activity_100)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_null_background_activity_0)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_null_background_activity_100)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_constant_background_activity_0)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_constant_background_activity_100)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_normal_background_activity_0)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+//BENCHMARK(BM_normal_background_activity_100)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
