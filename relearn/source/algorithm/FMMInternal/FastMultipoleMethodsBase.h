@@ -27,6 +27,7 @@
 #include "util/Timers.h"
 #include "util/Utility.h"
 #include "util/Vec3.h"
+#include "util/ranges/Functional.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -34,6 +35,18 @@
 #include <ostream>
 #include <span>
 #include <vector>
+
+#include <range/v3/algorithm/count_if.hpp>
+#include <range/v3/algorithm/for_each.hpp>
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/range/operations.hpp>
+#include <range/v3/view/cartesian_product.hpp>
+#include <range/v3/view/concat.hpp>
+#include <range/v3/view/drop.hpp>
+#include <range/v3/view/filter.hpp>
+#include <range/v3/view/repeat.hpp>
+#include <range/v3/view/transform.hpp>
 
 /**
  * This enum classifies the different calculation types for the Fast Multipole Method.
@@ -174,13 +187,11 @@ public:
      */
     [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* extract_element(const interaction_list_type& arr, const interaction_list_type::size_type index) noexcept {
         auto non_zero_counter = 0U;
-        for (auto i = 0U; i < arr.size(); i++) {
-            if (arr[i] != nullptr) {
-                if (index == non_zero_counter) {
-                    return arr[i];
-                }
-                non_zero_counter++;
+        for (auto* const node : arr | ranges::views::filter(not_nullptr)) {
+            if (index == non_zero_counter) {
+                return node;
             }
+            ++non_zero_counter;
         }
         return nullptr;
     }
@@ -238,16 +249,15 @@ public:
         const auto& sources = OctreeNodeExtractor<AdditionalCellAttributes>::get_all_positions_for(source, other_element_type, signal_type);
         const auto& targets = OctreeNodeExtractor<AdditionalCellAttributes>::get_all_positions_for(target, searched_element_type, signal_type);
 
-        auto result = 0.0;
-
-        for (const auto& [target_position, number_targets] : targets) {
-            for (const auto& [source_position, number_sources] : sources) {
-                const auto kernel_value = kernel(target_position, source_position, sigma);
-                result += kernel_value * number_sources * number_targets;
-            }
-        }
-
-        return result;
+        return ranges::accumulate(
+            ranges::views::cartesian_product(sources, targets)
+                | ranges::views::transform([sigma](const auto& source_target_pair) {
+                      const auto& [source_pair, target_pair] = source_target_pair;
+                      const auto& [source_position, number_sources] = source_pair;
+                      const auto& [target_position, number_targets] = target_pair;
+                      return kernel(target_position, source_position, sigma) * number_sources * number_targets;
+                  }),
+            0.0);
     }
 
     /**
@@ -514,11 +524,7 @@ public:
         auto hermite_coefficients_init = false;
 
         // For every target calculate the attractiveness
-        for (auto* current_target : interaction_list) {
-            if (current_target == nullptr) {
-                continue;
-            }
-
+        for (auto* current_target : interaction_list | ranges::views::filter(not_nullptr)) {
             const auto calculation_type = check_calculation_requirements(source, current_target, other_element_type, signal_type_needed);
 
             if (calculation_type == CalculationType::Direct) {
@@ -617,7 +623,7 @@ public:
         auto source_number = source_node->get_cell().get_number_elements_for(element_type, signal_type_needed);
 
         // How many target children we still have left
-        auto number_target_children = std::count_if(interaction_list.begin(), interaction_list.end(), [](auto* ptr) { return ptr != nullptr; });
+        auto number_target_children = ranges::count_if(interaction_list, not_nullptr);
         std::vector<OctreeNode<AdditionalCellAttributes>*> target_list{};
         target_list.reserve(number_target_children);
 
@@ -722,17 +728,12 @@ public:
             return stack;
         }
 
-        const auto other_element_type = get_other_element_type(element_type);
-
-        for (auto* node : local_roots) {
-            if (node == nullptr) {
-                continue;
-            }
-
-            if (node->get_cell().get_number_elements_for(other_element_type, signal_type_needed) == 0) {
-                continue;
-            }
-
+        for (const auto other_element_type = get_other_element_type(element_type);
+             auto* node : local_roots
+                 | ranges::views::filter(not_nullptr)
+                 | ranges::views::filter([other_element_type, signal_type_needed](auto* node) {
+                       return node->get_cell().get_number_elements_for(other_element_type, signal_type_needed) != 0;
+                   })) {
             const auto& children = node->get_children();
             for (auto* child : children) {
                 if (child == nullptr) {

@@ -18,6 +18,8 @@
 #include "io/InteractiveNeuronIO.h"
 #include "neurons/LocalAreaTranslator.h"
 
+#include <range/v3/range/conversion.hpp>
+
 #include <unordered_set>
 
 static void write_stimuli_to_file(std::filesystem::path path, std::vector<std::tuple<RelearnTypes::step_type, RelearnTypes::step_type, RelearnTypes::step_type, double, std::unordered_set<std::string>>> stimuli) {
@@ -46,7 +48,7 @@ TEST_F(StimulusTest, testStimulusWithNeuronIds) {
     std::vector<std::tuple<RelearnTypes::step_type, RelearnTypes::step_type, RelearnTypes::step_type, double, std::unordered_set<NeuronID>>> my_stimuli;
     std::vector<Interval> intervals = StimulusAdapter::get_random_non_overlapping_intervals(num_stimuli, num_steps, mt);
 
-    for (auto i = 0; i < num_stimuli; i++) {
+    for (const auto i : ranges::views::indices(num_stimuli)) {
         Interval interval = intervals[i];
 
         const auto intensity = RandomAdapter::get_random_double(0.001, 100.0, mt);
@@ -106,7 +108,7 @@ TEST_F(StimulusTest, testStimulusWithAreas) {
     std::vector<std::tuple<RelearnTypes::step_type, RelearnTypes::step_type, RelearnTypes::step_type, double, std::unordered_set<NeuronID>>> my_stimuli;
     std::vector<Interval> intervals = StimulusAdapter::get_random_non_overlapping_intervals(num_stimuli, num_steps, mt);
 
-    for (auto i = 0; i < num_stimuli; i++) {
+    for (const auto i : ranges::views::indices(num_stimuli)) {
         Interval interval = intervals[i];
 
         const auto intensity = RandomAdapter::get_random_double(0.001, 100.0, mt);
@@ -117,7 +119,7 @@ TEST_F(StimulusTest, testStimulusWithAreas) {
                 my_ids.insert(neuron_id);
             }
         }
-        stimuli.emplace_back(std::make_tuple(interval.begin, interval.end, 1U, intensity, std::unordered_set(chosen_area_names.begin(), chosen_area_names.end())));
+        stimuli.emplace_back(std::make_tuple(interval.begin, interval.end, 1U, intensity, chosen_area_names | ranges::to<std::unordered_set>));
         my_stimuli.emplace_back(std::make_tuple(interval.begin, interval.end, 1U, intensity, my_ids));
     }
 
@@ -196,7 +198,7 @@ TEST_F(StimulusTest, testEmptyNeurons) {
     std::vector<std::tuple<RelearnTypes::step_type, RelearnTypes::step_type, RelearnTypes::step_type, double, std::unordered_set<NeuronID>>> my_stimuli;
     std::vector<Interval> intervals = StimulusAdapter::get_random_non_overlapping_intervals(num_stimuli, num_steps, mt);
 
-    for (auto i = 0; i < num_stimuli; i++) {
+    for (const auto i : ranges::views::indices(num_stimuli)) {
         Interval interval = intervals[i];
         const auto intensity = RandomAdapter::get_random_double(0.001, 100.0, mt);
 

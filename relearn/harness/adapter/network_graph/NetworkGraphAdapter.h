@@ -16,14 +16,37 @@
 
 #include "Types.h"
 #include "neurons/NetworkGraph.h"
+#include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseDeletionRequests.h"
 #include "util/NeuronID.h"
+#include "util/ranges/Functional.hpp"
 
+#include <concepts>
 #include <map>
 #include <memory>
 #include <random>
 #include <tuple>
 #include <vector>
+
+#include <range/v3/action/insert.hpp>
+#include <range/v3/algorithm/for_each.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/range/traits.hpp>
+#include <range/v3/utility/tuple_algorithm.hpp>
+#include <range/v3/view/cartesian_product.hpp>
+#include <range/v3/view/filter.hpp>
+#include <range/v3/view/transform.hpp>
+
+namespace detail {
+const auto to_neuron_id = element<0>;
+const auto to_edge_weight = element<1>;
+const auto to_rank_neuron_id_and_weight_pair = [](const auto my_rank) {
+  return [my_rank](const auto local_edge) {
+    return std::pair{RankNeuronId{my_rank, to_neuron_id(local_edge)},
+                     to_edge_weight(local_edge)};
+  };
+};
+} // namespace detail
 
 class NetworkGraphAdapter {
 public:
@@ -81,35 +104,34 @@ public:
             synapse_map[{ target, source }] += weight;
         }
 
-        std::vector<PlasticLocalSynapse> synapses{};
-        synapses.reserve(synapse_map.size());
-
-        for (const auto& [pair, weight] : synapse_map) {
-            const auto& [target, source] = pair;
-            if (weight != 0) {
-                synapses.emplace_back(target, source, weight);
-            }
-        }
-
-        return synapses;
+        return synapse_map |
+               ranges::views::filter(not_equal_to(0), detail::to_edge_weight) |
+               ranges::views::transform(
+                   [](const auto &val) -> PlasticLocalSynapse {
+                     return {val.first.first, val.first.second, detail::to_edge_weight(val)};
+                   }) |
+               ranges::to_vector;
     }
 
     static std::shared_ptr<NetworkGraph> create_network_graph_all_to_all(size_t number_neurons, MPIRank mpi_rank, std::mt19937& mt) {
         auto ptr = std::make_shared<NetworkGraph>(mpi_rank);
         ptr->init(number_neurons);
 
-        for (const auto& source_id : NeuronID::range(number_neurons)) {
-            for (const auto& target_id : NeuronID::range(number_neurons)) {
-                if (source_id.get_neuron_id() == target_id.get_neuron_id()) {
-                    continue;
-                }
+        const auto not_the_same_id = [](const auto &id_pair) {
+          return element<0>(id_pair) != element<1>(id_pair);
+        };
 
-                const auto weight = get_random_plastic_synapse_weight(mt);
-                PlasticLocalSynapse ls(target_id, source_id, weight);
+        ranges::for_each(
+            ranges::views::cartesian_product(NeuronID::range(number_neurons),
+                                             NeuronID::range(number_neurons)) |
+                ranges::views::filter(not_the_same_id),
+            [&mt, &ptr](const auto &id_pair) {
+              const auto &[source_id, target_id] = id_pair;
+              const auto weight = get_random_plastic_synapse_weight(mt);
+              PlasticLocalSynapse ls(target_id, source_id, weight);
 
-                ptr->add_synapse(ls);
-            }
-        }
+              ptr->add_synapse(ls);
+            });
 
         return ptr;
     }
@@ -139,196 +161,95 @@ public:
         return ptr;
     }
 
+    template <ranges::range LocalEdgeRangeType, ranges::range DistantEdgeRangeType>
+        requires std::same_as<typename ranges::range_value_t<LocalEdgeRangeType>::second_type, typename ranges::range_value_t<DistantEdgeRangeType>::second_type>
+    [[nodiscard]] static std::vector<std::pair<RankNeuronId, typename ranges::range_value_t<LocalEdgeRangeType>::second_type>> get_all_edges(const LocalEdgeRangeType& all_local_edges, const DistantEdgeRangeType& all_distant_edges, const MPIRank my_rank, const SignalType signal_type) {
+    switch (signal_type) {
+        case SignalType::Excitatory:
+            return ranges::views::concat(
+                       all_local_edges |
+                           ranges::views::filter(greater(0), detail::to_edge_weight) |
+                           ranges::views::transform(detail::to_rank_neuron_id_and_weight_pair(my_rank)),
+                       all_distant_edges |
+                           ranges::views::filter(greater(0), detail::to_edge_weight)) |
+                   ranges::to_vector;
+
+        case SignalType::Inhibitory:
+            return ranges::views::concat(
+                       all_local_edges |
+                           ranges::views::filter(less(0), detail::to_edge_weight) |
+                           ranges::views::transform(detail::to_rank_neuron_id_and_weight_pair(my_rank)),
+                       all_distant_edges |
+                           ranges::views::filter(less(0), detail::to_edge_weight)) |
+                   ranges::to_vector;
+        }
+    }
+
+    template <ranges::range LocalEdgeRangeType, ranges::range DistantEdgeRangeType>
+        requires std::same_as<typename ranges::range_value_t<LocalEdgeRangeType>::second_type, typename ranges::range_value_t<DistantEdgeRangeType>::second_type>
+    [[nodiscard]] static std::vector<std::pair<RankNeuronId, typename ranges::range_value_t<LocalEdgeRangeType>::second_type>> get_all_edges(const LocalEdgeRangeType& all_local_edges, const DistantEdgeRangeType& all_distant_edges, const MPIRank my_rank) {
+        return ranges::views::concat(
+                   all_local_edges |
+                       ranges::views::transform(
+                           detail::to_rank_neuron_id_and_weight_pair(my_rank)),
+                   all_distant_edges) |
+               ranges::to_vector;
+    }
+
     [[nodiscard]] static std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>> get_all_plastic_in_edges(const NetworkGraph& ng, const MPIRank my_rank, const NeuronID neuron_id, const SignalType signal_type) {
         const auto& [all_distant_edges, _1] = ng.get_distant_in_edges(neuron_id);
         const auto& [all_local_edges, _2] = ng.get_local_in_edges(neuron_id);
 
-        std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>> filtered_edges{};
-        filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
-
-        for (const auto& [neuron_id, edge_val] : all_local_edges) {
-            if (signal_type == SignalType::Excitatory && edge_val > 0) {
-                filtered_edges.emplace_back(RankNeuronId(my_rank, neuron_id), edge_val);
-            }
-
-            if (signal_type == SignalType::Inhibitory && edge_val < 0) {
-                filtered_edges.emplace_back(RankNeuronId(my_rank, neuron_id), edge_val);
-            }
-        }
-
-        for (const auto& [edge_key, edge_val] : all_distant_edges) {
-            if (signal_type == SignalType::Excitatory && edge_val > 0) {
-                filtered_edges.emplace_back(edge_key, edge_val);
-            }
-
-            if (signal_type == SignalType::Inhibitory && edge_val < 0) {
-                filtered_edges.emplace_back(edge_key, edge_val);
-            }
-        }
-
-        return filtered_edges;
+        return get_all_edges(all_local_edges, all_distant_edges, my_rank, signal_type);
     }
 
     [[nodiscard]] static std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>> get_all_plastic_out_edges(const NetworkGraph& ng, const MPIRank my_rank, const NeuronID neuron_id, const SignalType signal_type) {
         const auto& [all_distant_edges, _1] = ng.get_distant_out_edges(neuron_id);
         const auto& [all_local_edges, _2] = ng.get_local_out_edges(neuron_id);
 
-        std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>> filtered_edges{};
-        filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
-
-        for (const auto& [edge_key, edge_val] : all_local_edges) {
-            if (signal_type == SignalType::Excitatory && edge_val > 0) {
-                filtered_edges.emplace_back(RankNeuronId(my_rank, edge_key), edge_val);
-            }
-
-            if (signal_type == SignalType::Inhibitory && edge_val < 0) {
-                filtered_edges.emplace_back(RankNeuronId(my_rank, edge_key), edge_val);
-            }
-        }
-
-        for (const auto& [edge_key, edge_val] : all_distant_edges) {
-            if (signal_type == SignalType::Excitatory && edge_val > 0) {
-                filtered_edges.emplace_back(edge_key, edge_val);
-            }
-
-            if (signal_type == SignalType::Inhibitory && edge_val < 0) {
-                filtered_edges.emplace_back(edge_key, edge_val);
-            }
-        }
-
-        return filtered_edges;
+        return get_all_edges(all_local_edges, all_distant_edges, my_rank, signal_type);
     }
 
     [[nodiscard]] static std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>> get_all_plastic_in_edges(const NetworkGraph& ng, const MPIRank my_rank, const NeuronID neuron_id) {
         const auto& [all_distant_edges, _1] = ng.get_distant_in_edges(neuron_id);
         const auto& [all_local_edges, _2] = ng.get_local_in_edges(neuron_id);
 
-        std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>> filtered_edges{};
-        filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
-
-        for (const auto& [edge_key, edge_val] : all_local_edges) {
-            filtered_edges.emplace_back(RankNeuronId(my_rank, edge_key), edge_val);
-        }
-
-        for (const auto& [edge_key, edge_val] : all_distant_edges) {
-            filtered_edges.emplace_back(edge_key, edge_val);
-        }
-
-        return filtered_edges;
+        return get_all_edges(all_local_edges, all_distant_edges, my_rank);
     }
 
     [[nodiscard]] static std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>> get_all_plastic_out_edges(const NetworkGraph& ng, const MPIRank my_rank, const NeuronID neuron_id) {
         const auto& [all_distant_edges, _1] = ng.get_distant_out_edges(neuron_id);
         const auto& [all_local_edges, _2] = ng.get_local_out_edges(neuron_id);
 
-        std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>> filtered_edges{};
-        filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
-
-        for (const auto& [edge_key, edge_val] : all_local_edges) {
-            filtered_edges.emplace_back(RankNeuronId(my_rank, edge_key), edge_val);
-        }
-
-        for (const auto& [edge_key, edge_val] : all_distant_edges) {
-            filtered_edges.emplace_back(edge_key, edge_val);
-        }
-
-        return filtered_edges;
+        return get_all_edges(all_local_edges, all_distant_edges, my_rank);
     }
 
     [[nodiscard]] static std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>> get_all_static_in_edges(const NetworkGraph& ng, const MPIRank my_rank, const NeuronID neuron_id, const SignalType signal_type) {
         const auto& [_1, all_distant_edges] = ng.get_distant_in_edges(neuron_id);
         const auto& [_2, all_local_edges] = ng.get_local_in_edges(neuron_id);
 
-        std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>> filtered_edges{};
-        filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
-
-        for (const auto& [neuron_id, edge_val] : all_local_edges) {
-            if (signal_type == SignalType::Excitatory && edge_val > 0) {
-                filtered_edges.emplace_back(RankNeuronId(my_rank, neuron_id), edge_val);
-            }
-
-            if (signal_type == SignalType::Inhibitory && edge_val < 0) {
-                filtered_edges.emplace_back(RankNeuronId(my_rank, neuron_id), edge_val);
-            }
-        }
-
-        for (const auto& [edge_key, edge_val] : all_distant_edges) {
-            if (signal_type == SignalType::Excitatory && edge_val > 0) {
-                filtered_edges.emplace_back(edge_key, edge_val);
-            }
-
-            if (signal_type == SignalType::Inhibitory && edge_val < 0) {
-                filtered_edges.emplace_back(edge_key, edge_val);
-            }
-        }
-
-        return filtered_edges;
+        return get_all_edges(all_local_edges, all_distant_edges, my_rank, signal_type);
     }
 
     [[nodiscard]] static std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>> get_all_static_out_edges(const NetworkGraph& ng, const MPIRank my_rank, const NeuronID neuron_id, const SignalType signal_type) {
         const auto& [_1, all_distant_edges] = ng.get_distant_out_edges(neuron_id);
         const auto& [_2, all_local_edges] = ng.get_local_out_edges(neuron_id);
 
-        std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>> filtered_edges{};
-        filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
-
-        for (const auto& [edge_key, edge_val] : all_local_edges) {
-            if (signal_type == SignalType::Excitatory && edge_val > 0) {
-                filtered_edges.emplace_back(RankNeuronId(my_rank, edge_key), edge_val);
-            }
-
-            if (signal_type == SignalType::Inhibitory && edge_val < 0) {
-                filtered_edges.emplace_back(RankNeuronId(my_rank, edge_key), edge_val);
-            }
-        }
-
-        for (const auto& [edge_key, edge_val] : all_distant_edges) {
-            if (signal_type == SignalType::Excitatory && edge_val > 0) {
-                filtered_edges.emplace_back(edge_key, edge_val);
-            }
-
-            if (signal_type == SignalType::Inhibitory && edge_val < 0) {
-                filtered_edges.emplace_back(edge_key, edge_val);
-            }
-        }
-
-        return filtered_edges;
+        return get_all_edges(all_local_edges, all_distant_edges, my_rank, signal_type);
     }
 
     [[nodiscard]] static std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>> get_all_static_in_edges(const NetworkGraph& ng, const MPIRank my_rank, const NeuronID neuron_id) {
         const auto& [_1, all_distant_edges] = ng.get_distant_in_edges(neuron_id);
         const auto& [_2, all_local_edges] = ng.get_local_in_edges(neuron_id);
 
-        std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>> filtered_edges{};
-        filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
-
-        for (const auto& [edge_key, edge_val] : all_local_edges) {
-            filtered_edges.emplace_back(RankNeuronId(my_rank, edge_key), edge_val);
-        }
-
-        for (const auto& [edge_key, edge_val] : all_distant_edges) {
-            filtered_edges.emplace_back(edge_key, edge_val);
-        }
-
-        return filtered_edges;
+        return get_all_edges(all_local_edges, all_distant_edges, my_rank);
     }
 
     [[nodiscard]] static std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>> get_all_static_out_edges(const NetworkGraph& ng, const MPIRank my_rank, const NeuronID neuron_id) {
         const auto& [_1, all_distant_edges] = ng.get_distant_out_edges(neuron_id);
         const auto& [_2, all_local_edges] = ng.get_local_out_edges(neuron_id);
 
-        std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>> filtered_edges{};
-        filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
-
-        for (const auto& [edge_key, edge_val] : all_local_edges) {
-            filtered_edges.emplace_back(RankNeuronId(my_rank, edge_key), edge_val);
-        }
-
-        for (const auto& [edge_key, edge_val] : all_distant_edges) {
-            filtered_edges.emplace_back(edge_key, edge_val);
-        }
-
-        return filtered_edges;
+        return get_all_edges(all_local_edges, all_distant_edges, my_rank);
     }
 
     /**

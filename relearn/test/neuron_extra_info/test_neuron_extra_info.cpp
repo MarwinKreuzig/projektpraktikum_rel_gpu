@@ -26,7 +26,7 @@ void NeuronsExtraInfoTest::assert_empty(const NeuronsExtraInfo& nei, size_t numb
 
     ASSERT_EQ(0, positions_size) << positions_size;
 
-    for (auto i = 0; i < number_neurons_out_of_scope; i++) {
+    for (const auto i : NeuronID::range_id(number_neurons_out_of_scope)) {
         const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, 1, mt);
 
         ASSERT_THROW(const auto& tmp = nei.get_position(neuron_id), RelearnException) << "assert empty position" << neuron_id;
@@ -51,7 +51,7 @@ void NeuronsExtraInfoTest::assert_contains(const NeuronsExtraInfo& nei, size_t n
         ASSERT_EQ(expected_positions[neuron_id.get_neuron_id()], nei.get_position(neuron_id)) << neuron_id;
     }
 
-    for (auto i = 0; i < number_neurons_out_of_scope; i++) {
+    for (const auto i : ranges::views::indices(number_neurons_out_of_scope)) {
         const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(
             number_neurons, number_neurons, mt);
 
@@ -96,7 +96,7 @@ TEST_F(NeuronsExtraInfoTest, testInit) {
 
     std::vector<Vec3d> positions_right(number_neurons);
 
-    for (NeuronID::value_type neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         positions_right[neuron_id] = SimulationAdapter::get_random_position(mt);
     }
 
@@ -106,7 +106,7 @@ TEST_F(NeuronsExtraInfoTest, testInit) {
 
     std::vector<Vec3d> positions_right_2(number_neurons);
 
-    for (NeuronID::value_type neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         positions_right_2[neuron_id] = SimulationAdapter::get_random_position(mt);
     }
 
@@ -133,7 +133,7 @@ TEST_F(NeuronsExtraInfoTest, testCreate) {
 
     std::vector<Vec3d> positions_right(num_neurons_init);
 
-    for (NeuronID::value_type neuron_id = 0; neuron_id < num_neurons_init; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(num_neurons_init)) {
         positions_right[neuron_id] = SimulationAdapter::get_random_position(mt);
     }
 
@@ -145,8 +145,7 @@ TEST_F(NeuronsExtraInfoTest, testCreate) {
 
     std::vector<Vec3d> positions_right_2(num_neurons_total_1);
 
-    for (NeuronID::value_type neuron_id = 0; neuron_id < num_neurons_total_1;
-         neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(num_neurons_total_1)) {
         positions_right_2[neuron_id] = SimulationAdapter::get_random_position(mt);
     }
 
@@ -160,7 +159,7 @@ TEST_F(NeuronsExtraInfoTest, testCreate) {
 
     std::vector<Vec3d> positions_right_3(num_neurons_total_2);
 
-    for (NeuronID::value_type neuron_id = 0; neuron_id < num_neurons_total_2; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(num_neurons_total_2)) {
         positions_right_3[neuron_id] = SimulationAdapter::get_random_position(mt);
     }
 
@@ -237,9 +236,9 @@ TEST_F(NeuronsExtraInfoTest, testSetStatusShuffle) {
         }
     }
 
-    RandomAdapter::shuffle(enabled_neurons.begin(), enabled_neurons.end(), mt);
-    RandomAdapter::shuffle(disabled_neurons.begin(), disabled_neurons.end(), mt);
-    RandomAdapter::shuffle(static_neurons.begin(), static_neurons.end(), mt);
+    RandomAdapter::shuffle(enabled_neurons, mt);
+    RandomAdapter::shuffle(disabled_neurons, mt);
+    RandomAdapter::shuffle(static_neurons, mt);
 
     ASSERT_THROW(nei.set_enabled_neurons(enabled_neurons), RelearnException);
     ASSERT_NO_THROW(nei.set_disabled_neurons(disabled_neurons));

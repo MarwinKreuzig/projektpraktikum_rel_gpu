@@ -18,6 +18,15 @@
 #include "adapter/neuron_id/NeuronIdAdapter.h"
 #include "adapter/random/RandomAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"
+#include "algorithm/FMMInternal/FastMultipoleMethodsCell.h"
+#include "structure/OctreeNode.h"
+#include "util/ranges/Functional.hpp"
+#include "util/shuffle/shuffle.h"
+
+#include <range/v3/action/sort.hpp>
+#include <range/v3/algorithm/sort.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/repeat_n.hpp>
 
 #include <algorithm>
 #include <vector>
@@ -37,12 +46,9 @@ TEST_F(FMMTest, testMultIndexGetIndices) {
             }
         }
     }
+    ranges::sort(expected_indices, std::less{});
 
-    const auto& actual_indices = MultiIndex::get_indices();
-    std::vector<Vec3u> actual_indices_vector{ actual_indices.begin(), actual_indices.end() };
-
-    std::sort(expected_indices.begin(), expected_indices.end());
-    std::sort(actual_indices_vector.begin(), actual_indices_vector.end());
+    std::vector<Vec3u> actual_indices_vector = MultiIndex::get_indices() | ranges::to_vector | ranges::actions::sort(std::less{});
 
     ASSERT_EQ(expected_indices, actual_indices_vector);
 }
@@ -85,16 +91,14 @@ TEST_F(FMMTest, testExtractElement) {
 
     std::vector<OctreeNode<FastMultipoleMethodsCell>> memory_holder(number_pointers);
 
-    std::vector<OctreeNode<FastMultipoleMethodsCell>*> pointers{};
-    pointers.reserve(number_pointers + number_nullptrs);
-
-    for (auto i = 0; i < number_pointers; i++) {
-        pointers.emplace_back(&memory_holder[i]);
-    }
-
-    pointers.resize(number_pointers + number_nullptrs, nullptr);
-
-    RandomAdapter::shuffle(pointers.begin(), pointers.end(), mt);
+    const std::vector<OctreeNode<FastMultipoleMethodsCell> *> pointers =
+        ranges::views::concat(
+            memory_holder |
+                ranges::views::transform([](auto &Val) { return &Val; }),
+            ranges::views::repeat_n(
+                static_cast<OctreeNode<FastMultipoleMethodsCell> *>(nullptr),
+                number_nullptrs)) |
+        ranges::to_vector | actions::shuffle(mt);
 
     std::vector<OctreeNode<FastMultipoleMethodsCell>*> received_pointers{};
     received_pointers.reserve(number_pointers);
@@ -106,7 +110,7 @@ TEST_F(FMMTest, testExtractElement) {
         received_pointers.emplace_back(ptr);
     }
 
-    std::sort(received_pointers.begin(), received_pointers.end());
+    ranges::sort(received_pointers);
 
     for (auto i = 0; i < number_pointers; i++) {
         ASSERT_EQ(received_pointers[i], &memory_holder[i]);
@@ -363,19 +367,19 @@ TEST_F(FMMTest, testHermiteCoefficientsForm) {
 
     const auto coefficients_a_e = FastMultipoleMethodsBase::calc_hermite_coefficients(&tree, ElementType::Axon, SignalType::Excitatory);
     ASSERT_EQ(coefficients_a_e.size(), Constants::p3);
-    ASSERT_TRUE(std::any_of(coefficients_a_e.begin(), coefficients_a_e.end(), [](const double coeff) -> bool { return coeff != 0.0; }));
+    ASSERT_TRUE(ranges::any_of(coefficients_a_e, not_equal_to(0.0)));
 
     const auto coefficients_a_i = FastMultipoleMethodsBase::calc_hermite_coefficients(&tree, ElementType::Axon, SignalType::Inhibitory);
     ASSERT_EQ(coefficients_a_i.size(), Constants::p3);
-    ASSERT_TRUE(std::any_of(coefficients_a_i.begin(), coefficients_a_i.end(), [](const double coeff) -> bool { return coeff != 0.0; }));
+    ASSERT_TRUE(ranges::any_of(coefficients_a_i, not_equal_to(0.0)));
 
     const auto coefficients_d_e = FastMultipoleMethodsBase::calc_hermite_coefficients(&tree, ElementType::Dendrite, SignalType::Excitatory);
     ASSERT_EQ(coefficients_d_e.size(), Constants::p3);
-    ASSERT_TRUE(std::any_of(coefficients_d_e.begin(), coefficients_d_e.end(), [](const double coeff) -> bool { return coeff != 0.0; }));
+    ASSERT_TRUE(ranges::any_of(coefficients_d_e, not_equal_to(0.0)));
 
     const auto coefficients_d_i = FastMultipoleMethodsBase::calc_hermite_coefficients(&tree, ElementType::Dendrite, SignalType::Inhibitory);
     ASSERT_EQ(coefficients_d_i.size(), Constants::p3);
-    ASSERT_TRUE(std::any_of(coefficients_d_i.begin(), coefficients_d_i.end(), [](const double coeff) -> bool { return coeff != 0.0; }));
+    ASSERT_TRUE(ranges::any_of(coefficients_d_i, not_equal_to(0.0)));
 }
 
 TEST_F(FMMTest, testTaylorCoefficientsException) {
@@ -440,19 +444,19 @@ TEST_F(FMMTest, testTaylorCoefficientsForm) {
 
     const auto coefficients_a_e = FastMultipoleMethodsBase::calc_taylor_coefficients(&tree, other_position, ElementType::Axon, SignalType::Excitatory);
     ASSERT_EQ(coefficients_a_e.size(), Constants::p3);
-    ASSERT_TRUE(std::any_of(coefficients_a_e.begin(), coefficients_a_e.end(), [](const double coeff) -> bool { return coeff != 0.0; }));
+    ASSERT_TRUE(ranges::any_of(coefficients_a_e, not_equal_to(0.0)));
 
     const auto coefficients_a_i = FastMultipoleMethodsBase::calc_taylor_coefficients(&tree, other_position, ElementType::Axon, SignalType::Inhibitory);
     ASSERT_EQ(coefficients_a_i.size(), Constants::p3);
-    ASSERT_TRUE(std::any_of(coefficients_a_i.begin(), coefficients_a_i.end(), [](const double coeff) -> bool { return coeff != 0.0; }));
+    ASSERT_TRUE(ranges::any_of(coefficients_a_i, not_equal_to(0.0)));
 
     const auto coefficients_d_e = FastMultipoleMethodsBase::calc_taylor_coefficients(&tree, other_position, ElementType::Dendrite, SignalType::Excitatory);
     ASSERT_EQ(coefficients_d_e.size(), Constants::p3);
-    ASSERT_TRUE(std::any_of(coefficients_d_e.begin(), coefficients_d_e.end(), [](const double coeff) -> bool { return coeff != 0.0; }));
+    ASSERT_TRUE(ranges::any_of(coefficients_d_e, not_equal_to(0.0)));
 
     const auto coefficients_d_i = FastMultipoleMethodsBase::calc_taylor_coefficients(&tree, other_position, ElementType::Dendrite, SignalType::Inhibitory);
     ASSERT_EQ(coefficients_d_i.size(), Constants::p3);
-    ASSERT_TRUE(std::any_of(coefficients_d_i.begin(), coefficients_d_i.end(), [](const double coeff) -> bool { return coeff != 0.0; }));
+    ASSERT_TRUE(ranges::any_of(coefficients_d_i, not_equal_to(0.0)));
 }
 
 TEST_F(FMMTest, testCalcHermiteException) {

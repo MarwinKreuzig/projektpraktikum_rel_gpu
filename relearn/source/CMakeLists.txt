@@ -21,7 +21,7 @@ target_sources(
           mpi/MPIWrapper.cpp
 
           # neurons
-		  neurons/helper/AreaMonitor.cpp
+          neurons/helper/AreaMonitor.cpp
           neurons/helper/NeuronMonitor.cpp
           neurons/helper/SynapseDeletionFinder.cpp
           neurons/input/FiredStatusApproximator.cpp
@@ -55,12 +55,11 @@ target_sources(
           structure/Partition.cpp
 
           # util
-		  util/StringUtil.cpp
-		  util/RelearnException.cpp
+          util/StringUtil.cpp
+          util/RelearnException.cpp
           util/Timers.cpp
-
-		  # for visual studio
-		  ${relearn_lib_additional_files})
+          # for visual studio
+          ${relearn_lib_additional_files})
 
 target_include_directories(relearn_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(relearn_lib PROPERTIES ENABLE_EXPORTS 1)

@@ -15,6 +15,8 @@
 #include "util/NeuronID.h"
 #include "util/Timers.h"
 
+#include <range/v3/action/insert.hpp>
+
 void NeuronModel::init(number_neurons_type number_neurons) {
     RelearnException::check(number_local_neurons == 0, "NeuronModel::init: Was already initialized");
     RelearnException::check(number_neurons > 0, "NeuronModel::init: Must initialize with more than 0 neurons");
@@ -78,7 +80,7 @@ std::vector<ModelParameter> NeuronModel::get_parameter() {
     auto parameters = input_calculator->get_parameter();
     auto other_parameters = background_calculator->get_parameter();
 
-    parameters.insert(parameters.end(), other_parameters.begin(), other_parameters.end());
+    ranges::insert(parameters, parameters.end(), other_parameters);
     parameters.emplace_back(Parameter<unsigned int>{ "Number integration steps", h, NeuronModel::min_h, NeuronModel::max_h });
 
     return parameters;

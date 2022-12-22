@@ -92,8 +92,8 @@ void FiredStatusApproximator::notify_of_plasticity_change(const step_type step) 
     }
 
     for (const auto& [rank, values] : incoming_firing_rates) {
+        auto &cache = firing_rate_cache[rank.get_rank()];
         for (const auto& [neuron_id, firing_rate] : values) {
-            auto& cache = firing_rate_cache[rank.get_rank()];
             cache[neuron_id] = firing_rate;
         }
     }

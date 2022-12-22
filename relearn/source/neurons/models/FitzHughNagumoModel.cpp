@@ -11,6 +11,7 @@
 #include "NeuronModels.h"
 
 #include "neurons/NeuronsExtraInfo.h"
+#include "util/NeuronID.h"
 
 using models::FitzHughNagumoModel;
 
@@ -152,10 +153,9 @@ void FitzHughNagumoModel::update_activity() {
 }
 
 void FitzHughNagumoModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {
-    for (NeuronID::value_type neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
-        const auto id = NeuronID{ neuron_id };
-        w[neuron_id] = FitzHughNagumoModel::init_w;
-        set_x(id, FitzHughNagumoModel::init_x);
+    for (const auto neuron_id : NeuronID::range(start_id, end_id)) {
+        w[neuron_id.get_neuron_id()] = FitzHughNagumoModel::init_w;
+        set_x(neuron_id, FitzHughNagumoModel::init_x);
     }
 }
 

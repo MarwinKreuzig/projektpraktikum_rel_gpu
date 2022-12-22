@@ -223,13 +223,13 @@ TEST_F(NeuronAssignmentTest, testDensityWriteToFile) {
 
     std::vector<bool> is_there(number_neurons, false);
 
-    for (auto j = 0; j < number_neurons; j++) {
-        const Vec3d& desired_position = positions[j];
-        const RelearnTypes::area_id& desired_area_id = area_ids[j];
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+        const Vec3d& desired_position = positions[neuron_id];
+        const RelearnTypes::area_id& desired_area_id = area_ids[neuron_id];
         const RelearnTypes::area_name& desired_area_name = area_names[desired_area_id];
-        const SignalType& desired_signal_type = types[j];
+        const SignalType& desired_signal_type = types[neuron_id];
 
-        const std::string& current_line = lines[j];
+        const std::string& current_line = lines[neuron_id];
 
         std::stringstream sstream(current_line);
 
@@ -540,16 +540,16 @@ TEST_F(NeuronAssignmentTest, testFileLoadSingleSubdomain) {
     const auto& loaded_positions = sff.get_neuron_positions_in_subdomains();
     const auto& loaded_types = sff.get_neuron_types_in_subdomains();
 
-    for (auto j = 0; j < number_neurons; j++) {
-        const auto& curr_pos = positions[j];
-        const auto& curr_loaded_pos = loaded_positions[j];
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+        const auto& curr_pos = positions[neuron_id];
+        const auto& curr_loaded_pos = loaded_positions[neuron_id];
 
         ASSERT_NEAR(curr_pos.get_x(), curr_loaded_pos.get_x(), eps);
         ASSERT_NEAR(curr_pos.get_y(), curr_loaded_pos.get_y(), eps);
         ASSERT_NEAR(curr_pos.get_z(), curr_loaded_pos.get_z(), eps);
 
-        const auto& curr_id = area_ids[j];
-        const auto& curr_loaded_id = sff.get_local_area_translator()->get_area_id_for_neuron_id(j);
+        const auto& curr_id = area_ids[neuron_id];
+        const auto& curr_loaded_id = sff.get_local_area_translator()->get_area_id_for_neuron_id(neuron_id);
 
         ASSERT_EQ(curr_id, curr_loaded_id);
 
@@ -558,8 +558,8 @@ TEST_F(NeuronAssignmentTest, testFileLoadSingleSubdomain) {
 
         ASSERT_EQ(curr_name, curr_loaded_name);
 
-        const auto& curr_type = types[j];
-        const auto& curr_loaded_type = loaded_types[j];
+        const auto& curr_type = types[neuron_id];
+        const auto& curr_loaded_type = loaded_types[neuron_id];
 
         ASSERT_EQ(curr_type, curr_loaded_type);
     }

@@ -32,6 +32,9 @@
 #include <utility>
 #include <vector>
 
+#include <range/v3/algorithm/transform.hpp>
+#include <range/v3/range/conversion.hpp>
+
 /**
  * This enum reflects the different probability kernels, it must
  * be kept in sync with the classes to allow a seamless integration
@@ -159,7 +162,7 @@ public:
         std::vector<double> probabilities{};
         probabilities.reserve(nodes.size());
 
-        std::transform(nodes.begin(), nodes.cend(), std::back_inserter(probabilities), [&](const OctreeNode<AdditionalCellAttributes>* target_node) {
+        ranges::transform(nodes, std::back_inserter(probabilities), [&](const OctreeNode<AdditionalCellAttributes>* target_node) {
             RelearnException::check(target_node != nullptr, "Kernel::create_probability_interval: target_node was nullptr");
             const auto prob = calculate_attractiveness_to_connect(source_neuron_id, source_position, target_node, element_type, signal_type);
             sum += prob;
@@ -170,7 +173,7 @@ public:
             // If all targets are so far away that rounding errors return a probability of 0, we fix this
 
             probabilities.resize(0);
-            std::transform(nodes.begin(), nodes.cend(), std::back_inserter(probabilities), [&](const OctreeNode<AdditionalCellAttributes>* target_node) {
+            ranges::transform(nodes, std::back_inserter(probabilities), [&](const OctreeNode<AdditionalCellAttributes>* target_node) {
                 if (target_node->contains(source_neuron_id)) {
                     return 0.0;
                 }

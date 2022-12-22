@@ -10,6 +10,7 @@
  *
  */
 
+#include "util/ranges/Functional.hpp"
 #include "util/shuffle/shuffle.h"
 
 #include <boost/random/normal_distribution.hpp>
@@ -17,10 +18,17 @@
 #include <boost/random/uniform_real_distribution.hpp>
 
 #include <cmath>
+#include <cstddef>
 #include <numeric>
 #include <random>
 #include <unordered_set>
 #include <vector>
+
+#include <range/v3/algorithm/any_of.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/enumerate.hpp>
+#include <range/v3/view/indices.hpp>
+#include <range/v3/view/transform.hpp>
 
 class RandomAdapter {
 public:
@@ -47,20 +55,19 @@ public:
     }
 
     static std::vector<size_t> get_random_derangement(size_t size, std::mt19937& mt) {
-        std::vector<size_t> derangement(size);
-        std::iota(derangement.begin(), derangement.end(), 0);
+        auto derangement = ranges::views::indices(size) | ranges::to_vector;
 
-        auto check = [](const std::vector<size_t>& vec) -> bool {
-            for (auto i = 0; i < vec.size(); i++) {
-                if (i == vec[i]) {
-                    return false;
-                }
-            }
-            return true;
+        auto check = [](const std::vector<size_t>& vec) {
+            const auto index_equals_value = [](const auto& IndexValuePair) {
+                const auto& [Index, Value] = IndexValuePair;
+                return Index == Value;
+            };
+
+            return ranges::any_of(vec | ranges::views::enumerate, index_equals_value);
         };
 
         do {
-            shuffle(derangement.begin(), derangement.end(), mt);
+            shuffle(derangement, mt);
         } while (!check(derangement));
 
         return derangement;
@@ -68,7 +75,12 @@ public:
 
     template <typename Iterator>
     static void shuffle(Iterator begin, Iterator end, std::mt19937& mt) {
-        detail::shuffle(begin, end, mt);
+        ::shuffle(begin, end, mt);
+    }
+
+    template <typename Range>
+    static void shuffle(Range& range, std::mt19937& mt) {
+        ::shuffle(range, mt);
     }
 
     template <typename T>
@@ -81,12 +93,11 @@ public:
             } while (indices.contains(index));
             indices.insert(index);
         }
-        std::vector<T> sample{};
-        for (const auto index : indices) {
-            sample.emplace_back(vector[index]);
-        }
-        shuffle(sample.begin(), sample.end(), mt);
-        return sample;
+
+        return indices
+            | ranges::views::transform(lookup(vector))
+            | ranges::to_vector
+            | actions::shuffle(mt);
     }
 
     template <typename T>

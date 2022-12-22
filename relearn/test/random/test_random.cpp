@@ -14,6 +14,9 @@
 
 #include "util/Random.h"
 
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/range/conversion.hpp>
+
 #include <cmath>
 #include <numeric>
 #include <unordered_set>
@@ -129,8 +132,7 @@ TEST_F(RandomTest, testUniformIndices) {
         const auto indices = RandomHolder::get_random_uniform_indices(RandomHolderKey::Partition, number_indices, number_elements);
         ASSERT_EQ(indices.size(), number_indices);
 
-        std::unordered_set<size_t> hashed{};
-        hashed.insert(indices.begin(), indices.end());
+        const std::unordered_set<size_t> hashed = indices | ranges::to<std::unordered_set>;
 
         ASSERT_EQ(indices.size(), hashed.size());
 
@@ -146,8 +148,7 @@ TEST_F(RandomTest, testUniformIndicesAll) {
     const auto indices = RandomHolder::get_random_uniform_indices(RandomHolderKey::Partition, number_indices, number_indices);
     ASSERT_EQ(indices.size(), number_indices);
 
-    std::unordered_set<size_t> hashed{};
-    hashed.insert(indices.begin(), indices.end());
+    const std::unordered_set<size_t> hashed = indices | ranges::to<std::unordered_set>;
 
     ASSERT_EQ(indices.size(), hashed.size());
 
@@ -181,7 +182,7 @@ TEST_F(RandomTest, testNormalDoubleRange) {
         random_numbers[i] = RandomHolder::get_random_normal_double(RandomHolderKey::Partition, mean, stddev);
     }
 
-    const auto sum = std::reduce(random_numbers.begin(), random_numbers.end(), 0.0, std::plus<double>{});
+    const auto sum = ranges::accumulate(random_numbers, 0.0);
     std::cerr << "Testing normal doubles. Mean: " << mean << " stddev: " << stddev << "\nValue: " << (sum / iterations) << '\n';
 }
 
@@ -190,7 +191,7 @@ TEST_F(RandomTest, testFillRange) {
     const auto upper_exclusive = RandomAdapter::get_random_double<double>(0.0001, 1000.0, mt) + lower_inclusive;
 
     std::vector<double> random_numbers(iterations);
-    RandomHolder::fill(RandomHolderKey::Partition, random_numbers.begin(), random_numbers.end(), lower_inclusive, upper_exclusive);
+    RandomHolder::fill(RandomHolderKey::Partition, random_numbers, lower_inclusive, upper_exclusive);
 
     for (auto i = 0; i < iterations; i++) {
         const auto random_number = random_numbers[i];
@@ -204,7 +205,7 @@ TEST_F(RandomTest, testFillMinimumRange) {
     const auto upper_exclusive = std::nextafter(lower_inclusive, lower_inclusive * 2.0);
 
     std::vector<double> random_numbers(iterations);
-    RandomHolder::fill(RandomHolderKey::Partition, random_numbers.begin(), random_numbers.end(), lower_inclusive, upper_exclusive);
+    RandomHolder::fill(RandomHolderKey::Partition, random_numbers, lower_inclusive, upper_exclusive);
 
     for (auto i = 0; i < iterations; i++) {
         const auto random_number = random_numbers[i];
@@ -217,7 +218,7 @@ TEST_F(RandomTest, testFillException) {
     const auto upper_exclusive = RandomAdapter::get_random_double<double>(0.0, 1000.0, mt);
 
     std::vector<double> random_numbers(iterations);
-    ASSERT_THROW(RandomHolder::fill(RandomHolderKey::Partition, random_numbers.begin(), random_numbers.end(), lower_inclusive, upper_exclusive);, RelearnException);
+    ASSERT_THROW(RandomHolder::fill(RandomHolderKey::Partition, random_numbers, lower_inclusive, upper_exclusive);, RelearnException);
 }
 
 TEST_F(RandomTest, testShuffle) {
@@ -225,12 +226,12 @@ TEST_F(RandomTest, testShuffle) {
     const auto upper_exclusive = RandomAdapter::get_random_double<double>(0.1, 1000.0, mt) + lower_inclusive;
 
     std::vector<double> random_numbers(iterations);
-    RandomHolder::fill(RandomHolderKey::Partition, random_numbers.begin(), random_numbers.end(), lower_inclusive, upper_exclusive);
+    RandomHolder::fill(RandomHolderKey::Partition, random_numbers, lower_inclusive, upper_exclusive);
     std::ranges::sort(random_numbers);
 
     auto copy = random_numbers;
 
-    RandomHolder::shuffle(RandomHolderKey::Partition, random_numbers.begin(), random_numbers.end());
+    RandomHolder::shuffle(RandomHolderKey::Partition, random_numbers);
     std::ranges::sort(random_numbers);
 
     ASSERT_EQ(copy, random_numbers);

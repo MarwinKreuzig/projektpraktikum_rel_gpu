@@ -11,6 +11,7 @@
  */
 
 #include "Config.h"
+#include "util/ranges/Functional.hpp"
 
 #if !RELEARN_MPI_FOUND
 #include "MPINoWrapper.h"
@@ -31,6 +32,10 @@ using MPIWrapper = MPINoWrapper;
 #include <span>
 #include <string>
 #include <vector>
+
+#include <range/v3/view/filter.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/range/conversion.hpp>
 
 template <typename T>
 class OctreeNode;
@@ -226,10 +231,9 @@ public:
         RelearnException::check(values.size() == num_ranks,
             "MPIWrapper::exchange_values: There are too many values: {} for the number of ranks {}!", values.size(), num_ranks);
 
-        std::vector<size_t> request_sizes(num_ranks, 0);
-        for (auto target_rank = 0; target_rank < num_ranks; target_rank++) {
-            request_sizes[target_rank] = values[target_rank].size();
-        }
+        const auto request_sizes = values
+            | ranges::views::transform(ranges::size)
+            | ranges::to_vector;
 
         std::vector<size_t> response_sizes = all_to_all(request_sizes);
 
@@ -239,20 +243,12 @@ public:
         }
 
         std::vector<AsyncToken> async_tokens{};
-        for (const auto rank : MPIRank::range(num_ranks)) {
-            if (rank == my_rank) {
-                continue;
-            }
-
+        for (const auto rank : MPIRank::range(num_ranks) | ranges::views::filter(not_equal_to(my_rank))) {
             const auto token = async_receive(std::span{ retrieved_data[rank.get_rank()] }, rank.get_rank());
             async_tokens.emplace_back(token);
         }
 
-        for (const auto rank : MPIRank::range(num_ranks)) {
-            if (rank == my_rank) {
-                continue;
-            }
-
+        for (const auto rank : MPIRank::range(num_ranks) | ranges::views::filter(not_equal_to(my_rank))) {
             const auto token = async_send(std::span{ values[rank.get_rank()] }, rank.get_rank());
             async_tokens.emplace_back(token);
         }
@@ -281,11 +277,7 @@ public:
 
         std::vector<AsyncToken> async_tokens{};
 
-        for (const auto rank : MPIRank::range(number_ranks)) {
-            if (!incoming_requests.contains(rank)) {
-                continue;
-            }
-
+        for (const auto rank : MPIRank::range(number_ranks) | ranges::views::filter([&incoming_requests](const auto& rank){ return incoming_requests.contains(rank); })) {
             auto* buffer = incoming_requests.get_data(rank);
             const auto size = incoming_requests.size(rank);
 
@@ -293,11 +285,7 @@ public:
             async_tokens.emplace_back(token);
         }
 
-        for (const auto rank : MPIRank::range(number_ranks)) {
-            if (!outgoing_requests.contains(rank)) {
-                continue;
-            }
-
+        for (const auto rank : MPIRank::range(number_ranks) | ranges::views::filter([&outgoing_requests](const auto& rank){ return outgoing_requests.contains(rank); })) {
             const auto* buffer = outgoing_requests.get_data(rank);
             const auto size = outgoing_requests.size(rank);
 

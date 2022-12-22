@@ -11,6 +11,7 @@
 #include "NeuronModels.h"
 
 #include "neurons/NeuronsExtraInfo.h"
+#include "util/NeuronID.h"
 
 #include <cmath>
 
@@ -188,11 +189,9 @@ void AEIFModel::update_activity() {
 }
 
 void AEIFModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {
-    for (NeuronID::value_type neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
-        const auto id = NeuronID{ neuron_id };
-
-        w[neuron_id] = 0.0;
-        set_x(id, E_L);
+    for (const auto neuron_id : NeuronID::range(start_id, end_id)) {
+        w[neuron_id.get_neuron_id()] = 0.0;
+        set_x(neuron_id, E_L);
     }
 }
 

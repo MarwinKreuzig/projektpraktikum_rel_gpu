@@ -15,8 +15,12 @@
 #include "neurons/NetworkGraph.h"
 #include "neurons/input/FiredStatusCommunicationMap.h"
 #include "util/NeuronID.h"
+#include "util/ranges/Functional.hpp"
 
 #include <algorithm>
+
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/view/filter.hpp>
 
 void SynapticInputCalculator::init(const number_neurons_type number_neurons) {
     RelearnException::check(number_local_neurons == 0, "SynapticInputCalculator::init: Was already initialized");
@@ -48,51 +52,41 @@ void SynapticInputCalculator::set_synaptic_input(const double value) noexcept {
 double SynapticInputCalculator::get_local_synaptic_input(const std::span<const FiredStatus> fired, const NeuronID neuron_id) {
     // Walk through the local in-edges of my neuron
     const auto& [local_in_edges_plastic, local_in_edges_static] = network_graph->get_local_in_edges(neuron_id);
+    const auto neuron_fired = [&fired](const NeuronID& src_neuron_id) {
+        return fired[src_neuron_id.get_neuron_id()] == FiredStatus::Fired;
+    };
 
-    auto local_input = 0.0;
+    const auto calculate = [this, &neuron_fired](const ranges::range auto range){
+        return ranges::accumulate(
+               range
+                   | ranges::views::filter(neuron_fired, element<0>)
+                   | ranges::views::values,
+               0.0)
+        * synapse_conductance;
+    };
 
-    for (const auto& [src_neuron_id, edge_val] : local_in_edges_plastic) {
-        const auto spike = fired[src_neuron_id.get_neuron_id()];
-        if (spike == FiredStatus::Fired) {
-            local_input += synapse_conductance * edge_val;
-        }
-    }
-
-    for (const auto& [src_neuron_id, edge_val] : local_in_edges_static) {
-        const auto spike = fired[src_neuron_id.get_neuron_id()];
-        if (spike == FiredStatus::Fired) {
-            local_input += synapse_conductance * edge_val;
-        }
-    }
-
-    return local_input;
+    // Walk through the local in-edges of my neuron
+    return calculate(local_in_edges_plastic) + calculate(local_in_edges_static);
 }
 
 double SynapticInputCalculator::get_distant_synaptic_input(const std::span<const FiredStatus> fired, const NeuronID neuron_id) {
     // Walk through the distant in-edges of my neuron
     const auto& [in_edges_plastic, in_edges_static] = network_graph->get_distant_in_edges(neuron_id);
 
-    auto distant_input = 0.0;
+    const auto calculate = [this](const ranges::range auto range){
+        const auto communicator_contains_rank_id = [this](const auto& key) {
+            const auto& rank = key.get_rank();
+            const auto& initiator_neuron_id = key.get_neuron_id();
+            return fired_status_comm->contains(rank, initiator_neuron_id);
+        };
 
-    for (const auto& [key, edge_val] : in_edges_plastic) {
-        const auto& rank = key.get_rank();
-        const auto& initiator_neuron_id = key.get_neuron_id();
-
-        const auto contains_id = fired_status_comm->contains(rank, initiator_neuron_id);
-        if (contains_id) {
-            distant_input += synapse_conductance * edge_val;
-        }
-    }
-
-    for (const auto& [key, edge_val] : in_edges_static) {
-        const auto& rank = key.get_rank();
-        const auto& initiator_neuron_id = key.get_neuron_id();
-
-        const auto contains_id = fired_status_comm->contains(rank, initiator_neuron_id);
-        if (contains_id) {
-            distant_input += synapse_conductance * edge_val;
-        }
-    }
-
-    return distant_input;
+        return ranges::accumulate(
+               range
+                   | ranges::views::filter(communicator_contains_rank_id, element<0>)
+                   | ranges::views::values,
+               0.0)
+        * synapse_conductance;
+    };
+    // Walk through the distant in-edges of my neuron
+    return calculate(in_edges_plastic) + calculate(in_edges_static);
 }

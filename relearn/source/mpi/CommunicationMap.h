@@ -19,6 +19,11 @@
 #include <unordered_map>
 #include <vector>
 
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/transform.hpp>
+
 /**
  * This type accumulates multiple values that should be exchanged between different MPI ranks.
  * It does not perform MPI communication on its own.
@@ -82,13 +87,11 @@ public:
      * @return The total number of requests
      */
     [[nodiscard]] requests_size_type get_total_number_requests() const noexcept {
-        requests_size_type total_size = 0;
-
-        for (const auto& [_, requests_for_rank] : requests) {
-            total_size += requests_for_rank.size();
-        }
-
-        return total_size;
+        return ranges::accumulate(
+            requests
+                | ranges::views::values
+                | ranges::views::transform(ranges::size),
+            requests_size_type{ 0U });
     }
 
     /**
@@ -359,13 +362,11 @@ public:
      *      <return>[i] = k indicates that there are k requests for rank i
      */
     [[nodiscard]] sizes_type get_request_sizes() const noexcept {
-        sizes_type number_requests{};
-
-        for (const auto& [rank, requests_for_rank] : requests) {
-            number_requests[rank] = requests_for_rank.size();
-        }
-
-        return number_requests;
+        return requests
+            | ranges::views::transform([](const auto& rank_requests_pair) -> sizes_type::value_type {
+                  return { rank_requests_pair.first, ranges::size(rank_requests_pair.second) };
+              })
+            | ranges::to<sizes_type>;
     }
 
     /**

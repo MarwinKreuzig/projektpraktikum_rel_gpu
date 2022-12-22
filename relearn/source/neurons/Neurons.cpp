@@ -17,13 +17,16 @@
 #include "neurons/models/NeuronModels.h"
 #include "neurons/LocalAreaTranslator.h"
 #include "neurons/NetworkGraph.h"
-#include "io/NeuronIO.h"
+#include "neurons/enums/UpdateStatus.h"
 #include "sim/Essentials.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
+#include "io/NeuronIO.h"
+#include "util/NeuronID.h"
 #include "util/Random.h"
 #include "util/Timers.h"
 #include "util/Utility.h"
+#include "util/ranges/Functional.hpp"
 
 #include <algorithm>
 #include <iomanip>
@@ -32,6 +35,13 @@
 #include <optional>
 #include <ranges>
 #include <sstream>
+
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/for_each.hpp>
+#include <range/v3/view/repeat_n.hpp>
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/view/filter.hpp>
+#include <range/v3/view/transform.hpp>
 
 void Neurons::init(const number_neurons_type number_neurons) {
     RelearnException::check(this->number_neurons == 0, "Neurons::init: Was already initialized");
@@ -340,15 +350,14 @@ StatisticalMeasures Neurons::global_statistics(const std::span<const double> loc
     /**
      * Calc variance
      */
-    double my_var = 0.0;
-    for (size_t neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
-            continue;
-        }
-
-        my_var += (local_values[neuron_id] - avg) * (local_values[neuron_id] - avg);
-    }
-    my_var /= num_values;
+    const auto my_var = ranges::accumulate(NeuronID::range_id(number_neurons)
+                                | ranges::views::filter(not_equal_to(UpdateStatus::Disabled), lookup(disable_flags))
+                                | ranges::views::transform([&local_values, avg](const auto& neuron_id) {
+                                      const auto val = local_values[neuron_id] - avg;
+                                      return val * val;
+                                  }),
+                            0.0)
+        / num_values;
 
     // Get global variance at rank "root"
     const double var = MPIWrapper::reduce(my_var, MPIWrapper::ReduceFunction::Sum, root);
@@ -507,7 +516,7 @@ std::tuple<std::uint64_t, std::uint64_t, std::uint64_t> Neurons::update_connecti
     size_t num_synapses_created = create_synapses();
     debug_check_counts();
     network_graph->debug_check();
-        
+
     neuron_model->notify_of_plasticity_change(step);
 
     return { num_axons_deleted, num_dendrites_deleted, num_synapses_created };
@@ -884,11 +893,8 @@ void Neurons::print_network_graph_to_log_file(const step_type step, const bool w
 
 void Neurons::print_positions_to_log_file() {
     std::stringstream ss;
-    NeuronIO::write_neurons_componentwise(NeuronID::range(number_neurons), extra_info->get_positions(),
-        local_area_translator,
-        axons->get_signal_types(), ss, partition->get_total_number_neurons(),
-        partition->get_simulation_box_size(),
-        partition->get_all_local_subdomain_boundaries());
+    NeuronIO::write_neurons_componentwise(NeuronID::range(number_neurons) | ranges::to_vector, extra_info->get_positions(), local_area_translator,
+        axons->get_signal_types(), ss, partition->get_total_number_neurons(), partition->get_simulation_box_size(), partition->get_all_local_subdomain_boundaries());
     LogFiles::write_to_file(LogFiles::EventType::Positions, false, ss.str());
 }
 

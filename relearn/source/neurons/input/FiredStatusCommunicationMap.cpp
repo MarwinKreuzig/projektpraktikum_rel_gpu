@@ -17,6 +17,10 @@
 
 #include <ranges>
 
+#include <range/v3/algorithm/for_each.hpp>
+#include <range/v3/view/filter.hpp>
+#include <range/v3/view/map.hpp>
+
 void FiredStatusCommunicationMap::set_local_fired_status([[maybe_unused]] const step_type step, const std::span<const FiredStatus> fired_status) {
     outgoing_ids.clear();
 
@@ -34,31 +38,23 @@ void FiredStatusCommunicationMap::set_local_fired_status([[maybe_unused]] const 
 
     Timers::start(TimerRegion::PREPARE_SENDING_SPIKES);
 
+    const auto not_disabled_not_inactive = [&disable_flags, &fired_status](const NeuronID& neuron_id) {
+        const auto id = neuron_id.get_neuron_id();
+        return disable_flags[id] != UpdateStatus::Disabled && fired_status[id] != FiredStatus::Inactive;
+    };
+
     // For my neurons
-    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_local_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
-            continue;
-        }
-
-        if (fired_status[neuron_id] == FiredStatus::Inactive) {
-            continue;
-        }
-
-        const auto id = NeuronID{ neuron_id };
-
+    for (const auto neuron_id : NeuronID::range(number_local_neurons)
+            | ranges::views::filter(not_disabled_not_inactive)) {
         // Don't send firing neuron id to myself as I already have this info
-        const auto& [distant_out_edges_plastic, distant_out_edges_static] = network_graph->get_distant_out_edges(id);
+        const auto& [distant_out_edges_plastic, distant_out_edges_static] = network_graph->get_distant_out_edges(neuron_id);
 
         // Find all target neurons which should receive the signal fired.
         // That is, neurons which connect axons from neuron "neuron_id"
-        auto send_fired_neurons = [this, id](const auto& distant_out_edges) {
-            for (const auto& [edge_key, _] : distant_out_edges) {
-                const auto target_rank = edge_key.get_rank();
-
-                // Function expects to insert neuron ids in sorted order
-                // Append if it is not already in
-                outgoing_ids.append(target_rank, id);
-            }
+        auto send_fired_neurons = [this, neuron_id](const auto& distant_out_edges) {
+            ranges::for_each(distant_out_edges | ranges::views::keys, [this, &neuron_id](const RankNeuronId& target_rank) {
+                outgoing_ids.append(target_rank.get_rank(), neuron_id);
+            });
         };
 
         send_fired_neurons(distant_out_edges_static);

@@ -111,8 +111,6 @@ private:
 
         RelearnException::check(all_same_size, "AlgorithmImpl::update_leaf_nodes: The vectors were of different sizes");
 
-        using counter_type = typename AdditionalCellAttributes::counter_type;
-
         for (const auto& neuron_id : NeuronID::range(num_leaf_nodes)) {
             const auto local_neuron_id = neuron_id.get_neuron_id();
 

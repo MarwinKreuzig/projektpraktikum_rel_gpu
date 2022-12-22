@@ -12,13 +12,14 @@
 
 #include "adapter/mpi/MpiRankAdapter.h"
 #include "adapter/neuron_id/NeuronIdAdapter.h"
-#include "adapter/neurons/NeuronTypesAdapter.h"
 #include "adapter/neurons/NeuronsAdapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
 #include "adapter/octree/OctreeAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"
 #include "adapter/synaptic_elements/SynapticElementsAdapter.h"
 #include "adapter/mpi/MpiRankAdapter.h"
 #include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "neurons/enums/UpdateStatus.h"
 #include "adapter/neurons/NeuronTypesAdapter.h"
 #include "adapter/neurons/NeuronsAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"
@@ -29,9 +30,12 @@
 #include "algorithm/Cells.h"
 #include "structure/Cell.h"
 #include "structure/Octree.h"
+#include "util/NeuronID.h"
 #include "util/Vec3.h"
+#include "util/ranges/Functional.hpp"
 
 #include <memory>
+#include <range/v3/view/filter.hpp>
 #include <stack>
 #include <tuple>
 #include <vector>
@@ -62,7 +66,7 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
     const auto& excitatory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Excitatory, mt);
     const auto& inhibitory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Inhibitory, mt);
 
-    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons, mt);
+    std::vector<std::pair<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons, mt);
 
     auto octree = std::make_shared<OctreeImplementation<BarnesHutCell>>(min, max, 0);
 
@@ -83,12 +87,9 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
 
     const auto update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
 
-    std::vector<NeuronID> disabled_neurons{};
-    for (auto i = 0; i < number_neurons; i++) {
-        if (update_status[i] == UpdateStatus::Disabled) {
-            disabled_neurons.emplace_back(i);
-        }
-    }
+    const auto disabled_neurons = NeuronID::range(number_neurons)
+        | ranges::views::filter(equal_to(UpdateStatus::Disabled), lookup(update_status, &NeuronID::get_neuron_id))
+        | ranges::to_vector;
 
     extra_infos->set_disabled_neurons(disabled_neurons);
 

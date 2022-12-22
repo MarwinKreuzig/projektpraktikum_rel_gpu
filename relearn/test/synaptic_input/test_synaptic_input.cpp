@@ -10,17 +10,24 @@
 
 #include "test_synaptic_input.h"
 
-#include "adapter/random/RandomAdapter.h"
-
 #include "adapter/network_graph/NetworkGraphAdapter.h"
-
 #include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/random/RandomAdapter.h"
+#include "adapter/network_graph/NetworkGraphAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "neurons/enums/FiredStatus.h"
+#include "neurons/helper/RankNeuronId.h"
 #include "neurons/input/FiredStatusCommunicationMap.h"
 #include "neurons/input/SynapticInputCalculator.h"
 #include "neurons/input/SynapticInputCalculators.h"
 #include "util/NeuronID.h"
+#include "util/ranges/Functional.hpp"
 
 #include <memory>
+
+#include <range/v3/functional/compose.hpp>
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/view/filter.hpp>
 
 void test_input_equality(const std::unique_ptr<SynapticInputCalculator>& input_calculator) {
     const auto number_neurons = input_calculator->get_number_neurons();
@@ -200,7 +207,7 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdate) {
         network_graph->add_synapse(PlasticLocalSynapse(target_id, source_id, weight));
     }
 
-    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
             extra_info->set_disabled_neurons(std::vector{ NeuronID{ neuron_id } });
@@ -222,15 +229,15 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdate) {
             continue;
         }
 
-        auto total_input = 0.0;
+        const auto id_not_inactive = [&fired_status](const auto& other_id) { return fired_status[other_id.get_neuron_id().get_neuron_id()] != FiredStatus::Inactive; };
 
-        for (const auto& [other_id, weight] : NetworkGraphAdapter::get_all_plastic_in_edges(*network_graph, MPIRank::root_rank(), NeuronID(neuron_id))) {
-            if (fired_status[other_id.get_neuron_id().get_neuron_id()] == FiredStatus::Inactive) {
-                continue;
-            }
-
-            total_input += (weight * random_conductance);
-        }
+        const auto edges = NetworkGraphAdapter::get_all_plastic_in_edges(*network_graph, MPIRank::root_rank(), NeuronID(neuron_id));
+        const auto total_input = ranges::accumulate(
+                                     edges
+                                         | ranges::views::filter(id_not_inactive, element<0>)
+                                         | ranges::views::transform(element<1>),
+                                     0.0)
+            * random_conductance;
 
         ASSERT_EQ(total_input, inputs[neuron_id]);
     }
@@ -317,7 +324,7 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate) {
         network_graph->add_synapse(PlasticLocalSynapse(target_id, source_id, weight));
     }
 
-    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
             extra_info->set_disabled_neurons(std::vector{ NeuronID{ neuron_id } });
@@ -333,15 +340,15 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate) {
 
     const auto& inputs = input_calculator->get_synaptic_input();
 
-    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        if (update_status[neuron_id] == UpdateStatus::Disabled) {
-            ASSERT_EQ(inputs[neuron_id], 0.0);
+    for (const auto neuron_id : NeuronID::range(number_neurons)) {
+        if (update_status[neuron_id.get_neuron_id()] == UpdateStatus::Disabled) {
+            ASSERT_EQ(inputs[neuron_id.get_neuron_id()], 0.0);
             continue;
         }
 
         auto total_input = 0.0;
 
-        for (const auto& [other_id, weight] : NetworkGraphAdapter::get_all_plastic_in_edges(*network_graph, MPIRank::root_rank(), NeuronID(neuron_id))) {
+        for (const auto& [other_id, weight] : NetworkGraphAdapter::get_all_plastic_in_edges(*network_graph, MPIRank::root_rank(), neuron_id)) {
             if (fired_status[other_id.get_neuron_id().get_neuron_id()] == FiredStatus::Inactive) {
                 continue;
             }
@@ -351,7 +358,7 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate) {
 
         const auto scaled_input = random_scale * std::log10(total_input + 1.0);
 
-        ASSERT_NEAR(scaled_input, inputs[neuron_id], eps);
+        ASSERT_NEAR(scaled_input, inputs[neuron_id.get_neuron_id()], eps);
     }
 
     test_input_equality(input_calculator);
@@ -436,7 +443,7 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputUpdate) {
         network_graph->add_synapse(PlasticLocalSynapse(target_id, source_id, weight));
     }
 
-    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
             extra_info->set_disabled_neurons(std::vector{ NeuronID{ neuron_id } });

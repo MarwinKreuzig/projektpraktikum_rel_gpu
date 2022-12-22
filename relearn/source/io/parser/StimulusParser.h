@@ -17,6 +17,8 @@
 #include "util/Interval.h"
 #include "util/NeuronID.h"
 #include "util/StringUtil.h"
+#include "util/ranges/Functional.hpp"
+#include "util/ranges/views/Optional.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -27,6 +29,10 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/filter.hpp>
+#include <range/v3/view/transform.hpp>
 
 class StimulusParser {
 public:
@@ -102,17 +108,10 @@ public:
      * @return All successfully parsed stimuli
      */
     [[nodiscard]] static std::vector<Stimulus> parse_lines(const std::vector<std::string>& lines, const int my_rank) {
-        std::vector<Stimulus> stimuli{};
-        stimuli.reserve(lines.size());
-
-        for (const auto& line : lines) {
-            const auto& optional_stimulus = parse_line(line, my_rank);
-            if (optional_stimulus.has_value()) {
-                stimuli.emplace_back(optional_stimulus.value());
-            }
-        }
-
-        return stimuli;
+        return lines
+            | ranges::views::transform([my_rank](const auto& line) { return parse_line(line, my_rank); })
+            | views::optional_values
+            | ranges::to_vector;
     }
 
     /**
@@ -123,33 +122,26 @@ public:
      * @return The check function. Empty if the stimuli intersect
      */
     [[nodiscard]] static RelearnTypes::stimuli_function_type generate_stimulus_function(std::vector<StimulusParser::Stimulus> stimuli) {
-        std::vector<Interval> intervals{};
-        intervals.reserve(stimuli.size());
-
-        for (const auto& [interval, _1, _2, _3] : stimuli) {
-            intervals.emplace_back(interval);
-        }
-
-        if (Interval::check_intervals_for_intersection(intervals)) {
+        if (Interval::check_intervals_for_intersection(
+                stimuli | ranges::views::transform(&Stimulus::interval) | ranges::to_vector)) {
             LogFiles::print_message_rank(MPIRank::root_rank(), "The intervals for the stimulus parser intersected, discarding all.");
             return {};
         }
 
-        auto comparison = [](const StimulusParser::Stimulus& first, const StimulusParser::Stimulus& second) -> bool {
-            return first.interval.begin < second.interval.begin;
+        auto less_begin = [](const Interval& first, const Interval& second) -> bool {
+            return first.begin < second.begin;
         };
 
-        std::ranges::sort(stimuli, comparison);
+        std::ranges::sort(stimuli, less_begin, &Stimulus::interval);
 
         auto step_checker_function = [stimuli = std::move(stimuli)](step_type current_step) noexcept -> RelearnTypes::stimuli_list_type {
-            RelearnTypes::stimuli_list_type stimuli_vector;
-            for (const auto& [interval, intensity, ids, areas] : stimuli) {
-                if (interval.hits_step(current_step)) {
-                    stimuli_vector.emplace_back(std::make_pair(ids, intensity));
-                }
-            }
-
-            return stimuli_vector;
+            const auto hits_current_step = [current_step](const Interval& interval) { return interval.hits_step(current_step); };
+            return stimuli
+                | ranges::views::filter(hits_current_step, &Stimulus::interval)
+                | ranges::views::transform([](const Stimulus& stimulus) {
+                      return std::pair{ stimulus.matching_ids, stimulus.stimulus_intensity };
+                  })
+                | ranges::to<RelearnTypes::stimuli_list_type>;
         };
 
         return step_checker_function;

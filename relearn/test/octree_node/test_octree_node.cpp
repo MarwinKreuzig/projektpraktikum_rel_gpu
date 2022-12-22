@@ -25,6 +25,7 @@
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
 #include "util/Vec3.h"
+#include "util/ranges/Functional.hpp"
 
 #include <algorithm>
 #include <map>
@@ -33,6 +34,8 @@
 #include <stack>
 #include <tuple>
 #include <vector>
+
+#include <range/v3/algorithm/sort.hpp>
 
 using test_types = ::testing::Types<BarnesHutCell, BarnesHutInvertedCell, FastMultipoleMethodsCell, NaiveCell>;
 TYPED_TEST_SUITE(OctreeNodeTest, test_types);
@@ -159,16 +162,16 @@ TYPED_TEST(OctreeNodeTest, testInsert) {
     const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(this->mt);
     const auto num_additional_ids = NeuronIdAdapter::get_random_number_neurons(this->mt);
 
-    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
+    std::vector<std::pair<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
 
     for (const auto& [pos, id] : neurons_to_place) {
         auto tmp = node.insert(pos, id);
     }
 
-    std::vector<std::tuple<Vec3d, NeuronID>> placed_neurons = OctreeAdapter::template extract_neurons<AdditionalCellAttributes>(&node);
+    std::vector<std::pair<Vec3d, NeuronID>> placed_neurons = OctreeAdapter::template extract_neurons<AdditionalCellAttributes>(&node);
 
-    std::sort(neurons_to_place.begin(), neurons_to_place.end(), [](std::tuple<Vec3d, NeuronID> a, std::tuple<Vec3d, NeuronID> b) { return std::get<1>(a) > std::get<1>(b); });
-    std::sort(placed_neurons.begin(), placed_neurons.end(), [](std::tuple<Vec3d, NeuronID> a, std::tuple<Vec3d, NeuronID> b) { return std::get<1>(a) > std::get<1>(b); });
+    ranges::sort(neurons_to_place, std::greater{},element<1>);
+    ranges::sort(placed_neurons, std::greater{},element<1>);
 
     ASSERT_EQ(neurons_to_place.size(), placed_neurons.size());
 
@@ -293,7 +296,7 @@ TYPED_TEST(OctreeNodeTest, testLevel) {
     size_t number_neurons = NeuronIdAdapter::get_random_number_neurons(this->mt);
     size_t num_additional_ids = NeuronIdAdapter::get_random_number_neurons(this->mt);
 
-    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
+    std::vector<std::pair<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
 
     for (const auto& [pos, id] : neurons_to_place) {
         auto tmp = node.insert(pos, id /*, my_rank */);
@@ -472,7 +475,7 @@ TYPED_TEST(OctreeNodeTest, testUpdateTree) {
     const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(this->mt);
     const auto num_additional_ids = NeuronIdAdapter::get_random_number_neurons(this->mt);
 
-    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
+    std::vector<std::pair<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
 
     for (const auto& [pos, id] : neurons_to_place) {
         auto tmp = node.insert(pos, id);
@@ -847,7 +850,7 @@ TYPED_TEST(OctreeNodeTest, testNodeExtractor) {
     const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(this->mt);
     const auto num_additional_ids = NeuronIdAdapter::get_random_number_neurons(this->mt);
 
-    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
+    std::vector<std::pair<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
 
     for (const auto& [pos, id] : neurons_to_place) {
         auto tmp = node.insert(pos, id);
@@ -914,10 +917,10 @@ TYPED_TEST(OctreeNodeTest, testNodeExtractor) {
 
     OctreeNodeUpdater<AdditionalCellAttributes>::update_tree(&node);
 
-    std::sort(excitatory_dendrites.begin(), excitatory_dendrites.end());
-    std::sort(inhibitory_dendrites.begin(), inhibitory_dendrites.end());
-    std::sort(excitatory_axons.begin(), excitatory_axons.end());
-    std::sort(inhibitory_axons.begin(), inhibitory_axons.end());
+    ranges::sort(excitatory_dendrites);
+    ranges::sort(inhibitory_dendrites);
+    ranges::sort(excitatory_axons);
+    ranges::sort(inhibitory_axons);
 
     using TT = OctreeNodeExtractor<AdditionalCellAttributes>;
 
@@ -925,7 +928,7 @@ TYPED_TEST(OctreeNodeTest, testNodeExtractor) {
         ASSERT_THROW(auto val = TT::get_all_positions_for(&node, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
     } else {
         auto nodes = TT::get_all_positions_for(&node, ElementType::Dendrite, SignalType::Excitatory);
-        std::sort(nodes.begin(), nodes.end());
+        ranges::sort(nodes);
 
         ASSERT_EQ(nodes, excitatory_dendrites);
     }
@@ -934,7 +937,7 @@ TYPED_TEST(OctreeNodeTest, testNodeExtractor) {
         ASSERT_THROW(auto val = TT::get_all_positions_for(&node, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
     } else {
         auto nodes = TT::get_all_positions_for(&node, ElementType::Dendrite, SignalType::Inhibitory);
-        std::sort(nodes.begin(), nodes.end());
+        ranges::sort(nodes);
 
         ASSERT_EQ(nodes, inhibitory_dendrites);
     }
@@ -943,7 +946,7 @@ TYPED_TEST(OctreeNodeTest, testNodeExtractor) {
         ASSERT_THROW(auto val = TT::get_all_positions_for(&node, ElementType::Axon, SignalType::Excitatory), RelearnException);
     } else {
         auto nodes = TT::get_all_positions_for(&node, ElementType::Axon, SignalType::Excitatory);
-        std::sort(nodes.begin(), nodes.end());
+        ranges::sort(nodes);
 
         ASSERT_EQ(nodes, excitatory_axons);
     }
@@ -952,7 +955,7 @@ TYPED_TEST(OctreeNodeTest, testNodeExtractor) {
         ASSERT_THROW(auto val = TT::get_all_positions_for(&node, ElementType::Axon, SignalType::Inhibitory), RelearnException);
     } else {
         auto nodes = TT::get_all_positions_for(&node, ElementType::Axon, SignalType::Inhibitory);
-        std::sort(nodes.begin(), nodes.end());
+        ranges::sort(nodes);
 
         ASSERT_EQ(nodes, inhibitory_axons);
     }

@@ -16,6 +16,12 @@
 #include "adapter/mpi/MpiRankAdapter.h"
 
 #include "io/parser/NeuronIdParser.h"
+#include "neurons/helper/RankNeuronId.h"
+#include "util/ranges/Functional.hpp"
+
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/filter.hpp>
+#include <range/v3/view/transform.hpp>
 
 TEST_F(NeuronIdParserTest, testParseDescriptionFixed) {
     auto checker = [](std::string_view description, MPIRank rank, NeuronID::value_type neuron_id) {
@@ -156,11 +162,14 @@ TEST_F(NeuronIdParserTest, testExtractNeuronIDs) {
     rank_neuron_ids.insert(rank_neuron_ids.begin() + position_1, RankNeuronId(my_rank, NeuronID(42)));
     rank_neuron_ids.insert(rank_neuron_ids.begin() + position_2, RankNeuronId(my_rank, NeuronID(9874)));
 
-    std::vector<RankNeuronId> filtered{};
-    std::copy_if(rank_neuron_ids.begin(), rank_neuron_ids.end(), std::back_inserter(filtered), [my_rank](const RankNeuronId& rni) { const auto& [rank, id] = rni; return rank == my_rank; });
-
-    std::vector<NeuronID> golden_ids{};
-    std::transform(filtered.begin(), filtered.end(), std::back_inserter(golden_ids), [](const RankNeuronId& rni) { const auto& [rank, id] = rni; return NeuronID(id.get_neuron_id() - 1); });
+    const std::vector<NeuronID> golden_ids =
+        rank_neuron_ids |
+        ranges::views::filter(equal_to(my_rank), &RankNeuronId::get_rank) |
+        ranges::views::transform([](const RankNeuronId &rni) {
+          const auto &[rank, id] = rni;
+          return NeuronID(id.get_neuron_id() - 1);
+        }) |
+        ranges::to_vector;
 
     const auto& extracted_ids = NeuronIdParser::extract_my_ids(rank_neuron_ids, my_rank);
 

@@ -13,14 +13,18 @@
 #include "algorithm/Connector.h"
 #include "algorithm/Kernel/Kernel.h"
 #include "neurons/NeuronsExtraInfo.h"
+#include "neurons/enums/UpdateStatus.h"
 #include "structure/NodeCache.h"
 #include "structure/OctreeNode.h"
 #include "util/NeuronID.h"
 #include "util/Timers.h"
+#include "util/ranges/Functional.hpp"
 
 #include <algorithm>
 #include <array>
 #include <stack>
+
+#include <range/v3/view/filter.hpp>
 
 std::optional<RankNeuronId> Naive::find_target_neuron(const NeuronID& src_neuron_id, const position_type& axon_position, const SignalType dendrite_type_needed) {
     OctreeNode<NaiveCell>* node_selected = nullptr;
@@ -67,16 +71,8 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const number
     const auto size_hint = std::min(number_neurons_type(number_ranks), number_neurons);
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks, size_hint);
 
-    const auto& axons_counts = axons->get_grown_elements();
-    const auto& axons_connected_counts = axons->get_connected_elements();
     // For my neurons
-    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] != UpdateStatus::Enabled) {
-            continue;
-        }
-
-        const auto id = NeuronID{ neuron_id };
-
+    for (const auto id : NeuronID::range(number_neurons) | ranges::views::filter(equal_to(UpdateStatus::Enabled), lookup(disable_flags, &NeuronID::get_neuron_id))) {
         const auto number_vacant_axons = axons->get_free_elements(id);
         if (number_vacant_axons == 0) {
             continue;

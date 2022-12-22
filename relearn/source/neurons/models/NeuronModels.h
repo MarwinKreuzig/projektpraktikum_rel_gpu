@@ -16,9 +16,12 @@
 #include "neurons/input/BackgroundActivityCalculator.h"
 #include "neurons/input/Stimulus.h"
 #include "neurons/input/SynapticInputCalculator.h"
+#include "neurons/enums/UpdateStatus.h"
+#include "neurons/input/BackgroundActivityCalculator.h"
 #include "neurons/models/ModelParameter.h"
 #include "util/RelearnException.h"
 #include "util/NeuronID.h"
+#include "Types.h"
 
 #include <algorithm>
 #include <array>
@@ -26,6 +29,8 @@
 #include <span>
 #include <utility>
 #include <vector>
+
+#include <range/v3/algorithm/fill.hpp>
 
 template <typename T>
 class AdapterNeuronModel;
@@ -158,7 +163,7 @@ public:
      * @param fire_recorder_period Type of recorder that will be resetted
      */
     void reset_fired_recorder(const FireRecorderPeriod fire_recorder_period) noexcept {
-        std::fill(fired_recorder[fire_recorder_period].begin(), fired_recorder[fire_recorder_period].end(), 0U);
+        ranges::fill(fired_recorder[fire_recorder_period], 0U);
     }
 
     /**

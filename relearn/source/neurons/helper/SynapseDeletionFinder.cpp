@@ -18,9 +18,15 @@
 #include "util/ProbabilityPicker.h"
 #include "util/Random.h"
 #include "util/Timers.h"
+#include "util/ranges/Functional.hpp"
 
 #include <numeric>
 #include <utility>
+
+#include <range/v3/action/insert.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/algorithm/lower_bound.hpp>
 
 std::pair<uint64_t, uint64_t> SynapseDeletionFinder::delete_synapses() {
     auto deletion_helper = [this](const std::shared_ptr<SynapticElements>& synaptic_elements) {
@@ -70,11 +76,7 @@ CommunicationMap<SynapseDeletionRequest> SynapseDeletionFinder::find_synapses_to
     const auto my_rank = MPIWrapper::get_my_rank();
     const auto element_type = synaptic_elements->get_element_type();
 
-    for (const auto& neuron_id : NeuronID::range(number_neurons)) {
-        if (!extra_info->does_update_plasticity(neuron_id)) {
-            continue;
-        }
-
+    for (const auto& neuron_id : NeuronID::range(number_neurons) | ranges::views::filter([this](const auto& neuron_id) { return extra_info->does_update_plasticity(neuron_id); })) {
         /**
          * Create and delete synaptic elements as required.
          * This function only deletes elements (bound and unbound), no synapses.
@@ -265,14 +267,7 @@ std::vector<RankNeuronId> RandomSynapseDeletionFinder::find_synapses_on_neuron(c
 
     const auto& drawn_indices = RandomHolder::get_random_uniform_indices(RandomHolderKey::SynapseDeletionFinder, num_synapses_to_delete, number_synapses);
 
-    std::vector<RankNeuronId> affected_neurons{};
-    affected_neurons.reserve(num_synapses_to_delete);
-
-    for (const auto index : drawn_indices) {
-        affected_neurons.emplace_back(current_synapses[index]);
-    }
-
-    return affected_neurons;
+    return drawn_indices | ranges::views::transform(lookup(current_synapses)) | ranges::to_vector;
 }
 
 CommunicationMap<SynapseDeletionRequest> InverseLengthSynapseDeletionFinder::find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) {
@@ -307,11 +302,7 @@ CommunicationMap<NeuronID> InverseLengthSynapseDeletionFinder::find_partners_to_
     std::unordered_set<RankNeuronId> partners{};
     partners.reserve(sum_to_delete);
 
-    for (const auto neuron_id : NeuronID::range(number_neurons)) {
-        if (!extra_info->does_update_plasticity(neuron_id)) {
-            continue;
-        }
-
+    for (const auto neuron_id : NeuronID::range(number_neurons) | ranges::views::filter([this](const auto& neuron_id) { return extra_info->does_update_plasticity(neuron_id); })) {
         /**
          * Create and delete synaptic elements as required.
          * This function only deletes elements (bound and unbound), no synapses.
@@ -326,10 +317,10 @@ CommunicationMap<NeuronID> InverseLengthSynapseDeletionFinder::find_partners_to_
 
         if (element_type == ElementType::Axon) {
             const auto& neuron_partners = network_graph->get_all_plastic_partners_outgoing(neuron_id);
-            partners.insert(neuron_partners.begin(), neuron_partners.end());
+            ranges::insert(partners, neuron_partners);
         } else {
             const auto& neuron_partners = network_graph->get_all_plastic_partners_incoming(neuron_id, signal_type);
-            partners.insert(neuron_partners.begin(), neuron_partners.end());
+            ranges::insert(partners, neuron_partners);
         }
     }
 
@@ -357,11 +348,8 @@ std::vector<RankNeuronId> InverseLengthSynapseDeletionFinder::find_synapses_on_n
 
     const auto& my_position = extra_info->get_position(neuron_id);
 
-    auto get_probabilities = [&my_position, &neuron_id, this](const std::vector<RankNeuronId>& others) -> std::vector<double> {
-        std::vector<double> probabilities{};
-        probabilities.reserve(others.size());
-
-        std::transform(others.begin(), others.end(), std::back_inserter(probabilities), [&my_position, &neuron_id, this](const RankNeuronId& rni) {
+    const auto get_probabilities = [&my_position, &neuron_id, this](const std::vector<RankNeuronId>& others) -> std::vector<double> {
+        return others | ranges::views::transform([&my_position, &neuron_id, this](const RankNeuronId& rni) {
             const auto& [other_rank, other_id] = rni;
             if (neuron_id == other_id) {
                 // In case a neuron has a synapse to itself, return 1.0
@@ -370,7 +358,7 @@ std::vector<RankNeuronId> InverseLengthSynapseDeletionFinder::find_synapses_on_n
 
             const auto& relevant_ids = partners.get_requests(other_rank);
 
-            const auto pos = std::lower_bound(relevant_ids.begin(), relevant_ids.end(), other_id);
+            const auto pos = ranges::lower_bound(relevant_ids, other_id);
             RelearnException::check(pos != relevant_ids.end(), "InverseLengthSynapseDeletionFinder::find_synapses_on_neuron: Did not find the id {} in the CommunicationMap at rank {}", other_id, other_rank);
 
             const auto distance = std::distance(relevant_ids.begin(), pos);
@@ -381,9 +369,7 @@ std::vector<RankNeuronId> InverseLengthSynapseDeletionFinder::find_synapses_on_n
             const auto euclidean_distance = diff.calculate_2_norm();
 
             return 1.0 / euclidean_distance;
-        });
-
-        return probabilities;
+        }) | ranges::to_vector;
     };
 
     std::vector<RankNeuronId> affected_neurons{};

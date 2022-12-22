@@ -13,12 +13,17 @@
 #include "adapter/neuron_id/NeuronIdAdapter.h"
 
 #include "util/Utility.h"
+#include "util/shuffle/shuffle.h"
+
+#include <range/v3/view/concat.hpp>
+#include <range/v3/view/indices.hpp>
+#include <range/v3/view/iota.hpp>
+#include <range/v3/view/repeat_n.hpp>
 
 TEST_F(MiscTest, testNumberDigitsInt) {
     using integer_type = int;
 
-    std::vector<integer_type> small_integers{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-    for (const auto val : small_integers) {
+    for (const auto val : ranges::views::iota(integer_type{ 0 }, integer_type{ 10 })) {
         ASSERT_EQ(1, Util::num_digits(val));
     }
 
@@ -51,8 +56,7 @@ TEST_F(MiscTest, testNumberDigitsInt) {
 TEST_F(MiscTest, testNumberDigitsUnsignedInt) {
     using integer_type = unsigned int;
 
-    std::vector<integer_type> small_integers{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-    for (const auto val : small_integers) {
+    for (const auto val : ranges::views::iota(integer_type{ 0 }, integer_type{ 10 })) {
         ASSERT_EQ(1, Util::num_digits(val));
     }
 
@@ -159,11 +163,14 @@ TEST_F(MiscTest, testMinMaxAccDouble) {
 
     const auto number_values = number_enabled + number_disabled + number_static;
 
-    std::vector<UpdateStatus> update_status(number_enabled, UpdateStatus::Enabled);
-    update_status.resize(number_enabled + number_disabled, UpdateStatus::Disabled);
-    update_status.resize(number_values, UpdateStatus::Static);
-
-    RandomAdapter::shuffle(update_status.begin(), update_status.end(), mt);
+    const auto update_status =
+        ranges::views::concat(
+            ranges::views::repeat_n(UpdateStatus::Enabled, number_enabled),
+            ranges::views::repeat_n(UpdateStatus::Disabled, number_disabled),
+            ranges::views::repeat_n(UpdateStatus::Static,
+                                    number_values -
+                                        (number_disabled + number_enabled)))
+            | ranges::to_vector | actions::shuffle(mt);
 
     std::vector<double> values{};
     values.reserve(number_values);
@@ -172,7 +179,7 @@ TEST_F(MiscTest, testMinMaxAccDouble) {
     auto max = -std::numeric_limits<double>::max();
     auto sum = 0.0;
 
-    for (auto i = 0; i < number_values; i++) {
+    for (auto i : ranges::views::indices(number_values)) {
         const auto random_value = RandomAdapter::get_random_double<double>(-100000.0, 100000.0, mt);
 
         if (update_status[i] == UpdateStatus::Enabled) {
@@ -199,11 +206,14 @@ TEST_F(MiscTest, testMinMaxAccSizet) {
 
     const auto number_values = number_enabled + number_disabled + number_static;
 
-    std::vector<UpdateStatus> update_status(number_enabled, UpdateStatus::Enabled);
-    update_status.resize(number_enabled + number_disabled, UpdateStatus::Disabled);
-    update_status.resize(number_values, UpdateStatus::Static);
-
-    RandomAdapter::shuffle(update_status.begin(), update_status.end(), mt);
+    const auto update_status =
+        ranges::views::concat(
+            ranges::views::repeat_n(UpdateStatus::Enabled, number_enabled),
+            ranges::views::repeat_n(UpdateStatus::Disabled, number_disabled),
+            ranges::views::repeat_n(UpdateStatus::Static,
+                                    number_values -
+                                        (number_disabled + number_enabled)))
+        | ranges::to_vector | actions::shuffle(mt);
 
     std::vector<size_t> values{};
     values.reserve(number_values);
@@ -212,7 +222,7 @@ TEST_F(MiscTest, testMinMaxAccSizet) {
     auto max = std::numeric_limits<size_t>::min();
     auto sum = size_t(0);
 
-    for (auto i = 0; i < number_values; i++) {
+    for (const auto i : ranges::views::indices(number_values)) {
         const auto random_value = RandomAdapter::get_random_integer<size_t>(std::numeric_limits<size_t>::min(), std::numeric_limits<size_t>::max(), mt);
 
         if (update_status[i] == UpdateStatus::Enabled) {

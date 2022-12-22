@@ -10,15 +10,16 @@
  *
  */
 
-#include "gtest/gtest.h"
-#include "gtest/gtest-typed-test.h"
-
 #include <cmath>
 #include <filesystem>
 #include <random>
 #include <span>
 #include <type_traits>
 #include <vector>
+
+#include <gtest/gtest.h>
+#include <gtest/gtest-typed-test.h>
+#include <range/v3/range/conversion.hpp>
 
 /**
  * @brief Get the path to relearn/relearn
@@ -46,14 +47,7 @@ protected:
 
     template <typename T>
     std::vector<std::decay_t<T>> vectorify_span(const std::span<T> span) {
-        std::vector<std::decay_t<T>> vec{};
-        vec.reserve(span.size());
-
-        for (auto val : span) {
-            vec.emplace_back(val);
-        }
-
-        return vec;
+        return span | ranges::to_vector;
     }
 
     constexpr static int number_neurons_out_of_scope = 100;

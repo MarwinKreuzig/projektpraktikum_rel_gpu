@@ -20,6 +20,9 @@
 #include <tuple>
 #include <vector>
 
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/transform.hpp>
+
 /**
  * This class provides all kinds of functionality that deals with the the local portion of neurons on the current MPI rank.
  * The local neurons are divided into Subdomains, from which each MPI rank has 1, 2, or 4
@@ -304,12 +307,9 @@ public:
      * @return The boundaries as pairs of (1) min and (2) max
      */
     [[nodiscard]] std::vector<std::pair<box_size_type, box_size_type>> get_all_local_subdomain_boundaries() const {
-        std::vector<std::pair<box_size_type, box_size_type>> subdomain_boundaries{};
-        subdomain_boundaries.reserve(local_subdomains.size());
-        for (const auto& local_subdomain : local_subdomains) {
-            subdomain_boundaries.emplace_back(local_subdomain.minimum_position, local_subdomain.maximum_position);
-        }
-        return subdomain_boundaries;
+        return local_subdomains
+            | ranges::views::transform([](const auto& subdomain) { return std::pair{ subdomain.minimum_position, subdomain.maximum_position }; })
+            | ranges::to_vector;
     }
 
     /**

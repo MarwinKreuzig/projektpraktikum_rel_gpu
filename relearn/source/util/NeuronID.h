@@ -11,6 +11,7 @@
  */
 
 #include "RelearnException.h"
+#include "util/ranges/Functional.hpp"
 
 #include <compare>
 #include <concepts>
@@ -20,6 +21,8 @@
 #include <vector>
 
 #include <fmt/ostream.h>
+#include <range/v3/view/iota.hpp>
+#include <range/v3/view/transform.hpp>
 
 namespace detail {
 template <std::integral T>
@@ -92,14 +95,8 @@ public:
      * @param end end of the vector
      * @return vector of NeuronIDs
      */
-    [[nodiscard]] static constexpr auto range(const value_type begin, const value_type end) {
-        std::vector<NeuronID> ids{};
-        ids.reserve(end - begin);
-        for (auto i = begin; i < end; i++) {
-            ids.emplace_back(i);
-        }
-
-        return ids;
+    [[nodiscard]] static auto range(const value_type begin, const value_type end) {
+        return ranges::views::iota(begin, end) | ranges::views::transform(construct<NeuronID>);
     }
 
     /**
@@ -108,7 +105,7 @@ public:
      * @param size size of the vector
      * @return vector of NeuronIDs
      */
-    [[nodiscard]] static constexpr auto range(const value_type size) {
+    [[nodiscard]] static auto range(const value_type size) {
         return range(0U, size);
     }
 
@@ -119,14 +116,8 @@ public:
      * @param end end of the vector
      * @return vector of NeuronIDs of type value_type
      */
-    [[nodiscard]] static constexpr auto range_id(const value_type begin, const value_type end) {
-        std::vector<value_type> ids{};
-        ids.reserve(end - begin);
-        for (auto i = begin; i < end; i++) {
-            ids.emplace_back(i);
-        }
-
-        return ids;
+    [[nodiscard]] static auto range_id(const value_type begin, const value_type end) {
+        return ranges::views::iota(begin, end);
     }
 
     /**
@@ -135,7 +126,7 @@ public:
      * @param size size of the vector
      * @return vector of NeuronIDs of type value_type
      */
-    [[nodiscard]] static constexpr auto range_id(const value_type size) {
+    [[nodiscard]] static auto range_id(const value_type size) {
         return range_id(0U, size);
     }
 

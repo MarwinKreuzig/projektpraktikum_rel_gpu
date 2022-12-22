@@ -20,6 +20,8 @@
 #include <string_view>
 #include <vector>
 
+#include <range/v3/algorithm/all_of.hpp>
+
 /**
  * This class provides a static interface to load interrupts from files, i.e., when during the simulation the neurons should be altered.
  */
@@ -52,7 +54,7 @@ public:
      * @return true if string is a number
      */
     static bool is_number(const std::string_view s) {
-        return std::all_of(s.begin(), s.end(), [](const char c) { return std::isdigit(c); });
+        return ranges::all_of(s, [](const char c) { return std::isdigit(c); });
     }
 
     /**

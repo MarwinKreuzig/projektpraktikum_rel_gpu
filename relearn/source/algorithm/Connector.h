@@ -13,14 +13,27 @@
 #include "Types.h"
 #include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
+#include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "neurons/models/SynapticElements.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
+#include "util/ranges/Functional.hpp"
 
+#include <concepts>
 #include <memory>
 #include <utility>
 #include <vector>
+
+#include <range/v3/functional/compose.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/all.hpp>
+#include <range/v3/view/cache1.hpp>
+#include <range/v3/view/enumerate.hpp>
+#include <range/v3/view/for_each.hpp>
+#include <range/v3/view/indices.hpp>
+#include <range/v3/view/repeat.hpp>
+#include <range/v3/view/zip.hpp>
 
 /**
  * This class commits SynapseCreationRequests and SynapseCreationResponses to the synaptic elements.
@@ -73,17 +86,16 @@ public:
         PlasticDistantInSynapses distant_synapses{};
         distant_synapses.reserve(total_number_requests);
 
-        std::vector<std::pair<MPIRank, unsigned int>> indices{};
-        indices.reserve(total_number_requests);
-
-        for (const auto& [source_rank, requests] : creation_requests) {
-            for (unsigned int request_index = 0; request_index < requests.size(); request_index++) {
-                indices.emplace_back(source_rank, request_index);
-            }
-        }
-
+        const auto indices = creation_requests
+            | ranges::views::for_each([](const auto& request) {
+                  const auto& [source_rank, requests] = request;
+                  return ranges::views::zip(
+                      ranges::views::repeat(source_rank),
+                      ranges::views::indices(ranges::size(requests)));
+              })
+            | ranges::to<std::vector<std::pair<MPIRank, unsigned int>>>
+            | RandomHolder::shuffleAction(RandomHolderKey::Connector);
         // We need to shuffle the request indices so we do not prefer those from smaller MPI ranks and lower neuron ids
-        RandomHolder::shuffle(RandomHolderKey::Connector, indices.begin(), indices.end());
 
         for (const auto& [source_rank, request_index] : indices) {
             const auto& [target_neuron_id, source_neuron_id, dendrite_type_needed] = creation_requests.get_request(source_rank, request_index);
@@ -140,7 +152,7 @@ public:
         RelearnException::check(axons_empty, "ForwardConnector::process_responses: The axons are empty");
 
         RelearnException::check(creation_requests.size() == creation_responses.size(),
-            "ForwardConnector::process_responses: Requests and Responses had different sizes");
+            "ForwardConnector::process_responses: Requests and Responses had different sizes: requests: {} vs responses: {}", creation_requests.size(), creation_responses.size());
 
         for (const auto rank : MPIRank::range(creation_requests.size())) {
             RelearnException::check(creation_requests.size(rank) == creation_responses.size(rank),
@@ -232,19 +244,18 @@ public:
         PlasticDistantOutSynapses distant_synapses{};
         distant_synapses.reserve(total_number_requests);
 
-        std::vector<std::pair<MPIRank, unsigned int>> indices{};
-        indices.reserve(total_number_requests);
-
-        for (const auto& [source_rank, requests] : creation_requests) {
-            for (unsigned int request_index = 0; request_index < requests.size(); request_index++) {
-                indices.emplace_back(source_rank, request_index);
-            }
-        }
+        const auto indices = creation_requests
+            | ranges::views::for_each([](const auto& request) {
+                  const auto& [source_rank, requests] = request;
+                  return ranges::views::zip(
+                      ranges::views::repeat(source_rank),
+                      ranges::views::iota(0U, ranges::size(requests)));
+              })
+            | ranges::to<std::vector<std::pair<MPIRank, unsigned int>>>
+            | RandomHolder::shuffleAction(RandomHolderKey::Connector);
+        // We need to shuffle the request indices so we do not prefer those from smaller MPI ranks and lower neuron ids
 
         const auto& signal_types = axons->get_signal_types();
-
-        // We need to shuffle the request indices so we do not prefer those from smaller MPI ranks and lower neuron ids
-        RandomHolder::shuffle(RandomHolderKey::Connector, indices.begin(), indices.end());
 
         for (const auto& [source_rank, request_index] : indices) {
             const auto& [target_neuron_id, source_neuron_id, axon_type_needed] = creation_requests.get_request(source_rank, request_index);

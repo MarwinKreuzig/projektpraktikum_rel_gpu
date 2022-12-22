@@ -20,6 +20,9 @@
 #include <string>
 #include <vector>
 
+#include <range/v3/algorithm/fill.hpp>
+#include <range/v3/view/transform.hpp>
+
 /**
  * An object of type NeuronsExtraInfo additional information of neurons.
  * For a single neuron, these additional information are: its x-, y-, and z- position and the name of the area the neuron is in.
@@ -58,13 +61,16 @@ public:
      * @exception Throws a RelearnException if one of the specified ids exceeds the number of stored neurons
      */
     void set_enabled_neurons(const std::span<const NeuronID> enabled_neurons) {
-        for (const auto& neuron_id : enabled_neurons) {
+        const auto get_update_status = [this](const auto& neuron_id) -> UpdateStatus& {
             const auto local_neuron_id = neuron_id.get_neuron_id();
+
             RelearnException::check(local_neuron_id < size, "NeuronsExtraInformation::set_enabled_neurons: NeuronID {} is too large: {}", neuron_id);
             RelearnException::check(update_status[local_neuron_id] == UpdateStatus::Disabled, "NeuronsExtraInformation::set_enabled_neurons: Cannot enable a not disabled neuron");
 
-            update_status[local_neuron_id] = UpdateStatus::Enabled;
-        }
+            return update_status[local_neuron_id];
+        };
+
+        ranges::fill(enabled_neurons | ranges::views::transform(get_update_status), UpdateStatus::Enabled);
     }
 
     /**
@@ -73,14 +79,21 @@ public:
      * @exception Throws a RelearnException if one of the specified ids exceeds the number of stored neurons
      */
     void set_disabled_neurons(const std::span<const NeuronID> disabled_neurons) {
-        for (const auto& neuron_id : disabled_neurons) {
+        const auto get_update_status = [this](const auto& neuron_id) -> UpdateStatus& {
             const auto local_neuron_id = neuron_id.get_neuron_id();
             RelearnException::check(local_neuron_id < size, "NeuronsExtraInformation::set_disabled_neurons: NeuronID {} is too large: {}", neuron_id, size);
 
-            RelearnException::check(update_status[local_neuron_id] != UpdateStatus::Static, "NeuronsExtraInformation::set_disabled_neurons: Cannot disable a static neuron");
-            RelearnException::check(update_status[local_neuron_id] != UpdateStatus::Disabled, "NeuronsExtraInformation::set_disabled_neurons: Cannot disable an already disabled neuron");
-            update_status[local_neuron_id] = UpdateStatus::Disabled;
-        }
+            auto &status = update_status[local_neuron_id];
+
+            RelearnException::check(status != UpdateStatus::Static,
+                                    "NeuronsExtraInformation::set_disabled_neurons: Cannot disable a static neuron");
+            RelearnException::check(status != UpdateStatus::Disabled,
+                                    "NeuronsExtraInformation::set_disabled_neurons: Cannot disable a disabled neuron");
+
+            return status;
+        };
+
+        ranges::fill(disabled_neurons | ranges::views::transform(get_update_status), UpdateStatus::Disabled);
     }
 
     /**
@@ -89,12 +102,14 @@ public:
      * @exception Throws a RelearnException if one of the specified ids exceeds the number of stored neurons
      */
     void set_static_neurons(const std::span<const NeuronID> static_neurons) {
-        for (const auto& neuron_id : static_neurons) {
+        const auto get_update_status = [this](const auto& neuron_id) -> UpdateStatus& {
             const auto local_neuron_id = neuron_id.get_neuron_id();
             RelearnException::check(local_neuron_id < size, "NeuronsExtraInformation::set_static_neurons: NeuronID {} is too large: {}", neuron_id);
 
-            update_status[local_neuron_id] = UpdateStatus::Static;
-        }
+            return update_status[local_neuron_id];
+        };
+
+        ranges::fill(static_neurons | ranges::views::transform(get_update_status), UpdateStatus::Static);
     }
 
     /**

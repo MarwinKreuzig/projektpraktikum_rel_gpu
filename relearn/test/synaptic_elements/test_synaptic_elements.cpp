@@ -22,9 +22,16 @@
 #include "neurons/enums/UpdateStatus.h"
 #include "neurons/models/SynapticElements.h"
 #include "util/Random.h"
+#include "util/NeuronID.h"
+#include "util/ranges/Functional.hpp"
 
 #include <numeric>
+#include <range/v3/range/conversion.hpp>
 #include <sstream>
+
+#include <range/v3/functional/arithmetic.hpp>
+#include <range/v3/algorithm/count.hpp>
+#include <range/v3/algorithm/sort.hpp>
 
 TEST_F(SynapticElementsTest, testGaussianGrowthCurve) {
     constexpr auto number_values = 100;
@@ -53,22 +60,22 @@ TEST_F(SynapticElementsTest, testGaussianGrowthCurve) {
     std::vector<double> larger_positives(number_values);
     std::vector<double> larger_negatives(number_values);
 
-    for (auto i = 0; i < number_values; i++) {
+    for (const auto i : ranges::views::indices(number_values)) {
         smaller_negatives[i] = RandomAdapter::get_random_double<double>(-100000.0, left_intersection, mt);
         smaller_positives[i] = RandomAdapter::get_random_double<double>(left_intersection, middle, mt);
         larger_positives[i] = RandomAdapter::get_random_double<double>(middle, right_intersection, mt);
         larger_negatives[i] = RandomAdapter::get_random_double<double>(right_intersection, 100000.0, mt);
     }
 
-    std::sort(smaller_negatives.begin(), smaller_negatives.end());
-    std::sort(smaller_positives.begin(), smaller_positives.end());
-    std::sort(larger_positives.begin(), larger_positives.end());
-    std::sort(larger_negatives.begin(), larger_negatives.end());
+    ranges::sort(smaller_negatives);
+    ranges::sort(smaller_positives);
+    ranges::sort(larger_positives);
+    ranges::sort(larger_negatives);
 
     auto last_value = -100000.0;
     auto last_change = gaussian_growth_curve(last_value, left_intersection, right_intersection, growth_factor);
 
-    for (auto i = 0; i < number_values; i++) {
+    for (const auto i : ranges::views::indices(number_values)) {
         const auto current_value = smaller_negatives[i];
         const auto current_change = gaussian_growth_curve(current_value, left_intersection, right_intersection, growth_factor);
 
@@ -90,7 +97,7 @@ TEST_F(SynapticElementsTest, testGaussianGrowthCurve) {
     last_value = left_intersection;
     last_change = gaussian_growth_curve(last_value, left_intersection, right_intersection, growth_factor);
 
-    for (auto i = 0; i < number_values; i++) {
+    for (const auto i : ranges::views::indices(number_values)) {
         const auto current_value = smaller_positives[i];
         const auto current_change = gaussian_growth_curve(current_value, left_intersection, right_intersection, growth_factor);
 
@@ -113,7 +120,7 @@ TEST_F(SynapticElementsTest, testGaussianGrowthCurve) {
     last_value = middle;
     last_change = gaussian_growth_curve(last_value, left_intersection, right_intersection, growth_factor);
 
-    for (auto i = 0; i < number_values; i++) {
+    for (const auto i : ranges::views::indices(number_values)) {
         const auto current_value = larger_positives[i];
         const auto current_change = gaussian_growth_curve(current_value, left_intersection, right_intersection, growth_factor);
 
@@ -136,7 +143,7 @@ TEST_F(SynapticElementsTest, testGaussianGrowthCurve) {
     last_value = right_intersection;
     last_change = gaussian_growth_curve(last_value, left_intersection, right_intersection, growth_factor);
 
-    for (auto i = 0; i < number_values; i++) {
+    for (const auto i : ranges::views::indices(number_values)) {
         const auto current_value = larger_negatives[i];
         const auto current_change = gaussian_growth_curve(current_value, left_intersection, right_intersection, growth_factor);
 
@@ -167,19 +174,19 @@ TEST_F(SynapticElementsTest, testGaussianGrowthCurveSameIntersections) {
     std::vector<double> left_values(number_values);
     std::vector<double> right_values(number_values);
 
-    for (auto i = 0; i < number_values; i++) {
+    for (const auto i : ranges::views::indices(number_values)) {
         left_values[i] = RandomAdapter::get_random_double<double>(-100000.0, intersection, mt);
         right_values[i] = RandomAdapter::get_random_double<double>(intersection, 100000.0, mt);
     }
 
-    for (auto i = 0; i < number_values; i++) {
+    for (const auto i : ranges::views::indices(number_values)) {
         const auto current_val_left = left_values[i];
         const auto current_change = gaussian_growth_curve(current_val_left, intersection, intersection, growth_factor);
 
         ASSERT_EQ(gaussian_growth_curve(current_val_left, intersection, intersection, growth_factor), -growth_factor);
     }
 
-    for (auto i = 0; i < number_values; i++) {
+    for (const auto i : ranges::views::indices(number_values)) {
         const auto current_val_right = right_values[i];
         const auto current_change = gaussian_growth_curve(current_val_right, intersection, intersection, growth_factor);
 
@@ -362,7 +369,7 @@ TEST_F(SynapticElementsTest, testInitialize) {
         ASSERT_EQ(delta_grown_element, 0.0) << ss.str() << neuron_id;
     }
 
-    for (auto iteration = 0; iteration < number_neurons_out_of_scope; iteration++) {
+    for (const auto& iteration : ranges::views::indices(number_neurons_out_of_scope)) {
         const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, number_neurons, mt);
 
         ASSERT_THROW(auto ret = synaptic_elements.get_grown_elements(neuron_id), RelearnException) << ss.str() << neuron_id;
@@ -419,7 +426,7 @@ TEST_F(SynapticElementsTest, testCreateNeurons) {
         ASSERT_EQ(delta_grown_element, 0.0) << ss.str() << neuron_id;
     }
 
-    for (auto iteration = 0; iteration < number_neurons_out_of_scope; iteration++) {
+    for (const auto& iteration : ranges::views::indices(number_neurons_out_of_scope)) {
         const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, number_neurons, mt);
 
         ASSERT_THROW(auto ret = synaptic_elements.get_grown_elements(neuron_id), RelearnException) << ss.str() << neuron_id;
@@ -475,8 +482,7 @@ TEST_F(SynapticElementsTest, testInitialElementsConstant) {
 
     const auto& counts = synaptic_elements.get_grown_elements();
 
-    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons;
-         neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         const auto grown_elements_1 = synaptic_elements.get_grown_elements(NeuronID{ neuron_id });
         const auto grown_elements_2 = counts[neuron_id];
 
@@ -514,7 +520,7 @@ TEST_F(SynapticElementsTest, testInitialElements) {
 
     const auto& counts = synaptic_elements.get_grown_elements();
 
-    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         const auto grown_elements_1 = synaptic_elements.get_grown_elements(NeuronID{ neuron_id });
         const auto grown_elements_2 = counts[neuron_id];
 
@@ -604,7 +610,7 @@ TEST_F(SynapticElementsTest, testInitialElementsMultipleBounds) {
         ASSERT_TRUE(grown_elements_1 <= upper_bound_1) << ss.str() << neuron_id;
     }
 
-    for (NeuronID::value_type neuron_id = number_neurons_initially; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons_initially, number_neurons)) {
         const auto id = NeuronID{ neuron_id };
         const auto grown_elements_1 = synaptic_elements.get_grown_elements(id);
         const auto grown_elements_2 = counts[neuron_id];
@@ -629,7 +635,7 @@ TEST_F(SynapticElementsTest, testSignalTypes) {
     std::vector<SignalType> signal_types(number_neurons);
     std::vector<SignalType> golden_signal_types(number_neurons);
 
-    for (NeuronID::value_type neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         const auto& signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
         signal_types[neuron_id] = signal_type;
@@ -706,14 +712,13 @@ TEST_F(SynapticElementsTest, testHistogram) {
 
     const auto& histogram = synaptic_elements.get_histogram();
 
-    std::vector<std::pair<unsigned int, unsigned int>> golden_histogram{};
-
-    for (auto i = 0; i < number_neurons; i++) {
-        golden_histogram.emplace_back(golden_connected_counts[i], static_cast<unsigned int>(golden_counts[i]));
-    }
+    const auto golden_histogram = ranges::views::zip(
+                                      golden_connected_counts,
+                                      golden_counts | ranges::views::transform(ranges::convert_to<unsigned int>{}))
+        | ranges::to_vector;
 
     for (const auto& [pair, count] : histogram) {
-        const auto golden_count = std::count(golden_histogram.begin(), golden_histogram.end(), pair);
+        const auto golden_count = ranges::count(golden_histogram, pair);
 
         ASSERT_EQ(count, golden_count) << ss.str() << ' ' << pair.first << ' ' << pair.second;
     }
@@ -729,7 +734,7 @@ TEST_F(SynapticElementsTest, testUpdateException) {
     SynapticElements synaptic_elements(element_type, 0.0);
     synaptic_elements.init(number_neurons);
 
-    for (auto iteration = 0; iteration < number_neurons_out_of_scope; iteration++) {
+    for (const auto iteration : ranges::views::indices(number_neurons_out_of_scope)) {
         const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, number_neurons, mt);
 
         ASSERT_THROW(auto ret = synaptic_elements.get_grown_elements(neuron_id), RelearnException) << ss.str() << neuron_id;
@@ -737,7 +742,7 @@ TEST_F(SynapticElementsTest, testUpdateException) {
         ASSERT_THROW(auto ret = synaptic_elements.get_delta(neuron_id), RelearnException) << ss.str() << neuron_id;
     }
 
-    for (auto iteration = 0; iteration < number_neurons_out_of_scope; iteration++) {
+    for (const auto iteration : ranges::views::indices(number_neurons_out_of_scope)) {
         const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, number_neurons, mt);
 
         const auto& grown_element = SynapticElementsAdapter::get_random_synaptic_element_count(mt);
@@ -867,7 +872,7 @@ TEST_F(SynapticElementsTest, testDisable) {
     std::vector<NeuronID> disabled_neurons{};
     std::vector<bool> disabled(number_neurons, false);
 
-    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         const auto disable = RandomAdapter::get_random_bool(mt);
         if (disable) {
             disabled_neurons.emplace_back(neuron_id);
@@ -875,7 +880,7 @@ TEST_F(SynapticElementsTest, testDisable) {
         }
     }
 
-    std::shuffle(disabled_neurons.begin(), disabled_neurons.end(), mt);
+    shuffle(disabled_neurons, mt);
 
     synaptic_elements.update_after_deletion(changes, disabled_neurons);
 
@@ -909,7 +914,7 @@ TEST_F(SynapticElementsTest, testDisableException) {
         std::vector<unsigned int> changes(number_neurons, 0);
         std::vector<NeuronID> disabled_neurons{};
 
-        for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
+        for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
             const auto disable = RandomAdapter::get_random_bool(mt);
             if (disable) {
                 disabled_neurons.emplace_back(neuron_id);
@@ -919,7 +924,7 @@ TEST_F(SynapticElementsTest, testDisableException) {
         const auto faulty_id = NeuronIdAdapter::get_random_number_neurons(mt) + number_neurons;
         disabled_neurons.emplace_back(faulty_id);
 
-        std::shuffle(disabled_neurons.begin(), disabled_neurons.end(), mt);
+        shuffle(disabled_neurons, mt);
 
         ASSERT_THROW(synaptic_elements.update_after_deletion(changes, disabled_neurons), RelearnException) << ss.str() << ' ' << faulty_id;
     }
@@ -938,7 +943,7 @@ TEST_F(SynapticElementsTest, testDelete) {
     std::vector<unsigned int> changes(number_neurons, 0);
     std::vector<NeuronID> disabled_neurons{};
 
-    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         const auto change = RandomAdapter::get_random_integer<unsigned int>(0, golden_connected_counts[neuron_id], mt);
         changes[neuron_id] = change;
     }
@@ -977,7 +982,7 @@ TEST_F(SynapticElementsTest, testDeleteException) {
 
         std::vector<unsigned int> changes(number_neurons, 0);
 
-        for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
+        for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
             const auto change = RandomAdapter::get_random_integer<unsigned int>(0, golden_connected_counts[neuron_id], mt) + 1;
             changes[neuron_id] = change;
         }
@@ -1010,7 +1015,7 @@ TEST_F(SynapticElementsTest, testUpdateNumberElements) {
     extra_info->init(number_neurons);
     synaptic_elements.set_extra_infos(extra_info);
 
-    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         calcium[neuron_id] = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
         target_calcium[neuron_id] = RandomAdapter::get_random_double<double>(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0, mt);
         if (RandomAdapter::get_random_bool(mt)) {
@@ -1064,7 +1069,7 @@ TEST_F(SynapticElementsTest, testMultipleUpdateNumberElements) {
         extra_info->init(number_neurons);
         synaptic_elements.set_extra_infos(extra_info);
 
-        for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
+        for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
             calcium[neuron_id] = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
             target_calcium[neuron_id] = RandomAdapter::get_random_double<double>(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0, mt);
             if (RandomAdapter::get_random_bool(mt)) {
@@ -1224,7 +1229,7 @@ TEST_F(SynapticElementsTest, testCommitUpdates) {
     std::vector<UpdateStatus> enable_flags(number_neurons, UpdateStatus::Enabled);
     std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
 
-    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         calcium[neuron_id] = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
         target_calcium[neuron_id] = RandomAdapter::get_random_double<double>(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0, mt);
         if (RandomAdapter::get_random_bool(mt)) {
@@ -1336,7 +1341,7 @@ TEST_F(SynapticElementsTest, testCommitUpdatesException) {
     std::vector<double> target_calcium(number_neurons, 0.0);
     std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
 
-    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         calcium[neuron_id] = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
         target_calcium[neuron_id] = RandomAdapter::get_random_double<double>(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0, mt);
         if (RandomAdapter::get_random_bool(mt)) {

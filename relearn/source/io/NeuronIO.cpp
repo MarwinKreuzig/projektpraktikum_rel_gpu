@@ -15,6 +15,7 @@
 #include "util/RelearnException.h"
 
 #include "spdlog/spdlog.h"
+#include "util/ranges/views/IO.hpp"
 
 #include <climits>
 #include <tuple>
@@ -23,6 +24,10 @@
 #include <iomanip>
 #include <sstream>
 #include <iostream>
+
+#include <range/v3/iterator/operations.hpp>
+#include <range/v3/algorithm/find.hpp>
+#include <range/v3/view/getlines.hpp>
 
 std::vector<std::string> NeuronIO::read_comments(const std::filesystem::path& file_path) {
     std::ifstream file(file_path);
@@ -71,12 +76,7 @@ std::tuple<std::vector<LoadedNeuron>, std::vector<RelearnTypes::area_name>, Load
 
     std::vector<RelearnTypes::area_name> area_names{};
 
-    for (std::string line{}; std::getline(file, line);) {
-        // Skip line with comments
-        if (line.empty() || '#' == line[0]) {
-            continue;
-        }
-
+    for (const auto& line : ranges::getlines(file) | views::filter_not_comment_not_empty_line) {
         NeuronID::value_type id{};
         position_type::value_type pos_x{};
         position_type::value_type pos_y{};
@@ -107,14 +107,14 @@ std::tuple<std::vector<LoadedNeuron>, std::vector<RelearnTypes::area_name>, Load
         minimum.calculate_componentwise_minimum(position);
         maximum.calculate_componentwise_maximum(position);
 
-        auto area_id_it = std::find(area_names.begin(), area_names.end(), area_name);
+        const auto area_id_it = ranges::find(area_names, area_name);
         RelearnTypes::area_id area_id{ 0 };
         if (area_id_it == area_names.end()) {
             // Area name not known
             area_names.emplace_back(std::move(area_name));
             area_id = area_names.size() - 1;
         } else {
-            area_id = area_id_it - area_names.begin();
+            area_id = static_cast<RelearnTypes::area_id>(ranges::distance(area_names.begin(), area_id_it));
         }
 
         if (signal_type == "in") {
@@ -153,12 +153,7 @@ NeuronIO::read_neurons_componentwise(const std::filesystem::path& file_path) {
 
     NeuronID::value_type expected_id = 0;
 
-    for (std::string line{}; std::getline(file, line);) {
-        // Skip line with comments
-        if (line.empty() || '#' == line[0]) {
-            continue;
-        }
-
+    for (const auto& line : ranges::getlines(file) | views::filter_not_comment_not_empty_line) {
         NeuronID::value_type id{};
         position_type::value_type pos_x{};
         position_type::value_type pos_y{};
@@ -192,14 +187,14 @@ NeuronIO::read_neurons_componentwise(const std::filesystem::path& file_path) {
         ids.emplace_back(false, id);
         positions.emplace_back(position);
 
-        auto area_id_it = std::find(area_names.begin(), area_names.end(), area_name);
+        const auto area_id_it = ranges::find(area_names, area_name);
         RelearnTypes::area_id area_id{ 0 };
         if (area_id_it == area_names.end()) {
             // Area name not known
             area_names.emplace_back(std::move(area_name));
             area_id = area_names.size() - 1;
         } else {
-            area_id = area_id_it - area_names.begin();
+            area_id = static_cast<RelearnTypes::area_id>(ranges::distance(area_names.begin(), area_id_it));
         }
         area_ids.emplace_back(area_id);
 
@@ -370,7 +365,7 @@ std::optional<std::vector<NeuronID>> NeuronIO::read_neuron_ids(const std::filesy
 
     std::vector<NeuronID> ids{};
 
-    for (std::string line{}; std::getline(local_file, line);) {
+    for (const auto& line : ranges::getlines(local_file) | views::filter_not_comment_not_empty_line) {
         // Skip line with comments
         if (line.empty() || '#' == line[0]) {
             continue;
@@ -420,12 +415,7 @@ NeuronIO::InSynapses NeuronIO::read_in_synapses(const std::filesystem::path& fil
 
     RelearnException::check(is_good && !is_bad, "NeuronIO::read_in_synapses: The ofstream failed to open {}", file_path.string());
 
-    for (std::string line{}; std::getline(file_synapses, line);) {
-        // Skip line with comments
-        if (line.empty() || '#' == line[0]) {
-            continue;
-        }
-
+    for (const auto& line : ranges::getlines(file_synapses) | views::filter_not_comment_not_empty_line) {
         int read_target_rank = 0;
         NeuronID::value_type read_target_id = 0;
         int read_source_rank = 0;
@@ -492,12 +482,7 @@ NeuronIO::OutSynapses NeuronIO::read_out_synapses(const std::filesystem::path& f
 
     RelearnException::check(is_good && !is_bad, "NeuronIO::read_out_synapses: The ofstream failed to open");
 
-    for (std::string line{}; std::getline(file_synapses, line);) {
-        // Skip line with comments
-        if (line.empty() || '#' == line[0]) {
-            continue;
-        }
-
+    for (const auto& line : ranges::getlines(file_synapses) | views::filter_not_comment_not_empty_line) {
         int read_target_rank = 0;
         NeuronID::value_type read_target_id = 0;
         int read_source_rank = 0;

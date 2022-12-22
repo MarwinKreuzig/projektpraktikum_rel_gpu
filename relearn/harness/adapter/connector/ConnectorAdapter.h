@@ -38,7 +38,7 @@ public:
 
             const auto id = target_id.get_neuron_id();
 
-            for (auto r = 0; r < number_requests; r++) {
+            for (const auto r : ranges::views::indices(number_requests)) {
                 const auto source_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
                 const auto source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
                 const auto fixed_source_id = (source_id.get_neuron_id() == target_id.get_neuron_id() && current_rank == source_rank.get_rank()) ? NeuronID{ (source_id.get_neuron_id() + 1) % number_neurons } : source_id;

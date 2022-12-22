@@ -13,6 +13,8 @@
 #include "neurons/NeuronsExtraInfo.h"
 #include "util/Random.h"
 
+#include <range/v3/view/drop.hpp>
+
 void SynapticElements::init(const number_neurons_type number_neurons) {
     RelearnException::check(size == 0, "SynapticElements::init: Was already initialized");
     RelearnException::check(number_neurons > 0, "SynapticElements::init: Cannot initialize with 0 neurons");
@@ -22,7 +24,7 @@ void SynapticElements::init(const number_neurons_type number_neurons) {
     grown_elements.resize(size);
 
     if (initial_vacant_elements_lower_bound < initial_vacant_elements_upper_bound) {
-        RandomHolder::fill(RandomHolderKey::SynapticElements, grown_elements.begin(), grown_elements.end(), initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
+        RandomHolder::fill(RandomHolderKey::SynapticElements, grown_elements, initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
     } else if (initial_vacant_elements_lower_bound == initial_vacant_elements_upper_bound) {
         std::ranges::fill(grown_elements, initial_vacant_elements_lower_bound);
     } else {
@@ -44,9 +46,9 @@ void SynapticElements::create_neurons(const number_neurons_type creation_count) 
     grown_elements.resize(new_size);
 
     if (initial_vacant_elements_lower_bound < initial_vacant_elements_upper_bound) {
-        RandomHolder::fill(RandomHolderKey::SynapticElements, grown_elements.begin() + static_cast<std::int64_t>(current_size), grown_elements.end(), initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
+        RandomHolder::fill(RandomHolderKey::SynapticElements, grown_elements | ranges::views::drop(current_size), initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
     } else if (initial_vacant_elements_lower_bound == initial_vacant_elements_upper_bound) {
-        std::fill(grown_elements.begin() + static_cast<std::int64_t>(current_size), grown_elements.end(), initial_vacant_elements_lower_bound);
+        ranges::fill(grown_elements | ranges::views::drop(current_size), initial_vacant_elements_lower_bound);
     } else {
         RelearnException::fail("SynapticElements::create_neurons: Should initialize synaptic elements with values between in the wrong order (lower is larger than upper)");
     }

@@ -11,6 +11,8 @@
 #include "Simulation.h"
 
 #include "algorithm/Algorithms.h"
+#include "neurons/enums/UpdateStatus.h"
+#include "util/NeuronID.h"
 #include "util/StringUtil.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
@@ -26,11 +28,17 @@
 #include "util/Random.h"
 #include "util/RelearnException.h"
 #include "util/Timers.h"
+#include "util/ranges/Functional.hpp"
 
 #include <iomanip>
 #include <map>
 #include <sstream>
 #include <utility>
+
+#include <range/v3/action/insert.hpp>
+#include <range/v3/action/transform.hpp>
+#include <range/v3/algorithm/sort.hpp>
+#include <range/v3/view/repeat_n.hpp>
 
 Simulation::Simulation(std::unique_ptr<Essentials> essentials, std::shared_ptr<Partition> partition)
     : essentials(std::move(essentials))
@@ -78,20 +86,19 @@ void Simulation::set_synapse_deletion_finder(std::unique_ptr<SynapseDeletionFind
     synapse_deletion_finder = std::move(sdf);
 }
 
-void Simulation::set_enable_interrupts(std::vector<std::pair<step_type, std::vector<NeuronID>>> interrupts) {
-    enable_interrupts = std::move(interrupts);
+namespace {
+constexpr auto sort_ids = [](auto pair) {
+    ranges::sort(pair.second);
+    return pair;
+};
+} // namespace
 
-    for (auto& [_, ids] : enable_interrupts) {
-        std::sort(ids.begin(), ids.end());
-    }
+void Simulation::set_enable_interrupts(std::vector<std::pair<step_type, std::vector<NeuronID>>> interrupts) {
+    enable_interrupts = std::move(interrupts) | ranges::actions::transform(sort_ids);
 }
 
 void Simulation::set_disable_interrupts(std::vector<std::pair<step_type, std::vector<NeuronID>>> interrupts) {
-    disable_interrupts = std::move(interrupts);
-
-    for (auto& [_, ids] : disable_interrupts) {
-        std::sort(ids.begin(), ids.end());
-    }
+    disable_interrupts = std::move(interrupts) | ranges::actions::transform(sort_ids);
 }
 
 void Simulation::set_creation_interrupts(std::vector<std::pair<step_type, number_neurons_type>> interrupts) noexcept {
@@ -248,10 +255,12 @@ void Simulation::initialize() {
     neurons->init_synaptic_elements();
 
     const auto fired_neurons = static_cast<size_t>(number_local_neurons * percentage_initially_fired);
-    std::vector<FiredStatus> initial_fired(fired_neurons, FiredStatus::Fired);
-    initial_fired.resize(number_local_neurons, FiredStatus::Inactive);
 
-    RandomHolder::shuffle(RandomHolderKey::BackgroundActivity, initial_fired.begin(), initial_fired.end());
+    const auto initial_fired = ranges::views::concat(
+                                   ranges::views::repeat_n(FiredStatus::Fired, fired_neurons),
+                                   ranges::views::repeat_n(FiredStatus::Inactive, number_local_neurons - fired_neurons))
+        | ranges::to_vector
+        | RandomHolder::shuffleAction(RandomHolderKey::BackgroundActivity);
 
     neurons->set_fired(std::move(initial_fired));
 
@@ -273,29 +282,23 @@ void Simulation::simulate(const step_type number_steps) {
      * Simulation loop
      */
     const auto final_step_count = step + number_steps;
-    for (; step < final_step_count; ++step) { // NOLINT(altera-id-dependent-backward-branch)
-        for (const auto& [disable_step, disable_ids] : disable_interrupts) {
-            if (disable_step == step) {
-                LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Disabling {} neurons in step {}", disable_ids.size(), disable_step);
-                const auto& [num_deleted_synapses, synapse_deletion_requests_outgoing] = neurons->disable_neurons(step, disable_ids, MPIWrapper::get_num_ranks());
-                total_synapse_deletions += static_cast<int64_t>(num_deleted_synapses);
-                const auto& synapse_deletion_requests_ingoing = MPIWrapper::exchange_requests(synapse_deletion_requests_outgoing);
-                total_synapse_deletions += neurons->delete_disabled_distant_synapses(synapse_deletion_requests_ingoing, my_rank);
-            }
+    for (; step <= final_step_count; ++step) { // NOLINT(altera-id-dependent-backward-branch)
+        for (const auto& [disable_step, disable_ids] : disable_interrupts | ranges::views::filter(equal_to(step), element<0>)) {
+            LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Disabling {} neurons in step {}", disable_ids.size(), disable_step);
+            const auto& [num_deleted_synapses, synapse_deletion_requests_outgoing] = neurons->disable_neurons(step, disable_ids, MPIWrapper::get_num_ranks());
+            total_synapse_deletions += static_cast<int64_t>(num_deleted_synapses);
+            const auto& synapse_deletion_requests_ingoing = MPIWrapper::exchange_requests(synapse_deletion_requests_outgoing);
+            total_synapse_deletions += neurons->delete_disabled_distant_synapses(synapse_deletion_requests_ingoing, my_rank);
         }
 
-        for (const auto& [enable_step, enable_ids] : enable_interrupts) {
-            if (enable_step == step) {
-                LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Enabling {} neurons in step {}", enable_ids.size(), enable_step);
-                neurons->enable_neurons(enable_ids);
-            }
+        for (const auto& [enable_step, enable_ids] : enable_interrupts | ranges::views::filter(equal_to(step), element<0>)) {
+            LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Enabling {} neurons in step {}", enable_ids.size(), enable_step);
+            neurons->enable_neurons(enable_ids);
         }
 
-        for (const auto& [creation_step, creation_count] : creation_interrupts) {
-            if (creation_step == step) {
-                LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Creating {} neurons in step {}", creation_count, creation_step);
-                neurons->create_neurons(creation_count);
-            }
+        for (const auto& [creation_step, creation_count] : creation_interrupts | ranges::views::filter(equal_to(step), element<1>)) {
+            LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Creating {} neurons in step {}", creation_count, creation_step);
+            neurons->create_neurons(creation_count);
         }
 
         if (interval_neuron_monitor.hits_step(step)) {
@@ -315,32 +318,30 @@ void Simulation::simulate(const step_type number_steps) {
         if (interval_area_monitor.hits_step(step) && area_monitor_enabled) {
             Timers::start(TimerRegion::CAPTURE_AREA_MONITORS);
 
-            for (auto& [_, area_monitor] : *area_monitors) {
-                area_monitor.prepare_recording();
-            }
+            ranges::for_each(*area_monitors | ranges::views::values, &AreaMonitor::prepare_recording);
 
-            for (NeuronID neuron_id : NeuronID::range(neurons->get_number_neurons())) {
-                if (neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
-                    continue;
-                }
+            for (NeuronID neuron_id :
+                 NeuronID::range(neurons->get_number_neurons()) |
+                     ranges::views::filter(equal_to(UpdateStatus::Enabled),
+                                           lookup(neurons->get_disable_flags(),
+                                                  &NeuronID::get_neuron_id))) {
                 const auto& area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(neuron_id.get_neuron_id());
                 if (!area_monitors->contains(area_id)) {
                     continue;
                 }
                 auto& area_monitor = area_monitors->at(area_id);
-                area_monitor.record_data(NeuronID(neuron_id));
+                area_monitor.record_data(neuron_id);
             }
 
             std::vector<std::vector<AreaMonitor::AreaConnection>> all_exchange_data(MPIWrapper::get_num_ranks());
-            for (auto& [_, area_monitor] : *area_monitors) {
+            for (const auto& area_monitor : *area_monitors | ranges::views::values) {
                 const auto& exchange_data_single = area_monitor.get_exchange_data();
-                RelearnException::check(all_exchange_data.size() == exchange_data_single.size(), 
+                RelearnException::check(all_exchange_data.size() == exchange_data_single.size(),
                     "StringUtil::stack_vectors: Cannot stack vectors with different size {} != {} ", all_exchange_data.size(), exchange_data_single.size());
 
                 for (size_t i = 0; i < all_exchange_data.size(); i++) {
-                    all_exchange_data[i].insert(all_exchange_data[i].end(), exchange_data_single[i].begin(), exchange_data_single[i].end());
+                    ranges::insert(all_exchange_data[i], all_exchange_data[i].end(), exchange_data_single[i]);
                 }
-
             }
 
             const auto& received_data = MPIWrapper::exchange_values<AreaMonitor::AreaConnection>(all_exchange_data);
@@ -356,9 +357,7 @@ void Simulation::simulate(const step_type number_steps) {
                 }
             }
 
-            for (auto& [_, area_monitor] : *area_monitors) {
-                area_monitor.finish_recording();
-            }
+            ranges::for_each(*area_monitors | ranges::views::values, &AreaMonitor::finish_recording);
 
             neurons->get_neuron_model()->reset_fired_recorder(NeuronModel::FireRecorderPeriod::AreaMonitor);
 
@@ -448,16 +447,12 @@ void Simulation::simulate(const step_type number_steps) {
 
         if (step % Config::flush_monitor_step == 0) {
             Timers::start(TimerRegion::PRINT_IO);
-            for (auto& monitor : *monitors) {
-                monitor.flush_current_contents();
-            }
+            ranges::for_each(*monitors, &NeuronMonitor::flush_current_contents);
             Timers::stop_and_add(TimerRegion::PRINT_IO);
         }
 
         if (step % Config::flush_area_monitor_step == 0) {
-            for (auto& [area_id, area_monitor] : *area_monitors) {
-                area_monitor.write_data_to_file();
-            }
+            ranges::for_each(*area_monitors | ranges::views::values, &AreaMonitor::write_data_to_file);
         }
 
         if (step % Config::console_update_step == 0) {
@@ -480,14 +475,10 @@ void Simulation::simulate(const step_type number_steps) {
     Timers::stop_and_add(TimerRegion::SIMULATION_LOOP);
 
     LogFiles::print_message_rank(MPIRank::root_rank(), "Final flush of neuron monitors");
-    for (auto& monitor : *monitors) {
-        monitor.flush_current_contents();
-    }
+    ranges::for_each(*monitors, &NeuronMonitor::flush_current_contents);
 
     LogFiles::print_message_rank(MPIRank::root_rank(), "Final flush of area monitors");
-    for (auto& [area_id, area_monitor] : *area_monitors) {
-        area_monitor.write_data_to_file();
-    }
+    ranges::for_each(*area_monitors | ranges::views::values, &AreaMonitor::write_data_to_file);
 
     LogFiles::print_message_rank(MPIRank::root_rank(), "Print positions");
     neurons->print_positions_to_log_file();

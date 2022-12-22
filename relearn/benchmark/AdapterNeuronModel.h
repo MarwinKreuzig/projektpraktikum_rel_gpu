@@ -13,6 +13,8 @@
 #include "neurons/enums/FiredStatus.h"
 #include "util/NeuronID.h"
 
+#include <range/v3/algorithm/fill.hpp>
+
 #include <span>
 #include <vector>
 
@@ -38,9 +40,7 @@ public:
     }
 
     void set_fired_status(const FiredStatus fs) {
-        for (auto& fired_status : model.fired) {
-            fired_status = fs;
-        }
+        ranges::fill(model.fired, fs);
     }
 
     void update_activity_benchmark(const NeuronID id) {
