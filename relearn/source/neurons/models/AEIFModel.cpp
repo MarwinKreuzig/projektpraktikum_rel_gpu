@@ -76,12 +76,13 @@ void AEIFModel::create_neurons(const number_neurons_type creation_count) {
     init_neurons(old_size, creation_count);
 }
 
-void AEIFModel::update_activity(const NeuronID& neuron_id) {
+void AEIFModel::update_activity_benchmark(const NeuronID neuron_id) {
     const auto h = get_h();
 
     const auto synaptic_input = get_synaptic_input(neuron_id);
     const auto background = get_background_activity(neuron_id);
-    const auto input = synaptic_input + background;
+    const auto stimulus = get_stimulus(neuron_id);
+    const auto input = synaptic_input + background + stimulus;
 
     auto x = get_x(neuron_id);
 
@@ -105,35 +106,46 @@ void AEIFModel::update_activity(const NeuronID& neuron_id) {
     set_x(neuron_id, x);
 }
 
-void AEIFModel::update_activity_benchmark(const NeuronID& neuron_id) {
-    const auto h = get_h();
-
+void AEIFModel::update_activity(const NeuronID neuron_id) {
     const auto synaptic_input = get_synaptic_input(neuron_id);
     const auto background = get_background_activity(neuron_id);
     const auto stimulus = get_stimulus(neuron_id);
     const auto input = synaptic_input + background + stimulus;
 
-    auto x = get_x(neuron_id);
+    const auto h = get_h();
+    const auto scale = 1.0 / h;
+
+    const auto d_T_inverse = 1.0 / d_T;
+    const auto tau_w_inverse = 1.0 / tau_w;
+    const auto C_inverse = 1.0 / C;
+
+    const auto local_neuron_id = neuron_id.get_neuron_id();
+
+    auto x_val = get_x(neuron_id);
+    auto w_val = w[local_neuron_id];
 
     auto has_spiked = FiredStatus::Inactive;
 
-    const auto local_neuron_id = neuron_id.get_neuron_id();
-    const auto scale = 1.0 / h;
-
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-        x += iter_x(x, w[local_neuron_id], input) * scale;
-        w[local_neuron_id] += iter_refraction(w[local_neuron_id], x) * scale;
+        const auto linear_part = -g_L * (x_val - E_L);
+        const auto exp_part = g_L * d_T * std::exp((x_val - V_T) * d_T_inverse);
+        const auto x_increase = (linear_part + exp_part - w_val + input) * C_inverse;
+        const auto w_increase = (a * (x_val - E_L) - w_val) * tau_w_inverse;
 
-        if (x >= V_spike) {
-            x = E_L;
-            w[local_neuron_id] += b;
+        x_val += x_increase * scale;
+        w_val += w_increase * scale;
+
+        if (x_val >= V_spike) {
+            x_val = E_L;
+            w_val += b;
             has_spiked = FiredStatus::Fired;
             break;
         }
     }
 
     set_fired(neuron_id, has_spiked);
-    set_x(neuron_id, x);
+    set_x(neuron_id, x_val);
+    w[local_neuron_id] = w_val;
 }
 
 void AEIFModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {
@@ -145,16 +157,16 @@ void AEIFModel::init_neurons(const number_neurons_type start_id, const number_ne
     }
 }
 
-[[nodiscard]] double AEIFModel::f(const double x) const noexcept {
+double AEIFModel::f(const double x) const noexcept {
     const auto linear_part = -g_L * (x - E_L);
     const auto exp_part = g_L * d_T * exp((x - V_T) / d_T);
     return linear_part + exp_part;
 }
 
-[[nodiscard]] double AEIFModel::iter_x(const double x, const double w, const double input) const noexcept {
+double AEIFModel::iter_x(const double x, const double w, const double input) const noexcept {
     return (f(x) - w + input) / C;
 }
 
-[[nodiscard]] double AEIFModel::iter_refraction(const double w, const double x) const noexcept {
+double AEIFModel::iter_refraction(const double w, const double x) const noexcept {
     return (a * (x - E_L) - w) / tau_w;
 }

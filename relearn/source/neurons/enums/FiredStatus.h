@@ -10,6 +10,8 @@
  *
  */
 
+#include "fmt/ostream.h"
+
 #include <ostream>
 
 /**

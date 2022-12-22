@@ -13,7 +13,7 @@
 #include "Types.h"
 #include "io/InteractiveNeuronIO.h"
 #include "neurons/LocalAreaTranslator.h"
-#include "neurons/UpdateStatus.h"
+#include "neurons/enums/UpdateStatus.h"
 #include "util/MPIRank.h"
 #include "util/TaggedID.h"
 #include "util/Timers.h"
@@ -45,7 +45,7 @@ public:
         stimulus.resize(new_size, 0.0);
     }
 
-    void update_stimulus(const RelearnTypes::step_type step, const std::vector<UpdateStatus>& disable_flags) {
+    void update_stimulus(const RelearnTypes::step_type step, const std::span<const UpdateStatus> disable_flags) {
         if (!stimulus_function.operator bool()) {
             return;
         }

@@ -14,7 +14,7 @@
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "Types.h"
-#include "neurons/SignalType.h"
+#include "neurons/enums/SignalType.h"
 #include "sim/random/SubdomainFromNeuronDensity.h"
 #include "structure/Partition.h"
 

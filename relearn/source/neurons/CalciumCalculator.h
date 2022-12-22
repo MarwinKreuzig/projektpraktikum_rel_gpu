@@ -11,15 +11,16 @@
  */
 
 #include "Types.h"
-#include "neurons/FiredStatus.h"
-#include "neurons/TargetCalciumDecay.h"
-#include "neurons/UpdateStatus.h"
+#include "neurons/enums/FiredStatus.h"
+#include "neurons/enums/TargetCalciumDecay.h"
+#include "neurons/enums/UpdateStatus.h"
 #include "util/MPIRank.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
 #include <functional>
 #include <limits>
+#include <span>
 #include <vector>
 
 class NeuronMonitor;
@@ -146,7 +147,7 @@ public:
      * @brief Returns the inter-cellular calcium concentration
      * @return The calcium values
      */
-    [[nodiscard]] constexpr const std::vector<double>& get_calcium() const noexcept {
+    [[nodiscard]] constexpr std::span<const double> get_calcium() const noexcept {
         return calcium;
     }
 
@@ -154,7 +155,7 @@ public:
      * @brief Returns the target calcium values
      * @return The target calcium values
      */
-    [[nodiscard]] constexpr const std::vector<double>& get_target_calcium() const noexcept {
+    [[nodiscard]] constexpr std::span<const double> get_target_calcium() const noexcept {
         return target_calcium;
     }
 
@@ -197,7 +198,7 @@ public:
      * @param fired_status Indicates if a neuron fired
      * @exception Throws a RelearnException if the size of the vectors doesn't match the size of the stored vectors
      */
-    void update_calcium(step_type step, const std::vector<UpdateStatus>& disable_flags, const std::vector<FiredStatus>& fired_status);
+    void update_calcium(step_type step, std::span<const UpdateStatus> disable_flags, std::span<const FiredStatus> fired_status);
 
     static constexpr double default_C_target{ 0.7 }; // In Sebastian's work: 0.5
 
@@ -214,9 +215,9 @@ public:
     static constexpr unsigned int max_h{ 1000 };
 
 private:
-    void update_current_calcium(const std::vector<UpdateStatus>& disable_flags, const std::vector<FiredStatus>& fired_status) noexcept;
+    void update_current_calcium(std::span<const UpdateStatus> disable_flags, std::span<const FiredStatus> fired_status) noexcept;
 
-    void update_target_calcium(step_type step, const std::vector<UpdateStatus>& disable_flags) noexcept;
+    void update_target_calcium(step_type step, std::span<const UpdateStatus> disable_flags) noexcept;
 
     std::function<double(MPIRank, NeuronID::value_type)> initial_calcium_initiator{};
     std::function<double(MPIRank, NeuronID::value_type)> target_calcium_calculator{};

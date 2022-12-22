@@ -17,8 +17,10 @@
 /**
  * An instance of this enum classifies a synaptic elements as either excitatory or inhibitory.
  */
-enum class SignalType { Excitatory,
-    Inhibitory };
+enum class SignalType : char {
+    Excitatory,
+    Inhibitory
+};
 
 /**
  * @brief Pretty-prints the signal type to the chosen stream

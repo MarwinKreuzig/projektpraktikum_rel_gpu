@@ -10,8 +10,8 @@
  *
  */
 
-#include "neurons/models/BackgroundActivityCalculator.h"
-#include "neurons/models/BackgroundActivityCalculators.h"
+#include "neurons/input/BackgroundActivityCalculator.h"
+#include "neurons/input/BackgroundActivityCalculators.h"
 
 #include <memory>
 

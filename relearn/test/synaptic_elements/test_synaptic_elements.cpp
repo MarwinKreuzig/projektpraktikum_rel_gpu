@@ -17,7 +17,7 @@
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "neurons/models/SynapticElements.h"
-#include "neurons/UpdateStatus.h"
+#include "neurons/enums/UpdateStatus.h"
 
 #include <numeric>
 #include <sstream>

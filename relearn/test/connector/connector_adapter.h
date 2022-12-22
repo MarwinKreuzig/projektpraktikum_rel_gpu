@@ -16,7 +16,7 @@
 
 #include "mpi/CommunicationMap.h"
 #include "neurons/helper/SynapseCreationRequests.h"
-#include "neurons/SignalType.h"
+#include "neurons/enums/SignalType.h"
 #include "util/TaggedID.h"
 
 #include <random>

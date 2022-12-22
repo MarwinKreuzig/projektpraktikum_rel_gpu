@@ -18,6 +18,7 @@
 
 #include <filesystem>
 #include <optional>
+#include <span>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -119,8 +120,8 @@ public:
      * @param local_subdomain_boundaries List of bounding boxes (as pair of bounding box min and bounding box max) of the local subdomains
      * @exception Throws a RelearnException if the vectors don't all have the same length, or opening the file failed
      */
-    static void write_neurons_componentwise(const std::vector<NeuronID>& ids, const std::vector<position_type>& positions,
-        const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::vector<SignalType>& signal_types, std::stringstream& ss, 
+    static void write_neurons_componentwise(std::span<const NeuronID> ids, std::span<const position_type> positions,
+        const std::shared_ptr<LocalAreaTranslator>& local_area_translator, std::span<const SignalType> signal_types, std::stringstream& ss, 
         size_t total_number_neurons, const std::tuple<Vec3<double>, Vec3<double>>& simulation_box, const std::vector<std::pair<Partition::box_size_type, Partition::box_size_type>>& local_subdomain_boundaries);
 
     /**
@@ -133,8 +134,8 @@ public:
      * @param file_path Path to the output file
      * @exception Throws a RelearnException if the vectors don't all have the same length, or opening the file failed
      */
-    static void write_neurons_componentwise(const std::vector<NeuronID>& ids, const std::vector<position_type>& positions,
-        const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::vector<SignalType>& signal_types, std::filesystem::path& file_path);
+    static void write_neurons_componentwise(std::span<const NeuronID> ids, std::span<const position_type> positions,
+        const std::shared_ptr<LocalAreaTranslator>& local_area_translator, std::span<const SignalType> signal_types, std::filesystem::path& file_path);
 
     /**
      * @brief Reads all neuron ids from a file and returns those.

@@ -12,7 +12,7 @@
 
 #include "mpi/MPIWrapper.h"
 #include "neurons/NetworkGraph.h"
-#include "neurons/models/FiredStatusCommunicationMap.h"
+#include "neurons/input/FiredStatusCommunicationMap.h"
 
 #include <algorithm>
 
@@ -42,7 +42,7 @@ void SynapticInputCalculator::set_synaptic_input(const double value) noexcept {
     std::ranges::fill(synaptic_input, value);
 }
 
-double SynapticInputCalculator::get_local_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus>& fired, const NeuronID& neuron_id) {
+double SynapticInputCalculator::get_local_synaptic_input(const NetworkGraph& network_graph, const std::span<const FiredStatus> fired, const NeuronID neuron_id) {
     // Walk through the local in-edges of my neuron
     const NetworkGraph::LocalEdges& local_in_edges = network_graph.get_local_in_edges(neuron_id);
 
@@ -57,7 +57,7 @@ double SynapticInputCalculator::get_local_synaptic_input(const NetworkGraph& net
     return local_input;
 }
 
-double SynapticInputCalculator::get_distant_synaptic_input(const NetworkGraph& network_graph, const std::vector<FiredStatus>& fired, const NeuronID& neuron_id) {
+double SynapticInputCalculator::get_distant_synaptic_input(const NetworkGraph& network_graph, const std::span<const FiredStatus> fired, const NeuronID neuron_id) {
     // Walk through the distant in-edges of my neuron
     const NetworkGraph::DistantEdges& in_edges = network_graph.get_distant_in_edges(neuron_id);
 

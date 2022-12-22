@@ -10,8 +10,8 @@
  *
  */
 
-#include "neurons/models/SynapticInputCalculator.h"
-#include "neurons/models/SynapticInputCalculators.h"
+#include "neurons/input/SynapticInputCalculator.h"
+#include "neurons/input/SynapticInputCalculators.h"
 
 #include <memory>
 

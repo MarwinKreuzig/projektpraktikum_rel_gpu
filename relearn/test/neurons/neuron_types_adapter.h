@@ -12,9 +12,9 @@
 
 #include "RandomAdapter.h"
 
-#include "neurons/ElementType.h"
-#include "neurons/FiredStatus.h"
-#include "neurons/SignalType.h"
+#include "neurons/enums/ElementType.h"
+#include "neurons/enums/FiredStatus.h"
+#include "neurons/enums/SignalType.h"
 #include "neurons/helper/DistantNeuronRequests.h"
 
 #include <random>

@@ -12,6 +12,7 @@ FetchContent_MakeAvailable(googlebenchmark)
 add_executable(
   relearn_benchmarks
   main.cpp
+  benchmark_background.cpp
   benchmark_kernel.cpp
   benchmark_network_graph.cpp
   benchmark_neuron_model.cpp

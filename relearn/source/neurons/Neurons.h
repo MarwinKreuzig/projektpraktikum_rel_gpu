@@ -17,11 +17,11 @@
 #include "models/SynapticElements.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/CalciumCalculator.h"
-#include "neurons/ElementType.h"
+#include "neurons/enums/ElementType.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/NeuronsExtraInfo.h"
-#include "neurons/SignalType.h"
-#include "neurons/UpdateStatus.h"
+#include "neurons/enums/SignalType.h"
+#include "neurons/enums/UpdateStatus.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "neurons/helper/SynapseDeletionRequests.h"
@@ -29,6 +29,7 @@
 #include "util/StatisticalMeasures.h"
 
 #include <memory>
+#include <span>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -124,9 +125,17 @@ public:
      * @param network_static The network graph for static connections
      * @param network_plastic The network graph for plastic connections
      */
-    void set_network_graph(std::shared_ptr<NetworkGraph>& network_static, std::shared_ptr<NetworkGraph>& network_plastic) {
-        network_graph_static = network_static;
-        network_graph_plastic = network_plastic;
+    void set_network_graph(std::shared_ptr<NetworkGraph> network_static, std::shared_ptr<NetworkGraph> network_plastic) {
+        network_graph_static = std::move(network_static);
+        network_graph_plastic = std::move(network_plastic);
+    }
+
+    /**
+     * @brief Sets the area translator that translates between the local area id on the current mpi rank and its area name
+     * @param local_area_translator the local area translator for this mpi rank
+     */
+    void set_local_area_translator(std::shared_ptr<LocalAreaTranslator> local_area_translator) {
+        this->local_area_translator = std::move(local_area_translator);
     }
 
     /**
@@ -134,7 +143,7 @@ public:
      * @param static_neurons List of neuron ids that will be marked as static
      * @throws RelearnException When a static neuron is loaded with a plastic connection
      */
-    void set_static_neurons(const std::vector<NeuronID>& static_neurons) {
+    void set_static_neurons(const std::span<const NeuronID> static_neurons) {
         for (const auto& neuronId : static_neurons) {
             disable_flags[neuronId.get_neuron_id()] = UpdateStatus::Static;
         }
@@ -189,14 +198,6 @@ public:
     }
 
     /**
-     * @brief Sets the area translator that translates between the local area id on the current mpi rank and its area name
-     * @param local_area_translator the local area translator for this mpi rank
-     */
-    void set_local_area_translator(std::shared_ptr<LocalAreaTranslator> local_area_translator) {
-        this->local_area_translator = local_area_translator;
-    }
-
-    /**
      * @brief Returns the area translate that translates between the local area id on the current mpi rank and its area name
      * @return the local area translator
      */
@@ -243,7 +244,7 @@ public:
      * @param fired The fired status of the neurons
      * @exception Throws a RelearnException if fired.size() is not equal to the number of local neurons
      */
-    void set_fired(std::vector<FiredStatus> fired) {
+    void set_fired(const std::span<const FiredStatus> fired) {
         RelearnException::check(fired.size() == number_neurons, "Neurons::set_fired: The sizes didn't match: {} vs {}", fired.size(), number_neurons);
 
         for (const auto neuron_id : NeuronID::range(number_neurons)) {
@@ -283,7 +284,7 @@ public:
      *      The reference is never invalidated
      * @return A constant reference to the disable flags
      */
-    [[nodiscard]] const std::vector<UpdateStatus>& get_disable_flags() const noexcept {
+    [[nodiscard]] const std::span<const UpdateStatus> get_disable_flags() const noexcept {
         return disable_flags;
     }
 
@@ -299,14 +300,14 @@ public:
      *      Otherwise, also deletes all synapses from the disabled neurons
      * @exception Throws RelearnExceptions if something unexpected happens
      */
-    number_neurons_type disable_neurons(const std::vector<NeuronID>& neuron_ids);
+    number_neurons_type disable_neurons(std::span<const NeuronID> neuron_ids);
 
     /**
      * @brief Enables all neurons with specified ids
      *      If a neuron is already enabled, nothing happens for that one
      * @exception Throws RelearnExceptions if something unexpected happens
      */
-    void enable_neurons(const std::vector<NeuronID>& neuron_ids);
+    void enable_neurons(std::span<const NeuronID> neuron_ids);
 
     /**
      * @brief Creates creation_count many new neurons with default values
@@ -429,17 +430,17 @@ public:
      * @param signal_types Vector of SignalTypes. Neuron i has signal_type[i]
      * @throws RelearnException If signal_type does not match weight
      */
-    static void check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, const std::vector<SignalType>& signal_types, const MPIRank my_rank);
+    static void check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, std::span<const SignalType> signal_types, const MPIRank my_rank);
 
 private:
-    [[nodiscard]] StatisticalMeasures global_statistics(const std::vector<double>& local_values, MPIRank root, const std::vector<UpdateStatus>& disable_flags) const;
+    [[nodiscard]] StatisticalMeasures global_statistics(std::span<const double> local_values, MPIRank root, std::span<const UpdateStatus> disable_flags) const;
 
     template <typename T>
-    [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::vector<T>& local_values, const MPIRank root, const std::vector<UpdateStatus>& disable_flags) const {
-        std::vector<double> converted_values;
+    [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::span<const T> local_values, const MPIRank root, const std::span<const UpdateStatus> disable_flags) const {
+        std::vector<double> converted_values{};
         converted_values.reserve(local_values.size());
 
-        for (const auto& value : local_values) {
+        for (const auto value : local_values) {
             converted_values.emplace_back(static_cast<double>(value));
         }
 

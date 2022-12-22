@@ -15,9 +15,9 @@
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
+#include <span>
 #include <string>
 #include <vector>
-#include <set>
 
 /**
  * An object of type NeuronsExtraInfo additional information of neurons.
@@ -63,7 +63,7 @@ public:
      * @brief Returns the currently stored positions as a vector. The reference is invalidated whenever init or create_neurons is called.
      * @return The currently stored positions as a vector
      */
-    [[nodiscard]] const std::vector<position_type>& get_positions() const noexcept {
+    [[nodiscard]] std::span<const position_type> get_positions() const noexcept {
         return positions;
     }
 
@@ -72,7 +72,7 @@ public:
      * @param neuron_id The local id of the neuron, i.e., from [0, num_local_neurons)
      * @exception Throws an RelearnException if the specified id exceeds the number of stored neurons
      */
-    [[nodiscard]] position_type get_position(const NeuronID& neuron_id) const {
+    [[nodiscard]] position_type get_position(const NeuronID neuron_id) const {
         const auto local_neuron_id = neuron_id.get_neuron_id();
         RelearnException::check(local_neuron_id < size, "NeuronsExtraInfo::get_position: neuron_id must be smaller than size but was {}", neuron_id);
         RelearnException::check(local_neuron_id < positions.size(), "NeuronsExtraInfo::get_position: neuron_id must be smaller than positions.size() but was {}", neuron_id);

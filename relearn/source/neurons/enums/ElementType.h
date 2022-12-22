@@ -19,8 +19,10 @@
  * In this simulation, there exists exactly two different ones: axonal elements and dendritic elements.
  * The distinction excitatory / inhibitory is made by the type SignalType.
  */
-enum class ElementType { Axon,
-    Dendrite };
+enum class ElementType : char {
+    Axon,
+    Dendrite
+};
 
 /**
  * @brief Returns the other element type, i.e., Axon for Dendrite and vice versa
@@ -52,5 +54,6 @@ inline std::ostream& operator<<(std::ostream& out, const ElementType element_typ
 
     return out;
 }
+
 template <>
 struct fmt::formatter<ElementType> : ostream_formatter { };

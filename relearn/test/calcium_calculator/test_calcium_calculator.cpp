@@ -707,12 +707,12 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateException) {
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    ASSERT_THROW(cc1.update_calcium(step, {}, { FiredStatus::Fired }), RelearnException);
-    ASSERT_THROW(cc1.update_calcium(step, { UpdateStatus::Disabled }, {}), RelearnException);
-    ASSERT_THROW(cc2.update_calcium(step, {}, { FiredStatus::Fired }), RelearnException);
-    ASSERT_THROW(cc2.update_calcium(step, { UpdateStatus::Disabled }, {}), RelearnException);
-    ASSERT_THROW(cc3.update_calcium(step, {}, { FiredStatus::Fired }), RelearnException);
-    ASSERT_THROW(cc3.update_calcium(step, { UpdateStatus::Disabled }, {}), RelearnException);
+    ASSERT_THROW(cc1.update_calcium(step, std::span<const UpdateStatus>{}, std::span<const FiredStatus>{ { FiredStatus::Fired } }), RelearnException);
+    ASSERT_THROW(cc1.update_calcium(step, std::span<const UpdateStatus>{ { UpdateStatus::Disabled } }, {}), RelearnException);
+    ASSERT_THROW(cc2.update_calcium(step, {}, std::span<const FiredStatus>{ { FiredStatus::Fired } }), RelearnException);
+    ASSERT_THROW(cc2.update_calcium(step, std::span<const UpdateStatus>{ { UpdateStatus::Disabled } }, {}), RelearnException);
+    ASSERT_THROW(cc3.update_calcium(step, {}, std::span<const FiredStatus>{ { FiredStatus::Fired } }), RelearnException);
+    ASSERT_THROW(cc3.update_calcium(step, std::span<const UpdateStatus>{ { UpdateStatus::Disabled } }, {}), RelearnException);
 
     ASSERT_NO_THROW(cc1.init(number_neurons));
     ASSERT_NO_THROW(cc2.init(number_neurons));

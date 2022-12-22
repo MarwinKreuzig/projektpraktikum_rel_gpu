@@ -14,12 +14,13 @@
 
 #include "Types.h"
 #include "mpi/CommunicationMap.h"
-#include "neurons/FiredStatus.h"
-#include "neurons/UpdateStatus.h"
+#include "neurons/enums/FiredStatus.h"
+#include "neurons/enums/UpdateStatus.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
 #include <algorithm>
+#include <span>
 #include <vector>
 
 class NetworkGraph;
@@ -51,7 +52,7 @@ public:
      * @param network_graph_static The network graph of static connections
      * @param network_graph_plastic The network graph of plastic connections
      */
-    void set_local_fired_status(const std::vector<FiredStatus>& fired_status, const std::vector<UpdateStatus>& disable_flags, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic) override;
+    void set_local_fired_status(std::span<const FiredStatus> fired_status, std::span<const UpdateStatus> disable_flags, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic) override;
 
     /**
      * @brief Exchanges the fired status with all MPI ranks

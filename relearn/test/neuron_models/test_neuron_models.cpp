@@ -3,7 +3,7 @@
 // #include "RelearnTest.hpp"
 //
 // #include "neurons/Neurons.h"
-// #include "neurons/UpdateStatus.h"
+// #include "neurons/enums/UpdateStatus.h"
 // #include "neurons/models/NeuronModels.h"
 //
 // #include "neurons/NetworkGraph.h"

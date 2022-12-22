@@ -11,8 +11,8 @@
  */
 
 #include "Types.h"
-#include "neurons/ElementType.h"
-#include "neurons/SignalType.h"
+#include "neurons/enums/ElementType.h"
+#include "neurons/enums/SignalType.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"

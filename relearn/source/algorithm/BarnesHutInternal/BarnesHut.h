@@ -16,7 +16,7 @@
 #include "Types.h"
 #include "algorithm/BarnesHutInternal/BarnesHutCell.h"
 #include "mpi/CommunicationMap.h"
-#include "neurons/UpdateStatus.h"
+#include "neurons/enums/UpdateStatus.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 
 #include <memory>

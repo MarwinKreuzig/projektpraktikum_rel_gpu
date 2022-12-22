@@ -58,9 +58,9 @@ void Neurons::init(const number_neurons_type number_neurons) {
 }
 
 void Neurons::init_synaptic_elements() {
-    const std::vector<double>& axons_counts = axons->get_grown_elements();
-    const std::vector<double>& dendrites_inh_counts = dendrites_inh->get_grown_elements();
-    const std::vector<double>& dendrites_exc_counts = dendrites_exc->get_grown_elements();
+    const auto& axons_counts = axons->get_grown_elements();
+    const auto& dendrites_inh_counts = dendrites_inh->get_grown_elements();
+    const auto& dendrites_exc_counts = dendrites_exc->get_grown_elements();
 
     for (const auto& id : NeuronID::range(number_neurons)) {
         const auto axon_connections = network_graph_plastic->get_number_out_edges(id);
@@ -85,7 +85,7 @@ void Neurons::init_synaptic_elements() {
     check_signal_types(network_graph_plastic, axons->get_signal_types(), MPIWrapper::get_my_rank());
 }
 
-void Neurons::check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, const std::vector<SignalType>& signal_types, const MPIRank my_rank) {
+void Neurons::check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, const std::span<const SignalType> signal_types, const MPIRank my_rank) {
     for (const auto& neuron_id : NeuronID::range(signal_types.size())) {
         const auto& signal_type = signal_types[neuron_id.get_neuron_id()];
         const auto& out_edges = network_graph->get_all_out_edges(neuron_id);
@@ -96,7 +96,7 @@ void Neurons::check_signal_types(const std::shared_ptr<NetworkGraph> network_gra
     }
 }
 
-Neurons::number_neurons_type Neurons::disable_neurons(const std::vector<NeuronID>& neuron_ids) {
+Neurons::number_neurons_type Neurons::disable_neurons(const std::span<const NeuronID> neuron_ids) {
     neuron_model->disable_neurons(neuron_ids);
 
     std::vector<unsigned int> deleted_axon_connections(number_neurons, 0);
@@ -207,7 +207,7 @@ Neurons::number_neurons_type Neurons::disable_neurons(const std::vector<NeuronID
     return deleted_connections_to_outer_world + weight_deleted_edges_within;
 }
 
-void Neurons::enable_neurons(const std::vector<NeuronID>& neuron_ids) {
+void Neurons::enable_neurons(const std::span<const NeuronID> neuron_ids) {
     for (const auto& neuron_id : neuron_ids) {
         RelearnException::check(neuron_id.get_neuron_id() < number_neurons, "Neurons::enable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
         disable_flags[neuron_id.get_neuron_id()] = UpdateStatus::Enabled;
@@ -261,7 +261,7 @@ void Neurons::update_number_synaptic_elements_delta() {
     dendrites_inh->update_number_elements_delta(calcium, target_calcium, disable_flags);
 }
 
-StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_values, const MPIRank root, const std::vector<UpdateStatus>& disable_flags) const {
+StatisticalMeasures Neurons::global_statistics(const std::span<const double> local_values, const MPIRank root, const std::span<const UpdateStatus> disable_flags) const {
     const auto [d_my_min, d_my_max, d_my_acc, d_num_values] = Util::min_max_acc(local_values, disable_flags);
     const double my_avg = d_my_acc / static_cast<double>(d_num_values);
 
@@ -290,7 +290,7 @@ StatisticalMeasures Neurons::global_statistics(const std::vector<double>& local_
     const double var = MPIWrapper::reduce(my_var, MPIWrapper::ReduceFunction::Sum, root);
 
     // Calc standard deviation
-    const double std = sqrt(var);
+    const double std = std::sqrt(var);
 
     return { d_min, d_max, avg, var, std };
 }
@@ -947,13 +947,13 @@ void Neurons::print() {
 }
 
 void Neurons::print_info_for_algorithm() {
-    const std::vector<double>& axons_counts = axons->get_grown_elements();
-    const std::vector<double>& dendrites_exc_counts = dendrites_exc->get_grown_elements();
-    const std::vector<double>& dendrites_inh_counts = dendrites_inh->get_grown_elements();
+    const auto& axons_counts = axons->get_grown_elements();
+    const auto& dendrites_exc_counts = dendrites_exc->get_grown_elements();
+    const auto& dendrites_inh_counts = dendrites_inh->get_grown_elements();
 
-    const std::vector<unsigned int>& axons_connected_counts = axons->get_connected_elements();
-    const std::vector<unsigned int>& dendrites_exc_connected_counts = dendrites_exc->get_connected_elements();
-    const std::vector<unsigned int>& dendrites_inh_connected_counts = dendrites_inh->get_connected_elements();
+    const auto& axons_connected_counts = axons->get_connected_elements();
+    const auto& dendrites_exc_connected_counts = dendrites_exc->get_connected_elements();
+    const auto& dendrites_inh_connected_counts = dendrites_inh->get_connected_elements();
 
     // Column widths
     const int cwidth_small = 8;

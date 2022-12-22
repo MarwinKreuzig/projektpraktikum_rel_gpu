@@ -65,15 +65,17 @@ if(WIN32)
 	
 	# neurons
 	list(APPEND relearn_lib_additional_files "neurons/CalciumCalculator.h")
-	list(APPEND relearn_lib_additional_files "neurons/ElementType.h")
-	list(APPEND relearn_lib_additional_files "neurons/FiredStatus.h")
 	list(APPEND relearn_lib_additional_files "neurons/LocalAreaTranslator.h")
 	list(APPEND relearn_lib_additional_files "neurons/NetworkGraph.h")
 	list(APPEND relearn_lib_additional_files "neurons/Neurons.h")
 	list(APPEND relearn_lib_additional_files "neurons/NeuronsExtraInfo.h")
-	list(APPEND relearn_lib_additional_files "neurons/SignalType.h")
-	list(APPEND relearn_lib_additional_files "neurons/TargetCalciumDecay.h")
-	list(APPEND relearn_lib_additional_files "neurons/UpdateStatus.h")
+	
+	# enums
+	list(APPEND relearn_lib_additional_files "neurons/enums/ElementType.h")
+	list(APPEND relearn_lib_additional_files "neurons/enums/FiredStatus.h")
+	list(APPEND relearn_lib_additional_files "neurons/enums/SignalType.h")
+	list(APPEND relearn_lib_additional_files "neurons/enums/TargetCalciumDecay.h")
+	list(APPEND relearn_lib_additional_files "neurons/enums/UpdateStatus.h")	
 	
 	# helper
 	list(APPEND relearn_lib_additional_files "neurons/helper/AreaMonitor.h")
@@ -84,16 +86,19 @@ if(WIN32)
 	list(APPEND relearn_lib_additional_files "neurons/helper/SynapseCreationRequests.h")
 	list(APPEND relearn_lib_additional_files "neurons/helper/SynapseDeletionRequests.h")
 	
+	# input
+	list(APPEND relearn_lib_additional_files "neurons/input/BackgroundActivityCalculator.h")
+	list(APPEND relearn_lib_additional_files "neurons/input/BackgroundActivityCalculators.h")
+	list(APPEND relearn_lib_additional_files "neurons/input/FiredStatusCommunicationMap.h")
+	list(APPEND relearn_lib_additional_files "neurons/input/FiredStatusCommunicator.h")
+	list(APPEND relearn_lib_additional_files "neurons/input/Stimulus.h")
+	list(APPEND relearn_lib_additional_files "neurons/input/SynapticInputCalculator.h")
+	list(APPEND relearn_lib_additional_files "neurons/input/SynapticInputCalculators.h")
+	
 	# models
-	list(APPEND relearn_lib_additional_files "neurons/models/BackgroundActivityCalculator.h")
-	list(APPEND relearn_lib_additional_files "neurons/models/BackgroundActivityCalculators.h")
-	list(APPEND relearn_lib_additional_files "neurons/models/FiredStatusCommunicationMap.h")
-	list(APPEND relearn_lib_additional_files "neurons/models/FiredStatusCommunicator.h")
 	list(APPEND relearn_lib_additional_files "neurons/models/ModelParameter.h")
 	list(APPEND relearn_lib_additional_files "neurons/models/NeuronModels.h")
 	list(APPEND relearn_lib_additional_files "neurons/models/SynapticElements.h")
-	list(APPEND relearn_lib_additional_files "neurons/models/SynapticInputCalculator.h")
-	list(APPEND relearn_lib_additional_files "neurons/models/SynapticInputCalculators.h")
 	
 	# sim
 	list(APPEND relearn_lib_additional_files "sim/Essentials.h")

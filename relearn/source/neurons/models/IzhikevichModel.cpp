@@ -71,7 +71,7 @@ void IzhikevichModel::create_neurons(const number_neurons_type creation_count) {
     init_neurons(old_size, creation_count);
 }
 
-void IzhikevichModel::update_activity(const NeuronID& neuron_id) {
+void IzhikevichModel::update_activity_benchmark(const NeuronID neuron_id) {
     const auto h = get_h();
 
     const auto synaptic_input = get_synaptic_input(neuron_id);
@@ -101,34 +101,42 @@ void IzhikevichModel::update_activity(const NeuronID& neuron_id) {
     set_x(neuron_id, x);
 }
 
-void IzhikevichModel::update_activity_benchmark(const NeuronID& neuron_id) {
-    const auto h = get_h();
-
+void IzhikevichModel::update_activity(const NeuronID neuron_id) {
     const auto synaptic_input = get_synaptic_input(neuron_id);
     const auto background = get_background_activity(neuron_id);
-    const auto input = synaptic_input + background;
+    const auto stimulus = get_stimulus(neuron_id);
+    const auto input = synaptic_input + background + stimulus;
 
-    auto x = get_x(neuron_id);
+    const auto h = get_h();
+    const auto scale = 1.0 / h;
 
     const auto local_neuron_id = neuron_id.get_neuron_id();
 
+    auto x_val = get_x(neuron_id);
+    auto u_val = u[local_neuron_id];
+
     auto has_spiked = FiredStatus::Inactive;
-    const auto scale = 1.0 / h;
 
     for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-        x += iter_x(x, u[local_neuron_id], input) * scale;
-        u[local_neuron_id] += iter_refraction(u[local_neuron_id], x) * scale;
+        const auto x_increase = k1 * x_val * x_val + k2 * x_val + k3 - u_val + input;
+        const auto u_increase = a * (b * x_val - u_val);
 
-        if (spiked(x)) {
-            x = c;
-            u[local_neuron_id] += d;
+        x_val += x_increase * scale;
+        u_val += u_increase * scale;
+
+        const auto spiked = x_val >= V_spike;
+
+        if (spiked) {
+            x_val = c;
+            u_val += d;
             has_spiked = FiredStatus::Fired;
             break;
         }
     }
 
     set_fired(neuron_id, has_spiked);
-    set_x(neuron_id, x);
+    set_x(neuron_id, x_val);
+    u[local_neuron_id] = u_val;
 }
 
 void IzhikevichModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {
@@ -139,14 +147,14 @@ void IzhikevichModel::init_neurons(const number_neurons_type start_id, const num
     }
 }
 
-[[nodiscard]] double IzhikevichModel::iter_x(const double x, const double u, const double input) const noexcept {
+double IzhikevichModel::iter_x(const double x, const double u, const double input) const noexcept {
     return k1 * x * x + k2 * x + k3 - u + input;
 }
 
-[[nodiscard]] double IzhikevichModel::iter_refraction(const double u, const double x) const noexcept {
+double IzhikevichModel::iter_refraction(const double u, const double x) const noexcept {
     return a * (b * x - u);
 }
 
-[[nodiscard]] bool IzhikevichModel::spiked(const double x) const noexcept {
+bool IzhikevichModel::spiked(const double x) const noexcept {
     return x >= V_spike;
 }

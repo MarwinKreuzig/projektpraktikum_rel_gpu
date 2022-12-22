@@ -291,8 +291,8 @@ void NeuronIO::write_area_names(std::stringstream& ss, const std::shared_ptr<Loc
     }
 }
 
-void NeuronIO::write_neurons_componentwise(const std::vector<NeuronID>& ids, const std::vector<position_type>& positions,
-    const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::vector<SignalType>& signal_types, std::stringstream& ss, size_t total_number_neurons, const std::tuple<Vec3<double>, Vec3<double>>& simulation_box,
+void NeuronIO::write_neurons_componentwise(const std::span<const NeuronID> ids, const std::span<const position_type> positions,
+    const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::span<const SignalType> signal_types, std::stringstream& ss, size_t total_number_neurons, const std::tuple<Vec3<double>, Vec3<double>>& simulation_box,
     const std::vector<std::pair<Partition::box_size_type, Partition::box_size_type>>& local_subdomain_boundaries) {
 
     const auto size_ids = ids.size();
@@ -343,8 +343,8 @@ void NeuronIO::write_neurons_componentwise(const std::vector<NeuronID>& ids, con
     }
 }
 
-void NeuronIO::write_neurons_componentwise(const std::vector<NeuronID>& ids, const std::vector<position_type>& positions,
-    const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::vector<SignalType>& signal_types, std::filesystem::path& file_path) {
+void NeuronIO::write_neurons_componentwise(const std::span<const NeuronID> ids, const std::span<const position_type> positions,
+    const std::shared_ptr<LocalAreaTranslator>& local_area_translator, const std::span<const SignalType> signal_types, std::filesystem::path& file_path) {
     std::stringstream ss;
     write_neurons_componentwise(ids, positions, local_area_translator, signal_types, ss, 0, std::make_tuple(RelearnTypes::position_type({ 0.0, 0.0, 0.0 }), RelearnTypes::position_type({ 0.0, 0.0, 0.0 })), {});
     std::ofstream of(file_path, std::ios::binary | std::ios::out);

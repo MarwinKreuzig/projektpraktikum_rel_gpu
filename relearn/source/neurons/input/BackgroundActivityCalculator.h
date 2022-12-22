@@ -11,7 +11,7 @@
  */
 
 #include "Types.h"
-#include "neurons/UpdateStatus.h"
+#include "neurons/enums/UpdateStatus.h"
 #include "neurons/models/ModelParameter.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
@@ -108,7 +108,7 @@ public:
      * @param disable_flags Which neurons are disabled
      * @exception Throws a RelearnException if the number of local neurons didn't match the sizes of the arguments
      */
-    virtual void update_input([[maybe_unused]] const step_type step, const std::vector<UpdateStatus>& disable_flags) = 0;
+    virtual void update_input([[maybe_unused]] const step_type step, std::span<const UpdateStatus> disable_flags) = 0;
 
     /**
      * @brief Returns the calculated background activity for the given neuron. Changes after calls to update_input(...)
@@ -116,7 +116,7 @@ public:
      * @exception Throws a RelearnException if the neuron_id is too large for the stored number of neurons
      * @return The background activity for the given neuron
      */
-    [[nodiscard]] double get_background_activity(const NeuronID& neuron_id) const {
+    [[nodiscard]] double get_background_activity(const NeuronID neuron_id) const {
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::get_x: id is too large: {}", neuron_id);
@@ -127,7 +127,7 @@ public:
      * @brief Returns the calculated background activity for all. Changes after calls to update_input(...)
      * @return The background activity for all neurons
      */
-    [[nodiscard]] const std::vector<double>& get_background_activity() const noexcept {
+    [[nodiscard]] std::span<const double> get_background_activity() const noexcept {
         return background_activity;
     }
 
