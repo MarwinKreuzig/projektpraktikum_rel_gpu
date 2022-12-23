@@ -12,6 +12,7 @@
 
 #include "Types.h"
 #include "util/MPIRank.h"
+#include "util/StimulusParser.h"
 #include "util/TaggedID.h"
 
 #include <cstdint>
@@ -31,6 +32,7 @@ class InteractiveNeuronIO {
 public:
     using step_type = RelearnTypes::step_type;
     using number_neurons_type = RelearnTypes::number_neurons_type;
+    using stimuli_vector_type = std::vector<std::pair<std::unordered_set<NeuronID ::value_type>, double>>;
 
     /**
      * @brief Reads the file specified by the path and extracts all enable-interrupts.
@@ -88,6 +90,6 @@ public:
      * @exception Throws a RelearnException if opening the file fails or my_rank is not initialized
      * @return A function that specified for a given simulation step and a given neuron id, how much background it receives
      */
-    [[nodiscard]] static std::function<double(step_type, NeuronID::value_type)> load_stimulus_interrupts(
+    [[nodiscard]] static RelearnTypes::stimuli_function_type load_stimulus_interrupts(
         const std::filesystem::path& path_to_file, MPIRank my_rank, std::shared_ptr<LocalAreaTranslator> local_area_translator);
 };

@@ -317,7 +317,7 @@ protected:
     }
 
     [[nodiscard]] double get_stimulus(const NeuronID neuron_id) const {
-        return stimulus_calculator->get_stimulus(neuron_id.get_neuron_id());
+        return stimulus_calculator->get_stimulus(neuron_id);
     }
 
     [[nodiscard]] const std::unique_ptr<SynapticInputCalculator>& get_synaptic_input_calculator() const noexcept {

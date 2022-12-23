@@ -26,7 +26,7 @@ class Stimulus {
 public:
     Stimulus() = default;
 
-    Stimulus(std::function<double(RelearnTypes::step_type, NeuronID::value_type)> stimulus_function)
+    Stimulus(RelearnTypes::stimuli_function_type stimulus_function)
         : stimulus_function(std::move(stimulus_function)) {
     }
 
@@ -51,14 +51,18 @@ public:
         }
 
         Timers::start(TimerRegion::CALC_STIMULUS);
-        for (auto neuron_id = NeuronID::value_type(0); neuron_id < disable_flags.size(); neuron_id++) {
-            stimulus[neuron_id] = stimulus_function(step, neuron_id);
+        std::fill(stimulus.begin(), stimulus.end(), 0.0);
+        const auto& stimuli = stimulus_function(step);
+        for (const auto& [neuron_ids, intensity] : stimuli) {
+            for (const auto& neuron_id : neuron_ids) {
+                stimulus[neuron_id.get_neuron_id()] = intensity;
+            }
         }
         Timers::stop_and_add(TimerRegion::CALC_STIMULUS);
     }
 
-    [[nodiscard]] double get_stimulus(const NeuronID::value_type neuron_id) const {
-        return stimulus[neuron_id];
+    [[nodiscard]] double get_stimulus(const NeuronID neuron_id) const {
+        return stimulus[neuron_id.get_neuron_id()];
     }
 
     [[nodiscard]] std::unique_ptr<Stimulus> clone() const {
@@ -67,5 +71,5 @@ public:
 
 private:
     std::vector<double> stimulus{};
-    std::function<double(RelearnTypes::step_type, NeuronID::value_type)> stimulus_function{};
+    RelearnTypes::stimuli_function_type stimulus_function{};
 };

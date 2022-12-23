@@ -18,6 +18,8 @@
 
 #include <cstdint>
 #include <functional>
+#include <unordered_set>
+#include <utility>
 #include <vector>
 
 enum class NeuronModelEnum {
@@ -72,6 +74,9 @@ using number_neurons_type = std::uint64_t;
 
 using area_name = std::string;
 using area_id = size_t;
+
+using stimuli_list_type = std::vector<std::pair<std::unordered_set<NeuronID>, double>>;
+using stimuli_function_type = std::function<stimuli_list_type(step_type)>;
 
 } // namespace RelearnTypes
 

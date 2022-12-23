@@ -202,23 +202,25 @@ if(WIN32)
 	
 	list(APPEND relearn_tests_additional_files "octree/octree_adapter.h")
 	list(APPEND relearn_tests_additional_files "octree/test_octree.h")
-	
-	list(APPEND relearn_tests_additional_files "parser/test_monitor_parser.h")	
+
+	list(APPEND relearn_tests_additional_files "parser/test_monitor_parser.h")
 	list(APPEND relearn_tests_additional_files "parser/test_step_parser.h")
-	
+
 	list(APPEND relearn_tests_additional_files "partition/test_partition.h")
-	
+
 	list(APPEND relearn_tests_additional_files "simulation/simulation_adapter.h")
-	
+
 	list(APPEND relearn_tests_additional_files "space_filling_curve/test_space_filling_curve.h")
+
+	list(APPEND relearn_tests_additional_files "stimulus/test_stimulus.h")
 
 	list(APPEND relearn_tests_additional_files "synaptic_elements/synaptic_elements_adapter.h")
 	list(APPEND relearn_tests_additional_files "synaptic_elements/test_synaptic_elements.h")
-	
+
 	list(APPEND relearn_tests_additional_files "synaptic_input/test_synaptic_input.h")
-	
+
 	list(APPEND relearn_tests_additional_files "tagged_id/tagged_id_adapter.h")
 	list(APPEND relearn_tests_additional_files "tagged_id/test_tagged_id.h")
-	
+
 	list(APPEND relearn_tests_additional_files "vector/test_vector.h")
 endif()

@@ -19,6 +19,7 @@
 #include <cmath>
 #include <numeric>
 #include <random>
+#include <unordered_set>
 #include <vector>
 
 class RandomAdapter {
@@ -68,5 +69,29 @@ public:
     template <typename Iterator>
     static void shuffle(Iterator begin, Iterator end, std::mt19937& mt) {
         detail::shuffle(begin, end, mt);
+    }
+
+    template <typename T>
+    static std::vector<T> sample(const std::vector<T> vector, size_t sample_size, std::mt19937& mt) {
+        std::unordered_set<size_t> indices{};
+        while (indices.size() != sample_size) {
+            size_t index;
+            do {
+                index = RandomAdapter::get_random_integer<size_t>(size_t{ 0 }, vector.size() - 1, mt);
+            } while (indices.contains(index));
+            indices.insert(index);
+        }
+        std::vector<T> sample{};
+        for (const auto index : indices) {
+            sample.emplace_back(vector[index]);
+        }
+        shuffle(sample.begin(), sample.end(), mt);
+        return sample;
+    }
+
+    template <typename T>
+    static std::vector<T> sample(const std::vector<T> vector, std::mt19937& mt) {
+        const size_t sample_size = RandomAdapter::get_random_integer<size_t>(size_t{ 0 }, vector.size() - 1, mt);
+        return sample(vector, sample_size, mt);
     }
 };

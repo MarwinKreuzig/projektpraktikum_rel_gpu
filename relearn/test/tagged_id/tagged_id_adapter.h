@@ -15,6 +15,7 @@
 #include "util/TaggedID.h"
 
 #include <random>
+#include <unordered_set>
 
 class TaggedIdAdapter {
 public:
@@ -45,5 +46,17 @@ public:
             nid = get_random_neuron_id(number_neurons, mt);
         } while (nid == except);
         return nid;
+    }
+
+    static std::unordered_set<NeuronID> get_random_neuron_ids(NeuronID::value_type number_neurons_in_sim, NeuronID::value_type number_neurons_in_sample, std::mt19937& mt) {
+        std::unordered_set<NeuronID> set;
+        for (auto i = 0; i < number_neurons_in_sample; i++) {
+            NeuronID neuron_id;
+            do {
+                neuron_id = get_random_neuron_id(number_neurons_in_sim, mt);
+            } while (set.contains(neuron_id));
+            set.insert(neuron_id);
+        }
+        return set;
     }
 };
