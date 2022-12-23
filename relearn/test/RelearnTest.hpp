@@ -18,6 +18,8 @@
 
 #include <cmath>
 #include <random>
+#include <span>
+#include <type_traits>
 #include <vector>
 
 /**
@@ -54,6 +56,18 @@ protected:
         return static_cast<size_t>(new_val);
     }
 
+    template <typename T>
+    std::vector<std::decay_t<T>> vectorify_span(const std::span<T> span) {
+        std::vector<std::decay_t<T>> vec{};
+        vec.reserve(span.size());
+
+        for (auto val : span) {
+            vec.emplace_back(val);
+        }
+
+        return vec;
+    }
+
     constexpr static int number_neurons_out_of_scope = 100;
 
     std::mt19937 mt;
@@ -61,7 +75,7 @@ protected:
     static int iterations;
     static double eps;
 
-private:           
+private:
     static bool use_predetermined_seed;
     static unsigned int predetermined_seed;
 };

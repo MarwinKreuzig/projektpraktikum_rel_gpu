@@ -60,15 +60,15 @@ TEST_F(ConnectorTest, testForwardConnectorEmptyMap) {
     const auto& inhibitory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Inhibitory, mt);
 
     // The following copies are intentional
-    const auto previous_connected_excitatory = excitatory_dendrites->get_connected_elements();
-    const auto previous_grown_excitatory = excitatory_dendrites->get_grown_elements();
-    const auto previous_deltas_excitatory = excitatory_dendrites->get_deltas();
-    const auto previous_types_excitatory = excitatory_dendrites->get_signal_types();
+    const auto previous_connected_excitatory = vectorify_span(excitatory_dendrites->get_connected_elements());
+    const auto previous_grown_excitatory = vectorify_span(excitatory_dendrites->get_grown_elements());
+    const auto previous_deltas_excitatory = vectorify_span(excitatory_dendrites->get_deltas());
+    const auto previous_types_excitatory = vectorify_span(excitatory_dendrites->get_signal_types());
 
-    const auto previous_connected_inhibitory = excitatory_dendrites->get_connected_elements();
-    const auto previous_grown_inhibitory = excitatory_dendrites->get_grown_elements();
-    const auto previous_deltas_inhibitory = excitatory_dendrites->get_deltas();
-    const auto previous_types_inhibitory = excitatory_dendrites->get_signal_types();
+    const auto previous_connected_inhibitory = vectorify_span(excitatory_dendrites->get_connected_elements());
+    const auto previous_grown_inhibitory = vectorify_span(excitatory_dendrites->get_grown_elements());
+    const auto previous_deltas_inhibitory = vectorify_span(excitatory_dendrites->get_deltas());
+    const auto previous_types_inhibitory = vectorify_span(excitatory_dendrites->get_signal_types());
 
     CommunicationMap<SynapseCreationRequest> incoming_requests{ number_ranks };
 
@@ -193,10 +193,10 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
     const auto& inhibitory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Inhibitory, mt);
 
     // The following copies are intentional
-    const auto previous_connected_excitatory_counts = excitatory_dendrites->get_connected_elements();
-    const auto previous_grown_excitatory_counts = excitatory_dendrites->get_grown_elements();
-    const auto previous_connected_inhibitory_counts = inhibitory_dendrites->get_connected_elements();
-    const auto previous_grown_inhibitory_counts = inhibitory_dendrites->get_grown_elements();
+    const auto previous_connected_excitatory_counts = vectorify_span(excitatory_dendrites->get_connected_elements());
+    const auto previous_grown_excitatory_counts = vectorify_span(excitatory_dendrites->get_grown_elements());
+    const auto previous_connected_inhibitory_counts = vectorify_span(inhibitory_dendrites->get_connected_elements());
+    const auto previous_grown_inhibitory_counts = vectorify_span(inhibitory_dendrites->get_grown_elements());
 
     const auto& [incoming_requests, number_excitatory_requests, number_inhibitory_requests]
         = ConnectorAdapter::create_incoming_requests(number_ranks, 0, number_neurons, 0, 9, mt);

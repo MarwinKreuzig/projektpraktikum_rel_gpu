@@ -765,8 +765,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
     std::vector<FiredStatus> fired_status2(number_neurons, FiredStatus::Fired);
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Disabled);
 
-    const auto previous_calcium = cc.get_calcium();
-    const auto previous_target = cc.get_target_calcium();
+    const auto previous_calcium = vectorify_span(cc.get_calcium());
+    const auto previous_target = vectorify_span(cc.get_target_calcium());
 
     ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status));
 
@@ -843,8 +843,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneStep0) {
     const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
     const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
 
-    const auto previous_calcium = cc.get_calcium();
-    const auto previous_target = cc.get_target_calcium();
+    const auto previous_calcium = vectorify_span(cc.get_calcium());
+    const auto previous_target = vectorify_span(cc.get_target_calcium());
 
     ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status));
 
@@ -906,8 +906,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNone) {
     const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
     const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
 
-    const auto previous_calcium = cc.get_calcium();
-    const auto previous_target = cc.get_target_calcium();
+    const auto previous_calcium = vectorify_span(cc.get_calcium());
+    const auto previous_target = vectorify_span(cc.get_target_calcium());
 
     ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status));
 
@@ -971,8 +971,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
     std::vector<FiredStatus> fired_status2(number_neurons, FiredStatus::Fired);
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Disabled);
 
-    const auto previous_calcium = cc.get_calcium();
-    const auto previous_target = cc.get_target_calcium();
+    const auto previous_calcium = vectorify_span(cc.get_calcium());
+    const auto previous_target = vectorify_span(cc.get_target_calcium());
 
     ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status));
 
@@ -1052,8 +1052,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeStep0) {
     const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
     const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
 
-    const auto previous_calcium = cc.get_calcium();
-    const auto previous_target = cc.get_target_calcium();
+    const auto previous_calcium = vectorify_span(cc.get_calcium());
+    const auto previous_target = vectorify_span(cc.get_target_calcium());
 
     ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status));
 
@@ -1119,8 +1119,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelative) {
     const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
     const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
 
-    const auto previous_calcium = cc.get_calcium();
-    const auto previous_target = cc.get_target_calcium();
+    const auto previous_calcium = vectorify_span(cc.get_calcium());
+    const auto previous_target = vectorify_span(cc.get_target_calcium());
 
     ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status));
 
@@ -1197,8 +1197,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
     std::vector<FiredStatus> fired_status2(number_neurons, FiredStatus::Fired);
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Disabled);
 
-    const auto previous_calcium = cc.get_calcium();
-    const auto previous_target = cc.get_target_calcium();
+    const auto previous_calcium = vectorify_span(cc.get_calcium());
+    const auto previous_target = vectorify_span(cc.get_target_calcium());
 
     ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status));
 
@@ -1279,8 +1279,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteStep0) {
     const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
     const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
 
-    const auto previous_calcium = cc.get_calcium();
-    const auto previous_target = cc.get_target_calcium();
+    const auto previous_calcium = vectorify_span(cc.get_calcium());
+    const auto previous_target = vectorify_span(cc.get_target_calcium());
 
     ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status));
 
@@ -1347,8 +1347,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsolute) {
     const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
     const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
 
-    const auto previous_calcium = cc.get_calcium();
-    const auto previous_target = cc.get_target_calcium();
+    const auto previous_calcium = vectorify_span(cc.get_calcium());
+    const auto previous_target = vectorify_span(cc.get_target_calcium());
 
     ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status));
 
