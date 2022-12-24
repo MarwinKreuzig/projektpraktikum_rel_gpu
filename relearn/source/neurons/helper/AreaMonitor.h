@@ -52,7 +52,7 @@ public:
      * @param area_name Name of the area that will be monitored
      * @param my_rank The mpi rank of this process
      */
-    AreaMonitor(Simulation* simulation, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name, int my_rank);
+    AreaMonitor(Simulation* simulation, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name, int my_rank, std::filesystem::path& path);
 
     /**
      * If a connected neuron is managed by another mpi rank. This area monitor cannot notify the other area about the connection to this area.
@@ -88,7 +88,7 @@ public:
      * Write all recorded data to a csv file
      * @param file_path Path to new csv file
      */
-    void write_data_to_file(const std::filesystem::path& file_path);
+    void write_data_to_file();
 
     /**
      * Returns the name of the area that is monitored
@@ -119,6 +119,10 @@ private:
 
     int my_rank;
 
+    size_t step = 0;
+
+    std::filesystem::path path;
+
     RelearnTypes::area_name area_name;
 
     RelearnTypes::area_id area_id;
@@ -145,4 +149,5 @@ private:
     std::vector<std::tuple<EnsembleConnections, double, double, double, double, double, double, double, double>> data;
 
     std::vector<std::vector<AreaConnection>> mpi_data{};
+    void write_header();
 };

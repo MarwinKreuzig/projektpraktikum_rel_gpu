@@ -94,4 +94,6 @@ public:
 
     // Flush the neuron monitors every <flush_monitor_step> ms
     inline static std::uint32_t flush_monitor_step = 30000; // NOLINT
+
+    inline static std::uint32_t flush_area_monitor_step = 100000;
 };

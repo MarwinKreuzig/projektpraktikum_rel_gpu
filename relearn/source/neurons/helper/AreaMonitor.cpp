@@ -21,11 +21,13 @@
 #include <set>
 #include <tuple>
 
-AreaMonitor::AreaMonitor(Simulation* simulation, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name, int my_rank)
+AreaMonitor::AreaMonitor(Simulation* simulation, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name, int my_rank, std::filesystem::path& path)
     : sim(simulation)
     , area_id(area_id)
     , area_name(std::move(area_name))
-    , my_rank(my_rank) {
+    , my_rank(my_rank)
+    , path(std::move(path)) {
+    write_header();
 }
 
 void AreaMonitor::record_data(NeuronID neuron_id) {
@@ -82,8 +84,20 @@ void AreaMonitor::finish_recording() {
     mpi_data.clear();
 }
 
-void AreaMonitor::write_data_to_file(const std::filesystem::path& file_path) {
-    std::ofstream out(file_path);
+void AreaMonitor::write_header() {
+    std::ofstream out(path, std::ios_base::app);
+
+    // Header
+    out << "# Connections from ensemble " << area_name << " (" << my_rank << ":" << area_id << ") to ..."
+        << "\n";
+    out << "# Rank: " << my_rank << "\n";
+    out << "# Area id: " << area_id << "\n";
+    out << "# Area name: " << area_name << "\n";
+    out.close();
+}
+
+void AreaMonitor::write_data_to_file() {
+    std::ofstream out(path, std::ios_base::app);
 
     std::set<std::pair<int, RelearnTypes::area_id>> unique_area_ids;
     for (const auto& single_record : data) {
@@ -97,12 +111,7 @@ void AreaMonitor::write_data_to_file(const std::filesystem::path& file_path) {
     std::copy(unique_area_ids.begin(), unique_area_ids.end(), std::back_inserter(unique_area_ids_list));
     std::sort(unique_area_ids_list.begin(), unique_area_ids_list.end());
     // Header
-    out << "# Connections from ensemble " << area_name << " (" << my_rank << ":" << area_id << ") to ..."
-        << "\n";
-    out << "# Rank: " << my_rank << "\n";
-    out << "# Area id: " << area_id << "\n";
-    out << "# Area name: " << area_name << "\n";
-    out << "Step;";
+    out << "# Step;";
     for (const auto& [rank, area_id] : unique_area_ids_list) {
         out << rank << ":" << area_id << "ex;"
             << rank << ":" << area_id << "in;";
@@ -111,7 +120,6 @@ void AreaMonitor::write_data_to_file(const std::filesystem::path& file_path) {
     out << "\n";
 
     // Data
-    size_t step = 0;
     for (const auto& single_record : data) {
         out << step << ";";
         auto connection_data = std::get<0>(single_record);
@@ -133,6 +141,7 @@ void AreaMonitor::write_data_to_file(const std::filesystem::path& file_path) {
         step += Config::monitor_area_step;
     }
     out.close();
+    data.clear();
 }
 const std::vector<std::vector<AreaMonitor::AreaConnection>>& AreaMonitor::get_exchange_data() const {
     return mpi_data;
