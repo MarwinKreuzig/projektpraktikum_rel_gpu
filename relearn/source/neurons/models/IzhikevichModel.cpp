@@ -72,36 +72,6 @@ void IzhikevichModel::create_neurons(const number_neurons_type creation_count) {
 }
 
 void IzhikevichModel::update_activity_benchmark(const NeuronID neuron_id) {
-    const auto h = get_h();
-
-    const auto synaptic_input = get_synaptic_input(neuron_id);
-    const auto background = get_background_activity(neuron_id);
-    const auto stimulus = get_stimulus(neuron_id);
-    const auto input = synaptic_input + background + stimulus;
-
-    auto x = get_x(neuron_id);
-
-    const auto local_neuron_id = neuron_id.get_neuron_id();
-
-    auto has_spiked = FiredStatus::Inactive;
-
-    for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-        x += iter_x(x, u[local_neuron_id], input) / h;
-        u[local_neuron_id] += iter_refrac(u[local_neuron_id], x) / h;
-
-        if (spiked(x)) {
-            x = c;
-            u[local_neuron_id] += d;
-            has_spiked = FiredStatus::Fired;
-            break;
-        }
-    }
-
-    set_fired(neuron_id, has_spiked);
-    set_x(neuron_id, x);
-}
-
-void IzhikevichModel::update_activity(const NeuronID neuron_id) {
     const auto synaptic_input = get_synaptic_input(neuron_id);
     const auto background = get_background_activity(neuron_id);
     const auto stimulus = get_stimulus(neuron_id);
@@ -137,6 +107,67 @@ void IzhikevichModel::update_activity(const NeuronID neuron_id) {
     set_fired(neuron_id, has_spiked);
     set_x(neuron_id, x_val);
     u[local_neuron_id] = u_val;
+}
+
+void IzhikevichModel::update_activity_benchmark(const std::span<const UpdateStatus> disable_flags) {
+    const auto number_local_neurons = get_number_neurons();
+
+#pragma omp parallel for shared(disable_flags, number_local_neurons) default(none)
+    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
+            continue;
+        }
+
+        NeuronID converted_id{ neuron_id };
+        update_activity_benchmark(converted_id);
+    }
+}
+
+void IzhikevichModel::update_activity(const std::span<const UpdateStatus> disable_flags) {
+    const auto number_local_neurons = get_number_neurons();
+
+    const auto h = get_h();
+    const auto scale = 1.0 / h;
+
+#pragma omp parallel for shared(disable_flags, number_local_neurons, h, scale) default(none)
+    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
+            continue;
+        }
+
+        NeuronID converted_id{ neuron_id };
+
+        const auto synaptic_input = get_synaptic_input(converted_id);
+        const auto background = get_background_activity(converted_id);
+        const auto stimulus = get_stimulus(converted_id);
+        const auto input = synaptic_input + background + stimulus;
+
+        auto x_val = get_x(converted_id);
+        auto u_val = u[neuron_id];
+
+        auto has_spiked = FiredStatus::Inactive;
+
+        for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
+            const auto x_increase = k1 * x_val * x_val + k2 * x_val + k3 - u_val + input;
+            const auto u_increase = a * (b * x_val - u_val);
+
+            x_val += x_increase * scale;
+            u_val += u_increase * scale;
+
+            const auto spiked = x_val >= V_spike;
+
+            if (spiked) {
+                x_val = c;
+                u_val += d;
+                has_spiked = FiredStatus::Fired;
+                break;
+            }
+        }
+
+        set_fired(converted_id, has_spiked);
+        set_x(converted_id, x_val);
+        u[neuron_id] = u_val;
+    }
 }
 
 void IzhikevichModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {

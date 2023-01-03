@@ -77,48 +77,18 @@ void AEIFModel::create_neurons(const number_neurons_type creation_count) {
 }
 
 void AEIFModel::update_activity_benchmark(const NeuronID neuron_id) {
-    const auto h = get_h();
-
     const auto synaptic_input = get_synaptic_input(neuron_id);
     const auto background = get_background_activity(neuron_id);
     const auto stimulus = get_stimulus(neuron_id);
     const auto input = synaptic_input + background + stimulus;
 
-    auto x = get_x(neuron_id);
-
-    auto has_spiked = FiredStatus::Inactive;
-
-    const auto local_neuron_id = neuron_id.get_neuron_id();
-
-    for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-        x += iter_x(x, w[local_neuron_id], input) / h;
-        w[local_neuron_id] += iter_refrac(w[local_neuron_id], x) / h;
-
-        if (x >= V_spike) {
-            x = E_L;
-            w[local_neuron_id] += b;
-            has_spiked = FiredStatus::Fired;
-            break;
-        }
-    }
-
-    set_fired(neuron_id, has_spiked);
-    set_x(neuron_id, x);
-}
-
-void AEIFModel::update_activity(const NeuronID neuron_id) {
-    const auto synaptic_input = get_synaptic_input(neuron_id);
-    const auto background = get_background_activity(neuron_id);
-    const auto stimulus = get_stimulus(neuron_id);
-    const auto input = synaptic_input + background + stimulus;
-    
     const auto h = get_h();
     const auto scale = 1.0 / h;
 
     const auto d_T_inverse = 1.0 / d_T;
     const auto tau_w_inverse = 1.0 / tau_w;
     const auto C_inverse = 1.0 / C;
-    
+
     const auto local_neuron_id = neuron_id.get_neuron_id();
 
     auto x_val = get_x(neuron_id);
@@ -146,6 +116,71 @@ void AEIFModel::update_activity(const NeuronID neuron_id) {
     set_fired(neuron_id, has_spiked);
     set_x(neuron_id, x_val);
     w[local_neuron_id] = w_val;
+}
+
+void AEIFModel::update_activity_benchmark(const std::span<const UpdateStatus> disable_flags) {
+    const auto number_local_neurons = get_number_neurons();
+
+#pragma omp parallel for shared(disable_flags, number_local_neurons) default(none)
+    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
+            continue;
+        }
+
+        NeuronID converted_id{ neuron_id };
+        update_activity_benchmark(converted_id);
+    }
+}
+
+void AEIFModel::update_activity(const std::span<const UpdateStatus> disable_flags) {
+    const auto number_local_neurons = get_number_neurons();
+
+    const auto h = get_h();
+    const auto scale = 1.0 / h;
+
+    const auto d_T_inverse = 1.0 / d_T;
+    const auto tau_w_inverse = 1.0 / tau_w;
+    const auto C_inverse = 1.0 / C;
+
+#pragma omp parallel for shared(disable_flags, number_local_neurons, h, scale, d_T_inverse, tau_w_inverse, C_inverse) default(none)
+    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
+            continue;
+        }
+
+        NeuronID converted_id{ neuron_id };
+
+        const auto synaptic_input = get_synaptic_input(converted_id);
+        const auto background = get_background_activity(converted_id);
+        const auto stimulus = get_stimulus(converted_id);
+        const auto input = synaptic_input + background + stimulus;
+
+        auto x_val = get_x(converted_id);
+        auto w_val = w[neuron_id];
+
+        auto has_spiked = FiredStatus::Inactive;
+
+        for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
+            const auto linear_part = -g_L * (x_val - E_L);
+            const auto exp_part = g_L * d_T * std::exp((x_val - V_T) * d_T_inverse);
+            const auto x_increase = (linear_part + exp_part - w_val + input) * C_inverse;
+            const auto w_increase = (a * (x_val - E_L) - w_val) * tau_w_inverse;
+
+            x_val += x_increase * scale;
+            w_val += w_increase * scale;
+
+            if (x_val >= V_spike) {
+                x_val = E_L;
+                w_val += b;
+                has_spiked = FiredStatus::Fired;
+                break;
+            }
+        }
+
+        set_fired(converted_id, has_spiked);
+        set_x(converted_id, x_val);
+        w[neuron_id] = w_val;
+    }
 }
 
 void AEIFModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {
