@@ -28,4 +28,8 @@ public:
     static std::unique_ptr<NormalBackgroundActivityCalculator> construct_normal_background(const double mean = 1.0, const double stddev = 1.0) {
         return std::make_unique<NormalBackgroundActivityCalculator>(mean, stddev);
     }
+
+    static std::unique_ptr<FastNormalBackgroundActivityCalculator> construct_fast_normal_background(const double mean = 1.0, const double stddev = 1.0, const size_t multiplier = 5) {
+        return std::make_unique<FastNormalBackgroundActivityCalculator>(mean, stddev, multiplier);
+    }
 };

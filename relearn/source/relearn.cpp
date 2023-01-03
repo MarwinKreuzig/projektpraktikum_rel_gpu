@@ -243,6 +243,7 @@ int main(int argc, char** argv) {
         { "null", BackgroundActivityCalculatorType::Null },
         { "constant", BackgroundActivityCalculatorType::Constant },
         { "normal", BackgroundActivityCalculatorType::Normal },
+        { "fast-normal", BackgroundActivityCalculatorType::FastNormal },
     };
 
     RelearnTypes::step_type simulation_steps{};
@@ -572,6 +573,10 @@ int main(int argc, char** argv) {
         RelearnException::check(background_activity_stddev > 0.0, "When choosing the normal-background calculator, the standard deviation must be set to > 0.0.");
 
         background_activity_calculator = std::make_unique<NormalBackgroundActivityCalculator>(background_activity_mean, background_activity_stddev);
+    } else if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::FastNormal) {
+        RelearnException::check(background_activity_stddev > 0.0, "When choosing the fast-normal-background calculator, the standard deviation must be set to > 0.0.");
+
+        background_activity_calculator = std::make_unique<FastNormalBackgroundActivityCalculator>(background_activity_mean, background_activity_stddev, 10);
     } else {
         RelearnException::fail("Chose a background activity calculator that is not implemented");
     }
