@@ -16,11 +16,27 @@
 
 /**
  * An instance of this enum classifies a synaptic elements as either excitatory or inhibitory.
+ * An axon of a specific type pairs only with dendrites of that type.
+ * A spiked transfered via an excitatory axon to an excitatory dendrite increases the electrical activity,
+ * while the same for an inhibitory decreases the electrical activity.
  */
 enum class SignalType : char {
     Excitatory,
     Inhibitory
 };
+
+/**
+ * @brief Returns the other signal type, i.e., Excitatory for Inhibitory and vice versa
+ * @param The current signal type
+ * @return The other signal type
+ */
+[[nodiscard]] inline constexpr SignalType get_other_signal_type(const SignalType type) noexcept {
+    if (type == SignalType::Excitatory) {
+        return SignalType::Inhibitory;
+    }
+
+    return SignalType::Excitatory;
+}
 
 /**
  * @brief Pretty-prints the signal type to the chosen stream

@@ -20,7 +20,6 @@
 #include "neurons/models/ModelParameter.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
-#include "Types.h"
 
 #include <algorithm>
 #include <array>
@@ -157,17 +156,25 @@ public:
     }
 
     /**
-     * @brief Returns a vector of doubles that indicate the neurons' respective membrane potential in the current simulation step
-     * @return A constant reference to the vector of doubles. It is not invalidated by calls to other methods
+     * @brief Returns a span of doubles that indicate the neurons' respective membrane potential in the current simulation step
+     * @return A span of doubles. It is not invalidated by calls to other methods
      */
     [[nodiscard]] std::span<const double> get_x() const noexcept {
         return x;
     }
 
+    /**
+     * @brief Returns a span of doubles that indicate the neurons' respective synaptic input in the current simulation step
+     * @return A span of doubles. It is not invalidated by calls to other methods
+     */
     [[nodiscard]] std::span<const double> get_synaptic_input() const noexcept {
         return input_calculator->get_synaptic_input();
     }
 
+    /**
+     * @brief Returns a span of doubles that indicate the neurons' respective background activity in the current simulation step
+     * @return A span of doubles. It is not invalidated by calls to other methods
+     */
     [[nodiscard]] std::span<const double> get_background_activity() const noexcept {
         return background_calculator->get_background_activity();
     }
