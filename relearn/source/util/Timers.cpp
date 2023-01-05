@@ -125,7 +125,6 @@ void Timers::print(const std::unique_ptr<Essentials>& essentials) {
     print_timer("    Update electrical activity                 : ", TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
     print_timer("      Prepare sending spikes                   : ", TimerRegion::PREPARE_SENDING_SPIKES);
     print_timer("      Exchange neuron ids                      : ", TimerRegion::EXCHANGE_NEURON_IDS);
-    print_timer("      Calculate serial activity setup          : ", TimerRegion::CALC_SERIAL_ACTIVITY);
     print_timer("      Calculate synaptic background            : ", TimerRegion::CALC_SYNAPTIC_BACKGROUND);
     print_timer("      Calculate synaptic input                 : ", TimerRegion::CALC_SYNAPTIC_INPUT);
     print_timer("      Calculate stimulus input                 : ", TimerRegion::CALC_STIMULUS);
