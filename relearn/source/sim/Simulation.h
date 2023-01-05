@@ -366,7 +366,7 @@ private:
     Interval interval_synaptic_input_log{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::synaptic_input_log_step };
     Interval interval_network_log{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::network_log_step };
 
-    Interval interval_statistics_log{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::network_log_step };
+    Interval interval_statistics_log{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::statistics_log_step };
     Interval interval_histogram_log{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::histogram_log_step };
 
     double percentage_initially_fired{ 0.0 };
