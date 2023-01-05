@@ -376,23 +376,33 @@ void Simulation::simulate(const step_type number_steps) {
         }
 
         if (Config::logfile_update_step > 0 && step % Config::logfile_update_step == 0) {
+            Timers::start(TimerRegion::PRINT_IO);
             neurons->print_local_network_histogram(step);
+            Timers::stop_and_add(TimerRegion::PRINT_IO);
         }
 
         if (Config::calcium_log_step > 0 && step % Config::calcium_log_step == 0) {
+            Timers::start(TimerRegion::PRINT_IO);
             neurons->print_calcium_values_to_file(step);
+            Timers::stop_and_add(TimerRegion::PRINT_IO);
         }
 
         if (Config::synaptic_input_log_step > 0 && step % Config::synaptic_input_log_step == 0) {
+            Timers::start(TimerRegion::PRINT_IO);
             neurons->print_synaptic_inputs_to_file(step);
+            Timers::stop_and_add(TimerRegion::PRINT_IO);
         }
 
         if (Config::network_log_step > 0 && step % Config::network_log_step == 0) {
+            Timers::start(TimerRegion::PRINT_IO);
             neurons->print_network_graph_to_log_file(step, true);
+            Timers::stop_and_add(TimerRegion::PRINT_IO);
         }
 
         if (step % Config::statistics_step == 0) {
+            Timers::start(TimerRegion::PRINT_IO);
             neurons->print_neurons_overview_to_log_file_on_rank_0(step);
+            Timers::stop_and_add(TimerRegion::PRINT_IO);
 
             for (auto& [attribute, vector] : statistics) {
                 vector.emplace_back(neurons->get_statistics(attribute));
@@ -400,9 +410,11 @@ void Simulation::simulate(const step_type number_steps) {
         }
 
         if (step % Config::flush_monitor_step == 0) {
+            Timers::start(TimerRegion::PRINT_IO);
             for (auto& monitor : *monitors) {
                 monitor.flush_current_contents();
             }
+            Timers::stop_and_add(TimerRegion::PRINT_IO);
         }
 
         if (step % Config::console_update_step == 0) {
