@@ -26,7 +26,6 @@ class Essentials;
 enum class TimerRegion : unsigned int {
     INITIALIZATION = 0,
     LOAD_SYNAPSES,
-    TRANSLATE_GLOBAL_IDS,
     INITIALIZE_NETWORK_GRAPH,
 
     SIMULATION_LOOP,
@@ -80,7 +79,7 @@ enum class TimerRegion : unsigned int {
 /**
  * This number is used as a shortcut to count the number of values valid for TimerRegion
  */
-constexpr size_t NUMBER_TIMERS = 40;
+constexpr size_t NUMBER_TIMERS = 39;
 
 /**
  * This class is used to collect all sorts of different timers (see TimerRegion).
