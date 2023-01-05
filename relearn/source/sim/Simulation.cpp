@@ -257,57 +257,6 @@ void Simulation::simulate(const step_type number_steps) {
      */
     const auto final_step_count = step + number_steps;
     for (; step <= final_step_count; ++step) { // NOLINT(altera-id-dependent-backward-branch)
-        if (step % Config::monitor_step == 0) {
-            const auto number_neurons = neurons->get_number_neurons();
-
-            Timers::start(TimerRegion::CAPTURE_MONITORS);
-            for (auto& mn : *monitors) {
-                if (mn.get_target_id().get_neuron_id() < number_neurons) {
-                    mn.record_data(step);
-                }
-            }
-            Timers::stop_and_add(TimerRegion::CAPTURE_MONITORS);
-
-            neurons->get_neuron_model()->reset_fired_recorder(NeuronModel::FireRecorderPeriod::NeuronMonitor);
-        }
-
-        if (step % Config::monitor_area_step == 0 && !area_monitors->empty()) {
-            for (auto& [_, area_monitor] : *area_monitors) {
-                area_monitor.prepare_recording();
-            }
-            for (NeuronID neuron_id : NeuronID::range(neurons->get_number_neurons())) {
-                const auto& area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(neuron_id.get_neuron_id());
-                if (!area_monitors->contains(area_id)) {
-                    continue;
-                }
-                auto& area_monitor = area_monitors->at(area_id);
-                area_monitor.record_data(NeuronID(neuron_id));
-            }
-            std::vector<std::vector<AreaMonitor::AreaConnection>> all_exchange_data(MPIWrapper::get_num_ranks());
-            for (auto& [_, area_monitor] : *area_monitors) {
-                const auto& exchange_data_single = area_monitor.get_exchange_data();
-                StringUtil::stack_vectors<AreaMonitor::AreaConnection>(all_exchange_data, exchange_data_single);
-            }
-            const auto& received_data = MPIWrapper::exchange_values<AreaMonitor::AreaConnection>(all_exchange_data);
-            RelearnException::check(received_data.size() == MPIWrapper::get_num_ranks(), "Simulation::simulate: MPI Communication for area monitor failed {} != {}", received_data.size() != MPIWrapper::get_num_ranks());
-            for (int rank = 0; rank < received_data.size(); rank++) {
-                const auto& received_data_single = received_data[rank];
-                if (MPIRank(rank) == my_rank) {
-                    RelearnException::check(received_data_single.empty(), "Simulation::simulate: Send MPI {} messages to myself", received_data_single.size());
-                }
-                for (const AreaMonitor::AreaConnection& connection : received_data_single) {
-                    const auto& area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(connection.to_local_neuron_id.get_neuron_id());
-                    area_monitors->at(area_id).add_outgoing_connection(connection);
-                }
-            }
-
-            for (auto& [_, area_monitor] : *area_monitors) {
-                area_monitor.finish_recording();
-            }
-
-            neurons->get_neuron_model()->reset_fired_recorder(NeuronModel::FireRecorderPeriod::AreaMonitor);
-        }
-
         for (const auto& [disable_step, disable_ids] : disable_interrupts) {
             if (disable_step == step) {
                 LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Disabling {} neurons in step {}", disable_ids.size(), disable_step);
@@ -329,22 +278,78 @@ void Simulation::simulate(const step_type number_steps) {
                 neurons->create_neurons(creation_count);
             }
         }
+        
+        if (interval_neuron_monitor.hits_step(step)) {
+            const auto number_neurons = neurons->get_number_neurons();
 
-        // Provide neuronal network to neuron models for one iteration step
-        Timers::start(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
-        neurons->update_electrical_activity(step);
-        Timers::stop_and_add(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
+            Timers::start(TimerRegion::CAPTURE_MONITORS);
+            for (auto& mn : *monitors) {
+                if (mn.get_target_id().get_neuron_id() < number_neurons) {
+                    mn.record_data(step);
+                }
+            }
 
-        // Calc how many synaptic elements grow/retract
-        // Apply the change in number of elements during connectivity update
+            neurons->get_neuron_model()->reset_fired_recorder(NeuronModel::FireRecorderPeriod::NeuronMonitor);
+            Timers::stop_and_add(TimerRegion::CAPTURE_MONITORS);
+        }
 
-        if (step >= Config::first_plasticity_update && step <= Config::last_plasticity_update) {
+        if (interval_area_monitor.hits_step(step)) {
+            Timers::start(TimerRegion::CAPTURE_AREA_MONITORS);
+
+            for (auto& [_, area_monitor] : *area_monitors) {
+                area_monitor.prepare_recording();
+            }
+
+            for (NeuronID neuron_id : NeuronID::range(neurons->get_number_neurons())) {
+                const auto& area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(neuron_id.get_neuron_id());
+                if (!area_monitors->contains(area_id)) {
+                    continue;
+                }
+                auto& area_monitor = area_monitors->at(area_id);
+                area_monitor.record_data(NeuronID(neuron_id));
+            }
+
+            std::vector<std::vector<AreaMonitor::AreaConnection>> all_exchange_data(MPIWrapper::get_num_ranks());
+            for (auto& [_, area_monitor] : *area_monitors) {
+                const auto& exchange_data_single = area_monitor.get_exchange_data();
+                StringUtil::stack_vectors<AreaMonitor::AreaConnection>(all_exchange_data, exchange_data_single);
+            }
+
+            const auto& received_data = MPIWrapper::exchange_values<AreaMonitor::AreaConnection>(all_exchange_data);
+            RelearnException::check(received_data.size() == MPIWrapper::get_num_ranks(), "Simulation::simulate: MPI Communication for area monitor failed {} != {}", received_data.size() != MPIWrapper::get_num_ranks());
+            for (int rank = 0; rank < received_data.size(); rank++) {
+                const auto& received_data_single = received_data[rank];
+                if (MPIRank(rank) == my_rank) {
+                    RelearnException::check(received_data_single.empty(), "Simulation::simulate: Send MPI {} messages to myself", received_data_single.size());
+                }
+                for (const AreaMonitor::AreaConnection& connection : received_data_single) {
+                    const auto& area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(connection.to_local_neuron_id.get_neuron_id());
+                    area_monitors->at(area_id).add_outgoing_connection(connection);
+                }
+            }
+
+            for (auto& [_, area_monitor] : *area_monitors) {
+                area_monitor.finish_recording();
+            }
+
+            neurons->get_neuron_model()->reset_fired_recorder(NeuronModel::FireRecorderPeriod::AreaMonitor);
+
+            Timers::stop_and_add(TimerRegion::CAPTURE_AREA_MONITORS);
+        }
+
+        if (interval_update_electrical_activity.hits_step(step)) {
+            Timers::start(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
+            neurons->update_electrical_activity(step);
+            Timers::stop_and_add(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
+        }
+
+        if (interval_update_synaptic_elements.hits_step(step)) {
             Timers::start(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
             neurons->update_number_synaptic_elements_delta();
             Timers::stop_and_add(TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
         }
 
-        if (step % Config::plasticity_update_step == 0 && step >= Config::first_plasticity_update && step <= Config::last_plasticity_update) {
+        if (interval_update_plasticity.hits_step(step)) {
             Timers::start(TimerRegion::UPDATE_CONNECTIVITY);
 
             const auto& [num_axons_deleted, num_dendrites_deleted, num_synapses_created] = neurons->update_connectivity();
@@ -366,40 +371,44 @@ void Simulation::simulate(const step_type number_steps) {
                 total_synapse_creations += global_creations;
             }
 
+            Timers::start(TimerRegion::PRINT_IO);
+
             LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdate, false, "{}: {} {} {}", step, global_creations, global_deletions, global_creations - global_deletions);
             LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateCSV, false, "{};{};{};{}", step, global_creations, global_deletions, global_creations - global_deletions);
             LogFiles::write_to_file(LogFiles::EventType::PlasticityUpdateLocal, false, "{}: {} {} {}", step, local_creations, local_deletions, local_creations - local_deletions);
 
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_axons_deleted, num_dendrites_deleted, num_synapses_created);
 
+            Timers::stop_and_add(TimerRegion::PRINT_IO);
+
             network_graph_plastic->debug_check();
         }
 
-        if (Config::logfile_update_step > 0 && step % Config::logfile_update_step == 0) {
+        if (interval_histogram_log.hits_step(step)) {
             Timers::start(TimerRegion::PRINT_IO);
             neurons->print_local_network_histogram(step);
             Timers::stop_and_add(TimerRegion::PRINT_IO);
         }
 
-        if (Config::calcium_log_step > 0 && step % Config::calcium_log_step == 0) {
+        if (interval_calcium_log.hits_step(step)) {
             Timers::start(TimerRegion::PRINT_IO);
             neurons->print_calcium_values_to_file(step);
             Timers::stop_and_add(TimerRegion::PRINT_IO);
         }
 
-        if (Config::synaptic_input_log_step > 0 && step % Config::synaptic_input_log_step == 0) {
+        if (interval_synaptic_input_log.hits_step(step)) {
             Timers::start(TimerRegion::PRINT_IO);
             neurons->print_synaptic_inputs_to_file(step);
             Timers::stop_and_add(TimerRegion::PRINT_IO);
         }
 
-        if (Config::network_log_step > 0 && step % Config::network_log_step == 0) {
+        if (interval_network_log.hits_step(step)) {
             Timers::start(TimerRegion::PRINT_IO);
             neurons->print_network_graph_to_log_file(step, true);
             Timers::stop_and_add(TimerRegion::PRINT_IO);
         }
 
-        if (step % Config::statistics_step == 0) {
+        if (interval_statistics_log.hits_step(step)) {
             Timers::start(TimerRegion::PRINT_IO);
             neurons->print_neurons_overview_to_log_file_on_rank_0(step);
             Timers::stop_and_add(TimerRegion::PRINT_IO);

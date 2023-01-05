@@ -156,6 +156,7 @@ void Timers::print(const std::unique_ptr<Essentials>& essentials) {
     print_timer("        Create synapses Process Responses      : ", TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES);
     print_timer("      Add synapses in local network graphs     : ", TimerRegion::ADD_SYNAPSES_TO_NETWORKGRAPH);
     print_timer("    Capture all neuron monitors                : ", TimerRegion::CAPTURE_MONITORS);
+    print_timer("    Capture area       monitors                : ", TimerRegion::CAPTURE_AREA_MONITORS);
     print_timer("    Print IO                                   : ", TimerRegion::PRINT_IO);
 
     sstring << "\n\n";

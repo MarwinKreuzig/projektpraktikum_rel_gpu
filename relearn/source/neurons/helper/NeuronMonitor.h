@@ -210,6 +210,7 @@ private:
 class NeuronMonitor {
 public:
     static inline std::shared_ptr<Neurons> neurons_to_monitor{};
+    static inline RelearnTypes::step_type log_frequency{ Config::neuron_monitor_log_step };
 
     /**
      * @brief Constructs a NeuronMonitor that monitors the specified neuron
@@ -250,7 +251,7 @@ public:
         const auto target_calcium = neurons_to_monitor->calcium_calculator->target_calcium[local_neuron_id];
         const auto x = neurons_to_monitor->neuron_model->x[local_neuron_id];
         const auto fired = neurons_to_monitor->neuron_model->fired[local_neuron_id] == FiredStatus::Fired;
-        const auto fired_fraction = static_cast<double>(neurons_to_monitor->neuron_model->fired_recorder[NeuronModel::FireRecorderPeriod::NeuronMonitor][local_neuron_id]) / static_cast<double>(Config::monitor_step);
+        const auto fired_fraction = static_cast<double>(neurons_to_monitor->neuron_model->fired_recorder[NeuronModel::FireRecorderPeriod::NeuronMonitor][local_neuron_id]) / static_cast<double>(log_frequency);
         const auto secondary = neurons_to_monitor->neuron_model->get_secondary_variable(target_neuron_id);
         const auto synaptic_input = neurons_to_monitor->neuron_model->input_calculator->get_synaptic_input(target_neuron_id);
         const auto background_activity = neurons_to_monitor->neuron_model->background_calculator->get_background_activity(target_neuron_id);
@@ -262,8 +263,8 @@ public:
         const auto inhibitory_dendrites_grown = neurons_to_monitor->dendrites_inh->grown_elements[local_neuron_id];
         const auto inhibitory_dendrites_connected = neurons_to_monitor->dendrites_inh->connected_elements[local_neuron_id];
 
-        informations.emplace_back(current_step, calcium, target_calcium, x, fired, fired_fraction, secondary, 
-            synaptic_input, background_activity, axons, axons_connected, excitatory_dendrites_grown, 
+        informations.emplace_back(current_step, calcium, target_calcium, x, fired, fired_fraction, secondary,
+            synaptic_input, background_activity, axons, axons_connected, excitatory_dendrites_grown,
             excitatory_dendrites_connected, inhibitory_dendrites_grown, inhibitory_dendrites_connected);
     }
 

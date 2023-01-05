@@ -73,13 +73,14 @@ enum class TimerRegion : unsigned int {
     ADD_SYNAPSES_TO_NETWORKGRAPH,
 
     CAPTURE_MONITORS,
+    CAPTURE_AREA_MONITORS,
     PRINT_IO,
 };
 
 /**
  * This number is used as a shortcut to count the number of values valid for TimerRegion
  */
-constexpr size_t NUMBER_TIMERS = 39;
+constexpr size_t NUMBER_TIMERS = 40;
 
 /**
  * This class is used to collect all sorts of different timers (see TimerRegion).

@@ -56,42 +56,42 @@ class Config {
 public:
     constexpr static bool do_debug_checks = false;
 
-    // Update connectivity every <plasticity_update_step> ms
-    inline static std::uint32_t plasticity_update_step = 100; // NOLINT
+    // By default: Update synaptic elements every <synaptic_elements_update_step> ms
+    constexpr static std::uint32_t synaptic_elements_update_step = 100; // NOLINT
 
-    // Update connectivity starting at <first_plasticity_update> ms
-    inline static std::uint32_t first_plasticity_update = 0; // NOLINT
+    // By default: Update electrical activity every <electrical_activity_update_step> ms
+    constexpr static std::uint32_t electrical_activity_update_step = 100; // NOLINT
 
-    // End the connectivity updates at <last_plascitiy_update> ms
-    inline static std::uint32_t last_plasticity_update = -1; // NOLINT
+    // By default: Update plasticity every <plasticity_update_step> ms
+    constexpr static std::uint32_t plasticity_update_step = 100; // NOLINT
 
-    // Print details every <logfile_update_step> ms
-    inline static std::uint32_t logfile_update_step = 100; // NOLINT
+    // By default: Print details every <logfile_update_step> ms
+    constexpr static std::uint32_t logfile_update_step = 100; // NOLINT
 
-    // Print to cout every <console_update_step> ms
-    inline static std::uint32_t console_update_step = 100; // NOLINT
+    // By default: Print to cout every <console_update_step> ms
+    constexpr static std::uint32_t console_update_step = 100; // NOLINT
 
-    // Capture individual neuron informations ever <monitor_step> ms
-    inline static std::uint32_t monitor_step = 100; // NOLINT
+    // By default: Capture individual neuron informations ever <neuron_monitor_log_step> ms
+    constexpr static std::uint32_t neuron_monitor_log_step = 100; // NOLINT
 
-    // Capture ensemble informations ever <monitor_area_step> ms
-    inline static std::uint32_t monitor_area_step = 100; // NOLINT
+    // By default: Capture ensemble informations ever <area_monitor_log_step> ms
+    constexpr static std::uint32_t area_monitor_log_step = 100; // NOLINT
 
-    // Capture the global statistics every <statistics_step> ms
-    inline static std::uint32_t statistics_step = 100; // NOLINT
+    // By default: Capture the global statistics every <statistics_log_step> ms
+    constexpr static std::uint32_t statistics_log_step = 100; // NOLINT
 
-    // Capture the calcium values every <calcium_log_step> ms
-    inline static std::uint32_t calcium_log_step = 1000000; // NOLINT
+    // By default: Capture the neuron histogram every <histogram_log_step> ms
+    constexpr static std::uint32_t histogram_log_step = 100; // NOLINT
 
-    // Capture the network every <network_log_step> ms
-    inline static std::uint32_t network_log_step = 10000; // NOLINT
+    // By default: Capture the calcium values every <calcium_log_step> ms
+    constexpr static std::uint32_t calcium_log_step = 1000000; // NOLINT
 
-    // Capture the syanptic input every <synaptic_input_log_step> ms
-    inline static std::uint32_t synaptic_input_log_step = 10000; // NOLINT
+    // By default: Capture the network every <network_log_step> ms
+    constexpr static std::uint32_t network_log_step = 10000; // NOLINT
 
-    // Capture the average local euclidean distance every <distance_step> ms
-    inline static std::uint32_t distance_step = 10000; // NOLINT
+    // By default: Capture the syanptic input every <synaptic_input_log_step> ms
+    constexpr static std::uint32_t synaptic_input_log_step = 10000; // NOLINT
 
-    // Flush the neuron monitors every <flush_monitor_step> ms
-    inline static std::uint32_t flush_monitor_step = 30000; // NOLINT
+    // By default: Flush the neuron monitors every <flush_monitor_step> ms
+    constexpr static std::uint32_t flush_monitor_step = 30000; // NOLINT
 };

@@ -25,7 +25,7 @@
 
 /**
  * This class serves as the basic building blocks of the Octree.
- * Each object has up to Config::number_oct children (can be nullptr) and a Cell which summarizes the relevant biological aspects.
+ * Each object has up to Constants::number_oct children (can be nullptr) and a Cell which summarizes the relevant biological aspects.
  * Additionally, an object stores its its MPI rank and whether or not it is an inner node.
  */
 template <typename AdditionalCellAttributes>

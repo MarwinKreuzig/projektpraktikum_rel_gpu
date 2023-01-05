@@ -14,6 +14,7 @@
 #include "Types.h"
 #include "algorithm/AlgorithmEnum.h"
 #include "sim/Essentials.h"
+#include "util/Interval.h"
 #include "util/StatisticalMeasures.h"
 
 #include <cstddef>
@@ -146,6 +147,85 @@ public:
      */
     void set_static_neurons(std::vector<NeuronID> static_neurons);
 
+    /**
+     * @brief Sets the new interval determining when the electrical activity is updated
+     * @param interval The new interval with first and last step, as well as the frequency
+     */
+    void set_update_electrical_activity_interval(const auto& interval) {
+        interval_update_electrical_activity = interval;
+    }
+
+    /**
+     * @brief Sets the new interval determining when the synaptic elements is updated
+     * @param interval The new interval with first and last step, as well as the frequency
+     */
+    void set_update_synaptic_elements_interval(const auto& interval) {
+        interval_update_synaptic_elements = interval;
+    }
+
+    /**
+     * @brief Sets the new interval determining when the plasticity is updated
+     * @param interval The new interval with first and last step, as well as the frequency
+     */
+    void set_update_plasticity_interval(const auto& interval) {
+        interval_update_plasticity = interval;
+    }
+
+    /**
+     * @brief Sets the new interval determining when the neuron monitors are updated
+     * @param interval The new interval with first and last step, as well as the frequency
+     */
+    void set_update_neuron_monitor_interval(const auto& interval) {
+        interval_neuron_monitor = interval;
+    }
+
+    /**
+     * @brief Sets the new interval determining when the area monitors are updated
+     * @param interval The new interval with first and last step, as well as the frequency
+     */
+    void set_update_area_monitor_interval(const auto& interval) {
+        interval_area_monitor = interval;
+    }
+
+    /**
+     * @brief Sets the new interval determining when the calcium is logged
+     * @param interval The new interval with first and last step, as well as the frequency
+     */
+    void set_log_calcium_interval(const auto& interval) {
+        interval_calcium_log = interval;
+    }
+
+    /**
+     * @brief Sets the new interval determining when the synaptic input is logged
+     * @param interval The new interval with first and last step, as well as the frequency
+     */
+    void set_log_synaptic_input_interval(const auto& interval) {
+        interval_synaptic_input_log = interval;
+    }
+
+    /**
+     * @brief Sets the new interval determining when the network is logged
+     * @param interval The new interval with first and last step, as well as the frequency
+     */
+    void set_log_network_interval(const auto& interval) {
+        interval_network_log = interval;
+    }
+
+    /**
+     * @brief Sets the new interval determining when the statistics are logged
+     * @param interval The new interval with first and last step, as well as the frequency
+     */
+    void set_log_statistics_interval(const auto& interval) {
+        interval_statistics_log = interval;
+    }
+
+    /**
+     * @brief Sets the new interval determining when the histograms are logged
+     * @param interval The new interval with first and last step, as well as the frequency
+     */
+    void set_log_historgram_interval(const auto& interval) {
+        interval_histogram_log = interval;
+    }
 
     /**
      * @brief Initializes the simulation and all other objects.
@@ -274,6 +354,20 @@ private:
 
     std::function<double(int, NeuronID::value_type)> target_calcium_calculator{};
     std::function<double(int, NeuronID::value_type)> initial_calcium_initiator{};
+
+    Interval interval_update_electrical_activity{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), RelearnTypes::step_type(1) };
+    Interval interval_update_synaptic_elements{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), RelearnTypes::step_type(1) };
+    Interval interval_update_plasticity{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::plasticity_update_step };
+
+    Interval interval_neuron_monitor{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::neuron_monitor_log_step };
+    Interval interval_area_monitor{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::area_monitor_log_step };
+
+    Interval interval_calcium_log{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::calcium_log_step };
+    Interval interval_synaptic_input_log{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::synaptic_input_log_step };
+    Interval interval_network_log{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::network_log_step };
+
+    Interval interval_statistics_log{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::network_log_step };
+    Interval interval_histogram_log{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::histogram_log_step };
 
     double percentage_initially_fired{ 0.0 };
 
