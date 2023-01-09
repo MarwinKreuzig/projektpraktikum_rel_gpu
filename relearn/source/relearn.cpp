@@ -654,9 +654,9 @@ int main(int argc, char** argv) {
             essentials->insert("Synapse-Input-Scaling", input_scale);
         } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
             essentials->insert("Synapse-Input", "Linear");
-        }
-        if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::HyperbolicTangent) {
+        } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::HyperbolicTangent) {
             essentials->insert("Synapse-Input", "Hyperbolic-Tangent");
+            essentials->insert("Synapse-Input-Scaling", input_scale);
         }
 
         if (chosen_kernel_type == KernelType::Gamma) {
@@ -665,7 +665,7 @@ int main(int argc, char** argv) {
             essentials->insert("Kernel-Scale-Parameter", gamma_theta);
         } else if (chosen_kernel_type == KernelType::Gaussian) {
             essentials->insert("Kernel-Type", "Gaussian");
-            essentials->insert("TKernel-ranslation-Parameter", gaussian_mu);
+            essentials->insert("Kernel-Translation-Parameter", gaussian_mu);
             essentials->insert("Kernel-Scale-Parameter", gaussian_sigma);
         } else if (chosen_kernel_type == KernelType::Linear) {
             essentials->insert("Kernel-Type", "Linear");

@@ -54,7 +54,7 @@ protected:
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank.
      */
     CommunicationMap<SynapseCreationRequest> find_target_neurons(number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
-        const std::unique_ptr<NeuronsExtraInfo>& extra_infos) override;
+        const std::shared_ptr<NeuronsExtraInfo>& extra_infos) override;
 
     /**
      * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses

@@ -50,7 +50,7 @@ public:
      * @return A tuple with the created synapses that must be committed to the network graph
      */
     [[nodiscard]] std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(number_neurons_type number_neurons,
-        const std::vector<UpdateStatus>& disable_flags, const std::unique_ptr<NeuronsExtraInfo>& extra_infos) override {
+        const std::vector<UpdateStatus>& disable_flags, const std::shared_ptr<NeuronsExtraInfo>& extra_infos) override {
 
         Timers::start(TimerRegion::CREATE_SYNAPSES);
 
@@ -92,7 +92,7 @@ protected:
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
     [[nodiscard]] virtual CommunicationMap<RequestType> find_target_neurons(number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
-        const std::unique_ptr<NeuronsExtraInfo>& extra_infos)
+        const std::shared_ptr<NeuronsExtraInfo>& extra_infos)
         = 0;
 
     /**
@@ -138,7 +138,7 @@ public:
      * @return A tuple with the created synapses that must be committed to the network graph
      */
     [[nodiscard]] std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(number_neurons_type number_neurons,
-        const std::vector<UpdateStatus>& disable_flags, const std::unique_ptr<NeuronsExtraInfo>& extra_infos) override {
+        const std::vector<UpdateStatus>& disable_flags, const std::shared_ptr<NeuronsExtraInfo>& extra_infos) override {
 
         Timers::start(TimerRegion::CREATE_SYNAPSES);
 
@@ -180,7 +180,7 @@ protected:
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
     [[nodiscard]] virtual CommunicationMap<RequestType> find_target_neurons(number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
-        const std::unique_ptr<NeuronsExtraInfo>& extra_infos)
+        const std::shared_ptr<NeuronsExtraInfo>& extra_infos)
         = 0;
 
     /**

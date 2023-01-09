@@ -70,7 +70,7 @@ void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const Netwo
 
     const auto number_local_neurons = get_number_neurons();
 
-#pragma omp parallel for shared(network_graph_static, network_graph_plastic, disable_flags, number_local_neurons, fired) default(none)
+//#pragma omp parallel for shared(network_graph_static, network_graph_plastic, disable_flags, number_local_neurons, fired) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
@@ -82,10 +82,10 @@ void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const Netwo
         const auto distant_input = get_distant_synaptic_input(network_graph_static, fired, id) + get_distant_synaptic_input(network_graph_plastic, fired, id);
         const auto total_input = local_input + distant_input;
 
-        const auto scaled_input = total_input * scale_factor;
-        const auto hyp_tan_input = std::tanh(scaled_input);
+        const auto hyp_tan_input = std::tanh(total_input);
+        const auto scaled_input = hyp_tan_input * scale_factor;
 
-        set_synaptic_input(neuron_id, hyp_tan_input);
+        set_synaptic_input(neuron_id, scaled_input);
     }
 
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
