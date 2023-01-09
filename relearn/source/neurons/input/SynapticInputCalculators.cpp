@@ -70,7 +70,7 @@ void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const Netwo
 
     const auto number_local_neurons = get_number_neurons();
 
-//#pragma omp parallel for shared(network_graph_static, network_graph_plastic, disable_flags, number_local_neurons, fired) default(none)
+#pragma omp parallel for shared(network_graph_static, network_graph_plastic, disable_flags, number_local_neurons, fired) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
