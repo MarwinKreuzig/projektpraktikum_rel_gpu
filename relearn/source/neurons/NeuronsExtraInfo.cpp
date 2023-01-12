@@ -25,6 +25,7 @@ void NeuronsExtraInfo::create_neurons(const number_neurons_type creation_count) 
     const auto current_size = size;
     const auto new_size = current_size + creation_count;
 
+    update_status.resize(new_size, UpdateStatus::Enabled);
     positions.resize(new_size);
 
     for (number_neurons_type i = current_size; i < new_size; i++) {

@@ -25,6 +25,7 @@ enum class BackgroundActivityCalculatorType : char {
     Null,
     Constant,
     Normal,
+    FastNormal,
 };
 
 /**
@@ -116,10 +117,10 @@ public:
      * @exception Throws a RelearnException if the neuron_id is too large for the stored number of neurons
      * @return The background activity for the given neuron
      */
-    [[nodiscard]] double get_background_activity(const NeuronID neuron_id) const {
+    [[nodiscard]] virtual double get_background_activity(const NeuronID neuron_id) const {
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
-        RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::get_x: id is too large: {}", neuron_id);
+        RelearnException::check(local_neuron_id < number_local_neurons, "BackgroundActivityCalculator::get_background_activity: id is too large: {}", neuron_id);
         return background_activity[local_neuron_id];
     }
 
@@ -127,7 +128,7 @@ public:
      * @brief Returns the calculated background activity for all. Changes after calls to update_input(...)
      * @return The background activity for all neurons
      */
-    [[nodiscard]] std::span<const double> get_background_activity() const noexcept {
+    [[nodiscard]] virtual std::span<const double> get_background_activity() const noexcept {
         return background_activity;
     }
 

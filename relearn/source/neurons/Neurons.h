@@ -209,7 +209,7 @@ public:
      * @brief Returns a constant reference to the extra information
      * @return The extra information for the neurons
      */
-    [[nodiscard]] const std::unique_ptr<NeuronsExtraInfo>& get_extra_info() const noexcept {
+    [[nodiscard]] const std::shared_ptr<NeuronsExtraInfo>& get_extra_info() const noexcept {
         return extra_info;
     }
 
@@ -280,12 +280,11 @@ public:
     }
 
     /**
-     * @brief Returns a constant reference to the disable flags for the neurons
-     *      The reference is never invalidated
-     * @return A constant reference to the disable flags
+     * @brief Returns the disable flags for the neurons
+     * @return The disable flags
      */
     [[nodiscard]] const std::span<const UpdateStatus> get_disable_flags() const noexcept {
-        return disable_flags;
+        return extra_info->get_disable_flags();
     }
 
     /**
@@ -307,7 +306,9 @@ public:
      *      If a neuron is already enabled, nothing happens for that one
      * @exception Throws RelearnExceptions if something unexpected happens
      */
-    void enable_neurons(std::span<const NeuronID> neuron_ids);
+    void enable_neurons(const std::span<const NeuronID> neuron_ids) {
+        extra_info->set_enabled_neurons(neuron_ids);
+    }
 
     /**
      * @brief Creates creation_count many new neurons with default values
@@ -478,5 +479,5 @@ private:
 
     std::vector<UpdateStatus> disable_flags{};
 
-    std::unique_ptr<NeuronsExtraInfo> extra_info{ std::make_unique<NeuronsExtraInfo>() };
+    std::shared_ptr<NeuronsExtraInfo> extra_info{ std::make_shared<NeuronsExtraInfo>() };
 };

@@ -15,7 +15,9 @@
 #include <ostream>
 
 /**
- * An instance of this enum symbolizes if a neuron spiked in the current simulation step.
+ * An instance of this enum symbolizes if a neuron fired in the current simulation step.
+ * That is, the model of electrical activity determined that the activity spiked and thus
+ * the neuron gives input to its neighbors.
  */
 enum class FiredStatus : char {
     Inactive = 0,

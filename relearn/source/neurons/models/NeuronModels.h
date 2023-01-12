@@ -20,7 +20,6 @@
 #include "neurons/models/ModelParameter.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
-#include "Types.h"
 
 #include <algorithm>
 #include <array>
@@ -157,17 +156,25 @@ public:
     }
 
     /**
-     * @brief Returns a vector of doubles that indicate the neurons' respective membrane potential in the current simulation step
-     * @return A constant reference to the vector of doubles. It is not invalidated by calls to other methods
+     * @brief Returns a span of doubles that indicate the neurons' respective membrane potential in the current simulation step
+     * @return A span of doubles. It is not invalidated by calls to other methods
      */
     [[nodiscard]] std::span<const double> get_x() const noexcept {
         return x;
     }
 
+    /**
+     * @brief Returns a span of doubles that indicate the neurons' respective synaptic input in the current simulation step
+     * @return A span of doubles. It is not invalidated by calls to other methods
+     */
     [[nodiscard]] std::span<const double> get_synaptic_input() const noexcept {
         return input_calculator->get_synaptic_input();
     }
 
+    /**
+     * @brief Returns a span of doubles that indicate the neurons' respective background activity in the current simulation step
+     * @return A span of doubles. It is not invalidated by calls to other methods
+     */
     [[nodiscard]] std::span<const double> get_background_activity() const noexcept {
         return background_calculator->get_background_activity();
     }
@@ -276,18 +283,10 @@ public:
     static constexpr unsigned int max_h{ 1000 };
 
 protected:
-    /**
-     * @brief Provides a hook to update the activity of the neuron with the passed id
-     *      If OpenMP is activated, this is called in parallel for multiple ids
-     * @param neuron_id The local neuron id that should be updated
-     */
-    virtual void update_activity(const NeuronID neuron_id) = 0;
+    virtual void update_activity(std::span<const UpdateStatus> disable_flags) = 0;
 
-    /**
-     * @brief This method exists in case some benchmarks are to be performed and need a comparison
-     */
-    virtual void update_activity_benchmark(const NeuronID neuron_id) {
-        update_activity(neuron_id);
+    virtual void update_activity_benchmark(const std::span<const UpdateStatus> disable_flags) {
+        update_activity(disable_flags);
     }
 
     /**
@@ -461,16 +460,18 @@ public:
     static constexpr unsigned int max_refractory_time{ 1000 };
 
 protected:
-    void update_activity(NeuronID neuron_id) final;
+    void update_activity(std::span<const UpdateStatus> disable_flags) final;
 
-    void update_activity_benchmark(NeuronID neuron_id) final;
+    void update_activity_benchmark(std::span<const UpdateStatus> disable_flags) final;
 
-    void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
+    void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final { }
 
 private:
     [[nodiscard]] double iter_x(const double x, const double input) const noexcept {
         return ((x_0 - x) / tau_x + input);
     }
+
+    void update_activity_benchmark(NeuronID neuron_id);
 
     std::vector<unsigned int> refractory_time{}; // refractory time
 
@@ -660,9 +661,9 @@ public:
     static constexpr double max_k3{ 200.0 };
 
 protected:
-    void update_activity(NeuronID neuron_id) final;
+    void update_activity(std::span<const UpdateStatus> disable_flags) final;
 
-    void update_activity_benchmark(NeuronID neuron_id) final;
+    void update_activity_benchmark(std::span<const UpdateStatus> disable_flags) final;
 
     void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
 
@@ -672,6 +673,8 @@ private:
     [[nodiscard]] double iter_refraction(double u, double x) const noexcept;
 
     [[nodiscard]] bool spiked(double x) const noexcept;
+
+    void update_activity_benchmark(NeuronID neuron_id);
 
     std::vector<double> u{}; // membrane recovery
 
@@ -803,9 +806,9 @@ public:
     static constexpr double init_w{ -0.6 };
 
 protected:
-    void update_activity(NeuronID neuron_id) final;
+    void update_activity(std::span<const UpdateStatus> disable_flags) final;
 
-    void update_activity_benchmark(NeuronID neuron_id) final;
+    void update_activity_benchmark(std::span<const UpdateStatus> disable_flags) final;
 
     void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
 
@@ -815,6 +818,8 @@ private:
     [[nodiscard]] double iter_refraction(double w, double x) const noexcept;
 
     [[nodiscard]] static bool spiked(double x, double w) noexcept;
+
+    void update_activity_benchmark(NeuronID neuron_id);
 
     std::vector<double> w{}; // recovery variable
 
@@ -1017,9 +1022,9 @@ public:
     static constexpr double max_V_spike{ 70.0 };
 
 protected:
-    void update_activity(NeuronID neuron_id) final;
+    void update_activity(std::span<const UpdateStatus> disable_flags) final;
 
-    void update_activity_benchmark(NeuronID neuron_id) final;
+    void update_activity_benchmark(std::span<const UpdateStatus> disable_flags) final;
 
     void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
 
@@ -1029,6 +1034,8 @@ private:
     [[nodiscard]] double iter_x(double x, double w, double input) const noexcept;
 
     [[nodiscard]] double iter_refraction(double w, double x) const noexcept;
+
+    void update_activity_benchmark(NeuronID neuron_id);
 
     std::vector<double> w{}; // adaption variable
 

@@ -41,11 +41,15 @@ public:
         }
     }
 
-    void update_activity(NeuronID id) {
-        model.update_activity(id);
+    void update_activity_benchmark(const NeuronID id) {
+        model.update_activity_benchmark(id);
     }
 
-    void update_activity_benchmark(NeuronID id) {
-        model.update_activity_benchmark(id);
+    void update_activity(std::span<const UpdateStatus> update_status) {
+        model.update_activity(update_status);
+    }
+
+    void update_activity_benchmark(std::span<const UpdateStatus> update_status) {
+        model.update_activity_benchmark(update_status);
     }
 };

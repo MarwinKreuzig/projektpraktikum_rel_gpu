@@ -28,7 +28,7 @@ void BarnesHutLocationAware::set_acceptance_criterion(const double acceptance_cr
 }
 
 CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neurons(const number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
-    const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
+    const std::shared_ptr<NeuronsExtraInfo>& extra_infos) {
 
     const auto number_ranks = MPIWrapper::get_num_ranks();
 

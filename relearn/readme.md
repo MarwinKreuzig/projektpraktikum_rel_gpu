@@ -44,7 +44,7 @@ Command | Shortcut | Effect | Notes
 `--weibull-b <double>` | | Specifies the scale parameter for the weibull probability kernel | Default is `1.0`
 `--neuron-model <enum>`| | Chooses the neuron model, can be *poisson*, *izhikevich*, *aeif*, or *fitzhughnagumo* | Default is `poisson`
 `--external-stimulation`  | | Specifies the file with the external stimulation |
-`--background-activity` | | Specifies the type of background activity the neurons receive. Must be *null*, *constant*, *normal*, or *stimulus* |
+`--background-activity` | | Specifies the type of background activity the neurons receive. Must be *null*, *constant*, *normal*, *fast-normal*, or *stimulus* |
 `--base-background-activity <double>` | | Specifies the base background activity by which all neurons are excited | Only has an effect if the type was set to *constant* |
 `--base-background-mean <double>` | | Specifies the mean background activity by which all neurons are excited | Only has an effect if the type was set to *normal* or *stimulus* |
 `--base-background-stddev <double>` | | Specifies the standard deviation of the background activity by which all neurons are excited | Must be non-negative. Only has an effect if the type was set to *normal* or *stimulus* |

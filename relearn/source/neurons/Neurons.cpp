@@ -97,6 +97,8 @@ void Neurons::check_signal_types(const std::shared_ptr<NetworkGraph> network_gra
 }
 
 Neurons::number_neurons_type Neurons::disable_neurons(const std::span<const NeuronID> neuron_ids) {
+    extra_info->set_disabled_neurons(neuron_ids);
+    
     neuron_model->disable_neurons(neuron_ids);
 
     std::vector<unsigned int> deleted_axon_connections(number_neurons, 0);
@@ -116,7 +118,8 @@ Neurons::number_neurons_type Neurons::disable_neurons(const std::span<const Neur
     RelearnTypes::synapse_weight weight_deleted_out_inh_edges_to_outside = 0;
 
     for (const auto& neuron_id : neuron_ids) {
-        RelearnException::check(disable_flags[neuron_id.get_neuron_id()] != UpdateStatus::Static, "Neurons::disable_neurons:: You cannot disable a static neuron");
+        RelearnException::check(neuron_id.get_neuron_id() < number_neurons, "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
+
         const auto local_out_edges = network_graph_plastic->get_local_out_edges(neuron_id);
         const auto distant_out_edges = network_graph_plastic->get_distant_out_edges(neuron_id);
 
@@ -156,9 +159,6 @@ Neurons::number_neurons_type Neurons::disable_neurons(const std::span<const Neur
     auto weight_deleted_in_edges_from_outside = 0.0;
 
     for (const auto& neuron_id : neuron_ids) {
-        RelearnException::check(neuron_id.get_neuron_id() < number_neurons, "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
-        disable_flags[neuron_id.get_neuron_id()] = UpdateStatus::Disabled;
-
         const auto local_in_edges = network_graph_plastic->get_local_in_edges(neuron_id);
         const auto distant_in_edges = network_graph_plastic->get_distant_in_edges(neuron_id);
         RelearnException::check(distant_in_edges.empty(), "Neurons::disable_neurons:: Currently, disabling neurons is only supported without mpi");
@@ -205,13 +205,6 @@ Neurons::number_neurons_type Neurons::disable_neurons(const std::span<const Neur
     const auto deleted_connections_to_outer_world = weight_deleted_in_edges_from_outside + weight_deleted_out_exc_edges_to_outside + weight_deleted_out_inh_edges_to_outside;
 
     return deleted_connections_to_outer_world + weight_deleted_edges_within;
-}
-
-void Neurons::enable_neurons(const std::span<const NeuronID> neuron_ids) {
-    for (const auto& neuron_id : neuron_ids) {
-        RelearnException::check(neuron_id.get_neuron_id() < number_neurons, "Neurons::enable_neurons: There was a too large id: {} vs {}", neuron_id, number_neurons);
-        disable_flags[neuron_id.get_neuron_id()] = UpdateStatus::Enabled;
-    }
 }
 
 void Neurons::create_neurons(const number_neurons_type creation_count) {

@@ -53,18 +53,7 @@ void NeuronModel::update_electrical_activity(const step_type step, const Network
     stimulus_calculator->update_stimulus(step, disable_flags);
 
     Timers::start(TimerRegion::CALC_ACTIVITY);
-
-    // For my neurons
-#pragma omp parallel for shared(disable_flags) default(none)
-    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
-            continue;
-        }
-
-        NeuronID converted_id{ neuron_id };
-        update_activity(converted_id);
-    }
-
+    update_activity(disable_flags);
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
 }
 

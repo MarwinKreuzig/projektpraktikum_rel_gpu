@@ -62,7 +62,7 @@ std::optional<RankNeuronId> Naive::find_target_neuron(const NeuronID& src_neuron
 }
 
 CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
-    const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
+    const std::shared_ptr<NeuronsExtraInfo>& extra_infos) {
 
     const auto number_ranks = MPIWrapper::get_num_ranks();
 

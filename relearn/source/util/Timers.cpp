@@ -120,13 +120,11 @@ void Timers::print(const std::unique_ptr<Essentials>& essentials) {
 
     print_timer("  Initialization                               : ", TimerRegion::INITIALIZATION);
     print_timer("    Load Synapses                              : ", TimerRegion::LOAD_SYNAPSES);
-    print_timer("    Translate Global IDs                       : ", TimerRegion::TRANSLATE_GLOBAL_IDS);
     print_timer("    Initialize Network Graph                   : ", TimerRegion::INITIALIZE_NETWORK_GRAPH);
     print_timer("  Simulation loop                              : ", TimerRegion::SIMULATION_LOOP);
     print_timer("    Update electrical activity                 : ", TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
     print_timer("      Prepare sending spikes                   : ", TimerRegion::PREPARE_SENDING_SPIKES);
     print_timer("      Exchange neuron ids                      : ", TimerRegion::EXCHANGE_NEURON_IDS);
-    print_timer("      Calculate serial activity setup          : ", TimerRegion::CALC_SERIAL_ACTIVITY);
     print_timer("      Calculate synaptic background            : ", TimerRegion::CALC_SYNAPTIC_BACKGROUND);
     print_timer("      Calculate synaptic input                 : ", TimerRegion::CALC_SYNAPTIC_INPUT);
     print_timer("      Calculate stimulus input                 : ", TimerRegion::CALC_STIMULUS);
@@ -155,7 +153,9 @@ void Timers::print(const std::unique_ptr<Essentials>& essentials) {
     print_timer("        Create synapses Exchange Responses     : ", TimerRegion::CREATE_SYNAPSES_EXCHANGE_RESPONSES);
     print_timer("        Create synapses Process Responses      : ", TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES);
     print_timer("      Add synapses in local network graphs     : ", TimerRegion::ADD_SYNAPSES_TO_NETWORK_GRAPH);
-    print_timer("    Capture all neuron monitors                : ", TimerRegion::CAPTURE_MONITORS);
+    print_timer("    Capture neuron monitors                    : ", TimerRegion::CAPTURE_MONITORS);
+    print_timer("    Capture area monitors                      : ", TimerRegion::CAPTURE_AREA_MONITORS);
+    print_timer("    Print IO                                   : ", TimerRegion::PRINT_IO);
 
     sstring << "\n\n";
 

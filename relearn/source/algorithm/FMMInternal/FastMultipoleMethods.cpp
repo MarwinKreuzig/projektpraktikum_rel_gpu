@@ -17,7 +17,7 @@
 #include "util/Timers.h"
 
 CommunicationMap<SynapseCreationRequest> FastMultipoleMethods::find_target_neurons(const number_neurons_type number_neurons,
-    const std::vector<UpdateStatus>& disable_flags, [[maybe_unused]] const std::unique_ptr<NeuronsExtraInfo>& extra_infos) {
+    const std::vector<UpdateStatus>& disable_flags, [[maybe_unused]] const std::shared_ptr<NeuronsExtraInfo>& extra_infos) {
 
     const auto number_ranks = MPIWrapper::get_num_ranks();
 

@@ -243,15 +243,16 @@ int main(int argc, char** argv) {
         { "null", BackgroundActivityCalculatorType::Null },
         { "constant", BackgroundActivityCalculatorType::Constant },
         { "normal", BackgroundActivityCalculatorType::Normal },
+        { "fast-normal", BackgroundActivityCalculatorType::FastNormal },
     };
 
     RelearnTypes::step_type simulation_steps{};
     app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms.")->required();
 
-    RelearnTypes::step_type first_plasticity_step{ Config::first_plasticity_update };
+    RelearnTypes::step_type first_plasticity_step{ 0 };
     app.add_option("--first-plasticity-step", first_plasticity_step, "The first step in which the plasticity is updated.");
 
-    RelearnTypes::step_type last_plasticity_step{ Config::last_plasticity_update };
+    RelearnTypes::step_type last_plasticity_step{ std::numeric_limits<RelearnTypes::step_type>::max() };
     auto* opt_last_plasticity_update_step = app.add_option("--last-plasticity-step", last_plasticity_step, "The last step in which the plasticity is updated.");
 
     RelearnTypes::step_type plasticity_update_step{ Config::plasticity_update_step };
@@ -266,10 +267,10 @@ int main(int argc, char** argv) {
     RelearnTypes::step_type network_log_step = Config::network_log_step;
     auto* const opt_network_log_step = app.add_option("--network-log-step", network_log_step, "Steps between saving the network graph");
 
-    RelearnTypes::step_type monitor_steps{ Config::monitor_step };
+    RelearnTypes::step_type monitor_steps{ Config::neuron_monitor_log_step };
     auto* opt_monitor_steps = app.add_option("--monitor-steps", monitor_steps, "Every time the neuron state is captured");
 
-    RelearnTypes::step_type monitor_ensemble_steps{ Config::monitor_area_step };
+    RelearnTypes::step_type monitor_ensemble_steps{ Config::area_monitor_log_step };
     auto* opt_monitor_ensemble_steps = app.add_option("--monitor-ensemble-steps", monitor_ensemble_steps, "Every time the ensemble information are captured");
 
     const auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
@@ -572,6 +573,10 @@ int main(int argc, char** argv) {
         RelearnException::check(background_activity_stddev > 0.0, "When choosing the normal-background calculator, the standard deviation must be set to > 0.0.");
 
         background_activity_calculator = std::make_unique<NormalBackgroundActivityCalculator>(background_activity_mean, background_activity_stddev);
+    } else if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::FastNormal) {
+        RelearnException::check(background_activity_stddev > 0.0, "When choosing the fast-normal-background calculator, the standard deviation must be set to > 0.0.");
+
+        background_activity_calculator = std::make_unique<FastNormalBackgroundActivityCalculator>(background_activity_mean, background_activity_stddev, 10);
     } else {
         RelearnException::fail("Chose a background activity calculator that is not implemented");
     }
@@ -587,14 +592,6 @@ int main(int argc, char** argv) {
     RelearnException::check(nu_axon <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
     RelearnException::check(nu_dend >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
     RelearnException::check(nu_dend <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
-
-    Config::first_plasticity_update = first_plasticity_step;
-    Config::last_plasticity_update = last_plasticity_step;
-    RelearnException::check(plasticity_update_step > 0, "update-plasticity-step must be greater than 0");
-    Config::plasticity_update_step = plasticity_update_step;
-    Config::calcium_log_step = calcium_log_step;
-    Config::synaptic_input_log_step = synaptic_input_log_step;
-    Config::network_log_step = network_log_step;
 
     omp_set_num_threads(openmp_threads);
 
@@ -663,9 +660,9 @@ int main(int argc, char** argv) {
             essentials->insert("Synapse-Input-Scaling", input_scale);
         } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
             essentials->insert("Synapse-Input", "Linear");
-        }
-        if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::HyperbolicTangent) {
+        } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::HyperbolicTangent) {
             essentials->insert("Synapse-Input", "Hyperbolic-Tangent");
+            essentials->insert("Synapse-Input-Scaling", input_scale);
         }
 
         if (chosen_kernel_type == KernelType::Gamma) {
@@ -842,10 +839,19 @@ int main(int argc, char** argv) {
         sim.set_creation_interrupts(std::move(creation_interrupts));
     }
 
-    Config::monitor_step = monitor_steps;
-    Config::monitor_area_step = monitor_ensemble_steps;
+    RelearnException::check(plasticity_update_step > 0, "update-plasticity-step must be greater than 0");
 
-    const auto steps_per_simulation = simulation_steps / Config::monitor_step;
+    sim.set_update_plasticity_interval(Interval{ first_plasticity_step, last_plasticity_step, plasticity_update_step });
+    sim.set_update_synaptic_elements_interval(Interval{ first_plasticity_step, last_plasticity_step, plasticity_update_step });
+    sim.set_log_calcium_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), calcium_log_step });
+    sim.set_log_synaptic_input_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), synaptic_input_log_step });
+    sim.set_log_network_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), network_log_step });
+    sim.set_update_neuron_monitor_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), monitor_steps });
+    sim.set_update_area_monitor_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), monitor_ensemble_steps });
+
+    NeuronMonitor::log_frequency = monitor_steps;
+
+    const auto steps_per_simulation = simulation_steps / monitor_steps;
     sim.increase_monitoring_capacity(steps_per_simulation);
 
     /**********************************************************************************/

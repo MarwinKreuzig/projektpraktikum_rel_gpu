@@ -11,7 +11,7 @@
  */
 
 #include "Types.h"
-#include "neurons/helper/RankNeuronId.h"
+#include "neurons/enums/UpdateStatus.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
@@ -32,21 +32,68 @@ public:
 
     /**
      * @brief Initializes a NeuronsExtraInfo that holds at most the given number of neurons.
-     *      Must only be called once. Does not initialize dimensions or area names.
+     *      Must only be called once. Sets up all neurons so that they update, but does not initialize the positions.
      * @param number_neurons The number of neurons, greater than 0
      * @exception Throws an RelearnException if number_neurons is 0 or if called multiple times.
      */
     void init(const number_neurons_type number_neurons) {
-        RelearnException::check(size == 0, "NeuronsExtraInfo::init: NeuronsExtraInfo initialized two times");
+        RelearnException::check(number_neurons > 0, "NeuronsExtraInfo::init: number_neurons must be larger than 0.");
+        RelearnException::check(size == 0, "NeuronsExtraInfo::init: NeuronsExtraInfo initialized two times, its size is already {}", size);
+
         size = number_neurons;
+        update_status.resize(number_neurons, UpdateStatus::Enabled);
     }
 
     /**
-     * @brief Inserts additional neurons with UNKNOWN area name and x-, y-, z- positions randomly picked from already existing ones. Requires only one MPI rank.
+     * @brief Inserts additional neurons with x-, y-, z- positions randomly picked from already existing ones.
+     *      Sets all neurons to update. Only works with one MPI rank.
      * @param creation_count The number of new neurons, greater than 0
-     * @exception Throws an RelearnException if creation_count is 0, if x_dims, y_dims, or z_dims are empty, or if more than one MPI rank computes
+     * @exception Throws an RelearnException if creation_count is 0, if the positions are empty, or if more than one MPI rank is active
      */
     void create_neurons(number_neurons_type creation_count);
+
+    /**
+     * @brief Marks the specified neurons as enabled
+     * @param enabled_neurons The neuron ids from the now enabled neurons
+     * @exception Throws a RelearnException if one of the specified ids exceeds the number of stored neurons
+     */
+    void set_enabled_neurons(const std::span<const NeuronID> enabled_neurons) {
+        for (const auto& neuron_id : enabled_neurons) {
+            const auto local_neuron_id = neuron_id.get_neuron_id();
+            RelearnException::check(local_neuron_id < size, "NeuronsExtraInformation::set_enabled_neurons: NeuronID {} is too large: {}", neuron_id);
+
+            update_status[local_neuron_id] = UpdateStatus::Enabled;
+        }
+    }
+
+    /**
+     * @brief Marks the specified neurons as disabled
+     * @param disabled_neurons The neuron ids from the now disabled neurons
+     * @exception Throws a RelearnException if one of the specified ids exceeds the number of stored neurons
+     */
+    void set_disabled_neurons(const std::span<const NeuronID> disabled_neurons) {
+        for (const auto& neuron_id : disabled_neurons) {
+            const auto local_neuron_id = neuron_id.get_neuron_id();
+            RelearnException::check(local_neuron_id < size, "NeuronsExtraInformation::set_disabled_neurons: NeuronID {} is too large: {}", neuron_id);
+
+            RelearnException::check(update_status[local_neuron_id] != UpdateStatus::Static, "NeuronsExtraInformation::set_disabled_neurons: Cannot disable a static neuron");
+            update_status[local_neuron_id] = UpdateStatus::Disabled;
+        }
+    }
+
+    /**
+     * @brief Marks the specified neurons as static
+     * @param static_neurons The neuron ids from the now static neurons
+     * @exception Throws a RelearnException if one of the specified ids exceeds the number of stored neurons
+     */
+    void set_static_neurons(const std::span<const NeuronID> static_neurons) {
+        for (const auto& neuron_id : static_neurons) {
+            const auto local_neuron_id = neuron_id.get_neuron_id();
+            RelearnException::check(local_neuron_id < size, "NeuronsExtraInformation::set_static_neurons: NeuronID {} is too large: {}", neuron_id);
+
+            update_status[local_neuron_id] = UpdateStatus::Static;
+        }
+    }
 
     /**
      * @brief Overwrites the current positions with the supplied ones
@@ -60,8 +107,8 @@ public:
     }
 
     /**
-     * @brief Returns the currently stored positions as a vector. The reference is invalidated whenever init or create_neurons is called.
-     * @return The currently stored positions as a vector
+     * @brief Returns the currently stored positions as a vector
+     * @return The currently stored positions
      */
     [[nodiscard]] std::span<const position_type> get_positions() const noexcept {
         return positions;
@@ -79,8 +126,46 @@ public:
         return positions[local_neuron_id];
     }
 
+    /**
+     * @brief Checks for a neuron if it updates its electrical activity
+     * @param neuron_id The local id of the neuron, i.e., from [0, num_local_neurons)
+     * @exception Throws an RelearnException if the specified id exceeds the number of stored neurons
+     * @return True iff the neuron updates its electrical activity
+     */
+    [[nodiscard]] bool does_update_electrical_actvity(const NeuronID neuron_id) const {
+        const auto local_neuron_id = neuron_id.get_neuron_id();
+        RelearnException::check(local_neuron_id < size, "NeuronsExtraInfo::does_update_electrical_actvity: neuron_id must be smaller than size but was {}", neuron_id);
+        RelearnException::check(local_neuron_id < update_status.size(), "NeuronsExtraInfo::does_update_electrical_actvity: neuron_id must be smaller than update_status.size() but was {}", neuron_id);
+
+        return update_status[local_neuron_id] != UpdateStatus::Disabled;
+    }
+
+    /**
+     * @brief Checks for a neuron if it updates its plasticity
+     * @param neuron_id The local id of the neuron, i.e., from [0, num_local_neurons)
+     * @exception Throws an RelearnException if the specified id exceeds the number of stored neurons
+     * @return True iff the neuron updates its plasticity
+     */
+    [[nodiscard]] bool does_update_plasticity(const NeuronID neuron_id) const {
+        const auto local_neuron_id = neuron_id.get_neuron_id();
+        RelearnException::check(local_neuron_id < size, "NeuronsExtraInfo::does_update_plasticity: neuron_id must be smaller than size but was {}", neuron_id);
+        RelearnException::check(local_neuron_id < update_status.size(), "NeuronsExtraInfo::does_update_plasticity: neuron_id must be smaller than update_status.size() but was {}", neuron_id);
+
+        return update_status[local_neuron_id] == UpdateStatus::Enabled;
+    }
+
+    /**
+     * @brief Returns the disable flags for the neurons
+     * @return The disable flags
+     */
+    [[nodiscard]] const std::span<const UpdateStatus> get_disable_flags() const noexcept {
+        return update_status;
+    }
+
+
 private:
     number_neurons_type size{ 0 };
 
     std::vector<position_type> positions{};
+    std::vector<UpdateStatus> update_status{};
 };
