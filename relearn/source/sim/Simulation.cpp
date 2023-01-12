@@ -198,6 +198,8 @@ void Simulation::initialize() {
     network_graph_static = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
     network_graph_plastic = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
 
+    const auto& extra_infos = neurons->get_extra_info();
+    algorithm->set_neuron_extra_infos(extra_infos);
     algorithm->set_synaptic_elements(axons, dendrites_ex, dendrites_in);
 
     neurons->set_local_area_translator(local_area_translator);

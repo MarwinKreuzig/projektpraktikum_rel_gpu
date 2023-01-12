@@ -45,11 +45,11 @@ public:
         model.update_activity_benchmark(id);
     }
 
-    void update_activity(std::span<const UpdateStatus> update_status) {
-        model.update_activity(update_status);
+    void update_activity() {
+        model.update_activity();
     }
 
-    void update_activity_benchmark(std::span<const UpdateStatus> update_status) {
-        model.update_activity_benchmark(update_status);
+    void update_activity_benchmark() {
+        model.update_activity_benchmark();
     }
 };

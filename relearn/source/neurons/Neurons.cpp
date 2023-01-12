@@ -55,6 +55,8 @@ void Neurons::init(const number_neurons_type number_neurons) {
     disable_flags.resize(number_neurons, UpdateStatus::Enabled);
 
     calcium_calculator->init(number_neurons);
+
+    neuron_model->set_extra_infos(extra_info);
 }
 
 void Neurons::init_synaptic_elements() {
@@ -239,7 +241,7 @@ void Neurons::create_neurons(const number_neurons_type creation_count) {
 }
 
 void Neurons::update_electrical_activity(const step_type step) {
-    neuron_model->update_electrical_activity(step, *network_graph_static, *network_graph_plastic, disable_flags);
+    neuron_model->update_electrical_activity(step, *network_graph_static, *network_graph_plastic);
 
     const auto& fired = neuron_model->get_fired();
     calcium_calculator->update_calcium(step, disable_flags, fired);
@@ -494,7 +496,7 @@ size_t Neurons::create_synapses() {
 
     // Lock local RMA memory for local stores and make them visible afterwards
     MPIWrapper::lock_window(my_rank, MPI_Locktype::Exclusive);
-    algorithm->update_octree(disable_flags);
+    algorithm->update_octree();
     MPIWrapper::unlock_window(my_rank);
 
     // Makes sure that all ranks finished their local access epoch

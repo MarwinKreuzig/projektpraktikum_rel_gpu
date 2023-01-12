@@ -52,6 +52,16 @@ public:
     }
 
     /**
+     * @brief Sets the extra infos for the neurons. They hold the positions and update flags for the neurons.
+     * @param infos The extra infos, not empty
+     * @exception throws a RelearnException if infos is empty
+     */
+    void set_neuron_extra_infos(std::shared_ptr<NeuronsExtraInfo> infos) {
+        RelearnException::check(infos.operator bool(), "Algorithm::set_neuron_extra_infos: infos is empty");
+        this->extra_infos = std::move(infos);
+    }
+
+    /**
      * @brief Updates the connectivity with the algorithm. Already updates the synaptic elements, i.e., the axons and dendrites (both excitatory and inhibitory).
      *      Does not update the network graph. Performs communication with MPI
      * @param number_neurons The number of local neurons
@@ -65,15 +75,16 @@ public:
         = 0;
 
     /**
-     * @brief Updates the octree according to the necessities of the algorithm.
+     * @brief Updates the octree according to the necessities of the algorithm. Updates only those neurons for which the extra infos specify so.
      *      Performs communication via MPI
-     * @param disable_flags Flags that indicate if a neuron id disabled or enabled. If disabled, it is ignored for all purposes
      * @exception Can throw a RelearnException
      */
-    virtual void update_octree(const std::vector<UpdateStatus>& disable_flags) = 0;
+    virtual void update_octree() = 0;
 
 protected:
     std::shared_ptr<SynapticElements> axons{}; // NOLINT
     std::shared_ptr<SynapticElements> excitatory_dendrites{}; // NOLINT
     std::shared_ptr<SynapticElements> inhibitory_dendrites{}; // NOLINT
+
+    std::shared_ptr<NeuronsExtraInfo> extra_infos{}; // NOLINT
 };

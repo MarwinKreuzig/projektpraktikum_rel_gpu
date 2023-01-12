@@ -3,6 +3,7 @@
 #include "AdapterNeuronModel.h"
 
 #include "factory/background_factory.h"
+#include "factory/extra_info_factory.h"
 #include "factory/input_factory.h"
 #include "factory/neuron_model_factory.h"
 
@@ -18,8 +19,14 @@ static void BM_NeuronModel_UpdateActivityBenchmark(benchmark::State& state) {
         auto synaptic_input = InputFactory::construct_linear_input();
         auto background = BackgroundFactory::construct_null_background();
 
+        auto extra_info = NeuronsExtraInfoFactory::construct_extra_info();
+        extra_info->init(number_neurons);
+
         auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), std::make_unique<Stimulus>());
         model->init(number_neurons);
+        model->set_extra_infos(extra_info);
+
+        NeuronsExtraInfoFactory::enable_all(extra_info);
 
         AdapterNeuronModel<NeuronModelType> adapter{ *model };
 
@@ -54,15 +61,19 @@ static void BM_NeuronModel_UpdateFullActivity(benchmark::State& state) {
         auto synaptic_input = InputFactory::construct_linear_input();
         auto background = BackgroundFactory::construct_null_background();
 
+        auto extra_info = NeuronsExtraInfoFactory::construct_extra_info();
+        extra_info->init(number_neurons);
+
         auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), std::make_unique<Stimulus>());
         model->init(number_neurons);
+        model->set_extra_infos(extra_info);
+
+        NeuronsExtraInfoFactory::enable_all(extra_info);
 
         AdapterNeuronModel<NeuronModelType> adapter{ *model };
 
-        std::vector<UpdateStatus> update_flags(number_neurons, UpdateStatus::Enabled);
-
         state.ResumeTiming();
-        adapter.update_activity(update_flags);
+        adapter.update_activity();
         state.PauseTiming();
 
         auto sum = 0.0;
@@ -88,15 +99,19 @@ static void BM_NeuronModel_UpdateFullActivityBenchmark(benchmark::State& state) 
         auto synaptic_input = InputFactory::construct_linear_input();
         auto background = BackgroundFactory::construct_null_background();
 
+        auto extra_info = NeuronsExtraInfoFactory::construct_extra_info();
+        extra_info->init(number_neurons);
+
         auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), std::make_unique<Stimulus>());
         model->init(number_neurons);
+        model->set_extra_infos(extra_info);
+
+        NeuronsExtraInfoFactory::enable_all(extra_info);
 
         AdapterNeuronModel<NeuronModelType> adapter{ *model };
 
-        std::vector<UpdateStatus> update_flags(number_neurons, UpdateStatus::Enabled);
-
         state.ResumeTiming();
-        adapter.update_activity_benchmark(update_flags);
+        adapter.update_activity_benchmark();
         state.PauseTiming();
 
         auto sum = 0.0;

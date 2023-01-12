@@ -10,6 +10,8 @@
 
 #include "NeuronModels.h"
 
+#include "neurons/NeuronsExtraInfo.h"
+
 using models::IzhikevichModel;
 
 IzhikevichModel::IzhikevichModel(
@@ -109,8 +111,9 @@ void IzhikevichModel::update_activity_benchmark(const NeuronID neuron_id) {
     u[local_neuron_id] = u_val;
 }
 
-void IzhikevichModel::update_activity_benchmark(const std::span<const UpdateStatus> disable_flags) {
+void IzhikevichModel::update_activity_benchmark() {
     const auto number_local_neurons = get_number_neurons();
+    const auto disable_flags = get_extra_infos()->get_disable_flags();
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
@@ -123,8 +126,9 @@ void IzhikevichModel::update_activity_benchmark(const std::span<const UpdateStat
     }
 }
 
-void IzhikevichModel::update_activity(const std::span<const UpdateStatus> disable_flags) {
+void IzhikevichModel::update_activity() {
     const auto number_local_neurons = get_number_neurons();
+    const auto disable_flags = get_extra_infos()->get_disable_flags();
 
     const auto h = get_h();
     const auto scale = 1.0 / h;

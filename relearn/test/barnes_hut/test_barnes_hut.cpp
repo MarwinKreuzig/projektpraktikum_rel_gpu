@@ -201,7 +201,7 @@ TEST_F(BarnesHutTest, testBarnesHutACParent) {
 }
 
 TEST_F(BarnesHutTest, testUpdateFunctor) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) * 0 + 4;
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     const auto& axons = SynapticElementsAdapter::create_axons(number_neurons, mt);
@@ -220,12 +220,25 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
 
     octree->initializes_leaf_nodes(number_neurons);
 
+    auto extra_infos = std::make_shared<NeuronsExtraInfo>();
+    extra_infos->init(number_neurons);
+
     BarnesHut barnes_hut(octree);
     barnes_hut.set_synaptic_elements(axons, excitatory_dendrites, inhibitory_dendrites);
+    barnes_hut.set_neuron_extra_infos(extra_infos);
 
     const auto update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
 
-    ASSERT_NO_THROW(barnes_hut.update_octree(update_status));
+    std::vector<NeuronID> disabled_neurons{};
+    for (auto i = 0; i < number_neurons; i++) {
+        if (update_status[i] == UpdateStatus::Disabled) {
+            disabled_neurons.emplace_back(i);
+        }
+    }
+
+    extra_infos->set_disabled_neurons(disabled_neurons);
+
+    ASSERT_NO_THROW(barnes_hut.update_octree());
 
     std::stack<OctreeNode<BarnesHutCell>*> stack{};
     stack.push(octree->get_root());

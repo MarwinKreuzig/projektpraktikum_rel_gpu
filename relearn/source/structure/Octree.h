@@ -41,8 +41,6 @@ public:
     using box_size_type = RelearnTypes::box_size_type;
     using position_type = RelearnTypes::position_type;
 
-    using AccessEpochsStarted = std::vector<bool>;
-
     /**
      * @brief Constructs a new Octree with the the given size and constructs the "internal" part up to and including the level_of_branch_nodes
      * @param xyz_min The minimum positions of this octree

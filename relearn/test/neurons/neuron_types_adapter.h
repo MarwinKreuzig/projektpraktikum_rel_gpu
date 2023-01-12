@@ -62,7 +62,6 @@ public:
         const auto number_disabled = RandomAdapter::get_random_integer<size_t>(0, number_neurons, mt);
         return get_update_status(number_neurons, number_disabled, mt);
     }
-    
 
     static std::vector<UpdateStatus> get_update_status(size_t number_neurons, size_t number_disabled, std::mt19937& mt) {
         std::vector<UpdateStatus> status(number_disabled, UpdateStatus::Disabled);

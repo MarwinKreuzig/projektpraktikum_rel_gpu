@@ -12,6 +12,7 @@
 
 #include "algorithm/Algorithm.h"
 
+#include "neurons/NeuronsExtraInfo.h"
 #include "neurons/enums/UpdateStatus.h"
 #include "neurons/models/SynapticElements.h"
 #include "structure/Octree.h"
@@ -41,15 +42,14 @@ public:
     }
 
     /**
-     * @brief Updates the octree according to the necessities of the algorithm.
+     * @brief Updates the octree according to the necessities of the algorithm. Updates only those neurons for which the extra infos specify so.
      *      Performs communication via MPI
-     * @param disable_flags Flags that indicate if a neuron id disabled or enabled. If disabled, it is ignored for all purposes
      * @exception Can throw a RelearnException
      */
-    void update_octree(const std::vector<UpdateStatus>& disable_flags) override {
+    void update_octree() override {
         // Update my leaf nodes
         Timers::start(TimerRegion::UPDATE_LEAF_NODES);
-        update_leaf_nodes(disable_flags);
+        update_leaf_nodes();
         Timers::stop_and_add(TimerRegion::UPDATE_LEAF_NODES);
 
         // Update the octree
@@ -83,11 +83,10 @@ protected:
 
 private:
     /**
-     * @brief Updates all leaf nodes in the octree by the algorithm
-     * @param disable_flags Flags that indicate if a neuron id disabled or enabled. If disabled, the cell is set to 0 free elements
+     * @brief Updates all leaf nodes in the octree by the algorithm if the extra infos specify so.
      * @exception Throws a RelearnException if the number of flags is different than the number of leaf nodes, or if there is an internal error
      */
-    void update_leaf_nodes(const std::vector<UpdateStatus>& disable_flags) {
+    void update_leaf_nodes() {
         const auto& dendrites_excitatory_counts = excitatory_dendrites->get_grown_elements();
         const auto& dendrites_excitatory_connected_counts = excitatory_dendrites->get_connected_elements();
 
@@ -99,7 +98,7 @@ private:
 
         const auto& leaf_nodes = global_tree->get_leaf_nodes();
         const auto num_leaf_nodes = leaf_nodes.size();
-        const auto num_disable_flags = disable_flags.size();
+        const auto num_disable_flags = extra_infos->get_size();
         const auto num_dendrites_excitatory_counts = dendrites_excitatory_counts.size();
         const auto num_dendrites_excitatory_connected_counts = dendrites_excitatory_connected_counts.size();
         const auto num_dendrites_inhibitory_counts = dendrites_inhibitory_counts.size();
@@ -125,7 +124,7 @@ private:
             const auto other_neuron_id = cell.get_neuron_id();
             RelearnException::check(neuron_id == other_neuron_id, "AlgorithmImpl::update_leaf_nodes: The nodes are not in order {} != {}", neuron_id, other_neuron_id);
 
-            if (disable_flags[local_neuron_id] != UpdateStatus::Enabled) {
+            if (!extra_infos->does_update_plasticity(neuron_id)) {
                 if constexpr (AdditionalCellAttributes::has_excitatory_dendrite) {
                     node->set_cell_number_excitatory_dendrites(0);
                 }

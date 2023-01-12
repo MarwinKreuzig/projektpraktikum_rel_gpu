@@ -10,6 +10,8 @@
 
 #include "NeuronModels.h"
 
+#include "neurons/NeuronsExtraInfo.h"
+
 using models::FitzHughNagumoModel;
 
 FitzHughNagumoModel::FitzHughNagumoModel(
@@ -90,8 +92,9 @@ void FitzHughNagumoModel::update_activity_benchmark(const NeuronID neuron_id) {
     w[local_neuron_id] = w_val;
 }
 
-void FitzHughNagumoModel::update_activity_benchmark(const std::span<const UpdateStatus> disable_flags) {
+void FitzHughNagumoModel::update_activity_benchmark() {
     const auto number_local_neurons = get_number_neurons();
+    const auto disable_flags = get_extra_infos()->get_disable_flags();
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
@@ -104,8 +107,9 @@ void FitzHughNagumoModel::update_activity_benchmark(const std::span<const Update
     }
 }
 
-void FitzHughNagumoModel::update_activity(const std::span<const UpdateStatus> disable_flags) {
+void FitzHughNagumoModel::update_activity() {
     const auto number_local_neurons = get_number_neurons();
+    const auto disable_flags = get_extra_infos()->get_disable_flags();
 
     const auto h = get_h();
     const auto scale = 1.0 / h;

@@ -33,6 +33,7 @@ class AdapterNeuronModel;
 class AreaMonitor;
 class NetworkGraph;
 class NeuronMonitor;
+class NeuronsExtraInfo;
 
 /**
  * This class provides the basic interface for every neuron model, that is, the rules by which a neuron spikes.
@@ -68,6 +69,17 @@ public:
         , input_calculator(std::move(synaptic_input_calculator))
         , background_calculator(std::move(background_activity_calculator))
         , stimulus_calculator(std::move(stimulus_calculator)) { }
+
+    /**
+     * @brief Sets the extra infos. These are used to determine which neuron updates its electrical activity
+     * @param new_extra_info The new extra infos, must not be empty
+     * @exception Throws a RelearnException if new_extra_info is empty
+     */
+    void set_extra_infos(std::shared_ptr<NeuronsExtraInfo> new_extra_info) {
+        const auto is_filled = new_extra_info.operator bool();
+        RelearnException::check(is_filled, "NeuronModel::set_extra_infos: new_extra_info is empty");
+        extra_infos = std::move(new_extra_info);
+    }
 
     virtual ~NeuronModel() = default;
 
@@ -211,7 +223,7 @@ public:
      * @param network_graph The network graph that specifies which neurons are connected. Is used to determine which spikes effect the local portion.
      * @param disable_flags A vector of flags that specify which neurons should be left alone during the update
      */
-    void update_electrical_activity(step_type step, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, std::span<const UpdateStatus> disable_flags);
+    void update_electrical_activity(step_type step, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic);
 
     /**
      * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned
@@ -283,10 +295,10 @@ public:
     static constexpr unsigned int max_h{ 1000 };
 
 protected:
-    virtual void update_activity(std::span<const UpdateStatus> disable_flags) = 0;
+    virtual void update_activity() = 0;
 
-    virtual void update_activity_benchmark(const std::span<const UpdateStatus> disable_flags) {
-        update_activity(disable_flags);
+    virtual void update_activity_benchmark() {
+        update_activity();
     }
 
     /**
@@ -331,6 +343,10 @@ protected:
         return stimulus_calculator;
     }
 
+    [[nodiscard]] const std::shared_ptr<NeuronsExtraInfo>& get_extra_infos() const noexcept {
+        return extra_infos;
+    }
+
 private:
     // My local number of neurons
     number_neurons_type number_local_neurons{ 0 };
@@ -346,6 +362,8 @@ private:
     std::unique_ptr<SynapticInputCalculator> input_calculator{};
     std::unique_ptr<BackgroundActivityCalculator> background_calculator{};
     std::unique_ptr<Stimulus> stimulus_calculator{};
+
+    std::shared_ptr<NeuronsExtraInfo> extra_infos{};
 };
 
 namespace models {
@@ -460,9 +478,9 @@ public:
     static constexpr unsigned int max_refrac_time{ 1000 };
 
 protected:
-    void update_activity(std::span<const UpdateStatus> disable_flags) final;
+    void update_activity() final;
 
-    void update_activity_benchmark(std::span<const UpdateStatus> disable_flags) final;
+    void update_activity_benchmark() final;
 
     void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final { }
 
@@ -661,9 +679,9 @@ public:
     static constexpr double max_k3{ 200.0 };
 
 protected:
-    void update_activity(std::span<const UpdateStatus> disable_flags) final;
+    void update_activity() final;
 
-    void update_activity_benchmark(std::span<const UpdateStatus> disable_flags) final;
+    void update_activity_benchmark() final;
 
     void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
 
@@ -806,9 +824,9 @@ public:
     static constexpr double init_w{ -0.6 };
 
 protected:
-    void update_activity(std::span<const UpdateStatus> disable_flags) final;
+    void update_activity() final;
 
-    void update_activity_benchmark(std::span<const UpdateStatus> disable_flags) final;
+    void update_activity_benchmark() final;
 
     void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
 
@@ -1022,9 +1040,9 @@ public:
     static constexpr double max_V_spike{ 70.0 };
 
 protected:
-    void update_activity(std::span<const UpdateStatus> disable_flags) final;
+    void update_activity() final;
 
-    void update_activity_benchmark(std::span<const UpdateStatus> disable_flags) final;
+    void update_activity_benchmark() final;
 
     void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
 
