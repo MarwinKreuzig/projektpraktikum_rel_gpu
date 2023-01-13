@@ -16,6 +16,7 @@
 #include "synaptic_elements_adapter.h"
 #include "tagged_id/tagged_id_adapter.h"
 
+#include "neurons/NeuronsExtraInfo.h"
 #include "neurons/models/SynapticElements.h"
 #include "neurons/enums/UpdateStatus.h"
 
@@ -999,17 +1000,22 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElements) {
 
     std::vector<double> calcium(number_neurons, 0.0);
     std::vector<double> target_calcium(number_neurons, 0.0);
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Disabled);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
+
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+    synaptic_elements.set_extra_infos(extra_info);
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         calcium[neuron_id] = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
         target_calcium[neuron_id] = RandomAdapter::get_random_double<double>(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0, mt);
         if (RandomAdapter::get_random_bool(mt)) {
-            disable_flags[neuron_id] = UpdateStatus::Enabled;
+            disable_flags[neuron_id] = UpdateStatus::Disabled;
+            extra_info->set_disabled_neurons(std::vector<NeuronID>{ NeuronID{ neuron_id } });
         }
     }
 
-    synaptic_elements.update_number_elements_delta(calcium, target_calcium, disable_flags);
+    synaptic_elements.update_number_elements_delta(calcium, target_calcium);
 
     for (auto neuron_id : NeuronID::range(number_neurons)) {
         ASSERT_EQ(synaptic_elements.get_connected_elements(neuron_id), golden_connected_counts[neuron_id.get_neuron_id()]) << ss.str() << neuron_id;
@@ -1044,24 +1050,29 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdateNumberElements) {
     auto [synaptic_elements, golden_counts, golden_connected_counts, golden_signal_types]
         = SynapticElementsAdapter::create_random_synaptic_elements(number_neurons, element_type, minimum_calcium_to_grow, mt, growth_factor);
 
+
     std::vector<double> golden_delta_counts(number_neurons, 0.0);
 
     for (auto i = 0; i < 10; i++) {
         std::vector<double> calcium(number_neurons, 0.0);
         std::vector<double> target_calcium(number_neurons, 0.0);
-        std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Disabled);
+
+        auto extra_info = std::make_shared<NeuronsExtraInfo>();
+        extra_info->init(number_neurons);
+        synaptic_elements.set_extra_infos(extra_info);
 
         for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
             calcium[neuron_id] = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
             target_calcium[neuron_id] = RandomAdapter::get_random_double<double>(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0, mt);
             if (RandomAdapter::get_random_bool(mt)) {
-                disable_flags[neuron_id] = UpdateStatus::Enabled;
                 const auto current_expected_delta = gaussian_growth_curve(calcium[neuron_id], minimum_calcium_to_grow, target_calcium[neuron_id], growth_factor);
                 golden_delta_counts[neuron_id] += current_expected_delta;
+            } else {
+                extra_info->set_disabled_neurons(std::vector<NeuronID>{ NeuronID{ neuron_id } });
             }
         }
 
-        synaptic_elements.update_number_elements_delta(calcium, target_calcium, disable_flags);
+        synaptic_elements.update_number_elements_delta(calcium, target_calcium);
     }
 
     for (auto neuron_id : NeuronID::range(number_neurons)) {
@@ -1106,51 +1117,57 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElementsException) 
     std::vector<double> target_calcium(number_neurons, 0.0);
     std::vector<double> target_calcium_too_large(number_too_large_target_calcium.get_neuron_id(), 0.0);
 
-    std::vector<UpdateStatus> disable_flags_too_small(number_too_small_disable_flags.get_neuron_id(), UpdateStatus::Disabled);
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Disabled);
-    std::vector<UpdateStatus> disable_flags_too_large(number_too_large_disable_flags.get_neuron_id(), UpdateStatus::Disabled);
+    auto extra_info_too_small = std::make_shared<NeuronsExtraInfo>();
+    extra_info_too_small->init(number_too_small_disable_flags.get_neuron_id());
 
-    auto lambda = [&ss, &synaptic_elements](auto calcium, auto target_calcium, auto disable_flags) {
-        ASSERT_THROW(synaptic_elements.update_number_elements_delta(calcium, target_calcium, disable_flags), RelearnException) << ss.str()
+    auto extra_info_correct = std::make_shared<NeuronsExtraInfo>();
+    extra_info_correct->init(number_neurons);
+
+    auto extra_info_too_large = std::make_shared<NeuronsExtraInfo>();
+    extra_info_too_large->init(number_too_large_disable_flags.get_neuron_id());
+
+    auto lambda = [&ss, &synaptic_elements](auto calcium, auto target_calcium, auto extra_info) {
+        synaptic_elements.set_extra_infos(extra_info);
+        ASSERT_THROW(synaptic_elements.update_number_elements_delta(calcium, target_calcium), RelearnException) << ss.str()
                                                                                                                                << calcium.size() << ' '
                                                                                                                                << target_calcium.size() << ' '
-                                                                                                                               << disable_flags.size();
+                                                                                                                               << extra_info->get_size();
     };
 
-    lambda(calcium_too_small, target_calcium_too_small, disable_flags_too_small);
-    lambda(calcium_too_small, target_calcium, disable_flags_too_small);
-    lambda(calcium_too_small, target_calcium_too_large, disable_flags_too_small);
+    lambda(calcium_too_small, target_calcium_too_small, extra_info_too_small);
+    lambda(calcium_too_small, target_calcium, extra_info_too_small);
+    lambda(calcium_too_small, target_calcium_too_large, extra_info_too_small);
 
-    lambda(calcium_too_small, target_calcium_too_small, disable_flags);
-    lambda(calcium_too_small, target_calcium, disable_flags);
-    lambda(calcium_too_small, target_calcium_too_large, disable_flags);
+    lambda(calcium_too_small, target_calcium_too_small, extra_info_correct);
+    lambda(calcium_too_small, target_calcium, extra_info_correct);
+    lambda(calcium_too_small, target_calcium_too_large, extra_info_correct);
 
-    lambda(calcium_too_small, target_calcium_too_small, disable_flags_too_large);
-    lambda(calcium_too_small, target_calcium, disable_flags_too_large);
-    lambda(calcium_too_small, target_calcium_too_large, disable_flags_too_large);
+    lambda(calcium_too_small, target_calcium_too_small, extra_info_too_large);
+    lambda(calcium_too_small, target_calcium, extra_info_too_large);
+    lambda(calcium_too_small, target_calcium_too_large, extra_info_too_large);
+    
+    lambda(calcium, target_calcium_too_small, extra_info_too_small);
+    lambda(calcium, target_calcium, extra_info_too_small);
+    lambda(calcium, target_calcium_too_large, extra_info_too_small);
 
-    lambda(calcium, target_calcium_too_small, disable_flags_too_small);
-    lambda(calcium, target_calcium, disable_flags_too_small);
-    lambda(calcium, target_calcium_too_large, disable_flags_too_small);
+    lambda(calcium, target_calcium_too_small, extra_info_correct);
+    lambda(calcium, target_calcium_too_large, extra_info_correct);
 
-    lambda(calcium, target_calcium_too_small, disable_flags);
-    lambda(calcium, target_calcium_too_large, disable_flags);
+    lambda(calcium, target_calcium_too_small, extra_info_too_large);
+    lambda(calcium, target_calcium, extra_info_too_large);
+    lambda(calcium, target_calcium_too_large, extra_info_too_large);
 
-    lambda(calcium, target_calcium_too_small, disable_flags_too_large);
-    lambda(calcium, target_calcium, disable_flags_too_large);
-    lambda(calcium, target_calcium_too_large, disable_flags_too_large);
+    lambda(calcium_too_large, target_calcium_too_small, extra_info_too_small);
+    lambda(calcium_too_large, target_calcium, extra_info_too_small);
+    lambda(calcium_too_large, target_calcium_too_large, extra_info_too_small);
 
-    lambda(calcium_too_large, target_calcium_too_small, disable_flags_too_small);
-    lambda(calcium_too_large, target_calcium, disable_flags_too_small);
-    lambda(calcium_too_large, target_calcium_too_large, disable_flags_too_small);
+    lambda(calcium_too_large, target_calcium_too_small, extra_info_correct);
+    lambda(calcium_too_large, target_calcium, extra_info_correct);
+    lambda(calcium_too_large, target_calcium_too_large, extra_info_correct);
 
-    lambda(calcium_too_large, target_calcium_too_small, disable_flags);
-    lambda(calcium_too_large, target_calcium, disable_flags);
-    lambda(calcium_too_large, target_calcium_too_large, disable_flags);
-
-    lambda(calcium_too_large, target_calcium_too_small, disable_flags_too_large);
-    lambda(calcium_too_large, target_calcium, disable_flags_too_large);
-    lambda(calcium_too_large, target_calcium_too_large, disable_flags_too_large);
+    lambda(calcium_too_large, target_calcium_too_small, extra_info_too_large);
+    lambda(calcium_too_large, target_calcium, extra_info_too_large);
+    lambda(calcium_too_large, target_calcium_too_large, extra_info_too_large);
 }
 
 TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdates) {
@@ -1167,6 +1184,12 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdates) {
 
     SynapticElements synaptic_elements(element_type, minimum_calcium_to_grow, growth_factor, retract_ratio);
     synaptic_elements.init(number_neurons);
+
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
+    auto extra_info_all_enabled = std::make_shared<NeuronsExtraInfo>();
+    extra_info_all_enabled->init(number_neurons);
 
     std::vector<double> golden_counts(number_neurons);
     std::vector<unsigned int> golden_connected_counts(number_neurons);
@@ -1189,18 +1212,21 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdates) {
     std::vector<double> calcium(number_neurons, 0.0);
     std::vector<double> target_calcium(number_neurons, 0.0);
     std::vector<UpdateStatus> enable_flags(number_neurons, UpdateStatus::Enabled);
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Disabled);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         calcium[neuron_id] = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
         target_calcium[neuron_id] = RandomAdapter::get_random_double<double>(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0, mt);
         if (RandomAdapter::get_random_bool(mt)) {
-            disable_flags[neuron_id] = UpdateStatus::Enabled;
+            extra_info->set_disabled_neurons(std::vector<NeuronID>{ NeuronID{ neuron_id } });
+            disable_flags[neuron_id] = UpdateStatus::Disabled;
         }
     }
 
-    synaptic_elements.update_number_elements_delta(calcium, target_calcium, enable_flags);
-    const auto& [number_deleted_elements, deleted_element_counts] = synaptic_elements.commit_updates(disable_flags);
+    synaptic_elements.set_extra_infos(extra_info_all_enabled);
+    synaptic_elements.update_number_elements_delta(calcium, target_calcium);
+    synaptic_elements.set_extra_infos(extra_info);
+    const auto& [number_deleted_elements, deleted_element_counts] = synaptic_elements.commit_updates();
 
     const auto& deltas = synaptic_elements.get_deltas();
 
@@ -1292,26 +1318,37 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdatesException) {
     auto [synaptic_elements, grown_elements, connected_elements, signal_types]
         = SynapticElementsAdapter::create_random_synaptic_elements(number_neurons, element_type, minimum_calcium_to_grow, mt, growth_factor);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+    synaptic_elements.set_extra_infos(extra_info);
+
     std::vector<double> calcium(number_neurons, 0.0);
     std::vector<double> target_calcium(number_neurons, 0.0);
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Disabled);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         calcium[neuron_id] = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
         target_calcium[neuron_id] = RandomAdapter::get_random_double<double>(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0, mt);
         if (RandomAdapter::get_random_bool(mt)) {
-            disable_flags[neuron_id] = UpdateStatus::Enabled;
+            disable_flags[neuron_id] = UpdateStatus::Disabled;
+            extra_info->set_disabled_neurons(std::vector<NeuronID>{ NeuronID{ neuron_id } });
         }
     }
 
-    synaptic_elements.update_number_elements_delta(calcium, target_calcium, disable_flags);
+    synaptic_elements.update_number_elements_delta(calcium, target_calcium);
 
     const auto number_too_small_disable_flags = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt).get_neuron_id();
     const auto number_too_large_disable_flags = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt).get_neuron_id() + number_neurons + 1;
 
-    std::vector<UpdateStatus> disable_flags_too_small(number_too_small_disable_flags, UpdateStatus::Disabled);
-    std::vector<UpdateStatus> disable_flags_too_large(number_too_large_disable_flags, UpdateStatus::Disabled);
+    auto extra_info_too_small = std::make_shared<NeuronsExtraInfo>();
+    extra_info_too_small->init(number_too_small_disable_flags);
 
-    ASSERT_THROW(auto ret = synaptic_elements.commit_updates(disable_flags_too_small), RelearnException) << ss.str() << number_too_small_disable_flags;
-    ASSERT_THROW(auto ret = synaptic_elements.commit_updates(disable_flags_too_large), RelearnException) << ss.str() << number_too_large_disable_flags;
+    auto extra_info_too_large = std::make_shared<NeuronsExtraInfo>();
+    extra_info_too_large->init(number_too_large_disable_flags);
+
+    synaptic_elements.set_extra_infos(extra_info_too_small);
+    ASSERT_THROW(auto ret = synaptic_elements.commit_updates(), RelearnException) << ss.str() << number_too_small_disable_flags;
+
+    synaptic_elements.set_extra_infos(extra_info_too_large);
+    ASSERT_THROW(auto ret = synaptic_elements.commit_updates(), RelearnException) << ss.str() << number_too_large_disable_flags;
 }

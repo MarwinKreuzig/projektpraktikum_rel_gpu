@@ -13,7 +13,6 @@
 #include "Types.h"
 #include "neurons/enums/ElementType.h"
 #include "neurons/enums/SignalType.h"
-#include "neurons/enums/UpdateStatus.h"
 #include "neurons/models/ModelParameter.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
@@ -27,6 +26,7 @@
 #include <vector>
 
 class NeuronMonitor;
+class NeuronsExtraInfo;
 
 /**
  * @brief A gaussian curve that is compressed by growth-factor nu and intersects the x-axis at
@@ -102,6 +102,17 @@ public:
     SynapticElements& operator=(SynapticElements&& other) = default;
 
     ~SynapticElements() = default;
+
+    /**
+     * @brief Sets the extra infos. These are used to determine which neuron updates its electrical activity
+     * @param new_extra_info The new extra infos, must not be empty
+     * @exception Throws a RelearnException if new_extra_info is empty
+     */
+    void set_extra_infos(std::shared_ptr<NeuronsExtraInfo> new_extra_info) {
+        const auto is_filled = new_extra_info.operator bool();
+        RelearnException::check(is_filled, "NeuronModel::set_extra_infos: new_extra_info is empty");
+        extra_infos = std::move(new_extra_info);
+    }
 
     /**
      * @brief Initializes the object to contain number_neurons elements.
@@ -421,65 +432,18 @@ public:
 
     /**
      * @brief Commits the accumulated differences for all neurons that are not disabled and returns the number of total deletions and neuron-wise deletions
-     * @param disable_flags Indicates that a neuron should not be updated (= 0)
-     * @exception Throws a RelearnException if disable_flags.size() does not match the number of stored neurons
+     * @exception Throws a RelearnException if the number of neurons in the extra infos does not match the number of stored neurons
      * @return Returns a tuple with (1) the number of deletions and (2) the number of deletions for each neuron
      */
-    [[nodiscard]] std::pair<unsigned int, std::vector<unsigned int>> commit_updates(const std::span<const UpdateStatus> disable_flags) {
-        RelearnException::check(disable_flags.size() == size, ":SynapticElements::commit_updates: disable_flags was not of the right size");
-
-        std::vector<unsigned int> number_deletions(size, 0);
-        unsigned int sum_to_delete = 0;
-
-#pragma omp parallel for reduction(+ \
-                                   : sum_to_delete) shared(number_deletions, disable_flags) default(none)
-        for (auto neuron_id = 0; neuron_id < size; ++neuron_id) {
-            if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
-                continue;
-            }
-
-            /**
-             * Create and delete synaptic elements as required.
-             * This function only deletes elements (bound and unbound), no synapses.
-             */
-            NeuronID converted_id{ neuron_id };
-            const auto num_synapses_to_delete = update_number_elements(converted_id);
-
-            number_deletions[neuron_id] = num_synapses_to_delete;
-            sum_to_delete += num_synapses_to_delete;
-        }
-
-        return std::make_pair(sum_to_delete, number_deletions);
-    }
+    [[nodiscard]] std::pair<unsigned int, std::vector<unsigned int>> commit_updates();
 
     /**
      * @brief Updates the accumulated delta for each enabled neuron based on its current calcium value
      * @param calcium The current calcium value for each neuron
      * @param target_calcium The target calcium value for each neuron
-     * @param disable_flags Indicates that a neuron should not be updated (= 0)
-     * @exception Throws a RelearnException if calcium.size() or disable_flags.size() does not match the number of stored neurons
+     * @exception Throws a RelearnException if calcium.size() or the number of neurons in the extra infos does not match the number of stored neurons
      */
-    void update_number_elements_delta(const std::span<const double> calcium, const std::span<const double> target_calcium, const std::span<const UpdateStatus> disable_flags) {
-        RelearnException::check(calcium.size() == size, "SynapticElements::commit_updates: calcium was not of the right size");
-        RelearnException::check(target_calcium.size() == size, "SynapticElements::commit_updates: target_calcium was not of the right size");
-        RelearnException::check(disable_flags.size() == size, "SynapticElements::commit_updates: disable_flags was not of the right size");
-
-#pragma omp parallel for shared(calcium, target_calcium, disable_flags) default(none)
-        for (auto neuron_id = 0; neuron_id < size; ++neuron_id) {
-            if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
-                continue;
-            }
-
-            const auto target_calcium_value = target_calcium[neuron_id];
-            const auto current_calcium_value = calcium[neuron_id];
-
-            const auto clamped_target = std::max(target_calcium_value, min_C_level_to_grow);
-
-            const auto inc = gaussian_growth_curve(current_calcium_value, min_C_level_to_grow, clamped_target, nu);
-
-            deltas_since_last_update[neuron_id] += inc;
-        }
-    }
+    void update_number_elements_delta(std::span<const double> calcium, std::span<const double> target_calcium);
 
     /**
      * @brief Calculates and returns the historgram of the synaptic elements, i.e.,
@@ -544,6 +508,8 @@ public:
 private:
     ElementType type{}; // Denotes the type of all synaptic elements, which is Axon or Dendrite
     number_neurons_type size{ 0 };
+
+    std::shared_ptr<NeuronsExtraInfo> extra_infos{};
     std::vector<double> grown_elements{};
     std::vector<double> deltas_since_last_update{}; // Keeps track of changes in number of elements until those changes are applied in next connectivity update
     std::vector<unsigned int> connected_elements{};

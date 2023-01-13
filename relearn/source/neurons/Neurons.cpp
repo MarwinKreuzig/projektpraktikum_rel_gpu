@@ -57,6 +57,10 @@ void Neurons::init(const number_neurons_type number_neurons) {
     calcium_calculator->init(number_neurons);
 
     neuron_model->set_extra_infos(extra_info);
+
+    axons->set_extra_infos(extra_info);
+    dendrites_exc->set_extra_infos(extra_info);
+    dendrites_inh->set_extra_infos(extra_info);
 }
 
 void Neurons::init_synaptic_elements() {
@@ -251,9 +255,9 @@ void Neurons::update_number_synaptic_elements_delta() {
     const auto& calcium = calcium_calculator->get_calcium();
     const auto& target_calcium = calcium_calculator->get_target_calcium();
 
-    axons->update_number_elements_delta(calcium, target_calcium, disable_flags);
-    dendrites_exc->update_number_elements_delta(calcium, target_calcium, disable_flags);
-    dendrites_inh->update_number_elements_delta(calcium, target_calcium, disable_flags);
+    axons->update_number_elements_delta(calcium, target_calcium);
+    dendrites_exc->update_number_elements_delta(calcium, target_calcium);
+    dendrites_inh->update_number_elements_delta(calcium, target_calcium);
 }
 
 StatisticalMeasures Neurons::global_statistics(const std::span<const double> local_values, const MPIRank root, const std::span<const UpdateStatus> disable_flags) const {
@@ -295,7 +299,7 @@ std::pair<uint64_t, uint64_t> Neurons::delete_synapses() {
         Timers::start(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
 
         Timers::start(TimerRegion::COMMIT_NUM_SYNAPTIC_ELEMENTS);
-        const auto to_delete = synaptic_elements->commit_updates(disable_flags);
+        const auto to_delete = synaptic_elements->commit_updates();
         Timers::stop_and_add(TimerRegion::COMMIT_NUM_SYNAPTIC_ELEMENTS);
 
         Timers::start(TimerRegion::FIND_SYNAPSES_TO_DELETE);

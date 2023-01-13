@@ -13,7 +13,6 @@
 #include "Types.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/enums/FiredStatus.h"
-#include "neurons/enums/UpdateStatus.h"
 #include "neurons/input/BackgroundActivityCalculator.h"
 #include "neurons/input/Stimulus.h"
 #include "neurons/input/SynapticInputCalculator.h"

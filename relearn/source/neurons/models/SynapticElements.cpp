@@ -10,6 +10,61 @@
 
 #include "SynapticElements.h"
 
+#include "neurons/NeuronsExtraInfo.h"
+
+std::pair<unsigned int, std::vector<unsigned int>> SynapticElements::commit_updates() {
+    const auto& disable_flags = extra_infos->get_disable_flags();
+
+    RelearnException::check(disable_flags.size() == size, ":SynapticElements::commit_updates: disable_flags was not of the right size");
+
+    std::vector<unsigned int> number_deletions(size, 0);
+    unsigned int sum_to_delete = 0;
+
+#pragma omp parallel for reduction(+ \
+                                   : sum_to_delete) shared(number_deletions, disable_flags) default(none)
+    for (auto neuron_id = 0; neuron_id < size; ++neuron_id) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
+            continue;
+        }
+
+        /**
+         * Create and delete synaptic elements as required.
+         * This function only deletes elements (bound and unbound), no synapses.
+         */
+        NeuronID converted_id{ neuron_id };
+        const auto num_synapses_to_delete = update_number_elements(converted_id);
+
+        number_deletions[neuron_id] = num_synapses_to_delete;
+        sum_to_delete += num_synapses_to_delete;
+    }
+
+    return std::make_pair(sum_to_delete, number_deletions);
+}
+
+void SynapticElements::update_number_elements_delta(const std::span<const double> calcium, const std::span<const double> target_calcium) {
+    const auto& disable_flags = extra_infos->get_disable_flags();
+
+    RelearnException::check(calcium.size() == size, "SynapticElements::commit_updates: calcium was not of the right size");
+    RelearnException::check(target_calcium.size() == size, "SynapticElements::commit_updates: target_calcium was not of the right size");
+    RelearnException::check(disable_flags.size() == size, "SynapticElements::commit_updates: disable_flags was not of the right size");
+
+#pragma omp parallel for shared(calcium, target_calcium, disable_flags) default(none)
+    for (auto neuron_id = 0; neuron_id < size; ++neuron_id) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
+            continue;
+        }
+
+        const auto target_calcium_value = target_calcium[neuron_id];
+        const auto current_calcium_value = calcium[neuron_id];
+
+        const auto clamped_target = std::max(target_calcium_value, min_C_level_to_grow);
+
+        const auto inc = gaussian_growth_curve(current_calcium_value, min_C_level_to_grow, clamped_target, nu);
+
+        deltas_since_last_update[neuron_id] += inc;
+    }
+}
+
 unsigned int SynapticElements::update_number_elements(const NeuronID neuron_id) {
     const auto local_neuron_id = neuron_id.get_neuron_id();
 
