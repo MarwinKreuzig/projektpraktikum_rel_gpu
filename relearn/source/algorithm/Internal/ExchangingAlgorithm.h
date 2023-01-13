@@ -44,18 +44,14 @@ public:
      * @brief Updates the connectivity with the algorithm. Already updates the synaptic elements, i.e., the axons and dendrites (both excitatory and inhibitory).
      *      Does not update the network graph. Performs communication with MPI
      * @param number_neurons The number of local neurons
-     * @param disable_flags Flags that indicate if a local neuron is disabled. If so, the neuron is ignored
-     * @param extra_infos Used to access the positions of the local neurons
      * @exception Can throw a RelearnException
      * @return A tuple with the created synapses that must be committed to the network graph
      */
-    [[nodiscard]] std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(number_neurons_type number_neurons,
-        const std::vector<UpdateStatus>& disable_flags, const std::shared_ptr<NeuronsExtraInfo>& extra_infos) override {
-
+    [[nodiscard]] std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(number_neurons_type number_neurons) override {
         Timers::start(TimerRegion::CREATE_SYNAPSES);
 
         Timers::start(TimerRegion::FIND_TARGET_NEURONS);
-        const auto& synapse_creation_requests_outgoing = find_target_neurons(number_neurons, disable_flags, extra_infos);
+        const auto& synapse_creation_requests_outgoing = find_target_neurons(number_neurons);
         Timers::stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
 
         Timers::start(TimerRegion::CREATE_SYNAPSES_EXCHANGE_REQUESTS);
@@ -86,14 +82,10 @@ protected:
     /**
      * @brief Returns a collection of proposed synapse creations for each neuron
      * @param number_neurons The number of local neurons
-     * @param disable_flags Flags that indicate if a local neuron is disabled. If so, the neuron is ignored
-     * @param extra_infos Used to access the positions of the local neurons
      * @exception Can throw a RelearnException
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
-    [[nodiscard]] virtual CommunicationMap<RequestType> find_target_neurons(number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
-        const std::shared_ptr<NeuronsExtraInfo>& extra_infos)
-        = 0;
+    [[nodiscard]] virtual CommunicationMap<RequestType> find_target_neurons(number_neurons_type number_neurons) = 0;
 
     /**
      * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses
@@ -132,18 +124,14 @@ public:
      * @brief Updates the connectivity with the algorithm. Already updates the synaptic elements, i.e., the axons and dendrites (both excitatory and inhibitory).
      *      Does not update the network graph. Performs communication with MPI
      * @param number_neurons The number of local neurons
-     * @param disable_flags Flags that indicate if a local neuron is disabled. If so, the neuron is ignored
-     * @param extra_infos Used to access the positions of the local neurons
      * @exception Can throw a RelearnException
      * @return A tuple with the created synapses that must be committed to the network graph
      */
-    [[nodiscard]] std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(number_neurons_type number_neurons,
-        const std::vector<UpdateStatus>& disable_flags, const std::shared_ptr<NeuronsExtraInfo>& extra_infos) override {
-
+    [[nodiscard]] std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(number_neurons_type number_neurons) override {
         Timers::start(TimerRegion::CREATE_SYNAPSES);
 
         Timers::start(TimerRegion::FIND_TARGET_NEURONS);
-        const auto& synapse_creation_requests_outgoing = find_target_neurons(number_neurons, disable_flags, extra_infos);
+        const auto& synapse_creation_requests_outgoing = find_target_neurons(number_neurons);
         Timers::stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
 
         Timers::start(TimerRegion::CREATE_SYNAPSES_EXCHANGE_REQUESTS);
@@ -174,14 +162,10 @@ protected:
     /**
      * @brief Returns a collection of proposed synapse creations for each neuron
      * @param number_neurons The number of local neurons
-     * @param disable_flags Flags that indicate if a local neuron is disabled. If so, the neuron is ignored
-     * @param extra_infos Used to access the positions of the local neurons
      * @exception Can throw a RelearnException
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
-    [[nodiscard]] virtual CommunicationMap<RequestType> find_target_neurons(number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
-        const std::shared_ptr<NeuronsExtraInfo>& extra_infos)
-        = 0;
+    [[nodiscard]] virtual CommunicationMap<RequestType> find_target_neurons(number_neurons_type number_neurons) = 0;
 
     /**
      * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses

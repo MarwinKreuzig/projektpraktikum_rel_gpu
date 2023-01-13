@@ -48,14 +48,11 @@ protected:
     /**
      * @brief Returns a collection of proposed synapse creations for each neuron with vacant axons.
      * @param number_neurons The number of local neurons
-     * @param disable_flags Flags that indicate if a local neuron is disabled. If so (== 0), the neuron is ignored
-     * @param extra_infos Used to access the positions of the local neurons
      * @param axons The axon model that is used
      * @exception Can throw a RelearnException
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank.
      */
-    CommunicationMap<SynapseCreationRequest> find_target_neurons(number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
-        const std::shared_ptr<NeuronsExtraInfo>& extra_infos) override;
+    CommunicationMap<SynapseCreationRequest> find_target_neurons(number_neurons_type number_neurons) override;
 
     /**
      * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses

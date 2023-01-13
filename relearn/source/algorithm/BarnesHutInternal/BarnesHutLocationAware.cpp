@@ -27,9 +27,8 @@ void BarnesHutLocationAware::set_acceptance_criterion(const double acceptance_cr
     this->acceptance_criterion = acceptance_criterion;
 }
 
-CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neurons(const number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
-    const std::shared_ptr<NeuronsExtraInfo>& extra_infos) {
-
+CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neurons(const number_neurons_type number_neurons) {
+    const auto& disable_flags = extra_infos->get_disable_flags();
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
     const auto size_hint = std::min(number_neurons, number_neurons_type(number_ranks));
@@ -38,7 +37,7 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
     auto* const root = get_octree_root();
 
     // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
-#pragma omp parallel for default(none) shared(root, number_neurons, extra_infos, disable_flags, neuron_requests_outgoing)
+#pragma omp parallel for default(none) shared(root, number_neurons, disable_flags, neuron_requests_outgoing)
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] != UpdateStatus::Enabled) {
             continue;

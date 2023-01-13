@@ -13,7 +13,6 @@
 #include "algorithm/Algorithm.h"
 
 #include "neurons/NeuronsExtraInfo.h"
-#include "neurons/enums/UpdateStatus.h"
 #include "neurons/models/SynapticElements.h"
 #include "structure/Octree.h"
 #include "structure/OctreeNode.h"

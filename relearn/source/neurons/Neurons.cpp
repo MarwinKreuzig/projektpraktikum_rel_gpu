@@ -509,7 +509,7 @@ size_t Neurons::create_synapses() {
 
     // Delegate the creation of new synapses to the algorithm
     const auto& [local_synapses, distant_in_synapses, distant_out_synapses]
-        = algorithm->update_connectivity(number_neurons, disable_flags, extra_info);
+        = algorithm->update_connectivity(number_neurons);
 
     // Update the network graph all at once
     Timers::start(TimerRegion::ADD_SYNAPSES_TO_NETWORKGRAPH);
