@@ -78,6 +78,10 @@ public:
         const auto is_filled = new_extra_info.operator bool();
         RelearnException::check(is_filled, "NeuronModel::set_extra_infos: new_extra_info is empty");
         extra_infos = std::move(new_extra_info);
+
+        input_calculator->set_extra_infos(extra_infos);
+        background_calculator->set_extra_infos(extra_infos);
+        stimulus_calculator->set_extra_infos(extra_infos);
     }
 
     virtual ~NeuronModel() = default;
@@ -219,8 +223,8 @@ public:
      * @brief Performs one step of simulating the electrical activity for all neurons.
      *      This method performs communication via MPI.
      * @param step The current update step
-     * @param network_graph The network graph that specifies which neurons are connected. Is used to determine which spikes effect the local portion.
-     * @param disable_flags A vector of flags that specify which neurons should be left alone during the update
+     * @param network_graph_static The network graph that specifies which neurons are connected with static connections. Is used to determine which spikes effect the local portion.
+     * @param network_graph_plastic The network graph that specifies which neurons are connected with plastic connections. Is used to determine which spikes effect the local portion.
      */
     void update_electrical_activity(step_type step, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic);
 

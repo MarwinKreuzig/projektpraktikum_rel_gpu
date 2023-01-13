@@ -15,9 +15,10 @@
 
 #include <cmath>
 
-void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::span<const FiredStatus> fired, const std::span<const UpdateStatus> disable_flags) {
+void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::span<const FiredStatus> fired) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
+    const auto& disable_flags = extra_infos->get_disable_flags();
     const auto number_local_neurons = get_number_neurons();
 
 #pragma omp parallel for shared(network_graph_static, network_graph_plastic, disable_flags, number_local_neurons, fired) default(none)
@@ -38,9 +39,10 @@ void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& ne
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
 }
 
-void LogarithmicSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::span<const FiredStatus> fired, const std::span<const UpdateStatus> disable_flags) {
+void LogarithmicSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::span<const FiredStatus> fired) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
+    const auto& disable_flags = extra_infos->get_disable_flags();
     const auto number_local_neurons = get_number_neurons();
 
 #pragma omp parallel for shared(network_graph_static, network_graph_plastic, disable_flags, number_local_neurons, fired) default(none)
@@ -65,9 +67,10 @@ void LogarithmicSynapticInputCalculator::update_synaptic_input(const NetworkGrap
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
 }
 
-void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::span<const FiredStatus> fired, const std::span<const UpdateStatus> disable_flags) {
+void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::span<const FiredStatus> fired) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
+    const auto& disable_flags = extra_infos->get_disable_flags();
     const auto number_local_neurons = get_number_neurons();
 
 #pragma omp parallel for shared(network_graph_static, network_graph_plastic, disable_flags, number_local_neurons, fired) default(none)

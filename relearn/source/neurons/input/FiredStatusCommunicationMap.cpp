@@ -16,7 +16,8 @@
 
 #include <ranges>
 
-void FiredStatusCommunicationMap::set_local_fired_status(const std::span<const FiredStatus> fired_status, const std::span<const UpdateStatus> disable_flags, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic) {
+void FiredStatusCommunicationMap::set_local_fired_status(const std::span<const FiredStatus> fired_status, 
+    const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic) {
     outgoing_ids.clear();
 
     if (const auto number_ranks = get_number_ranks(); number_ranks == 1) {
@@ -28,6 +29,7 @@ void FiredStatusCommunicationMap::set_local_fired_status(const std::span<const F
      * That is, they contain the neurons connecting the axons of my firing neurons.
      */
 
+    const auto disable_flags = extra_infos->get_disable_flags();
     const auto number_local_neurons = get_number_local_neurons();
 
     Timers::start(TimerRegion::PREPARE_SENDING_SPIKES);

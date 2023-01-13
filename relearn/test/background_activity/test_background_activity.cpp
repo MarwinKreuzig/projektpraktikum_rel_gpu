@@ -194,15 +194,21 @@ TEST_F(BackgroundActivityTest, testNullBackgroundActivityUpdate) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     background_calculator->init(number_neurons);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
+    background_calculator->set_extra_infos(extra_info);
+
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
+            extra_info->set_disabled_neurons(std::vector{ NeuronID{ neuron_id } });
         }
     }
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
-    background_calculator->update_input(step, update_status);
+    background_calculator->update_input(step);
 
     test_background_equality(background_calculator);
 
@@ -219,15 +225,21 @@ TEST_F(BackgroundActivityTest, testConstantBackgroundActivityUpdate) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     background_calculator->init(number_neurons);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
+    background_calculator->set_extra_infos(extra_info);
+
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
+            extra_info->set_disabled_neurons(std::vector{ NeuronID{ neuron_id } });
         }
     }
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
-    background_calculator->update_input(step, update_status);
+    background_calculator->update_input(step);
 
     test_background_equality(background_calculator);
 
@@ -250,15 +262,21 @@ TEST_F(BackgroundActivityTest, testNormalBackgroundActivityUpdate) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     background_calculator->init(number_neurons);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
+    background_calculator->set_extra_infos(extra_info);
+
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
+            extra_info->set_disabled_neurons(std::vector{ NeuronID{ neuron_id } });
         }
     }
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
-    background_calculator->update_input(step, update_status);
+    background_calculator->update_input(step);
 
     test_background_equality(background_calculator);
 
@@ -294,15 +312,21 @@ TEST_F(BackgroundActivityTest, testFastNormalBackgroundActivityUpdate) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     background_calculator->init(number_neurons);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
+    background_calculator->set_extra_infos(extra_info);
+
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
+            extra_info->set_disabled_neurons(std::vector{ NeuronID{ neuron_id } });
         }
     }
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
-    background_calculator->update_input(step, update_status);
+    background_calculator->update_input(step);
 
     test_background_equality(background_calculator);
 

@@ -110,7 +110,7 @@ public:
      */
     void set_extra_infos(std::shared_ptr<NeuronsExtraInfo> new_extra_info) {
         const auto is_filled = new_extra_info.operator bool();
-        RelearnException::check(is_filled, "NeuronModel::set_extra_infos: new_extra_info is empty");
+        RelearnException::check(is_filled, "SynapticElements::set_extra_infos: new_extra_info is empty");
         extra_infos = std::move(new_extra_info);
     }
 

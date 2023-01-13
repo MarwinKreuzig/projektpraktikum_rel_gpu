@@ -36,7 +36,7 @@ public:
     }
 
 protected:
-    void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, std::span<const FiredStatus> fired, std::span<const UpdateStatus> disable_flags) override;
+    void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, std::span<const FiredStatus> fired) override;
 };
 
 /**
@@ -86,7 +86,7 @@ public:
     static constexpr double max_scaling{ 100.0 };
 
 protected:
-    void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, std::span<const FiredStatus> fired, std::span<const UpdateStatus> disable_flags) override;
+    void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, std::span<const FiredStatus> fired) override;
 
 private:
     double scale_factor{ default_scaling };
@@ -136,7 +136,7 @@ public:
     static constexpr double max_scaling{ 100.0 };
 
 protected:
-    void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, std::span<const FiredStatus> fired, std::span<const UpdateStatus> disable_flags) override;
+    void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, std::span<const FiredStatus> fired) override;
 
 private:
     double scale_factor{ default_scaling };
