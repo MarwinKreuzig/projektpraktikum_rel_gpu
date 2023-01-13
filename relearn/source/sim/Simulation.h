@@ -65,6 +65,14 @@ public:
     void register_neuron_monitor(const NeuronID& neuron_id);
 
     /**
+     * @brief Enables the area monitor for all areas. Must be called before initialize()
+     * @param enable If the area monitor shall be enabled
+     */
+    void enable_area_monitor(bool enable) {
+        area_monitor_enabled = enable;
+    }
+
+    /**
      * @brief Sets the acceptance criterion (theta) for the barnes hut algorithm
      * @param value The acceptance criterion (theta) in [0.0, BarnesHut::max_theta]
      * @exception Throws a RelearnException if value is not from [0.0, BarnesHut::max_theta]
@@ -370,6 +378,8 @@ private:
     Interval interval_histogram_log{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::histogram_log_step };
 
     double percentage_initially_fired{ 0.0 };
+
+    bool area_monitor_enabled {false};
 
     double accept_criterion{ 0.0 };
 

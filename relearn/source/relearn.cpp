@@ -267,6 +267,8 @@ int main(int argc, char** argv) {
     RelearnTypes::step_type network_log_step = Config::network_log_step;
     auto* const opt_network_log_step = app.add_option("--network-log-step", network_log_step, "Steps between saving the network graph");
 
+    auto* flag_area_monitor = app.add_flag("--enable-area-monitor", "Enables the area monitor");
+
     RelearnTypes::step_type monitor_steps{ Config::neuron_monitor_log_step };
     auto* opt_monitor_steps = app.add_option("--monitor-steps", monitor_steps, "Every time the neuron state is captured");
 
@@ -847,6 +849,7 @@ int main(int argc, char** argv) {
     sim.set_log_synaptic_input_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), synaptic_input_log_step });
     sim.set_log_network_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), network_log_step });
     sim.set_update_neuron_monitor_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), monitor_steps });
+    sim.enable_area_monitor(static_cast<bool>(*flag_area_monitor));
     sim.set_update_area_monitor_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), monitor_ensemble_steps });
 
     NeuronMonitor::log_frequency = monitor_steps;

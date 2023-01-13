@@ -208,14 +208,17 @@ void Simulation::initialize() {
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 
-    for (size_t area_id = 0; area_id < local_area_translator->get_number_of_areas(); area_id++) {
-        const auto& area_name = local_area_translator->get_area_name_for_area_id(area_id);
-        std::filesystem::path dir = LogFiles::get_output_path() / "area_monitors";
-        if (!std::filesystem::exists(dir)) {
-            std::filesystem::create_directories(dir);
+    if(area_monitor_enabled) {
+        for (size_t area_id = 0; area_id < local_area_translator->get_number_of_areas(); area_id++) {
+            const auto &area_name = local_area_translator->get_area_name_for_area_id(area_id);
+            const std::filesystem::path dir = LogFiles::get_output_path() / "area_monitors";
+            if (!std::filesystem::exists(dir)) {
+                std::filesystem::create_directories(dir);
+            }
+            auto path = dir / (MPIWrapper::get_my_rank_str() + "_area_" + std::to_string(area_id) + ".csv");
+            area_monitors->insert(
+                    std::make_pair(area_id, AreaMonitor(this, area_id, area_name, my_rank.get_rank(), path)));
         }
-        auto path = dir / (MPIWrapper::get_my_rank_str() + "_area_" + std::to_string(area_id) + ".csv");
-        area_monitors->insert(std::make_pair(area_id, AreaMonitor(this, area_id, area_name, my_rank.get_rank(), path)));
     }
 
     auto synapse_loader = neuron_to_subdomain_assignment->get_synapse_loader();
