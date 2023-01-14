@@ -29,7 +29,7 @@ enum class NeuronModelEnum {
     FitzHughNagumo
 };
 
-constexpr inline std::string stringify(const NeuronModelEnum& neuron_model_enum) {
+inline std::string stringify(const NeuronModelEnum& neuron_model_enum) {
     if (neuron_model_enum == NeuronModelEnum::Poisson) {
         return "Poisson";
     }

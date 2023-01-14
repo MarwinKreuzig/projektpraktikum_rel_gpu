@@ -53,7 +53,7 @@ constexpr inline bool is_fast_multipole_method(const AlgorithmEnum algorithm_enu
     return algorithm_enum == AlgorithmEnum::FastMultipoleMethods;
 }
 
-constexpr inline std::string stringify(const AlgorithmEnum& algorithm_enum) {
+inline std::string stringify(const AlgorithmEnum& algorithm_enum) {
     if (algorithm_enum == AlgorithmEnum::Naive) {
         return "Naive";
     }
