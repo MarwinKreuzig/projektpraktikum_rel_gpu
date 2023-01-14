@@ -125,10 +125,6 @@ public:
         , mean_input(mean)
         , stddev_input(stddev) {
         RelearnException::check(stddev > 0.0, "NormalBackgroundActivityCalculator::NormalBackgroundActivityCalculator: stddev was: {}", stddev);
-
-        for (auto i = 0; i < values.size(); i++) {
-            values[i] = RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
-        }
     }
 
     virtual ~NormalBackgroundActivityCalculator() = default;
@@ -145,7 +141,7 @@ public:
 
         Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
         for (number_neurons_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
-            const auto input = disable_flags[neuron_id] == UpdateStatus::Disabled ? 0.0 : values[RandomHolder::get_random_uniform_integer(RandomHolderKey::BackgroundActivity, 0U, static_cast<uint>(values.size() - 1))];
+            const auto input = disable_flags[neuron_id] == UpdateStatus::Disabled ? 0.0 : RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
             set_background_activity(neuron_id, input);
         }
         Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
@@ -174,8 +170,8 @@ public:
 private:
     double mean_input{ default_background_activity_mean };
     double stddev_input{ default_background_activity_stddev };
-    std::array<double, 10000> values;
 };
+
 
 /**
  * This class provides a normally distributed input, i.e., according to some N(expected, standard deviation).
