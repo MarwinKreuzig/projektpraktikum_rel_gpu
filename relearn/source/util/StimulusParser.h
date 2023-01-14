@@ -28,7 +28,6 @@
 #include <utility>
 #include <vector>
 
-#include "iostream"
 class StimulusParser {
 public:
     using step_type = RelearnTypes::step_type;

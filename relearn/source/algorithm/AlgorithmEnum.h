@@ -53,7 +53,7 @@ constexpr inline bool is_fast_multipole_method(const AlgorithmEnum algorithm_enu
     return algorithm_enum == AlgorithmEnum::FastMultipoleMethods;
 }
 
-inline std::string string(const AlgorithmEnum& algorithm_enum) {
+constexpr inline std::string stringify(const AlgorithmEnum& algorithm_enum) {
     if (algorithm_enum == AlgorithmEnum::Naive) {
         return "Naive";
     }
@@ -83,7 +83,7 @@ inline std::string string(const AlgorithmEnum& algorithm_enum) {
  * @return The argument out, now altered with the algorithm
  */
 inline std::ostream& operator<<(std::ostream& out, const AlgorithmEnum& algorithm_enum) {
-    return out << string(algorithm_enum);
+    return out << stringify(algorithm_enum);
 }
 
 template <>

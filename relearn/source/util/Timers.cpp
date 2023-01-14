@@ -136,11 +136,11 @@ void Timers::print(const std::unique_ptr<Essentials>& essentials) {
     print_timer("      Delete synapses                          : ", TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
     print_timer("        Commit #synaptic elements              : ", TimerRegion::COMMIT_NUM_SYNAPTIC_ELEMENTS);
     print_timer("        Find synapses to delete                : ", TimerRegion::FIND_SYNAPSES_TO_DELETE);
-    print_timer("        Exchange deletions (w/ all to all)       : ", TimerRegion::DELETE_SYNAPSES_ALL_TO_ALL);
+    print_timer("        Exchange deletions (w/ all to all)     : ", TimerRegion::DELETE_SYNAPSES_ALL_TO_ALL);
     print_timer("        Process deletion requests              : ", TimerRegion::PROCESS_DELETE_REQUESTS);
     print_timer("      Update leaf nodes                        : ", TimerRegion::UPDATE_LEAF_NODES);
     print_timer("      Update local trees                       : ", TimerRegion::UPDATE_LOCAL_TREES);
-    print_timer("      Exchange branch nodes (w/ All-gather)     : ", TimerRegion::EXCHANGE_BRANCH_NODES);
+    print_timer("      Exchange branch nodes (w/ All-gather)    : ", TimerRegion::EXCHANGE_BRANCH_NODES);
     print_timer("      Insert branch nodes into global tree     : ", TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
     print_timer("      Update global tree                       : ", TimerRegion::UPDATE_GLOBAL_TREE);
     print_timer("      Find target neurons (w/ RMA)             : ", TimerRegion::FIND_TARGET_NEURONS);

@@ -28,7 +28,8 @@ enum class NeuronModelEnum {
     AEIF,
     FitzHughNagumo
 };
-inline std::string string(const NeuronModelEnum& neuron_model_enum) {
+
+constexpr inline std::string stringify(const NeuronModelEnum& neuron_model_enum) {
     if (neuron_model_enum == NeuronModelEnum::Poisson) {
         return "Poisson";
     }
@@ -47,6 +48,7 @@ inline std::string string(const NeuronModelEnum& neuron_model_enum) {
 
     return "";
 }
+
 /**
  * @brief Pretty-prints the algorithm to the chosen stream
  * @param out The stream to which to print the algorithm
@@ -54,8 +56,9 @@ inline std::string string(const NeuronModelEnum& neuron_model_enum) {
  * @return The argument out, now altered with the algorithm
  */
 inline std::ostream& operator<<(std::ostream& out, const NeuronModelEnum& neuron_model_enum) {
-    return out << string(neuron_model_enum);
+    return out << stringify(neuron_model_enum);
 }
+
 template <>
 struct fmt::formatter<NeuronModelEnum> : ostream_formatter { };
 

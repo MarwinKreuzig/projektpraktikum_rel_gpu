@@ -652,8 +652,8 @@ int main(int argc, char** argv) {
         essentials->insert("Background-Stddev", background_activity_stddev);
 
         essentials->insert("Log-path", log_path.string());
-        essentials->insert("Algorithm", string(chosen_algorithm));
-        essentials->insert("Neuron-model", string(chosen_neuron_model));
+        essentials->insert("Algorithm", stringify(chosen_algorithm));
+        essentials->insert("Neuron-model", stringify(chosen_neuron_model));
         essentials->insert("First-plasticity-step", first_plasticity_step);
         essentials->insert("Last-plasticity-step", last_plasticity_step);
 
