@@ -12,6 +12,7 @@
 
 #include "RandomAdapter.h"
 
+#include "neurons/NeuronsExtraInfo.h"
 #include "neurons/enums/ElementType.h"
 #include "neurons/enums/FiredStatus.h"
 #include "neurons/enums/SignalType.h"
@@ -70,5 +71,17 @@ public:
         RandomAdapter::shuffle(status.begin(), status.end(), mt);
 
         return status;
+    }
+
+    static void disable_neurons(size_t number_neurons, std::shared_ptr<NeuronsExtraInfo> extra_infos, std::mt19937& mt) {
+        const auto number_disabled = RandomAdapter::get_random_integer<size_t>(0, number_neurons, mt);
+        disable_neurons(number_neurons, number_disabled, std::move(extra_infos), mt);
+    }
+
+    static void disable_neurons(size_t number_neurons, size_t number_disabled, std::shared_ptr<NeuronsExtraInfo> extra_infos, std::mt19937& mt) {
+        std::vector<NeuronID> neuron_ids = NeuronID::range(number_neurons);
+        RandomAdapter::shuffle(neuron_ids.begin(), neuron_ids.end(), mt);
+
+        extra_infos->set_disabled_neurons(std::span<NeuronID>{ neuron_ids.data(), number_disabled });
     }
 };

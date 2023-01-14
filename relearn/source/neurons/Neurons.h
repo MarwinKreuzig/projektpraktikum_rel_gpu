@@ -144,21 +144,14 @@ public:
      * @throws RelearnException When a static neuron is loaded with a plastic connection
      */
     void set_static_neurons(const std::span<const NeuronID> static_neurons) {
-        for (const auto& neuronId : static_neurons) {
-            disable_flags[neuronId.get_neuron_id()] = UpdateStatus::Static;
-        }
+        extra_info->set_static_neurons(static_neurons);
 
-        for (NeuronID neuron_id : NeuronID::range(0, number_neurons)) {
-            const auto neuron_id_id = neuron_id.get_neuron_id();
+        for (const auto neuron_id : static_neurons) {
             NetworkGraph::DistantEdges edges_out = network_graph_plastic->get_all_out_edges(neuron_id);
-            if (!edges_out.empty()) {
-                RelearnException::check(disable_flags[neuron_id_id] != UpdateStatus::Static, "Plastic connection from a static neuron is forbidden. {} (static)  -> ?", neuron_id_id);
-            }
+            RelearnException::check(edges_out.empty(), "Plastic connection from a static neuron is forbidden. {} (static)  -> ?", neuron_id);
 
             NetworkGraph::DistantEdges edges_in = network_graph_plastic->get_all_in_edges(neuron_id);
-            if (!edges_in.empty()) {
-                RelearnException::check(disable_flags[neuron_id_id] != UpdateStatus::Static, "Plastic connection from a static neuron is forbidden. ? -> {} (static)", neuron_id_id);
-            }
+            RelearnException::check(edges_in.empty(), "Plastic connection from a static neuron is forbidden. ? -> {} (static)", neuron_id);
         }
     }
 
@@ -434,10 +427,10 @@ public:
     static void check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, std::span<const SignalType> signal_types, const MPIRank my_rank);
 
 private:
-    [[nodiscard]] StatisticalMeasures global_statistics(std::span<const double> local_values, MPIRank root, std::span<const UpdateStatus> disable_flags) const;
+    [[nodiscard]] StatisticalMeasures global_statistics(std::span<const double> local_values, MPIRank root) const;
 
     template <typename T>
-    [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::span<const T> local_values, const MPIRank root, const std::span<const UpdateStatus> disable_flags) const {
+    [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::span<const T> local_values, const MPIRank root) const {
         std::vector<double> converted_values{};
         converted_values.reserve(local_values.size());
 
@@ -445,7 +438,7 @@ private:
             converted_values.emplace_back(static_cast<double>(value));
         }
 
-        return global_statistics(converted_values, root, disable_flags);
+        return global_statistics(converted_values, root);
     }
 
     [[nodiscard]] std::pair<uint64_t, uint64_t> delete_synapses();
@@ -476,8 +469,6 @@ private:
     std::shared_ptr<Axons> axons{};
     std::shared_ptr<DendritesExcitatory> dendrites_exc{};
     std::shared_ptr<DendritesInhibitory> dendrites_inh{};
-
-    std::vector<UpdateStatus> disable_flags{};
 
     std::shared_ptr<NeuronsExtraInfo> extra_info{ std::make_shared<NeuronsExtraInfo>() };
 };

@@ -52,8 +52,6 @@ void Neurons::init(const number_neurons_type number_neurons) {
         dendrites_inh->set_signal_type(id, SignalType::Inhibitory);
     }
 
-    disable_flags.resize(number_neurons, UpdateStatus::Enabled);
-
     calcium_calculator->init(number_neurons);
 
     neuron_model->set_extra_infos(extra_info);
@@ -61,6 +59,8 @@ void Neurons::init(const number_neurons_type number_neurons) {
     axons->set_extra_infos(extra_info);
     dendrites_exc->set_extra_infos(extra_info);
     dendrites_inh->set_extra_infos(extra_info);
+
+    calcium_calculator->set_extra_infos(extra_info);
 }
 
 void Neurons::init_synaptic_elements() {
@@ -229,8 +229,6 @@ void Neurons::create_neurons(const number_neurons_type creation_count) {
     dendrites_exc->create_neurons(creation_count);
     dendrites_inh->create_neurons(creation_count);
 
-    disable_flags.resize(new_size, UpdateStatus::Enabled);
-
     for (const auto& neuron_id : NeuronID::range(current_size, new_size)) {
         dendrites_exc->set_signal_type(neuron_id, SignalType::Excitatory);
         dendrites_inh->set_signal_type(neuron_id, SignalType::Inhibitory);
@@ -248,7 +246,7 @@ void Neurons::update_electrical_activity(const step_type step) {
     neuron_model->update_electrical_activity(step, *network_graph_static, *network_graph_plastic);
 
     const auto& fired = neuron_model->get_fired();
-    calcium_calculator->update_calcium(step, disable_flags, fired);
+    calcium_calculator->update_calcium(step, fired);
 }
 
 void Neurons::update_number_synaptic_elements_delta() {
@@ -260,7 +258,8 @@ void Neurons::update_number_synaptic_elements_delta() {
     dendrites_inh->update_number_elements_delta(calcium, target_calcium);
 }
 
-StatisticalMeasures Neurons::global_statistics(const std::span<const double> local_values, const MPIRank root, const std::span<const UpdateStatus> disable_flags) const {
+StatisticalMeasures Neurons::global_statistics(const std::span<const double> local_values, const MPIRank root) const {
+    const auto disable_flags = extra_info->get_disable_flags();
     const auto [d_my_min, d_my_max, d_my_acc, d_num_values] = Util::min_max_acc(local_values, disable_flags);
     const double my_avg = d_my_acc / static_cast<double>(d_num_values);
 
@@ -344,7 +343,7 @@ CommunicationMap<SynapseDeletionRequest> Neurons::delete_synapses_find_synapses(
     for (const auto& neuron_id : NeuronID::range(number_neurons)) {
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
-        if (disable_flags[local_neuron_id] == UpdateStatus::Disabled) {
+        if (!extra_info->does_update_plasticity(neuron_id)) {
             continue;
         }
 
@@ -573,37 +572,37 @@ void Neurons::debug_check_counts() {
 StatisticalMeasures Neurons::get_statistics(const NeuronAttribute attribute) const {
     switch (attribute) {
     case NeuronAttribute::Calcium:
-        return global_statistics(calcium_calculator->get_calcium(), MPIRank::root_rank(), disable_flags);
+        return global_statistics(calcium_calculator->get_calcium(), MPIRank::root_rank());
 
     case NeuronAttribute::X:
-        return global_statistics(neuron_model->get_x(), MPIRank::root_rank(), disable_flags);
+        return global_statistics(neuron_model->get_x(), MPIRank::root_rank());
 
     case NeuronAttribute::Fired:
-        return global_statistics_integral(neuron_model->get_fired(), MPIRank::root_rank(), disable_flags);
+        return global_statistics_integral(neuron_model->get_fired(), MPIRank::root_rank());
 
     case NeuronAttribute::SynapticInput:
-        return global_statistics(neuron_model->get_synaptic_input(), MPIRank::root_rank(), disable_flags);
+        return global_statistics(neuron_model->get_synaptic_input(), MPIRank::root_rank());
 
     case NeuronAttribute::BackgroundActivity:
-        return global_statistics(neuron_model->get_background_activity(), MPIRank::root_rank(), disable_flags);
+        return global_statistics(neuron_model->get_background_activity(), MPIRank::root_rank());
 
     case NeuronAttribute::Axons:
-        return global_statistics(axons->get_grown_elements(), MPIRank::root_rank(), disable_flags);
+        return global_statistics(axons->get_grown_elements(), MPIRank::root_rank());
 
     case NeuronAttribute::AxonsConnected:
-        return global_statistics_integral(axons->get_connected_elements(), MPIRank::root_rank(), disable_flags);
+        return global_statistics_integral(axons->get_connected_elements(), MPIRank::root_rank());
 
     case NeuronAttribute::DendritesExcitatory:
-        return global_statistics(dendrites_exc->get_grown_elements(), MPIRank::root_rank(), disable_flags);
+        return global_statistics(dendrites_exc->get_grown_elements(), MPIRank::root_rank());
 
     case NeuronAttribute::DendritesExcitatoryConnected:
-        return global_statistics_integral(dendrites_exc->get_connected_elements(), MPIRank::root_rank(), disable_flags);
+        return global_statistics_integral(dendrites_exc->get_connected_elements(), MPIRank::root_rank());
 
     case NeuronAttribute::DendritesInhibitory:
-        return global_statistics(dendrites_inh->get_grown_elements(), MPIRank::root_rank(), disable_flags);
+        return global_statistics(dendrites_inh->get_grown_elements(), MPIRank::root_rank());
 
     case NeuronAttribute::DendritesInhibitoryConnected:
-        return global_statistics_integral(dendrites_inh->get_connected_elements(), MPIRank::root_rank(), disable_flags);
+        return global_statistics_integral(dendrites_inh->get_connected_elements(), MPIRank::root_rank());
     }
 
     RelearnException::fail("Neurons::get_statistics: Got an unsupported attribute: {}", static_cast<int>(attribute));
@@ -872,7 +871,7 @@ void Neurons::print_neurons_overview_to_log_file_on_rank_0(const step_type step)
 
 void Neurons::print_calcium_statistics_to_essentials(const std::unique_ptr<Essentials>& essentials) {
     const auto& calcium = calcium_calculator->get_calcium();
-    const StatisticalMeasures& calcium_statistics = global_statistics(calcium, MPIRank::root_rank(), disable_flags);
+    const StatisticalMeasures& calcium_statistics = global_statistics(calcium, MPIRank::root_rank());
 
     if (MPIRank::root_rank() != MPIWrapper::get_my_rank()) {
         // All ranks must compute the statistics, but only one should print them

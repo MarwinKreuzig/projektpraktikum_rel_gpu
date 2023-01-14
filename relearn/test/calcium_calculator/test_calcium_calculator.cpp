@@ -14,6 +14,7 @@
 #include "tagged_id/tagged_id_adapter.h"
 
 #include "neurons/CalciumCalculator.h"
+#include "neurons/NeuronsExtraInfo.h"
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorConstructorNone) {
     const auto decay_amount = RandomAdapter::get_random_double(-10000.0, 10000.0, mt);
@@ -683,6 +684,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateException) {
     CalciumCalculator cc2(TargetCalciumDecay::Relative, decay_amount_relative, decay_step);
     CalciumCalculator cc3(TargetCalciumDecay::Absolute, decay_amount_absolute, decay_step);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+
     const auto beta = beta_distr(mt);
     const auto tau_C = tau_C_distr(mt);
     const auto h = h_distr(mt);
@@ -692,44 +695,49 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateException) {
     cc1.set_h(h);
     cc1.set_initial_calcium_calculator(initiator);
     cc1.set_target_calcium_calculator(calculator);
+    cc1.set_extra_infos(extra_info);
 
     cc2.set_beta(beta);
     cc2.set_tau_C(tau_C);
     cc2.set_h(h);
     cc2.set_initial_calcium_calculator(initiator);
     cc2.set_target_calcium_calculator(calculator);
+    cc2.set_extra_infos(extra_info);
 
     cc3.set_beta(beta);
     cc3.set_tau_C(tau_C);
     cc3.set_h(h);
     cc3.set_initial_calcium_calculator(initiator);
     cc3.set_target_calcium_calculator(calculator);
+    cc3.set_extra_infos(extra_info);
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    ASSERT_THROW(cc1.update_calcium(step, std::span<const UpdateStatus>{}, std::span<const FiredStatus>{ { FiredStatus::Fired } }), RelearnException);
-    ASSERT_THROW(cc1.update_calcium(step, std::span<const UpdateStatus>{ { UpdateStatus::Disabled } }, {}), RelearnException);
-    ASSERT_THROW(cc2.update_calcium(step, {}, std::span<const FiredStatus>{ { FiredStatus::Fired } }), RelearnException);
-    ASSERT_THROW(cc2.update_calcium(step, std::span<const UpdateStatus>{ { UpdateStatus::Disabled } }, {}), RelearnException);
-    ASSERT_THROW(cc3.update_calcium(step, {}, std::span<const FiredStatus>{ { FiredStatus::Fired } }), RelearnException);
-    ASSERT_THROW(cc3.update_calcium(step, std::span<const UpdateStatus>{ { UpdateStatus::Disabled } }, {}), RelearnException);
-
-    ASSERT_NO_THROW(cc1.init(number_neurons));
-    ASSERT_NO_THROW(cc2.init(number_neurons));
-    ASSERT_NO_THROW(cc3.init(number_neurons));
+    ASSERT_THROW(cc1.update_calcium(step, std::span<const FiredStatus>{ { FiredStatus::Fired } }), RelearnException);
+    ASSERT_THROW(cc2.update_calcium(step, std::span<const FiredStatus>{ { FiredStatus::Fired } }), RelearnException);
+    ASSERT_THROW(cc3.update_calcium(step, std::span<const FiredStatus>{ { FiredStatus::Fired } }), RelearnException);
 
     const auto fired_size = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto update_size = TaggedIdAdapter::get_random_number_neurons(mt);
 
     std::vector<FiredStatus> fired_status(fired_size);
-    std::vector<UpdateStatus> update_status(update_size == fired_size ? update_size + 1 : update_size);
 
-    ASSERT_THROW(cc1.update_calcium(0, update_status, fired_status), RelearnException);
-    ASSERT_THROW(cc1.update_calcium(step, update_status, fired_status), RelearnException);
-    ASSERT_THROW(cc2.update_calcium(0, update_status, fired_status), RelearnException);
-    ASSERT_THROW(cc2.update_calcium(step, update_status, fired_status), RelearnException);
-    ASSERT_THROW(cc3.update_calcium(0, update_status, fired_status), RelearnException);
-    ASSERT_THROW(cc3.update_calcium(step, update_status, fired_status), RelearnException);
+    extra_info->init(update_size == fired_size ? update_size + 1 : update_size);
+
+    ASSERT_THROW(cc1.update_calcium(step, {}), RelearnException);
+    ASSERT_THROW(cc2.update_calcium(step, {}), RelearnException);
+    ASSERT_THROW(cc3.update_calcium(step, {}), RelearnException);
+
+    ASSERT_NO_THROW(cc1.init(number_neurons));
+    ASSERT_NO_THROW(cc2.init(number_neurons));
+    ASSERT_NO_THROW(cc3.init(number_neurons));
+
+    ASSERT_THROW(cc1.update_calcium(0, fired_status), RelearnException);
+    ASSERT_THROW(cc1.update_calcium(step, fired_status), RelearnException);
+    ASSERT_THROW(cc2.update_calcium(0, fired_status), RelearnException);
+    ASSERT_THROW(cc2.update_calcium(step, fired_status), RelearnException);
+    ASSERT_THROW(cc3.update_calcium(0, fired_status), RelearnException);
+    ASSERT_THROW(cc3.update_calcium(step, fired_status), RelearnException);
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
@@ -753,22 +761,27 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
     const auto tau_C = tau_C_distr(mt);
     const auto h = h_distr(mt);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
+    extra_info->set_disabled_neurons(NeuronID::range(number_neurons));
+    
     cc.set_beta(beta);
     cc.set_tau_C(tau_C);
     cc.set_h(h);
     cc.set_initial_calcium_calculator(initiator);
     cc.set_target_calcium_calculator(calculator);
+    cc.set_extra_infos(extra_info);
 
     ASSERT_NO_THROW(cc.init(number_neurons));
 
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
     std::vector<FiredStatus> fired_status2(number_neurons, FiredStatus::Fired);
-    std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Disabled);
 
     const auto previous_calcium = vectorify_span(cc.get_calcium());
     const auto previous_target = vectorify_span(cc.get_target_calcium());
 
-    ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status));
+    ASSERT_NO_THROW(cc.update_calcium(0, fired_status));
 
     const auto now_calcium = cc.get_calcium();
     const auto now_target = cc.get_target_calcium();
@@ -780,7 +793,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status));
+    ASSERT_NO_THROW(cc.update_calcium(step, fired_status));
 
     const auto now_calcium_2 = cc.get_calcium();
     const auto now_target_2 = cc.get_target_calcium();
@@ -793,14 +806,14 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
     const auto now_calcium_3 = cc.get_calcium();
     const auto now_target_3 = cc.get_target_calcium();
 
-    ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status2));
+    ASSERT_NO_THROW(cc.update_calcium(0, fired_status2));
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         ASSERT_EQ(previous_calcium[neuron_id], now_calcium_3[neuron_id]);
         ASSERT_EQ(previous_target[neuron_id], now_target_3[neuron_id]);
     }
 
-    ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status2));
+    ASSERT_NO_THROW(cc.update_calcium(step, fired_status2));
 
     const auto now_calcium_4 = cc.get_calcium();
     const auto now_target_4 = cc.get_target_calcium();
@@ -832,21 +845,26 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneStep0) {
     const auto tau_C = tau_C_distr(mt);
     const auto h = h_distr(mt);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
     cc.set_beta(beta);
     cc.set_tau_C(tau_C);
     cc.set_h(h);
     cc.set_initial_calcium_calculator(initiator);
     cc.set_target_calcium_calculator(calculator);
+    cc.set_extra_infos(extra_info);
 
     ASSERT_NO_THROW(cc.init(number_neurons));
 
     const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
-    const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
+    NeuronTypesAdapter::disable_neurons(number_neurons, extra_info, mt);
+    const auto update_status = extra_info->get_disable_flags();
 
     const auto previous_calcium = vectorify_span(cc.get_calcium());
     const auto previous_target = vectorify_span(cc.get_target_calcium());
 
-    ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status));
+    ASSERT_NO_THROW(cc.update_calcium(0, fired_status));
 
     const auto now_calcium = cc.get_calcium();
     const auto now_target = cc.get_target_calcium();
@@ -895,21 +913,26 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNone) {
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
     cc.set_beta(beta);
     cc.set_tau_C(tau_C);
     cc.set_h(h);
     cc.set_initial_calcium_calculator(initiator);
     cc.set_target_calcium_calculator(calculator);
+    cc.set_extra_infos(extra_info);
 
     ASSERT_NO_THROW(cc.init(number_neurons));
 
     const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
-    const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
+    NeuronTypesAdapter::disable_neurons(number_neurons, extra_info, mt);
+    const auto update_status = extra_info->get_disable_flags();
 
     const auto previous_calcium = vectorify_span(cc.get_calcium());
     const auto previous_target = vectorify_span(cc.get_target_calcium());
 
-    ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status));
+    ASSERT_NO_THROW(cc.update_calcium(step, fired_status));
 
     const auto now_calcium = cc.get_calcium();
     const auto now_target = cc.get_target_calcium();
@@ -959,22 +982,27 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
     const auto tau_C = tau_C_distr(mt);
     const auto h = h_distr(mt);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
     cc.set_beta(beta);
     cc.set_tau_C(tau_C);
     cc.set_h(h);
     cc.set_initial_calcium_calculator(initiator);
     cc.set_target_calcium_calculator(calculator);
+    cc.set_extra_infos(extra_info);
 
     ASSERT_NO_THROW(cc.init(number_neurons));
 
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
     std::vector<FiredStatus> fired_status2(number_neurons, FiredStatus::Fired);
-    std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Disabled);
+    extra_info->set_disabled_neurons(NeuronID::range(number_neurons));
+    const auto update_status = extra_info->get_disable_flags();
 
     const auto previous_calcium = vectorify_span(cc.get_calcium());
     const auto previous_target = vectorify_span(cc.get_target_calcium());
 
-    ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status));
+    ASSERT_NO_THROW(cc.update_calcium(0, fired_status));
 
     const auto now_calcium = cc.get_calcium();
     const auto now_target = cc.get_target_calcium();
@@ -986,7 +1014,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status));
+    ASSERT_NO_THROW(cc.update_calcium(step, fired_status));
 
     const auto now_calcium_2 = cc.get_calcium();
     const auto now_target_2 = cc.get_target_calcium();
@@ -999,14 +1027,14 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
     const auto now_calcium_3 = cc.get_calcium();
     const auto now_target_3 = cc.get_target_calcium();
 
-    ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status2));
+    ASSERT_NO_THROW(cc.update_calcium(0, fired_status2));
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         ASSERT_EQ(previous_calcium[neuron_id], now_calcium_3[neuron_id]);
         ASSERT_EQ(previous_target[neuron_id], now_target_3[neuron_id]);
     }
 
-    ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status2));
+    ASSERT_NO_THROW(cc.update_calcium(step, fired_status2));
 
     const auto now_calcium_4 = cc.get_calcium();
     const auto now_target_4 = cc.get_target_calcium();
@@ -1041,21 +1069,26 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeStep0) {
     const auto tau_C = tau_C_distr(mt);
     const auto h = h_distr(mt);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
     cc.set_beta(beta);
     cc.set_tau_C(tau_C);
     cc.set_h(h);
     cc.set_initial_calcium_calculator(initiator);
     cc.set_target_calcium_calculator(calculator);
+    cc.set_extra_infos(extra_info);
 
     ASSERT_NO_THROW(cc.init(number_neurons));
 
     const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
-    const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
+    NeuronTypesAdapter::disable_neurons(number_neurons, extra_info, mt);
+    const auto update_status = extra_info->get_disable_flags();
 
     const auto previous_calcium = vectorify_span(cc.get_calcium());
     const auto previous_target = vectorify_span(cc.get_target_calcium());
 
-    ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status));
+    ASSERT_NO_THROW(cc.update_calcium(0, fired_status));
 
     const auto now_calcium = cc.get_calcium();
     const auto now_target = cc.get_target_calcium();
@@ -1108,21 +1141,26 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelative) {
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
     cc.set_beta(beta);
     cc.set_tau_C(tau_C);
     cc.set_h(h);
     cc.set_initial_calcium_calculator(initiator);
     cc.set_target_calcium_calculator(calculator);
+    cc.set_extra_infos(extra_info);
 
     ASSERT_NO_THROW(cc.init(number_neurons));
 
     const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
-    const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
+    NeuronTypesAdapter::disable_neurons(number_neurons, extra_info, mt);
+    const auto update_status = extra_info->get_disable_flags();
 
     const auto previous_calcium = vectorify_span(cc.get_calcium());
     const auto previous_target = vectorify_span(cc.get_target_calcium());
 
-    ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status));
+    ASSERT_NO_THROW(cc.update_calcium(step, fired_status));
 
     const auto now_calcium = cc.get_calcium();
     const auto now_target = cc.get_target_calcium();
@@ -1185,22 +1223,27 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
     const auto tau_C = tau_C_distr(mt);
     const auto h = h_distr(mt);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
     cc.set_beta(beta);
     cc.set_tau_C(tau_C);
     cc.set_h(h);
     cc.set_initial_calcium_calculator(initiator);
     cc.set_target_calcium_calculator(calculator);
+    cc.set_extra_infos(extra_info);
 
     ASSERT_NO_THROW(cc.init(number_neurons));
 
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
     std::vector<FiredStatus> fired_status2(number_neurons, FiredStatus::Fired);
-    std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Disabled);
+    extra_info->set_disabled_neurons(NeuronID::range(number_neurons));
+    const auto update_status = extra_info->get_disable_flags();
 
     const auto previous_calcium = vectorify_span(cc.get_calcium());
     const auto previous_target = vectorify_span(cc.get_target_calcium());
 
-    ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status));
+    ASSERT_NO_THROW(cc.update_calcium(0, fired_status));
 
     const auto now_calcium = cc.get_calcium();
     const auto now_target = cc.get_target_calcium();
@@ -1212,7 +1255,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
-    ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status));
+    ASSERT_NO_THROW(cc.update_calcium(step, fired_status));
 
     const auto now_calcium_2 = cc.get_calcium();
     const auto now_target_2 = cc.get_target_calcium();
@@ -1225,14 +1268,14 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
     const auto now_calcium_3 = cc.get_calcium();
     const auto now_target_3 = cc.get_target_calcium();
 
-    ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status2));
+    ASSERT_NO_THROW(cc.update_calcium(0, fired_status2));
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         ASSERT_EQ(previous_calcium[neuron_id], now_calcium_3[neuron_id]);
         ASSERT_EQ(previous_target[neuron_id], now_target_3[neuron_id]);
     }
 
-    ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status2));
+    ASSERT_NO_THROW(cc.update_calcium(step, fired_status2));
 
     const auto now_calcium_4 = cc.get_calcium();
     const auto now_target_4 = cc.get_target_calcium();
@@ -1268,21 +1311,26 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteStep0) {
     const auto tau_C = tau_C_distr(mt);
     const auto h = h_distr(mt);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
     cc.set_beta(beta);
     cc.set_tau_C(tau_C);
     cc.set_h(h);
     cc.set_initial_calcium_calculator(initiator);
     cc.set_target_calcium_calculator(calculator);
+    cc.set_extra_infos(extra_info);
 
     ASSERT_NO_THROW(cc.init(number_neurons));
 
     const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
-    const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
+    extra_info->set_disabled_neurons(NeuronID::range(number_neurons));
+    const auto update_status = extra_info->get_disable_flags();
 
     const auto previous_calcium = vectorify_span(cc.get_calcium());
     const auto previous_target = vectorify_span(cc.get_target_calcium());
 
-    ASSERT_NO_THROW(cc.update_calcium(0, update_status, fired_status));
+    ASSERT_NO_THROW(cc.update_calcium(0, fired_status));
 
     const auto now_calcium = cc.get_calcium();
     const auto now_target = cc.get_target_calcium();
@@ -1336,21 +1384,26 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsolute) {
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 10000000, mt);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
     cc.set_beta(beta);
     cc.set_tau_C(tau_C);
     cc.set_h(h);
     cc.set_initial_calcium_calculator(initiator);
     cc.set_target_calcium_calculator(calculator);
+    cc.set_extra_infos(extra_info);
 
     ASSERT_NO_THROW(cc.init(number_neurons));
 
     const auto& fired_status = NeuronTypesAdapter::get_fired_status(number_neurons, mt);
-    const auto& update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
+    extra_info->set_disabled_neurons(NeuronID::range(number_neurons));
+    const auto update_status = extra_info->get_disable_flags();
 
     const auto previous_calcium = vectorify_span(cc.get_calcium());
     const auto previous_target = vectorify_span(cc.get_target_calcium());
 
-    ASSERT_NO_THROW(cc.update_calcium(step, update_status, fired_status));
+    ASSERT_NO_THROW(cc.update_calcium(step, fired_status));
 
     const auto now_calcium = cc.get_calcium();
     const auto now_target = cc.get_target_calcium();

@@ -13,7 +13,6 @@
 #include "Types.h"
 #include "neurons/enums/FiredStatus.h"
 #include "neurons/enums/TargetCalciumDecay.h"
-#include "neurons/enums/UpdateStatus.h"
 #include "util/MPIRank.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
@@ -24,6 +23,7 @@
 #include <vector>
 
 class NeuronMonitor;
+class NeuronsExtraInfo;
 
 /**
  * This class focuses on calculating the inter-cellular calcium concentration of the neurons.
@@ -60,6 +60,17 @@ public:
             RelearnException::check(decay_amount >= 0 && decay_amount < 1.0, "CalciumCalculator::CalciumCalculator: The decay type is relative, but the amount was not from [0, 1)! {}", decay_amount);
             RelearnException::check(decay_step > 0, "CalciumCalculator::CalciumCalculator: The decay type is relative, but the step is 0!");
         }
+    }
+
+    /**
+     * @brief Sets the extra infos. These are used to determine which neuron updates its electrical activity
+     * @param new_extra_info The new extra infos, must not be empty
+     * @exception Throws a RelearnException if new_extra_info is empty
+     */
+    void set_extra_infos(std::shared_ptr<NeuronsExtraInfo> new_extra_info) {
+        const auto is_filled = new_extra_info.operator bool();
+        RelearnException::check(is_filled, "SynapticElements::set_extra_infos: new_extra_info is empty");
+        extra_infos = std::move(new_extra_info);
     }
 
     /**
@@ -194,11 +205,10 @@ public:
     /**
      * @brief Updates the calcium values for each neuron
      * @param step The current update step
-     * @param disable_flags Indicates if a neuron is to be updated
      * @param fired_status Indicates if a neuron fired
      * @exception Throws a RelearnException if the size of the vectors doesn't match the size of the stored vectors
      */
-    void update_calcium(step_type step, std::span<const UpdateStatus> disable_flags, std::span<const FiredStatus> fired_status);
+    void update_calcium(step_type step, std::span<const FiredStatus> fired_status);
 
     static constexpr double default_C_target{ 0.7 }; // In Sebastian's work: 0.5
 
@@ -215,15 +225,17 @@ public:
     static constexpr unsigned int max_h{ 1000 };
 
 private:
-    void update_current_calcium(std::span<const UpdateStatus> disable_flags, std::span<const FiredStatus> fired_status) noexcept;
+    void update_current_calcium(std::span<const FiredStatus> fired_status) noexcept;
 
-    void update_target_calcium(step_type step, std::span<const UpdateStatus> disable_flags) noexcept;
+    void update_target_calcium(step_type step) noexcept;
 
     std::function<double(MPIRank, NeuronID::value_type)> initial_calcium_initiator{};
     std::function<double(MPIRank, NeuronID::value_type)> target_calcium_calculator{};
 
     std::vector<double> calcium{};
     std::vector<double> target_calcium{};
+
+    std::shared_ptr<NeuronsExtraInfo> extra_infos{};
 
     double beta{ default_beta };
     double tau_C{ default_tau_C }; // Decay time of calcium
