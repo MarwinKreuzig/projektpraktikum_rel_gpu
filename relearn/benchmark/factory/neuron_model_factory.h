@@ -33,7 +33,7 @@ public:
     static std::unique_ptr<models::PoissonModel> construct_poisson_model(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator, 
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator) {
         return std::make_unique<models::PoissonModel>(h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
-            models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refrac_time);
+            models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refractory_period);
     }
 
     static std::unique_ptr<models::IzhikevichModel> construct_izhikevich_model(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,

@@ -33,7 +33,7 @@ public:
     /**
      * @brief Sets the shape parameter k, must be greater than 0.0
      * @param k The shape parameter, > 0.0
-     * @exception Throws a RelearnExeption if k <= 0.0
+     * @exception Throws a RelearnException if k <= 0.0
      */
     static void set_k(const double k) {
         RelearnException::check(k > 0.0, "In GammaDistributionKernel::set_k, k was not greater than 0.0");
@@ -52,7 +52,7 @@ public:
     /**
      * @brief Sets the scale parameter theta, must be greater than 0.0
      * @param theta The scaling parameter, > 0.0
-     * @exception Throws a RelearnExeption if theta <= 0.0
+     * @exception Throws a RelearnException if theta <= 0.0
      */
     static void set_theta(const double theta) {
         RelearnException::check(theta > 0.0, "In GammaDistributionKernel::set_theta, theta was not greater than 0.0");

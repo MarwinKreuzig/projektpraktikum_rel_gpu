@@ -64,9 +64,9 @@ void Neurons::init(const number_neurons_type number_neurons) {
 }
 
 void Neurons::init_synaptic_elements() {
-    const auto& axons_cnts = axons->get_grown_elements();
-    const auto& dendrites_inh_cnts = dendrites_inh->get_grown_elements();
-    const auto& dendrites_exc_cnts = dendrites_exc->get_grown_elements();
+    const auto& axons_counts = axons->get_grown_elements();
+    const auto& dendrites_inh_counts = dendrites_inh->get_grown_elements();
+    const auto& dendrites_exc_counts = dendrites_exc->get_grown_elements();
 
     for (const auto& id : NeuronID::range(number_neurons)) {
         const auto axon_connections = network_graph_plastic->get_number_out_edges(id);
@@ -83,9 +83,9 @@ void Neurons::init_synaptic_elements() {
 
         const auto local_id = id.get_neuron_id();
 
-        RelearnException::check(axons_cnts[local_id] >= axons->get_connected_elements()[local_id], "Error is with: %d", local_id);
-        RelearnException::check(dendrites_inh_cnts[local_id] >= dendrites_inh->get_connected_elements()[local_id], "Error is with: %d", local_id);
-        RelearnException::check(dendrites_exc_cnts[local_id] >= dendrites_exc->get_connected_elements()[local_id], "Error is with: %d", local_id);
+        RelearnException::check(axons_counts[local_id] >= axons->get_connected_elements()[local_id], "Error is with: %d", local_id);
+        RelearnException::check(dendrites_inh_counts[local_id] >= dendrites_inh->get_connected_elements()[local_id], "Error is with: %d", local_id);
+        RelearnException::check(dendrites_exc_counts[local_id] >= dendrites_exc->get_connected_elements()[local_id], "Error is with: %d", local_id);
     }
 
     check_signal_types(network_graph_plastic, axons->get_signal_types(), MPIWrapper::get_my_rank());
@@ -512,9 +512,9 @@ size_t Neurons::create_synapses() {
         = algorithm->update_connectivity(number_neurons);
 
     // Update the network graph all at once
-    Timers::start(TimerRegion::ADD_SYNAPSES_TO_NETWORKGRAPH);
+    Timers::start(TimerRegion::ADD_SYNAPSES_TO_NETWORK_GRAPH);
     network_graph_plastic->add_edges(local_synapses, distant_in_synapses, distant_out_synapses);
-    Timers::stop_and_add(TimerRegion::ADD_SYNAPSES_TO_NETWORKGRAPH);
+    Timers::stop_and_add(TimerRegion::ADD_SYNAPSES_TO_NETWORK_GRAPH);
 
     // The distant_out_synapses are counted on the ranks where they are in
     const auto num_synapses_created = local_synapses.size() + distant_in_synapses.size();
@@ -930,7 +930,7 @@ void Neurons::print() {
     std::stringstream ss{};
 
     // Heading
-    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "{2:<{1}}{3:<{0}}{4:<{0}}{5:<{0}}{6:<{0}}{7:<{0}}{8:<{0}}{9:<{0}}", cwidth, cwidth_left, "gid", "x", "AP", "refrac", "C", "A", "D_ex", "D_in");
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "{2:<{1}}{3:<{0}}{4:<{0}}{5:<{0}}{6:<{0}}{7:<{0}}{8:<{0}}{9:<{0}}", cwidth, cwidth_left, "gid", "x", "AP", "refractory_time", "C", "A", "D_ex", "D_in");
 
     // Values
     for (const auto& neuron_id : NeuronID::range(number_neurons)) {
@@ -946,13 +946,13 @@ void Neurons::print() {
 }
 
 void Neurons::print_info_for_algorithm() {
-    const auto& axons_cnts = axons->get_grown_elements();
-    const auto& dendrites_exc_cnts = dendrites_exc->get_grown_elements();
-    const auto& dendrites_inh_cnts = dendrites_inh->get_grown_elements();
+    const auto& axons_counts = axons->get_grown_elements();
+    const auto& dendrites_exc_counts = dendrites_exc->get_grown_elements();
+    const auto& dendrites_inh_counts = dendrites_inh->get_grown_elements();
 
-    const auto& axons_connected_cnts = axons->get_connected_elements();
-    const auto& dendrites_exc_connected_cnts = dendrites_exc->get_connected_elements();
-    const auto& dendrites_inh_connected_cnts = dendrites_inh->get_connected_elements();
+    const auto& axons_connected_counts = axons->get_connected_elements();
+    const auto& dendrites_exc_connected_counts = dendrites_exc->get_connected_elements();
+    const auto& dendrites_inh_connected_counts = dendrites_inh->get_connected_elements();
 
     // Column widths
     const int cwidth_small = 8;
@@ -978,13 +978,13 @@ void Neurons::print_info_for_algorithm() {
         my_string = "(" + std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + ")";
         ss << std::setw(cwidth_medium) << my_string;
 
-        my_string = std::to_string(axons_cnts[local_neuron_id]) + "|" + std::to_string(axons_connected_cnts[local_neuron_id]);
+        my_string = std::to_string(axons_counts[local_neuron_id]) + "|" + std::to_string(axons_connected_counts[local_neuron_id]);
         ss << std::setw(cwidth_big) << my_string;
 
-        my_string = std::to_string(dendrites_exc_cnts[local_neuron_id]) + "|" + std::to_string(dendrites_exc_connected_cnts[local_neuron_id]);
+        my_string = std::to_string(dendrites_exc_counts[local_neuron_id]) + "|" + std::to_string(dendrites_exc_connected_counts[local_neuron_id]);
         ss << std::setw(cwidth_big) << my_string;
 
-        my_string = std::to_string(dendrites_inh_cnts[local_neuron_id]) + "|" + std::to_string(dendrites_inh_connected_cnts[local_neuron_id]);
+        my_string = std::to_string(dendrites_inh_counts[local_neuron_id]) + "|" + std::to_string(dendrites_inh_connected_counts[local_neuron_id]);
         ss << std::setw(cwidth_big) << my_string;
 
         ss << '\n';
@@ -994,16 +994,16 @@ void Neurons::print_info_for_algorithm() {
 }
 
 void Neurons::print_local_network_histogram(const step_type current_step) {
-    const auto& out_histogram = axons->get_historgram();
-    const auto& in_inhibitory_histogram = dendrites_inh->get_historgram();
-    const auto& in_excitatory_histogram = dendrites_exc->get_historgram();
+    const auto& out_histogram = axons->get_histogram();
+    const auto& in_inhibitory_histogram = dendrites_inh->get_histogram();
+    const auto& in_excitatory_histogram = dendrites_exc->get_histogram();
 
     const auto print_histogram = [current_step](const std::map<std::pair<unsigned int, unsigned int>, uint64_t>& hist) -> std::string {
         std::stringstream ss{};
         ss << '#' << current_step;
-        for (const auto& [val, occurences] : hist) {
+        for (const auto& [val, occurrences] : hist) {
             const auto& [connected, grown] = val;
-            ss << ";(" << connected << ',' << grown << "):" << occurences;
+            ss << ";(" << connected << ',' << grown << "):" << occurrences;
         }
 
         return ss.str();

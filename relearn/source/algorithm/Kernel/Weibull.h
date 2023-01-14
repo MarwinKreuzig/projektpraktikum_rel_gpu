@@ -33,7 +33,7 @@ public:
     /**
      * @brief Sets the shape parameter k, must be greater than 0.0
      * @param k The shape parameter, > 0.0
-     * @exception Throws a RelearnExeption if k <= 0.0
+     * @exception Throws a RelearnException if k <= 0.0
      */
     static void set_k(const double k) {
         RelearnException::check(k > 0.0, "In WeibullDistributionKernel::set_k, k was not greater than 0.0");
@@ -51,7 +51,7 @@ public:
     /**
      * @brief Sets the scale parameter b, must be greater than 0.0
      * @param b The scaling parameter, > 0.0
-     * @exception Throws a RelearnExeption if b <= 0.0
+     * @exception Throws a RelearnException if b <= 0.0
      */
     static void set_b(const double b) {
         RelearnException::check(b > 0.0, "In WeibullDistributionKernel::set_b, b was not greater than 0.0");

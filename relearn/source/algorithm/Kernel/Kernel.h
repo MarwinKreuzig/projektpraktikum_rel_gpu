@@ -32,8 +32,8 @@
 #include <vector>
 
 /**
- * This enum reflects the different probabilty kernels, it must
- * be kept in sync with the classes to allow a seemless integration
+ * This enum reflects the different probability kernels, it must
+ * be kept in sync with the classes to allow a seamless integration
  */
 enum class KernelType {
     Gaussian,
@@ -60,7 +60,7 @@ inline std::ostream& operator<<(std::ostream& out, const KernelType& kernel_type
         return out << "Weibull";
     }
 
-    return out << "UNKOWN";
+    return out << "UNKNOWN";
 }
 
 template <>
@@ -129,7 +129,7 @@ public:
             return WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position.value(), number_elements);
         }
 
-        RelearnException::fail("Kernel::calculate_attractiveness_to_connect: {} is an unkown kernel type!", currently_used_kernel);
+        RelearnException::fail("Kernel::calculate_attractiveness_to_connect: {} is an unknown kernel type!", currently_used_kernel);
 
         return 0.0;
     }

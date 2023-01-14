@@ -700,7 +700,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsHistogram) {
     auto [synaptic_elements, golden_counts, golden_connected_counts, golden_signal_types]
         = SynapticElementsAdapter::create_random_synaptic_elements(number_neurons, element_type, 0.0, mt);
 
-    const auto& histogram = synaptic_elements.get_historgram();
+    const auto& histogram = synaptic_elements.get_histogram();
 
     std::vector<std::pair<unsigned int, unsigned int>> golden_histogram{};
 

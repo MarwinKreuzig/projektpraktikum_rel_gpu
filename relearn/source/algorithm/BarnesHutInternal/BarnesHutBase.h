@@ -60,7 +60,7 @@ public:
      * @param element_type The type of elements that are searched for
      * @param signal_type The signal type of the elements that are searched for
      * @param acceptance_criterion The acceptance criterion, must be > 0.0 and <= Constants::bh_max_theta
-     * @exception Throws a RelearnEception if a parameter did not meet the requirements or there was an algorithmic error
+     * @exception Throws a RelearnException if a parameter did not meet the requirements or there was an algorithmic error
      * @return The acceptance status for the node, i.e., if it must be discarded, can be accepted, or must be expanded.
      */
     [[nodiscard]] static AcceptanceStatus test_acceptance_criterion(const position_type& source_position, const OctreeNode<AdditionalCellAttributes>* target_node,
@@ -79,7 +79,7 @@ public:
             return AcceptanceStatus::Discard;
         }
 
-        // Always accept a leaf noce
+        // Always accept a leaf node
         if (const auto is_leaf = target_node->is_leaf(); is_leaf) {
             return AcceptanceStatus::Accept;
         }
@@ -114,7 +114,7 @@ public:
      * @param signal_type The signal type that the source searches
      * @param acceptance_criterion The acceptance criterion, must be > 0.0 and <= Constants::bh_max_theta
      * @param accept_early_far_node If true, then nodes that belong to another MPI rank and (don't) satisfy the acceptance criterion are still returned
-     * @return The vector of all nodes from qhich the source can choose
+     * @return The vector of all nodes from which the source can choose
      */
     [[nodiscard]] static std::vector<OctreeNode<AdditionalCellAttributes>*> get_nodes_to_consider(const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
         const ElementType element_type, const SignalType signal_type, const double acceptance_criterion, const bool accept_early_far_node = false) {

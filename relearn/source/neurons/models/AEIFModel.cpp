@@ -206,6 +206,6 @@ double AEIFModel::iter_x(const double x, const double w, const double input) con
     return (f(x) - w + input) / C;
 }
 
-double AEIFModel::iter_refrac(const double w, const double x) const noexcept {
+double AEIFModel::iter_refraction(const double w, const double x) const noexcept {
     return (a * (x - E_L) - w) / tau_w;
 }

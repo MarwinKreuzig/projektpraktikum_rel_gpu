@@ -68,7 +68,7 @@ enum class TimerRegion : unsigned int {
     CREATE_SYNAPSES_EXCHANGE_RESPONSES,
     CREATE_SYNAPSES_PROCESS_RESPONSES,
 
-    ADD_SYNAPSES_TO_NETWORKGRAPH,
+    ADD_SYNAPSES_TO_NETWORK_GRAPH,
 
     CAPTURE_MONITORS,
     CAPTURE_AREA_MONITORS,
@@ -158,7 +158,7 @@ public:
 
 private:
     /**
-     * @brief Returns the elapsed time for the respecive timer
+     * @brief Returns the elapsed time for the respective timer
      * @param timer The timer for which to return the elapsed time
      * @exception Throws a RelearnException if the timer casts to an index that is >= NUMBER_TIMERS
      * @return The elapsed time

@@ -104,7 +104,7 @@ public:
     /**
      * @brief Returns the OctreeNode at the specified offset
      * @param offset The offset at which the OctreeNode shall be returned
-     * @exception Throws a RelaernException if offset is larger or equal to the total number of objects or to the current filling
+     * @exception Throws a RelearnException if offset is larger or equal to the total number of objects or to the current filling
      * @return The OctreeNode with the specified offset
      */
     [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_node_from_offset(std::uint64_t offset) {

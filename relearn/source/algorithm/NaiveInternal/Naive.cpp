@@ -68,9 +68,8 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const number
     const auto size_hint = std::min(number_neurons_type(number_ranks), number_neurons);
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks, size_hint);
 
-    const auto& axons_cnts = axons->get_grown_elements();
-    const auto& axons_connected_cnts = axons->get_connected_elements();
-
+    const auto& axons_counts = axons->get_grown_elements();
+    const auto& axons_connected_counts = axons->get_connected_elements();
     // For my neurons
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] != UpdateStatus::Enabled) {
@@ -170,7 +169,7 @@ std::vector<OctreeNode<NaiveCell>*> Naive::get_nodes_for_interval(const position
             // Node is owned by this rank, so the pointers are good
             children = node->get_children();
         } else {
-            // Node owned by different rank, so we have do download the data to local nodes
+            // Node owned by different rank, so we have to download the data to local nodes
             children = NodeCache<NaiveCell>::download_children(node);
         }
 

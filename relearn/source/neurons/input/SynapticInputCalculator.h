@@ -65,8 +65,8 @@ public:
     using step_type = RelearnTypes::step_type;
 
     /**
-     * @brief Construcs a new instance of type SynapticInputCalculator with 0 neurons and the passed values for all parameters.
-     *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
+     * @brief Constructs a new instance of type SynapticInputCalculator with 0 neurons and the passed values for all parameters.
+     *      Does not check the parameters against the min and max values defined below in order to allow other values besides in the GUI
      * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
      */
     SynapticInputCalculator(const double synapse_conductance)

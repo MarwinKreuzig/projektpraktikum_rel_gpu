@@ -38,7 +38,7 @@ public:
 
     /**
      * @brief Constructs a new object with the given parameters
-     * @param decay_type The type of decay (abolute, relative, none)
+     * @param decay_type The type of decay (absolute, relative, none)
      * @param decay_amount The amount of decay
      * @param decay_step The steps when the decay occurs
      * @exception Throws a RelearnException if
@@ -200,10 +200,10 @@ public:
      */
     void update_calcium(step_type step, std::span<const UpdateStatus> disable_flags, std::span<const FiredStatus> fired_status);
 
-    static constexpr double default_C_target{ 0.7 }; // In Sebastians work: 0.5
+    static constexpr double default_C_target{ 0.7 }; // In Sebastian's work: 0.5
 
-    static constexpr double default_tau_C{ 10000 }; // In Sebastians work: 5000
-    static constexpr double default_beta{ 0.001 }; // In Sebastians work: 0.001
+    static constexpr double default_tau_C{ 10000 }; // In Sebastian's work: 5000
+    static constexpr double default_beta{ 0.001 }; // In Sebastian's work: 0.001
     static constexpr unsigned int default_h{ 10 };
 
     static constexpr double min_tau_C{ 0 };

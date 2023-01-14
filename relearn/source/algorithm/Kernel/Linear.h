@@ -30,9 +30,9 @@ public:
     static constexpr double default_cutoff = std::numeric_limits<double>::infinity();
 
     /**
-     * @brief Sets cut-off, must be greater than or egal to 0.0
+     * @brief Sets cut-off, must be greater than or equal to 0.0
      * @param cutoff_point The cut-off parameter, >= 0.0
-     * @exception Throws a RelearnExeption if cutoff_point < 0.0
+     * @exception Throws a RelearnException if cutoff_point < 0.0
      */
     static void set_cutoff(const double cutoff_point) {
         RelearnException::check(cutoff_point >= 0.0, "In LinearDistributionKernel::set_sigma, sigma was less than 0.0");

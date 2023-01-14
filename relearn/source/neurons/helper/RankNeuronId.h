@@ -44,7 +44,7 @@ public:
     }
 
     /**
-     * @brief Provides a lexiographical ordering of RankNeuronId
+     * @brief Provides a lexicographical ordering of RankNeuronId
      * @param first The first object
      * @param second The second object
      * @return A strong ordering on RankNeuronId
@@ -72,7 +72,7 @@ public:
     }
 
     /**
-     * @brief Prints the object's rank and id; inserts \n
+     * @brief Prints the object's rank and id; inserts
      * @param os The out-stream in which the object is printed
      * @return The argument os to allow chaining
      */

@@ -78,10 +78,10 @@ void SubdomainFromNeuronPerRank::fill_all_subdomains() {
 
         const auto& [min, max] = partition->get_subdomain_boundaries(i);
 
-        auto [nodes, placed_exitatory_neurons] = place_neurons_in_box(min, max, number_neurons_per_subdomain, currently_placed_neurons);
+        auto [nodes, placed_excitatory_neurons] = place_neurons_in_box(min, max, number_neurons_per_subdomain, currently_placed_neurons);
 
         currently_placed_neurons += number_neurons_per_subdomain;
-        currently_placed_excitatory_neurons += placed_exitatory_neurons;
+        currently_placed_excitatory_neurons += placed_excitatory_neurons;
 
         loaded_neurons.insert(loaded_neurons.end(), nodes.begin(), nodes.end());
     }

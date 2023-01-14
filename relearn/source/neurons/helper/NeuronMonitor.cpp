@@ -24,7 +24,7 @@ void NeuronMonitor::init_print_file() {
         std::filesystem::create_directories(path);
     }
 
-    const auto& file_path = path / (MPIWrapper::get_my_rank_str() + '_' + std::to_string(target_neuron_id.get_neuron_id()) + ".csv");
+    const auto& file_path = path / (MPIWrapper::get_my_rank_str() + '_' + std::to_string(target_neuron_id.get_neuron_id() + 1) + ".csv");
     std::ofstream outfile(file_path, std::ios_base::out | std::ios_base::trunc);
 
     constexpr auto description = "# Step;Fired;Fired Fraction;x;Secondary Variable;Calcium;Target Calcium;Synaptic Input;Background Activity;Grown Axons;Connected Axons;Grown Excitatory Dendrites;Connected Excitatory Dendrites;Grown Inhibitory Dendrites;Connected Inhibitory Dendrites\n";
@@ -33,7 +33,7 @@ void NeuronMonitor::init_print_file() {
     outfile.imbue(std::locale());
 
     outfile << "# Rank: " << MPIWrapper::get_my_rank_str() << "\n";
-    outfile << "# Neuron ID: " << target_neuron_id.get_neuron_id() << "\n";
+    outfile << "# Neuron ID: " << target_neuron_id.get_neuron_id() + 1 << "\n";
     outfile << "# Area name: " << neurons_to_monitor->get_local_area_translator()->get_area_name_for_neuron_id(target_neuron_id.get_neuron_id()) << "\n";
     outfile << "# Area id: " << neurons_to_monitor->get_local_area_translator()->get_area_id_for_neuron_id(target_neuron_id.get_neuron_id()) << "\n";
     outfile << description;
@@ -47,7 +47,7 @@ void NeuronMonitor::flush_current_contents() {
 
     constexpr auto filler = ";";
 
-    for (const auto& info : informations) {
+    for (const auto& info : information) {
         outfile << info.get_step() << filler;
         outfile << info.get_fired() << filler;
         outfile << info.get_fraction_fired() << filler;
@@ -65,5 +65,5 @@ void NeuronMonitor::flush_current_contents() {
         outfile << info.get_inhibitory_dendrites_connected() << '\n';
     }
 
-    informations.clear();
+    information.clear();
 }

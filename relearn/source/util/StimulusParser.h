@@ -25,18 +25,20 @@
 #include <sstream>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
-struct Stimulus {
-    Interval interval{};
-    double stimulus_intensity{};
-    std::unordered_set<NeuronID::value_type> matching_ids{};
-    std::unordered_set<RelearnTypes::area_name> matching_area_names;
-};
-
+#include "iostream"
 class StimulusParser {
 public:
     using step_type = RelearnTypes::step_type;
+
+    struct Stimulus {
+        Interval interval{};
+        double stimulus_intensity{};
+        std::unordered_set<NeuronID> matching_ids{};
+        std::unordered_set<RelearnTypes::area_name> matching_area_names;
+    };
 
     /**
      * @brief Parses one line into a stimulus. Ignores stimuli for other ranks than the current.
@@ -47,7 +49,7 @@ public:
      * @param my_rank The mpi rank of the current process
      * @return Returns an optional Stimulus which is empty if parsing failed
      */
-    [[nodiscard]] static std::optional<Stimulus> parse_line(const std::string& line, const int my_rank) {
+    [[nodiscard]] static std::optional<StimulusParser::Stimulus> parse_line(const std::string& line, const int my_rank) {
         std::stringstream ss{ line };
 
         std::string interval_description{};
@@ -69,7 +71,7 @@ public:
             return {};
         }
 
-        std::unordered_set<NeuronID::value_type> ids{};
+        std::unordered_set<NeuronID> ids{};
         ids.reserve(line.size());
         std::unordered_set<RelearnTypes::area_name> area_names{};
         area_names.reserve(line.size());
@@ -83,7 +85,7 @@ public:
                     continue;
                 }
                 const auto neuron_id = std::stoul(rank_neuron_id_vector[1]);
-                ids.insert({ neuron_id });
+                ids.insert({ NeuronID{ neuron_id } });
             } else {
                 RelearnException::check(!StringUtil::is_number(current_value), "StimulusParser::parseLine:: Illegal neuron id {} in stimulus files. Must have the format <rank>:<neuron_id> or be an area name", current_value);
                 // Neuron descriptor is an area name
@@ -91,13 +93,13 @@ public:
             }
         }
 
-        return { Stimulus{ parsed_interval.value(), intensity, ids, area_names } };
+        return { StimulusParser::Stimulus{ parsed_interval.value(), intensity, ids, area_names } };
     }
 
     /**
      * @brief Parses all lines as stimuli and discards those that fail or are for another mpi rank
      * @param lines The lines to parse
-     * @param my_rank The mpi rank of the current propcess
+     * @param my_rank The mpi rank of the current process
      * @return All successfully parsed stimuli
      */
     [[nodiscard]] static std::vector<Stimulus> parse_lines(const std::vector<std::string>& lines, const int my_rank) {
@@ -121,7 +123,7 @@ public:
      * @param local_area_translator Translates between the local area id on the current mpi rank and its area name
      * @return The check function. Empty if the stimuli intersect
      */
-    [[nodiscard]] static std::function<double(step_type, NeuronID::value_type)> generate_stimulus_function(std::vector<Stimulus> stimuli, const std::shared_ptr<LocalAreaTranslator> local_area_translator) {
+    [[nodiscard]] static RelearnTypes::stimuli_function_type generate_stimulus_function(std::vector<StimulusParser::Stimulus> stimuli) {
         std::vector<Interval> intervals{};
         intervals.reserve(stimuli.size());
 
@@ -134,20 +136,21 @@ public:
             return {};
         }
 
-        auto comparison = [](const Stimulus& first, const Stimulus& second) -> bool {
+        auto comparison = [](const StimulusParser::Stimulus& first, const StimulusParser::Stimulus& second) -> bool {
             return first.interval.begin < second.interval.begin;
         };
 
         std::ranges::sort(stimuli, comparison);
 
-        auto step_checker_function = [stimuli = std::move(stimuli), local_area_translator](step_type current_step, NeuronID::value_type neuron_id) noexcept -> double {
+        auto step_checker_function = [stimuli = std::move(stimuli)](step_type current_step) noexcept -> RelearnTypes::stimuli_list_type {
+            RelearnTypes::stimuli_list_type stimuli_vector;
             for (const auto& [interval, intensity, ids, areas] : stimuli) {
-                if (interval.hits_step(current_step) && (ids.contains(neuron_id) || areas.contains(local_area_translator->get_area_name_for_neuron_id(neuron_id)))) {
-                    return intensity;
+                if (interval.hits_step(current_step)) {
+                    stimuli_vector.emplace_back(std::make_pair(ids, intensity));
                 }
             }
 
-            return 0.0;
+            return stimuli_vector;
         };
 
         return step_checker_function;

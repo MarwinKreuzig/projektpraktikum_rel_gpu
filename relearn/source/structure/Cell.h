@@ -95,7 +95,7 @@ public:
 
     /**
      * @brief Calculates the octant for the position.
-     * @param position The position inside the current cell which's octant position should be found
+     * @param position The position inside the current cell whose octant position should be found
      * @exception Throws a RelearnException if the position is not within the current cell
      * @return A value from 0 to 7 that indicates which octant the position is
      *
@@ -313,7 +313,7 @@ public:
 
     /**
      * @brief Returns the position of the dendrite with the given signal type
-     * @param dendrite_type The type of dendrite which's position should be returned
+     * @param dendrite_type The type of dendrite whose position should be returned
      * @return The position of the associated dendrite, can be empty
      */
     [[nodiscard]] std::optional<position_type> get_dendrites_position_for(const SignalType dendrite_type) const {
@@ -449,7 +449,7 @@ public:
 
     /**
      * @brief Returns the position of the axons with the given signal type
-     * @param dendrite_type The type of axons which's position should be returned
+     * @param dendrite_type The type of axons whose position should be returned
      * @return The position of the associated axons, can be empty
      */
     [[nodiscard]] std::optional<position_type> get_axons_position_for(const SignalType axon_type) const {

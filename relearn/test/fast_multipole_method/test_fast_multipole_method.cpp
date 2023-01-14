@@ -747,8 +747,8 @@
 //     }
 // }
 //
-// TEST_F(FMMTest, test_multiIndex) {
-//     Multiindex m;
+//  TEST_F(FMMTest, test_multiIndex) {
+//      MultiIndex m;
 //
 //     EXPECT_EQ(m.get_number_of_indices(), Constants::p3);
 //

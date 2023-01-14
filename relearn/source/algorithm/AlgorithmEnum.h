@@ -53,6 +53,29 @@ constexpr inline bool is_fast_multipole_method(const AlgorithmEnum algorithm_enu
     return algorithm_enum == AlgorithmEnum::FastMultipoleMethods;
 }
 
+inline std::string string(const AlgorithmEnum& algorithm_enum) {
+    if (algorithm_enum == AlgorithmEnum::Naive) {
+        return "Naive";
+    }
+
+    if (algorithm_enum == AlgorithmEnum::BarnesHut) {
+        return "BarnesHut";
+    }
+
+    if (algorithm_enum == AlgorithmEnum::BarnesHutInverted) {
+        return "BarnesHutInverted";
+    }
+
+    if (algorithm_enum == AlgorithmEnum::BarnesHutLocationAware) {
+        return "BarnesHutLocationAware";
+    }
+
+    if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
+        return "FastMultipoleMethods";
+    }
+
+    return "";
+}
 /**
  * @brief Pretty-prints the algorithm to the chosen stream
  * @param out The stream to which to print the algorithm
@@ -60,25 +83,8 @@ constexpr inline bool is_fast_multipole_method(const AlgorithmEnum algorithm_enu
  * @return The argument out, now altered with the algorithm
  */
 inline std::ostream& operator<<(std::ostream& out, const AlgorithmEnum& algorithm_enum) {
-    if (algorithm_enum == AlgorithmEnum::Naive) {
-        return out << "Naive";
-    }
-
-    if (algorithm_enum == AlgorithmEnum::BarnesHut) {
-        return out << "BarnesHut";
-    }
-
-    if (algorithm_enum == AlgorithmEnum::BarnesHutInverted) {
-        return out << "BarnesHutInverted";
-    }
-
-    if (algorithm_enum == AlgorithmEnum::BarnesHutLocationAware) {
-        return out << "BarnesHutLocationAware";
-    }
-
-    if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
-        return out << "FastMultipoleMethods";
-    }
-
-    return out;
+    return out << string(algorithm_enum);
 }
+
+template <>
+struct fmt::formatter<AlgorithmEnum> : ostream_formatter { };

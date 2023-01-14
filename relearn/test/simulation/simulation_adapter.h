@@ -22,19 +22,19 @@
 
 class SimulationAdapter {
 public:
-    constexpr static inline double position_bounary = 10000.0;
+    constexpr static inline double position_boundary = 10000.0;
     constexpr static unsigned short small_refinement_level = 5;
     constexpr static unsigned short max_refinement_level = Constants::max_lvl_subdomains;
 
     static std::tuple<Vec3d, Vec3d> get_random_simulation_box_size(std::mt19937& mt) {
-        const auto rand_x_1 = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
-        const auto rand_x_2 = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
+        const auto rand_x_1 = RandomAdapter::get_random_double(-position_boundary, +position_boundary, mt);
+        const auto rand_x_2 = RandomAdapter::get_random_double(-position_boundary, +position_boundary, mt);
 
-        const auto rand_y_1 = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
-        const auto rand_y_2 = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
+        const auto rand_y_1 = RandomAdapter::get_random_double(-position_boundary, +position_boundary, mt);
+        const auto rand_y_2 = RandomAdapter::get_random_double(-position_boundary, +position_boundary, mt);
 
-        const auto rand_z_1 = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
-        const auto rand_z_2 = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
+        const auto rand_z_1 = RandomAdapter::get_random_double(-position_boundary, +position_boundary, mt);
+        const auto rand_z_2 = RandomAdapter::get_random_double(-position_boundary, +position_boundary, mt);
 
         return {
             { std::min(rand_x_1, rand_x_2), std::min(rand_y_1, rand_y_2), std::min(rand_z_1, rand_z_2) },
@@ -43,24 +43,24 @@ public:
     }
 
     static double get_random_position_element(std::mt19937& mt) {
-        const auto val = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
+        const auto val = RandomAdapter::get_random_double(-position_boundary, +position_boundary, mt);
         return val;
     }
 
     static Vec3d get_random_position(std::mt19937& mt) {
-        const auto x = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
-        const auto y = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
-        const auto z = RandomAdapter::get_random_double(-position_bounary, +position_bounary, mt);
+        const auto x = RandomAdapter::get_random_double(-position_boundary, +position_boundary, mt);
+        const auto y = RandomAdapter::get_random_double(-position_boundary, +position_boundary, mt);
+        const auto z = RandomAdapter::get_random_double(-position_boundary, +position_boundary, mt);
 
         return { x, y, z };
     }
 
     static Vec3d get_minimum_position() {
-        return { -position_bounary, -position_bounary, -position_bounary };
+        return { -position_boundary, -position_boundary, -position_boundary };
     }
 
     static Vec3d get_maximum_position() {
-        return { position_bounary, position_bounary, position_bounary };
+        return { position_boundary, position_boundary, position_boundary };
     }
 
     static Vec3d get_random_position_in_box(const Vec3d& min, const Vec3d& max, std::mt19937& mt) {

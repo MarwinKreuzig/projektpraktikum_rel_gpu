@@ -52,10 +52,10 @@ public:
      * @brief Loads all synapses that affect the local neurons, which are
      *      (1) local synapses (local neuron to local neuron)
      *      (2) in synapses (non-local neuron to local neuron)
-     *      (3) out synpases (local neuron to non-local neuron)
+     *      (3) out synapses (local neuron to non-local neuron)
      *      for both plastic and static synapses
      * @param essentials The essentials to print the metrics
-     * @return Two tuples of (local, in, out) synapes, the first one being static synapses, the second one being plastic synapses
+     * @return Two tuples of (local, in, out) synapses, the first one being static synapses, the second one being plastic synapses
      */
     synapses_pair_type load_synapses(const std::unique_ptr<Essentials>& essentials);
 

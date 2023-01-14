@@ -59,7 +59,7 @@ public:
      * @param target_neuron_identifier The identifier of the target node
      * @param target_neuron_type The type of the target node
      * @param signal_type The signal type
-     * @exception Throws a RelearnExpcetion if source_id is virtual or uninitialized
+     * @exception Throws a RelearnException if source_id is virtual or uninitialized
      */
     constexpr DistantNeuronRequest(const NeuronID& source_id, const RelearnTypes::position_type& source_position,
         const NeuronID::value_type target_neuron_identifier, const TargetNeuronType target_neuron_type, const SignalType signal_type)
@@ -155,7 +155,7 @@ public:
     /**
      * @brief Constructs a new response with the arguments
      * @param source The RankNeuronId of the source, must be an actual neuron id
-     * @param creation_response The response if a synapse was succesfully created
+     * @param creation_response The response if a synapse was successfully created
      * @exception Throws a RelearnException if source_id is virtual or not initialized
      */
     constexpr DistantNeuronResponse(const NeuronID& source_id, const SynapseCreationResponse& creation_response)

@@ -63,7 +63,7 @@ public:
     using step_type = RelearnTypes::step_type;
 
     /**
-     * @brief Construcs a new instance of type SynapticInputCalculator with 0 neurons.
+     * @brief Constructs a new instance of type SynapticInputCalculator with 0 neurons.
      */
     BackgroundActivityCalculator() = default;
 

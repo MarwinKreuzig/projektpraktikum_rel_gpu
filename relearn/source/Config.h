@@ -62,6 +62,8 @@ public:
     // By default: Update electrical activity every <electrical_activity_update_step> ms
     constexpr static std::uint32_t electrical_activity_update_step = 100; // NOLINT
 
+    // End the connectivity updates at <last_plasticity_update> ms
+    inline static std::uint32_t last_plasticity_update = -1; // NOLINT
     // By default: Update plasticity every <plasticity_update_step> ms
     constexpr static std::uint32_t plasticity_update_step = 100; // NOLINT
 
@@ -71,9 +73,13 @@ public:
     // By default: Print to cout every <console_update_step> ms
     constexpr static std::uint32_t console_update_step = 100; // NOLINT
 
+    // Capture individual neuron information ever <monitor_step> ms
+    inline static std::uint32_t monitor_step = 100; // NOLINT
     // By default: Capture individual neuron informations ever <neuron_monitor_log_step> ms
     constexpr static std::uint32_t neuron_monitor_log_step = 100; // NOLINT
 
+    // Capture ensemble information ever <monitor_area_step> ms
+    inline static std::uint32_t monitor_area_step = 100; // NOLINT
     // By default: Capture ensemble informations ever <area_monitor_log_step> ms
     constexpr static std::uint32_t area_monitor_log_step = 100; // NOLINT
 
@@ -91,6 +97,9 @@ public:
 
     // By default: Capture the syanptic input every <synaptic_input_log_step> ms
     constexpr static std::uint32_t synaptic_input_log_step = 10000; // NOLINT
+
+    // By default: Flush the area monitors every <flush_area_monitor_step> ms
+    constexpr static std::uint32_t flush_area_monitor_step = 100000; // NOLINT
 
     // By default: Flush the neuron monitors every <flush_monitor_step> ms
     constexpr static std::uint32_t flush_monitor_step = 30000; // NOLINT

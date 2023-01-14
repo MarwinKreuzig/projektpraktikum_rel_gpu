@@ -13,6 +13,7 @@
 #include "Types.h"
 
 #include <set>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -88,6 +89,16 @@ public:
     }
 
     /**
+     * Returns if the area name is known on this mpi rank
+     * @param area_name Name of the area
+     * @return True, if area name exists on this mpi rank
+     */
+    [[nodiscard]] bool knows_area_name(const RelearnTypes::area_name& area_name) const noexcept {
+        auto it = std::find(area_id_to_area_name.begin(), area_id_to_area_name.end(), area_name);
+        return it != area_id_to_area_name.end();
+    }
+
+    /**
      * Returns the number of neurons on this mpi rank (over all local areas)
      * @return Number of neurons on this mpi rank
      */
@@ -126,12 +137,12 @@ public:
      * @param my_area_ids Vector of area ids in which the neuron ids must lay
      * @return Vector of neuron ids within the specified area in my_area_ids
      */
-    [[nodiscard]] std::vector<NeuronID> get_neuron_ids_in_area(RelearnTypes::area_id my_area_id) const {
+    [[nodiscard]] std::unordered_set<NeuronID> get_neuron_ids_in_area(RelearnTypes::area_id my_area_id) const {
         RelearnException::check(my_area_id < area_id_to_area_name.size(), "LocalAreaTranslator::get_neuron_ids_in_area: Area id {} is too large", my_area_id);
-        std::vector<NeuronID> neurons_in_area{};
+        std::unordered_set<NeuronID> neurons_in_area{};
         for (const auto& neuron_id : NeuronID::range(0, neuron_id_to_area_id.size())) {
             if (my_area_id == neuron_id_to_area_id[neuron_id.get_neuron_id()]) {
-                neurons_in_area.emplace_back(neuron_id);
+                neurons_in_area.insert(neuron_id);
             }
         }
         return neurons_in_area;

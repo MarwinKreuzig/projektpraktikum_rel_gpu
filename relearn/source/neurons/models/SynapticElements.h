@@ -116,7 +116,7 @@ public:
 
     /**
      * @brief Initializes the object to contain number_neurons elements.
-     *      Creates initially free elements, uniformely and independently drawn from [initial_vacant_elements_lb, initial_vacant_elements_ub].
+     *      Creates initially free elements, uniformly and independently drawn from [initial_vacant_elements_lb, initial_vacant_elements_ub].
      *      Sets the number of connected elements to 0 for all neurons
      * @param number_neurons The number of that should be stored
      * @exception Throws a RelearnException if initial_vacant_elements_ub < initial_vacant_elements_lb
@@ -141,7 +141,7 @@ public:
 
     /**
      * @brief Creates additional creation_count elements.
-     *      For those, creates initially free elements, uniformely and independently drawn from [initial_vacant_elements_lb, initial_vacant_elements_ub].
+     *      For those, creates initially free elements, uniformly and independently drawn from [initial_vacant_elements_lb, initial_vacant_elements_ub].
      *      For those, sets the number of connected elements to 0 for all neurons.
      *      All previous elements are not changed.
      * @param number_neurons The number of that should be created
@@ -288,7 +288,7 @@ public:
 
         if (delta > 0) {
             const auto number_free_elements = get_free_elements(neuron_id);
-            RelearnException::check(number_free_elements >= static_cast<unsigned int>(delta), "SynapticElements::update_connected_elements: There are not enogh free elements {}: {} vs {}", neuron_id, delta, number_free_elements);
+            RelearnException::check(number_free_elements >= static_cast<unsigned int>(delta), "SynapticElements::update_connected_elements: There are not enough free elements {}: {} vs {}", neuron_id, delta, number_free_elements);
         }
 
         connected_elements[local_neuron_id] += delta;
@@ -446,17 +446,17 @@ public:
     void update_number_elements_delta(std::span<const double> calcium, std::span<const double> target_calcium);
 
     /**
-     * @brief Calculates and returns the historgram of the synaptic elements, i.e.,
+     * @brief Calculates and returns the histogram of the synaptic elements, i.e.,
      *      a mapping (x, y) -> z which indicates that there are z neurons
      *      that have x connected elements and y total elements (rounded down).
      * @exception Throws a RelearnException if the internal data structures are corrupted
      * @return The connection histogram
      */
-    [[nodiscard]] std::map<std::pair<unsigned int, unsigned int>, uint64_t> get_historgram() const {
-        RelearnException::check(size == grown_elements.size(), "SynapticElements::get_historgram: size did not match the number of grown elements");
-        RelearnException::check(size == deltas_since_last_update.size(), "SynapticElements::get_historgram: size did not match the number of deltas");
-        RelearnException::check(size == connected_elements.size(), "SynapticElements::get_historgram: size did not match the number of connected elements");
-        RelearnException::check(size == signal_types.size(), "SynapticElements::get_historgram: size did not match the number of signal types");
+    [[nodiscard]] std::map<std::pair<unsigned int, unsigned int>, uint64_t> get_histogram() const {
+        RelearnException::check(size == grown_elements.size(), "SynapticElements::get_histogram: size did not match the number of grown elements");
+        RelearnException::check(size == deltas_since_last_update.size(), "SynapticElements::get_histogram: size did not match the number of deltas");
+        RelearnException::check(size == connected_elements.size(), "SynapticElements::get_histogram: size did not match the number of connected elements");
+        RelearnException::check(size == signal_types.size(), "SynapticElements::get_histogram: size did not match the number of signal types");
 
         std::map<std::pair<unsigned int, unsigned int>, uint64_t> result{};
 
@@ -485,10 +485,10 @@ private:
     [[nodiscard]] unsigned int update_number_elements(NeuronID neuron_id);
 
 public:
-    static constexpr double default_eta_Axons{ 0.4 }; // In Sebastians work: 0.0
-    static constexpr double default_eta_Dendrites_exc{ 0.1 }; // In Sebastians work: 0.0
-    static constexpr double default_eta_Dendrites_inh{ 0.0 }; // In Sebastians work: 0.0
-    static constexpr double default_nu{ 1e-5 }; // In Sebastians work: 1e-5
+    static constexpr double default_eta_Axons{ 0.4 }; // In Sebastian's work: 0.0
+    static constexpr double default_eta_Dendrites_exc{ 0.1 }; // In Sebastian's work: 0.0
+    static constexpr double default_eta_Dendrites_inh{ 0.0 }; // In Sebastian's work: 0.0
+    static constexpr double default_nu{ 1e-5 }; // In Sebastian's work: 1e-5
     static constexpr double default_vacant_retract_ratio{ 0.0 };
     static constexpr double default_vacant_elements_initially_lower_bound{ 0.0 };
     static constexpr double default_vacant_elements_initially_upper_bound{ 0.0 };

@@ -20,8 +20,8 @@ class NetworkGraph;
 class LinearSynapticInputCalculator : public SynapticInputCalculator {
 public:
     /**
-     * @brief Construcs a new instance of type LinearSynapticInputCalculator with 0 neurons and the passed values for all parameters.
-     *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
+     * @brief Constructs a new instance of type LinearSynapticInputCalculator with 0 neurons and the passed values for all parameters.
+     *      Does not check the parameters against the min and max values defined below in order to allow other values besides in the GUI
      * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
      */
     LinearSynapticInputCalculator(const double synapse_conductance)
@@ -45,8 +45,8 @@ protected:
 class LogarithmicSynapticInputCalculator : public SynapticInputCalculator {
 public:
     /**
-     * @brief Construcs a new instance of type LogarithmicSynapticInputCalculator with 0 neurons and the passed values for all parameters.
-     *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
+     * @brief Constructs a new instance of type LogarithmicSynapticInputCalculator with 0 neurons and the passed values for all parameters.
+     *      Does not check the parameters against the min and max values defined below in order to allow other values besides in the GUI
      * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
      * @param scaling_factor The factor that scales the logarithmic input
      */
@@ -113,7 +113,7 @@ public:
     }
 
     /**
-     * @brief Returns the currently used scale factor for the hyperbolic tangent 
+     * @brief Returns the currently used scale factor for the hyperbolic tangent
      * @return The scale factor
      */
     [[nodiscard]] double get_scale_factor() const noexcept {

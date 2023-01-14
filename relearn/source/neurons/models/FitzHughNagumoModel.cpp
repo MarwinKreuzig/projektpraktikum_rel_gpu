@@ -163,7 +163,7 @@ double FitzHughNagumoModel::iter_x(const double x, const double w, const double 
     return x - x * x * x / 3 - w + input;
 }
 
-double FitzHughNagumoModel::iter_refrac(const double w, const double x) const noexcept {
+double FitzHughNagumoModel::iter_refraction(const double w, const double x) const noexcept {
     return phi * (x + a - b * w);
 }
 

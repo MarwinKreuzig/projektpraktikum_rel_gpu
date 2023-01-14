@@ -77,7 +77,7 @@ public:
         return area_names;
     }
 
-    static std::vector<RelearnTypes::area_name> get_neuron_id_vs_area_name(const std::vector<RelearnTypes::area_id>& neuron_id_vs_area_id, 
+    static std::vector<RelearnTypes::area_name> get_neuron_id_vs_area_name(const std::vector<RelearnTypes::area_id>& neuron_id_vs_area_id,
         const std::vector<RelearnTypes::area_name>& area_id_vs_area_name) {
         std::vector<RelearnTypes::area_name> neuron_id_vs_area_name{};
 
@@ -85,5 +85,22 @@ public:
             neuron_id_vs_area_name.emplace_back(area_id_vs_area_name[i]);
         }
         return neuron_id_vs_area_name;
+    }
+
+    static std::shared_ptr<LocalAreaTranslator> get_randomized_area_translator(std::mt19937& mt) {
+        const auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+        const auto num_areas = std::max(size_t{ 1 }, num_neurons / 10);
+        auto area_id_to_area_name = NeuronAssignmentAdapter::get_random_area_names(num_areas, mt);
+        auto neuron_id_to_area_id = NeuronAssignmentAdapter::get_random_area_ids(area_id_to_area_name.size(), num_neurons, mt);
+
+        return std::make_shared<LocalAreaTranslator>(area_id_to_area_name, neuron_id_to_area_id);
+    }
+
+    static std::string get_invalid_area_name(const std::vector<RelearnTypes::area_name>& area_id_to_area_name, std::mt19937& mt) {
+        RelearnTypes::area_name area_name = "";
+        do {
+            area_name = std::to_string(RandomAdapter::get_random_percentage<double>(mt));
+        } while (std::find(area_id_to_area_name.begin(), area_id_to_area_name.end(), area_name) != area_id_to_area_name.end());
+        return area_name;
     }
 };

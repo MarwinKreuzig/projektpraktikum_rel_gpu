@@ -26,7 +26,7 @@
 
 /**
  * @brief A Vec3 holds three different values of type T and allows computations via operators.
- * @tparam T The type that shall be stored inside this class. Is required to fullfill std::is_arithmetic_v<T>
+ * @tparam T The type that shall be stored inside this class. Is required to fulfill std::is_arithmetic_v<T>
  */
 template <typename T>
 class Vec3 {
@@ -309,7 +309,7 @@ public:
     }
 
     /**
-     * @brief Calculates the p-norm of the (absolute value of the) current obejct
+     * @brief Calculates the p-norm of the (absolute value of the) current object
      * @param p The exponent of the norm, must be >= 1.0
      * @exception Throws a RelearnException if p < 1.0
      * @return The calculated p-norm
@@ -327,7 +327,7 @@ public:
     }
 
     /**
-     * @brief Calcualtes the 1-norm of the vector (the sum of absolutes)
+     * @brief Calculates the 1-norm of the vector (the sum of absolutes)
      * @return The calculated 1-norm
      */
     [[nodiscard]] T calculate_1_norm() const noexcept {

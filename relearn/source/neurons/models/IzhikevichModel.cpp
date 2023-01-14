@@ -177,7 +177,7 @@ void IzhikevichModel::update_activity() {
 void IzhikevichModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {
     for (auto neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
         const auto id = NeuronID{ neuron_id };
-        u[neuron_id] = iter_refrac(b * c, c);
+        u[neuron_id] = iter_refraction(b * c, c);
         set_x(id, c);
     }
 }
@@ -186,7 +186,7 @@ double IzhikevichModel::iter_x(const double x, const double u, const double inpu
     return k1 * x * x + k2 * x + k3 - u + input;
 }
 
-double IzhikevichModel::iter_refrac(const double u, const double x) const noexcept {
+double IzhikevichModel::iter_refraction(const double u, const double x) const noexcept {
     return a * (b * x - u);
 }
 

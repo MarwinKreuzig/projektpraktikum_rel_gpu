@@ -20,10 +20,10 @@
 #include <vector>
 
 /**
- * An object of type NeuronsExtraInfo additional informations of neurons.
- * For a single neuron, these additional informations are: its x-, y-, and z- position and the name of the area the neuron is in.
+ * An object of type NeuronsExtraInfo additional information of neurons.
+ * For a single neuron, these additional information are: its x-, y-, and z- position and the name of the area the neuron is in.
  * It furthermore stores a map from the MPI rank to the (global) starting neuron id.
- * This is useful whenever one wants to print all neurons across multiple MPI ranks, while ommiting the MPI rank itself.
+ * This is useful whenever one wants to print all neurons across multiple MPI ranks, while omitting the MPI rank itself.
  */
 class NeuronsExtraInfo {
 public:
@@ -39,7 +39,7 @@ public:
     void init(const number_neurons_type number_neurons) {
         RelearnException::check(number_neurons > 0, "NeuronsExtraInfo::init: number_neurons must be larger than 0.");
         RelearnException::check(size == 0, "NeuronsExtraInfo::init: NeuronsExtraInfo initialized two times, its size is already {}", size);
-        
+
         size = number_neurons;
         update_status.resize(number_neurons, UpdateStatus::Enabled);
     }

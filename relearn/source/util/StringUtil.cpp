@@ -14,7 +14,7 @@
 #include <vector>
 
 /**
- * @brief Split a string basedd on a delimiter character in a list of substrings
+ * @brief Split a string based on a delimiter character in a list of substrings
  * @param string The string to split
  * @param delim Single char used as delimiter
  * @return Vector of substrings

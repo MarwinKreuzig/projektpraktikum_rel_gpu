@@ -71,7 +71,7 @@ public:
     /**
      * @brief Generates a random integer (uniformly distributed in [lower_inclusive, upper_inclusive]).
      *      Uses the RNG that is associated with the key.
-     * @param key The type which's RNG shall be used
+     * @param key The type whose RNG shall be used
      * @param lower_inclusive The lower inclusive bound for the random integer
      * @param upper_inclusive The upper inclusive bound for the random integer
      * @exception Throws a RelearnException if lower_inclusive > upper_inclusive
@@ -89,7 +89,7 @@ public:
     /**
      * @brief Generates a random double (normally distributed in with specified mean and standard deviation).
      *      Uses the RNG that is associated with the key.
-     * @param key The type which's RNG shall be used
+     * @param key The type whose RNG shall be used
      * @param mean The mean of the normal distribution
      * @param stddev The standard deviation of the normal distribution
      * @exception Throws a RelearnException if stddev <= 0.0
@@ -105,7 +105,7 @@ public:
     /**
      * @brief Generates a random double (uniformly distributed in [lower_inclusive, upper_exclusive)).
      *      Uses the RNG that is associated with the key.
-     * @param key The type which's RNG shall be used
+     * @param key The type whose RNG shall be used
      * @param lower_inclusive The lower inclusive bound for the random double
      * @param upper_exclusive The upper exclusive bound for the random double
      * @exception Throws a RelearnException if lower_inclusive >= upper_exclusive
@@ -122,7 +122,7 @@ public:
     /**
      * @brief Fills all values in [begin, end) with uniformly distributed doubles from [lower_inclusive, upper_exclusive).
      *      Uses the RNG that is associated with the key. There should be a natural number n st. begin + n = end.
-     * @param key The type which's RNG shall be used
+     * @param key The type whose RNG shall be used
      * @param begin The iterator that marks the inclusive begin
      * @param end the iterator that marks the exclusive end
      * @param lower_inclusive The lower inclusive bound for the random doubles
@@ -158,7 +158,7 @@ public:
     /**
      * @brief Seeds the random number generators associated with the key.
      *      The seed used is seed + omp_get_thread_num()
-     * @param key The type which's RNG shall be seeded
+     * @param key The type whose RNG shall be seeded
      * @param seed The base seed that should be used
      */
     static void seed(const RandomHolderKey key, const unsigned int seed) {

@@ -115,10 +115,10 @@ unsigned int SynapticElements::update_number_elements(const NeuronID neuron_id) 
     grown_elements[local_neuron_id] = retracted_new_count;
     deltas_since_last_update[local_neuron_id] = 0.0;
 
-    const auto deleted_cnts = current_connected_count - new_connected_count;
+    const auto deleted_counts = current_connected_count - new_connected_count;
 
-    RelearnException::check(deleted_cnts >= 0.0, "SynapticElements::update_number_elements:  deleted was negative");
-    const auto num_delete_connected = static_cast<unsigned int>(deleted_cnts);
+    RelearnException::check(deleted_counts >= 0.0, "SynapticElements::update_number_elements:  deleted was negative");
+    const auto num_delete_connected = static_cast<unsigned int>(deleted_counts);
 
     return num_delete_connected;
 }
