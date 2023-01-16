@@ -73,7 +73,7 @@ void CalciumCalculator::update_current_calcium(std::span<const FiredStatus> fire
 
     const auto disable_flags = extra_infos->get_disable_flags();
 
-#pragma omp parallel for default(none) shared(disable_flags, fired_status, scale)
+#pragma omp parallel for default(none) shared(disable_flags, fired_status, scale, tau_C_inverse)
     for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
