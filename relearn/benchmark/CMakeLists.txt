@@ -14,6 +14,7 @@ add_executable(
   main.cpp
   benchmark_background.cpp
   benchmark_calcium.cpp
+  benchmark_input_calculator.cpp
   benchmark_kernel.cpp
   benchmark_network_graph.cpp
   benchmark_neuron_model.cpp

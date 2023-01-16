@@ -120,7 +120,7 @@ static void BM_NetworkGraph_RemoveDistantOut(benchmark::State& state) {
     }
 }
 
-void CustomArgs(benchmark::internal::Benchmark* b) {
+void CustomArgsNetwork(benchmark::internal::Benchmark* b) {
     if constexpr (excessive_testing) {
         const auto neuron_sizes = { 1000,
             2000,
@@ -141,11 +141,11 @@ void CustomArgs(benchmark::internal::Benchmark* b) {
     }
 }
 
-// BENCHMARK(BM_NetworkGraph_InsertLocal)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(static_number_iterations);
-// BENCHMARK(BM_NetworkGraph_RemoveLocal)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(static_number_iterations);
+// BENCHMARK(BM_NetworkGraph_InsertLocal)->Unit(benchmark::kMillisecond)->Apply(CustomArgsNetwork)->Iterations(static_number_iterations);
+// BENCHMARK(BM_NetworkGraph_RemoveLocal)->Unit(benchmark::kMillisecond)->Apply(CustomArgsNetwork)->Iterations(static_number_iterations);
 
-// BENCHMARK(BM_NetworkGraph_InsertDistantIn)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(static_number_iterations);
-// BENCHMARK(BM_NetworkGraph_RemoveDistantIn)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(static_number_iterations);
+// BENCHMARK(BM_NetworkGraph_InsertDistantIn)->Unit(benchmark::kMillisecond)->Apply(CustomArgsNetwork)->Iterations(static_number_iterations);
+// BENCHMARK(BM_NetworkGraph_RemoveDistantIn)->Unit(benchmark::kMillisecond)->Apply(CustomArgsNetwork)->Iterations(static_number_iterations);
 
-// BENCHMARK(BM_NetworkGraph_InsertDistantOut)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(static_number_iterations);
-// BENCHMARK(BM_NetworkGraph_RemoveDistantOut)->Unit(benchmark::kMillisecond)->Apply(CustomArgs)->Iterations(static_number_iterations);
+// BENCHMARK(BM_NetworkGraph_InsertDistantOut)->Unit(benchmark::kMillisecond)->Apply(CustomArgsNetwork)->Iterations(static_number_iterations);
+// BENCHMARK(BM_NetworkGraph_RemoveDistantOut)->Unit(benchmark::kMillisecond)->Apply(CustomArgsNetwork)->Iterations(static_number_iterations);

@@ -201,11 +201,11 @@ static void BM_CalciumCalculator_Absolute_Decay_All_Fired(benchmark::State& stat
     }
 }
 
-BENCHMARK(BM_CalciumCalculator_No_Decay_No_Fired)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(static_number_iterations);
-BENCHMARK(BM_CalciumCalculator_No_Decay_All_Fired)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(static_number_iterations);
+// BENCHMARK(BM_CalciumCalculator_No_Decay_No_Fired)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(static_number_iterations);
+// BENCHMARK(BM_CalciumCalculator_No_Decay_All_Fired)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(static_number_iterations);
 
-BENCHMARK(BM_CalciumCalculator_Relative_Decay_No_Fired)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(static_number_iterations);
-BENCHMARK(BM_CalciumCalculator_Relative_Decay_All_Fired)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(static_number_iterations);
+// BENCHMARK(BM_CalciumCalculator_Relative_Decay_No_Fired)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(static_number_iterations);
+// BENCHMARK(BM_CalciumCalculator_Relative_Decay_All_Fired)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(static_number_iterations);
 
-BENCHMARK(BM_CalciumCalculator_Absolute_Decay_No_Fired)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(static_number_iterations);
-BENCHMARK(BM_CalciumCalculator_Absolute_Decay_All_Fired)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(static_number_iterations);
+// BENCHMARK(BM_CalciumCalculator_Absolute_Decay_No_Fired)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(static_number_iterations);
+// BENCHMARK(BM_CalciumCalculator_Absolute_Decay_All_Fired)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(static_number_iterations);
