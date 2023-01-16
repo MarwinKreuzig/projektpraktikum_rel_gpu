@@ -1,86 +1,18 @@
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
+
 #include "main.h"
 
 #include "mpi/MPIWrapper.h"
-#include "util/Random.h"
 
-LocalSynapses generate_local_synapses(uint64_t number_neurons, uint64_t number_synapses) {
-    std::vector<LocalSynapse> synapses{};
-    synapses.reserve(number_neurons * number_synapses);
-
-    mt19937 mt{};
-    uniform_int_distribution<uint64_t> uid(0, number_neurons - 1);
-
-    for (auto neuron_id = 0ULL; neuron_id < number_neurons; neuron_id++) {
-        for (auto synapse_id = 0ULL; synapse_id < number_synapses; synapse_id++) {
-            auto random_id = uid(mt);
-
-            const NeuronID source_id{ neuron_id };
-            const NeuronID target_id{ random_id };
-
-            const auto weight = 1;
-
-            synapses.emplace_back(target_id, source_id, weight);
-        }
-    }
-
-    return synapses;
-}
-
-DistantInSynapses generate_distant_in_synapses(uint64_t number_neurons, uint64_t number_synapses) {
-    std::vector<DistantInSynapse> synapses{};
-    synapses.reserve(number_neurons * number_synapses);
-
-    mt19937 mt{};
-    uniform_int_distribution<uint64_t> uid(0, number_neurons - 1);
-    uniform_int_distribution<int> uid_rank(1, 32);
-
-    for (auto neuron_id = 0ULL; neuron_id < number_neurons; neuron_id++) {
-        for (auto synapse_id = 0ULL; synapse_id < number_synapses; synapse_id++) {
-            auto random_id = uid(mt);
-            auto random_rank = uid_rank(mt);
-
-            const NeuronID source_id{ random_id };
-            const NeuronID target_id{ neuron_id };
-
-            const RankNeuronId rni{ MPIRank(random_rank), source_id };
-
-            const auto weight = 1;
-
-            synapses.emplace_back(target_id, rni, weight);
-        }
-    }
-
-    return synapses;
-}
-
-DistantOutSynapses generate_distant_out_synapses(uint64_t number_neurons, uint64_t number_synapses) {
-    std::vector<DistantOutSynapse> synapses{};
-    synapses.reserve(number_neurons * number_synapses);
-
-    mt19937 mt{};
-    uniform_int_distribution<uint64_t> uid(0, number_neurons - 1);
-    uniform_int_distribution<int> uid_rank(1, 32);
-
-    for (auto neuron_id = 0ULL; neuron_id < number_neurons; neuron_id++) {
-        for (auto synapse_id = 0ULL; synapse_id < number_synapses; synapse_id++) {
-            auto random_id = uid(mt);
-            auto random_rank = uid_rank(mt);
-
-            const NeuronID source_id{ neuron_id };
-            const NeuronID target_id{ random_id };
-
-            const RankNeuronId rni{ MPIRank(random_rank), target_id };
-
-            const auto weight = 1;
-
-            synapses.emplace_back(rni, source_id, weight);
-        }
-    }
-
-    return synapses;
-}
-
-  int main(int argc, char** argv) {
+int main(int argc, char** argv) {
     MPIWrapper::init(argc, argv);
 
     ::benchmark::Initialize(&argc, argv);

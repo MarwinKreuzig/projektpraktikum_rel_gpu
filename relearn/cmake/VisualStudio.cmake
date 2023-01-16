@@ -5,11 +5,12 @@ set(relearn_tests_additional_files "" CACHE INTERNAL "")
 if(WIN32)
 	list(APPEND relearn_benchmark_additional_files "main.h")
 	list(APPEND relearn_benchmark_additional_files "AdapterNeuronModel.h")
-	
+
 	list(APPEND relearn_benchmark_additional_files "factory/background_factory.h")
 	list(APPEND relearn_benchmark_additional_files "factory/calcium_factory.h")
 	list(APPEND relearn_benchmark_additional_files "factory/extra_info_factory.h")
 	list(APPEND relearn_benchmark_additional_files "factory/input_factory.h")
+	list(APPEND relearn_benchmark_additional_files "factory/network_graph_factory.h")
 	list(APPEND relearn_benchmark_additional_files "factory/neuron_model_factory.h")
 
 	# root files

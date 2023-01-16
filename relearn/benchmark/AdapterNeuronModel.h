@@ -11,7 +11,9 @@
  */
 
 #include "neurons/enums/FiredStatus.h"
+#include "util/TaggedID.h"
 
+#include <span>
 #include <vector>
 
 template <typename NeuronModelType>
