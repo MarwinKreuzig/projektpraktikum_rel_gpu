@@ -68,11 +68,12 @@ void CalciumCalculator::update_calcium(const step_type step, const std::span<con
 }
 
 void CalciumCalculator::update_current_calcium(std::span<const FiredStatus> fired_status) noexcept {
-    const auto val = (1.0 / static_cast<double>(h));
+    const auto scale = (1.0 / static_cast<double>(h));
+    const auto tau_C_inverse = -1.0 / tau_C;
 
     const auto disable_flags = extra_infos->get_disable_flags();
 
-#pragma omp parallel for default(none) shared(disable_flags, fired_status, val)
+#pragma omp parallel for default(none) shared(disable_flags, fired_status, scale)
     for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
@@ -80,13 +81,11 @@ void CalciumCalculator::update_current_calcium(std::span<const FiredStatus> fire
 
         // Update calcium depending on the firing
         auto c = calcium[neuron_id];
-        if (fired_status[neuron_id] == FiredStatus::Inactive) {
-            for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-                c += val * (-c / tau_C);
-            }
-        } else {
-            for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-                c += val * (-c / tau_C + beta);
+        for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
+            if (fired_status[neuron_id] == FiredStatus::Inactive) {
+                c += scale * (c * tau_C_inverse);
+            } else {
+                c += scale * (c * tau_C_inverse + beta);
             }
         }
         calcium[neuron_id] = c;
