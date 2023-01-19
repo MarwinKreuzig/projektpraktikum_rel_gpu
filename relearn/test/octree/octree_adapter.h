@@ -22,6 +22,7 @@
 
 #include "gtest/gtest.h"
 
+#include <cmath>
 #include <random>
 #include <stack>
 #include <tuple>
@@ -340,5 +341,62 @@ public:
         root.update();
 
         return root;
+    }
+
+    template <typename AdditionalCellAttributes>
+    static void mark_node_as_distributed(OctreeNode<AdditionalCellAttributes>* root, std::uint16_t level_of_branch_nodes) {
+
+        std::vector<OctreeNode<AdditionalCellAttributes>*> branch_nodes{};
+        branch_nodes.reserve(static_cast<size_t>(std::pow(8.0, level_of_branch_nodes) * 2));
+
+        std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
+        stack.push(root);
+
+        while (!stack.empty()) {
+            auto* current = stack.top();
+            stack.pop();
+
+            if (current->get_level() == level_of_branch_nodes) {
+                branch_nodes.emplace_back(current);
+                continue;
+            }
+
+            if (current->get_level() < level_of_branch_nodes) {
+                for (auto* child : current->get_children()) {
+                    if (child != nullptr) {
+                        stack.push(child);
+                    }
+                }
+                continue;
+            }
+        }
+
+        auto current_rank= 0;
+        for (auto* node : branch_nodes) {
+            node->set_rank(MPIRank(current_rank));
+            current_rank++;
+        }
+
+        auto mark_children
+            = [](OctreeNode<AdditionalCellAttributes>* node) {
+            auto rank = node->get_mpi_rank();
+
+            std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
+            stack.push(node);
+
+            while (!stack.empty()) {
+                auto* current = stack.top();
+                stack.pop();
+
+                current->set_rank(rank);
+
+                for (auto* child : current->get_children()) {
+                    if (child != nullptr) {
+                        stack.push(child);
+                    }
+                }
+            } };
+
+        std::for_each(branch_nodes.begin(), branch_nodes.end(), mark_children);
     }
 };

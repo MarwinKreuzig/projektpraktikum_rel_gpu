@@ -203,6 +203,8 @@ if(WIN32)
 	list(APPEND relearn_tests_additional_files "neurons/neuron_types_adapter.h")
 	list(APPEND relearn_tests_additional_files "neurons/test_neurons.h")
 	
+	list(APPEND relearn_tests_additional_files "node_cache/node_cache_adapter.h")
+	
 	list(APPEND relearn_tests_additional_files "octree/octree_adapter.h")
 	list(APPEND relearn_tests_additional_files "octree/test_octree.h")
 

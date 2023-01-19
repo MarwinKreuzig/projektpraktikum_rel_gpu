@@ -55,6 +55,7 @@ target_sources(
 		  
 		  barnes_hut/test_barnes_hut.cpp
 		  barnes_hut/test_barnes_hut_base.cpp
+		  barnes_hut/test_barnes_hut_base_inverted.cpp
 		  barnes_hut/test_barnes_hut_inverted.cpp
 		  
 		  calcium_calculator/test_calcium_calculator.cpp
