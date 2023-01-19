@@ -54,6 +54,8 @@ target_sources(
 		  background_activity/test_background_activity.cpp
 		  
 		  barnes_hut/test_barnes_hut.cpp
+		  barnes_hut/test_barnes_hut_base.cpp
+		  barnes_hut/test_barnes_hut_inverted.cpp
 		  
 		  calcium_calculator/test_calcium_calculator.cpp
 		  

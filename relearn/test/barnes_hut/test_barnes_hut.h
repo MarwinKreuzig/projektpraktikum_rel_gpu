@@ -15,6 +15,20 @@
 #include "algorithm/BarnesHutInternal/BarnesHutCell.h"
 #include "algorithm/BarnesHutInternal/BarnesHutInvertedCell.h"
 
+class BarnesHutBaseTest : public RelearnTestWithAdditionalCellAttribute {
+protected:
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<BarnesHutCell>();
+    }
+};
+
+class BarnesHutInvertedBaseTest : public RelearnTestWithAdditionalCellAttribute {
+protected:
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<BarnesHutInvertedCell>();
+    }
+};
+
 class BarnesHutTest : public RelearnTestWithAdditionalCellAttribute {
 protected:
     static void SetUpTestSuite() {

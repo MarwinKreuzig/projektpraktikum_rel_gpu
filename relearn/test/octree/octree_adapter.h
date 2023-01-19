@@ -12,6 +12,8 @@
 
 #include "RandomAdapter.h"
 
+#include "simulation/simulation_adapter.h"
+
 #include "structure/Cell.h"
 #include "structure/Octree.h"
 #include "structure/OctreeNode.h"
@@ -128,5 +130,215 @@ public:
         }
 
         return extract_neurons<AdditionalCellAttributes>(root);
+    }
+
+    template <typename AdditionalCellAttributes>
+    static OctreeNode<AdditionalCellAttributes> get_standard_tree(const RelearnTypes::number_neurons_type number_neurons, const Vec3d& min_pos, const Vec3d& max_pos, std::mt19937& mt) {
+        auto get_synaptic_count = [&mt]() { return RandomAdapter::get_random_integer<OctreeNode<AdditionalCellAttributes>::counter_type>(0, 1, mt); };
+
+        OctreeNode<AdditionalCellAttributes> root{};
+        root.set_level(0);
+        root.set_rank(MPIRank::root_rank());
+
+        root.set_cell_neuron_id(NeuronID(0));
+        root.set_cell_size(min_pos, max_pos);
+        root.set_cell_neuron_position(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
+
+        if constexpr (OctreeNode<AdditionalCellAttributes>::has_excitatory_dendrite) {
+            root.set_cell_number_excitatory_dendrites(get_synaptic_count());
+        }
+
+        if constexpr (OctreeNode<AdditionalCellAttributes>::has_inhibitory_dendrite) {
+            root.set_cell_number_inhibitory_dendrites(get_synaptic_count());
+        }
+
+        if constexpr (OctreeNode<AdditionalCellAttributes>::has_excitatory_axon) {
+            root.set_cell_number_excitatory_axons(get_synaptic_count());
+        }
+
+        if constexpr (OctreeNode<AdditionalCellAttributes>::has_inhibitory_axon) {
+            root.set_cell_number_inhibitory_axons(get_synaptic_count());
+        }
+
+        for (const auto id : NeuronID::range(1, number_neurons)) {
+            auto* ptr = root.insert(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt), id);
+
+            if constexpr (OctreeNode<AdditionalCellAttributes>::has_excitatory_dendrite) {
+                ptr->set_cell_number_excitatory_dendrites(get_synaptic_count());
+            }
+
+            if constexpr (OctreeNode<AdditionalCellAttributes>::has_inhibitory_dendrite) {
+                ptr->set_cell_number_inhibitory_dendrites(get_synaptic_count());
+            }
+
+            if constexpr (OctreeNode<AdditionalCellAttributes>::has_excitatory_axon) {
+                ptr->set_cell_number_excitatory_axons(get_synaptic_count());
+            }
+
+            if constexpr (OctreeNode<AdditionalCellAttributes>::has_inhibitory_axon) {
+                ptr->set_cell_number_inhibitory_axons(get_synaptic_count());
+            }
+        }
+
+        root.update();
+
+        return root;
+    }
+
+    template <typename AdditionalCellAttributes>
+    static OctreeNode<AdditionalCellAttributes> get_tree_no_axons(const RelearnTypes::number_neurons_type number_neurons, const Vec3d& min_pos, const Vec3d& max_pos, std::mt19937& mt) {
+        auto get_synaptic_count = [&mt]() { return RandomAdapter::get_random_integer<OctreeNode<AdditionalCellAttributes>::counter_type>(0, 1, mt); };
+
+        OctreeNode<AdditionalCellAttributes> root{};
+        root.set_level(0);
+        root.set_rank(MPIRank::root_rank());
+
+        root.set_cell_neuron_id(NeuronID(0));
+        root.set_cell_size(min_pos, max_pos);
+        root.set_cell_neuron_position(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
+
+        if constexpr (OctreeNode<AdditionalCellAttributes>::has_excitatory_dendrite) {
+            root.set_cell_number_excitatory_dendrites(get_synaptic_count());
+        }
+
+        if constexpr (OctreeNode<AdditionalCellAttributes>::has_inhibitory_dendrite) {
+            root.set_cell_number_inhibitory_dendrites(get_synaptic_count());
+        }
+
+        if constexpr (OctreeNode<AdditionalCellAttributes>::has_excitatory_axon) {
+            root.set_cell_number_excitatory_axons(0);
+        }
+
+        if constexpr (OctreeNode<AdditionalCellAttributes>::has_inhibitory_axon) {
+            root.set_cell_number_inhibitory_axons(0);
+        }
+
+        for (const auto id : NeuronID::range(1, number_neurons)) {
+            auto* ptr = root.insert(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt), id);
+
+            if constexpr (OctreeNode<AdditionalCellAttributes>::has_excitatory_dendrite) {
+                ptr->set_cell_number_excitatory_dendrites(get_synaptic_count());
+            }
+
+            if constexpr (OctreeNode<AdditionalCellAttributes>::has_inhibitory_dendrite) {
+                ptr->set_cell_number_inhibitory_dendrites(get_synaptic_count());
+            }
+
+            if constexpr (OctreeNode<AdditionalCellAttributes>::has_excitatory_axon) {
+                ptr->set_cell_number_excitatory_axons(0);
+            }
+
+            if constexpr (OctreeNode<AdditionalCellAttributes>::has_inhibitory_axon) {
+                ptr->set_cell_number_inhibitory_axons(0);
+            }
+        }
+
+        root.update();
+
+        return root;
+    }
+
+    template <typename AdditionalCellAttributes>
+    static OctreeNode<AdditionalCellAttributes> get_tree_no_dendrites(const RelearnTypes::number_neurons_type number_neurons, const Vec3d& min_pos, const Vec3d& max_pos, std::mt19937& mt) {
+        auto get_synaptic_count = [&mt]() { return RandomAdapter::get_random_integer<OctreeNode<AdditionalCellAttributes>::counter_type>(0, 1, mt); };
+
+        OctreeNode<AdditionalCellAttributes> root{};
+        root.set_level(0);
+        root.set_rank(MPIRank::root_rank());
+
+        root.set_cell_neuron_id(NeuronID(0));
+        root.set_cell_size(min_pos, max_pos);
+        root.set_cell_neuron_position(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
+
+        if constexpr (OctreeNode<AdditionalCellAttributes>::has_excitatory_dendrite) {
+            root.set_cell_number_excitatory_dendrites(0);
+        }
+
+        if constexpr (OctreeNode<AdditionalCellAttributes>::has_inhibitory_dendrite) {
+            root.set_cell_number_inhibitory_dendrites(0);
+        }
+
+        if constexpr (OctreeNode<AdditionalCellAttributes>::has_excitatory_axon) {
+            root.set_cell_number_excitatory_axons(get_synaptic_count());
+        }
+
+        if constexpr (OctreeNode<AdditionalCellAttributes>::has_inhibitory_axon) {
+            root.set_cell_number_inhibitory_axons(get_synaptic_count());
+        }
+
+        for (const auto id : NeuronID::range(1, number_neurons)) {
+            auto* ptr = root.insert(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt), id);
+
+            if constexpr (OctreeNode<AdditionalCellAttributes>::has_excitatory_dendrite) {
+                ptr->set_cell_number_excitatory_dendrites(0);
+            }
+
+            if constexpr (OctreeNode<AdditionalCellAttributes>::has_inhibitory_dendrite) {
+                ptr->set_cell_number_inhibitory_dendrites(0);
+            }
+
+            if constexpr (OctreeNode<AdditionalCellAttributes>::has_excitatory_axon) {
+                ptr->set_cell_number_excitatory_axons(get_synaptic_count());
+            }
+
+            if constexpr (OctreeNode<AdditionalCellAttributes>::has_inhibitory_axon) {
+                ptr->set_cell_number_inhibitory_axons(get_synaptic_count());
+            }
+        }
+
+        root.update();
+
+        return root;
+    }
+
+    template <typename AdditionalCellAttributes>
+    static OctreeNode<AdditionalCellAttributes> get_tree_no_synaptic_elements(const RelearnTypes::number_neurons_type number_neurons, const Vec3d& min_pos, const Vec3d& max_pos, std::mt19937& mt) {
+        OctreeNode<AdditionalCellAttributes> root{};
+        root.set_level(0);
+        root.set_rank(MPIRank::root_rank());
+
+        root.set_cell_neuron_id(NeuronID(0));
+        root.set_cell_size(min_pos, max_pos);
+        root.set_cell_neuron_position(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
+
+        if constexpr (OctreeNode<AdditionalCellAttributes>::has_excitatory_dendrite) {
+            root.set_cell_number_excitatory_dendrites(0);
+        }
+
+        if constexpr (OctreeNode<AdditionalCellAttributes>::has_inhibitory_dendrite) {
+            root.set_cell_number_inhibitory_dendrites(0);
+        }
+
+        if constexpr (OctreeNode<AdditionalCellAttributes>::has_excitatory_axon) {
+            root.set_cell_number_excitatory_axons(0);
+        }
+
+        if constexpr (OctreeNode<AdditionalCellAttributes>::has_inhibitory_axon) {
+            root.set_cell_number_inhibitory_axons(0);
+        }
+
+        for (const auto id : NeuronID::range(1, number_neurons)) {
+            auto* ptr = root.insert(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt), id);
+
+            if constexpr (OctreeNode<AdditionalCellAttributes>::has_excitatory_dendrite) {
+                ptr->set_cell_number_excitatory_dendrites(0);
+            }
+
+            if constexpr (OctreeNode<AdditionalCellAttributes>::has_inhibitory_dendrite) {
+                ptr->set_cell_number_inhibitory_dendrites(0);
+            }
+
+            if constexpr (OctreeNode<AdditionalCellAttributes>::has_excitatory_axon) {
+                ptr->set_cell_number_excitatory_axons(0);
+            }
+
+            if constexpr (OctreeNode<AdditionalCellAttributes>::has_inhibitory_axon) {
+                ptr->set_cell_number_inhibitory_axons(0);
+            }
+        }
+
+        root.update();
+
+        return root;
     }
 };
