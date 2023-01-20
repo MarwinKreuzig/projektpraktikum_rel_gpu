@@ -596,3 +596,16 @@ TEST_F(BarnesHutBaseTest, testNodesToConsiderException) {
 
     make_mpi_mem_available<additional_cell_attributes>();
 }
+
+TEST_F(BarnesHutBaseTest, testFindTargetNeuronException) {
+    using additional_cell_attributes = BarnesHutCell;
+
+    const NeuronID neuron_id(1000000);
+    const Vec3d position{ 0.0 };
+
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
+
+    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron(neuron_id, position, nullptr, ElementType::Dendrite, searched_signal_type, Constants::bh_default_theta);, RelearnException);
+
+    make_mpi_mem_available<additional_cell_attributes>();
+}
