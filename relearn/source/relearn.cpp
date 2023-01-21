@@ -844,7 +844,6 @@ int main(int argc, char** argv) {
     RelearnException::check(plasticity_update_step > 0, "update-plasticity-step must be greater than 0");
 
     sim.set_update_plasticity_interval(Interval{ first_plasticity_step, last_plasticity_step, plasticity_update_step });
-    sim.set_update_synaptic_elements_interval(Interval{ first_plasticity_step, last_plasticity_step, plasticity_update_step });
     sim.set_log_calcium_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), calcium_log_step });
     sim.set_log_synaptic_input_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), synaptic_input_log_step });
     sim.set_log_network_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), network_log_step });
