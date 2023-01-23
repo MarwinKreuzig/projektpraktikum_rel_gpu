@@ -56,8 +56,10 @@ static void BM_NeuronModel_UpdateFullActivity(benchmark::State& state) {
         auto synaptic_input = InputFactory::construct_linear_input();
         auto background = BackgroundFactory::construct_null_background();
 
-        auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), std::make_shared<Stimulus>());
+        const auto stimulus = std::make_shared<Stimulus>();
+        auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), stimulus);
         model->init(number_neurons);
+        model->set_stimulus_calculator(stimulus);
 
         AdapterNeuronModel<NeuronModelType> adapter{ *model };
 
@@ -90,8 +92,10 @@ static void BM_NeuronModel_UpdateFullActivityBenchmark(benchmark::State& state) 
         auto synaptic_input = InputFactory::construct_linear_input();
         auto background = BackgroundFactory::construct_null_background();
 
-        auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), std::make_shared<Stimulus>());
+        const auto stimulus = std::make_shared<Stimulus>();
+        auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), stimulus);
         model->init(number_neurons);
+        model->set_stimulus_calculator(stimulus);
 
         AdapterNeuronModel<NeuronModelType> adapter{ *model };
 
