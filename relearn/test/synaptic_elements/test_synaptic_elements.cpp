@@ -158,7 +158,7 @@ TEST_F(SynapticElementsTest, testGaussianGrowthCurveSameIntersections) {
 
     const auto intersection = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
     const auto growth_factor = RandomAdapter::get_random_double<double>(1e-6, 100.0, mt);
-        
+
     ASSERT_EQ(gaussian_growth_curve(intersection, intersection, intersection, growth_factor), 0.0);
 
     std::vector<double> left_values(number_values);
@@ -168,7 +168,7 @@ TEST_F(SynapticElementsTest, testGaussianGrowthCurveSameIntersections) {
         left_values[i] = RandomAdapter::get_random_double<double>(-100000.0, intersection, mt);
         right_values[i] = RandomAdapter::get_random_double<double>(intersection, 100000.0, mt);
     }
-      
+
     for (auto i = 0; i < number_values; i++) {
         const auto current_val_left = left_values[i];
         const auto current_change = gaussian_growth_curve(current_val_left, intersection, intersection, growth_factor);
@@ -765,7 +765,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
     for (auto iteration = 0; iteration < 10; iteration++) {
         for (auto neuron_id : NeuronID::range(number_neurons)) {
             const auto& grown_element = SynapticElementsAdapter::get_random_synaptic_element_count(mt);
-            const auto& connected_grown_element =SynapticElementsAdapter:: get_random_synaptic_element_connected_count(static_cast<unsigned int>(grown_element), mt);
+            const auto& connected_grown_element = SynapticElementsAdapter::get_random_synaptic_element_connected_count(static_cast<unsigned int>(grown_element), mt);
             const auto& signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
             golden_counts[neuron_id.get_neuron_id()] += grown_element;
@@ -819,7 +819,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsFreeElements) {
     for (auto iteration = 0; iteration < 10; iteration++) {
         for (auto neuron_id : NeuronID::range(number_neurons)) {
             const auto& grown_element = SynapticElementsAdapter::get_random_synaptic_element_count(mt);
-            const auto& connected_grown_element =SynapticElementsAdapter:: get_random_synaptic_element_connected_count(static_cast<unsigned int>(grown_element), mt);
+            const auto& connected_grown_element = SynapticElementsAdapter::get_random_synaptic_element_connected_count(static_cast<unsigned int>(grown_element), mt);
             const auto& signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
             golden_counts[neuron_id.get_neuron_id()] += grown_element;
@@ -1050,7 +1050,6 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdateNumberElements) {
     auto [synaptic_elements, golden_counts, golden_connected_counts, golden_signal_types]
         = SynapticElementsAdapter::create_random_synaptic_elements(number_neurons, element_type, minimum_calcium_to_grow, mt, growth_factor);
 
-
     std::vector<double> golden_delta_counts(number_neurons, 0.0);
 
     for (auto i = 0; i < 10; i++) {
@@ -1091,7 +1090,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdateNumberElements) {
 }
 
 TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElementsException) {
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -1100,38 +1099,38 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElementsException) 
     auto [synaptic_elements, grown_elements, connected_elements, signal_types]
         = SynapticElementsAdapter::create_random_synaptic_elements(number_neurons, element_type, 0.0, mt);
 
-    const auto number_too_small_calcium = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-    const auto number_too_large_calcium = TaggedIdAdapter::get_random_neuron_id(number_neurons, number_neurons + 1, mt);
+    const auto number_too_small_calcium = RandomAdapter::get_random_integer<size_t>(1, number_neurons - 1, mt);
+    const auto number_too_large_calcium = RandomAdapter::get_random_integer<size_t>(number_neurons + 1, number_neurons * 2 + 1, mt);
 
-    const auto number_too_small_target_calcium = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-    const auto number_too_large_target_calcium = TaggedIdAdapter::get_random_neuron_id(number_neurons, number_neurons + 1, mt);
+    const auto number_too_small_target_calcium = RandomAdapter::get_random_integer<size_t>(1, number_neurons - 1, mt);
+    const auto number_too_large_target_calcium = RandomAdapter::get_random_integer<size_t>(number_neurons + 1, number_neurons * 2 + 1, mt);
 
-    const auto number_too_small_disable_flags = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-    const auto number_too_large_disable_flags = TaggedIdAdapter::get_random_neuron_id(number_neurons, number_neurons + 1, mt);
+    const auto number_too_small_disable_flags = RandomAdapter::get_random_integer<size_t>(1, number_neurons - 1, mt);
+    const auto number_too_large_disable_flags = RandomAdapter::get_random_integer<size_t>(number_neurons + 1, number_neurons * 2 + 1, mt);
 
-    std::vector<double> calcium_too_small(number_too_small_calcium.get_neuron_id(), 0.0);
+    std::vector<double> calcium_too_small(number_too_small_calcium, 0.0);
     std::vector<double> calcium(number_neurons, 0.0);
-    std::vector<double> calcium_too_large(number_too_large_calcium.get_neuron_id(), 0.0);
+    std::vector<double> calcium_too_large(number_too_large_calcium, 0.0);
 
-    std::vector<double> target_calcium_too_small(number_too_small_target_calcium.get_neuron_id(), 0.0);
+    std::vector<double> target_calcium_too_small(number_too_small_target_calcium, 0.0);
     std::vector<double> target_calcium(number_neurons, 0.0);
-    std::vector<double> target_calcium_too_large(number_too_large_target_calcium.get_neuron_id(), 0.0);
+    std::vector<double> target_calcium_too_large(number_too_large_target_calcium, 0.0);
 
     auto extra_info_too_small = std::make_shared<NeuronsExtraInfo>();
-    extra_info_too_small->init(number_too_small_disable_flags.get_neuron_id());
+    extra_info_too_small->init(number_too_small_disable_flags);
 
     auto extra_info_correct = std::make_shared<NeuronsExtraInfo>();
     extra_info_correct->init(number_neurons);
 
     auto extra_info_too_large = std::make_shared<NeuronsExtraInfo>();
-    extra_info_too_large->init(number_too_large_disable_flags.get_neuron_id());
+    extra_info_too_large->init(number_too_large_disable_flags);
 
     auto lambda = [&ss, &synaptic_elements](auto calcium, auto target_calcium, auto extra_info) {
         synaptic_elements.set_extra_infos(extra_info);
         ASSERT_THROW(synaptic_elements.update_number_elements_delta(calcium, target_calcium), RelearnException) << ss.str()
-                                                                                                                               << calcium.size() << ' '
-                                                                                                                               << target_calcium.size() << ' '
-                                                                                                                               << extra_info->get_size();
+                                                                                                                << calcium.size() << ' '
+                                                                                                                << target_calcium.size() << ' '
+                                                                                                                << extra_info->get_size();
     };
 
     lambda(calcium_too_small, target_calcium_too_small, extra_info_too_small);
@@ -1145,7 +1144,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElementsException) 
     lambda(calcium_too_small, target_calcium_too_small, extra_info_too_large);
     lambda(calcium_too_small, target_calcium, extra_info_too_large);
     lambda(calcium_too_small, target_calcium_too_large, extra_info_too_large);
-    
+
     lambda(calcium, target_calcium_too_small, extra_info_too_small);
     lambda(calcium, target_calcium, extra_info_too_small);
     lambda(calcium, target_calcium_too_large, extra_info_too_small);
