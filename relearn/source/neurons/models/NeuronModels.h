@@ -63,11 +63,10 @@ public:
      * @param stimulus_calculator The object that is responsible for calculating the stimulus
      */
     NeuronModel(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
-        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator)
+        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator)
         : h(h)
         , input_calculator(std::move(synaptic_input_calculator))
-        , background_calculator(std::move(background_activity_calculator))
-        , stimulus_calculator(std::move(stimulus_calculator)) { }
+        , background_calculator(std::move(background_activity_calculator)) { }
 
     virtual ~NeuronModel() = default;
 
@@ -278,6 +277,11 @@ public:
         }
     }
 
+    void set_stimulus_calculator(const std::shared_ptr<Stimulus>& stimulus_calculator) {
+        this->stimulus_calculator = stimulus_calculator;
+        this->stimulus_calculator->init(number_local_neurons);
+    }
+
     static constexpr unsigned int default_h{ 10 };
     static constexpr unsigned int min_h{ 1 };
     static constexpr unsigned int max_h{ 1000 };
@@ -327,7 +331,7 @@ protected:
         return background_calculator;
     }
 
-    [[nodiscard]] const std::unique_ptr<Stimulus>& get_stimulus_calculator() const noexcept {
+    [[nodiscard]] const std::shared_ptr<Stimulus>& get_stimulus_calculator() const noexcept {
         return stimulus_calculator;
     }
 
@@ -345,7 +349,7 @@ private:
 
     std::unique_ptr<SynapticInputCalculator> input_calculator{};
     std::unique_ptr<BackgroundActivityCalculator> background_calculator{};
-    std::unique_ptr<Stimulus> stimulus_calculator{};
+    std::shared_ptr<Stimulus> stimulus_calculator{};
 };
 
 namespace models {
@@ -367,7 +371,6 @@ public:
      * @param h See NeuronModel(...)
      * @param synaptic_input_calculator See NeuronModel(...)
      * @param background_activity_calculator See NeuronModel(...)
-     * @param stimulus_calculator See NeuronModel(...)
      * @param x_0 The resting membrane potential
      * @param tau_x The dampening factor by which the membrane potential decreases
      * @param refractory_time The number of steps a neuron doesn't spike after spiking
@@ -376,7 +379,6 @@ public:
         unsigned int h,
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
-        std::unique_ptr<Stimulus>&& stimulus_calculator,
         double x_0,
         double tau_x,
         unsigned int refractory_time);
@@ -504,7 +506,6 @@ public:
      * @param h See NeuronModel(...)
      * @param synaptic_input_calculator See NeuronModel(...)
      * @param background_activity_calculator See NeuronModel(...)
-     * @param stimulus_calculator See NeuronModel(...)
      * @param a The dampening factor for u(t)
      * @param b The dampening factor for v(t) inside the equation for d/dt u(t)
      * @param c The reset activity
@@ -518,7 +519,6 @@ public:
         unsigned int h,
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
-        std::unique_ptr<Stimulus>&& stimulus_calculator,
         double a,
         double b,
         double c,
@@ -711,7 +711,6 @@ public:
      * @param h See NeuronModel(...)
      * @param synaptic_input_calculator See NeuronModel(...)
      * @param background_activity_calculator See NeuronModel(...)
-     * @param stimulus_calculator See NeuronModel(...)
      * @param a The constant inside the equation for d/dt w(t)
      * @param b The dampening factor for w(t) inside the equation for d/dt w(t)
      * @param phi The dampening factor for w(t)
@@ -720,7 +719,6 @@ public:
         unsigned int h,
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
-        std::unique_ptr<Stimulus>&& stimulus_calculator,
         double a,
         double b,
         double phi);
@@ -852,7 +850,6 @@ public:
      * @param h See NeuronModel(...)
      * @param synaptic_input_calculator See NeuronModel(...)
      * @param background_activity_calculator See NeuronModel(...)
-     * @param stimulus_calculator See NeuronModel(...)
      * @param C The dampening factor for v(t) (membrane capacitance)
      * @param g_T The leak conductance
      * @param E_L The reset membrane potential (leak reversal potential)
@@ -867,7 +864,6 @@ public:
         unsigned int h,
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
-        std::unique_ptr<Stimulus>&& stimulus_calculator,
         double C,
         double g_L,
         double E_L,
