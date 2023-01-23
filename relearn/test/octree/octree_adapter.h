@@ -136,7 +136,7 @@ public:
 
     template <typename AdditionalCellAttributes>
     static OctreeNode<AdditionalCellAttributes> get_standard_tree(const RelearnTypes::number_neurons_type number_neurons, const Vec3d& min_pos, const Vec3d& max_pos, std::mt19937& mt) {
-        auto get_synaptic_count = [&mt]() { return RandomAdapter::get_random_integer<OctreeNode<AdditionalCellAttributes>::counter_type>(0, 1, mt); };
+        auto get_synaptic_count = [&mt]() { return RandomAdapter::get_random_integer<typename OctreeNode<AdditionalCellAttributes>::counter_type>(0, 1, mt); };
 
         OctreeNode<AdditionalCellAttributes> root{};
         root.set_level(0);
@@ -191,7 +191,7 @@ public:
 
     template <typename AdditionalCellAttributes>
     static OctreeNode<AdditionalCellAttributes> get_tree_no_axons(const RelearnTypes::number_neurons_type number_neurons, const Vec3d& min_pos, const Vec3d& max_pos, std::mt19937& mt) {
-        auto get_synaptic_count = [&mt]() { return RandomAdapter::get_random_integer<OctreeNode<AdditionalCellAttributes>::counter_type>(0, 1, mt); };
+        auto get_synaptic_count = [&mt]() { return RandomAdapter::get_random_integer<typename OctreeNode<AdditionalCellAttributes>::counter_type>(0, 1, mt); };
 
         OctreeNode<AdditionalCellAttributes> root{};
         root.set_level(0);
@@ -246,7 +246,7 @@ public:
 
     template <typename AdditionalCellAttributes>
     static OctreeNode<AdditionalCellAttributes> get_tree_no_dendrites(const RelearnTypes::number_neurons_type number_neurons, const Vec3d& min_pos, const Vec3d& max_pos, std::mt19937& mt) {
-        auto get_synaptic_count = [&mt]() { return RandomAdapter::get_random_integer<OctreeNode<AdditionalCellAttributes>::counter_type>(0, 1, mt); };
+        auto get_synaptic_count = [&mt]() { return RandomAdapter::get_random_integer<typename OctreeNode<AdditionalCellAttributes>::counter_type>(0, 1, mt); };
 
         OctreeNode<AdditionalCellAttributes> root{};
         root.set_level(0);

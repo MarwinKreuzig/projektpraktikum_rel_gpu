@@ -671,10 +671,10 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronOneChoice) {
     root.set_cell_neuron_id(NeuronID(2));
 
     const auto first_position = SimulationAdapter::get_random_position_in_box(minimum, maximum, mt);
-    root.insert(first_position, NeuronID(0));
+    auto _1 = root.insert(first_position, NeuronID(0));
 
     const auto second_position = SimulationAdapter::get_random_position_in_box(minimum, maximum, mt);
-    root.insert(second_position, NeuronID(1));
+    auto _2 = root.insert(second_position, NeuronID(1));
 
     auto* first_node = OctreeAdapter::find_node<additional_cell_attributes>({ MPIRank::root_rank(), NeuronID(0) }, &root);
     auto* second_node = OctreeAdapter::find_node<additional_cell_attributes>({ MPIRank::root_rank(), NeuronID(1) }, &root);
