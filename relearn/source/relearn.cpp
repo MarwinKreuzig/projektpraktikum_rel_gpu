@@ -559,6 +559,13 @@ int main(int argc, char** argv) {
         }
     }
 
+    std::shared_ptr<Stimulus> stimulus_calculator{};
+    if (static_cast<bool>(*opt_file_external_stimulation)) {
+      //  stimulus_calculator = std::make_shared<Stimulus>(file_external_stimulation, my_rank);
+    } else {
+        stimulus_calculator = std::make_shared<Stimulus>();
+    }
+
     std::unique_ptr<BackgroundActivityCalculator> background_activity_calculator{};
     if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Null) {
         RelearnException::check(!static_cast<bool>(*opt_base_background_activity), "Setting the base background activity is not valid when choosing the null-background calculator (or not setting it at all).");
@@ -758,6 +765,8 @@ int main(int argc, char** argv) {
         RelearnException::fail("Chose a neuron model that is not implemented");
     }
 
+    neuron_model->set_stimulus_calculator(std::move(stimulus_calculator));
+
     auto calcium_calculator = std::make_unique<CalciumCalculator>(target_calcium_decay_type, target_calcium_decay_amount, target_calcium_decay_step, first_decay_step, last_decay_step);
     calcium_calculator->set_beta(beta);
     calcium_calculator->set_tau_C(calcium_decay);
@@ -861,15 +870,6 @@ int main(int argc, char** argv) {
     MPIWrapper::lock_window(my_rank, MPI_Locktype::Exclusive);
 
     sim.initialize();
-
-    std::shared_ptr<Stimulus> stimulus_calculator{};
-    if (static_cast<bool>(*opt_file_external_stimulation)) {
-        stimulus_calculator = std::make_shared<Stimulus>(file_external_stimulation, my_rank, sim.get_neurons()->get_local_area_translator());
-    } else {
-        stimulus_calculator = std::make_shared<Stimulus>();
-    }
-
-    sim.get_neurons()->get_neuron_model()->set_stimulus_calculator(stimulus_calculator);
 
     if (static_cast<bool>(*flag_monitor_all)) {
         const auto number_local_neurons = partition->get_number_local_neurons();

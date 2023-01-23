@@ -8,6 +8,7 @@
 #include "neurons/input/BackgroundActivityCalculators.h"
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
+#include "neurons/input/Stimulus.h"
 #include "neurons/input/SynapticInputCalculator.h"
 #include "neurons/input/SynapticInputCalculators.h"
 #include "neurons/CalciumCalculator.h"
@@ -108,6 +109,9 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
         models::PoissonModel::default_x_0,
         models::PoissonModel::default_tau_x,
         models::PoissonModel::default_refractory_period);
+
+    model->set_stimulus_calculator(std::make_shared<Stimulus>());
+
     auto calcium = std::make_unique<CalciumCalculator>();
     calcium->set_initial_calcium_calculator([](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
     calcium->set_target_calcium_calculator([](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });

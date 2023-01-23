@@ -292,9 +292,8 @@ public:
         }
     }
 
-    void set_stimulus_calculator(const std::shared_ptr<Stimulus>& stimulus_calculator) {
-        this->stimulus_calculator = stimulus_calculator;
-        this->stimulus_calculator->init(number_local_neurons);
+    void set_stimulus_calculator(std::shared_ptr<Stimulus> stimulus_calculator) {
+        this->stimulus_calculator = std::move(stimulus_calculator);
     }
 
     static constexpr unsigned int default_h{ 10 };
@@ -368,7 +367,7 @@ private:
 
     std::unique_ptr<SynapticInputCalculator> input_calculator{};
     std::unique_ptr<BackgroundActivityCalculator> background_calculator{};
-    std::unique_ptr<Stimulus> stimulus_calculator{};
+    std::shared_ptr<Stimulus> stimulus_calculator{};
 
     std::shared_ptr<NeuronsExtraInfo> extra_infos{};
 };
