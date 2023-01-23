@@ -71,6 +71,8 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
 std::vector<std::tuple<MPIRank, DistantNeuronRequest>> BarnesHutLocationAware::find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
     const counter_type& number_vacant_elements, OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type) {
 
+    const auto my_rank = MPIWrapper::get_my_rank();
+
     std::vector<std::tuple<MPIRank, DistantNeuronRequest>> requests{};
     requests.reserve(number_vacant_elements);
 
@@ -78,7 +80,7 @@ std::vector<std::tuple<MPIRank, DistantNeuronRequest>> BarnesHutLocationAware::f
 
     for (counter_type j = 0; j < number_vacant_elements; j++) {
         // Find one target at the time
-        const auto& neuron_request = BarnesHutBase<BarnesHutCell>::find_target_neuron(source_neuron_id, source_position, root, element_type, signal_type, level_of_branch_nodes, acceptance_criterion);
+        const auto& neuron_request = BarnesHutBase<BarnesHutCell>::find_target_neuron({ my_rank, source_neuron_id }, source_position, root, element_type, signal_type, level_of_branch_nodes, acceptance_criterion);
         if (!neuron_request.has_value()) {
             // If finding failed, it won't succeed in later iterations
             break;
@@ -138,7 +140,7 @@ BarnesHutLocationAware::process_requests(const CommunicationMap<DistantNeuronReq
             const auto source_position = current_request.get_source_position();
 
             // If the local search is successful, create a SynapseCreationRequest
-            if (const auto& local_search = BarnesHutBase<BarnesHutCell>::find_target_neuron(source_neuron_id, source_position, chosen_target, ElementType::Dendrite, signal_type, acceptance_criterion); local_search.has_value()) {
+            if (const auto& local_search = BarnesHutBase<BarnesHutCell>::find_target_neuron({ MPIRank(request_index), source_neuron_id }, source_position, chosen_target, ElementType::Dendrite, signal_type, acceptance_criterion); local_search.has_value()) {
                 const auto& [target_rank, target_neuron_id] = local_search.value();
 
                 creation_requests.set_request(source_rank, request_index, SynapseCreationRequest{ target_neuron_id, source_neuron_id, signal_type });

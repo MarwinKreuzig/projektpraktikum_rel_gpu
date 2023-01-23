@@ -508,7 +508,7 @@ protected:
 
         if (const auto update_height = max_depth - local_tree_root->get_level(); update_height < 3) {
             // If the update concerns less than 3 levels, update serially
-            update_tree(local_tree_root, max_depth);
+            OctreeNodeUpdater<AdditionalCellAttributes>::update_tree(local_tree_root, max_depth);
             return;
         }
 
@@ -542,7 +542,7 @@ protected:
 #pragma omp parallel for shared(subtrees, max_depth) default(none)
         for (auto i = 0; i < subtrees.size(); i++) {
             auto* local_tree_root = subtrees[i];
-            update_tree(local_tree_root, max_depth);
+            OctreeNodeUpdater<AdditionalCellAttributes>::update_tree(local_tree_root, max_depth);
         }
 
         while (!tree_upper_part.empty()) {
@@ -550,109 +550,10 @@ protected:
             tree_upper_part.pop();
 
             if (node->is_parent()) {
-                node->update();
+                OctreeNodeUpdater<AdditionalCellAttributes>::update_node(node);
             }
         }
     }
-
-    /**
-     * @brief Updates the tree induced by local_tree_root until the desired level.
-     *      Uses OctreeNode::get_level() to determine the depth. The nodes at that depth are still updated, but not their children.
-     * @param local_tree_root The root of the tree from where to update
-     * @param max_depth The depth where the updates shall stop
-     * @exception Throws a RelearnException if local_tree_root is nullptr or if max_depth is smaller than the depth of local_tree_root
-     */
-    void update_tree(OctreeNode<AdditionalCellAttributes>* local_tree_root, const std::uint16_t max_depth) {
-        struct StackElement {
-        private:
-            OctreeNode<AdditionalCellAttributes>* ptr{ nullptr };
-
-            // True if node has been on stack already
-            // twice and can be visited now
-            bool already_visited{ false };
-
-        public:
-            /**
-             * @brief Constructs a new object that holds the given node, which is marked as not already visited
-             * @param octree_node The node that should be visited, not nullptr
-             * @exception Throws a RelearnException if octree_node is nullptr
-             */
-            explicit StackElement(OctreeNode<AdditionalCellAttributes>* octree_node)
-                : ptr(octree_node) {
-                RelearnException::check(octree_node != nullptr, "StackElement::StackElement: octree_node was nullptr");
-            }
-
-            /**
-             * @brief Returns the node
-             * @return The node
-             */
-            [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_octree_node() const noexcept {
-                return ptr;
-            }
-
-            /**
-             * @brief Sets the flag that indicated if this node was already visited
-             * @exception Throws a RelearnException if this node was already visited before
-             */
-            void set_visited() {
-                RelearnException::check(!already_visited, "StackElement::set_visited: element is already visited");
-                already_visited = true;
-            }
-
-            /**
-             * @brief Returns the flag indicating if this node was already visited
-             * @return True iff the node was already visited
-             */
-            [[nodiscard]] bool was_already_visited() const noexcept {
-                return already_visited;
-            }
-        };
-
-        RelearnException::check(local_tree_root != nullptr, "OctreeImplementation::update_tree: local_tree_root is nullptr.");
-        RelearnException::check(local_tree_root->get_level() <= max_depth, "OctreeImplementation::update_tree: The root had a larger depth than max_depth.");
-
-        Stack<StackElement> stack{};
-        stack.emplace_back(local_tree_root);
-
-        while (!stack.empty()) {
-            auto& current_element = stack.top();
-            auto* current_octree_node = current_element.get_octree_node();
-
-            if (current_element.was_already_visited()) {
-                // Make sure that the element was visited before, i.e., its children are processed
-                if (current_octree_node->is_parent()) {
-                    // Don't update leaf nodes, they were updated before
-                    current_octree_node->update();
-                }
-
-                stack.pop();
-                continue;
-            }
-
-            // Mark node to be visited next time now, because it's a reference and will change once we push the other elements
-            current_element.set_visited();
-
-            const auto current_depth = current_octree_node->get_level();
-            if (current_depth >= max_depth) {
-                // We're at the border of where we want to update, so don't push children
-                if (current_octree_node->is_parent()) {
-                    // Don't update leaf nodes, they were updated before
-                    current_octree_node->update();
-                }
-
-                stack.pop();
-                continue;
-            }
-
-            for (auto* child : current_octree_node->get_children()) {
-                if (child == nullptr) {
-                    continue;
-                }
-                stack.emplace_back(child);
-            }
-        } /* while */
-    }
-
 private:
     // Root of the tree
     OctreeNode<AdditionalCellAttributes>* root{ nullptr };

@@ -17,6 +17,7 @@
 #include "algorithm/Kernel/Weibull.h"
 #include "neurons/enums/ElementType.h"
 #include "neurons/enums/SignalType.h"
+#include "neurons/helper/RankNeuronId.h"
 #include "structure/OctreeNode.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
@@ -105,10 +106,10 @@ public:
      * @exception Throws a RelearnException if the position for (element_type, signal_type) from target_node is empty or not supported
      * @return The calculated attractiveness, might be 0.0 to avoid autapses
      */
-    [[nodiscard]] static double calculate_attractiveness_to_connect(const NeuronID& source_neuron_id, const position_type& source_position,
+    [[nodiscard]] static double calculate_attractiveness_to_connect(const RankNeuronId& source_neuron_id, const position_type& source_position,
         const OctreeNode<AdditionalCellAttributes>* target_node, const ElementType element_type, const SignalType signal_type) {
         // A neuron must not form an autapse, i.e., a synapse to itself
-        if (target_node->is_leaf() && source_neuron_id == target_node->get_cell_neuron_id()) {
+        if (target_node->contains(source_neuron_id)) {
             return 0.0;
         }
 
@@ -145,7 +146,7 @@ public:
      * @exception Throws a RelearnException if one of the pointer in nodes is a nullptr, or if KernelType::calculate_attractiveness_to_connect throws
      * @return A pair of (a) the total probability of all targets and (b) the respective probability of each target
      */
-    [[nodiscard]] static std::pair<double, std::vector<double>> create_probability_interval(const NeuronID& source_neuron_id, const position_type& source_position,
+    [[nodiscard]] static std::pair<double, std::vector<double>> create_probability_interval(const RankNeuronId& source_neuron_id, const position_type& source_position,
         const std::vector<OctreeNode<AdditionalCellAttributes>*>& nodes, const ElementType element_type, const SignalType signal_type) {
 
         if (nodes.empty()) {
@@ -164,8 +165,27 @@ public:
             return prob;
         });
 
-        // Short-cut an empty vector here for later uses
         if (sum == 0.0) {
+            // If all targets are so far away that rounding errors return a probability of 0, we fix this
+
+            probabilities.resize(0);
+            std::transform(nodes.begin(), nodes.cend(), std::back_inserter(probabilities), [&](const OctreeNode<AdditionalCellAttributes>* target_node) {
+                if (target_node->contains(source_neuron_id)) {
+                    return 0.0;
+                }
+
+                const auto& cell = target_node->get_cell();
+                const auto& target_position = cell.get_position_for(element_type, signal_type);
+                const auto& number_elements = cell.get_number_elements_for(element_type, signal_type);
+
+                const auto prob = static_cast<double>(number_elements) / ((target_position.value() - source_position).calculate_2_norm());
+                sum += prob;
+                return prob;
+            });
+        }
+
+        if (sum == 0.0) {
+            // If the vector still contains only the same node, return nothing
             return { 0.0, {} };
         }
 
@@ -215,7 +235,7 @@ public:
      * @exception Throws a RelearnException if one of the pointer in nodes is a nullptr, or if KernelType::calculate_attractiveness_to_connect throws
      * @return The selected target node, is nullptr if nodes.empty()
      */
-    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* pick_target(const NeuronID& source_neuron_id, const position_type& source_position,
+    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* pick_target(const RankNeuronId& source_neuron_id, const position_type& source_position,
         const std::vector<OctreeNode<AdditionalCellAttributes>*>& nodes, const ElementType element_type, const SignalType signal_type) {
         if (nodes.empty()) {
             return nullptr;
@@ -233,7 +253,7 @@ public:
             return nullptr;
         }
 
-        const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, 
+        const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0,
             std::nextafter(total_probability, total_probability + Constants::eps));
 
         auto* node_selected = pick_target(nodes, all_probabilities, random_number);

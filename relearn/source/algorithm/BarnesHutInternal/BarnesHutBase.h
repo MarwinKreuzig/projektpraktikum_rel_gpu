@@ -65,9 +65,9 @@ public:
      */
     [[nodiscard]] static AcceptanceStatus test_acceptance_criterion(const position_type& source_position, const OctreeNode<AdditionalCellAttributes>* target_node,
         const ElementType element_type, const SignalType signal_type, const double acceptance_criterion) {
-        RelearnException::check(acceptance_criterion > 0.0, 
+        RelearnException::check(acceptance_criterion > 0.0,
             "BarnesHutBase::test_acceptance_criterion: The acceptance criterion must not positive: ({})", acceptance_criterion);
-        RelearnException::check(acceptance_criterion <= Constants::bh_max_theta, 
+        RelearnException::check(acceptance_criterion <= Constants::bh_max_theta,
             "BarnesHutBase::test_acceptance_criterion: The acceptance criterion must not be larger than {}: ({})", Constants::bh_max_theta, acceptance_criterion);
         RelearnException::check(target_node != nullptr,
             "BarnesHutBase::test_acceptance_criterion: target_node was nullptr");
@@ -205,9 +205,13 @@ public:
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorithm found a matching neuron, its RankNeuronId is returned
      */
-    [[nodiscard]] static std::optional<RankNeuronId> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
+    [[nodiscard]] static std::optional<RankNeuronId> find_target_neuron(const RankNeuronId& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
         const ElementType element_type, const SignalType signal_type, const double acceptance_criterion) {
         RelearnException::check(root != nullptr, "BarnesHutBase::find_target_neuron: root was nullptr");
+        
+        if (root->contains(source_neuron_id)) {
+            return {};
+        }
 
         if (root->is_leaf()) {
             return RankNeuronId{ root->get_mpi_rank(), root->get_cell_neuron_id() };
@@ -242,7 +246,7 @@ public:
      * @param acceptance_criterion The acceptance criterion, must be > 0.0 and <= Constants::bh_max_theta
      * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank
      */
-    [[nodiscard]] static std::vector<std::tuple<MPIRank, SynapseCreationRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
+    [[nodiscard]] static std::vector<std::tuple<MPIRank, SynapseCreationRequest>> find_target_neurons(const RankNeuronId& source_neuron_id, const position_type& source_position,
         const counter_type& number_vacant_elements, OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type, const double acceptance_criterion) {
 
         std::vector<std::tuple<MPIRank, SynapseCreationRequest>> requests{};
@@ -257,7 +261,7 @@ public:
             }
 
             const auto& [target_rank, target_id] = rank_neuron_id.value();
-            const SynapseCreationRequest creation_request(target_id, source_neuron_id, signal_type);
+            const SynapseCreationRequest creation_request(target_id, source_neuron_id.get_neuron_id(), signal_type);
 
             requests.emplace_back(target_rank, creation_request);
         }
@@ -278,7 +282,7 @@ public:
      * @return If the algorithm didn't find a matching neuron, the return value is empty.
      *      If the algorithm found a matching neuron, its RankNeuronId is returned
      */
-    [[nodiscard]] static std::optional<std::pair<MPIRank, DistantNeuronRequest>> find_target_neuron(const NeuronID& source_neuron_id, const position_type& source_position,
+    [[nodiscard]] static std::optional<std::pair<MPIRank, DistantNeuronRequest>> find_target_neuron(const RankNeuronId& source_neuron_id, const position_type& source_position,
         OctreeNode<AdditionalCellAttributes>* const root, const ElementType element_type, const SignalType signal_type, const std::uint16_t level_of_branch_nodes, const double acceptance_criterion) {
         RelearnException::check(root != nullptr, "BarnesHutLocationAwareBase::find_target_neuron: root was nullptr");
 
@@ -306,7 +310,7 @@ public:
 
                 if (is_leaf) {
                     const DistantNeuronRequest neuron_request(
-                        source_neuron_id,
+                        source_neuron_id.get_neuron_id(),
                         source_position,
                         cell.get_neuron_id().get_neuron_id(),
                         DistantNeuronRequest::TargetNeuronType::Leaf,
@@ -316,7 +320,7 @@ public:
                 }
 
                 const DistantNeuronRequest neuron_request(
-                    source_neuron_id,
+                    source_neuron_id.get_neuron_id(),
                     source_position,
                     cell.get_neuron_id().get_rma_offset(),
                     DistantNeuronRequest::TargetNeuronType::VirtualNode,

@@ -37,8 +37,9 @@ TEST_F(KernelTest, testKernelSameNode) {
 
     OctreeNode<BarnesHutCell> node{};
     node.set_cell_neuron_id(neuron_id);
+    node.set_rank(MPIRank::root_rank());
 
-    const auto attractiveness = Kernel<BarnesHutCell>::calculate_attractiveness_to_connect(neuron_id, position, &node, element_type, signal_type);
+    const auto attractiveness = Kernel<BarnesHutCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id }, position, &node, element_type, signal_type);
     ASSERT_EQ(attractiveness, 0.0);
 }
 
@@ -68,10 +69,10 @@ TEST_F(KernelTest, testKernelException) {
     const auto& debug_kernel_string = KernelAdapter::set_random_kernel<FastMultipoleMethodsCell>(mt);
 
     using type = Kernel<FastMultipoleMethodsCell>;
-    ASSERT_THROW(const auto attr_exc_axons = type::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Axon, SignalType::Excitatory);, RelearnException);
-    ASSERT_THROW(const auto attr_inh_axons = type::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Axon, SignalType::Inhibitory);, RelearnException);
-    ASSERT_THROW(const auto attr_exc_dendrites = type::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Dendrite, SignalType::Excitatory);, RelearnException);
-    ASSERT_THROW(const auto attr_inh_dendrites = type::calculate_attractiveness_to_connect(neuron_id_2, source_position, &node, ElementType::Dendrite, SignalType::Inhibitory);, RelearnException);
+    ASSERT_THROW(const auto attr_exc_axons = type::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Axon, SignalType::Excitatory);, RelearnException);
+    ASSERT_THROW(const auto attr_inh_axons = type::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Axon, SignalType::Inhibitory);, RelearnException);
+    ASSERT_THROW(const auto attr_exc_dendrites = type::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Dendrite, SignalType::Excitatory);, RelearnException);
+    ASSERT_THROW(const auto attr_inh_dendrites = type::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Dendrite, SignalType::Inhibitory);, RelearnException);
 }
 
 TEST_F(KernelTest, testKernelEmptyVector) {
@@ -85,7 +86,7 @@ TEST_F(KernelTest, testKernelEmptyVector) {
     const auto& debug_kernel_string = KernelAdapter::set_random_kernel<FastMultipoleMethodsCell>(mt);
 
     const auto& [sum, attrs] = Kernel<FastMultipoleMethodsCell>::create_probability_interval(
-        neuron_id, position, {}, element_type, signal_type);
+        { MPIRank::root_rank(), neuron_id }, position, {}, element_type, signal_type);
 
     ASSERT_EQ(sum, 0.0);
     ASSERT_EQ(0, attrs.size());
@@ -106,6 +107,7 @@ TEST_F(KernelTest, testKernelAutapseVector) {
 
     for (auto i = 0; i < number_nodes; i++) {
         nodes[i].set_cell_neuron_id(neuron_id);
+        nodes[i].set_rank(MPIRank::root_rank());
         nodes[i].set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
 
         const auto& target_excitatory_axon_position = SimulationAdapter::get_random_position(mt);
@@ -132,7 +134,7 @@ TEST_F(KernelTest, testKernelAutapseVector) {
     const auto& debug_kernel_string = KernelAdapter::set_random_kernel<FastMultipoleMethodsCell>(mt);
 
     const auto& [sum, attrs] = Kernel<FastMultipoleMethodsCell>::create_probability_interval(
-        neuron_id, position, node_pointers, element_type, signal_type);
+        { MPIRank::root_rank(), neuron_id }, position, node_pointers, element_type, signal_type);
 
     ASSERT_EQ(sum, 0.0);
     ASSERT_EQ(0, attrs.size());
@@ -183,7 +185,7 @@ TEST_F(KernelTest, testKernelVectorException) {
 
     using TT = Kernel<FastMultipoleMethodsCell>;
 
-    ASSERT_THROW(const auto& val = TT::create_probability_interval(neuron_id, position, node_pointers, element_type, signal_type);, RelearnException);
+    ASSERT_THROW(const auto& val = TT::create_probability_interval({ MPIRank::root_rank(), neuron_id }, position, node_pointers, element_type, signal_type);, RelearnException);
 }
 
 TEST_F(KernelTest, testKernelRandomVector) {
@@ -202,6 +204,7 @@ TEST_F(KernelTest, testKernelRandomVector) {
     for (auto i = 0; i < number_nodes; i++) {
         nodes[i].set_cell_neuron_id(TaggedIdAdapter::get_random_neuron_id(1000, 1000, mt));
         nodes[i].set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
+        nodes[i].set_rank(MPIRank(0));
 
         const auto& target_excitatory_axon_position = SimulationAdapter::get_random_position(mt);
         const auto& target_inhibitory_axon_position = SimulationAdapter::get_random_position(mt);
@@ -229,18 +232,17 @@ TEST_F(KernelTest, testKernelRandomVector) {
     auto total_attractiveness = 0.0;
     std::vector<double> attractivenesses{};
     for (auto i = 0; i < number_nodes; i++) {
-        const auto attr = Kernel<FastMultipoleMethodsCell>::calculate_attractiveness_to_connect(neuron_id, position, &nodes[i], element_type, signal_type);
+        const auto attr = Kernel<FastMultipoleMethodsCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id }, position, &nodes[i], element_type, signal_type);
 
         attractivenesses.emplace_back(attr);
         total_attractiveness += attr;
     }
 
     const auto& [sum, attrs] = Kernel<FastMultipoleMethodsCell>::create_probability_interval(
-        neuron_id, position, node_pointers, element_type, signal_type);
+        { MPIRank::root_rank(), neuron_id }, position, node_pointers, element_type, signal_type);
 
-    ASSERT_NEAR(sum, total_attractiveness, eps);
-
-    if (sum != 0.0) {
+    if (total_attractiveness > 0.0) {
+        ASSERT_NEAR(sum, total_attractiveness, eps);
         ASSERT_EQ(attractivenesses.size(), attrs.size());
 
         for (auto i = 0; i < attrs.size(); i++) {
@@ -371,7 +373,7 @@ TEST_F(KernelTest, testPickTargetEmpty2) {
 
     const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
 
-    auto* result = Kernel<BarnesHutCell>::pick_target(neuron_id, position, {}, element_type, signal_type);
+    auto* result = Kernel<BarnesHutCell>::pick_target({ MPIRank::root_rank(), neuron_id }, position, {}, element_type, signal_type);
 
     ASSERT_EQ(result, nullptr);
 }
@@ -419,7 +421,7 @@ TEST_F(KernelTest, testPickTargetException) {
     const auto& debug_kernel_string = KernelAdapter::set_random_kernel<FastMultipoleMethodsCell>(mt);
 
     using TT = Kernel<FastMultipoleMethodsCell>;
-    ASSERT_THROW(auto* result = TT::pick_target(neuron_id, position, node_pointers, element_type, signal_type);, RelearnException);
+    ASSERT_THROW(auto* result = TT::pick_target({ MPIRank::root_rank(), neuron_id }, position, node_pointers, element_type, signal_type);, RelearnException);
 }
 
 TEST_F(KernelTest, testPickTargetRandom2) {
@@ -463,11 +465,11 @@ TEST_F(KernelTest, testPickTargetRandom2) {
 
     for (auto i = 0; i < number_nodes; i++) {
         auto* result = Kernel<FastMultipoleMethodsCell>::
-            pick_target(neuron_id, position, node_pointers, element_type, signal_type);
+            pick_target({ MPIRank::root_rank(), neuron_id }, position, node_pointers, element_type, signal_type);
 
         if (result == nullptr) {
             for (auto* ptr : node_pointers) {
-                const auto attraction = Kernel<FastMultipoleMethodsCell>::calculate_attractiveness_to_connect(neuron_id, position, ptr, element_type, signal_type);
+                const auto attraction = Kernel<FastMultipoleMethodsCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id }, position, ptr, element_type, signal_type);
                 ASSERT_EQ(attraction, 0.0);
             }
 

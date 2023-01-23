@@ -29,6 +29,7 @@ void BarnesHut::set_acceptance_criterion(const double acceptance_criterion) {
 CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const number_neurons_type number_neurons) {
     const auto& disable_flags = extra_infos->get_disable_flags();
     const auto number_ranks = MPIWrapper::get_num_ranks();
+    const auto my_rank = MPIWrapper::get_my_rank();
 
     const auto size_hint = std::min(number_neurons, number_neurons_type(number_ranks));
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks, size_hint);
@@ -36,7 +37,7 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const nu
     auto* const root = get_octree_root();
 
     // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
-#pragma omp parallel for default(none) shared(root, number_neurons, disable_flags, synapse_creation_requests_outgoing)
+#pragma omp parallel for default(none) shared(root, my_rank, number_neurons, disable_flags, synapse_creation_requests_outgoing)
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] != UpdateStatus::Enabled) {
             continue;
@@ -52,7 +53,7 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const nu
         const auto& axon_position = extra_infos->get_position(id);
         const auto dendrite_type_needed = axons->get_signal_type(id);
 
-        const auto& requests = BarnesHutBase<BarnesHutCell>::find_target_neurons(id, axon_position, number_vacant_axons, root, ElementType::Dendrite, dendrite_type_needed, acceptance_criterion);
+        const auto& requests = BarnesHutBase<BarnesHutCell>::find_target_neurons({ my_rank, id }, axon_position, number_vacant_axons, root, ElementType::Dendrite, dendrite_type_needed, acceptance_criterion);
         for (const auto& [target_rank, creation_request] : requests) {
 #pragma omp critical(BHrequests)
             synapse_creation_requests_outgoing.append(target_rank, creation_request);

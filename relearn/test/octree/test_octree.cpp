@@ -182,6 +182,35 @@ TYPED_TEST(OctreeTest, testOctreeNodeInsert) {
     this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
+TYPED_TEST(OctreeTest, testNodeContains) {
+    const auto neuron_id = TaggedIdAdapter::get_random_neuron_id(100, this->mt);
+    const auto mpi_rank = MPIRankAdapter::get_random_mpi_rank(20, this->mt);
+
+    RankNeuronId rni{ mpi_rank, neuron_id };
+
+    using AdditionalCellAttributes = TypeParam;
+
+    for (const auto id_iterator : NeuronID::range(100)) {
+        for (const auto rank_iterator : MPIRank::range(20)) {
+            OctreeNode<AdditionalCellAttributes> node{};
+            node.set_cell_neuron_id(id_iterator);
+            node.set_rank(rank_iterator);
+
+            const auto flag = node.contains(rni);
+
+            if (node.is_leaf() && node.get_mpi_rank() == mpi_rank && node.get_cell_neuron_id() == neuron_id) {
+                ASSERT_TRUE(flag);
+            } else {
+                ASSERT_FALSE(flag);
+            }
+
+            node.set_parent();
+
+            ASSERT_FALSE(node.contains(rni));
+        }
+    }
+}
+
 TYPED_TEST(OctreeTest, testOctreeConstructor) {
     using AdditionalCellAttributes = TypeParam;
 

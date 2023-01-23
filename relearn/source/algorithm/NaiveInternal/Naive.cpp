@@ -42,7 +42,7 @@ std::optional<RankNeuronId> Naive::find_target_neuron(const NeuronID& src_neuron
          * Nodes with 0 probability are removed.
          * The probabilities of all vector elements sum up to 1.
          */
-        auto* node_selected = Kernel<AdditionalCellAttributes>::pick_target(src_neuron_id, axon_position, vector, ElementType::Dendrite, dendrite_type_needed);
+        auto* node_selected = Kernel<AdditionalCellAttributes>::pick_target({ MPIWrapper::get_my_rank(), src_neuron_id }, axon_position, vector, ElementType::Dendrite, dendrite_type_needed);
         if (node_selected == nullptr) {
             return {};
         }

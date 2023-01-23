@@ -29,6 +29,7 @@ void BarnesHutInverted::set_acceptance_criterion(const double acceptance_criteri
 CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(const number_neurons_type number_neurons) {
     const auto& disable_flags = extra_infos->get_disable_flags();
     const auto number_ranks = MPIWrapper::get_num_ranks();
+    const auto my_rank = MPIWrapper::get_my_rank();
 
     const auto size_hint = std::min(number_neurons, number_neurons_type(number_ranks));
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks, size_hint);
@@ -36,7 +37,7 @@ CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(
     auto* const root = get_octree_root();
 
     // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
-#pragma omp parallel for default(none) shared(root, number_neurons, disable_flags, synapse_creation_requests_outgoing)
+#pragma omp parallel for default(none) shared(root, my_rank, number_neurons, disable_flags, synapse_creation_requests_outgoing)
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] != UpdateStatus::Enabled) {
             continue;
@@ -54,14 +55,14 @@ CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(
         const auto& dendrite_position = extra_infos->get_position(id);
 
         const auto& excitatory_requests = 
-            BarnesHutBase<BarnesHutInvertedCell>::find_target_neurons(id, dendrite_position, number_vacant_excitatory_dendrites, root, ElementType::Axon, SignalType::Excitatory, acceptance_criterion);
+            BarnesHutBase<BarnesHutInvertedCell>::find_target_neurons({ my_rank, id }, dendrite_position, number_vacant_excitatory_dendrites, root, ElementType::Axon, SignalType::Excitatory, acceptance_criterion);
         for (const auto& [target_rank, creation_request] : excitatory_requests) {
 #pragma omp critical(BHIrequests)
             synapse_creation_requests_outgoing.append(target_rank, creation_request);
         }
 
         const auto& inhibitory_requests = 
-            BarnesHutBase<BarnesHutInvertedCell>::find_target_neurons(id, dendrite_position, number_vacant_inhibitory_dendrites, root, ElementType::Axon, SignalType::Inhibitory, acceptance_criterion);
+            BarnesHutBase<BarnesHutInvertedCell>::find_target_neurons({ my_rank, id }, dendrite_position, number_vacant_inhibitory_dendrites, root, ElementType::Axon, SignalType::Inhibitory, acceptance_criterion);
         for (const auto& [target_rank, creation_request] : inhibitory_requests) {
 #pragma omp critical(BHIrequests)
             synapse_creation_requests_outgoing.append(target_rank, creation_request);
