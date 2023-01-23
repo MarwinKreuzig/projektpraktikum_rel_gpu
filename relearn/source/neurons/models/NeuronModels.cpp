@@ -29,7 +29,6 @@ void NeuronModel::init(number_neurons_type number_neurons) {
 
     input_calculator->init(number_neurons);
     background_calculator->init(number_neurons);
-    stimulus_calculator->init(number_neurons);
 }
 
 void NeuronModel::create_neurons(number_neurons_type creation_count) {

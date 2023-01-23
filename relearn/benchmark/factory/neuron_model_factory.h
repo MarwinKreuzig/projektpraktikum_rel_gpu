@@ -18,7 +18,7 @@ class NeuronModelFactory {
 public:
     template <typename NeuronModelType>
     static std::unique_ptr<NeuronModelType> construct_model(const unsigned int h,
-        std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator, std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator) {
+        std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator, std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::shared_ptr<Stimulus> stimulus_calculator) {
         if constexpr (std::is_same_v<NeuronModelType, models::PoissonModel>) {
             return construct_poisson_model(h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator));
         } else if constexpr (std::is_same_v<NeuronModelType, models::IzhikevichModel>) {
@@ -30,29 +30,37 @@ public:
         }
     }
 
-    static std::unique_ptr<models::PoissonModel> construct_poisson_model(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
-        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator) {
-        return std::make_unique<models::PoissonModel>(h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+    static std::unique_ptr<models::PoissonModel> construct_poisson_model(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator, 
+        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::shared_ptr<Stimulus>&& stimulus_calculator) {
+       auto model = std::make_unique<models::PoissonModel>(h, std::move(synaptic_input_calculator), std::move(background_activity_calculator),
             models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refractory_period);
+        model->set_stimulus_calculator(stimulus_calculator);
+        return model;
     }
 
     static std::unique_ptr<models::IzhikevichModel> construct_izhikevich_model(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
-        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator) {
-        return std::make_unique<models::IzhikevichModel>(h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::shared_ptr<Stimulus>&& stimulus_calculator) {
+        auto model = std::make_unique<models::IzhikevichModel>(h, std::move(synaptic_input_calculator), std::move(background_activity_calculator),
             models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c, models::IzhikevichModel::default_d,
             models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1, models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
+        model->set_stimulus_calculator(stimulus_calculator);
+        return model;
     }
 
     static std::unique_ptr<models::FitzHughNagumoModel> construct_fitzhughnaguma_model(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
-        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator) {
-        return std::make_unique<models::FitzHughNagumoModel>(h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::shared_ptr<Stimulus>&& stimulus_calculator) {
+        auto model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(synaptic_input_calculator), std::move(background_activity_calculator),
             models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
+        model->set_stimulus_calculator(stimulus_calculator);
+        return model;
     }
 
     static std::unique_ptr<models::AEIFModel> construct_aeif_model(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
-        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator) {
-        return std::make_unique<models::AEIFModel>(h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::shared_ptr<Stimulus>&& stimulus_calculator) {
+        auto model =  std::make_unique<models::AEIFModel>(h, std::move(synaptic_input_calculator), std::move(background_activity_calculator),
             models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
             models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b, models::AEIFModel::default_V_spike);
+        model->set_stimulus_calculator(stimulus_calculator);
+        return model;
     }
 };
