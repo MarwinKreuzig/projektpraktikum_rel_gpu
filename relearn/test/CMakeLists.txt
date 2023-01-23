@@ -98,6 +98,7 @@ target_sources(
 		neurons/test_neurons.cpp
 
 		octree/test_octree.cpp
+		octree/test_octree_node.cpp
 
 		parser/test_monitor_parser.cpp
 		parser/test_step_parser.cpp

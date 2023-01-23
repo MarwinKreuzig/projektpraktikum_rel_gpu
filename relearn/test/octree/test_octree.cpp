@@ -36,182 +36,7 @@
 using test_types = ::testing::Types<BarnesHutCell, BarnesHutInvertedCell, FastMultipoleMethodsCell, NaiveCell>;
 TYPED_TEST_SUITE(OctreeTest, test_types);
 
-TYPED_TEST(OctreeTest, testOctreeNodeReset) {
-    using AdditionalCellAttributes = TypeParam;
-
-    OctreeNode<AdditionalCellAttributes> node{};
-
-    ASSERT_FALSE(node.is_parent());
-    ASSERT_TRUE(node.get_mpi_rank() == MPIRank::uninitialized_rank());
-    ASSERT_TRUE(node.get_children().size() == Constants::number_oct);
-
-    const auto& children = node.get_children();
-
-    for (auto i = 0; i < Constants::number_oct; i++) {
-        ASSERT_TRUE(node.get_child(i) == nullptr);
-        ASSERT_TRUE(children[i] == nullptr);
-    }
-
-    node.set_parent();
-
-    const auto number_ranks = MPIRankAdapter::get_random_number_ranks(this->mt);
-    const auto rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, this->mt);
-
-    node.set_rank(rank);
-
-    std::array<OctreeNode<AdditionalCellAttributes>, Constants::number_oct> other_nodes{};
-    for (auto i = 0; i < Constants::number_oct; i++) {
-        node.set_child(&(other_nodes[i]), i);
-    }
-
-    node.reset();
-
-    ASSERT_FALSE(node.is_parent());
-    ASSERT_TRUE(node.get_mpi_rank() == MPIRank::uninitialized_rank());
-    ASSERT_TRUE(node.get_children().size() == Constants::number_oct);
-
-    const auto& new_children = node.get_children();
-
-    for (auto i = 0; i < Constants::number_oct; i++) {
-        ASSERT_TRUE(node.get_child(i) == nullptr);
-        ASSERT_TRUE(new_children[i] == nullptr);
-    }
-}
-
-TYPED_TEST(OctreeTest, testOctreeNodeSetterGetter) {
-    using AdditionalCellAttributes = TypeParam;
-
-    OctreeNode<AdditionalCellAttributes> node{};
-
-    node.set_parent();
-
-    const auto number_ranks = MPIRankAdapter::get_random_number_ranks(this->mt);
-    const auto rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, this->mt);
-
-    node.set_rank(rank);
-
-    std::array<OctreeNode<AdditionalCellAttributes>, Constants::number_oct> other_nodes{};
-    for (auto i = 0; i < Constants::number_oct; i++) {
-        node.set_child(&(other_nodes[i]), i);
-    }
-
-    ASSERT_TRUE(node.is_parent());
-    ASSERT_TRUE(node.get_mpi_rank() == rank);
-    ASSERT_TRUE(node.get_children().size() == Constants::number_oct);
-
-    const auto& children = node.get_children();
-
-    for (auto i = 0; i < Constants::number_oct; i++) {
-        ASSERT_TRUE(node.get_child(i) == &(other_nodes[i]));
-        ASSERT_TRUE(children[i] == &(other_nodes[i]));
-    }
-
-    const auto ub = Constants::number_oct * 100 + 100;
-
-    for (auto i = 0; i < ub; i++) {
-        if (i < Constants::number_oct) {
-            continue;
-        }
-
-        ASSERT_THROW(node.set_child(nullptr, i), RelearnException);
-        ASSERT_THROW(node.set_child(&node, i), RelearnException);
-        ASSERT_THROW(auto tmp = node.get_child(i), RelearnException);
-    }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
-}
-
-TYPED_TEST(OctreeTest, testOctreeNodeLocal) {
-    using AdditionalCellAttributes = TypeParam;
-
-    OctreeNode<AdditionalCellAttributes> node{};
-    const auto my_rank = MPIWrapper::get_my_rank();
-
-    for (const auto rank : MPIRank::range(1000)) {
-        node.set_rank(rank);
-
-        if (rank == my_rank) {
-            ASSERT_TRUE(node.is_local());
-        } else {
-            ASSERT_FALSE(node.is_local());
-        }
-    }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
-}
-
-TYPED_TEST(OctreeTest, testOctreeNodeInsert) {
-    using AdditionalCellAttributes = TypeParam;
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
-    const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
-    const auto& own_position = SimulationAdapter::get_random_position_in_box(min, max, this->mt);
-    size_t level = SimulationAdapter::get_small_refinement_level(this->mt);
-
-    OctreeNode<AdditionalCellAttributes> node{};
-    node.set_level(0);
-    node.set_rank(my_rank);
-    node.set_cell_size(min, max);
-    node.set_cell_neuron_id(NeuronID::virtual_id());
-    node.set_cell_neuron_position(own_position);
-
-    size_t number_neurons = TaggedIdAdapter::get_random_number_neurons(this->mt);
-    size_t num_additional_ids = TaggedIdAdapter::get_random_number_neurons(this->mt);
-
-    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
-
-    for (const auto& [pos, id] : neurons_to_place) {
-        auto tmp = node.insert(pos, id);
-    }
-
-    std::vector<std::tuple<Vec3d, NeuronID>> placed_neurons = OctreeAdapter::template extract_neurons<AdditionalCellAttributes>(&node);
-
-    std::sort(neurons_to_place.begin(), neurons_to_place.end(), [](std::tuple<Vec3d, NeuronID> a, std::tuple<Vec3d, NeuronID> b) { return std::get<1>(a) > std::get<1>(b); });
-    std::sort(placed_neurons.begin(), placed_neurons.end(), [](std::tuple<Vec3d, NeuronID> a, std::tuple<Vec3d, NeuronID> b) { return std::get<1>(a) > std::get<1>(b); });
-
-    ASSERT_EQ(neurons_to_place.size(), placed_neurons.size());
-
-    for (auto i = 0; i < neurons_to_place.size(); i++) {
-        const auto& expected_neuron = neurons_to_place[i];
-        const auto& found_neuron = placed_neurons[i];
-
-        ASSERT_EQ(expected_neuron, found_neuron);
-    }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
-}
-
-TYPED_TEST(OctreeTest, testNodeContains) {
-    const auto neuron_id = TaggedIdAdapter::get_random_neuron_id(100, this->mt);
-    const auto mpi_rank = MPIRankAdapter::get_random_mpi_rank(20, this->mt);
-
-    RankNeuronId rni{ mpi_rank, neuron_id };
-
-    using AdditionalCellAttributes = TypeParam;
-
-    for (const auto id_iterator : NeuronID::range(100)) {
-        for (const auto rank_iterator : MPIRank::range(20)) {
-            OctreeNode<AdditionalCellAttributes> node{};
-            node.set_cell_neuron_id(id_iterator);
-            node.set_rank(rank_iterator);
-
-            const auto flag = node.contains(rni);
-
-            if (node.is_leaf() && node.get_mpi_rank() == mpi_rank && node.get_cell_neuron_id() == neuron_id) {
-                ASSERT_TRUE(flag);
-            } else {
-                ASSERT_FALSE(flag);
-            }
-
-            node.set_parent();
-
-            ASSERT_FALSE(node.contains(rni));
-        }
-    }
-}
-
-TYPED_TEST(OctreeTest, testOctreeConstructor) {
+TYPED_TEST(OctreeTest, testConstructor) {
     using AdditionalCellAttributes = TypeParam;
 
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
@@ -250,7 +75,7 @@ TYPED_TEST(OctreeTest, testOctreeConstructor) {
     this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
-TYPED_TEST(OctreeTest, testOctreeConstructorExceptions) {
+TYPED_TEST(OctreeTest, testConstructorExceptions) {
     using AdditionalCellAttributes = TypeParam;
 
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
@@ -261,7 +86,7 @@ TYPED_TEST(OctreeTest, testOctreeConstructorExceptions) {
     this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
-TYPED_TEST(OctreeTest, testOctreeInsertNeurons) {
+TYPED_TEST(OctreeTest, testInsertNeurons) {
     using AdditionalCellAttributes = TypeParam;
 
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
@@ -295,7 +120,7 @@ TYPED_TEST(OctreeTest, testOctreeInsertNeurons) {
     this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
-TYPED_TEST(OctreeTest, testOctreeInsertNeuronsExceptions) {
+TYPED_TEST(OctreeTest, testInsertNeuronsExceptions) {
     using AdditionalCellAttributes = TypeParam;
 
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
@@ -335,7 +160,7 @@ TYPED_TEST(OctreeTest, testOctreeInsertNeuronsExceptions) {
     this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
-TYPED_TEST(OctreeTest, testOctreeStructure) {
+TYPED_TEST(OctreeTest, testStructure) {
     using AdditionalCellAttributes = TypeParam;
 
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
@@ -419,7 +244,7 @@ TYPED_TEST(OctreeTest, testOctreeStructure) {
     this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
-TYPED_TEST(OctreeTest, testOctreeMemoryStructure) {
+TYPED_TEST(OctreeTest, testMemoryStructure) {
     using AdditionalCellAttributes = TypeParam;
 
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
@@ -474,7 +299,7 @@ TYPED_TEST(OctreeTest, testOctreeMemoryStructure) {
     this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
-TYPED_TEST(OctreeTest, testOctreeLocalTrees) {
+TYPED_TEST(OctreeTest, testLocalTrees) {
     using AdditionalCellAttributes = TypeParam;
 
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
@@ -511,7 +336,7 @@ TYPED_TEST(OctreeTest, testOctreeLocalTrees) {
     this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
-TYPED_TEST(OctreeTest, testOctreeInsertLocalTree) {
+TYPED_TEST(OctreeTest, testInsertLocalTree) {
     using AdditionalCellAttributes = TypeParam;
 
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
@@ -608,56 +433,6 @@ TYPED_TEST(OctreeTest, testOctreeInsertLocalTree) {
     for (auto i = 0; i < num_local_trees; i++) {
         delete nodes_to_save_local_trees[i];
         delete nodes_to_save_new_local_trees[i];
-    }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
-}
-
-TYPED_TEST(OctreeTest, testOctreeLevel) {
-    using AdditionalCellAttributes = TypeParam;
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
-    const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
-    const auto& own_position = SimulationAdapter::get_random_position_in_box(min, max, this->mt);
-    std::uint16_t level = SimulationAdapter::get_small_refinement_level(this->mt);
-
-    OctreeNode<AdditionalCellAttributes> node{};
-    node.set_level(level);
-    node.set_rank(my_rank);
-    node.set_cell_size(min, max);
-    node.set_cell_neuron_id(NeuronID::virtual_id());
-    node.set_cell_neuron_position(own_position);
-
-    size_t number_neurons = TaggedIdAdapter::get_random_number_neurons(this->mt);
-    size_t num_additional_ids = TaggedIdAdapter::get_random_number_neurons(this->mt);
-
-    std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
-
-    for (const auto& [pos, id] : neurons_to_place) {
-        auto tmp = node.insert(pos, id /*, my_rank */);
-    }
-
-    ASSERT_EQ(node.get_level(), level);
-    Stack<std::pair<const OctreeNode<AdditionalCellAttributes>*, const OctreeNode<AdditionalCellAttributes>*>> stack;
-    for (const auto* child : node.get_children()) {
-        if (child != nullptr) {
-            stack.emplace_back(&node, child);
-        }
-    }
-
-    while (!stack.empty()) {
-        const auto& [parent, child] = stack.pop_back();
-        const auto parent_level = parent->get_level();
-        const auto child_level = child->get_level();
-        ASSERT_EQ(parent_level + 1, child_level);
-        if (child->is_parent()) {
-            for (const auto* new_child : child->get_children()) {
-                if (new_child != nullptr) {
-                    stack.emplace_back(child, new_child);
-                }
-            }
-        }
     }
 
     this->template make_mpi_mem_available<AdditionalCellAttributes>();

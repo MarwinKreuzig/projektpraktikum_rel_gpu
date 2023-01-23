@@ -19,3 +19,11 @@ protected:
         SetUpTestCaseTemplate<AdditionalCellAttributes>();
     }
 };
+
+template <typename AdditionalCellAttributes>
+class OctreeNodeTest : public RelearnTestWithAdditionalCellAttribute {
+protected:
+    static void SetUpTestSuite() {
+        SetUpTestCaseTemplate<AdditionalCellAttributes>();
+    }
+};
