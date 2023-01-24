@@ -221,9 +221,12 @@ protected:
 
     void create_local_area_translator(size_t num_local_neurons) {
         std::vector<RelearnTypes::area_id> neuron_id_to_area_id{};
-        neuron_id_to_area_id.resize(num_local_neurons, 0);
+        neuron_id_to_area_id.reserve(num_local_neurons);
 
-        if(!loaded_neurons.empty()) {
+        if(loaded_neurons.empty())  {
+            neuron_id_to_area_id.resize(num_local_neurons, 0);
+        }
+        else {
             for (const auto &loaded_neuron: loaded_neurons) {
                 neuron_id_to_area_id.push_back(loaded_neuron.area_id);
             }
