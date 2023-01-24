@@ -24,7 +24,7 @@
 #include "neurons/input/BackgroundActivityCalculator.h"
 #include "neurons/input/BackgroundActivityCalculators.h"
 #include "neurons/input/SynapticInputCalculator.h"
-#include "neurons/input/SynapticInputCalculators.h"
+#include "neurons/input/SynapticInputCalculators.h"<
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
 #include "sim/Essentials.h"
@@ -657,6 +657,10 @@ int main(int argc, char** argv) {
         essentials->insert("First-plasticity-step", first_plasticity_step);
         essentials->insert("Last-plasticity-step", last_plasticity_step);
 
+        essentials->insert("Calcium-Minimum-Axons", min_calcium_axons);
+        essentials->insert("Calcium-Minimum-Excitatory-Dendrites", min_calcium_excitatory_dendrites);
+        essentials->insert("Calcium-Minimum-Inhibitory-Dendrites", min_calcium_inhibitory_dendrites);
+
         if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic) {
             essentials->insert("Synapse-Input", "Logarithmic");
             essentials->insert("Synapse-Input-Scaling", input_scale);
@@ -673,7 +677,7 @@ int main(int argc, char** argv) {
             essentials->insert("Kernel-Scale-Parameter", gamma_theta);
         } else if (chosen_kernel_type == KernelType::Gaussian) {
             essentials->insert("Kernel-Type", "Gaussian");
-            essentials->insert("TKernel-Translation-Parameter", gaussian_mu);
+            essentials->insert("Kernel-Translation-Parameter", gaussian_mu);
             essentials->insert("Kernel-Scale-Parameter", gaussian_sigma);
         } else if (chosen_kernel_type == KernelType::Linear) {
             essentials->insert("Kernel-Type", "Linear");
