@@ -1,8 +1,11 @@
+set(relearn_adapter_additional_files "" CACHE INTERNAL "")
 set(relearn_benchmark_additional_files "" CACHE INTERNAL "")
 set(relearn_lib_additional_files "" CACHE INTERNAL "")
 set(relearn_tests_additional_files "" CACHE INTERNAL "")
 	
 if(WIN32)
+	list(APPEND relearn_adapter_additional_files "RandomAdapter.h")
+
 	list(APPEND relearn_benchmark_additional_files "main.h")
 	list(APPEND relearn_benchmark_additional_files "AdapterNeuronModel.h")
 
@@ -153,7 +156,6 @@ if(WIN32)
 	list(APPEND relearn_lib_additional_files "util/shuffle/shuffle.h")
 	
 	#tests
-	list(APPEND relearn_tests_additional_files "RandomAdapter.h")
 	list(APPEND relearn_tests_additional_files "RelearnTest.hpp")
 	
 	list(APPEND relearn_tests_additional_files "background_activity/test_background_activity.h")

@@ -122,8 +122,9 @@ target_sources(
 		  
 target_include_directories(relearn_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(relearn_tests PRIVATE project_options project_libraries)
-target_link_libraries(relearn_tests PRIVATE relearn_lib)
+target_link_libraries(relearn_tests PRIVATE relearn_lib relearn_adapter)
 target_link_libraries(relearn_tests PRIVATE gtest_main)
+
 add_test(NAME SerialTests COMMAND relearn_tests)
 add_dependencies(check relearn_tests)
 

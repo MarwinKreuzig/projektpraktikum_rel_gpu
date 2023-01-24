@@ -23,7 +23,7 @@ add_executable(
 
 target_link_libraries(relearn_benchmarks PRIVATE project_options
                                                  project_libraries)
-target_link_libraries(relearn_benchmarks PRIVATE relearn_lib)
+target_link_libraries(relearn_benchmarks PRIVATE relearn_lib relearn_adapter)
 target_link_libraries(relearn_benchmarks PRIVATE benchmark::benchmark)
 
 get_target_property(relearn_benchmark_sources relearn_benchmarks SOURCES)
