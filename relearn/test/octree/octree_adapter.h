@@ -27,6 +27,7 @@
 #include <random>
 #include <stack>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 class OctreeAdapter {
@@ -430,5 +431,32 @@ public:
         }
 
         return nullptr;
+    }
+
+    template <typename AdditionalCellAttributes>
+    static std::unordered_map<RankNeuronId, OctreeNode<AdditionalCellAttributes>*> find_nodes(OctreeNode<AdditionalCellAttributes>* root) {
+        std::unordered_map<RankNeuronId, OctreeNode<AdditionalCellAttributes>*> mapping{};
+
+        std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
+        stack.push(root);
+
+        while (!stack.empty()) {
+            auto* current = stack.top();
+            stack.pop();
+
+            if (current->is_leaf()) {
+                RankNeuronId rni{ current->get_mpi_rank(), current->get_cell_neuron_id() };
+                mapping.emplace(rni, current);
+                continue;
+            }
+
+            for (auto* child : current->get_children()) {
+                if (child != nullptr) {
+                    stack.push(child);
+                }
+            }
+        }
+
+        return mapping;
     }
 };
