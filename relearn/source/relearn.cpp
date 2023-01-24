@@ -726,6 +726,13 @@ int main(int argc, char** argv) {
         RelearnException::check(chosen_kernel_type == KernelType::Gaussian, "Setting the probability kernel type is not supported for the fast multipole methods!");
     }
 
+    std::unique_ptr<Stimulus> stimulus_calculator{};
+    if (static_cast<bool>(*opt_file_external_stimulation)) {
+        stimulus_calculator = std::make_unique<Stimulus>(file_external_stimulation, my_rank, subdomain->get_local_area_translator());
+    } else {
+        stimulus_calculator = std::make_unique<Stimulus>();
+    }
+
     std::unique_ptr<SynapticInputCalculator> input_calculator{};
     if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
         input_calculator = std::make_unique<LinearSynapticInputCalculator>(synapse_conductance);
@@ -739,24 +746,25 @@ int main(int argc, char** argv) {
 
     std::unique_ptr<NeuronModel> neuron_model{};
     if (chosen_neuron_model == NeuronModelEnum::Poisson) {
-        neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
-            models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refractory_period);
+        neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+                                                              models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refractory_period);
     } else if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
-        neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
-            models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
-            models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
-            models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
+        neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+                                                                 models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
+                                                                 models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
+                                                                 models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
     } else if (chosen_neuron_model == NeuronModelEnum::FitzHughNagumo) {
-        neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
-            models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
+        neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+                                                                     models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
     } else if (chosen_neuron_model == NeuronModelEnum::AEIF) {
-        neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator),
-            models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
-            models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
-            models::AEIFModel::default_V_spike);
+        neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+                                                           models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
+                                                           models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
+                                                           models::AEIFModel::default_V_spike);
     } else {
         RelearnException::fail("Chose a neuron model that is not implemented");
     }
+
 
     auto calcium_calculator = std::make_unique<CalciumCalculator>(target_calcium_decay_type, target_calcium_decay_amount, target_calcium_decay_step, first_decay_step, last_decay_step);
     calcium_calculator->set_beta(beta);
@@ -860,15 +868,6 @@ int main(int argc, char** argv) {
     MPIWrapper::lock_window(my_rank, MPI_Locktype::Exclusive);
 
     sim.initialize();
-
-    std::shared_ptr<Stimulus> stimulus_calculator{};
-    if (static_cast<bool>(*opt_file_external_stimulation)) {
-        stimulus_calculator = std::make_shared<Stimulus>(file_external_stimulation, my_rank, sim.get_neurons()->get_local_area_translator());
-    } else {
-        stimulus_calculator = std::make_shared<Stimulus>();
-    }
-
-    sim.get_neurons()->get_neuron_model()->set_stimulus_calculator(stimulus_calculator);
 
     if (static_cast<bool>(*flag_monitor_all)) {
         const auto number_local_neurons = partition->get_number_local_neurons();

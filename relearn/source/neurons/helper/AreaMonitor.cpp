@@ -97,6 +97,7 @@ void AreaMonitor::write_header() {
 }
 
 void AreaMonitor::write_data_to_file() {
+    //Timers::start();
     std::ofstream out(path, std::ios_base::app);
 
     std::set<std::pair<int, RelearnTypes::area_id>> unique_area_ids;
@@ -142,6 +143,7 @@ void AreaMonitor::write_data_to_file() {
     }
     out.close();
     data.clear();
+    //Timers::stop_and_add();
 }
 const std::vector<std::vector<AreaMonitor::AreaConnection>>& AreaMonitor::get_exchange_data() const {
     return mpi_data;

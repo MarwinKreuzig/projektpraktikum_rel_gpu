@@ -106,4 +106,5 @@ void MultipleSubdomainsFromFile::read_neurons_from_file(const std::filesystem::p
     partition->set_total_number_neurons(total_number_neurons);
 
     set_loaded_nodes(std::move(nodes));
+    create_local_area_translator(total_number_neurons);
 }

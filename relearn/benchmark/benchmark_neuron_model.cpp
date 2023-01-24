@@ -18,10 +18,8 @@ static void BM_NeuronModel_UpdateActivityBenchmark(benchmark::State& state) {
         auto synaptic_input = InputFactory::construct_linear_input();
         auto background = BackgroundFactory::construct_null_background();
 
-        const auto stimulus = std::make_shared<Stimulus>();
-        auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), stimulus);
+        auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), std::make_unique<Stimulus>());
         model->init(number_neurons);
-        model->set_stimulus_calculator(stimulus);
 
         AdapterNeuronModel<NeuronModelType> adapter{ *model };
 
@@ -56,10 +54,8 @@ static void BM_NeuronModel_UpdateFullActivity(benchmark::State& state) {
         auto synaptic_input = InputFactory::construct_linear_input();
         auto background = BackgroundFactory::construct_null_background();
 
-        const auto stimulus = std::make_shared<Stimulus>();
-        auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), stimulus);
+        auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), std::make_unique<Stimulus>());
         model->init(number_neurons);
-        model->set_stimulus_calculator(stimulus);
 
         AdapterNeuronModel<NeuronModelType> adapter{ *model };
 
@@ -92,10 +88,8 @@ static void BM_NeuronModel_UpdateFullActivityBenchmark(benchmark::State& state) 
         auto synaptic_input = InputFactory::construct_linear_input();
         auto background = BackgroundFactory::construct_null_background();
 
-        const auto stimulus = std::make_shared<Stimulus>();
-        auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), stimulus);
+        auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), std::make_unique<Stimulus>());
         model->init(number_neurons);
-        model->set_stimulus_calculator(stimulus);
 
         AdapterNeuronModel<NeuronModelType> adapter{ *model };
 
@@ -127,7 +121,7 @@ BENCHMARK(BM_NeuronModel_UpdateFullActivity<models::PoissonModel>)->Unit(benchma
 BENCHMARK(BM_NeuronModel_UpdateFullActivity<models::IzhikevichModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(50);
 BENCHMARK(BM_NeuronModel_UpdateFullActivity<models::FitzHughNagumoModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(50);
 BENCHMARK(BM_NeuronModel_UpdateFullActivity<models::AEIFModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(50);
-                               
+
 BENCHMARK(BM_NeuronModel_UpdateFullActivityBenchmark<models::PoissonModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(50);
 BENCHMARK(BM_NeuronModel_UpdateFullActivityBenchmark<models::IzhikevichModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(50);
 BENCHMARK(BM_NeuronModel_UpdateFullActivityBenchmark<models::FitzHughNagumoModel>)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(50);

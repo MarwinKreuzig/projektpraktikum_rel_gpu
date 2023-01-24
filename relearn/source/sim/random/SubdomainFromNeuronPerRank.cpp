@@ -53,6 +53,8 @@ SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank(const SubdomainFromNeuron
     set_ratio_placed_excitatory_neurons(0.0);
 
     synapse_loader = std::make_shared<RandomSynapseLoader>(std::move(partition));
+
+    create_local_area_translator(number_neurons_per_rank);
 }
 
 void SubdomainFromNeuronPerRank::print_essentials(const std::unique_ptr<Essentials>& essentials) {

@@ -459,15 +459,23 @@ void Simulation::simulate(const step_type number_steps) {
     // Stop timing simulation loop
     Timers::stop_and_add(TimerRegion::SIMULATION_LOOP);
 
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Final flush of neuron monitors");
+
     for (auto& monitor : *monitors) {
         monitor.flush_current_contents();
     }
+
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Final flush of area monitors");
 
     for (auto& [area_id, area_monitor] : *area_monitors) {
         area_monitor.write_data_to_file();
     }
 
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Print positions");
+
     neurons->print_positions_to_log_file();
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Print area mapping");
+
     neurons->print_area_mapping_to_log_file();
 }
 

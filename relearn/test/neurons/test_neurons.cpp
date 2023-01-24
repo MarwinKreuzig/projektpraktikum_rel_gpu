@@ -103,11 +103,12 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
 
     auto partition = std::make_shared<Partition>(1, MPIRank::root_rank());
     auto model = std::make_unique<models::PoissonModel>(models::PoissonModel::default_h,
-        std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_conductance),
-        std::make_unique<NullBackgroundActivityCalculator>(),
-        models::PoissonModel::default_x_0,
-        models::PoissonModel::default_tau_x,
-        models::PoissonModel::default_refractory_period);
+                                                        std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_conductance),
+                                                        std::make_unique<NullBackgroundActivityCalculator>(),
+                                                        std::make_unique<Stimulus>(),
+                                                        models::PoissonModel::default_x_0,
+                                                        models::PoissonModel::default_tau_x,
+                                                        models::PoissonModel::default_refractory_period);
     auto calcium = std::make_unique<CalciumCalculator>();
     calcium->set_initial_calcium_calculator([](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
     calcium->set_target_calcium_calculator([](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
@@ -136,7 +137,7 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
             src = TaggedIdAdapter::get_random_neuron_id(num_neurons, mt);
             tgt = TaggedIdAdapter::get_random_neuron_id(num_neurons, mt);
         } while (std::find(static_neurons.begin(), static_neurons.end(), src) != static_neurons.end() || std::find(static_neurons.begin(), static_neurons.end(), tgt) != static_neurons.end()
-            || src == tgt);
+                 || src == tgt);
         auto weight = RandomAdapter::get_random_double<double>(0.1, 10, mt);
         network_graph_plastic->add_synapse({ NeuronID{ tgt }, NeuronID{ src }, weight });
     }
