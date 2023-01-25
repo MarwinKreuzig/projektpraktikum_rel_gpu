@@ -828,12 +828,12 @@ int main(int argc, char** argv) {
     sim.set_subdomain_assignment(std::move(subdomain));
 
     if (*opt_file_enable_interrupts) {
-        auto enable_interrupts = InteractiveNeuronIO::load_enable_interrupts(file_enable_interrupts);
+        auto enable_interrupts = InteractiveNeuronIO::load_enable_interrupts(file_enable_interrupts, my_rank);
         sim.set_enable_interrupts(std::move(enable_interrupts));
     }
 
     if (*opt_file_disable_interrupts) {
-        auto disable_interrupts = InteractiveNeuronIO::load_disable_interrupts(file_disable_interrupts);
+        auto disable_interrupts = InteractiveNeuronIO::load_disable_interrupts(file_disable_interrupts, my_rank);
         sim.set_disable_interrupts(std::move(disable_interrupts));
     }
 
