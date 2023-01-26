@@ -10,12 +10,12 @@
 
 #include "test_kernel.h"
 
-#include "RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
-#include "kernel_adapter.h"
-#include "neurons/neuron_types_adapter.h"
-#include "simulation/simulation_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/kernel/KernelAdapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "algorithm/Kernel/Kernel.h"
 #include "algorithm/Cells.h"

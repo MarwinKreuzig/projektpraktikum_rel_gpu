@@ -10,11 +10,11 @@
 
 #include "test_synaptic_elements.h"
 
-#include "RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
-#include "neurons/neuron_types_adapter.h"
-#include "synaptic_elements_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/synaptic_elements/SynapticElementsAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "neurons/NeuronsExtraInfo.h"
 #include "neurons/models/SynapticElements.h"

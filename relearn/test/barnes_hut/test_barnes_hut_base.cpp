@@ -10,13 +10,13 @@
 
 #include "test_barnes_hut.h"
 
-#include "mpi/mpi_rank_adapter.h"
-#include "neurons/neurons_adapter.h"
-#include "neurons/neuron_types_adapter.h"
-#include "node_cache/node_cache_adapter.h"
-#include "octree/octree_adapter.h"
-#include "simulation/simulation_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/neurons/NeuronsAdapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/node_cache/NodeCacheAdapter.h"
+#include "adapter/octree/OctreeAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "algorithm/BarnesHutInternal/BarnesHutBase.h"
 #include "algorithm/Cells.h"

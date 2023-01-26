@@ -10,7 +10,7 @@
  *
  */
 
-#include "RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
 #include "Config.h"
 #include "util/Vec3.h"

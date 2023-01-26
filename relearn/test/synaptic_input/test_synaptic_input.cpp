@@ -10,10 +10,10 @@
 
 #include "test_synaptic_input.h"
 
-#include "RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
-#include "network_graph/network_graph_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/network_graph/NetworkGraphAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "neurons/input/SynapticInputCalculator.h"
 #include "neurons/input/SynapticInputCalculators.h"

@@ -10,8 +10,8 @@
 
 #include "test_calcium_calculator.h"
 
-#include "neurons/neuron_types_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "neurons/CalciumCalculator.h"
 #include "neurons/NeuronsExtraInfo.h"

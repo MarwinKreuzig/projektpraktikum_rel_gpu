@@ -10,7 +10,7 @@
 
 #include "test_misc.h"
 
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "util/Utility.h"
 

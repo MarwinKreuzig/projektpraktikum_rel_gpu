@@ -10,7 +10,7 @@
  *
  */
 
-#include "RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
 #include "Types.h"
 #include "util/Interval.h"

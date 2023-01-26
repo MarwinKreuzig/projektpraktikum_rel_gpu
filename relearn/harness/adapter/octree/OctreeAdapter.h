@@ -10,9 +10,9 @@
  *
  */
 
-#include "RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
-#include "simulation/simulation_adapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
 
 #include "neurons/helper/RankNeuronId.h"
 #include "structure/Cell.h"

@@ -10,9 +10,9 @@
 
 #include "test_kernel.h"
 
-#include "kernel_adapter.h"
-#include "simulation/simulation_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/kernel/KernelAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "algorithm/Kernel/Gaussian.h"
 #include "algorithm/Kernel/Kernel.h"

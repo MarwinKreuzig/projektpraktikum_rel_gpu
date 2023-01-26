@@ -11,7 +11,7 @@
  */
 
 #include "RelearnTest.hpp"
-#include "RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
 #include "util/Interval.h"
 

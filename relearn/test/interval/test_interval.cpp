@@ -10,7 +10,8 @@
 
 #include "test_interval.h"
 
-#include "interval_adapter.h"
+#include "adapter/interval/IntervalAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
 #include <sstream>
 

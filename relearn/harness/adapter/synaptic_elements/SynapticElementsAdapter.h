@@ -10,9 +10,9 @@
  *
  */
 
-#include "RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
-#include "neurons/neuron_types_adapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
 
 #include "neurons/models/SynapticElements.h"
 #include "neurons/CalciumCalculator.h"

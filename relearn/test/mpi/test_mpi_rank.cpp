@@ -10,7 +10,7 @@
 
 #include "test_mpi_rank.h"
 
-#include "RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
 #include "util/MPIRank.h"
 

@@ -10,7 +10,7 @@
 
 #include "test_vector.h"
 
-#include "simulation/simulation_adapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
 #include "util/Vec3.h"
 
 #include <sstream>

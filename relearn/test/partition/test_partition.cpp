@@ -10,9 +10,9 @@
 
 #include "test_partition.h"
 
-#include "mpi/mpi_rank_adapter.h"
-#include "simulation/simulation_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "structure/Partition.h"
 #include "util/RelearnException.h"

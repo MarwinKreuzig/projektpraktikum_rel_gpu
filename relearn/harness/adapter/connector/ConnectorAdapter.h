@@ -10,9 +10,9 @@
  *
  */
 
-#include "mpi/mpi_rank_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
-#include "RandomAdapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
 #include "mpi/CommunicationMap.h"
 #include "neurons/helper/SynapseCreationRequests.h"

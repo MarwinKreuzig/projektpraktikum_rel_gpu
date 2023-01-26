@@ -10,11 +10,11 @@
 
 #include "test_octree.h"
 
-#include "mpi/mpi_rank_adapter.h"
-#include "neurons/neurons_adapter.h"
-#include "octree/octree_adapter.h"
-#include "simulation/simulation_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/neurons/NeuronsAdapter.h"
+#include "adapter/octree/OctreeAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "algorithm/Algorithms.h"
 #include "algorithm/Cells.h"

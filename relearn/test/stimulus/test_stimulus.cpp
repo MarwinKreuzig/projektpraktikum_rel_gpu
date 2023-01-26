@@ -10,9 +10,9 @@
 
 #include "test_stimulus.h"
 
-#include "neuron_assignment/neuron_assignment_adapter.h"
-#include "RandomAdapter.h"
-#include "stimulus/stimulus_adapter.h"
+#include "adapter/neuron_assignment/NeuronAssignmentAdapter.h"
+#include "adapter/random/RandomAdapter.h"
+#include "adapter/stimulus/StimulusAdapter.h"
 
 #include "io/InteractiveNeuronIO.h"
 #include "neurons/LocalAreaTranslator.h"

@@ -10,8 +10,8 @@
  *
  */
 
-#include "RandomAdapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/random/RandomAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "Types.h"
 #include "neurons/enums/SignalType.h"

@@ -10,14 +10,14 @@
 
 #include "test_neuron_io.h"
 
-#include "RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
-#include "mpi/mpi_rank_adapter.h"
-#include "network_graph/network_graph_adapter.h"
-#include "neuron_assignment/neuron_assignment_adapter.h"
-#include "neurons/neuron_types_adapter.h"
-#include "simulation/simulation_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/network_graph/NetworkGraphAdapter.h"
+#include "adapter/neuron_assignment/NeuronAssignmentAdapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "io/NeuronIO.h"
 #include "neurons/LocalAreaTranslator.h"

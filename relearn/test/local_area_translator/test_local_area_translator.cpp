@@ -10,10 +10,10 @@
 
 #include "test_local_area_translator.h"
 
-#include "RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
-#include "neuron_assignment/neuron_assignment_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/neuron_assignment/NeuronAssignmentAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "neurons/LocalAreaTranslator.h"
 

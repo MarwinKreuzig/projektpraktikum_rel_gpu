@@ -12,7 +12,7 @@
 
 #include "RelearnTest.hpp"
 
-#include "helper/rank_neuron_id_adapter.h"
+#include "adapter/helper/RankNeuronIdAdapter.h"
 
 #include "neurons/helper/RankNeuronId.h"
 

@@ -10,7 +10,7 @@
 
 #include "test_barnes_hut.h"
 
-#include "simulation/simulation_adapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
 
 #include "algorithm/BarnesHutInternal/BarnesHutInverted.h"
 #include "algorithm/BarnesHutInternal/BarnesHutInvertedCell.h"

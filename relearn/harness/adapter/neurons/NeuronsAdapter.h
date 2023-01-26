@@ -10,9 +10,9 @@
  *
  */
 
-#include "RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
-#include "simulation/simulation_adapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
 
 #include "util/TaggedID.h"
 #include "util/Vec3.h"

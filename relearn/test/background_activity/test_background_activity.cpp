@@ -10,7 +10,7 @@
 
 #include "test_background_activity.h"
 
-#include "tagged_id/tagged_id_adapter.h"
+#include "tagged_id/TaggedIdAdapter.h"
 
 #include "neurons/input/BackgroundActivityCalculator.h"
 #include "neurons/input/BackgroundActivityCalculators.h"

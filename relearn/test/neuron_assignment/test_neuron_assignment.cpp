@@ -10,12 +10,12 @@
 
 #include "test_neuron_assignment.h"
 
-#include "RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
-#include "mpi/mpi_rank_adapter.h"
-#include "network_graph/network_graph_adapter.h"
-#include "neuron_assignment_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/network_graph/NetworkGraphAdapter.h"
+#include "adapter/neuron_assignment/NeuronAssignmentAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "sim/Essentials.h"
 #include "sim/random/SubdomainFromNeuronDensity.h"
