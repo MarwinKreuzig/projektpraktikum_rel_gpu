@@ -10,9 +10,9 @@
 
 #include "test_distant_neuron_request.h"
 
-#include "neurons/NeuronTypesAdapter.h"
-#include "simulation/SimulationAdapter.h"
-#include "tagged_id/TaggedIdAdapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "neurons/helper/DistantNeuronRequests.h"
 

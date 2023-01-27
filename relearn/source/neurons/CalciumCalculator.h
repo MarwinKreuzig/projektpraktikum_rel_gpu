@@ -210,6 +210,24 @@ public:
      */
     void update_calcium(step_type step, std::span<const FiredStatus> fired_status);
 
+    /**
+     * @brief Returns the id of the neuron that has the currently lowest calcium value (on the MPI rank).
+     *      Can return an unitialized ID if there was no neuron to update.
+     * @return The id
+     */
+    constexpr NeuronID get_current_minimum() const noexcept {
+        return current_minimum;
+    }
+
+    /**
+     * @brief Returns the id of the neuron that has the currently highest calcium value (on the MPI rank).
+     *      Can return an unitialized ID if there was no neuron to update.
+     * @return The id
+     */
+    constexpr NeuronID get_current_maximum() const noexcept {
+        return current_maximum;
+    }
+
     static constexpr double default_C_target{ 0.7 }; // In Sebastian's work: 0.5
 
     static constexpr double default_tau_C{ 10000 }; // In Sebastian's work: 5000
@@ -246,4 +264,7 @@ private:
     step_type decay_step{ 1000 };
     step_type first_decay_step{ 0 };
     step_type last_decay_step{ std::numeric_limits<step_type>::max() };
+
+    NeuronID current_minimum{ NeuronID::uninitialized_id() };
+    NeuronID current_maximum{ NeuronID::uninitialized_id() };
 };

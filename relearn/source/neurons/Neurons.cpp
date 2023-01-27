@@ -104,7 +104,7 @@ void Neurons::check_signal_types(const std::shared_ptr<NetworkGraph> network_gra
 
 Neurons::number_neurons_type Neurons::disable_neurons(const std::span<const NeuronID> neuron_ids) {
     extra_info->set_disabled_neurons(neuron_ids);
-    
+
     neuron_model->disable_neurons(neuron_ids);
 
     std::vector<unsigned int> deleted_axon_connections(number_neurons, 0);
@@ -247,6 +247,13 @@ void Neurons::update_electrical_activity(const step_type step) {
 
     const auto& fired = neuron_model->get_fired();
     calcium_calculator->update_calcium(step, fired);
+
+    const auto& calcium_values = calcium_calculator->get_calcium();
+    const auto& current_min_id = calcium_calculator->get_current_minimum().get_neuron_id();
+    const auto& current_max_id = calcium_calculator->get_current_maximum().get_neuron_id();
+
+    LogFiles::write_to_file(LogFiles::EventType::ExtremeCalciumValues, false, "{};{:.6f};{};{:.6f}",
+        current_min_id, calcium_values[current_min_id], current_max_id, calcium_values[current_max_id]);
 }
 
 void Neurons::update_number_synaptic_elements_delta() {
@@ -883,6 +890,25 @@ void Neurons::print_calcium_statistics_to_essentials(const std::unique_ptr<Essen
     essentials->insert("Calcium-Maximum", calcium_statistics.max);
 }
 
+void Neurons::print_synaptic_changes_to_essentials(const std::unique_ptr<Essentials>& essentials) {
+    auto helper = [this, &essentials](const auto& synaptic_elements, std::string message) {
+        const auto local_adds = synaptic_elements.get_total_additions();
+        const auto local_dels = synaptic_elements.get_total_deletions();
+
+        const auto global_adds = MPIWrapper::reduce(local_adds, MPIWrapper::ReduceFunction::Sum, MPIRank::root_rank());
+        const auto global_dels = MPIWrapper::reduce(local_dels, MPIWrapper::ReduceFunction::Sum, MPIRank::root_rank());
+
+        if (MPIRank::root_rank() == MPIWrapper::get_my_rank()) {
+            essentials->insert(message + "Additions", global_adds);
+            essentials->insert(message + "Deletions", global_dels);
+        }
+    };
+
+    helper(*axons, "Axons-");
+    helper(*dendrites_exc, "Dendrites-Excitatory-");
+    helper(*dendrites_inh, "Dendrites-Inhibitory-");
+}
+
 void Neurons::print_network_graph_to_log_file(const step_type step, bool with_prefix) const {
     std::string prefix = "";
     if (with_prefix) {
@@ -894,12 +920,12 @@ void Neurons::print_network_graph_to_log_file(const step_type step, bool with_pr
     std::stringstream ss_in_network{};
     std::stringstream ss_out_network{};
 
-    NeuronIO::write_out_synapses(network_graph_static->get_all_local_out_edges(), network_graph_static->get_all_distant_out_edges(), 
+    NeuronIO::write_out_synapses(network_graph_static->get_all_local_out_edges(), network_graph_static->get_all_distant_out_edges(),
         network_graph_plastic->get_all_local_out_edges(), network_graph_plastic->get_all_distant_out_edges(), MPIWrapper::get_my_rank(),
         partition->get_number_mpi_ranks(), partition->get_number_local_neurons(), partition->get_total_number_neurons(), ss_out_network, step);
-    
-    NeuronIO::write_in_synapses(network_graph_static->get_all_local_in_edges(), network_graph_static->get_all_distant_in_edges(), 
-        network_graph_plastic->get_all_local_in_edges(), network_graph_plastic->get_all_distant_in_edges(), MPIWrapper::get_my_rank(), 
+
+    NeuronIO::write_in_synapses(network_graph_static->get_all_local_in_edges(), network_graph_static->get_all_distant_in_edges(),
+        network_graph_plastic->get_all_local_in_edges(), network_graph_plastic->get_all_distant_in_edges(), MPIWrapper::get_my_rank(),
         partition->get_number_mpi_ranks(), partition->get_number_local_neurons(), partition->get_total_number_neurons(), ss_in_network, step);
 
     LogFiles::write_to_file(LogFiles::EventType::InNetwork, false, ss_in_network.str());

@@ -1,9 +1,9 @@
 #include "test_neurons.h"
 
-#include "random/RandomAdapter.h"
-#include "mpi/MpiRankAdapter.h"
-#include "neurons/NeuronTypesAdapter.h"
-#include "tagged_id/TaggedIdAdapter.h"
+#include "adapter/random/RandomAdapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "neurons/input/BackgroundActivityCalculators.h"
 #include "neurons/models/NeuronModels.h"

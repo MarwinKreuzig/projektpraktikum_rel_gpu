@@ -470,6 +470,22 @@ public:
         return result;
     }
 
+    /**
+     * @brief Returns the total amount of additions to these synaptic elements over the whole simulation
+     * @return The additions
+     */
+    [[nodiscard]] double get_total_additions() const noexcept {
+        return total_additions;
+    }
+
+    /**
+     * @brief Returns the total amount of deletions to these synaptic elements over the whole simulation
+     * @return The deletions
+     */
+    [[nodiscard]] double get_total_deletions() const noexcept {
+        return total_deletions;
+    }
+
 private:
     /**
      * @brief Updates the number of synaptic elements for the specified neuron.
@@ -506,6 +522,9 @@ public:
     static constexpr double max_vacant_elements_initially{ 1000.0 };
 
 private:
+    double total_additions{ 0.0 };
+    double total_deletions{ 0.0 };
+
     ElementType type{}; // Denotes the type of all synaptic elements, which is Axon or Dendrite
     number_neurons_type size{ 0 };
 

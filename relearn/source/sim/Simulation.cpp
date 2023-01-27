@@ -486,7 +486,8 @@ void Simulation::finalize() const {
         Timers::wall_clock_time());
 
     neurons->print_calcium_statistics_to_essentials(essentials);
-
+    neurons->print_synaptic_changes_to_essentials(essentials);
+    
     essentials->insert("Created-Synapses", total_synapse_creations);
     essentials->insert("Deleted-Synapses", total_synapse_deletions);
     essentials->insert("net-Synapses", net_creations);

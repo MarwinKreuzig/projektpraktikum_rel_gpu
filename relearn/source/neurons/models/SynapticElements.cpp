@@ -17,6 +17,31 @@ std::pair<unsigned int, std::vector<unsigned int>> SynapticElements::commit_upda
 
     RelearnException::check(disable_flags.size() == size, ":SynapticElements::commit_updates: disable_flags was not of the right size");
 
+    auto current_additions = 0.0;
+    auto current_deletions = 0.0;
+
+#pragma omp parallel for reduction(+ \
+                                   : current_additions, current_deletions) shared(disable_flags) default(none)
+    for (auto neuron_id = 0; neuron_id < size; ++neuron_id) {
+        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
+            continue;
+        }
+
+        const auto delta = deltas_since_last_update[neuron_id];
+
+        const auto adds = delta > 0.0 ? delta : 0.0;
+        auto dels = delta < 0.0 ? std::abs(delta) : 0.0;
+        if (dels > grown_elements[neuron_id]) {
+            dels = grown_elements[neuron_id];
+        }
+
+        current_additions += adds;
+        current_deletions += dels;
+    }
+
+    total_additions += current_additions;
+    total_deletions += current_deletions;
+
     std::vector<unsigned int> number_deletions(size, 0);
     unsigned int sum_to_delete = 0;
 
@@ -44,9 +69,9 @@ std::pair<unsigned int, std::vector<unsigned int>> SynapticElements::commit_upda
 void SynapticElements::update_number_elements_delta(const std::span<const double> calcium, const std::span<const double> target_calcium) {
     const auto& disable_flags = extra_infos->get_disable_flags();
 
-    RelearnException::check(calcium.size() == size, "SynapticElements::commit_updates: calcium was not of the right size");
-    RelearnException::check(target_calcium.size() == size, "SynapticElements::commit_updates: target_calcium was not of the right size");
-    RelearnException::check(disable_flags.size() == size, "SynapticElements::commit_updates: disable_flags was not of the right size");
+    RelearnException::check(calcium.size() == size, "SynapticElements::update_number_elements_delta: calcium was not of the right size");
+    RelearnException::check(target_calcium.size() == size, "SynapticElements::update_number_elements_delta: target_calcium was not of the right size");
+    RelearnException::check(disable_flags.size() == size, "SynapticElements::update_number_elements_delta: disable_flags was not of the right size");
 
 #pragma omp parallel for shared(calcium, target_calcium, disable_flags) default(none)
     for (auto neuron_id = 0; neuron_id < size; ++neuron_id) {

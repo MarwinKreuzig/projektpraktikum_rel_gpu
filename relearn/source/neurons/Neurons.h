@@ -363,6 +363,13 @@ public:
     void print_calcium_statistics_to_essentials(const std::unique_ptr<Essentials>& essentials);
 
     /**
+     * @brief Inserts the calcium statistics in the essentials
+     *      Performs communication with MPI
+     * @param essentials The essentials
+     */
+    void print_synaptic_changes_to_essentials(const std::unique_ptr<Essentials>& essentials);
+
+    /**
      * @brief Prints the network graph to LogFiles::EventType::Network. Stores current step in file name and log
      * @param step The current simulation step
      * @param with_prefix If the file name should contain the current step as prefix
