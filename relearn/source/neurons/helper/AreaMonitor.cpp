@@ -79,7 +79,10 @@ void AreaMonitor::prepare_recording() {
     fired_fraction = 0;
     mpi_data.clear();
     const auto num_areas = sim->get_neurons()->get_local_area_translator()->get_number_of_areas();
-    mpi_data.resize(MPIWrapper::get_num_ranks(), std::vector<AreaConnection>(num_areas));
+    mpi_data.resize(MPIWrapper::get_num_ranks());
+    for(auto& d: mpi_data) {
+        d.resize(num_areas);
+    }
 }
 
 void AreaMonitor::finish_recording() {
