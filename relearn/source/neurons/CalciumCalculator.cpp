@@ -79,7 +79,7 @@ void CalciumCalculator::update_current_calcium(std::span<const FiredStatus> fire
     auto maximum_id = NeuronID::uninitialized_id();
     auto maximum_ca = -std::numeric_limits<double>::max();
 
-#pragma omp parallel for default(none) shared(disable_flags, fired_status, scale, tau_C_inverse)
+#pragma omp parallel for default(none) shared(disable_flags, fired_status, scale, tau_C_inverse, minimum_ca, maximum_ca, minimum_id, maximum_id)
     for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
