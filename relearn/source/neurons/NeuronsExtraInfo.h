@@ -61,6 +61,7 @@ public:
         for (const auto& neuron_id : enabled_neurons) {
             const auto local_neuron_id = neuron_id.get_neuron_id();
             RelearnException::check(local_neuron_id < size, "NeuronsExtraInformation::set_enabled_neurons: NeuronID {} is too large: {}", neuron_id);
+            RelearnException::check(update_status[local_neuron_id] == UpdateStatus::Disabled, "NeuronsExtraInformation::set_enabled_neurons: Cannot enable a not disabled neuron");
 
             update_status[local_neuron_id] = UpdateStatus::Enabled;
         }
@@ -77,6 +78,7 @@ public:
             RelearnException::check(local_neuron_id < size, "NeuronsExtraInformation::set_disabled_neurons: NeuronID {} is too large: {}", neuron_id);
 
             RelearnException::check(update_status[local_neuron_id] != UpdateStatus::Static, "NeuronsExtraInformation::set_disabled_neurons: Cannot disable a static neuron");
+            RelearnException::check(update_status[local_neuron_id] != UpdateStatus::Disabled, "NeuronsExtraInformation::set_disabled_neurons: Cannot disable an already disabled neuron");
             update_status[local_neuron_id] = UpdateStatus::Disabled;
         }
     }

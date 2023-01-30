@@ -80,7 +80,7 @@ void Simulation::set_enable_interrupts(std::vector<std::pair<step_type, std::vec
     }
 }
 
-void Simulation::set_disable_interrupts(std::vector<std::pair<step_type, std::vector<RankNeuronId>>> interrupts) {
+void Simulation::set_disable_interrupts(std::vector<std::pair<step_type, std::vector<NeuronID>>> interrupts) {
     disable_interrupts = std::move(interrupts);
 
     for (auto& [step, ids] : disable_interrupts) {
@@ -268,8 +268,11 @@ void Simulation::simulate(const step_type number_steps) {
         for (const auto& [disable_step, disable_ids] : disable_interrupts) {
             if (disable_step == step) {
                 LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Disabling {} neurons in step {}", disable_ids.size(), disable_step);
-                const auto num_deleted_synapses = neurons->disable_neurons(disable_ids, my_rank);
+                const auto& [num_deleted_synapses, synapse_deletion_requests_outgoing] = neurons->disable_neurons(disable_ids, MPIWrapper::get_num_ranks());
                 total_synapse_deletions += static_cast<int64_t>(num_deleted_synapses);
+                const auto& synapse_deletion_requests_ingoing = MPIWrapper::exchange_requests(synapse_deletion_requests_outgoing);
+                total_synapse_deletions += neurons->delete_disabled_distant_synapses(synapse_deletion_requests_ingoing, my_rank);
+                continue;
             }
         }
 

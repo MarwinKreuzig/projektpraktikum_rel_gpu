@@ -11,6 +11,7 @@
  */
 
 #include "Types.h"
+#include "neurons/helper/RankNeuronId.h"
 #include "util/MPIRank.h"
 #include "util/StimulusParser.h"
 #include "util/TaggedID.h"

@@ -13,6 +13,7 @@
 #include "neurons/enums/UpdateStatus.h"
 #include "util/RelearnException.h"
 
+#include <functional>
 #include <span>
 #include <tuple>
 #include <type_traits>
@@ -111,4 +112,39 @@ static constexpr T factorial(T value) noexcept {
 
     return result;
 }
+
+/**
+ * Check if a container (e.g. vector) contains an element
+ * @tparam Container  Container class (e.g. std::vector)
+ * @param container The actual container
+ * @param element The element
+ * @return True if element inside of container. Otherwise false
+ */
+    template <class Container>
+    static bool contains(const Container& container, const typename Container::value_type& element)
+    {
+        return std::find(container.begin(), container.end(), element) != container.end();
+    }
+
+    /**
+     * Maps each element of a vector to a new objects and checks if one of this transformed objects equals to the searched element
+     * @tparam T Type of the elements in the vector
+     * @tparam U Type of the transformed elements
+     * @param container The vector
+     * @param element The transformed element, we are looking for
+     * @param function Function which transforms the elements of the vector
+     * @return True if the transformed list contains the element. Otherwise false
+     */
+    template <typename T, typename U>
+    static bool transform_contains(const std::vector<T>& container, const U& element, std::function<U(T)> function)
+    {
+        for(const auto& el : container) {
+            const U transformed = function(el);
+            if(transformed==element){
+                return true;
+            }
+        }
+        return false;
+    }
+
 } // namespace Util

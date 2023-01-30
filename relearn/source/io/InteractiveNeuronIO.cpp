@@ -116,11 +116,11 @@ std::vector<std::pair<InteractiveNeuronIO::step_type, std::vector<NeuronID>>> In
 
         for (std::string rank_neuron_string; sstream >> rank_neuron_string;) {
             const auto rank_neuron_vector = StringUtil::split_string(rank_neuron_string, ':');
-            const auto rank = MPIRank{ std::stoi(rank_neuron_vector[0])};
+            const auto rank = MPIRank{std::stoi(rank_neuron_vector[0])};
             const auto neuron_id = NeuronID(std::stoi(rank_neuron_vector[1]));
 
-            if (rank == my_rank) {
-                indices.emplace_back(neuron_id);
+            if(rank == my_rank){
+                indices.push_back(neuron_id);
             }
         }
 
@@ -130,13 +130,15 @@ std::vector<std::pair<InteractiveNeuronIO::step_type, std::vector<NeuronID>>> In
     return return_value;
 }
 
-std::vector<std::pair<InteractiveNeuronIO::step_type, InteractiveNeuronIO::number_neurons_type>> InteractiveNeuronIO::load_creation_interrupts(const std::filesystem::path& path_to_file) {
-    std::ifstream file{ path_to_file };
+std::vector<std::pair<InteractiveNeuronIO::step_type, InteractiveNeuronIO::number_neurons_type>>
+InteractiveNeuronIO::load_creation_interrupts(const std::filesystem::path &path_to_file) {
+    std::ifstream file{path_to_file};
 
     const bool file_is_good = file.good();
     const bool file_is_not_good = file.fail() || file.eof();
 
-    RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_creation_interrupts: Opening the file was not successful");
+    RelearnException::check(file_is_good && !file_is_not_good,
+                            "InteractiveNeuronIO::load_creation_interrupts: Opening the file was not successful");
 
     std::vector<std::pair<step_type, number_neurons_type>> return_value{};
 
@@ -173,15 +175,18 @@ std::vector<std::pair<InteractiveNeuronIO::step_type, InteractiveNeuronIO::numbe
 }
 
 RelearnTypes::stimuli_function_type InteractiveNeuronIO::load_stimulus_interrupts(
-    const std::filesystem::path& path_to_file, const MPIRank my_rank, std::shared_ptr<LocalAreaTranslator> local_area_translator) {
-    RelearnException::check(my_rank.is_initialized(), "InteractiveNeuronIO::load_stimulus_interrupts: my_rank was virtual");
+        const std::filesystem::path &path_to_file, const MPIRank my_rank,
+        std::shared_ptr<LocalAreaTranslator> local_area_translator) {
+    RelearnException::check(my_rank.is_initialized(),
+                            "InteractiveNeuronIO::load_stimulus_interrupts: my_rank was virtual");
 
-    std::ifstream file{ path_to_file };
+    std::ifstream file{path_to_file};
 
     const bool file_is_good = file.good();
     const bool file_is_not_good = file.fail() || file.eof();
 
-    RelearnException::check(file_is_good && !file_is_not_good, "InteractiveNeuronIO::load_stimulus_interrupts: Opening the file was not successful");
+    RelearnException::check(file_is_good && !file_is_not_good,
+                            "InteractiveNeuronIO::load_stimulus_interrupts: Opening the file was not successful");
 
     std::vector<StimulusParser::Stimulus> stimuli{};
 
@@ -197,20 +202,23 @@ RelearnTypes::stimuli_function_type InteractiveNeuronIO::load_stimulus_interrupt
 
         if (stimulus.has_value()) {
             auto stimulus_value = stimulus.value();
-            for (const auto& neuron_id : stimulus_value.matching_ids) {
-                RelearnException::check(neuron_id.get_neuron_id() < num_neurons, "InteractiveNeuronIO::load_stimulus_interrupts: Invalid neuron id {}", neuron_id);
+            for (const auto &neuron_id: stimulus_value.matching_ids) {
+                RelearnException::check(neuron_id.get_neuron_id() < num_neurons,
+                                        "InteractiveNeuronIO::load_stimulus_interrupts: Invalid neuron id {}",
+                                        neuron_id);
             }
             std::unordered_set<NeuronID> ids{};
             ids.insert(stimulus_value.matching_ids.begin(), stimulus_value.matching_ids.end());
-            for (const auto& area : stimulus.value().matching_area_names) {
+            for (const auto &area: stimulus.value().matching_area_names) {
                 if (local_area_translator->knows_area_name(area)) {
-                    const auto& area_id = local_area_translator->get_area_id_for_area_name(area);
+                    const auto &area_id = local_area_translator->get_area_id_for_area_name(area);
                     auto ids_in_area = local_area_translator->get_neuron_ids_in_area(area_id);
                     ids.insert(ids_in_area.begin(), ids_in_area.end());
                 }
             }
             if (!ids.empty()) {
-                stimuli.emplace_back(StimulusParser::Stimulus{ stimulus_value.interval, stimulus_value.stimulus_intensity, ids, {} });
+                stimuli.emplace_back(
+                        StimulusParser::Stimulus{stimulus_value.interval, stimulus_value.stimulus_intensity, ids, {}});
             }
         }
     }
