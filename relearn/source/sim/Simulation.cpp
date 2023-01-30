@@ -272,7 +272,6 @@ void Simulation::simulate(const step_type number_steps) {
                 total_synapse_deletions += static_cast<int64_t>(num_deleted_synapses);
                 const auto& synapse_deletion_requests_ingoing = MPIWrapper::exchange_requests(synapse_deletion_requests_outgoing);
                 total_synapse_deletions += neurons->delete_disabled_distant_synapses(synapse_deletion_requests_ingoing, my_rank);
-                continue;
             }
         }
 

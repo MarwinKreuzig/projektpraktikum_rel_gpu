@@ -81,7 +81,7 @@ void AreaMonitor::prepare_recording() {
     const auto num_areas = sim->get_neurons()->get_local_area_translator()->get_number_of_areas();
     mpi_data.resize(MPIWrapper::get_num_ranks());
     for(auto& d: mpi_data) {
-        d.resize(num_areas);
+        d.reserve(num_areas);
     }
 }
 
