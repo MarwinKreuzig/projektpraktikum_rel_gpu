@@ -24,7 +24,7 @@
 #include "neurons/input/BackgroundActivityCalculator.h"
 #include "neurons/input/BackgroundActivityCalculators.h"
 #include "neurons/input/SynapticInputCalculator.h"
-#include "neurons/input/SynapticInputCalculators.h"<
+#include "neurons/input/SynapticInputCalculators.h"
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
 #include "sim/Essentials.h"
