@@ -270,8 +270,10 @@ void Simulation::simulate(const step_type number_steps) {
         for (const auto& [disable_step, disable_ids] : disable_interrupts) {
             if (disable_step == step) {
                 LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Disabling {} neurons in step {}", disable_ids.size(), disable_step);
-                const auto num_deleted_synapses = neurons->disable_neurons(disable_ids);
+                const auto& [num_deleted_synapses, synapse_deletion_requests_outgoing] = neurons->disable_neurons(disable_ids, MPIWrapper::get_num_ranks());
                 total_synapse_deletions += static_cast<int64_t>(num_deleted_synapses);
+                const auto& synapse_deletion_requests_ingoing = MPIWrapper::exchange_requests(synapse_deletion_requests_outgoing);
+                total_synapse_deletions += neurons->delete_disabled_distant_synapses(synapse_deletion_requests_ingoing, my_rank);
             }
         }
 
@@ -311,6 +313,9 @@ void Simulation::simulate(const step_type number_steps) {
             }
 
             for (NeuronID neuron_id : NeuronID::range(neurons->get_number_neurons())) {
+                if(neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
+                    continue;
+                }
                 const auto& area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(neuron_id.get_neuron_id());
                 if (!area_monitors->contains(area_id)) {
                     continue;
@@ -461,15 +466,23 @@ void Simulation::simulate(const step_type number_steps) {
     // Stop timing simulation loop
     Timers::stop_and_add(TimerRegion::SIMULATION_LOOP);
 
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Final flush of neuron monitors");
+
     for (auto& monitor : *monitors) {
         monitor.flush_current_contents();
     }
+
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Final flush of area monitors");
 
     for (auto& [area_id, area_monitor] : *area_monitors) {
         area_monitor.write_data_to_file();
     }
 
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Print positions");
+
     neurons->print_positions_to_log_file();
+    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Print area mapping");
+
     neurons->print_area_mapping_to_log_file();
 }
 

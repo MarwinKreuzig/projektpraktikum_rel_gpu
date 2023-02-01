@@ -28,7 +28,7 @@ template <typename T>
 class OctreeImplementation;
 
 /**
- * This class represents the implementation and adaptation of the Barnes–Hut algorithm. The parameters can be set on the fly.
+ * This class represents the implementation and adaptation of the Barnesï¿½Hut algorithm. The parameters can be set on the fly.
  * In this instance, axons search for dendrites.
  * It is strongly tied to Octree, and might perform MPI communication via NodeCache::download_children()
  */

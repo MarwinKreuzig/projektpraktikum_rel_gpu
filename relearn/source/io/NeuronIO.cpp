@@ -52,6 +52,7 @@ std::vector<std::string> NeuronIO::read_comments(const std::filesystem::path& fi
 }
 
 std::tuple<std::vector<LoadedNeuron>, std::vector<RelearnTypes::area_name>, LoadedNeuronsInfo> NeuronIO::read_neurons(const std::filesystem::path& file_path) {
+    RelearnException::check(std::filesystem::is_regular_file(file_path), "NeuronIO::read_neurons: Path is not a file" );
     std::ifstream file(file_path);
 
     const auto file_is_good = file.good();
@@ -418,7 +419,7 @@ std::pair<std::tuple<LocalSynapses, DistantInSynapses>, std::tuple<LocalSynapses
     const auto is_good = file_synapses.good();
     const auto is_bad = file_synapses.bad();
 
-    RelearnException::check(is_good && !is_bad, "NeuronIO::read_in_synapses: The ofstream failed to open");
+    RelearnException::check(is_good && !is_bad, "NeuronIO::read_in_synapses: The ofstream failed to open {}", file_path.c_str());
 
     for (std::string line{}; std::getline(file_synapses, line);) {
         // Skip line with comments

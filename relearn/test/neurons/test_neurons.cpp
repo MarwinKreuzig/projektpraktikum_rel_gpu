@@ -5,6 +5,9 @@
 #include "adapter/neurons/NeuronTypesAdapter.h"
 #include "adapter/tagged_id/TaggedIdAdapter.h"
 
+#include "algorithm/BarnesHutInternal/BarnesHutBase.h"
+#include "algorithm/BarnesHutInternal/BarnesHutCell.h"
+#include "algorithm/Internal/ExchangingAlgorithm.h"
 #include "neurons/input/BackgroundActivityCalculators.h"
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
@@ -14,7 +17,10 @@
 #include "neurons/CalciumCalculator.h"
 #include "neurons/Neurons.h"
 #include "structure/Partition.h"
+#include "util/Utility.h"
+#include "algorithm/BarnesHutInternal/BarnesHut.h"
 
+#include <span>
 #include <vector>
 
 TEST_F(NeuronsTest, testNeuronsConstructor) {
@@ -26,7 +32,8 @@ TEST_F(NeuronsTest, testNeuronsConstructor) {
     auto dends_in = std::make_unique<SynapticElements>(ElementType::Dendrite, 0.2);
     auto axs = std::make_unique<SynapticElements>(ElementType::Axon, 0.2);
 
-    Neurons neurons{ partition, std::move(model), std::move(calcium), std::move(axs), std::move(dends_ex), std::move(dends_in) };
+    Neurons neurons{partition, std::move(model), std::move(calcium), std::move(axs), std::move(dends_ex),
+                    std::move(dends_in)};
 }
 
 TEST_F(NeuronsTest, testSignalTypeCheck) {
@@ -37,7 +44,7 @@ TEST_F(NeuronsTest, testSignalTypeCheck) {
     std::vector<SignalType> signal_types{};
     const auto network_graph = std::make_shared<NetworkGraph>(num_neurons, MPIRank::root_rank());
 
-    for (const auto& neuron_id : NeuronID::range(num_neurons)) {
+    for (const auto &neuron_id: NeuronID::range(num_neurons)) {
         const auto signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
         signal_types.emplace_back(signal_type);
     }
@@ -51,9 +58,9 @@ TEST_F(NeuronsTest, testSignalTypeCheck) {
             weight = -weight;
         }
         if (tgt_rank == MPIRank::root_rank()) {
-            network_graph->add_synapse({ tgt, src, weight });
+            network_graph->add_synapse({tgt, src, weight});
         } else {
-            network_graph->add_synapse({ RankNeuronId(tgt_rank, tgt), src, weight });
+            network_graph->add_synapse({RankNeuronId(tgt_rank, tgt), src, weight});
         }
     }
 
@@ -68,22 +75,22 @@ TEST_F(NeuronsTest, testSignalTypeCheck) {
         if (signal_types[src.get_neuron_id()] == SignalType::Excitatory) {
             weight = -weight;
         }
-        const auto& out_edges = network_graph->get_all_out_edges(src);
-        for (const auto& [out_tgt_rni, out_weight] : out_edges) {
+        const auto &out_edges = network_graph->get_all_out_edges(src);
+        for (const auto &[out_tgt_rni, out_weight]: out_edges) {
             if (tgt_rni == out_tgt_rni) {
                 weight = weight - out_weight;
             }
         }
         if (tgt_rank == MPIRank::root_rank()) {
-            network_graph->add_synapse({ tgt, src, weight });
+            network_graph->add_synapse({tgt, src, weight});
         } else {
-            network_graph->add_synapse({ RankNeuronId(tgt_rank, tgt), src, weight });
+            network_graph->add_synapse({RankNeuronId(tgt_rank, tgt), src, weight});
         }
         ASSERT_THROW(Neurons::check_signal_types(network_graph, signal_types, MPIRank::root_rank()), RelearnException);
         if (tgt_rank == MPIRank::root_rank()) {
-            network_graph->add_synapse({ tgt, src, -weight });
+            network_graph->add_synapse({tgt, src, -weight});
         } else {
-            network_graph->add_synapse({ RankNeuronId(tgt_rank, tgt), src, -weight });
+            network_graph->add_synapse({RankNeuronId(tgt_rank, tgt), src, -weight});
         }
         ASSERT_NO_THROW(Neurons::check_signal_types(network_graph, signal_types, MPIRank::root_rank()));
     }
@@ -113,13 +120,16 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
     model->set_stimulus_calculator(std::make_shared<Stimulus>());
 
     auto calcium = std::make_unique<CalciumCalculator>();
-    calcium->set_initial_calcium_calculator([](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
-    calcium->set_target_calcium_calculator([](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
+    calcium->set_initial_calcium_calculator(
+            [](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
+    calcium->set_target_calcium_calculator(
+            [](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
     auto dends_ex = std::make_unique<SynapticElements>(ElementType::Dendrite, 0.2);
     auto dends_in = std::make_unique<SynapticElements>(ElementType::Dendrite, 0.2);
     auto axs = std::make_unique<SynapticElements>(ElementType::Axon, 0.2);
 
-    Neurons neurons{ partition, std::move(model), std::move(calcium), std::move(axs), std::move(dends_ex), std::move(dends_in) };
+    Neurons neurons{partition, std::move(model), std::move(calcium), std::move(axs), std::move(dends_ex),
+                    std::move(dends_in)};
 
     auto network_graph_static = std::make_shared<NetworkGraph>(num_neurons, MPIRank::root_rank());
     auto network_graph_plastic = std::make_shared<NetworkGraph>(num_neurons, MPIRank::root_rank());
@@ -131,7 +141,7 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
         auto src = TaggedIdAdapter::get_random_neuron_id(num_neurons, mt);
         auto tgt = TaggedIdAdapter::get_random_neuron_id(num_neurons, NeuronID(src), mt);
         auto weight = RandomAdapter::get_random_double<double>(0.1, 10, mt);
-        network_graph_static->add_synapse({ tgt, src, weight });
+        network_graph_static->add_synapse({tgt, src, weight});
     }
 
     for (auto i = 0; i < num_synapses_plastic; i++) {
@@ -139,10 +149,11 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
         do {
             src = TaggedIdAdapter::get_random_neuron_id(num_neurons, mt);
             tgt = TaggedIdAdapter::get_random_neuron_id(num_neurons, mt);
-        } while (std::find(static_neurons.begin(), static_neurons.end(), src) != static_neurons.end() || std::find(static_neurons.begin(), static_neurons.end(), tgt) != static_neurons.end()
-            || src == tgt);
+        } while (std::find(static_neurons.begin(), static_neurons.end(), src) != static_neurons.end() ||
+                 std::find(static_neurons.begin(), static_neurons.end(), tgt) != static_neurons.end()
+                 || src == tgt);
         auto weight = RandomAdapter::get_random_double<double>(0.1, 10, mt);
-        network_graph_plastic->add_synapse({ NeuronID{ tgt }, NeuronID{ src }, weight });
+        network_graph_plastic->add_synapse({NeuronID{tgt}, NeuronID{src}, weight});
     }
 
     neurons.init(num_neurons);
@@ -177,10 +188,551 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
             weight = -weight;
         }
 
-        network_graph_plastic->add_synapse({ tgt, src, weight });
+        network_graph_plastic->add_synapse({tgt, src, weight});
 
         ASSERT_THROW(neurons.set_static_neurons(static_neurons), RelearnException);
-        network_graph_plastic->add_synapse({ tgt, src, -weight });
+        network_graph_plastic->add_synapse({tgt, src, -weight});
         neurons.set_static_neurons(static_neurons);
     }
+}
+
+
+TEST_F(NeuronsTest, testDisableNeuronsWithoutMPI) {
+    auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 30;
+
+    auto partition = std::make_shared<Partition>(1, MPIRank::root_rank());
+    auto neurons = create_neurons_object(partition);
+    auto network_graph_plastic = std::make_shared<NetworkGraph>(num_neurons, MPIRank::root_rank());
+
+    neurons.init(num_neurons);
+    auto network_graph_static = std::make_shared<NetworkGraph>(num_neurons, MPIRank::root_rank());
+    NetworkGraphAdapter::create_dense_network(network_graph_plastic, neurons.get_axons().get_signal_types(),
+                                              num_neurons, 8, 1, MPIRank(0), mt);
+    neurons.set_network_graph(network_graph_static, network_graph_plastic);
+    neurons.init_synaptic_elements();
+
+    const auto disable_id = TaggedIdAdapter::get_random_neuron_id(num_neurons, mt);
+    const auto disabled_neurons = std::vector<NeuronID>{disable_id};
+    const auto enabled_neurons = std::vector<NeuronID>{disable_id};
+    const auto mpi_rank = MPIRank{0};
+    std::set<NeuronID> out_ids, in_ids;
+    const auto out_edges = network_graph_plastic->get_local_out_edges(disable_id);
+    const auto in_edges = network_graph_plastic->get_local_in_edges(disable_id);
+    std::transform(out_edges.begin(), out_edges.end(), std::inserter(out_ids, out_ids.end()),
+                   [](const auto &edge) {
+                       const auto &[target, weight] = edge;
+                       return target;
+                   });
+    std::transform(in_edges.begin(), in_edges.end(), std::inserter(in_ids, in_ids.end()),
+                   [](const auto &edge) {
+                       const auto &[source, weight] = edge;
+                       return source;
+                   });
+    ASSERT_GT(out_edges.size(), 0);
+    ASSERT_GT(in_edges.size(), 0);
+    ASSERT_THROW(neurons.enable_neurons(enabled_neurons), RelearnException);
+
+    std::vector<NeuronID> disabled_neurons_vector;
+    std::copy(disabled_neurons.begin(), disabled_neurons.end(), std::back_inserter(disabled_neurons_vector));
+    const auto &[num_deletions, synapse_deletion_Requests] = neurons.disable_neurons(disabled_neurons_vector, 1);
+    ASSERT_EQ(synapse_deletion_Requests.get_total_number_requests(), 0);
+    ASSERT_EQ(num_deletions, out_edges.size() + in_edges.size());
+    const auto &num_distant_deletions = neurons.delete_disabled_distant_synapses(synapse_deletion_Requests, MPIRank(0));
+    ASSERT_EQ(num_distant_deletions, 0);
+    ASSERT_THROW(neurons.disable_neurons(disabled_neurons_vector, 1), RelearnException);
+
+    ASSERT_EQ(network_graph_plastic->get_local_in_edges(disable_id).size(), 0);
+    ASSERT_EQ(network_graph_plastic->get_local_out_edges(disable_id).size(), 0);
+
+    for (const auto &id: out_ids) {
+        const bool contains = Util::transform_contains<std::pair<NeuronID, double>, NeuronID>(
+                network_graph_plastic->get_local_in_edges(id), disable_id, [](const auto &edge) { return edge.first; });
+        ASSERT_FALSE(contains);
+        ASSERT_EQ(neurons.get_extra_info()->get_disable_flags()[id.get_neuron_id()], UpdateStatus::Enabled);
+    }
+    for (const auto &id: in_ids) {
+        const bool contains = Util::transform_contains<std::pair<NeuronID, double>, NeuronID>(
+                network_graph_plastic->get_local_out_edges(id), disable_id,
+                [](const auto &edge) { return edge.first; });
+        ASSERT_FALSE(contains);
+        ASSERT_EQ(neurons.get_extra_info()->get_disable_flags()[id.get_neuron_id()], UpdateStatus::Enabled);
+        ASSERT_EQ(neurons.get_axons().get_connected_elements(id), 7);
+    }
+
+    ASSERT_EQ(neurons.get_extra_info()->get_disable_flags()[disable_id.get_neuron_id()], UpdateStatus::Disabled);
+    ASSERT_EQ(neurons.get_axons().get_connected_elements(disable_id), 0);
+    ASSERT_EQ(neurons.get_dendrites_exc().get_connected_elements(disable_id), 0);
+    ASSERT_EQ(neurons.get_dendrites_inh().get_connected_elements(disable_id), 0);
+
+    std::vector<std::vector<SignalType>> signal_types{{}};
+    std::copy(neurons.get_axons().get_signal_types().begin(), neurons.get_axons().get_signal_types().end(),
+              std::back_inserter(signal_types[0]));
+    NetworkGraphAdapter::check_validity_of_network_graphs({network_graph_plastic}, signal_types, num_neurons);
+}
+
+TEST_F(NeuronsTest, testDisableMultipleNeuronsWithoutMPI) {
+    auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 30;
+
+    auto partition = std::make_shared<Partition>(1, MPIRank::root_rank());
+    auto neurons = create_neurons_object(partition);
+
+    neurons.init(num_neurons);
+
+    auto network_graph_static = std::make_shared<NetworkGraph>(num_neurons, MPIRank::root_rank());
+    auto network_graph_plastic = std::make_shared<NetworkGraph>(num_neurons, MPIRank::root_rank());
+
+    const auto mpi_rank = MPIRank{0};
+    const auto disabled_neurons = TaggedIdAdapter::get_random_neuron_ids(num_neurons, 15, mt);
+    std::vector<RankNeuronId> disabled_rank_neurons;
+    std::transform(disabled_neurons.begin(), disabled_neurons.end(), std::back_inserter(disabled_rank_neurons),
+                   [&mpi_rank](const auto &neuron_id) { return RankNeuronId(mpi_rank, neuron_id); });
+    for (const auto &neuron1: disabled_neurons) {
+        for (const auto &neuron2: disabled_neurons) {
+            if (neuron1 == neuron2) {
+                continue;
+            }
+            double weight = neurons.get_axons().get_signal_type(neuron1) == SignalType::Excitatory ? 1 : -1;
+            network_graph_plastic->add_synapse(LocalSynapse(neuron2, neuron1, weight));
+        }
+    }
+    NetworkGraphAdapter::create_dense_network(network_graph_plastic, neurons.get_axons().get_signal_types(),
+                                              num_neurons, 8, 1, MPIRank(0), mt);
+    neurons.set_network_graph(network_graph_static, network_graph_plastic);
+
+
+    std::vector<NeuronID> disabled_neurons_vector;
+    std::copy(disabled_neurons.begin(), disabled_neurons.end(), std::back_inserter(disabled_neurons_vector));
+
+    std::vector<double> to_delete_axons, to_delete_den_ex, to_delete_den_inh;
+    to_delete_axons.resize(num_neurons, 0.0);
+    to_delete_den_ex.resize(num_neurons, 0.0);
+    to_delete_den_inh.resize(num_neurons, 0.0);
+    int expected_num_deletions = 0;
+    for (const auto &disabled_id: disabled_neurons) {
+        const auto out_edges = network_graph_plastic->get_local_out_edges(disabled_id);
+        for (const auto &[target, weight]: out_edges) {
+            if (weight > 0) {
+                to_delete_den_ex[target.get_neuron_id()]++;
+            } else {
+                to_delete_den_inh[target.get_neuron_id()]++;
+            }
+            expected_num_deletions++;
+        }
+
+        const auto in_edges = network_graph_plastic->get_local_in_edges(disabled_id);
+        for (const auto &[source, weight]: in_edges) {
+            to_delete_axons[source.get_neuron_id()] += std::abs(weight);
+            if (!disabled_neurons.contains(source)) {
+                expected_num_deletions++;
+            }
+        }
+    }
+
+    neurons.init_synaptic_elements();
+
+    const auto axons = neurons.get_axons().get_connected_elements();
+    const auto den_ex = neurons.get_dendrites_exc().get_connected_elements();
+    const auto den_inh = neurons.get_dendrites_inh().get_connected_elements();
+    std::vector<uint> axons_old, den_ex_old, den_inh_old;
+    std::copy(axons.begin(), axons.end(), std::back_inserter(axons_old));
+    std::copy(den_ex.begin(), den_ex.end(), std::back_inserter(den_ex_old));
+    std::copy(den_inh.begin(), den_inh.end(), std::back_inserter(den_inh_old));
+
+
+    const auto &[num_deletions, synapse_deletion_Requests] = neurons.disable_neurons(disabled_neurons_vector, 1);
+    ASSERT_EQ(synapse_deletion_Requests.get_total_number_requests(), 0);
+    ASSERT_EQ(num_deletions, expected_num_deletions);
+    const auto &num_distant_deletions = neurons.delete_disabled_distant_synapses(synapse_deletion_Requests, MPIRank(0));
+    ASSERT_EQ(num_distant_deletions, 0);
+    for (const auto &disable_id: disabled_neurons) {
+        ASSERT_EQ(network_graph_plastic->get_local_in_edges(disable_id).size(), 0);
+        ASSERT_EQ(network_graph_plastic->get_local_out_edges(disable_id).size(), 0);
+        ASSERT_EQ(neurons.get_extra_info()->get_disable_flags()[disable_id.get_neuron_id()], UpdateStatus::Disabled);
+        ASSERT_EQ(neurons.get_axons().get_connected_elements(disable_id), 0);
+        ASSERT_EQ(neurons.get_dendrites_exc().get_connected_elements(disable_id), 0);
+        ASSERT_EQ(neurons.get_dendrites_inh().get_connected_elements(disable_id), 0);
+    }
+
+    for (const auto &neuron_id: NeuronID::range(num_neurons)) {
+        if (disabled_neurons.contains(neuron_id)) {
+            continue;
+        }
+
+        ASSERT_EQ(neurons.get_axons().get_connected_elements(neuron_id),
+                  axons_old[neuron_id.get_neuron_id()] - to_delete_axons[neuron_id.get_neuron_id()]);
+        ASSERT_EQ(neurons.get_dendrites_exc().get_connected_elements(neuron_id),
+                  den_ex_old[neuron_id.get_neuron_id()] - to_delete_den_ex[neuron_id.get_neuron_id()]);
+        ASSERT_EQ(neurons.get_dendrites_inh().get_connected_elements(neuron_id),
+                  den_inh_old[neuron_id.get_neuron_id()] - to_delete_den_inh[neuron_id.get_neuron_id()]);
+    }
+
+    std::vector<std::vector<SignalType>> signal_types{{}};
+    std::copy(neurons.get_axons().get_signal_types().begin(), neurons.get_axons().get_signal_types().end(),
+              std::back_inserter(signal_types[0]));
+    NetworkGraphAdapter::check_validity_of_network_graphs({network_graph_plastic}, signal_types, num_neurons);
+}
+
+
+TEST_F(NeuronsTest, testDisableNeuronsWithRanks) {
+    const auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 30;
+    const auto num_ranks = MPIRankAdapter::get_random_number_ranks(mt) + 1;
+
+    std::vector<Neurons> rank_to_neurons;
+    std::vector<std::shared_ptr<NetworkGraph>> network_graphs;
+    std::vector<std::unordered_set<NeuronID>> rank_to_disabled_neurons;
+    std::vector<int> expected_distant_out_deletions_received{};
+    std::vector<int> expected_distant_in_deletions_received{};
+    expected_distant_out_deletions_received.resize(num_ranks, 0);
+    expected_distant_in_deletions_received.resize(num_ranks, 0);
+    std::vector<int> expected_distant_out_deletions_initiated{};
+    std::vector<int> expected_distant_in_deletions_initiated{};
+    expected_distant_out_deletions_initiated.resize(num_ranks, 0);
+    expected_distant_in_deletions_initiated.resize(num_ranks, 0);
+    for (int rank = 0; rank < num_ranks; rank++) {
+        const MPIRank mpi_rank{rank};
+
+        auto partition = std::make_shared<Partition>(1,MPIRank(0));
+        auto neurons = create_neurons_object(partition);
+
+        neurons.init(num_neurons);
+
+
+        auto network_graph_static = std::make_shared<NetworkGraph>(num_neurons, mpi_rank);
+        auto network_graph_plastic = std::make_shared<NetworkGraph>(num_neurons, mpi_rank);
+
+        const auto disabled_neurons = TaggedIdAdapter::get_random_neuron_ids(num_neurons, 15, mt);
+        for (const auto &neuron1: disabled_neurons) {
+            for (const auto &neuron2: disabled_neurons) {
+                if (neuron1 == neuron2) {
+                    continue;
+                }
+                const auto target_rank = MPIRankAdapter::get_random_mpi_rank(num_ranks, mt);
+                const double weight = neurons.get_axons().get_signal_type(neuron1) == SignalType::Excitatory ? 1 : -1;
+
+                if (target_rank == mpi_rank) {
+                    network_graph_plastic->add_synapse(LocalSynapse(neuron2, neuron1, weight));
+                } else {
+                    network_graph_plastic->add_synapse(
+                            DistantOutSynapse(RankNeuronId(target_rank, neuron2), neuron1, weight));
+                }
+            }
+        }
+        NetworkGraphAdapter::create_dense_network(network_graph_plastic, neurons.get_axons().get_signal_types(),
+                                                  num_neurons, 8, num_ranks, mpi_rank, mt);
+
+        Neurons::check_signal_types(network_graph_plastic, neurons.get_axons().get_signal_types(), mpi_rank);
+
+        neurons.set_network_graph(network_graph_static, network_graph_plastic);
+        rank_to_neurons.push_back(std::move(neurons));
+        rank_to_disabled_neurons.push_back(disabled_neurons);
+        network_graphs.push_back(network_graph_plastic);
+
+    }
+    NetworkGraphAdapter::harmonize_network_graphs_from_different_ranks(network_graphs, num_neurons);
+
+    std::vector<std::vector<SignalType>> signal_types;
+    signal_types.resize(num_ranks);
+    for (auto rank = 0; rank < num_ranks; rank++) {
+        std::copy(rank_to_neurons[rank].get_axons().get_signal_types().begin(),
+                  rank_to_neurons[rank].get_axons().get_signal_types().end(),
+                  std::back_inserter(signal_types[rank]));
+    }
+
+
+    std::vector<std::vector<int>> expected_axons, expected_den_ex, expected_den_inh;
+    expected_axons.resize(num_ranks);
+    expected_den_ex.resize(num_ranks);
+    expected_den_inh.resize(num_ranks);
+    for (auto rank = 0; rank < num_ranks; rank++) {
+        auto &neurons = rank_to_neurons[rank];
+        neurons.init_synaptic_elements();
+
+        const auto axons = neurons.get_axons().get_connected_elements();
+        const auto den_ex = neurons.get_dendrites_exc().get_connected_elements();
+        const auto den_inh = neurons.get_dendrites_inh().get_connected_elements();
+        std::copy(axons.begin(), axons.end(), std::back_inserter(expected_axons[rank]));
+        std::copy(den_ex.begin(), den_ex.end(), std::back_inserter(expected_den_ex[rank]));
+        std::copy(den_inh.begin(), den_inh.end(), std::back_inserter(expected_den_inh[rank]));
+    }
+
+    std::vector<CommunicationMap<SynapseDeletionRequest>> outgoing_requests;
+
+
+    for (int rank = 0; rank < num_ranks; rank++) {
+        const auto &network_graph = network_graphs[rank];
+        const auto &disabled_neurons = rank_to_disabled_neurons[rank];
+        std::vector<NeuronID> disabled_neurons_vector;
+        std::copy(disabled_neurons.begin(), disabled_neurons.end(), std::back_inserter(disabled_neurons_vector));
+        auto &neurons = rank_to_neurons[rank];
+
+        auto expected_num_local_deletions = 0;
+
+        for (const auto neuron_id: rank_to_disabled_neurons[rank]) {
+            const auto &distant_out_edges = network_graph->get_distant_out_edges(neuron_id);
+            expected_distant_out_deletions_initiated[rank] += distant_out_edges.size();
+            for (const auto &[target, weight]: distant_out_edges) {
+                expected_distant_in_deletions_received[target.get_rank().get_rank()]++;
+                if (weight > 0) {
+                    expected_den_ex[target.get_rank().get_rank()][target.get_neuron_id().get_neuron_id()]--;
+                } else {
+                    expected_den_inh[target.get_rank().get_rank()][target.get_neuron_id().get_neuron_id()]--;
+                }
+            }
+
+            const auto &distant_in_edges = network_graph->get_distant_in_edges(neuron_id);
+            expected_distant_out_deletions_initiated[rank] += distant_in_edges.size();
+            for (const auto &[source, weight]: distant_in_edges) {
+                expected_distant_out_deletions_received[source.get_rank().get_rank()]++;
+                expected_axons[source.get_rank().get_rank()][source.get_neuron_id().get_neuron_id()]--;
+            }
+
+
+            const auto out_edges = network_graph->get_local_out_edges(neuron_id);
+            for (const auto &[target, weight]: out_edges) {
+                if (weight > 0) {
+                    expected_den_ex[rank][target.get_neuron_id()]--;
+                } else {
+                    expected_den_inh[rank][target.get_neuron_id()]--;
+                }
+                expected_num_local_deletions++;
+            }
+
+
+            const auto in_edges = network_graph->get_local_in_edges(neuron_id);
+            for (const auto &[source, weight]: in_edges) {
+                expected_axons[rank][source.get_neuron_id()]--;
+                if (!disabled_neurons.contains(source)) {
+                    expected_num_local_deletions++;
+                }
+            }
+        }
+
+
+        const auto &[num_deletions, synapse_deletion_Requests] = neurons.disable_neurons(disabled_neurons_vector,
+                                                                                         num_ranks);
+        ASSERT_EQ(synapse_deletion_Requests.get_total_number_requests(),
+                  expected_distant_out_deletions_initiated[rank] + expected_distant_in_deletions_initiated[rank]);
+        ASSERT_EQ(num_deletions, expected_num_local_deletions + expected_distant_out_deletions_initiated[rank] +
+                                 expected_distant_in_deletions_initiated[rank]);
+
+        ASSERT_FALSE(synapse_deletion_Requests.contains(MPIRank(rank)));
+
+        outgoing_requests.push_back(synapse_deletion_Requests);
+
+        for (const auto &disable_id: disabled_neurons) {
+            ASSERT_EQ(network_graph->get_local_in_edges(disable_id).size(), 0);
+            if (network_graph->get_local_out_edges(disable_id).size() != 0) {
+                const auto &e = network_graph->get_local_out_edges(disable_id);
+                ASSERT_EQ(network_graph->get_local_out_edges(disable_id).size(), 0);
+            }
+            ASSERT_EQ(network_graph->get_distant_in_edges(disable_id).size(), 0);
+            ASSERT_EQ(network_graph->get_distant_out_edges(disable_id).size(), 0);
+            ASSERT_EQ(neurons.get_extra_info()->get_disable_flags()[disable_id.get_neuron_id()],
+                      UpdateStatus::Disabled);
+            ASSERT_EQ(neurons.get_axons().get_connected_elements(disable_id), 0);
+            ASSERT_EQ(neurons.get_dendrites_exc().get_connected_elements(disable_id), 0);
+            ASSERT_EQ(neurons.get_dendrites_inh().get_connected_elements(disable_id), 0);
+        }
+
+    }
+
+    const auto &ingoing_requests = MPIAdapter::exchange_requests(outgoing_requests);
+
+    for (int rank = 0; rank < num_ranks; rank++) {
+        const MPIRank mpi_rank{rank};
+
+        const auto &synapse_deletion_Requests = ingoing_requests[rank];
+
+        const auto &network_graph = network_graphs[rank];
+        const auto &disabled_neurons = rank_to_disabled_neurons[rank];
+        auto &neurons = rank_to_neurons[rank];
+        const auto &num_distant_deletions = neurons.delete_disabled_distant_synapses(synapse_deletion_Requests,
+                                                                                     mpi_rank);
+        ASSERT_EQ(num_distant_deletions,
+                  expected_distant_in_deletions_received[rank] + expected_distant_out_deletions_received[rank]);
+        for (const auto &disable_id: disabled_neurons) {
+            ASSERT_EQ(network_graph->get_local_in_edges(disable_id).size(), 0);
+            if (network_graph->get_local_out_edges(disable_id).size() != 0) {
+                const auto &e = network_graph->get_local_out_edges(disable_id);
+                ASSERT_EQ(network_graph->get_local_out_edges(disable_id).size(), 0);
+            }
+            ASSERT_EQ(network_graph->get_distant_in_edges(disable_id).size(), 0);
+            ASSERT_EQ(network_graph->get_distant_out_edges(disable_id).size(), 0);
+            ASSERT_EQ(neurons.get_extra_info()->get_disable_flags()[disable_id.get_neuron_id()],
+                      UpdateStatus::Disabled);
+            ASSERT_EQ(neurons.get_axons().get_connected_elements(disable_id), 0);
+            ASSERT_EQ(neurons.get_dendrites_exc().get_connected_elements(disable_id), 0);
+            ASSERT_EQ(neurons.get_dendrites_inh().get_connected_elements(disable_id), 0);
+        }
+
+        for (const auto &neuron_id: NeuronID::range(num_neurons)) {
+            if (disabled_neurons.contains(neuron_id)) {
+                continue;
+            }
+
+            ASSERT_EQ(neurons.get_axons().get_connected_elements(neuron_id),
+                      expected_axons[rank][neuron_id.get_neuron_id()]);
+            ASSERT_EQ(neurons.get_dendrites_exc().get_connected_elements(neuron_id),
+                      expected_den_ex[rank][neuron_id.get_neuron_id()]);
+            ASSERT_EQ(neurons.get_dendrites_inh().get_connected_elements(neuron_id),
+                      expected_den_inh[rank][neuron_id.get_neuron_id()]);
+            ASSERT_EQ(neurons.get_disable_flags()[neuron_id.get_neuron_id()], UpdateStatus::Enabled);
+        }
+    }
+
+    NetworkGraphAdapter::check_validity_of_network_graphs(network_graphs, signal_types, num_neurons);
+}
+
+TEST_F(NeuronsTest, testDisableNeuronsWithRanksAndOnlyOneDisabledNeuron) {
+    RelearnException::hide_messages = false;
+    const auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 30;
+    const auto num_ranks = MPIRankAdapter::get_random_number_ranks(mt) + 1;
+
+    std::vector<Neurons> rank_to_neurons;
+    std::vector<std::shared_ptr<NetworkGraph>> network_graphs;
+
+    for (int rank = 0; rank < num_ranks; rank++) {
+        const MPIRank mpi_rank{rank};
+
+        auto partition = std::make_shared<Partition>(1,MPIRank(0));
+        auto neurons = create_neurons_object(partition);
+
+        neurons.init(num_neurons);
+
+
+        auto network_graph_static = std::make_shared<NetworkGraph>(num_neurons, mpi_rank);
+        auto network_graph_plastic = std::make_shared<NetworkGraph>(num_neurons, mpi_rank);
+
+        NetworkGraphAdapter::create_dense_network(network_graph_plastic, neurons.get_axons().get_signal_types(),
+                                                  num_neurons, 8, num_ranks, mpi_rank, mt);
+
+        Neurons::check_signal_types(network_graph_plastic, neurons.get_axons().get_signal_types(), mpi_rank);
+
+        neurons.set_network_graph(network_graph_static, network_graph_plastic);
+        rank_to_neurons.push_back(std::move(neurons));
+        network_graphs.push_back(network_graph_plastic);
+
+    }
+
+    const auto& disabled_neuron_id = TaggedIdAdapter::get_random_neuron_id(num_neurons,mt);
+    const auto& disabled_rank = MPIRankAdapter::get_random_mpi_rank(num_ranks, mt);
+
+    NetworkGraphAdapter::harmonize_network_graphs_from_different_ranks(network_graphs, num_neurons);
+
+    std::vector<std::vector<SignalType>> signal_types;
+    signal_types.resize(num_ranks);
+    for (auto rank = 0; rank < num_ranks; rank++) {
+        std::copy(rank_to_neurons[rank].get_axons().get_signal_types().begin(),
+                  rank_to_neurons[rank].get_axons().get_signal_types().end(),
+                  std::back_inserter(signal_types[rank]));
+    }
+
+
+    std::vector<std::vector<int>> expected_axons, expected_den_ex, expected_den_inh;
+    expected_axons.resize(num_ranks);
+    expected_den_ex.resize(num_ranks);
+    expected_den_inh.resize(num_ranks);
+    for (auto rank = 0; rank < num_ranks; rank++) {
+        auto &neurons = rank_to_neurons[rank];
+        neurons.init_synaptic_elements();
+
+        const auto axons = neurons.get_axons().get_connected_elements();
+        const auto den_ex = neurons.get_dendrites_exc().get_connected_elements();
+        const auto den_inh = neurons.get_dendrites_inh().get_connected_elements();
+        std::copy(axons.begin(), axons.end(), std::back_inserter(expected_axons[rank]));
+        std::copy(den_ex.begin(), den_ex.end(), std::back_inserter(expected_den_ex[rank]));
+        std::copy(den_inh.begin(), den_inh.end(), std::back_inserter(expected_den_inh[rank]));
+    }
+
+    std::vector<CommunicationMap<SynapseDeletionRequest>> outgoing_requests;
+
+    size_t num_distant_deletions=0;
+    size_t num_local_deletions=0;
+
+    const auto &distant_out_edges = network_graphs[disabled_rank.get_rank()]->get_distant_out_edges(disabled_neuron_id);
+    for (const auto &[target, weight]: distant_out_edges) {
+        if (weight > 0) {
+            expected_den_ex[target.get_rank().get_rank()][target.get_neuron_id().get_neuron_id()]--;
+        } else {
+            expected_den_inh[target.get_rank().get_rank()][target.get_neuron_id().get_neuron_id()]--;
+        }
+        num_distant_deletions++;
+    }
+
+    const auto &distant_in_edges = network_graphs[disabled_rank.get_rank()]->get_distant_in_edges(disabled_neuron_id);
+    for (const auto &[source, weight]: distant_in_edges) {
+        expected_axons[source.get_rank().get_rank()][source.get_neuron_id().get_neuron_id()]--;
+        num_distant_deletions++;
+    }
+
+    const auto &local_out_edges = network_graphs[disabled_rank.get_rank()]->get_local_out_edges(disabled_neuron_id);
+    for (const auto &[target, weight]: local_out_edges) {
+        if (weight > 0) {
+            expected_den_ex[disabled_rank.get_rank()][target.get_neuron_id()]--;
+        } else {
+            expected_den_inh[disabled_rank.get_rank()][target.get_neuron_id()]--;
+        }
+        num_local_deletions++;
+    }
+
+    const auto &local_in_edges = network_graphs[disabled_rank.get_rank()]->get_local_in_edges(disabled_neuron_id);
+    for (const auto &[source, weight]: local_in_edges) {
+        expected_axons[disabled_rank.get_rank()][source.get_neuron_id()]--;
+        num_local_deletions++;
+    }
+
+    expected_axons[disabled_rank.get_rank()][disabled_neuron_id.get_neuron_id()] = 0;
+    expected_den_ex[disabled_rank.get_rank()][disabled_neuron_id.get_neuron_id()] = 0;
+    expected_den_inh[disabled_rank.get_rank()][disabled_neuron_id.get_neuron_id()] = 0;
+
+
+    for (int rank = 0; rank < num_ranks; rank++) {
+        const auto &network_graph = network_graphs[rank];
+        std::vector<NeuronID> disabled_neurons_vector;
+if(disabled_rank.get_rank()==rank) {
+    disabled_neurons_vector.push_back(disabled_neuron_id);
+}        auto &neurons = rank_to_neurons[rank];
+
+
+
+        const auto &[num_deletions, synapse_deletion_Requests] = neurons.disable_neurons(disabled_neurons_vector,
+                                                                                         num_ranks);
+       ASSERT_FALSE(synapse_deletion_Requests.contains(MPIRank(rank)));
+
+       if(rank == disabled_rank.get_rank()) {
+           ASSERT_EQ(num_deletions, num_local_deletions+num_distant_deletions);
+           ASSERT_EQ(synapse_deletion_Requests.get_total_number_requests(), num_distant_deletions);
+       }
+       else {
+           ASSERT_EQ(num_deletions,0);
+           ASSERT_EQ(synapse_deletion_Requests.get_total_number_requests(), 0);
+       }
+
+        outgoing_requests.push_back(synapse_deletion_Requests);
+
+    }
+
+    const auto &ingoing_requests = MPIAdapter::exchange_requests(outgoing_requests);
+
+    for (int rank = 0; rank < num_ranks; rank++) {
+        const MPIRank mpi_rank{rank};
+
+        const auto &synapse_deletion_Requests = ingoing_requests[rank];
+
+        const auto &network_graph = network_graphs[rank];
+        auto &neurons = rank_to_neurons[rank];
+        const auto &num_distant_deletions = neurons.delete_disabled_distant_synapses(synapse_deletion_Requests,
+                                                                                     mpi_rank);
+
+        for (const auto &neuron_id: NeuronID::range(num_neurons)) {
+            ASSERT_EQ(neurons.get_axons().get_connected_elements(neuron_id),
+                      expected_axons[rank][neuron_id.get_neuron_id()]);
+            ASSERT_EQ(neurons.get_dendrites_exc().get_connected_elements(neuron_id),
+                      expected_den_ex[rank][neuron_id.get_neuron_id()]);
+            ASSERT_EQ(neurons.get_dendrites_inh().get_connected_elements(neuron_id),
+                      expected_den_inh[rank][neuron_id.get_neuron_id()]);
+        }
+    }
+
+    NetworkGraphAdapter::check_validity_of_network_graphs(network_graphs, signal_types, num_neurons);
 }

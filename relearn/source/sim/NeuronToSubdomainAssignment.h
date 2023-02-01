@@ -204,8 +204,6 @@ protected:
 
     void set_loaded_nodes(std::vector<LoadedNeuron>&& neurons) {
         loaded_neurons = std::move(neurons);
-
-        create_local_area_translator();
     }
 
     void set_area_id_to_area_name(const std::vector<RelearnTypes::area_name>& area_id_vs_area_name) {
@@ -221,17 +219,22 @@ protected:
 
     bool initialized{ false };
 
-private:
-    void create_local_area_translator() {
+    void create_local_area_translator(size_t num_local_neurons) {
         std::vector<RelearnTypes::area_id> neuron_id_to_area_id{};
-        neuron_id_to_area_id.reserve(loaded_neurons.size());
+        neuron_id_to_area_id.reserve(num_local_neurons);
 
-        for (const auto& loaded_neuron : loaded_neurons) {
-            neuron_id_to_area_id.push_back(loaded_neuron.area_id);
+        if(loaded_neurons.empty())  {
+            neuron_id_to_area_id.resize(num_local_neurons, 0);
         }
-
+        else {
+            for (const auto &loaded_neuron: loaded_neurons) {
+                neuron_id_to_area_id.push_back(loaded_neuron.area_id);
+            }
+        }
         local_area_translator = std::make_shared<LocalAreaTranslator>(area_id_to_area_name, neuron_id_to_area_id);
     }
+
+private:
     std::vector<LoadedNeuron> loaded_neurons{};
 
     std::vector<RelearnTypes::area_name> area_id_to_area_name{};

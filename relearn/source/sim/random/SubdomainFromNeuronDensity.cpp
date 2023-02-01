@@ -37,6 +37,9 @@ SubdomainFromNeuronDensity::SubdomainFromNeuronDensity(const SubdomainFromNeuron
     set_ratio_placed_excitatory_neurons(0.0);
 
     synapse_loader = std::make_shared<RandomSynapseLoader>(std::move(partition));
+
+    set_area_id_to_area_name({ "random" });
+    create_local_area_translator(number_neurons);
 }
 
 void SubdomainFromNeuronDensity::print_essentials(const std::unique_ptr<Essentials>& essentials) {
@@ -49,7 +52,6 @@ void SubdomainFromNeuronDensity::fill_all_subdomains() {
     const auto& [min, max] = partition->get_subdomain_boundaries(0);
     const auto requested_number_neurons = get_requested_number_neurons();
     auto [neurons, number_excitatory_neurons] = place_neurons_in_box(min, max, requested_number_neurons, 0);
-    set_area_id_to_area_name({ "random" });
 
     set_number_placed_neurons(requested_number_neurons);
     set_total_number_placed_neurons(requested_number_neurons);

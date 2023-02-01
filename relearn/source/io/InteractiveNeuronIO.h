@@ -11,6 +11,7 @@
  */
 
 #include "Types.h"
+#include "neurons/helper/RankNeuronId.h"
 #include "util/MPIRank.h"
 #include "util/StimulusParser.h"
 #include "util/TaggedID.h"
@@ -46,7 +47,7 @@ public:
      * @exception Throws a RelearnException if opening the file fails
      * @return A collection of pairs: (<simulation step>, <all neurons that should be enabled in the simulation step>)
      */
-    [[nodiscard]] static std::vector<std::pair<step_type, std::vector<NeuronID>>> load_enable_interrupts(const std::filesystem::path& path_to_file);
+    [[nodiscard]] static std::vector<std::pair<step_type, std::vector<NeuronID>>> load_enable_interrupts(const std::filesystem::path& path_to_file, const MPIRank& my_rank);
 
     /**
      * @brief Reads the file specified by the path and extracts all disable-interrupts.
@@ -60,7 +61,7 @@ public:
      * @exception Throws a RelearnException if opening the file fails
      * @return A collection of pairs: (<simulation step>, <all neurons that should be disabled in the simulation step>)
      */
-    [[nodiscard]] static std::vector<std::pair<step_type, std::vector<NeuronID>>> load_disable_interrupts(const std::filesystem::path& path_to_file);
+    [[nodiscard]] static std::vector<std::pair<step_type, std::vector<NeuronID>>> load_disable_interrupts(const std::filesystem::path& path_to_file, const MPIRank& my_rank);
 
     /**
      * @brief Reads the file specified by the path and extracts all creation-interrupts.

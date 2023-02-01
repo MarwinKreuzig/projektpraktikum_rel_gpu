@@ -85,7 +85,7 @@ public:
     [[nodiscard]] RelearnTypes::area_id get_area_id_for_area_name(const RelearnTypes::area_name& area_name) const {
         auto it = std::find(area_id_to_area_name.begin(), area_id_to_area_name.end(), area_name);
         RelearnException::check(it != area_id_to_area_name.end(), "LocalAreaTranslator::get_area_id_for_area_name: Area name {} is unknown", area_name);
-        return it - area_id_to_area_name.begin();
+        return std::distance(area_id_to_area_name.begin(),it);
     }
 
     /**
@@ -168,7 +168,7 @@ public:
         return neuron_id_to_area_id;
     }
 
-    void neurons_created(size_t created_neurons) {
+    void create_neurons(size_t created_neurons) {
         neuron_id_to_area_id.insert(neuron_id_to_area_id.end(), created_neurons, 0UL);
     }
 

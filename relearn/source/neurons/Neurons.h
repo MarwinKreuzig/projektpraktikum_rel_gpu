@@ -105,6 +105,14 @@ public:
     void init(number_neurons_type number_neurons);
 
     /**
+     * Returns the algorithm that calculates to which neuron a neuron connects during the plasticity update
+     * @return The algorithm
+     */
+    [[nodiscard]] const std::shared_ptr<Algorithm>& get_algorithm() const {
+        return algorithm;
+    }
+
+    /**
      * @brief Sets the octree in which the neurons are stored
      * @param octree The octree
      */
@@ -290,9 +298,11 @@ public:
      * @brief Disables all neurons with specified ids
      *      If a neuron is already disabled, nothing happens for that one
      *      Otherwise, also deletes all synapses from the disabled neurons
+     *      Returns a CommunicationMap containing the mpi requests for deleting distant connections on other ranks to the disabled neurons on this rank.
      * @exception Throws RelearnExceptions if something unexpected happens
+     * @return Pair of number of local synapse deletion and requests for deletions on other ranks
      */
-    number_neurons_type disable_neurons(std::span<const NeuronID> neuron_ids);
+    std::pair<size_t,CommunicationMap<SynapseDeletionRequest>> disable_neurons(const std::span<const NeuronID> local_neuron_ids, const int num_ranks);
 
     /**
      * @brief Enables all neurons with specified ids
@@ -433,6 +443,15 @@ public:
      */
     static void check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, std::span<const SignalType> signal_types, const MPIRank my_rank);
 
+
+    /**
+     * Processes the requests of other mpi ranks to delete distant synapses on this rank to disabled remote neurons
+     * @param list The communication map
+     * @param my_rank Current mpi rank
+     * @return Number of deletions
+     */
+    [[nodiscard]] size_t delete_disabled_distant_synapses(const CommunicationMap<SynapseDeletionRequest> &list, const MPIRank& my_rank);
+
 private:
     [[nodiscard]] StatisticalMeasures global_statistics(std::span<const double> local_values, MPIRank root) const;
 
@@ -454,7 +473,7 @@ private:
 
     [[nodiscard]] std::vector<RankNeuronId> delete_synapses_find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete);
 
-    [[nodiscard]] size_t delete_synapses_commit_deletions(const CommunicationMap<SynapseDeletionRequest>& list);
+    [[nodiscard]] size_t delete_synapses_commit_deletions(const CommunicationMap<SynapseDeletionRequest>& list,  const MPIRank& my_rank);
 
     [[nodiscard]] size_t create_synapses();
 
