@@ -24,8 +24,8 @@
 #include <vector>
 
 TEST_F(MonitorParserTest, testParseDescriptionFixed) {
-    auto checker = [](std::string_view description, MPIRank default_rank, MPIRank rank, NeuronID::value_type neuron_id) {
-        auto opt_rni = MonitorParser::parse_description(description, default_rank);
+    auto checker = [](std::string_view description, MPIRank rank, NeuronID::value_type neuron_id) {
+        auto opt_rni = MonitorParser::parse_description(description, rank);
         ASSERT_TRUE(opt_rni.has_value());
 
         const auto& parsed_rni = opt_rni.value();
@@ -33,10 +33,10 @@ TEST_F(MonitorParserTest, testParseDescriptionFixed) {
         ASSERT_EQ(rni, parsed_rni);
     };
 
-    checker("0:0", MPIRank(0), MPIRank(0), 0);
-    checker("2:0", MPIRank(0), MPIRank(2), 0);
-    checker("155:377", MPIRank(17), MPIRank(155), 377);
-    checker("-1:17", MPIRank(5), MPIRank(5), 17);
+    checker("0:1", MPIRank(0), 1);
+    checker("2:1", MPIRank(2), 1);
+    checker("155:377",  MPIRank(155), 377);
+    checker("-1:17",MPIRank(5), 17);
 }
 
 TEST_F(MonitorParserTest, testParseDescriptionFail) {
@@ -45,14 +45,25 @@ TEST_F(MonitorParserTest, testParseDescriptionFail) {
         ASSERT_FALSE(opt_rni.has_value());
     };
 
-    checker("0:0:0", MPIRank::root_rank());
+    checker("0:1:0", MPIRank::root_rank());
     checker("5:-4", MPIRank::root_rank());
-    checker("+0:0", MPIRank::root_rank());
-    checker("AB:0", MPIRank::root_rank());
+    checker("+0:1", MPIRank::root_rank());
+    checker("AB:1", MPIRank::root_rank());
     checker("-5:2", MPIRank::root_rank());
     checker("0:", MPIRank::root_rank());
     checker("5;2", MPIRank::root_rank());
     checker("", MPIRank::root_rank());
+}
+
+TEST_F(MonitorParserTest, testParseDescriptionException) {
+    auto checker = [](std::string_view description, MPIRank default_rank) {
+        ASSERT_THROW(auto opt_rni = MonitorParser::parse_description(description, default_rank);, RelearnException);
+    };
+
+    checker("0:0", MPIRank::root_rank());
+    checker("1:0", MPIRank::root_rank());
+    checker("-1:0", MPIRank::root_rank());
+    checker("24575:0", MPIRank::root_rank());
 }
 
 TEST_F(MonitorParserTest, testParseDescriptionRandom) {
@@ -63,7 +74,7 @@ TEST_F(MonitorParserTest, testParseDescriptionRandom) {
         ASSERT_TRUE(opt_rni.has_value());
 
         const auto& parsed_rni = opt_rni.value();
-        ASSERT_EQ(rni, parsed_rni);
+        ASSERT_EQ(add_one_to_neuron_id(rni), parsed_rni);
     }
 }
 
@@ -76,7 +87,7 @@ TEST_F(MonitorParserTest, testParseDescriptions) {
     std::stringstream ss{};
 
     const auto& [first_rni, first_description] = generate_random_rank_neuron_id_description();
-    rank_neuron_ids.emplace_back(first_rni);
+    rank_neuron_ids.emplace_back(add_one_to_neuron_id(first_rni));
 
     ss << first_description;
 
@@ -84,7 +95,7 @@ TEST_F(MonitorParserTest, testParseDescriptions) {
         const auto& [new_rni, new_description] = generate_random_rank_neuron_id_description();
         ss << ';' << new_description;
 
-        rank_neuron_ids.emplace_back(new_rni);
+        rank_neuron_ids.emplace_back(add_one_to_neuron_id(new_rni));
     }
 
     const auto& parsed_rnis = MonitorParser::parse_multiple_description(ss.str(), MPIRank(3));
@@ -97,16 +108,16 @@ TEST_F(MonitorParserTest, testParseDescriptionsFixed) {
         { MPIRank(5), NeuronID(6) },
         { MPIRank(0), NeuronID(122) },
         { MPIRank(2), NeuronID(100) },
-        { MPIRank(1674), NeuronID(0) },
+        { MPIRank(1674), NeuronID(1) },
         { MPIRank(89512), NeuronID(6) },
-        { MPIRank(0), NeuronID(0) },
-        { MPIRank(0), NeuronID(0) },
+        { MPIRank(0), NeuronID(1) },
+        { MPIRank(0), NeuronID(1) },
     };
 
-    constexpr auto description_1 = "2:100;5:6;0:122;2:100;1674:0;89512:6;0:0;0:0";
-    constexpr auto description_2 = "2:100;-1:6;0:122;2:100;1674:0;89512:6;0:0;0:0";
-    constexpr auto description_3 = "2:100;5:6;-1:122;2:100;1674:0;89512:6;-1:0;0:0";
-    constexpr auto description_4 = "2:100;5:6;-1:122;-8:800;2:100;6:;1674:0;-999:5;89512:6;-1:0;0:0";
+    constexpr auto description_1 = "2:100;5:6;0:122;2:100;1674:1;89512:6;0:1;0:1";
+    constexpr auto description_2 = "2:100;-1:6;0:122;2:100;1674:1;89512:6;0:1;0:1";
+    constexpr auto description_3 = "2:100;5:6;-1:122;2:100;1674:1;89512:6;-1:1;0:1";
+    constexpr auto description_4 = "2:100;5:6;-1:122;-8:800;2:100;6:;1674:1;-999:5;89512:6;-1:1;0:1";
 
     const auto& parsed_rnis_1 = MonitorParser::parse_multiple_description(description_1, MPIRank(3));
     ASSERT_EQ(rank_neuron_ids, parsed_rnis_1);
@@ -144,7 +155,7 @@ TEST_F(MonitorParserTest, testExtractNeuronIDs) {
     std::copy_if(rank_neuron_ids.begin(), rank_neuron_ids.end(), std::back_inserter(filtered), [my_rank](const RankNeuronId& rni) { const auto& [rank, id] = rni; return rank == my_rank; });
 
     std::vector<NeuronID> golden_ids{};
-    std::transform(filtered.begin(), filtered.end(), std::back_inserter(golden_ids), [](const RankNeuronId& rni) { const auto& [rank, id] = rni; return id; });
+    std::transform(filtered.begin(), filtered.end(), std::back_inserter(golden_ids), [](const RankNeuronId& rni) { const auto& [rank, id] = rni; return NeuronID(id.get_neuron_id() - 1); });
 
     const auto& extracted_ids = MonitorParser::extract_my_ids(rank_neuron_ids, my_rank);
 
@@ -237,7 +248,7 @@ TEST_F(MonitorParserTest, testParseIds) {
     std::shuffle(rank_neuron_ids.begin(), rank_neuron_ids.end(), mt);
 
     std::stringstream ss{};
-    ss << "0:0";
+    ss << "0:1";
 
     for (const auto& rni : rank_neuron_ids) {
         if (rni.get_rank() != my_rank) {
@@ -248,7 +259,7 @@ TEST_F(MonitorParserTest, testParseIds) {
         const auto use_default = RandomAdapter::get_random_bool(mt);
 
         if (use_default) {
-            ss << ";-1:" << rni.get_neuron_id();
+            ss << ";-1:" << rni.get_neuron_id().get_neuron_id() + 1;
         } else {
             ss << ';' << codify_rank_neuron_id(rni);
         }
@@ -256,7 +267,7 @@ TEST_F(MonitorParserTest, testParseIds) {
 
     auto translator = std::make_shared<LocalAreaTranslator>(std::vector<RelearnTypes::area_name>({ "random" }), std::vector<RelearnTypes::area_id>({ 0 }));
 
-    const auto& parsed_ids = MonitorParser::parse_my_ids(ss.str(), my_rank, my_rank, translator);
+    const auto& parsed_ids = MonitorParser::parse_my_ids(ss.str(), my_rank, translator);
 
     ASSERT_EQ(parsed_ids.size(), my_number_neurons);
 

@@ -444,7 +444,8 @@ int main(int argc, char** argv) {
     app.add_option("--min-calcium-inhibitory-dendrites", min_calcium_inhibitory_dendrites, "The minimum intercellular calcium for inhibitory dendrites to grow. Default is 0.0");
 
     std::string neuron_monitors_description{};
-    auto* const monitor_option = app.add_option("--neuron-monitors", neuron_monitors_description, "The description which neurons to monitor. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;... where <mpi_rank> can be -1 to indicate \"on every rank\"");
+    auto* const monitor_option = app.add_option("--neuron-monitors", neuron_monitors_description, 
+        "The description which neurons to monitor. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;...<area_name>;... where <mpi_rank> can be -1 to indicate \"on every rank\"");
 
     auto* flag_monitor_all = app.add_flag("--neuron-monitors-all", "Monitors all neurons.");
     // auto* flag_area_monitor_all = app.add_flag("--area-monitors-all", "Monitors all areas.");
@@ -808,7 +809,7 @@ int main(int argc, char** argv) {
     sim.set_percentage_initial_fired_neurons(percentage_initial_fired_neurons);
 
     if (*opt_static_neurons) {
-        auto static_neurons = MonitorParser::parse_my_ids(static_neurons_str, my_rank, my_rank, subdomain->get_local_area_translator());
+        auto static_neurons = MonitorParser::parse_my_ids(static_neurons_str, my_rank, subdomain->get_local_area_translator());
         sim.set_static_neurons(static_neurons);
     }
 
@@ -881,7 +882,7 @@ int main(int argc, char** argv) {
             sim.register_neuron_monitor(neuron_id);
         }
     } else {
-        const auto& my_neuron_ids_to_monitor = MonitorParser::parse_my_ids(neuron_monitors_description, my_rank, my_rank, sim.get_neurons()->get_local_area_translator());
+        const auto& my_neuron_ids_to_monitor = MonitorParser::parse_my_ids(neuron_monitors_description, my_rank, sim.get_neurons()->get_local_area_translator());
         for (const auto& neuron_id : my_neuron_ids_to_monitor) {
             sim.register_neuron_monitor(neuron_id);
         }
