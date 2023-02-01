@@ -79,7 +79,6 @@ TEST_F(LocalAreaTranslatorTest, simpleExceptionTest) {
 }
 
 TEST_F(LocalAreaTranslatorTest, getterAreaTest) {
-    RelearnException::hide_messages = false;
     auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 10;
     auto area_id_to_area_name = NeuronAssignmentAdapter::get_random_area_names_specific(2, mt);
     std::vector<RelearnTypes::area_id> neuron_id_to_area_id{};
