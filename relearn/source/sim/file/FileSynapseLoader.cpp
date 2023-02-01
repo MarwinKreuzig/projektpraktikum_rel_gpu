@@ -13,6 +13,7 @@
 #include "io/NeuronIO.h"
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
+#include "util/StringUtil.h"
 
 #include <filesystem>
 
@@ -30,16 +31,16 @@ FileSynapseLoader::synapses_pair_type FileSynapseLoader::internal_load_synapses(
 
     const auto& actual_path = optional_path_to_file.value();
 
-    const auto expected_in_name = "rank_0_in_network.txt";
-    const auto expected_out_name = "rank_0_out_network.txt";
+    const std::filesystem::path path_to_in_file = StringUtil::find_file_for_rank(actual_path, MPIRank::root_rank().get_rank(), "rank_", "_in_network.txt", 5);
+    const std::filesystem::path path_to_out_file = StringUtil::find_file_for_rank(actual_path, MPIRank::root_rank().get_rank(), "rank_", "_out_network.txt", 5);
 
     const auto number_local_neurons = partition->get_number_local_neurons();
 
-    auto [in_synapses_static, in_synapses_plastic] = NeuronIO::read_in_synapses(actual_path / expected_in_name, number_local_neurons, MPIRank::root_rank(), 1);
+    auto [in_synapses_static, in_synapses_plastic] = NeuronIO::read_in_synapses(path_to_in_file, number_local_neurons, MPIRank::root_rank(), 1);
     auto [read_local_in_synapses_static, read_distant_in_synapses_static] = in_synapses_static;
     auto [read_local_in_synapses_plastic, read_distant_in_synapses_plastic] = in_synapses_plastic;
 
-    auto [out_synapses_static, out_synapses_plastic] = NeuronIO::read_out_synapses(actual_path / expected_out_name, number_local_neurons, MPIRank::root_rank(), 1);
+    auto [out_synapses_static, out_synapses_plastic] = NeuronIO::read_out_synapses(path_to_out_file, number_local_neurons, MPIRank::root_rank(), 1);
     auto [read_local_out_synapses_static, read_distant_out_synapses_static] = out_synapses_static;
     auto [read_local_out_synapses_plastic, read_distant_out_synapses_plastic] = out_synapses_plastic;
 

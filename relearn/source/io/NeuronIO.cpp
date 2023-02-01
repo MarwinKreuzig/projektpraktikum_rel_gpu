@@ -419,7 +419,7 @@ std::pair<std::tuple<LocalSynapses, DistantInSynapses>, std::tuple<LocalSynapses
     const auto is_good = file_synapses.good();
     const auto is_bad = file_synapses.bad();
 
-    RelearnException::check(is_good && !is_bad, "NeuronIO::read_in_synapses: The ofstream failed to open");
+    RelearnException::check(is_good && !is_bad, "NeuronIO::read_in_synapses: The ofstream failed to open {}", file_path.c_str());
 
     for (std::string line{}; std::getline(file_synapses, line);) {
         // Skip line with comments
