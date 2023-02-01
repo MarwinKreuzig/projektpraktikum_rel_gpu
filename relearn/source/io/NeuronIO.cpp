@@ -52,6 +52,7 @@ std::vector<std::string> NeuronIO::read_comments(const std::filesystem::path& fi
 }
 
 std::tuple<std::vector<LoadedNeuron>, std::vector<RelearnTypes::area_name>, LoadedNeuronsInfo> NeuronIO::read_neurons(const std::filesystem::path& file_path) {
+    RelearnException::check(std::filesystem::is_regular_file(file_path), "NeuronIO::read_neurons: Path is not a file" );
     std::ifstream file(file_path);
 
     const auto file_is_good = file.good();
