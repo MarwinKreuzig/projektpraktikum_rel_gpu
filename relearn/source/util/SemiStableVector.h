@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2020, Technical University of Darmstadt, Germany
  *
- * This software may be modified and distributed under the terms of a BSD-style license. 
+ * This software may be modified and distributed under the terms of a BSD-style license.
  * See the LICENSE file in the base directory for details.
  *
  */
@@ -38,7 +38,8 @@ public:
     using container_type = Base;
 
     template <typename... Ts>
-    explicit SemiStableVector(Ts&&... args) requires std::constructible_from<Base, Ts...>
+    explicit SemiStableVector(Ts&&... args)
+        requires std::constructible_from<Base, Ts...>
         : Base{ std::forward<Ts>(args)... } { }
 
     SemiStableVector(const SemiStableVector&) = default;
@@ -77,12 +78,16 @@ public:
     void push_back(value_type&& val) { Base::push_back(std::move(val)); }
 
     template <typename... Ts>
-    [[nodiscard]] reference emplace_front(Ts&&... args) requires std::constructible_from<value_type, Ts...> {
+    [[nodiscard]] reference emplace_front(Ts&&... args)
+        requires std::constructible_from<value_type, Ts...>
+    {
         return Base::emplace_front(std::forward<Ts>(args)...);
     }
 
     template <typename... Ts>
-    [[nodiscard]] reference emplace_back(Ts&&... args) requires std::constructible_from<value_type, Ts...> {
+    [[nodiscard]] reference emplace_back(Ts&&... args)
+        requires std::constructible_from<value_type, Ts...>
+    {
         return Base::emplace_back(std::forward<Ts>(args)...);
     }
 

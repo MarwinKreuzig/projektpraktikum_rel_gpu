@@ -172,7 +172,6 @@ private:
     double stddev_input{ default_background_activity_stddev };
 };
 
-
 /**
  * This class provides a normally distributed input, i.e., according to some N(expected, standard deviation).
  * However, it draws all input at the initialization phase and only returns pointers into that memory;

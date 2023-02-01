@@ -32,7 +32,7 @@ class OctreeImplementation;
  * In this instance, dendrites search for axons.
  * It is strongly tied to Octree, which might perform MPI communication via NodeCache::download_children()
  */
-class BarnesHutInverted :public BackwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, BarnesHutInvertedCell> {
+class BarnesHutInverted : public BackwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, BarnesHutInvertedCell> {
 public:
     using AdditionalCellAttributes = BarnesHutInvertedCell;
     using position_type = typename RelearnTypes::position_type;

@@ -554,6 +554,7 @@ protected:
             }
         }
     }
+
 private:
     // Root of the tree
     OctreeNode<AdditionalCellAttributes>* root{ nullptr };

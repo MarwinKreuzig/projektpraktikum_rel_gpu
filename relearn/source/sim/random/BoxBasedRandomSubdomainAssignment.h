@@ -82,11 +82,11 @@ public:
 
     /**
      * @brief Places a given number of neurons within a box
-     * @param offset 
+     * @param offset
      * @param length_of_box The length of the box, must be positive in each component
-     * @param number_neurons 
-     * @param first_id 
-     * @return 
+     * @param number_neurons
+     * @param first_id
+     * @return
      */
     std::pair<std::vector<LoadedNeuron>, number_neurons_type> place_neurons_in_box(const box_size_type& offset, const box_size_type& length_of_box,
         number_neurons_type number_neurons, NeuronID::value_type first_id);

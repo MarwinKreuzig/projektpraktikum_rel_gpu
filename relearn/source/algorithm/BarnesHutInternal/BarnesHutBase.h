@@ -208,7 +208,7 @@ public:
     [[nodiscard]] static std::optional<RankNeuronId> find_target_neuron(const RankNeuronId& source_neuron_id, const position_type& source_position, OctreeNode<AdditionalCellAttributes>* const root,
         const ElementType element_type, const SignalType signal_type, const double acceptance_criterion) {
         RelearnException::check(root != nullptr, "BarnesHutBase::find_target_neuron: root was nullptr");
-        
+
         if (root->contains(source_neuron_id)) {
             return {};
         }

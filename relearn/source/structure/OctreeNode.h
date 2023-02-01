@@ -72,7 +72,7 @@ public:
      * @brief Checks if the specified neuron is stored within *this* node
      * @param rank_neuron_id The MPI rank and neuron id in question
      * @return True iff the specified neuron is stored in this node
-    */
+     */
     [[nodiscard]] constexpr bool contains(const RankNeuronId& rank_neuron_id) const {
         if (is_parent()) {
             return false;

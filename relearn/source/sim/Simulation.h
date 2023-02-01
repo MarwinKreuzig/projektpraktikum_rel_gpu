@@ -379,7 +379,7 @@ private:
 
     double percentage_initially_fired{ 0.0 };
 
-    bool area_monitor_enabled {false};
+    bool area_monitor_enabled{ false };
 
     double accept_criterion{ 0.0 };
 

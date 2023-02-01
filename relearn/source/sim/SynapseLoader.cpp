@@ -21,14 +21,14 @@
 #include <sstream>
 #include <string>
 
-std::pair<std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>, std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>> 
+std::pair<std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>, std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>>
 SynapseLoader::load_synapses(const std::unique_ptr<Essentials>& essentials) {
     Timers::start(TimerRegion::LOAD_SYNAPSES);
 
     const auto& synapses_pair = internal_load_synapses();
     const auto& [synapses_static, synapses_plastic] = synapses_pair;
     const auto& [local_synapses, in_synapses, out_synapses] = synapses_plastic;
-    
+
     Timers::stop_and_add(TimerRegion::LOAD_SYNAPSES);
 
     RelearnTypes::synapse_weight total_local_weight = 0;

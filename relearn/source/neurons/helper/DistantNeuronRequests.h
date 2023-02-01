@@ -67,7 +67,7 @@ public:
         , source_position(source_position)
         , target_neuron_identifier(target_neuron_identifier)
         , target_neuron_type(target_neuron_type)
-        , signal_type(signal_type) { 
+        , signal_type(signal_type) {
         RelearnException::check(source_id.is_local(), "DistantNeuronRequest::DistantNeuronRequest: The source neuron must be initialized and non-virtual.");
     }
 

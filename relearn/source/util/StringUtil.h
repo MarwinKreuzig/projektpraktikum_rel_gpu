@@ -68,7 +68,7 @@ public:
      * @return The file path for the found file
      * @throws RelearnException When no file was found
      */
-    static std::filesystem::path find_file_for_rank(const std::filesystem::path& directory, const int rank, 
+    static std::filesystem::path find_file_for_rank(const std::filesystem::path& directory, const int rank,
         const std::string& prefix, const std::string& suffix, const unsigned int max_digits) {
         std::filesystem::path path_to_file{};
 

@@ -210,16 +210,16 @@ void Simulation::initialize() {
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 
-    if(area_monitor_enabled) {
+    if (area_monitor_enabled) {
         for (size_t area_id = 0; area_id < local_area_translator->get_number_of_areas(); area_id++) {
-            const auto &area_name = local_area_translator->get_area_name_for_area_id(area_id);
+            const auto& area_name = local_area_translator->get_area_name_for_area_id(area_id);
             const std::filesystem::path dir = LogFiles::get_output_path() / "area_monitors";
             if (!std::filesystem::exists(dir)) {
                 std::filesystem::create_directories(dir);
             }
             auto path = dir / (MPIWrapper::get_my_rank_str() + "_area_" + std::to_string(area_id) + ".csv");
             area_monitors->insert(
-                    std::make_pair(area_id, AreaMonitor(this, area_id, area_name, my_rank.get_rank(), path)));
+                std::make_pair(area_id, AreaMonitor(this, area_id, area_name, my_rank.get_rank(), path)));
         }
     }
 
@@ -290,7 +290,7 @@ void Simulation::simulate(const step_type number_steps) {
                 neurons->create_neurons(creation_count);
             }
         }
-        
+
         if (interval_neuron_monitor.hits_step(step)) {
             const auto number_neurons = neurons->get_number_neurons();
 
@@ -313,7 +313,7 @@ void Simulation::simulate(const step_type number_steps) {
             }
 
             for (NeuronID neuron_id : NeuronID::range(neurons->get_number_neurons())) {
-                if(neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
+                if (neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
                     continue;
                 }
                 const auto& area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(neuron_id.get_neuron_id());
@@ -500,7 +500,7 @@ void Simulation::finalize() const {
 
     neurons->print_calcium_statistics_to_essentials(essentials);
     neurons->print_synaptic_changes_to_essentials(essentials);
-    
+
     essentials->insert("Created-Synapses", total_synapse_creations);
     essentials->insert("Deleted-Synapses", total_synapse_deletions);
     essentials->insert("net-Synapses", net_creations);

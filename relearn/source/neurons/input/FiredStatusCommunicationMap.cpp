@@ -16,7 +16,7 @@
 
 #include <ranges>
 
-void FiredStatusCommunicationMap::set_local_fired_status(const std::span<const FiredStatus> fired_status, 
+void FiredStatusCommunicationMap::set_local_fired_status(const std::span<const FiredStatus> fired_status,
     const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic) {
     outgoing_ids.clear();
 

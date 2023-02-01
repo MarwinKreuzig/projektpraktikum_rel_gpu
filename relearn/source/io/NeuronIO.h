@@ -76,7 +76,7 @@ public:
      * @param partition Partition of the entire simulation
      * @exception Throws a RelearnException if opening the file failed
      */
-    static void write_neurons(const std::vector<LoadedNeuron>& neurons, const std::filesystem::path& file_path, 
+    static void write_neurons(const std::vector<LoadedNeuron>& neurons, const std::filesystem::path& file_path,
         const std::shared_ptr<LocalAreaTranslator>& local_area_translator, std::shared_ptr<Partition> partition);
 
     /**
@@ -121,7 +121,7 @@ public:
      * @exception Throws a RelearnException if the vectors don't all have the same length, or opening the file failed
      */
     static void write_neurons_componentwise(std::span<const NeuronID> ids, std::span<const position_type> positions,
-        const std::shared_ptr<LocalAreaTranslator>& local_area_translator, std::span<const SignalType> signal_types, std::stringstream& ss, 
+        const std::shared_ptr<LocalAreaTranslator>& local_area_translator, std::span<const SignalType> signal_types, std::stringstream& ss,
         size_t total_number_neurons, const std::tuple<Vec3<double>, Vec3<double>>& simulation_box, const std::vector<std::pair<Partition::box_size_type, Partition::box_size_type>>& local_subdomain_boundaries);
 
     /**
@@ -174,7 +174,7 @@ public:
      * @param file_path The path to the file
      * @exception Throws a RelearnException if opening the file failed or if the source rank of a distant in-synapse is equal to my_rank
      */
-    static void write_in_synapses(const LocalSynapses& local_in_synapses_static, const DistantInSynapses& distant_in_synapses_static, const LocalSynapses& local_in_synapses_plastic, 
+    static void write_in_synapses(const LocalSynapses& local_in_synapses_static, const DistantInSynapses& distant_in_synapses_static, const LocalSynapses& local_in_synapses_plastic,
         const DistantInSynapses& distant_in_synapses_plastic, MPIRank my_rank, RelearnTypes::number_neurons_type num_neurons, const std::filesystem::path& file_path);
 
     /**
@@ -226,7 +226,7 @@ public:
      *      (5) or a source id is not from [0, number_local_neurons)
      * @return All out-synapses as a tuple: { { (1) Static synapses: (1.1) The local ones and (1.2) the distant ones }, { (2) Plastic synapses: (2.1) The local ones and (2.2) the distant ones } }
      */
-    static std::pair<std::tuple<LocalSynapses, DistantOutSynapses>, std::tuple<LocalSynapses, DistantOutSynapses>> read_out_synapses(const std::filesystem::path& file_path, 
+    static std::pair<std::tuple<LocalSynapses, DistantOutSynapses>, std::tuple<LocalSynapses, DistantOutSynapses>> read_out_synapses(const std::filesystem::path& file_path,
         number_neurons_type number_local_neurons, MPIRank my_rank, size_t number_mpi_ranks);
 
     /**
@@ -240,7 +240,7 @@ public:
      * @param file_path The path to the file
      * @exception Throws a RelearnException if opening the file failed or if the target rank of a distant out-synapse is equal to my_rank
      */
-    static void write_out_synapses(const LocalSynapses& local_out_synapses_static, const DistantOutSynapses& distant_out_synapses_static, 
-        const LocalSynapses& local_out_synapses_plastic, const DistantOutSynapses& distant_out_synapses_plastic, 
+    static void write_out_synapses(const LocalSynapses& local_out_synapses_static, const DistantOutSynapses& distant_out_synapses_static,
+        const LocalSynapses& local_out_synapses_plastic, const DistantOutSynapses& distant_out_synapses_plastic,
         MPIRank my_rank, RelearnTypes::number_neurons_type num_neurons, const std::filesystem::path& file_path);
 };

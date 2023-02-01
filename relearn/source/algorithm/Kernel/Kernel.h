@@ -137,7 +137,7 @@ public:
 
     /**
      * @brief Calculates the probability for the source neuron to connect to each of the OctreeNodes in the vector,
-     *      searching the specified element_type and signal_type. 
+     *      searching the specified element_type and signal_type.
      *      If all probabilities are 0.0 (by rounding errors), the probabilities are calculated as number_free_elements/euclidean_distance
      * @param source_neuron_id The id of the source neuron, is used to prevent autapses
      * @param source_position The position of the source neuron
