@@ -184,7 +184,7 @@ TEST_F(SynapticElementsTest, testGaussianGrowthCurveSameIntersections) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsConstructor) {
+TEST_F(SynapticElementsTest, testConstructor) {
     const auto& calcium_to_grow = RandomAdapter::get_random_double<double>(SynapticElements::min_min_C_level_to_grow, SynapticElements::max_min_C_level_to_grow, mt);
     const auto& nu = RandomAdapter::get_random_double<double>(SynapticElements::min_nu, SynapticElements::max_nu, mt);
     const auto& retract_ratio = RandomAdapter::get_random_double<double>(SynapticElements::min_vacant_retract_ratio, SynapticElements::max_vacant_retract_ratio, mt);
@@ -220,7 +220,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsConstructor) {
     ASSERT_EQ(param_upper_bound.value(), vacant_elements_ub) << ss.str();
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsParameters) {
+TEST_F(SynapticElementsTest, testParameters) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& C = RandomAdapter::get_random_percentage<double>(mt);
 
@@ -281,7 +281,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsParameters) {
     ASSERT_EQ(param_upper_bound.value(), d5) << ss.str();
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsClone) {
+TEST_F(SynapticElementsTest, testClone) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& C = RandomAdapter::get_random_percentage<double>(mt);
 
@@ -337,7 +337,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsClone) {
     ASSERT_EQ(cloned_param_upper_bound.value(), d5) << ss.str();
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsInitialize) {
+TEST_F(SynapticElementsTest, testInitialize) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -390,7 +390,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialize) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsCreateNeurons) {
+TEST_F(SynapticElementsTest, testCreateNeurons) {
     const auto& number_neurons_initially = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& number_neurons_added = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
@@ -447,7 +447,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsCreateNeurons) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsConstant) {
+TEST_F(SynapticElementsTest, testInitialElementsConstant) {
     const auto& number_neurons_initially = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& number_neurons_added = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
@@ -481,7 +481,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsConstant) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsInitialElements) {
+TEST_F(SynapticElementsTest, testInitialElements) {
     const auto& number_neurons_initially = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& number_neurons_added = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
@@ -521,7 +521,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialElements) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsException) {
+TEST_F(SynapticElementsTest, testInitialElementsException) {
     const auto& number_neurons_initially = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& number_neurons_added = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
@@ -547,7 +547,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsException) {
     ASSERT_THROW(synaptic_elements.create_neurons(number_neurons_added), RelearnException) << ss.str();
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsMultipleBounds) {
+TEST_F(SynapticElementsTest, testInitialElementsMultipleBounds) {
     const auto& number_neurons_initially = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& number_neurons_added = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
@@ -612,7 +612,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsMultipleBounds) 
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsSignalTypes) {
+TEST_F(SynapticElementsTest, testSignalTypes) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -639,7 +639,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsSignalTypes) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsSingleUpdate) {
+TEST_F(SynapticElementsTest, testSingleUpdate) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -690,7 +690,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsSingleUpdate) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsHistogram) {
+TEST_F(SynapticElementsTest, testHistogram) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -715,7 +715,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsHistogram) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsUpdateException) {
+TEST_F(SynapticElementsTest, testUpdateException) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -746,7 +746,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateException) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
+TEST_F(SynapticElementsTest, testMultipleUpdate) {
     uniform_int_distribution<unsigned int> uid_connected(0, 10);
 
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
@@ -800,7 +800,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsFreeElements) {
+TEST_F(SynapticElementsTest, testFreeElements) {
     uniform_int_distribution<unsigned int> uid_connected(0, 10);
 
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
@@ -849,7 +849,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsFreeElements) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsDisable) {
+TEST_F(SynapticElementsTest, testDisable) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -891,7 +891,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsDisable) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsDisableException) {
+TEST_F(SynapticElementsTest, testDisableException) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -921,7 +921,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsDisableException) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsDelete) {
+TEST_F(SynapticElementsTest, testDelete) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -950,7 +950,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsDelete) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsDeleteException) {
+TEST_F(SynapticElementsTest, testDeleteException) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -985,7 +985,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsDeleteException) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElements) {
+TEST_F(SynapticElementsTest, testUpdateNumberElements) {
     const auto minimum_calcium_to_grow = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
     const auto growth_factor = RandomAdapter::get_random_double<double>(1e-6, 100.0, mt);
 
@@ -1037,7 +1037,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElements) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdateNumberElements) {
+TEST_F(SynapticElementsTest, testMultipleUpdateNumberElements) {
     const auto minimum_calcium_to_grow = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
     const auto growth_factor = RandomAdapter::get_random_double<double>(1e-6, 100.0, mt);
 
@@ -1089,7 +1089,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdateNumberElements) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElementsException) {
+TEST_F(SynapticElementsTest, testUpdateNumberElementsException) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -1169,7 +1169,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElementsException) 
     lambda(calcium_too_large, target_calcium_too_large, extra_info_too_large);
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdates) {
+TEST_F(SynapticElementsTest, testCommitUpdates) {
     const auto minimum_calcium_to_grow = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
     const auto growth_factor = RandomAdapter::get_random_double<double>(1e-6, 100.0, mt);
 
@@ -1304,7 +1304,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdates) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdatesException) {
+TEST_F(SynapticElementsTest, testCommitUpdatesException) {
     const auto minimum_calcium_to_grow = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
     const auto growth_factor = RandomAdapter::get_random_double<double>(1e-6, 100.0, mt);
 
