@@ -11,7 +11,6 @@
  */
 
 #include "gtest/gtest.h"
-#include "RandomAdapter.h"
 
 #include "util/MPIRank.h"
 #include "mpi/CommunicationMap.h"

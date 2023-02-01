@@ -1,7 +1,9 @@
 #include "test_neurons.h"
 
 #include "adapter/random/RandomAdapter.h"
+#include "adapter/mpi/MpiAdapter.h"
 #include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/network_graph/NetworkGraphAdapter.h"
 #include "adapter/neurons/NeuronTypesAdapter.h"
 #include "adapter/tagged_id/TaggedIdAdapter.h"
 
@@ -113,6 +115,7 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
     auto model = std::make_unique<models::PoissonModel>(models::PoissonModel::default_h,
         std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_conductance),
         std::make_unique<NullBackgroundActivityCalculator>(),
+        std::make_unique<Stimulus>(),
         models::PoissonModel::default_x_0,
         models::PoissonModel::default_tau_x,
         models::PoissonModel::default_refractory_period);
@@ -333,7 +336,7 @@ TEST_F(NeuronsTest, testDisableMultipleNeuronsWithoutMPI) {
     const auto axons = neurons.get_axons().get_connected_elements();
     const auto den_ex = neurons.get_dendrites_exc().get_connected_elements();
     const auto den_inh = neurons.get_dendrites_inh().get_connected_elements();
-    std::vector<uint> axons_old, den_ex_old, den_inh_old;
+    std::vector<unsigned int> axons_old, den_ex_old, den_inh_old;
     std::copy(axons.begin(), axons.end(), std::back_inserter(axons_old));
     std::copy(den_ex.begin(), den_ex.end(), std::back_inserter(den_ex_old));
     std::copy(den_inh.begin(), den_inh.end(), std::back_inserter(den_inh_old));

@@ -346,7 +346,7 @@ protected:
         return background_calculator;
     }
 
-    [[nodiscard]] const std::unique_ptr<Stimulus>& get_stimulus_calculator() const noexcept {
+    [[nodiscard]] const std::shared_ptr<Stimulus>& get_stimulus_calculator() const noexcept {
         return stimulus_calculator;
     }
 

@@ -560,13 +560,6 @@ int main(int argc, char** argv) {
         }
     }
 
-    std::shared_ptr<Stimulus> stimulus_calculator{};
-    if (static_cast<bool>(*opt_file_external_stimulation)) {
-      //  stimulus_calculator = std::make_shared<Stimulus>(file_external_stimulation, my_rank);
-    } else {
-        stimulus_calculator = std::make_shared<Stimulus>();
-    }
-
     std::unique_ptr<BackgroundActivityCalculator> background_activity_calculator{};
     if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Null) {
         RelearnException::check(!static_cast<bool>(*opt_base_background_activity), "Setting the base background activity is not valid when choosing the null-background calculator (or not setting it at all).");

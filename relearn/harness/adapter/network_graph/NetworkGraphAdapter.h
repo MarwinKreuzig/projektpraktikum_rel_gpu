@@ -12,7 +12,7 @@
 
 #include "adapter/random/RandomAdapter.h"
 #include "adapter/tagged_id/TaggedIdAdapter.h"
-#include "adapter/mpi/mpi_rank_adapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
 
 #include "Types.h"
 #include "neurons/NetworkGraph.h"

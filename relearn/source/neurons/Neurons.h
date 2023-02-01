@@ -302,7 +302,7 @@ public:
      * @exception Throws RelearnExceptions if something unexpected happens
      * @return Pair of number of local synapse deletion and requests for deletions on other ranks
      */
-    std::pair<size_t,CommunicationMap<SynapseDeletionRequest>> disable_neurons(const std::span<const NeuronID> local_neuron_ids, const int num_ranks);
+    std::pair<size_t,CommunicationMap<SynapseDeletionRequest>> disable_neurons(std::span<const NeuronID> local_neuron_ids, int num_ranks);
 
     /**
      * @brief Enables all neurons with specified ids

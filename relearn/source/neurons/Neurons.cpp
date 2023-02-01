@@ -108,18 +108,10 @@ void Neurons::check_signal_types(const std::shared_ptr<NetworkGraph> network_gra
     }
 }
 
-Neurons::number_neurons_type Neurons::disable_neurons(const std::span<const NeuronID> neuron_ids) {
-    extra_info->set_disabled_neurons(neuron_ids);
-
-    neuron_model->disable_neurons(neuron_ids);
-
+std::pair<size_t, CommunicationMap<SynapseDeletionRequest>> Neurons::disable_neurons(const std::span<const NeuronID> local_neuron_ids, const int num_ranks) {
     extra_info->set_disabled_neurons(local_neuron_ids);
 
     neuron_model->disable_neurons(local_neuron_ids);
-
-    for(const auto& neuron_id:local_neuron_ids) {
-        disable_flags[neuron_id.get_neuron_id()] = UpdateStatus::Disabled;
-    }
 
     std::vector<unsigned int> deleted_axon_connections(number_neurons, 0);
     std::vector<unsigned int> deleted_dend_ex_connections(number_neurons, 0);
@@ -260,6 +252,7 @@ Neurons::number_neurons_type Neurons::disable_neurons(const std::span<const Neur
     const auto deleted_connections = number_deleted_distant_out_axons + number_deleted_distant_in_inh + number_deleted_distant_in_exc
             + number_deleted_in_edges_from_outside + number_deleted_out_inh_edges_to_outside + number_deleted_out_exc_edges_to_outside
             + number_deleted_out_exc_edges_within + number_deleted_out_inh_edges_within;
+
     return std::make_pair(deleted_connections, synapse_deletion_requests_outgoing);
 }
 
@@ -566,6 +559,8 @@ size_t Neurons::delete_synapses_commit_deletions(const CommunicationMap<SynapseD
 size_t Neurons::delete_disabled_distant_synapses(const CommunicationMap<SynapseDeletionRequest> &list, const MPIRank& my_rank) {
 
     size_t num_synapses_deleted = 0;
+
+    const auto& disable_flags = extra_info->get_disable_flags();
 
     for (const auto &[other_rank, requests]: list) {
         num_synapses_deleted += requests.size();
