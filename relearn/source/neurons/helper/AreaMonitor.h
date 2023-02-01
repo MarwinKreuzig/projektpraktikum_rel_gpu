@@ -135,6 +135,7 @@ private:
     int den_inh_conn = 0;
     double calcium = 0;
     double fired_fraction = 0.0;
+    size_t num_enabled_neurons = 0;
     using EnsembleConnections = std::unordered_map<std::pair<int, RelearnTypes::area_id>, ConnectionCount,
         boost::hash<std::pair<int, RelearnTypes::area_id>>>;
 
@@ -146,7 +147,7 @@ private:
     /**
      * Complete data of all earlier logging steps
      */
-    std::vector<std::tuple<EnsembleConnections, double, double, double, double, double, double, double, double>> data;
+    std::vector<std::tuple<EnsembleConnections, double, double, double, double, double, double, double, double, size_t>> data;
 
     std::vector<std::vector<AreaConnection>> mpi_data{};
     void write_header();

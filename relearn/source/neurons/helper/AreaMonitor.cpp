@@ -65,6 +65,7 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
     fired_fraction +=
             static_cast<double>(sim->get_neurons()->get_neuron_model()->fired_recorder[NeuronModel::FireRecorderPeriod::AreaMonitor][neuron_id.get_neuron_id()]) /
             static_cast<double>(Config::area_monitor_log_step);
+    num_enabled_neurons++;
 }
 
 void AreaMonitor::prepare_recording() {
@@ -77,6 +78,7 @@ void AreaMonitor::prepare_recording() {
     den_inh_grown = 0;
     calcium = 0;
     fired_fraction = 0;
+    num_enabled_neurons = 0;
     mpi_data.clear();
     const auto num_areas = sim->get_neurons()->get_local_area_translator()->get_number_of_areas();
     mpi_data.resize(MPIWrapper::get_num_ranks());
@@ -88,7 +90,7 @@ void AreaMonitor::prepare_recording() {
 void AreaMonitor::finish_recording() {
     data.emplace_back(connections, axons_grown, static_cast<double>(axons_conn), den_ex_grown,
                       static_cast<double>(den_ex_conn), den_inh_grown, static_cast<double>(den_inh_conn), calcium,
-                      fired_fraction);
+                      fired_fraction, num_enabled_neurons);
     mpi_data.clear();
 }
 
@@ -125,7 +127,7 @@ void AreaMonitor::write_data_to_file() {
         out << rank << ":" << area_id << "ex;"
             << rank << ":" << area_id << "in;";
     }
-    out << "Axons grown;Axons conn;Den ex grown;Den ex conn;Den inh grown;Den inh conn;Calcium;Fire rate;";
+    out << "Axons grown;Axons conn;Den ex grown;Den ex conn;Den inh grown;Den inh conn;Calcium;Fire rate;Enabled neurons;";
     out << "\n";
 
     // Data
@@ -145,6 +147,7 @@ void AreaMonitor::write_data_to_file() {
         out << std::to_string(std::get<6>(single_record)) << ";";
         out << std::to_string(std::get<7>(single_record)) << ";";
         out << std::to_string(std::get<8>(single_record)) << ";";
+        out << std::to_string(std::get<9>(single_record)) << ";";
 
         out << "\n";
         step += Config::area_monitor_log_step;
