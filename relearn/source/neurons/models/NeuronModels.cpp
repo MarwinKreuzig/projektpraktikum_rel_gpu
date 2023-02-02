@@ -48,7 +48,10 @@ void NeuronModel::create_neurons(number_neurons_type creation_count) {
 }
 
 void NeuronModel::update_electrical_activity(const step_type step, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::span<const UpdateStatus> disable_flags) {
-    input_calculator->update_input(step, network_graph_static, network_graph_plastic, fired, disable_flags);
+
+    const auto& delayed_fire_state = transmission_delayer->apply_delay(fired);
+
+    input_calculator->update_input(step, network_graph_static, network_graph_plastic, delayed_fire_state, disable_flags);
     background_calculator->update_input(step, disable_flags);
     stimulus_calculator->update_stimulus(step, disable_flags);
 

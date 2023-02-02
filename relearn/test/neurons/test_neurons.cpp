@@ -116,6 +116,7 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
                                                                 SynapticInputCalculator::default_conductance),
                                                         std::make_unique<NullBackgroundActivityCalculator>(),
                                                         std::make_unique<Stimulus>(),
+                                                        std::make_unique<TransmissionDelayer>(),
                                                         models::PoissonModel::default_x_0,
                                                         models::PoissonModel::default_tau_x,
                                                         models::PoissonModel::default_refractory_period);

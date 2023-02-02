@@ -22,10 +22,11 @@ PoissonModel::PoissonModel(
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
         std::unique_ptr<Stimulus>&& stimulus_calculator,
+        std::unique_ptr<TransmissionDelayer>&& transmission_delayer,
         const double x_0,
         const double tau_x,
         const unsigned int refractory_period)
-        : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator) }
+        : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator), std::move(transmission_delayer) }
         , x_0{ x_0 }
         , tau_x{ tau_x }
         , refractory_period{ refractory_period } {
@@ -33,7 +34,7 @@ PoissonModel::PoissonModel(
 
 [[nodiscard]] std::unique_ptr<NeuronModel> PoissonModel::clone() const {
     return std::make_unique<PoissonModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(),
-                                          get_stimulus_calculator()->clone(), x_0, tau_x, refractory_period);
+                                          get_stimulus_calculator()->clone(), get_transmission_delayer()->clone(), x_0, tau_x, refractory_period);
 }
 
 [[nodiscard]] std::vector<ModelParameter> PoissonModel::get_parameter() {

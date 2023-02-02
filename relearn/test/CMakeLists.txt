@@ -45,7 +45,7 @@ file(
   "#include <filesystem>\nstd::filesystem::path get_relearn_path() { return \"${CMAKE_SOURCE_DIR}\"; }"
 )
 
-add_executable(relearn_tests ${SRC_TST})
+add_executable(relearn_tests ${SRC_TST} transmission_delay/test_transmission_delay.cpp)
 target_sources(
   relearn_tests
   PRIVATE ${CMAKE_BINARY_DIR}/test_get_relearn_path.cpp

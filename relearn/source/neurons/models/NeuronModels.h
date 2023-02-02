@@ -14,6 +14,7 @@
 #include "mpi/CommunicationMap.h"
 #include "neurons/enums/FiredStatus.h"
 #include "neurons/enums/UpdateStatus.h"
+#include "neurons/input/TransmissionDelayer.h"
 #include "neurons/input/BackgroundActivityCalculator.h"
 #include "neurons/input/Stimulus.h"
 #include "neurons/input/SynapticInputCalculator.h"
@@ -61,11 +62,13 @@ public:
      * @param synaptic_input_calculator The object that is responsible for calculating the synaptic input
      * @param background_activity_calculator The object that is responsible for calculating the background activity
      * @param stimulus_calculator The object that is responsible for calculating the stimulus
+     * @param transmission_delayerThe object that is responsible to delay the transmission of the firing of neurons to their target neurons
      */
     NeuronModel(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
-                std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator)
+                std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator, std::unique_ptr<TransmissionDelayer>&& transmission_delayer)
             : h(h)
-            , input_calculator(std::move(synaptic_input_calculator))
+            , input_calculator(std::move(synaptic_input_calculator)),
+            transmission_delayer(std::move(transmission_delayer))
             , background_calculator(std::move(background_activity_calculator))
             , stimulus_calculator(std::move(stimulus_calculator)) { }
 
@@ -319,6 +322,10 @@ protected:
         return stimulus_calculator->get_stimulus(neuron_id);
     }
 
+    [[nodiscard]] const std::unique_ptr<TransmissionDelayer>& get_transmission_delayer() const noexcept{
+        return transmission_delayer;
+    }
+
     [[nodiscard]] const std::unique_ptr<SynapticInputCalculator>& get_synaptic_input_calculator() const noexcept {
         return input_calculator;
     }
@@ -346,6 +353,7 @@ private:
     std::unique_ptr<SynapticInputCalculator> input_calculator{};
     std::unique_ptr<BackgroundActivityCalculator> background_calculator{};
     std::unique_ptr<Stimulus> stimulus_calculator{};
+    std::unique_ptr<TransmissionDelayer> transmission_delayer{};
 };
 
 namespace models {
@@ -368,6 +376,7 @@ namespace models {
          * @param synaptic_input_calculator See NeuronModel(...)
          * @param background_activity_calculator See NeuronModel(...)
          * @param stimulus_calculator See NeuronModel(...)
+         * @param transmission_delayer See NeuronModel(...)
          * @param x_0 The resting membrane potential
          * @param tau_x The dampening factor by which the membrane potential decreases
          * @param refractory_time The number of steps a neuron doesn't spike after spiking
@@ -377,6 +386,7 @@ namespace models {
                 std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
                 std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
                 std::unique_ptr<Stimulus>&& stimulus_calculator,
+                std::unique_ptr<TransmissionDelayer>&& transmission_delayer,
                 double x_0,
                 double tau_x,
                 unsigned int refractory_time);
@@ -505,6 +515,7 @@ namespace models {
          * @param synaptic_input_calculator See NeuronModel(...)
          * @param background_activity_calculator See NeuronModel(...)
          * @param stimulus_calculator See NeuronModel(...)
+         * @param transmission_delayer See NeuronModel(...)
          * @param a The dampening factor for u(t)
          * @param b The dampening factor for v(t) inside the equation for d/dt u(t)
          * @param c The reset activity
@@ -519,6 +530,7 @@ namespace models {
                 std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
                 std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
                 std::unique_ptr<Stimulus>&& stimulus_calculator,
+                std::unique_ptr<TransmissionDelayer>&& transmission_delayer,
                 double a,
                 double b,
                 double c,
@@ -712,6 +724,7 @@ namespace models {
          * @param synaptic_input_calculator See NeuronModel(...)
          * @param background_activity_calculator See NeuronModel(...)
          * @param stimulus_calculator See NeuronModel(...)
+         * @param transmission_delayer See NeuronModel(...)
          * @param a The constant inside the equation for d/dt w(t)
          * @param b The dampening factor for w(t) inside the equation for d/dt w(t)
          * @param phi The dampening factor for w(t)
@@ -721,6 +734,7 @@ namespace models {
                 std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
                 std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
                 std::unique_ptr<Stimulus>&& stimulus_calculator,
+                std::unique_ptr<TransmissionDelayer>&& transmission_delayer,
                 double a,
                 double b,
                 double phi);
@@ -853,6 +867,7 @@ namespace models {
          * @param synaptic_input_calculator See NeuronModel(...)
          * @param background_activity_calculator See NeuronModel(...)
          * @param stimulus_calculator See NeuronModel(...)
+         * @param transmission_delayer See NeuronModel(...)
          * @param C The dampening factor for v(t) (membrane capacitance)
          * @param g_T The leak conductance
          * @param E_L The reset membrane potential (leak reversal potential)
@@ -868,6 +883,7 @@ namespace models {
                 std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
                 std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
                 std::unique_ptr<Stimulus>&& stimulus_calculator,
+                std::unique_ptr<TransmissionDelayer>&& transmission_delayer,
                 double C,
                 double g_L,
                 double E_L,
