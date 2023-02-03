@@ -16,13 +16,9 @@
 #include "Types.h"
 #include "algorithm/BarnesHutInternal/BarnesHutCell.h"
 #include "mpi/CommunicationMap.h"
-#include "neurons/enums/ElementType.h"
-#include "neurons/enums/SignalType.h"
-#include "neurons/enums/UpdateStatus.h"
 #include "neurons/helper/DistantNeuronRequests.h"
 
 #include <memory>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -74,19 +70,6 @@ protected:
      * @return Returns a map, indicating for every MPI rank all requests that are made from this rank. Does not send those requests to the other MPI ranks.
      */
     [[nodiscard]] CommunicationMap<DistantNeuronRequest> find_target_neurons(number_neurons_type number_neurons) override;
-
-    /**
-     * @brief Finds target neurons for a specified source neuron
-     * @param source_neuron_id The source neuron's id
-     * @param source_position The source neuron's position
-     * @param number_vacant_elements The number of vacant elements of the source neuron
-     * @param root Where the source neuron should start to search for targets. It is not const because the children might be changed if the node is
-     * @param element_type The element type the source neuron searches
-     * @param signal_type The signal type the source neuron searches
-     * @return A vector of pairs with (a) the target mpi rank and (b) the request for that rank
-     */
-    [[nodiscard]] std::vector<std::tuple<MPIRank, DistantNeuronRequest>> find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
-        const counter_type& number_vacant_elements, OctreeNode<AdditionalCellAttributes>* root, ElementType element_type, SignalType signal_type);
 
     /**
      * @brief Processes all incoming requests from the MPI ranks locally, and prepares the responses

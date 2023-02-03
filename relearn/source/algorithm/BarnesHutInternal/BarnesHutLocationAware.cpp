@@ -30,20 +30,22 @@ void BarnesHutLocationAware::set_acceptance_criterion(const double acceptance_cr
 CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neurons(const number_neurons_type number_neurons) {
     const auto& disable_flags = extra_infos->get_disable_flags();
     const auto number_ranks = MPIWrapper::get_num_ranks();
+    const auto my_rank = MPIWrapper::get_my_rank();
 
     const auto size_hint = std::min(number_neurons, number_neurons_type(number_ranks));
     CommunicationMap<DistantNeuronRequest> neuron_requests_outgoing(number_ranks, size_hint);
 
     auto* const root = get_octree_root();
+    const auto level_of_branch_nodes = get_level_of_branch_nodes();
 
     // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
-#pragma omp parallel for default(none) shared(root, number_neurons, disable_flags, neuron_requests_outgoing)
+#pragma omp parallel for default(none) shared(root, number_neurons, disable_flags, neuron_requests_outgoing, level_of_branch_nodes, my_rank)
     for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] != UpdateStatus::Enabled) {
             continue;
         }
 
-        const NeuronID id{ neuron_id };
+        const NeuronID id(neuron_id);
 
         const auto number_vacant_axons = axons->get_free_elements(id);
         if (number_vacant_axons == 0) {
@@ -53,7 +55,9 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
         const auto& axon_position = extra_infos->get_position(id);
         const auto dendrite_type_needed = axons->get_signal_type(id);
 
-        const auto& requests = find_target_neurons(id, axon_position, number_vacant_axons, root, ElementType::Dendrite, dendrite_type_needed);
+        const auto& requests = BarnesHutBase<BarnesHutCell>::find_target_neurons_location_aware({ my_rank, id }, axon_position, number_vacant_axons,
+            root, ElementType::Dendrite, dendrite_type_needed, level_of_branch_nodes, acceptance_criterion);
+
         for (const auto& [target_rank, creation_request] : requests) {
 #pragma omp critical(BHrequests)
             neuron_requests_outgoing.append(target_rank, creation_request);
@@ -66,32 +70,6 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
     Timers::stop_and_add(TimerRegion::EMPTY_REMOTE_NODES_CACHE);
 
     return neuron_requests_outgoing;
-}
-
-std::vector<std::tuple<MPIRank, DistantNeuronRequest>> BarnesHutLocationAware::find_target_neurons(const NeuronID& source_neuron_id, const position_type& source_position,
-    const counter_type& number_vacant_elements, OctreeNode<AdditionalCellAttributes>* root, const ElementType element_type, const SignalType signal_type) {
-
-    const auto my_rank = MPIWrapper::get_my_rank();
-
-    std::vector<std::tuple<MPIRank, DistantNeuronRequest>> requests{};
-    requests.reserve(number_vacant_elements);
-
-    const auto level_of_branch_nodes = get_level_of_branch_nodes();
-
-    for (counter_type j = 0; j < number_vacant_elements; j++) {
-        // Find one target at the time
-        const auto& neuron_request = BarnesHutBase<BarnesHutCell>::find_target_neuron({ my_rank, source_neuron_id }, source_position, root, element_type, signal_type, level_of_branch_nodes, acceptance_criterion);
-        if (!neuron_request.has_value()) {
-            // If finding failed, it won't succeed in later iterations
-            break;
-        }
-
-        const auto& [target_rank, request] = neuron_request.value();
-
-        requests.emplace_back(target_rank, request);
-    }
-
-    return requests;
 }
 
 std::pair<CommunicationMap<DistantNeuronResponse>, std::pair<LocalSynapses, DistantInSynapses>>

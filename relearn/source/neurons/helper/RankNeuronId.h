@@ -14,6 +14,8 @@
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
+#include <boost/functional/hash.hpp>
+
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
@@ -135,4 +137,23 @@ struct tuple_element<1, ::RankNeuronId> {
     using type = NeuronID;
 };
 
+} // namespace std
+
+namespace std {
+template <>
+struct hash<RankNeuronId> {
+    using argument_type = RankNeuronId;
+    using result_type = std::size_t;
+
+    result_type operator()(const argument_type& rni) const {
+        const auto& [rank, neuron_id] = rni;
+
+        const auto rank_hash = std::hash<MPIRank>{}(rank);
+        const auto neuron_id_hash = std::hash<NeuronID>{}(neuron_id);
+
+        std::size_t total_hash = rank_hash;
+        boost::hash_combine(total_hash, neuron_id_hash);
+        return total_hash;
+    }
+};
 } // namespace std
