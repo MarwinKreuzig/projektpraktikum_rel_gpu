@@ -1146,6 +1146,174 @@ TEST_F(BarnesHutBaseTest, testConvertTargetNodeException) {
     make_mpi_mem_available<additional_cell_attributes>();
 }
 
+TEST_F(BarnesHutBaseTest, testConvertTargetNodeLeaf) {
+    using additional_cell_attributes = BarnesHutCell;
+
+    const NeuronID source(1000000);
+    const NeuronID target(1000001);
+
+    const Vec3d source_position{ 0.2 };
+    const Vec3d target_position{ 0.5 };
+
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
+    const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
+    const auto target_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
+
+    OctreeNode<additional_cell_attributes> target_node{};
+    target_node.set_cell_neuron_id(target);
+    target_node.set_cell_size(Vec3d{ -1.0 }, Vec3d{ 1.0 });
+    target_node.set_level(target_level);
+    target_node.set_cell_neuron_position(target_position);
+    target_node.set_rank(MPIRank::root_rank());
+
+    for (const auto mpi_rank : MPIRank::range(1000)) {
+        const RankNeuronId rni{ mpi_rank, source };
+
+        const auto& val = BarnesHutBase<additional_cell_attributes>::convert_target_node(rni, source_position, &target_node, searched_signal_type, branching_level);
+
+        ASSERT_TRUE(val.has_value());
+
+        const auto& [found_rank, distant_neuron_request] = val.value();
+
+        ASSERT_EQ(found_rank, MPIRank::root_rank());
+
+        const auto& [_source_id, _source_position, _target_identifier, _target_neuron_type, _searched_signal_type] = distant_neuron_request;
+
+        ASSERT_EQ(_source_id, source);
+        ASSERT_EQ(_source_position, source_position);
+        ASSERT_EQ(_target_identifier, target.get_neuron_id());
+        ASSERT_EQ(_target_neuron_type, DistantNeuronRequest::TargetNeuronType::Leaf);
+        ASSERT_EQ(_searched_signal_type, searched_signal_type);
+    }
+
+    make_mpi_mem_available<additional_cell_attributes>();
+}
+
+TEST_F(BarnesHutBaseTest, testConvertTargetNodeTooHigh) {
+    using additional_cell_attributes = BarnesHutCell;
+
+    const NeuronID source(1000000);
+
+    const Vec3d source_position{ 0.2 };
+
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
+    const auto target_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
+    const auto branching_level = target_level + 1;
+
+    OctreeNode<additional_cell_attributes> target_node{};
+    target_node.set_cell_size(Vec3d{ -1.0 }, Vec3d{ 1.0 });
+    target_node.set_level(target_level);
+    target_node.set_rank(MPIRank::root_rank());
+    target_node.set_cell_neuron_id(NeuronID(0));
+    target_node.set_cell_neuron_position(Vec3d{ 0.0 });
+
+    auto _1 = target_node.insert(Vec3d{ 0.3 }, NeuronID(1));
+    auto _2 = target_node.insert(Vec3d{ 0.5 }, NeuronID(2));
+    auto _3 = target_node.insert(Vec3d{ 0.7 }, NeuronID(3));
+
+    const auto& val_0 = BarnesHutBase<additional_cell_attributes>::convert_target_node({ MPIRank(0), source }, source_position, &target_node, searched_signal_type, branching_level);
+    ASSERT_FALSE(val_0.has_value());
+
+    const auto& val_1 = BarnesHutBase<additional_cell_attributes>::convert_target_node({ MPIRank(1), source }, source_position, &target_node, searched_signal_type, branching_level);
+    ASSERT_FALSE(val_1.has_value());
+
+    make_mpi_mem_available<additional_cell_attributes>();
+}
+
+TEST_F(BarnesHutBaseTest, testConvertTargetNodeVirtual) {
+    using additional_cell_attributes = BarnesHutCell;
+
+    const NeuronID source(1000000);
+
+    const Vec3d source_position{ 0.2 };
+
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
+    const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
+    const auto target_level = branching_level + 1;
+
+    OctreeNode<additional_cell_attributes> target_node{};
+    target_node.set_cell_size(Vec3d{ -1.0 }, Vec3d{ 1.0 });
+    target_node.set_level(target_level);
+    target_node.set_cell_neuron_id(NeuronID(0));
+    target_node.set_cell_neuron_position(Vec3d{ 0.0 });
+    target_node.set_rank(MPIRank::root_rank());
+
+    auto _1 = target_node.insert(Vec3d{ 0.3 }, NeuronID(1));
+    auto _2 = target_node.insert(Vec3d{ 0.5 }, NeuronID(2));
+    auto _3 = target_node.insert(Vec3d{ 0.7 }, NeuronID(3));
+
+    target_node.set_cell_neuron_id(NeuronID(true, 10101010));
+
+    for (const auto mpi_rank : MPIRank::range(1000)) {
+        const RankNeuronId rni{ mpi_rank, source };
+
+        const auto& val = BarnesHutBase<additional_cell_attributes>::convert_target_node(rni, source_position, &target_node, searched_signal_type, branching_level);
+
+        ASSERT_TRUE(val.has_value());
+
+        const auto& [found_rank, distant_neuron_request] = val.value();
+
+        ASSERT_EQ(found_rank, MPIRank::root_rank());
+
+        const auto& [_source_id, _source_position, _target_identifier, _target_neuron_type, _searched_signal_type] = distant_neuron_request;
+
+        ASSERT_EQ(_source_id, source);
+        ASSERT_EQ(_source_position, source_position);
+        ASSERT_EQ(_target_identifier, 10101010);
+        ASSERT_EQ(_target_neuron_type, DistantNeuronRequest::TargetNeuronType::VirtualNode);
+        ASSERT_EQ(_searched_signal_type, searched_signal_type);
+    }
+
+    make_mpi_mem_available<additional_cell_attributes>();
+}
+
+TEST_F(BarnesHutBaseTest, testConvertTargetNodeBranch) {
+    using additional_cell_attributes = BarnesHutCell;
+
+    const NeuronID source(1000000);
+
+    const Vec3d source_position{ 0.2 };
+
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
+    const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
+    const auto target_level = branching_level;
+
+    OctreeNode<additional_cell_attributes> target_node{};
+    target_node.set_cell_size(Vec3d{ -1.0 }, Vec3d{ 1.0 });
+    target_node.set_level(target_level);
+    target_node.set_cell_neuron_id(NeuronID(0));
+    target_node.set_cell_neuron_position(Vec3d{ 0.0 });
+    target_node.set_rank(MPIRank::root_rank());
+
+    auto _1 = target_node.insert(Vec3d{ 0.3 }, NeuronID(1));
+    auto _2 = target_node.insert(Vec3d{ 0.5 }, NeuronID(2));
+    auto _3 = target_node.insert(Vec3d{ 0.7 }, NeuronID(3));
+
+    target_node.set_cell_neuron_id(NeuronID(true, 256));
+
+    for (const auto mpi_rank : MPIRank::range(1000)) {
+        const RankNeuronId rni{ mpi_rank, source };
+
+        const auto& val = BarnesHutBase<additional_cell_attributes>::convert_target_node(rni, source_position, &target_node, searched_signal_type, branching_level);
+
+        ASSERT_TRUE(val.has_value());
+
+        const auto& [found_rank, distant_neuron_request] = val.value();
+
+        ASSERT_EQ(found_rank, MPIRank::root_rank());
+
+        const auto& [_source_id, _source_position, _target_identifier, _target_neuron_type, _searched_signal_type] = distant_neuron_request;
+
+        ASSERT_EQ(_source_id, source);
+        ASSERT_EQ(_source_position, source_position);
+        ASSERT_EQ(_target_identifier, 256);
+        ASSERT_EQ(_target_neuron_type, DistantNeuronRequest::TargetNeuronType::BranchNode);
+        ASSERT_EQ(_searched_signal_type, searched_signal_type);
+    }
+
+    make_mpi_mem_available<additional_cell_attributes>();
+}
+
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareException) {
     using additional_cell_attributes = BarnesHutCell;
 
