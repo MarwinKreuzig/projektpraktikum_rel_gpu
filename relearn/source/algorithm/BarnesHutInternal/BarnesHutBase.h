@@ -286,6 +286,62 @@ public:
     }
 
     /**
+     * @brief Converts a chosen target node to a DistantNeuronRequest (with associated MPIRank).
+     * @param source_neuron_id The source neuron's id
+     * @param source_position The source neuron's position
+     * @param target_node The chosen target node, not nullptr
+     * @param signal_type The searched signal type
+     * @param level_of_branch_nodes The level of branch nodes
+     * @exception Throws a RelearnExcpetion if target_node is nullptr
+     * @return If the target node cannot be used as-is (its level is smaller than the level of branch nodes), returns empty.
+     *      Otherwise, constructs the correct DistantNeuronRequest and returns it
+     */
+    [[nodiscard]] static std::optional<std::pair<MPIRank, DistantNeuronRequest>> convert_target_node(const RankNeuronId& source_neuron_id, const position_type& source_position,
+        const OctreeNode<AdditionalCellAttributes>* const target_node, const SignalType signal_type, const std::uint16_t level_of_branch_nodes) {
+        RelearnException::check(target_node != nullptr, "BarnesHutBase::convert_target_node: target_node was nullptr");
+
+        const auto& cell = target_node->get_cell();
+        const auto target_rank = target_node->get_mpi_rank();
+
+        if (const auto is_leaf = target_node->is_leaf(); is_leaf) {
+            const DistantNeuronRequest neuron_request(
+                source_neuron_id.get_neuron_id(),
+                source_position,
+                cell.get_neuron_id().get_neuron_id(),
+                DistantNeuronRequest::TargetNeuronType::Leaf,
+                signal_type);
+
+            return std::make_pair(target_rank, neuron_request);
+        }
+
+        const auto level_of_target = target_node->get_level();
+
+        if (level_of_target == level_of_branch_nodes) {
+            const DistantNeuronRequest neuron_request(
+                source_neuron_id.get_neuron_id(),
+                source_position,
+                cell.get_neuron_id().get_branch_node_index(),
+                DistantNeuronRequest::TargetNeuronType::BranchNode,
+                signal_type);
+
+            return std::make_pair(target_rank, neuron_request);
+        }
+
+        if (level_of_target > level_of_branch_nodes) {
+            const DistantNeuronRequest neuron_request(
+                source_neuron_id.get_neuron_id(),
+                source_position,
+                cell.get_neuron_id().get_rma_offset(),
+                DistantNeuronRequest::TargetNeuronType::VirtualNode,
+                signal_type);
+
+            return std::make_pair(target_rank, neuron_request);
+        }
+
+        return {};
+    }
+
+    /**
      * @brief Returns an optional pair of target rank and request. This is used for sending the request to the other rank and calculating further. No actual request is sent yet.
      *      Might perform MPI communication via NodeCache::download_children()
      * @param source_neuron_id The source neuron's id
@@ -308,46 +364,16 @@ public:
         RelearnException::check(root != nullptr, "BarnesHutBase::find_target_neuron_location_aware: root was nullptr");
 
         for (auto root_of_subtree = root; true;) {
-            const auto& possible_targets = BarnesHutBase<AdditionalCellAttributes>::get_nodes_to_consider(source_position, root_of_subtree, element_type, signal_type, true, acceptance_criterion);
+            const auto& possible_targets = get_nodes_to_consider(source_position, root_of_subtree, element_type, signal_type, acceptance_criterion, true);
 
             auto* node_selected = Kernel<AdditionalCellAttributes>::pick_target(source_neuron_id, source_position, possible_targets, element_type, signal_type);
             if (node_selected == nullptr) {
                 return {};
             }
 
-            if (node_selected == root_of_subtree) {
-                return {};
-            }
-
-            if (level_of_branch_nodes == node_selected->get_level()) {
-                // TODO(fabian)
-            }
-
-            if (level_of_branch_nodes < node_selected->get_level()) {
-                const auto& cell = node_selected->get_cell();
-                const auto target_rank = node_selected->get_mpi_rank();
-                const auto is_local = node_selected->is_local();
-                const auto is_leaf = node_selected->is_leaf();
-
-                if (is_leaf) {
-                    const DistantNeuronRequest neuron_request(
-                        source_neuron_id.get_neuron_id(),
-                        source_position,
-                        cell.get_neuron_id().get_neuron_id(),
-                        DistantNeuronRequest::TargetNeuronType::Leaf,
-                        signal_type);
-
-                    return std::make_pair(target_rank, neuron_request);
-                }
-
-                const DistantNeuronRequest neuron_request(
-                    source_neuron_id.get_neuron_id(),
-                    source_position,
-                    cell.get_neuron_id().get_rma_offset(),
-                    DistantNeuronRequest::TargetNeuronType::VirtualNode,
-                    signal_type);
-
-                return std::make_pair(target_rank, neuron_request);
+            const auto& request = convert_target_node(source_neuron_id, source_position, node_selected, signal_type, level_of_branch_nodes);
+            if (request.has_value()) {
+                return request.value();
             }
 
             // If the level of the selected node is too low, continue the search

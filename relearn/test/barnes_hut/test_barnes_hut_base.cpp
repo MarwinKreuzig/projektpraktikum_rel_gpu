@@ -1131,3 +1131,71 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronsFullChoiceDistributed) {
 
     make_mpi_mem_available<additional_cell_attributes>();
 }
+
+TEST_F(BarnesHutBaseTest, testConvertTargetNodeException) {
+    using additional_cell_attributes = BarnesHutCell;
+
+    const NeuronID neuron_id(1000000);
+    const Vec3d position{ 0.0 };
+
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
+    const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
+
+    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::convert_target_node({ MPIRank::root_rank(), neuron_id }, position, nullptr, searched_signal_type, branching_level), RelearnException);
+
+    make_mpi_mem_available<additional_cell_attributes>();
+}
+
+TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareException) {
+    using additional_cell_attributes = BarnesHutCell;
+
+    const NeuronID neuron_id(1000000);
+    const Vec3d position{ 0.0 };
+
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
+    const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
+
+    const auto too_small_acceptance_criterion = RandomAdapter::get_random_double<double>(-1000.0, 0.0, mt);
+    const auto too_large_acceptance_criterion = RandomAdapter::get_random_double<double>(Constants::bh_max_theta + eps, 10000.0, mt);
+
+    auto root = OctreeAdapter::get_standard_tree<additional_cell_attributes>(number_neurons, minimum, maximum, mt);
+
+    const RankNeuronId source{ MPIRank::root_rank(), neuron_id };
+
+    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron_location_aware(source, position, nullptr, ElementType::Dendrite, searched_signal_type, branching_level, Constants::bh_default_theta);, RelearnException);
+    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron_location_aware(source, position, &root, ElementType::Dendrite, searched_signal_type, branching_level, 0.0);, RelearnException);
+    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron_location_aware(source, position, &root, ElementType::Dendrite, searched_signal_type, branching_level, Constants::bh_max_theta + eps);, RelearnException);
+    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron_location_aware(source, position, &root, ElementType::Dendrite, searched_signal_type, branching_level, too_small_acceptance_criterion);, RelearnException);
+    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron_location_aware(source, position, &root, ElementType::Dendrite, searched_signal_type, branching_level, too_large_acceptance_criterion);, RelearnException);
+
+    make_mpi_mem_available<additional_cell_attributes>();
+}
+
+TEST_F(BarnesHutBaseTest, testFindTargetNeuronsLocationAwareException) {
+    using additional_cell_attributes = BarnesHutCell;
+
+    const NeuronID neuron_id(1000000);
+    const Vec3d position{ 0.0 };
+
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
+    const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
+
+    const auto too_small_acceptance_criterion = RandomAdapter::get_random_double<double>(-1000.0, 0.0, mt);
+    const auto too_large_acceptance_criterion = RandomAdapter::get_random_double<double>(Constants::bh_max_theta + eps, 10000.0, mt);
+
+    auto root = OctreeAdapter::get_standard_tree<additional_cell_attributes>(number_neurons, minimum, maximum, mt);
+
+    const RankNeuronId source{ MPIRank::root_rank(), neuron_id };
+
+    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neurons_location_aware(source, position, 1, nullptr, ElementType::Dendrite, searched_signal_type, branching_level, Constants::bh_default_theta);, RelearnException);
+    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neurons_location_aware(source, position, 1, &root, ElementType::Dendrite, searched_signal_type, branching_level, 0.0);, RelearnException);
+    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neurons_location_aware(source, position, 1, &root, ElementType::Dendrite, searched_signal_type, branching_level, Constants::bh_max_theta + eps);, RelearnException);
+    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neurons_location_aware(source, position, 1, &root, ElementType::Dendrite, searched_signal_type, branching_level, too_small_acceptance_criterion);, RelearnException);
+    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neurons_location_aware(source, position, 1, &root, ElementType::Dendrite, searched_signal_type, branching_level, too_large_acceptance_criterion);, RelearnException);
+
+    make_mpi_mem_available<additional_cell_attributes>();
+}

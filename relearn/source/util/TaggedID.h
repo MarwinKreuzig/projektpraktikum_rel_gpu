@@ -91,17 +91,16 @@ public:
 
     /**
      * @brief Get a virtual id (is initialized, but virtual)
-     * @param id The offset in the RMA window
      * @return constexpr TaggedID virtual id
      */
     [[nodiscard]] static constexpr TaggedID virtual_id() noexcept { return TaggedID{ true, 0 }; }
 
     /**
      * @brief Get a virtual id (is initialized, but virtual)
-     * @param id The offset in the RMA window
+     * @param hijacked_value The offset in the RMA window/index of the branch node
      * @return constexpr TaggedID virtual id
      */
-    [[nodiscard]] static constexpr TaggedID virtual_id(std::integral auto offset) noexcept { return TaggedID{ true, offset }; }
+    [[nodiscard]] static constexpr TaggedID virtual_id(std::integral auto hijacked_value) noexcept { return TaggedID{ true, hijacked_value }; }
 
     /**
      * @brief Create a vector of local TaggedIDs within the range [0, size)
@@ -151,7 +150,7 @@ public:
      * @param is_virtual flag if the id should be marked virtual
      * @param id the id value
      */
-    constexpr explicit TaggedID(bool is_virtual, std::integral auto id) noexcept
+    constexpr TaggedID(bool is_virtual, std::integral auto id) noexcept
         : is_initialized_{ true }
         , is_virtual_{ is_virtual }
         , id_{ static_cast<value_type>(id) } { }
@@ -203,6 +202,18 @@ public:
     [[nodiscard]] constexpr value_type get_rma_offset() const {
         RelearnException::check(is_initialized(), "TaggedID::get_rma_offset: Is not initialized {:s}", *this);
         RelearnException::check(is_virtual(), "TaggedID::get_rma_offset: Is not virtual {:s}", *this);
+        return id_;
+    }
+
+    /**
+     * @brief Get the index of the branch node. The neuron id must be virtual.
+     *      This method is functionally equivalent to get_rma_offset, it offers a different name for readability
+     * @exception RelearnException if the id is not initialized or is not virtual
+     * @return constexpr value_type The index of the branch node
+     */
+    [[nodiscard]] constexpr value_type get_branch_node_index() const {
+        RelearnException::check(is_initialized(), "TaggedID::get_branch_node_index: Is not initialized {:s}", *this);
+        RelearnException::check(is_virtual(), "TaggedID::get_branch_node_index: Is not virtual {:s}", *this);
         return id_;
     }
 
