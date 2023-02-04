@@ -38,6 +38,7 @@ public:
      */
     static void init(std::span<OctreeNode<AdditionalCellAttributes>> memory) noexcept {
         memory_holder = memory;
+        parent_to_offset.reserve(memory.size());
         std::ranges::uninitialized_default_construct(memory_holder);
     }
 

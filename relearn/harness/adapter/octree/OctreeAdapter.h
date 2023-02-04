@@ -355,7 +355,6 @@ public:
 
     template <typename AdditionalCellAttributes>
     static void mark_node_as_distributed(OctreeNode<AdditionalCellAttributes>* root, const std::uint16_t level_of_branch_nodes) {
-
         std::vector<OctreeNode<AdditionalCellAttributes>*> branch_nodes{};
         branch_nodes.reserve(static_cast<size_t>(std::pow(8.0, level_of_branch_nodes) * 2));
 
@@ -458,5 +457,43 @@ public:
         }
 
         return mapping;
+    }
+
+    template <typename AdditionalCellAttributes>
+    static std::vector<OctreeNode<AdditionalCellAttributes>*> mark_branch_nodes_with_ids(OctreeNode<AdditionalCellAttributes>* root, const std::uint16_t level_of_branch_nodes) {
+        std::vector<OctreeNode<AdditionalCellAttributes>*> branch_nodes{};
+        branch_nodes.reserve(static_cast<size_t>(std::pow(8.0, level_of_branch_nodes) * 2));
+
+        std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
+        stack.push(root);
+
+        while (!stack.empty()) {
+            auto* current = stack.top();
+            stack.pop();
+
+            if (current->get_level() == level_of_branch_nodes) {
+                branch_nodes.emplace_back(current);
+                continue;
+            }
+
+            if (current->get_level() < level_of_branch_nodes) {
+                for (auto* child : current->get_children()) {
+                    if (child != nullptr) {
+                        stack.push(child);
+                    }
+                }
+                continue;
+            }
+        }
+
+        NeuronID::value_type current_branch_idx = 0;
+        for (auto* node : branch_nodes) {
+            if (node->is_parent()) {
+                node->set_cell_neuron_id(NeuronID(true, current_branch_idx));
+            }
+            current_branch_idx++;
+        }
+
+        return branch_nodes;
     }
 };

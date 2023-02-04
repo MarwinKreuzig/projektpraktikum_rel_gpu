@@ -373,6 +373,7 @@ public:
 
             const auto& request = convert_target_node(source_neuron_id, source_position, node_selected, signal_type, level_of_branch_nodes);
             if (request.has_value()) {
+                found = node_selected;
                 return request.value();
             }
 
@@ -381,6 +382,12 @@ public:
             root_of_subtree = node_selected;
         }
     }
+
+     static inline OctreeNode<AdditionalCellAttributes>* found{};
+
+     static auto get_found_node() {
+        return found;
+     }
 
     /**
      * @brief Finds target neurons for a specified source neuron. No actual request is made.

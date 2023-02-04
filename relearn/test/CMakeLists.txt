@@ -81,6 +81,8 @@ target_sources(
 		  
 		  local_area_translator/test_local_area_translator.cpp
 		  
+		  memory_holder/test_memory_holder.cpp
+		  
 		  misc/test_misc.cpp
 		  
 		  mpi/test_mpi_rank.cpp
@@ -95,29 +97,29 @@ target_sources(
 		  
           neuron_models/test_neuron_models.cpp
 
-		neurons/test_neurons.cpp
+		  neurons/test_neurons.cpp
 
-		octree/test_octree.cpp
-		octree/test_octree_node.cpp
+		  octree/test_octree.cpp
+		  octree/test_octree_node.cpp
 
-		parser/test_monitor_parser.cpp
-		parser/test_step_parser.cpp
+		  parser/test_monitor_parser.cpp
+		  parser/test_step_parser.cpp
 
-		partition/test_partition.cpp
+		  partition/test_partition.cpp
 
-		space_filling_curve/test_space_filling_curve.cpp
+		  space_filling_curve/test_space_filling_curve.cpp
 
-		stimulus/test_stimulus.cpp
+		  stimulus/test_stimulus.cpp
 
-		synaptic_elements/test_synaptic_elements.cpp
+		  synaptic_elements/test_synaptic_elements.cpp
 
-		synaptic_input/test_synaptic_input.cpp
+		  synaptic_input/test_synaptic_input.cpp
 
-		tagged_id/test_tagged_id.cpp
+		  tagged_id/test_tagged_id.cpp
 
-		vector/test_vector.cpp
+		  vector/test_vector.cpp
 
-		# for visual studio
+		  # for visual studio
 		  ${relearn_tests_additional_files})
 		  
 target_include_directories(relearn_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

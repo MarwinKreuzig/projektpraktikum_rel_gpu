@@ -204,9 +204,11 @@ public:
                 auto* new_node = MemoryHolder<AdditionalCellAttributes>::get_available(parent_node, parent_own_octant);
                 new_node->set_cell_size(minimum_position, maximum_position);
                 new_node->set_cell_neuron_position(parent_position);
-                new_node->set_cell_neuron_id(parent_neuron_id);
                 new_node->set_rank(parent_node->get_mpi_rank());
                 new_node->set_level(parent_node->get_level() + 1);
+                if (parent_neuron_id.is_local()) {
+                    new_node->set_cell_neuron_id(parent_neuron_id);
+                }
 
                 // Set the child and mark the parent as virtual
                 parent_node->set_child(new_node, parent_own_octant);

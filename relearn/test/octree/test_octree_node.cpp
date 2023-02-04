@@ -587,7 +587,7 @@ TYPED_TEST(OctreeNodeTest, testUpdateTree) {
                 }
             }
         }
-        
+
         if constexpr (AdditionalCellAttributes::has_excitatory_dendrite) {
             auto vacant_elements = cell.get_number_excitatory_dendrites();
             auto position = cell.get_excitatory_dendrites_position().value();
@@ -619,6 +619,41 @@ TYPED_TEST(OctreeNodeTest, testUpdateTree) {
             ASSERT_EQ(vacant_elements, golden_number_inhibitory_axons);
             ASSERT_EQ(position, golden_position_inhibitory_axons);
         }
+    }
+
+    this->template make_mpi_mem_available<AdditionalCellAttributes>();
+}
+
+TYPED_TEST(OctreeNodeTest, testMemoryLayout) {
+    using AdditionalCellAttributes = TypeParam;
+
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(this->mt) + 1;
+    const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(this->mt);
+
+    auto root = OctreeAdapter::get_standard_tree<AdditionalCellAttributes>(number_neurons, minimum, maximum, this->mt);
+
+    std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
+    stack.push(&root);
+
+    while (!stack.empty()) {
+        OctreeNode<AdditionalCellAttributes>* current = stack.top();
+        stack.pop();
+
+        if (current->is_leaf()) {
+            continue;
+        }
+
+        for (auto* child : current->get_children()) {
+            if (child != nullptr) {
+                stack.push(child);
+            }
+        }
+
+        const auto rma_offset = current->get_cell_neuron_id().get_rma_offset();
+        ASSERT_EQ(rma_offset % sizeof(OctreeNode<AdditionalCellAttributes>), 0);
+
+        const auto virtual_node_index = rma_offset / sizeof(OctreeNode<AdditionalCellAttributes>);
+
     }
 
     this->template make_mpi_mem_available<AdditionalCellAttributes>();

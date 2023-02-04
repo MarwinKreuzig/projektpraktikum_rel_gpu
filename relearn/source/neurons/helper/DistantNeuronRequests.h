@@ -194,6 +194,8 @@ private:
     NeuronID::value_type target_neuron_identifier{};
     TargetNeuronType target_neuron_type{};
     SignalType signal_type{};
+
+    static_assert(sizeof(target_neuron_identifier) >= sizeof(std::intptr_t), "DistantNeuronRequest: The size of target_neuron_identifier cannot hold a pointer");
 };
 
 namespace std {

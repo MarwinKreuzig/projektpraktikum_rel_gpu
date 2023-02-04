@@ -1341,6 +1341,77 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareException) {
     make_mpi_mem_available<additional_cell_attributes>();
 }
 
+TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareFullChoice) {
+    using additional_cell_attributes = BarnesHutCell;
+
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
+    const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
+
+    auto root = OctreeAdapter::get_standard_tree<additional_cell_attributes>(number_neurons, minimum, maximum, mt);
+    const auto& nodes = OctreeAdapter::find_nodes(&root);
+    const auto& branch_nodes = OctreeAdapter::mark_branch_nodes_with_ids(&root, branching_level);
+
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
+
+    for (const auto neuron_id : NeuronID::range(number_neurons)) {
+        const auto acceptance_criterion = RandomAdapter::get_random_double<double>(eps, Constants::bh_max_theta, mt);
+        const auto& position = SimulationAdapter::get_random_position(mt);
+
+        const RankNeuronId searching_id{ MPIRank::root_rank(), neuron_id };
+        auto found_target = BarnesHutBase<additional_cell_attributes>::find_target_neuron_location_aware(searching_id, position, &root, ElementType::Dendrite, searched_signal_type, branching_level, acceptance_criterion);
+
+        ASSERT_TRUE(found_target.has_value());
+
+        const auto& [found_rank, distant_neuron_request] = found_target.value();
+
+        const auto& [_source_id, _source_position, _target_identifier, _target_neuron_type, _searched_signal_type] = distant_neuron_request;
+
+        ASSERT_EQ(found_rank, MPIRank::root_rank());
+
+        ASSERT_EQ(_searched_signal_type, searched_signal_type);
+        ASSERT_EQ(_source_id, neuron_id);
+        ASSERT_EQ(_source_position, position);
+
+        const auto* marked_node = BarnesHutBase<additional_cell_attributes>::get_found_node();
+
+        if (_target_neuron_type == DistantNeuronRequest::TargetNeuronType::Leaf) {
+            const NeuronID found_id(_target_identifier);
+            
+            ASSERT_TRUE(nodes.contains({ found_rank, found_id }));
+
+            const auto* found_node = nodes.at({ found_rank, found_id });
+            ASSERT_EQ(found_node, marked_node);
+
+            ASSERT_GE(found_node->get_cell().get_number_dendrites_for(searched_signal_type), 0);
+        }
+
+        if (_target_neuron_type == DistantNeuronRequest::TargetNeuronType::VirtualNode) {
+            // TODO(fabian): check later
+
+            //ASSERT_EQ(_target_identifier % sizeof(OctreeNode<additional_cell_attributes>), 0);
+
+            //auto* found_node = MemoryHolder<additional_cell_attributes>::get_node_from_offset(_target_identifier / sizeof(OctreeNode<additional_cell_attributes>));
+            //ASSERT_EQ(found_node, marked_node);
+
+            //ASSERT_TRUE(found_node->get_cell_neuron_id().is_virtual());
+            //ASSERT_GE(found_node->get_cell().get_number_dendrites_for(searched_signal_type), 0);
+        }
+
+        if (_target_neuron_type == DistantNeuronRequest::TargetNeuronType::BranchNode) {
+            ASSERT_GE(branch_nodes.size(), _target_identifier);
+            auto* found_node = branch_nodes[_target_identifier];
+            ASSERT_EQ(found_node, marked_node);
+
+            ASSERT_TRUE(found_node->get_cell_neuron_id().is_virtual());
+            ASSERT_EQ(found_node->get_cell_neuron_id().get_branch_node_index(), _target_identifier);
+            ASSERT_GE(found_node->get_cell().get_number_dendrites_for(searched_signal_type), 0);
+        }
+    }
+
+    make_mpi_mem_available<additional_cell_attributes>();
+}
+
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronsLocationAwareException) {
     using additional_cell_attributes = BarnesHutCell;
 
