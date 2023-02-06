@@ -25,6 +25,7 @@
 #include "neurons/input/BackgroundActivityCalculators.h"
 #include "neurons/input/SynapticInputCalculator.h"
 #include "neurons/input/SynapticInputCalculators.h"
+#include "neurons/input/TransformationFunctions.h"
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
 #include "sim/Essentials.h"
@@ -246,6 +247,12 @@ int main(int argc, char** argv) {
         { "fast-normal", BackgroundActivityCalculatorType::FastNormal },
     };
 
+    TransformationFunctionType chosen_background_transformation = TransformationFunctionType::Identity;
+    std::map<std::string, TransformationFunctionType> cli_parse_transformation_type{
+            { "identity", TransformationFunctionType::Identity },
+            { "linear", TransformationFunctionType::Linear }
+    };
+
     RelearnTypes::step_type simulation_steps{};
     app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms.")->required();
 
@@ -375,7 +382,24 @@ int main(int argc, char** argv) {
 
     double background_activity_stddev{ BackgroundActivityCalculator::default_background_activity_stddev };
     auto* const opt_stddev_background_activity = app.add_option("--background-activity-stddev", background_activity_stddev,
-        "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as N(mean, stddev)");
+                                                                "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as N(mean, stddev)");
+
+    auto* const opt_background_transformation_type = app.add_option("--background-transformation", chosen_background_transformation, "The type of the background activity transformation. Default: Identity");
+    opt_background_transformation_type->transform(CLI::CheckedTransformer(cli_parse_transformation_type, CLI::ignore_case));
+
+    double background_transformation_factor{ LinearTransformation::default_factor };
+    auto* const opt_stddev_background_transformation_factor = app.add_option("--background-transformation-factor", background_transformation_factor,
+                                                                             "The linear factor for the background activity transformation");
+
+    double background_transformation_cut_off{ LinearTransformation::default_factor_cutoff };
+    auto* const opt_stddev_background_transformation_cut_off = app.add_option("--background-transformation-cutoff", background_transformation_cut_off,
+                                                                             "The min/max of the linear factor for the background activity transformation");
+
+
+    double background_transformation_factor_start{ LinearTransformation::default_factor_start };
+    auto* const opt_stddev_background_transformation_factor_start = app.add_option("--background-transformation-factor-start", background_transformation_factor_start,
+                                                                             "The start of the linear function for the background actvity transformation");
+
 
     double synapse_conductance{ SynapticInputCalculator::default_conductance };
     app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transferred to its neighbors when a neuron spikes. Default is 0.03");
@@ -562,26 +586,36 @@ int main(int argc, char** argv) {
         }
     }
 
+    std::unique_ptr<TransformationFunction> transformation_function;
+    if(chosen_background_transformation == TransformationFunctionType::Identity) {
+        transformation_function = std::make_unique<IdentityTransformation>();
+    }
+    else if(chosen_background_transformation == TransformationFunctionType::Linear) {
+        transformation_function = std::make_unique<LinearTransformation>(background_transformation_factor, background_transformation_factor_start, background_transformation_cut_off);
+    } else {
+        RelearnException::fail("Unknown background activity transformation {}", chosen_background_transformation);
+    }
+
     std::unique_ptr<BackgroundActivityCalculator> background_activity_calculator{};
     if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Null) {
         RelearnException::check(!static_cast<bool>(*opt_base_background_activity), "Setting the base background activity is not valid when choosing the null-background calculator (or not setting it at all).");
         RelearnException::check(!static_cast<bool>(*opt_mean_background_activity), "Setting the mean background activity is not valid when choosing the null-background calculator (or not setting it at all).");
         RelearnException::check(!static_cast<bool>(*opt_stddev_background_activity), "Setting the stddev background activity is not valid when choosing the null-background calculator (or not setting it at all).");
 
-        background_activity_calculator = std::make_unique<NullBackgroundActivityCalculator>();
+        background_activity_calculator = std::make_unique<NullBackgroundActivityCalculator>(std::move(transformation_function));
     } else if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Constant) {
         RelearnException::check(!static_cast<bool>(*opt_mean_background_activity), "Setting the mean background activity is not valid when choosing the constant-background calculator.");
         RelearnException::check(!static_cast<bool>(*opt_stddev_background_activity), "Setting the stddev background activity is not valid when choosing the constant-background calculator.");
 
-        background_activity_calculator = std::make_unique<ConstantBackgroundActivityCalculator>(base_background_activity);
+        background_activity_calculator = std::make_unique<ConstantBackgroundActivityCalculator>(std::move(transformation_function), base_background_activity);
     } else if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Normal) {
         RelearnException::check(background_activity_stddev > 0.0, "When choosing the normal-background calculator, the standard deviation must be set to > 0.0.");
 
-        background_activity_calculator = std::make_unique<NormalBackgroundActivityCalculator>(background_activity_mean, background_activity_stddev);
+        background_activity_calculator = std::make_unique<NormalBackgroundActivityCalculator>(std::move(transformation_function), background_activity_mean, background_activity_stddev);
     } else if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::FastNormal) {
         RelearnException::check(background_activity_stddev > 0.0, "When choosing the fast-normal-background calculator, the standard deviation must be set to > 0.0.");
 
-        background_activity_calculator = std::make_unique<FastNormalBackgroundActivityCalculator>(background_activity_mean, background_activity_stddev, 10);
+        background_activity_calculator = std::make_unique<FastNormalBackgroundActivityCalculator>(std::move(transformation_function), background_activity_mean, background_activity_stddev, 10);
     } else {
         RelearnException::fail("Chose a background activity calculator that is not implemented");
     }

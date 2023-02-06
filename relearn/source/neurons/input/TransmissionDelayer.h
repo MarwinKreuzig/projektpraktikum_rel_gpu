@@ -48,7 +48,7 @@ public:
         saved_fire_states.push(fired_in_current_step);
 
         if(saved_fire_states.size() == delay_steps + 1) {
-            const std::vector<FiredStatus> delayed_fire_state = saved_fire_states.front();
+            std::vector<FiredStatus> delayed_fire_state = saved_fire_states.front();
             saved_fire_states.pop();
             return delayed_fire_state;
         }

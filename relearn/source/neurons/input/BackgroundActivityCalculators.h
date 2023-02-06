@@ -31,7 +31,7 @@ public:
     /**
      * @brief Constructs a new object of type NullBackgroundActivityCalculator
      */
-    NullBackgroundActivityCalculator() = default;
+    NullBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function) : BackgroundActivityCalculator(std::move(transformation_function)) {}
 
     virtual ~NullBackgroundActivityCalculator() = default;
 
@@ -48,7 +48,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
-        return std::make_unique<NullBackgroundActivityCalculator>();
+        return std::make_unique<NullBackgroundActivityCalculator>(transformation_function->clone());
     }
 };
 
@@ -61,8 +61,8 @@ public:
      * @brief Constructs a new object with the given constant input
      * @brief input The base input
      */
-    ConstantBackgroundActivityCalculator(const double input) noexcept
-        : BackgroundActivityCalculator()
+    ConstantBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function,const double input) noexcept
+        : BackgroundActivityCalculator(std::move(transformation_function))
         , base_input(input) {
     }
 
@@ -81,7 +81,7 @@ public:
         Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
         for (number_neurons_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
             const auto input = disable_flags[neuron_id] == UpdateStatus::Disabled ? 0.0 : base_input;
-            set_background_activity(neuron_id, input);
+            set_and_transform_background_activity(step, neuron_id, input);
         }
         Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
     }
@@ -91,7 +91,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
-        return std::make_unique<ConstantBackgroundActivityCalculator>(base_input);
+        return std::make_unique<ConstantBackgroundActivityCalculator>(transformation_function->clone(), base_input);
     }
 
     /**
@@ -121,8 +121,8 @@ public:
      * @brief stddev The standard deviation, must be > 0.0
      * @exception Throws a RelearnException if stddev <= 0.0
      */
-    NormalBackgroundActivityCalculator(const double mean, const double stddev)
-        : BackgroundActivityCalculator()
+    NormalBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function,const double mean, const double stddev)
+        : BackgroundActivityCalculator(std::move(transformation_function))
         , mean_input(mean)
         , stddev_input(stddev) {
         RelearnException::check(stddev > 0.0, "NormalBackgroundActivityCalculator::NormalBackgroundActivityCalculator: stddev was: {}", stddev);
@@ -147,7 +147,7 @@ public:
         Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
         for (number_neurons_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
             const auto input = disable_flags[neuron_id] == UpdateStatus::Disabled ? 0.0 : values[RandomHolder::get_random_uniform_integer(RandomHolderKey::BackgroundActivity, 0U, static_cast<uint>(values.size() - 1))];
-            set_background_activity(neuron_id, input);
+            set_and_transform_background_activity(step, neuron_id, input);
         }
         Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
     }
@@ -157,7 +157,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
-        return std::make_unique<NormalBackgroundActivityCalculator>(mean_input, stddev_input);
+        return std::make_unique<NormalBackgroundActivityCalculator>(transformation_function->clone(),mean_input, stddev_input);
     }
 
     /**
@@ -193,8 +193,8 @@ public:
      * @param multiplier The factor how many more values should be drawn
      * @exception Throws a RelearnException if stddev <= 0.0
      */
-    FastNormalBackgroundActivityCalculator(const double mean, const double stddev, const size_t multiplier)
-        : BackgroundActivityCalculator()
+    FastNormalBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function,const double mean, const double stddev, const size_t multiplier)
+        : BackgroundActivityCalculator(std::move(transformation_function))
         , mean_input(mean)
         , stddev_input(stddev)
         , multiplier(multiplier) {
@@ -222,6 +222,7 @@ public:
 
         const auto new_offset = RandomHolder::get_random_uniform_integer<size_t>(RandomHolderKey::BackgroundActivity, min_offset, max_offset);
         offset = new_offset;
+        cur_step = step;
 
         Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
     }
@@ -272,7 +273,7 @@ public:
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < number_neurons, "FastNormalBackgroundActivityCalculator::get_background_activity: id is too large: {}", neuron_id);
-        return pre_drawn_values[offset + local_neuron_id];
+        return transformation_function->transform(cur_step,pre_drawn_values[offset + local_neuron_id]);
     }
 
     /**
@@ -283,7 +284,7 @@ public:
         const auto number_neurons = get_number_neurons();
 
         const auto pointer = pre_drawn_values.data();
-
+        //TODO Ignores Transformation function
         return std::span<const double>{ pointer + offset, number_neurons };
     }
 
@@ -292,7 +293,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
-        return std::make_unique<FastNormalBackgroundActivityCalculator>(mean_input, stddev_input, multiplier);
+        return std::make_unique<FastNormalBackgroundActivityCalculator>(transformation_function->clone(), mean_input, stddev_input, multiplier);
     }
 
     /**
@@ -314,4 +315,5 @@ private:
     size_t offset{ 0 };
 
     std::vector<double> pre_drawn_values{};
+    step_type cur_step;
 };

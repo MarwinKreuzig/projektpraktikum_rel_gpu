@@ -12,6 +12,7 @@
 
 #include "Types.h"
 #include "neurons/enums/UpdateStatus.h"
+#include "neurons/input/TransformationFunctions.h"
 #include "neurons/models/ModelParameter.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
@@ -49,6 +50,8 @@ inline std::ostream& operator<<(std::ostream& out, const BackgroundActivityCalcu
 
     return out;
 }
+template <>
+struct fmt::formatter<BackgroundActivityCalculatorType> : ostream_formatter { };
 
 /**
  * This class provides an interface to calculate the background activity that neurons receive.
@@ -65,7 +68,8 @@ public:
     /**
      * @brief Constructs a new instance of type SynapticInputCalculator with 0 neurons.
      */
-    BackgroundActivityCalculator() = default;
+    explicit BackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function)
+    : transformation_function(std::move(transformation_function)) {}
 
     virtual ~BackgroundActivityCalculator() = default;
 
@@ -162,18 +166,22 @@ public:
 
 protected:
     /**
-     * @brief Sets the background activity for the given neuron
+     * @brief Sets the background activity for the given neuron and applies the transformation function
+     * @param step The current step
      * @param neuron_id The local neuron
      * @param value The new background activity
      * @exception Throws a RelearnException if the neuron_id is to large
      */
-    void set_background_activity(const number_neurons_type neuron_id, const double value) {
-        RelearnException::check(neuron_id < number_local_neurons, "SynapticInputCalculator::set_background_activity: neuron_id was too large: {} vs {}", neuron_id, number_local_neurons);
-        background_activity[neuron_id] = value;
+    void set_and_transform_background_activity(const RelearnTypes::step_type  step,const number_neurons_type neuron_id, const double value) {
+        RelearnException::check(neuron_id < number_local_neurons, "SynapticInputCalculator::set_and_transform_background_activity: neuron_id was too large: {} vs {}", neuron_id, number_local_neurons);
+        std::cout << "BEFORE TRANSFORM" << std::endl;
+        background_activity[neuron_id] = transformation_function->transform(step, value);
     }
 
+    std::unique_ptr<TransformationFunction> transformation_function;
 private:
     number_neurons_type number_local_neurons{};
 
     std::vector<double> background_activity{};
+
 };
