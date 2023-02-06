@@ -22,10 +22,28 @@ public:
     }
 
     static void enable_all(const std::shared_ptr<NeuronsExtraInfo>& extra_info) {
-        extra_info->set_enabled_neurons(NeuronID::range(extra_info->get_size()));
+        std::vector<NeuronID> ids_to_enable{};
+
+        const auto disable_flags = extra_info->get_disable_flags();
+        for (size_t i = 0; i < disable_flags.size(); i++) {
+            if (disable_flags[i] == UpdateStatus::Disabled) {
+                ids_to_enable.emplace_back(i);
+            }
+        }
+
+        extra_info->set_enabled_neurons(std::move(ids_to_enable));
     }
 
     static void disable_all(const std::shared_ptr<NeuronsExtraInfo>& extra_info) {
-        extra_info->set_enabled_neurons(NeuronID::range(extra_info->get_size()));
+        std::vector<NeuronID> ids_to_disable{};
+
+        const auto disable_flags = extra_info->get_disable_flags();
+        for (size_t i = 0; i < disable_flags.size(); i++) {
+            if (disable_flags[i] == UpdateStatus::Enabled) {
+                ids_to_disable.emplace_back(i);
+            }
+        }
+
+        extra_info->set_disabled_neurons(std::move(ids_to_disable));
     }
 };

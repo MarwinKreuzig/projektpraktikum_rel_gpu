@@ -79,33 +79,52 @@ void CalciumCalculator::update_current_calcium(std::span<const FiredStatus> fire
     auto maximum_id = NeuronID::uninitialized_id();
     auto maximum_ca = -std::numeric_limits<double>::max();
 
-#pragma omp parallel for default(none) shared(disable_flags, fired_status, scale, tau_C_inverse, minimum_ca, maximum_ca, minimum_id, maximum_id)
-    for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
-            continue;
-        }
+#pragma omp parallel default(none) shared(disable_flags, fired_status, scale, tau_C_inverse, minimum_ca, maximum_ca, minimum_id, maximum_id)
+    {
+        auto thread_minimum_id = NeuronID::uninitialized_id();
+        auto thread_minimum_ca = std::numeric_limits<double>::max();
 
-        // Update calcium depending on the firing
-        auto c = calcium[neuron_id];
-        for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-            if (fired_status[neuron_id] == FiredStatus::Inactive) {
-                c += scale * (c * tau_C_inverse);
-            } else {
-                c += scale * (c * tau_C_inverse + beta);
+        auto thread_maximum_id = NeuronID::uninitialized_id();
+        auto thread_maximum_ca = -std::numeric_limits<double>::max();
+
+#pragma omp for nowait schedule(static)
+        for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
+            if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
+                continue;
+            }
+
+            // Update calcium depending on the firing
+            auto c = calcium[neuron_id];
+            for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
+                if (fired_status[neuron_id] == FiredStatus::Inactive) {
+                    c += scale * (c * tau_C_inverse);
+                } else {
+                    c += scale * (c * tau_C_inverse + beta);
+                }
+            }
+            calcium[neuron_id] = c;
+
+            if (thread_minimum_ca > c) {
+                thread_minimum_ca = c;
+                thread_minimum_id = NeuronID(neuron_id);
+            }
+
+            if (thread_maximum_ca < c) {
+                thread_maximum_ca = c;
+                thread_maximum_id = NeuronID(neuron_id);
             }
         }
-        calcium[neuron_id] = c;
 
-#pragma omp critical(calcium)
+#pragma omp critical
         {
-            if (minimum_ca > c) {
-                minimum_ca = c;
-                minimum_id = NeuronID(neuron_id);
+            if (minimum_ca > thread_minimum_ca) {
+                minimum_ca = thread_minimum_ca;
+                minimum_id = thread_minimum_id;
             }
 
-            if (maximum_ca < c) {
-                maximum_ca = c;
-                maximum_id = NeuronID(neuron_id);
+            if (maximum_ca < thread_maximum_ca) {
+                maximum_ca = thread_maximum_ca;
+                maximum_id = thread_maximum_id;
             }
         }
     }

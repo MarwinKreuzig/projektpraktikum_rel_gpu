@@ -260,11 +260,11 @@ void CustomArgsInput(benchmark::internal::Benchmark* b) {
     b->Args({ 50000, static_number_synapses });
 }
 
-BENCHMARK(BM_Linear_Input_No_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
-BENCHMARK(BM_Linear_Input_All_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
+// BENCHMARK(BM_Linear_Input_No_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
+// BENCHMARK(BM_Linear_Input_All_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
 
-BENCHMARK(BM_Logarithmic_Input_No_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
-BENCHMARK(BM_Logarithmic_Input_All_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
+// BENCHMARK(BM_Logarithmic_Input_No_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
+// BENCHMARK(BM_Logarithmic_Input_All_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
 
-BENCHMARK(BM_TanH_Input_No_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
-BENCHMARK(BM_TanH_Input_All_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
+// BENCHMARK(BM_TanH_Input_No_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
+// BENCHMARK(BM_TanH_Input_All_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
