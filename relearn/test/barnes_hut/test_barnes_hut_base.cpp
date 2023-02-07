@@ -67,8 +67,6 @@ TEST_F(BarnesHutBaseTest, testACException) {
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(source_position,
                      &node, ElementType::Dendrite, searched_signal_type, too_large_acceptance_criterion),
         RelearnException);
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testACLeafDendrites) {
@@ -240,8 +238,6 @@ TEST_F(BarnesHutBaseTest, testNodesToConsiderException) {
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::get_nodes_to_consider(position, nullptr, ElementType::Dendrite, searched_signal_type, acceptance_criterion), RelearnException);
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::get_nodes_to_consider(position, nullptr, ElementType::Dendrite, searched_signal_type, Constants::bh_default_theta, true), RelearnException);
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::get_nodes_to_consider(position, nullptr, ElementType::Dendrite, searched_signal_type, acceptance_criterion, true), RelearnException);
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testNodesToConsiderLeaf) {
@@ -316,8 +312,6 @@ TEST_F(BarnesHutBaseTest, testNodesToConsiderNoDendrites) {
         auto found_nodes_dendrite = BarnesHutBase<additional_cell_attributes>::get_nodes_to_consider(position, &root, ElementType::Dendrite, searched_signal_type, acceptance_criterion, false);
         ASSERT_TRUE(found_nodes_dendrite.empty());
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testNodesToConsiderNoElements) {
@@ -337,8 +331,6 @@ TEST_F(BarnesHutBaseTest, testNodesToConsiderNoElements) {
         auto found_nodes_dendrite = BarnesHutBase<additional_cell_attributes>::get_nodes_to_consider(position, &root, ElementType::Dendrite, searched_signal_type, acceptance_criterion, false);
         ASSERT_TRUE(found_nodes_dendrite.empty());
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testNodesToConsider) {
@@ -391,8 +383,6 @@ TEST_F(BarnesHutBaseTest, testNodesToConsider) {
 
         ASSERT_EQ(found_nodes, golden_nodes);
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testNodesToConsiderNoAxons) {
@@ -445,8 +435,6 @@ TEST_F(BarnesHutBaseTest, testNodesToConsiderNoAxons) {
 
         ASSERT_EQ(found_nodes, golden_nodes);
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testNodesToConsiderDistributedTree) {
@@ -504,8 +492,6 @@ TEST_F(BarnesHutBaseTest, testNodesToConsiderDistributedTree) {
 
         ASSERT_EQ(found_nodes, golden_nodes);
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testNodesToConsiderEarlyReturn) {
@@ -558,8 +544,6 @@ TEST_F(BarnesHutBaseTest, testNodesToConsiderEarlyReturn) {
 
         ASSERT_EQ(found_nodes, golden_nodes);
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testNodesToConsiderEarlyReturnDistributedTree) {
@@ -622,8 +606,6 @@ TEST_F(BarnesHutBaseTest, testNodesToConsiderEarlyReturnDistributedTree) {
 
         ASSERT_EQ(found_nodes, golden_nodes);
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronException) {
@@ -646,8 +628,6 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronException) {
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron({ MPIRank::root_rank(), neuron_id }, position, &root, ElementType::Dendrite, searched_signal_type, Constants::bh_max_theta + eps);, RelearnException);
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron({ MPIRank::root_rank(), neuron_id }, position, &root, ElementType::Dendrite, searched_signal_type, too_small_acceptance_criterion);, RelearnException);
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron({ MPIRank::root_rank(), neuron_id }, position, &root, ElementType::Dendrite, searched_signal_type, too_large_acceptance_criterion);, RelearnException);
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronNoChoice) {
@@ -683,8 +663,6 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronNoChoice) {
         ASSERT_EQ(second_rank, MPIRank::root_rank());
         ASSERT_EQ(second_id, NeuronID(0));
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronOneChoice) {
@@ -734,8 +712,6 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronOneChoice) {
     auto [second_rank, second_id] = second_target_opt.value();
     ASSERT_EQ(second_rank, MPIRank(0));
     ASSERT_EQ(second_id, NeuronID(0));
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronFullChoice) {
@@ -769,8 +745,6 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronFullChoice) {
         ASSERT_EQ(target_rank, MPIRank::root_rank());
         ASSERT_NE(neuron_id, target_id);
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronNoChoiceDistributed) {
@@ -812,8 +786,6 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronNoChoiceDistributed) {
         ASSERT_EQ(second_rank, MPIRank(1));
         ASSERT_EQ(second_id, NeuronID(0));
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronFullChoiceDistributed) {
@@ -846,8 +818,6 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronFullChoiceDistributed) {
         ASSERT_TRUE(nodes.contains(found_id));
         ASSERT_GE(nodes.at(found_id)->get_cell().get_number_dendrites_for(searched_signal_type), 0);
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronsException) {
@@ -870,8 +840,6 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronsException) {
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neurons({ MPIRank::root_rank(), neuron_id }, position, 1, &root, ElementType::Dendrite, searched_signal_type, Constants::bh_max_theta + eps);, RelearnException);
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neurons({ MPIRank::root_rank(), neuron_id }, position, 1, &root, ElementType::Dendrite, searched_signal_type, too_small_acceptance_criterion);, RelearnException);
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neurons({ MPIRank::root_rank(), neuron_id }, position, 1, &root, ElementType::Dendrite, searched_signal_type, too_large_acceptance_criterion);, RelearnException);
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronsNoChoice) {
@@ -919,8 +887,6 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronsNoChoice) {
             ASSERT_EQ(signal_type, searched_signal_type);
         }
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronsOneChoice) {
@@ -1024,8 +990,6 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronsFullChoice) {
             ASSERT_EQ(signal_type, searched_signal_type);
         }
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronsNoChoiceDistributed) {
@@ -1084,8 +1048,6 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronsNoChoiceDistributed) {
             ASSERT_EQ(signal_type, searched_signal_type);
         }
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronsFullChoiceDistributed) {
@@ -1128,8 +1090,6 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronsFullChoiceDistributed) {
             ASSERT_GE(nodes.at(found_id)->get_cell().get_number_dendrites_for(searched_signal_type), 0);
         }
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testConvertTargetNodeException) {
@@ -1142,8 +1102,6 @@ TEST_F(BarnesHutBaseTest, testConvertTargetNodeException) {
     const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
 
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::convert_target_node({ MPIRank::root_rank(), neuron_id }, position, nullptr, searched_signal_type, branching_level), RelearnException);
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testConvertTargetNodeLeaf) {
@@ -1185,8 +1143,6 @@ TEST_F(BarnesHutBaseTest, testConvertTargetNodeLeaf) {
         ASSERT_EQ(_target_neuron_type, DistantNeuronRequest::TargetNeuronType::Leaf);
         ASSERT_EQ(_searched_signal_type, searched_signal_type);
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testConvertTargetNodeTooHigh) {
@@ -1216,8 +1172,6 @@ TEST_F(BarnesHutBaseTest, testConvertTargetNodeTooHigh) {
 
     const auto& val_1 = BarnesHutBase<additional_cell_attributes>::convert_target_node({ MPIRank(1), source }, source_position, &target_node, searched_signal_type, branching_level);
     ASSERT_FALSE(val_1.has_value());
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testConvertTargetNodeVirtual) {
@@ -1263,8 +1217,6 @@ TEST_F(BarnesHutBaseTest, testConvertTargetNodeVirtual) {
         ASSERT_EQ(_target_neuron_type, DistantNeuronRequest::TargetNeuronType::VirtualNode);
         ASSERT_EQ(_searched_signal_type, searched_signal_type);
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testConvertTargetNodeBranch) {
@@ -1310,8 +1262,6 @@ TEST_F(BarnesHutBaseTest, testConvertTargetNodeBranch) {
         ASSERT_EQ(_target_neuron_type, DistantNeuronRequest::TargetNeuronType::BranchNode);
         ASSERT_EQ(_searched_signal_type, searched_signal_type);
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareException) {
@@ -1337,8 +1287,6 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareException) {
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron_location_aware(source, position, &root, ElementType::Dendrite, searched_signal_type, branching_level, Constants::bh_max_theta + eps);, RelearnException);
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron_location_aware(source, position, &root, ElementType::Dendrite, searched_signal_type, branching_level, too_small_acceptance_criterion);, RelearnException);
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron_location_aware(source, position, &root, ElementType::Dendrite, searched_signal_type, branching_level, too_large_acceptance_criterion);, RelearnException);
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareFullChoice) {
@@ -1408,8 +1356,6 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareFullChoice) {
             ASSERT_GE(found_node->get_cell().get_number_dendrites_for(searched_signal_type), 0);
         }
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronsLocationAwareException) {
@@ -1435,6 +1381,4 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronsLocationAwareException) {
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neurons_location_aware(source, position, 1, &root, ElementType::Dendrite, searched_signal_type, branching_level, Constants::bh_max_theta + eps);, RelearnException);
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neurons_location_aware(source, position, 1, &root, ElementType::Dendrite, searched_signal_type, branching_level, too_small_acceptance_criterion);, RelearnException);
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neurons_location_aware(source, position, 1, &root, ElementType::Dendrite, searched_signal_type, branching_level, too_large_acceptance_criterion);, RelearnException);
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }

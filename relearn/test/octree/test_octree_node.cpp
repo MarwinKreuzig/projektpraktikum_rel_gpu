@@ -120,8 +120,6 @@ TYPED_TEST(OctreeNodeTest, testSetterGetter) {
         ASSERT_THROW(node.set_child(&node, i), RelearnException);
         ASSERT_THROW(auto tmp = node.get_child(i), RelearnException);
     }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeNodeTest, testLocal) {
@@ -139,8 +137,6 @@ TYPED_TEST(OctreeNodeTest, testLocal) {
             ASSERT_FALSE(node.is_local());
         }
     }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeNodeTest, testInsert) {
@@ -181,8 +177,6 @@ TYPED_TEST(OctreeNodeTest, testInsert) {
 
         ASSERT_EQ(expected_neuron, found_neuron);
     }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeNodeTest, testContains) {
@@ -260,8 +254,6 @@ TYPED_TEST(OctreeNodeTest, testLevel) {
             }
         }
     }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeNodeTest, testUpdateNode) {
@@ -393,8 +385,6 @@ TYPED_TEST(OctreeNodeTest, testUpdateNode) {
 
         ASSERT_NEAR(norm, 0.0, this->eps);
     }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeNodeTest, testUpdateTree) {
@@ -620,8 +610,6 @@ TYPED_TEST(OctreeNodeTest, testUpdateTree) {
             ASSERT_EQ(position, golden_position_inhibitory_axons);
         }
     }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeNodeTest, testMemoryLayout) {
@@ -653,8 +641,5 @@ TYPED_TEST(OctreeNodeTest, testMemoryLayout) {
         ASSERT_EQ(rma_offset % sizeof(OctreeNode<AdditionalCellAttributes>), 0);
 
         const auto virtual_node_index = rma_offset / sizeof(OctreeNode<AdditionalCellAttributes>);
-
     }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }

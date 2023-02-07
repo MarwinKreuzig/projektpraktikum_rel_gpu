@@ -14,10 +14,6 @@
 
 class CellTest : public RelearnTest {
 protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-
     template <typename AdditionalCellAttributes>
     void test_cell_size();
 

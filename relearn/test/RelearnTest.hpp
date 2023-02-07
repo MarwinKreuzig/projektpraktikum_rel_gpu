@@ -14,7 +14,6 @@
 #include "gtest/gtest-typed-test.h"
 
 #include "mpi/MPIWrapper.h"
-#include "util/MemoryHolder.h"
 
 #include <cmath>
 #include <random>
@@ -31,23 +30,13 @@
 
 class RelearnTest : public ::testing::Test {
 protected:
-    static void init();
+    RelearnTest();
 
-protected:
-    static void SetUpTestCaseTemplate();
+    virtual ~RelearnTest();
 
-    static void SetUpTestSuite();
+    void SetUp() override; // Called immediately after the constructor for each test
 
-    static void TearDownTestSuite();
-
-    void SetUp() override;
-
-    void TearDown() override;
-
-    template <typename AdditionalCellAttributes>
-    void make_mpi_mem_available() {
-        MemoryHolder<AdditionalCellAttributes>::make_all_available();
-    }
+    void TearDown() override; // Called immediately before the destructor for each test
 
     size_t round_to_next_exponent(size_t numToRound, size_t exponent) {
         auto log = std::log(static_cast<double>(numToRound)) / std::log(static_cast<double>(exponent));
@@ -78,20 +67,4 @@ protected:
 private:
     static bool use_predetermined_seed;
     static unsigned int predetermined_seed;
-};
-
-class RelearnTestWithAdditionalCellAttribute : public RelearnTest {
-protected:
-    template <typename AdditionalCellAttributes>
-    static void init() {
-        RelearnTest::init();
-        MPIWrapper::init_buffer_octree<AdditionalCellAttributes>();
-    }
-
-protected:
-    template <typename AdditionalCellAttributes>
-    static void SetUpTestCaseTemplate() {
-        RelearnTest::SetUpTestCaseTemplate();
-        init<AdditionalCellAttributes>();
-    }
 };

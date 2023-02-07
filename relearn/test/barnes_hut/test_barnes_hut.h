@@ -12,33 +12,14 @@
 
 #include "RelearnTest.hpp"
 
-#include "algorithm/BarnesHutInternal/BarnesHutCell.h"
-#include "algorithm/BarnesHutInternal/BarnesHutInvertedCell.h"
-
-class BarnesHutBaseTest : public RelearnTestWithAdditionalCellAttribute {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate<BarnesHutCell>();
-    }
+class BarnesHutBaseTest : public RelearnTest {
 };
 
-class BarnesHutInvertedBaseTest : public RelearnTestWithAdditionalCellAttribute {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate<BarnesHutInvertedCell>();
-    }
+class BarnesHutInvertedBaseTest : public RelearnTest {
 };
 
-class BarnesHutTest : public RelearnTestWithAdditionalCellAttribute {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate<BarnesHutCell>();
-    }
+class BarnesHutTest : public RelearnTest {
 };
 
-class BarnesHutInvertedTest : public RelearnTestWithAdditionalCellAttribute {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate<BarnesHutInvertedCell>();
-    }
+class BarnesHutInvertedTest : public RelearnTest {
 };

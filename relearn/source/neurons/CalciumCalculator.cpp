@@ -87,7 +87,7 @@ void CalciumCalculator::update_current_calcium(std::span<const FiredStatus> fire
         auto thread_maximum_id = NeuronID::uninitialized_id();
         auto thread_maximum_ca = -std::numeric_limits<double>::max();
 
-#pragma omp for nowait schedule(static)
+#pragma omp for nowait
         for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
             if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
                 continue;

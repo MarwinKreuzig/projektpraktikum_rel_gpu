@@ -67,8 +67,6 @@ TEST_F(BarnesHutInvertedBaseTest, testACException) {
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(source_position,
                      &node, ElementType::Axon, searched_signal_type, too_large_acceptance_criterion),
         RelearnException);
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutInvertedBaseTest, testACLeafAxons) {
@@ -229,8 +227,6 @@ TEST_F(BarnesHutInvertedBaseTest, testNodesToConsider) {
 
         ASSERT_EQ(found_nodes, golden_nodes);
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutInvertedBaseTest, testNodesToConsiderDistributedTree) {
@@ -288,8 +284,6 @@ TEST_F(BarnesHutInvertedBaseTest, testNodesToConsiderDistributedTree) {
 
         ASSERT_EQ(found_nodes, golden_nodes);
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutInvertedBaseTest, testNodesToConsiderEarlyReturn) {
@@ -342,8 +336,6 @@ TEST_F(BarnesHutInvertedBaseTest, testNodesToConsiderEarlyReturn) {
 
         ASSERT_EQ(found_nodes, golden_nodes);
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutInvertedBaseTest, testNodesToConsiderEarlyReturnDistributedTree) {
@@ -406,8 +398,6 @@ TEST_F(BarnesHutInvertedBaseTest, testNodesToConsiderEarlyReturnDistributedTree)
 
         ASSERT_EQ(found_nodes, golden_nodes);
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutInvertedBaseTest, testNodesToConsiderNoAxons) {
@@ -427,8 +417,6 @@ TEST_F(BarnesHutInvertedBaseTest, testNodesToConsiderNoAxons) {
         auto found_nodes_axon = BarnesHutBase<additional_cell_attributes>::get_nodes_to_consider(position, &root, ElementType::Axon, searched_signal_type, acceptance_criterion, false);
         ASSERT_TRUE(found_nodes_axon.empty());
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutInvertedBaseTest, testNodesToConsiderNoElements) {
@@ -448,8 +436,6 @@ TEST_F(BarnesHutInvertedBaseTest, testNodesToConsiderNoElements) {
         auto found_nodes_axon = BarnesHutBase<additional_cell_attributes>::get_nodes_to_consider(position, &root, ElementType::Axon, searched_signal_type, acceptance_criterion, false);
         ASSERT_TRUE(found_nodes_axon.empty());
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutInvertedBaseTest, testNodesToConsiderNoDendrites) {
@@ -502,7 +488,4 @@ TEST_F(BarnesHutInvertedBaseTest, testNodesToConsiderNoDendrites) {
 
         ASSERT_EQ(found_nodes, golden_nodes);
     }
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
-

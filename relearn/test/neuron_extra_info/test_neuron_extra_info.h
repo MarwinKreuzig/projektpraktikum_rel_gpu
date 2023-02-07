@@ -16,10 +16,6 @@
 
 class NeuronsExtraInfoTest : public RelearnTest {
 protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-
     void assert_empty(const NeuronsExtraInfo& nei, size_t number_neurons);
 
     void assert_contains(const NeuronsExtraInfo& nei, size_t number_neurons, size_t num_neurons_check, const std::vector<Vec3d>& expected_positions);

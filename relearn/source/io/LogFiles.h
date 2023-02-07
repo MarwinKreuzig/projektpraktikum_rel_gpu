@@ -27,8 +27,6 @@
  * Some files are only created for the MPI rank 0, some for all.
  */
 class LogFiles {
-    friend class RelearnTest;
-
 public:
     /**
      * This enum classifies the different type of files that can be written to.
@@ -173,7 +171,6 @@ private:
     using Logger = std::shared_ptr<spdlog::logger>;
     static inline std::map<EventType, Logger> log_files{};
     static inline std::map<EventType, bool> log_disable{};
-    static inline bool disable{ false };
 
     // NOLINTNEXTLINE
     static inline std::filesystem::path output_path{ "../output/" };
@@ -187,4 +184,7 @@ private:
     [[nodiscard]] static bool do_i_print(int rank);
 
     [[nodiscard]] static std::string get_my_rank_str();
+
+public:
+    static inline bool disable{ false }; // This is public for test purposes
 };

@@ -13,15 +13,7 @@
 #include "RelearnTest.hpp"
 
 class KernelTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
 };
 
 class ProbabilityKernelTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
 };

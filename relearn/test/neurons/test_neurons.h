@@ -17,10 +17,6 @@
 
 class NeuronsTest : public RelearnTest {
 protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-
     static Neurons create_neurons_object(std::shared_ptr<Partition>& partition) {
         auto model = std::make_unique<models::PoissonModel>(models::PoissonModel::default_h,
                                                             std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_conductance),

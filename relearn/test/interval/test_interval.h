@@ -12,15 +12,5 @@
 
 #include "RelearnTest.hpp"
 
-#include "util/Interval.h"
-
-#include <climits>
-#include <string>
-#include <utility>
-
 class IntervalTest : public RelearnTest {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
 };

@@ -34,6 +34,4 @@ TEST_F(BarnesHutInvertedTest, testBarnesHutInvertedGetterSetter) {
 
     ASSERT_NO_THROW(algorithm.set_acceptance_criterion(random_acceptance_criterion));
     ASSERT_EQ(algorithm.get_acceptance_criterion(), random_acceptance_criterion);
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }

@@ -17,10 +17,6 @@
 template <typename T>
 class TaggedIDTest : public RelearnTest {
 protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-
     static bool get_initialized(const TaggedID<T>& id) {
         return id.is_initialized_;
     }

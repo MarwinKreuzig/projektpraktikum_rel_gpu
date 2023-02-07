@@ -71,8 +71,6 @@ TYPED_TEST(OctreeTest, testConstructor) {
 
         ASSERT_EQ(level_to_count[level], expected_elements);
     }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeTest, testConstructorExceptions) {
@@ -82,8 +80,6 @@ TYPED_TEST(OctreeTest, testConstructorExceptions) {
     const auto level_of_branch_nodes = SimulationAdapter::get_small_refinement_level(this->mt);
 
     ASSERT_THROW(OctreeImplementation<TypeParam> octree(max, min, level_of_branch_nodes), RelearnException);
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeTest, testInsertNeurons) {
@@ -116,8 +112,6 @@ TYPED_TEST(OctreeTest, testInsertNeurons) {
 
         ASSERT_EQ(expected_neuron, found_neuron);
     }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeTest, testInsertNeuronsExceptions) {
@@ -156,8 +150,6 @@ TYPED_TEST(OctreeTest, testInsertNeuronsExceptions) {
         ASSERT_THROW(octree.insert(pos_invalid_y_min, id), RelearnException);
         ASSERT_THROW(octree.insert(pos_invalid_z_min, id), RelearnException);
     }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeTest, testStructure) {
@@ -240,8 +232,6 @@ TYPED_TEST(OctreeTest, testStructure) {
             }
         }
     }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeTest, testMemoryStructure) {
@@ -295,8 +285,6 @@ TYPED_TEST(OctreeTest, testMemoryStructure) {
             ASSERT_EQ(ptr, child);
         }
     }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeTest, testLocalTrees) {
@@ -332,8 +320,6 @@ TYPED_TEST(OctreeTest, testLocalTrees) {
         const auto local_tree = octree.get_local_root(pos1d);
         ASSERT_EQ(local_tree, branch_node);
     }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }
 
 TYPED_TEST(OctreeTest, testInsertLocalTree) {
@@ -434,6 +420,4 @@ TYPED_TEST(OctreeTest, testInsertLocalTree) {
         delete nodes_to_save_local_trees[i];
         delete nodes_to_save_new_local_trees[i];
     }
-
-    this->template make_mpi_mem_available<AdditionalCellAttributes>();
 }

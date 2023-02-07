@@ -43,6 +43,43 @@ public:
     }
 
     /**
+     * @brief Returns the currently held memory
+     * @return The currently held memory
+     */
+    [[nodiscard]] std::span<OctreeNode<AdditionalCellAttributes>> get_current_memory() noexcept {
+        return memory_holder;
+    }
+
+    /**
+     * @brief Returns the number of objects that fit into the memory portion
+     * @return The number of objects that fit into the memory portion
+     */
+    [[nodiscard]] static std::span<OctreeNode<AdditionalCellAttributes>>::size_type get_size() noexcept {
+        return memory_holder.size();
+    }
+
+    /**
+     * @brief Returns the number of objects that are currently held
+     * @return The number of objects that are currently held
+     */
+    [[nodiscard]] static std::uint64_t get_current_filling() noexcept {
+        return current_filling;
+    }
+
+    /**
+     * @brief Destroys all objects that were handed out via get_available. All pointers are invalidated.
+     */
+    static void make_all_available() noexcept {
+        using size_type = typename std::span<OctreeNode<AdditionalCellAttributes>>::size_type;
+        for (size_type i = 0; i < memory_holder.size(); i++) {
+            memory_holder[i].reset();
+        }
+
+        current_filling = 0;
+        parent_to_offset.clear();
+    }
+
+    /**
      * @brief Returns the pointer for the octant-th child of parent.
      *      Is deterministic if called repeatedly without calls to make_all_available inbetween.
      * @param parent The OctreeNode whose child the newly created node shall be
@@ -64,27 +101,6 @@ public:
             "MemoryHolder::get_available: The offset is too large: {} + {} vs {}", offset, Constants::number_oct, memory_holder.size());
 
         return &memory_holder[offset + octant];
-    }
-
-    /**
-     * @brief Destroys all objects that were handed out via get_available. All pointers are invalidated.
-     */
-    static void make_all_available() noexcept {
-        using size_type = typename std::span<OctreeNode<AdditionalCellAttributes>>::size_type;
-        for (size_type i = 0; i < memory_holder.size(); i++) {
-            memory_holder[i].reset();
-        }
-
-        current_filling = 0;
-        parent_to_offset.clear();
-    }
-
-    /**
-     * @brief Returns the number of objects that fit into the memory portion
-     * @return The number of objects that fit into the memory portion
-     */
-    [[nodiscard]] static std::span<OctreeNode<AdditionalCellAttributes>>::size_type get_size() noexcept {
-        return memory_holder.size();
     }
 
     /**

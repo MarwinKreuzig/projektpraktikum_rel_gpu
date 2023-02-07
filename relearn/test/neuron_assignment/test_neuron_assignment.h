@@ -16,10 +16,6 @@
 
 class NeuronAssignmentTest : public RelearnTest {
 protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-
     static double calculate_box_length(const size_t number_neurons, const double um_per_neuron) noexcept {
         return std::ceil(std::pow(static_cast<double>(number_neurons), 1 / 3.)) * um_per_neuron;
     }

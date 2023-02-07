@@ -46,8 +46,6 @@ TEST_F(BarnesHutTest, testBarnesHutGetterSetter) {
 
     ASSERT_NO_THROW(algorithm.set_acceptance_criterion(random_acceptance_criterion));
     ASSERT_EQ(algorithm.get_acceptance_criterion(), random_acceptance_criterion);
-
-    make_mpi_mem_available<additional_cell_attributes>();
 }
 
 TEST_F(BarnesHutTest, testUpdateFunctor) {
@@ -190,6 +188,4 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
             }
         }
     }
-
-    make_mpi_mem_available<BarnesHutCell>();
 }
