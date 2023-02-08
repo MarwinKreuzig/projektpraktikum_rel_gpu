@@ -625,6 +625,8 @@ TYPED_TEST(OctreeNodeTest, testMemoryLayout) {
     std::stack<std::pair<OctreeNode<AdditionalCellAttributes>*, OctreeNode<AdditionalCellAttributes>*>> stack{};
     stack.emplace(&root, nullptr);
 
+    std::vector<std::uint64_t> touched_rmas{};
+
     while (!stack.empty()) {
         auto [current_node, parent] = stack.top();
         stack.pop();
@@ -641,11 +643,15 @@ TYPED_TEST(OctreeNodeTest, testMemoryLayout) {
 
         const NeuronID saved_neuron_id = current_node->get_cell_neuron_id();
         ASSERT_TRUE(saved_neuron_id.is_virtual());
+        const auto saved_rma_offset = saved_neuron_id.get_rma_offset();
+
+        ASSERT_EQ(saved_rma_offset % size_of_node, 0);
+        const auto virtual_node_index = saved_rma_offset / size_of_node;
+
+        touched_rmas.emplace_back(virtual_node_index);
 
         if (parent == nullptr) {
             ASSERT_EQ(&root, current_node);
-            const auto saved_rma_offset = saved_neuron_id.get_rma_offset();
-
             ASSERT_EQ(saved_rma_offset, 0);
 
             const auto mh_offset = MH::get_offset(current_node);
@@ -666,13 +672,9 @@ TYPED_TEST(OctreeNodeTest, testMemoryLayout) {
             continue;
         }
 
-        const auto saved_rma_offset = saved_neuron_id.get_rma_offset();
         const auto mh_offset = MH::get_offset(current_node);
 
         ASSERT_EQ(mh_offset, saved_rma_offset);
-
-        ASSERT_EQ(saved_rma_offset % size_of_node, 0);
-        const auto virtual_node_index = saved_rma_offset / size_of_node;
 
         auto* mh_ptr = MH::get_node_from_offset(virtual_node_index);
 
@@ -685,5 +687,11 @@ TYPED_TEST(OctreeNodeTest, testMemoryLayout) {
             auto* expected_ptr = mh_ptr + child_id;
             ASSERT_EQ(expected_ptr, child);
         }
+    }
+
+    std::ranges::sort(touched_rmas);
+
+    for (auto idx = 0; idx < touched_rmas.size(); idx++) {
+        ASSERT_EQ(idx * Constants::number_oct, touched_rmas[idx]);
     }
 }

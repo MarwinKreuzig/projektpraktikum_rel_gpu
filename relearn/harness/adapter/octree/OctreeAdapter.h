@@ -496,4 +496,32 @@ public:
 
         return branch_nodes;
     }
+
+    template <typename AdditionalCellAttributes>
+    static std::unordered_map<std::uint64_t, OctreeNode<AdditionalCellAttributes>*> find_child_offsets(OctreeNode<AdditionalCellAttributes>* root) {
+        std::unordered_map<std::uint64_t, OctreeNode<AdditionalCellAttributes>*> mapping{};
+
+        std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
+        stack.push(root);
+
+        while (!stack.empty()) {
+            auto* current = stack.top();
+            stack.pop();
+
+            if (current->is_leaf()) {
+                continue;
+            }
+
+            for (auto* child : current->get_children()) {
+                if (child != nullptr) {
+                    stack.push(child);
+                }
+            }
+
+            const auto virtual_id = current->get_cell().get_neuron_id().get_rma_offset();
+            mapping.emplace(virtual_id, current);
+        }
+
+        return mapping;
+    }
 };
