@@ -65,10 +65,9 @@ public:
      * @param transmission_delayerThe object that is responsible to delay the transmission of the firing of neurons to their target neurons
      */
     NeuronModel(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
-                std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator, std::unique_ptr<TransmissionDelayer>&& transmission_delayer)
+                std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator)
             : h(h)
-            , input_calculator(std::move(synaptic_input_calculator)),
-            transmission_delayer(std::move(transmission_delayer))
+            , input_calculator(std::move(synaptic_input_calculator))
             , background_calculator(std::move(background_activity_calculator))
             , stimulus_calculator(std::move(stimulus_calculator)) { }
 
@@ -322,10 +321,6 @@ protected:
         return stimulus_calculator->get_stimulus(neuron_id);
     }
 
-    [[nodiscard]] const std::unique_ptr<TransmissionDelayer>& get_transmission_delayer() const noexcept{
-        return transmission_delayer;
-    }
-
     [[nodiscard]] const std::unique_ptr<SynapticInputCalculator>& get_synaptic_input_calculator() const noexcept {
         return input_calculator;
     }
@@ -353,7 +348,6 @@ private:
     std::unique_ptr<SynapticInputCalculator> input_calculator{};
     std::unique_ptr<BackgroundActivityCalculator> background_calculator{};
     std::unique_ptr<Stimulus> stimulus_calculator{};
-    std::unique_ptr<TransmissionDelayer> transmission_delayer{};
 };
 
 namespace models {
@@ -386,7 +380,6 @@ namespace models {
                 std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
                 std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
                 std::unique_ptr<Stimulus>&& stimulus_calculator,
-                std::unique_ptr<TransmissionDelayer>&& transmission_delayer,
                 double x_0,
                 double tau_x,
                 unsigned int refractory_time);
@@ -530,7 +523,6 @@ namespace models {
                 std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
                 std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
                 std::unique_ptr<Stimulus>&& stimulus_calculator,
-                std::unique_ptr<TransmissionDelayer>&& transmission_delayer,
                 double a,
                 double b,
                 double c,
@@ -734,7 +726,6 @@ namespace models {
                 std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
                 std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
                 std::unique_ptr<Stimulus>&& stimulus_calculator,
-                std::unique_ptr<TransmissionDelayer>&& transmission_delayer,
                 double a,
                 double b,
                 double phi);
@@ -883,7 +874,6 @@ namespace models {
                 std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
                 std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
                 std::unique_ptr<Stimulus>&& stimulus_calculator,
-                std::unique_ptr<TransmissionDelayer>&& transmission_delayer,
                 double C,
                 double g_L,
                 double E_L,

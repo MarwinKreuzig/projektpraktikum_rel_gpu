@@ -17,6 +17,7 @@
 
 #include "neurons/input/SynapticInputCalculator.h"
 #include "neurons/input/SynapticInputCalculators.h"
+#include "neurons/input/TransmissionDelayer.h"
 
 #include <memory>
 
@@ -122,16 +123,16 @@ void test_init_create(const std::unique_ptr<SynapticInputCalculator>& input_calc
 }
 
 TEST_F(SynapticInputTest, testLinearSynapticInputConstruct) {
+    const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_create = TaggedIdAdapter::get_random_number_neurons(mt);
+
     const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance, SynapticInputCalculator::max_conductance, mt);
 
-    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance);
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance, std::make_unique<ConstantTransmissionDelayer>(0));
     ASSERT_EQ(input_calculator->get_synapse_conductance(), random_conductance);
 
     const auto new_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance, SynapticInputCalculator::max_conductance, mt);
     test_constructor_clone(input_calculator, random_conductance, new_conductance);
-
-    const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto number_neurons_create = TaggedIdAdapter::get_random_number_neurons(mt);
 
     test_init_create(input_calculator, number_neurons_init, number_neurons_create);
 }
@@ -140,7 +141,7 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdateEmptyGraph) {
     const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance, SynapticInputCalculator::max_conductance, mt);
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance);
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance, std::make_unique<ConstantTransmissionDelayer>(0));
     input_calculator->init(number_neurons);
 
     NetworkGraph ng_plastic(number_neurons, MPIRank::root_rank());
@@ -163,7 +164,7 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdate) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto num_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
 
-    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance);
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance, std::make_unique<ConstantTransmissionDelayer>(0));
     input_calculator->init(number_neurons);
 
     NetworkGraph ng_plastic(number_neurons, MPIRank::root_rank());
@@ -220,13 +221,14 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputConstruct) {
     const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance, SynapticInputCalculator::max_conductance, mt);
     const auto random_scale = RandomAdapter::get_random_double<double>(LogarithmicSynapticInputCalculator::min_scaling, LogarithmicSynapticInputCalculator::max_scaling, mt);
 
-    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_conductance, random_scale);
+    const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
+
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_conductance,std::make_unique<ConstantTransmissionDelayer>(0),  random_scale);
     ASSERT_EQ(input_calculator->get_synapse_conductance(), random_conductance);
 
     const auto new_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance, SynapticInputCalculator::max_conductance, mt);
     test_constructor_clone(input_calculator, random_conductance, new_conductance);
 
-    const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto number_neurons_create = TaggedIdAdapter::get_random_number_neurons(mt);
 
     test_init_create(input_calculator, number_neurons_init, number_neurons_create);
@@ -238,7 +240,7 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdateEmptyGraph) {
 
     const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_conductance, random_scale);
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_conductance, std::make_unique<ConstantTransmissionDelayer>(0), random_scale);
     input_calculator->init(number_neurons_init);
 
     NetworkGraph ng_plastic(number_neurons_init, MPIRank::root_rank());
@@ -263,7 +265,7 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto num_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
 
-    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_conductance, random_scale);
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_conductance,std::make_unique<ConstantTransmissionDelayer>(0), random_scale);
     input_calculator->init(number_neurons);
 
     NetworkGraph ng_static(number_neurons, MPIRank::root_rank());
@@ -323,13 +325,13 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputConstruct) {
     const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance, SynapticInputCalculator::max_conductance, mt);
     const auto random_scale = RandomAdapter::get_random_double<double>(HyperbolicTangentSynapticInputCalculator::min_scaling, HyperbolicTangentSynapticInputCalculator::max_scaling, mt);
 
-    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(random_conductance, random_scale);
+    const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(random_conductance,std::make_unique<ConstantTransmissionDelayer>(0), random_scale);
     ASSERT_EQ(input_calculator->get_synapse_conductance(), random_conductance);
 
     const auto new_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance, SynapticInputCalculator::max_conductance, mt);
     test_constructor_clone(input_calculator, random_conductance, new_conductance);
 
-    const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto number_neurons_create = TaggedIdAdapter::get_random_number_neurons(mt);
 
     test_init_create(input_calculator, number_neurons_init, number_neurons_create);
@@ -341,7 +343,7 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputUpdateEmptyGraph) {
 
     const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_conductance, random_scale);
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_conductance,std::make_unique<ConstantTransmissionDelayer>(0), random_scale);
     input_calculator->init(number_neurons_init);
 
     NetworkGraph ng_plastic(number_neurons_init, MPIRank::root_rank());
@@ -366,7 +368,7 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputUpdate) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto num_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
 
-    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(random_conductance, random_scale);
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(random_conductance, std::make_unique<ConstantTransmissionDelayer>(0),random_scale);
     input_calculator->init(number_neurons);
 
     NetworkGraph ng_static(number_neurons, MPIRank::root_rank());

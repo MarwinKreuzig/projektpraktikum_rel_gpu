@@ -28,9 +28,7 @@ void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& ne
 
         NeuronID id{ neuron_id };
 
-        const auto local_input = get_local_synaptic_input(network_graph_static, fired, id) + get_local_synaptic_input(network_graph_plastic, fired, id);
-        const auto distant_input = get_distant_synaptic_input(network_graph_static, fired, id) + get_distant_synaptic_input(network_graph_plastic, fired, id);
-        const auto total_input = local_input + distant_input;
+        const auto total_input = get_local_and_distant_synaptic_input(id);
 
         set_synaptic_input(neuron_id, total_input);
     }
@@ -51,9 +49,7 @@ void LogarithmicSynapticInputCalculator::update_synaptic_input(const NetworkGrap
 
         NeuronID id{ neuron_id };
 
-        const auto local_input = get_local_synaptic_input(network_graph_static, fired, id) + get_local_synaptic_input(network_graph_plastic, fired, id);
-        const auto distant_input = get_distant_synaptic_input(network_graph_static, fired, id) + get_distant_synaptic_input(network_graph_plastic, fired, id);
-        const auto total_input = local_input + distant_input;
+        const auto total_input = get_local_and_distant_synaptic_input(id);
 
         // Avoid negative numbers
         const auto shifted_input = total_input + 1;
@@ -78,9 +74,7 @@ void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const Netwo
 
         NeuronID id{ neuron_id };
 
-        const auto local_input = get_local_synaptic_input(network_graph_static, fired, id) + get_local_synaptic_input(network_graph_plastic, fired, id);
-        const auto distant_input = get_distant_synaptic_input(network_graph_static, fired, id) + get_distant_synaptic_input(network_graph_plastic, fired, id);
-        const auto total_input = local_input + distant_input;
+        const auto total_input = get_local_and_distant_synaptic_input(id);
 
         const auto hyp_tan_input = std::tanh(total_input);
         const auto scaled_input = hyp_tan_input * scale_factor;

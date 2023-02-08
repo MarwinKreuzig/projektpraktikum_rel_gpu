@@ -18,10 +18,10 @@
 class InputFactory {
 public:
     static std::unique_ptr<SynapticInputCalculator> construct_linear_input(const double synapse_conductance = 1.0) {
-        return std::make_unique<LinearSynapticInputCalculator>(synapse_conductance);
+        return std::make_unique<LinearSynapticInputCalculator>(synapse_conductance, std::make_unique<ConstantTransmissionDelayer>(0));
     }
 
     static std::unique_ptr<SynapticInputCalculator> construct_logarithmic_input(const double synapse_conductance = 1.0, const double scaling_factor = 1.0) {
-        return std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, scaling_factor);
+        return std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, std::make_unique<ConstantTransmissionDelayer>(0), scaling_factor);
     }
 };

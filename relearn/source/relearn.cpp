@@ -770,33 +770,33 @@ int main(int argc, char** argv) {
         stimulus_calculator = std::make_unique<Stimulus>();
     }
 
+    std::unique_ptr<ConstantTransmissionDelayer> transmission_delayer = std::make_unique<ConstantTransmissionDelayer>(transmission_delay);
+
     std::unique_ptr<SynapticInputCalculator> input_calculator{};
     if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
-        input_calculator = std::make_unique<LinearSynapticInputCalculator>(synapse_conductance);
+        input_calculator = std::make_unique<LinearSynapticInputCalculator>(synapse_conductance, std::move(transmission_delayer));
     } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic) {
-        input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, input_scale);
+        input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, std::move(transmission_delayer), input_scale);
     } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::HyperbolicTangent) {
-        input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(synapse_conductance, input_scale);
+        input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(synapse_conductance, std::move(transmission_delayer), input_scale);
     } else {
         RelearnException::fail("Chose a synaptic input calculator that is not implemented");
     }
 
-    std::unique_ptr<TransmissionDelayer> transmission_delayer = std::make_unique<TransmissionDelayer>(transmission_delay);
-
     std::unique_ptr<NeuronModel> neuron_model{};
     if (chosen_neuron_model == NeuronModelEnum::Poisson) {
-        neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator), std::move(transmission_delayer),
+        neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
                                                               models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refractory_period);
     } else if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
-        neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator), std::move(transmission_delayer),
+        neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
                                                                  models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
                                                                  models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
                                                                  models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
     } else if (chosen_neuron_model == NeuronModelEnum::FitzHughNagumo) {
-        neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator), std::move(transmission_delayer),
+        neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
                                                                      models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
     } else if (chosen_neuron_model == NeuronModelEnum::AEIF) {
-        neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator), std::move(transmission_delayer),
+        neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
                                                            models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
                                                            models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
                                                            models::AEIFModel::default_V_spike);

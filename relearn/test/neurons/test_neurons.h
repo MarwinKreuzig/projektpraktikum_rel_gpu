@@ -23,10 +23,9 @@ protected:
 
     static Neurons create_neurons_object(std::shared_ptr<Partition>& partition) {
         auto model = std::make_unique<models::PoissonModel>(models::PoissonModel::default_h,
-                                                            std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_conductance),
+                                                            std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_conductance, std::make_unique<ConstantTransmissionDelayer>(0)),
                                                             std::make_unique<NullBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>()),
                                                             std::make_unique<Stimulus>(),
-                                                            std::make_unique<TransmissionDelayer>(),
                                                             models::PoissonModel::default_x_0,
                                                             models::PoissonModel::default_tau_x,
                                                             models::PoissonModel::default_refractory_period);

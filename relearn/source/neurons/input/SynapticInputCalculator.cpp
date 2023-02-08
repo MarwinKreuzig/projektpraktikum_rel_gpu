@@ -36,41 +36,22 @@ void SynapticInputCalculator::create_neurons(const number_neurons_type creation_
     synaptic_input.resize(new_size, 0.0);
 
     fired_status_comm = std::make_unique<FiredStatusCommunicationMap>(MPIWrapper::get_num_ranks(), new_size);
+
+    transmission_delayer->create_neurons(new_size);
 }
 
 void SynapticInputCalculator::set_synaptic_input(const double value) noexcept {
     std::ranges::fill(synaptic_input, value);
 }
 
-double SynapticInputCalculator::get_local_synaptic_input(const NetworkGraph& network_graph, const std::span<const FiredStatus> fired, const NeuronID neuron_id) {
-    // Walk through the local in-edges of my neuron
-    const NetworkGraph::LocalEdges& local_in_edges = network_graph.get_local_in_edges(neuron_id);
-
+double SynapticInputCalculator::get_local_and_distant_synaptic_input(const NeuronID& neuron_id) {
     auto local_input = 0.0;
-    for (const auto& [src_neuron_id, edge_val] : local_in_edges) {
-        const auto spike = fired[src_neuron_id.get_neuron_id()];
-        if (spike == FiredStatus::Fired) {
+
+    if(transmission_delayer->has_delayed_inputs()) {
+        for (const auto &[src_neuron_id, edge_val]: transmission_delayer->get_delayed_inputs(neuron_id)) {
             local_input += synapse_conductance * edge_val;
         }
     }
 
     return local_input;
-}
-
-double SynapticInputCalculator::get_distant_synaptic_input(const NetworkGraph& network_graph, const std::span<const FiredStatus> fired, const NeuronID neuron_id) {
-    // Walk through the distant in-edges of my neuron
-    const NetworkGraph::DistantEdges& in_edges = network_graph.get_distant_in_edges(neuron_id);
-
-    auto distant_input = 0.0;
-    for (const auto& [key, edge_val] : in_edges) {
-        const auto& rank = key.get_rank();
-        const auto& initiator_neuron_id = key.get_neuron_id();
-
-        const auto contains_id = fired_status_comm->contains(rank, initiator_neuron_id);
-        if (contains_id) {
-            distant_input += synapse_conductance * edge_val;
-        }
-    }
-
-    return distant_input;
 }

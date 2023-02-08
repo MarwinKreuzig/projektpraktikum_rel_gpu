@@ -11,10 +11,13 @@
  */
 
 #include "Types.h"
+#include "mpi/MPIWrapper.h"
 #include "neurons/enums/FiredStatus.h"
 #include "neurons/enums/UpdateStatus.h"
 #include "neurons/input/FiredStatusCommunicator.h"
+#include "neurons/input/TransmissionDelayer.h"
 #include "neurons/models/ModelParameter.h"
+#include "neurons/NetworkGraph.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
@@ -68,8 +71,8 @@ public:
      *      Does not check the parameters against the min and max values defined below in order to allow other values besides in the GUI
      * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
      */
-    SynapticInputCalculator(const double synapse_conductance)
-        : synapse_conductance(synapse_conductance) { }
+    SynapticInputCalculator(const double synapse_conductance,std::unique_ptr<TransmissionDelayer>&& transmission_delayer)
+        : synapse_conductance(synapse_conductance), transmission_delayer(std::move(transmission_delayer)) { }
 
     /**
      * @brief Creates a clone of this instance (without neurons), copies all parameters
@@ -106,8 +109,13 @@ public:
         RelearnException::check(fired.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of fired did not match number of local neurons: {} vs {}", fired.size(), number_local_neurons);
         RelearnException::check(disable_flags.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of disable_flags did not match number of local neurons: {} vs {}", disable_flags.size(), number_local_neurons);
 
+        transmission_delayer->prepare_update();
         fired_status_comm->set_local_fired_status(fired, disable_flags, network_graph_static, network_graph_plastic);
         fired_status_comm->exchange_fired_status();
+
+        update_transmission_delayer(network_graph_plastic, fired);
+        update_transmission_delayer(network_graph_static, fired);
+
 
         update_synaptic_input(network_graph_static, network_graph_plastic, fired, disable_flags);
     }
@@ -147,6 +155,10 @@ public:
      */
     [[nodiscard]] double get_synapse_conductance() const noexcept {
         return synapse_conductance;
+    }
+
+    [[nodiscard]] const std::unique_ptr<TransmissionDelayer>& get_transmission_delayer() const noexcept {
+        return transmission_delayer;
     }
 
     /**
@@ -201,9 +213,9 @@ protected:
      */
     void set_synaptic_input(double value) noexcept;
 
-    [[nodiscard]] double get_local_synaptic_input(const NetworkGraph& network_graph, std::span<const FiredStatus> fired, NeuronID neuron_id);
+    [[nodiscard]] double get_local_and_distant_synaptic_input(const NeuronID& neuron_id);
 
-    [[nodiscard]] double get_distant_synaptic_input(const NetworkGraph& network_graph, std::span<const FiredStatus> fired, NeuronID neuron_id);
+    std::unique_ptr<TransmissionDelayer> transmission_delayer;
 
 private:
     number_neurons_type number_local_neurons{};
@@ -213,4 +225,35 @@ private:
     std::vector<double> synaptic_input{};
 
     std::unique_ptr<FiredStatusCommunicator> fired_status_comm{};
+
+    void update_transmission_delayer(const NetworkGraph& network_graph, const std::span<const FiredStatus> fired) {
+        for(const auto& neuron_id : NeuronID::range(number_local_neurons)) {
+
+            //Walk through local in-edges
+            const auto &local_in_edges = network_graph.get_local_in_edges(neuron_id);
+
+            const auto my_rank = MPIWrapper::get_my_rank();
+            for (const auto &[src_neuron_id, edge_val]: local_in_edges) {
+                const auto spike = fired[src_neuron_id.get_neuron_id()];
+                if (spike == FiredStatus::Fired) {
+                    transmission_delayer->register_fired_input(neuron_id, RankNeuronId(my_rank, src_neuron_id),
+                                                               edge_val, number_local_neurons);
+                }
+            }
+
+            // Walk through the distant in-edges of my neuron
+            const NetworkGraph::DistantEdges &distant_in_edges = network_graph.get_distant_in_edges(neuron_id);
+            for (const auto &[key, edge_val]: distant_in_edges) {
+                const auto &rank = key.get_rank();
+                const auto &initiator_neuron_id = key.get_neuron_id();
+
+                const auto contains_id = fired_status_comm->contains(rank, initiator_neuron_id);
+                if (contains_id) {
+                    transmission_delayer->register_fired_input(neuron_id, RankNeuronId(rank, initiator_neuron_id),
+                                                               edge_val, number_local_neurons);
+                }
+            }
+        }
+    }
+
 };

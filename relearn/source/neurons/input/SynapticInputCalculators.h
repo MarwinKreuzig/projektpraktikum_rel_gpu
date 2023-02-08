@@ -24,15 +24,15 @@ public:
      *      Does not check the parameters against the min and max values defined below in order to allow other values besides in the GUI
      * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
      */
-    LinearSynapticInputCalculator(const double synapse_conductance)
-        : SynapticInputCalculator(synapse_conductance) { }
+    LinearSynapticInputCalculator(const double synapse_conductance, std::unique_ptr<TransmissionDelayer>&& transmission_delayer)
+        : SynapticInputCalculator(synapse_conductance, std::move(transmission_delayer)) { }
 
     /**
      * @brief Creates a clone of this instance (without neurons), copies all parameters
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<SynapticInputCalculator> clone() const final {
-        return std::make_unique<LinearSynapticInputCalculator>(get_synapse_conductance());
+        return std::make_unique<LinearSynapticInputCalculator>(get_synapse_conductance(), get_transmission_delayer()->clone());
     }
 
 protected:
@@ -50,8 +50,8 @@ public:
      * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
      * @param scaling_factor The factor that scales the logarithmic input
      */
-    LogarithmicSynapticInputCalculator(const double synapse_conductance, const double scaling_factor)
-        : SynapticInputCalculator(synapse_conductance)
+    LogarithmicSynapticInputCalculator(const double synapse_conductance, std::unique_ptr<TransmissionDelayer>&& transmission_delayer, const double scaling_factor)
+        : SynapticInputCalculator(synapse_conductance, std::move(transmission_delayer))
         , scale_factor(scaling_factor) { }
 
     /**
@@ -59,7 +59,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<SynapticInputCalculator> clone() const final {
-        return std::make_unique<LogarithmicSynapticInputCalculator>(get_synapse_conductance(), get_scale_factor());
+        return std::make_unique<LogarithmicSynapticInputCalculator>(get_synapse_conductance(), get_transmission_delayer()->clone(), get_scale_factor());
     }
 
     /**
@@ -100,8 +100,8 @@ public:
      * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
      * @param scaling_factor The factor that scales the hyperbolic tanget input
      */
-    HyperbolicTangentSynapticInputCalculator(const double synapse_conductance, const double scaling_factor)
-        : SynapticInputCalculator(synapse_conductance)
+    HyperbolicTangentSynapticInputCalculator(const double synapse_conductance, std::unique_ptr<TransmissionDelayer>&& transmission_delayer, const double scaling_factor)
+        : SynapticInputCalculator(synapse_conductance, std::move(transmission_delayer))
         , scale_factor(scaling_factor) { }
 
     /**
@@ -109,7 +109,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<SynapticInputCalculator> clone() const final {
-        return std::make_unique<HyperbolicTangentSynapticInputCalculator>(get_synapse_conductance(), get_scale_factor());
+        return std::make_unique<HyperbolicTangentSynapticInputCalculator>(get_synapse_conductance(),get_transmission_delayer()->clone(), get_scale_factor());
     }
 
     /**

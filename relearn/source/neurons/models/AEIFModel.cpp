@@ -19,7 +19,6 @@ AEIFModel::AEIFModel(
         std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
         std::unique_ptr<Stimulus>&& stimulus_calculator,
-        std::unique_ptr<TransmissionDelayer>&& transmission_delayer,
         const double C,
         const double g_L,
         const double E_L,
@@ -29,7 +28,7 @@ AEIFModel::AEIFModel(
         const double a,
         const double b,
         const double V_spike)
-        : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator), std::move(transmission_delayer) }
+        : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator) }
         , C{ C }
         , g_L{ g_L }
         , E_L{ E_L }
@@ -43,7 +42,7 @@ AEIFModel::AEIFModel(
 
 [[nodiscard]] std::unique_ptr<NeuronModel> AEIFModel::clone() const {
     return std::make_unique<AEIFModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(),
-                                       get_stimulus_calculator()->clone(),get_transmission_delayer()->clone(), C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike);
+                                       get_stimulus_calculator()->clone(), C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike);
 }
 
 [[nodiscard]] std::vector<ModelParameter> AEIFModel::get_parameter() {

@@ -174,7 +174,6 @@ protected:
      */
     void set_and_transform_background_activity(const RelearnTypes::step_type  step,const number_neurons_type neuron_id, const double value) {
         RelearnException::check(neuron_id < number_local_neurons, "SynapticInputCalculator::set_and_transform_background_activity: neuron_id was too large: {} vs {}", neuron_id, number_local_neurons);
-        std::cout << "BEFORE TRANSFORM" << std::endl;
         background_activity[neuron_id] = transformation_function->transform(step, value);
     }
 

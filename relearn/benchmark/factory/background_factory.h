@@ -18,18 +18,18 @@
 class BackgroundFactory {
 public:
     static std::unique_ptr<BackgroundActivityCalculator> construct_null_background() {
-        return std::make_unique<NullBackgroundActivityCalculator>();
+        return std::make_unique<NullBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>());
     }
 
     static std::unique_ptr<ConstantBackgroundActivityCalculator> construct_constant_background(const double background = 1.0) {
-        return std::make_unique<ConstantBackgroundActivityCalculator>(background);
+        return std::make_unique<ConstantBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),background);
     }
 
     static std::unique_ptr<NormalBackgroundActivityCalculator> construct_normal_background(const double mean = 1.0, const double stddev = 1.0) {
-        return std::make_unique<NormalBackgroundActivityCalculator>(mean, stddev);
+        return std::make_unique<NormalBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),mean, stddev);
     }
 
     static std::unique_ptr<FastNormalBackgroundActivityCalculator> construct_fast_normal_background(const double mean = 1.0, const double stddev = 1.0, const size_t multiplier = 5) {
-        return std::make_unique<FastNormalBackgroundActivityCalculator>(mean, stddev, multiplier);
+        return std::make_unique<FastNormalBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),mean, stddev, multiplier);
     }
 };
