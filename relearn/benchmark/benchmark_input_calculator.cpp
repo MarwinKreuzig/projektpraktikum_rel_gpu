@@ -41,7 +41,6 @@ static void BM_Linear_Input_No_Fired(benchmark::State& state) {
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        state.ResumeTiming();
         input_calculator->update_input(1000, *network_graph_static, *network_graph_plastic, fired_status);
         state.PauseTiming();
 
@@ -53,6 +52,7 @@ static void BM_Linear_Input_No_Fired(benchmark::State& state) {
         }
 
         benchmark::DoNotOptimize(sum);
+        state.ResumeTiming();
     }
 }
 
@@ -81,7 +81,6 @@ static void BM_Linear_Input_All_Fired(benchmark::State& state) {
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        state.ResumeTiming();
         input_calculator->update_input(1000, *network_graph_static, *network_graph_plastic, fired_status);
         state.PauseTiming();
 
@@ -93,6 +92,7 @@ static void BM_Linear_Input_All_Fired(benchmark::State& state) {
         }
 
         benchmark::DoNotOptimize(sum);
+        state.ResumeTiming();
     }
 }
 
@@ -121,7 +121,6 @@ static void BM_Logarithmic_Input_No_Fired(benchmark::State& state) {
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        state.ResumeTiming();
         input_calculator->update_input(1000, *network_graph_static, *network_graph_plastic, fired_status);
         state.PauseTiming();
 
@@ -133,6 +132,7 @@ static void BM_Logarithmic_Input_No_Fired(benchmark::State& state) {
         }
 
         benchmark::DoNotOptimize(sum);
+        state.ResumeTiming();
     }
 }
 
@@ -161,7 +161,6 @@ static void BM_Logarithmic_Input_All_Fired(benchmark::State& state) {
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        state.ResumeTiming();
         input_calculator->update_input(1000, *network_graph_static, *network_graph_plastic, fired_status);
         state.PauseTiming();
 
@@ -173,6 +172,7 @@ static void BM_Logarithmic_Input_All_Fired(benchmark::State& state) {
         }
 
         benchmark::DoNotOptimize(sum);
+        state.ResumeTiming();
     }
 }
 
@@ -201,7 +201,6 @@ static void BM_TanH_Input_No_Fired(benchmark::State& state) {
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        state.ResumeTiming();
         input_calculator->update_input(1000, *network_graph_static, *network_graph_plastic, fired_status);
         state.PauseTiming();
 
@@ -213,6 +212,7 @@ static void BM_TanH_Input_No_Fired(benchmark::State& state) {
         }
 
         benchmark::DoNotOptimize(sum);
+        state.ResumeTiming();
     }
 }
 
@@ -241,7 +241,6 @@ static void BM_TanH_Input_All_Fired(benchmark::State& state) {
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        state.ResumeTiming();
         input_calculator->update_input(1000, *network_graph_static, *network_graph_plastic, fired_status);
         state.PauseTiming();
 
@@ -253,6 +252,7 @@ static void BM_TanH_Input_All_Fired(benchmark::State& state) {
         }
 
         benchmark::DoNotOptimize(sum);
+        state.ResumeTiming();
     }
 }
 
@@ -260,11 +260,11 @@ void CustomArgsInput(benchmark::internal::Benchmark* b) {
     b->Args({ 50000, static_number_synapses });
 }
 
-// BENCHMARK(BM_Linear_Input_No_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Linear_Input_All_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
+BENCHMARK(BM_Linear_Input_No_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_few_iterations);
+BENCHMARK(BM_Linear_Input_All_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_few_iterations);
 
-// BENCHMARK(BM_Logarithmic_Input_No_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Logarithmic_Input_All_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
+BENCHMARK(BM_Logarithmic_Input_No_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_few_iterations);
+BENCHMARK(BM_Logarithmic_Input_All_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_few_iterations);
 
-// BENCHMARK(BM_TanH_Input_No_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
-// BENCHMARK(BM_TanH_Input_All_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_number_iterations);
+BENCHMARK(BM_TanH_Input_No_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_few_iterations);
+BENCHMARK(BM_TanH_Input_All_Fired)->Unit(benchmark::kMillisecond)->Apply(CustomArgsInput)->Iterations(static_few_iterations);

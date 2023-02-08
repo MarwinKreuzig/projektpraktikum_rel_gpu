@@ -27,7 +27,6 @@ static void BM_null_background_activity_100(benchmark::State& state) {
     background->set_extra_infos(std::move(extra_info));
 
     for (auto _ : state) {
-        state.ResumeTiming();
         background->update_input(1000);
         state.PauseTiming();
 
@@ -39,6 +38,7 @@ static void BM_null_background_activity_100(benchmark::State& state) {
         }
 
         benchmark::DoNotOptimize(sum);
+        state.ResumeTiming();
     }
 }
 
@@ -54,7 +54,6 @@ static void BM_constant_background_activity_100(benchmark::State& state) {
     background->set_extra_infos(std::move(extra_info));
 
     for (auto _ : state) {
-        state.ResumeTiming();
         background->update_input(1000);
         state.PauseTiming();
 
@@ -66,6 +65,7 @@ static void BM_constant_background_activity_100(benchmark::State& state) {
         }
 
         benchmark::DoNotOptimize(sum);
+        state.ResumeTiming();
     }
 }
 
@@ -81,7 +81,6 @@ static void BM_normal_background_activity_100(benchmark::State& state) {
     background->set_extra_infos(std::move(extra_info));
 
     for (auto _ : state) {
-        state.ResumeTiming();
         background->update_input(1000);
         state.PauseTiming();
 
@@ -93,6 +92,7 @@ static void BM_normal_background_activity_100(benchmark::State& state) {
         }
 
         benchmark::DoNotOptimize(sum);
+        state.ResumeTiming();
     }
 }
 
@@ -108,7 +108,6 @@ static void BM_fast_normal_background_activity_100(benchmark::State& state) {
     background->set_extra_infos(std::move(extra_info));
 
     for (auto _ : state) {
-        state.ResumeTiming();
         background->update_input(1000);
         state.PauseTiming();
 
@@ -120,10 +119,11 @@ static void BM_fast_normal_background_activity_100(benchmark::State& state) {
         }
 
         benchmark::DoNotOptimize(sum);
+        state.ResumeTiming();
     }
 }
 
-// BENCHMARK(BM_null_background_activity_100)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-// BENCHMARK(BM_constant_background_activity_100)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-// BENCHMARK(BM_normal_background_activity_100)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
-// BENCHMARK(BM_fast_normal_background_activity_100)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons);
+BENCHMARK(BM_null_background_activity_100)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(static_few_iterations);
+BENCHMARK(BM_constant_background_activity_100)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(static_few_iterations);
+BENCHMARK(BM_normal_background_activity_100)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(static_few_iterations);
+BENCHMARK(BM_fast_normal_background_activity_100)->Unit(benchmark::kMillisecond)->Arg(static_number_neurons)->Iterations(static_few_iterations);

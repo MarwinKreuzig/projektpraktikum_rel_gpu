@@ -35,7 +35,6 @@ static void BM_CalciumCalculator_No_Decay_No_Fired(benchmark::State& state) {
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        state.ResumeTiming();
         calcium_calculator->update_calcium(100, fired_status);
         state.PauseTiming();
 
@@ -47,7 +46,11 @@ static void BM_CalciumCalculator_No_Decay_No_Fired(benchmark::State& state) {
         }
 
         benchmark::DoNotOptimize(sum);
+        state.ResumeTiming();
     }
+
+    int i = 0;
+    i++;
 }
 
 static void BM_CalciumCalculator_No_Decay_All_Fired(benchmark::State& state) {
@@ -70,7 +73,6 @@ static void BM_CalciumCalculator_No_Decay_All_Fired(benchmark::State& state) {
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        state.ResumeTiming();
         calcium_calculator->update_calcium(100, fired_status);
         state.PauseTiming();
 
@@ -82,6 +84,7 @@ static void BM_CalciumCalculator_No_Decay_All_Fired(benchmark::State& state) {
         }
 
         benchmark::DoNotOptimize(sum);
+        state.ResumeTiming();
     }
 }
 
@@ -101,7 +104,6 @@ static void BM_CalciumCalculator_Relative_Decay_No_Fired(benchmark::State& state
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        state.ResumeTiming();
         calcium_calculator->update_calcium(100, fired_status);
         state.PauseTiming();
 
@@ -113,6 +115,7 @@ static void BM_CalciumCalculator_Relative_Decay_No_Fired(benchmark::State& state
         }
 
         benchmark::DoNotOptimize(sum);
+        state.ResumeTiming();
     }
 }
 
@@ -132,7 +135,6 @@ static void BM_CalciumCalculator_Relative_Decay_All_Fired(benchmark::State& stat
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        state.ResumeTiming();
         calcium_calculator->update_calcium(100, fired_status);
         state.PauseTiming();
 
@@ -144,6 +146,7 @@ static void BM_CalciumCalculator_Relative_Decay_All_Fired(benchmark::State& stat
         }
 
         benchmark::DoNotOptimize(sum);
+        state.ResumeTiming();
     }
 }
 
@@ -163,7 +166,6 @@ static void BM_CalciumCalculator_Absolute_Decay_No_Fired(benchmark::State& state
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        state.ResumeTiming();
         calcium_calculator->update_calcium(100, fired_status);
         state.PauseTiming();
 
@@ -175,6 +177,7 @@ static void BM_CalciumCalculator_Absolute_Decay_No_Fired(benchmark::State& state
         }
 
         benchmark::DoNotOptimize(sum);
+        state.ResumeTiming();
     }
 }
 
@@ -194,7 +197,6 @@ static void BM_CalciumCalculator_Absolute_Decay_All_Fired(benchmark::State& stat
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        state.ResumeTiming();
         calcium_calculator->update_calcium(100, fired_status);
         state.PauseTiming();
 
@@ -206,6 +208,7 @@ static void BM_CalciumCalculator_Absolute_Decay_All_Fired(benchmark::State& stat
         }
 
         benchmark::DoNotOptimize(sum);
+        state.ResumeTiming();
     }
 }
 

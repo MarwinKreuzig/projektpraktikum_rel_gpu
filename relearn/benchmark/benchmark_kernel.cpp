@@ -31,13 +31,9 @@ static void BM_Gaussian_Kernel(benchmark::State& state) {
         pairs.emplace_back(source, target);
     }
 
+    std::vector<double> attractivenesses(number_pairs, 0.0);
+
     for (auto _ : state) {
-        state.PauseTiming();
-
-        std::vector<double> attractivenesses(number_pairs, 0.0);
-
-        state.ResumeTiming();
-
         for (auto i = 0; i < number_pairs; i++) {
             const auto& [source, target] = pairs[i];
             const auto attr = GaussianDistributionKernel::calculate_attractiveness_to_connect(source, target, 3);
@@ -67,12 +63,9 @@ static void BM_Gamma_Kernel(benchmark::State& state) {
         pairs.emplace_back(source, target);
     }
 
+    std::vector<double> attractivenesses(number_pairs, 0.0);
+
     for (auto _ : state) {
-        state.PauseTiming();
-
-        std::vector<double> attractivenesses(number_pairs, 0.0);
-
-        state.ResumeTiming();
 
         for (auto i = 0; i < number_pairs; i++) {
             const auto& [source, target] = pairs[i];
@@ -103,12 +96,9 @@ static void BM_Linear_Kernel(benchmark::State& state) {
         pairs.emplace_back(source, target);
     }
 
+    std::vector<double> attractivenesses(number_pairs, 0.0);
+
     for (auto _ : state) {
-        state.PauseTiming();
-
-        std::vector<double> attractivenesses(number_pairs, 0.0);
-
-        state.ResumeTiming();
 
         for (auto i = 0; i < number_pairs; i++) {
             const auto& [source, target] = pairs[i];
@@ -139,12 +129,9 @@ static void BM_Weibull_Kernel(benchmark::State& state) {
         pairs.emplace_back(source, target);
     }
 
+    std::vector<double> attractivenesses(number_pairs, 0.0);
+
     for (auto _ : state) {
-        state.PauseTiming();
-
-        std::vector<double> attractivenesses(number_pairs, 0.0);
-
-        state.ResumeTiming();
 
         for (auto i = 0; i < number_pairs; i++) {
             const auto& [source, target] = pairs[i];
@@ -162,26 +149,26 @@ static void BM_Weibull_Kernel(benchmark::State& state) {
     }
 }
 
-// BENCHMARK(BM_Gaussian_Kernel)->Unit(benchmark::kMillisecond)->Arg(1000)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Gaussian_Kernel)->Unit(benchmark::kMillisecond)->Arg(4000)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Gaussian_Kernel)->Unit(benchmark::kMillisecond)->Arg(16000)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Gaussian_Kernel)->Unit(benchmark::kMillisecond)->Arg(64000)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Gaussian_Kernel)->Unit(benchmark::kMillisecond)->Arg(256000)->Iterations(static_number_iterations);
-//
-// BENCHMARK(BM_Gamma_Kernel)->Unit(benchmark::kMillisecond)->Arg(1000)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Gamma_Kernel)->Unit(benchmark::kMillisecond)->Arg(4000)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Gamma_Kernel)->Unit(benchmark::kMillisecond)->Arg(16000)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Gamma_Kernel)->Unit(benchmark::kMillisecond)->Arg(64000)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Gamma_Kernel)->Unit(benchmark::kMillisecond)->Arg(256000)->Iterations(static_number_iterations);
-//
-// BENCHMARK(BM_Linear_Kernel)->Unit(benchmark::kMillisecond)->Arg(1000)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Linear_Kernel)->Unit(benchmark::kMillisecond)->Arg(4000)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Linear_Kernel)->Unit(benchmark::kMillisecond)->Arg(16000)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Linear_Kernel)->Unit(benchmark::kMillisecond)->Arg(64000)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Linear_Kernel)->Unit(benchmark::kMillisecond)->Arg(256000)->Iterations(static_number_iterations);
-//
-// BENCHMARK(BM_Weibull_Kernel)->Unit(benchmark::kMillisecond)->Arg(1000)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Weibull_Kernel)->Unit(benchmark::kMillisecond)->Arg(4000)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Weibull_Kernel)->Unit(benchmark::kMillisecond)->Arg(16000)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Weibull_Kernel)->Unit(benchmark::kMillisecond)->Arg(64000)->Iterations(static_number_iterations);
-// BENCHMARK(BM_Weibull_Kernel)->Unit(benchmark::kMillisecond)->Arg(256000)->Iterations(static_number_iterations);
+BENCHMARK(BM_Gaussian_Kernel)->Unit(benchmark::kMillisecond)->Arg(1000)->Iterations(static_many_iterations);
+BENCHMARK(BM_Gaussian_Kernel)->Unit(benchmark::kMillisecond)->Arg(4000)->Iterations(static_many_iterations);
+BENCHMARK(BM_Gaussian_Kernel)->Unit(benchmark::kMillisecond)->Arg(16000)->Iterations(static_many_iterations);
+BENCHMARK(BM_Gaussian_Kernel)->Unit(benchmark::kMillisecond)->Arg(64000)->Iterations(static_many_iterations);
+BENCHMARK(BM_Gaussian_Kernel)->Unit(benchmark::kMillisecond)->Arg(256000)->Iterations(static_many_iterations);
+
+BENCHMARK(BM_Gamma_Kernel)->Unit(benchmark::kMillisecond)->Arg(1000)->Iterations(static_many_iterations);
+BENCHMARK(BM_Gamma_Kernel)->Unit(benchmark::kMillisecond)->Arg(4000)->Iterations(static_many_iterations);
+BENCHMARK(BM_Gamma_Kernel)->Unit(benchmark::kMillisecond)->Arg(16000)->Iterations(static_many_iterations);
+BENCHMARK(BM_Gamma_Kernel)->Unit(benchmark::kMillisecond)->Arg(64000)->Iterations(static_many_iterations);
+BENCHMARK(BM_Gamma_Kernel)->Unit(benchmark::kMillisecond)->Arg(256000)->Iterations(static_many_iterations);
+
+BENCHMARK(BM_Linear_Kernel)->Unit(benchmark::kMillisecond)->Arg(1000)->Iterations(static_many_iterations);
+BENCHMARK(BM_Linear_Kernel)->Unit(benchmark::kMillisecond)->Arg(4000)->Iterations(static_many_iterations);
+BENCHMARK(BM_Linear_Kernel)->Unit(benchmark::kMillisecond)->Arg(16000)->Iterations(static_many_iterations);
+BENCHMARK(BM_Linear_Kernel)->Unit(benchmark::kMillisecond)->Arg(64000)->Iterations(static_many_iterations);
+BENCHMARK(BM_Linear_Kernel)->Unit(benchmark::kMillisecond)->Arg(256000)->Iterations(static_many_iterations);
+
+BENCHMARK(BM_Weibull_Kernel)->Unit(benchmark::kMillisecond)->Arg(1000)->Iterations(static_many_iterations);
+BENCHMARK(BM_Weibull_Kernel)->Unit(benchmark::kMillisecond)->Arg(4000)->Iterations(static_many_iterations);
+BENCHMARK(BM_Weibull_Kernel)->Unit(benchmark::kMillisecond)->Arg(16000)->Iterations(static_many_iterations);
+BENCHMARK(BM_Weibull_Kernel)->Unit(benchmark::kMillisecond)->Arg(64000)->Iterations(static_many_iterations);
+BENCHMARK(BM_Weibull_Kernel)->Unit(benchmark::kMillisecond)->Arg(256000)->Iterations(static_many_iterations);
