@@ -36,17 +36,7 @@ RelearnTest::RelearnTest() {
 }
 
 RelearnTest::~RelearnTest() {
-    if (MemoryHolder<BarnesHutCell>::get_current_filling() > 0) {
-        MemoryHolder<BarnesHutCell>::make_all_available();
-    }
 
-    if (MemoryHolder<BarnesHutInvertedCell>::get_current_filling() > 0) {
-        MemoryHolder<BarnesHutInvertedCell>::make_all_available();
-    }
-
-    if (MemoryHolder<FastMultipoleMethodsCell>::get_current_filling() > 0) {
-        MemoryHolder<FastMultipoleMethodsCell>::make_all_available();
-    }
 }
 
 void RelearnTest::SetUp() {
