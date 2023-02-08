@@ -245,7 +245,8 @@ TYPED_TEST(MemoryHolderTest, testMakeAvailable) {
     std::vector<OctreeNode<AdditionalCellAttributes>> parents(number_requesting_objects, OctreeNode<AdditionalCellAttributes>{});
 
     for (auto i = 0; i < number_requesting_objects; i++) {
-        if (i * Constants::number_oct >= number_objects) {
+        if (i * Constants::number_oct + Constants::number_oct > number_objects) {
+            ASSERT_THROW(auto val = MH::get_available(&parents[i], 0), RelearnException);
             continue;
         }
 

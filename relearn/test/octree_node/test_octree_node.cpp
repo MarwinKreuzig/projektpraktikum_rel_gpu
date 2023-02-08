@@ -8,7 +8,7 @@
  *
  */
 
-#include "test_octree.h"
+#include "test_octree_node.h"
 
 #include "adapter/mpi/MpiRankAdapter.h"
 #include "adapter/neurons/NeuronsAdapter.h"
@@ -614,32 +614,76 @@ TYPED_TEST(OctreeNodeTest, testUpdateTree) {
 
 TYPED_TEST(OctreeNodeTest, testMemoryLayout) {
     using AdditionalCellAttributes = TypeParam;
+    using MH = MemoryHolder<AdditionalCellAttributes>;
+    const auto size_of_node = sizeof(OctreeNode<AdditionalCellAttributes>);
 
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(this->mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(this->mt);
 
     auto root = OctreeAdapter::get_standard_tree<AdditionalCellAttributes>(number_neurons, minimum, maximum, this->mt);
 
-    std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
-    stack.push(&root);
+    std::stack<std::pair<OctreeNode<AdditionalCellAttributes>*, OctreeNode<AdditionalCellAttributes>*>> stack{};
+    stack.emplace(&root, nullptr);
 
     while (!stack.empty()) {
-        OctreeNode<AdditionalCellAttributes>* current = stack.top();
+        auto [current_node, parent] = stack.top();
         stack.pop();
 
-        if (current->is_leaf()) {
+        if (current_node->is_leaf()) {
             continue;
         }
 
-        for (auto* child : current->get_children()) {
+        for (auto* child : current_node->get_children()) {
             if (child != nullptr) {
-                stack.push(child);
+                stack.emplace(child, current_node);
             }
         }
 
-        const auto rma_offset = current->get_cell_neuron_id().get_rma_offset();
-        ASSERT_EQ(rma_offset % sizeof(OctreeNode<AdditionalCellAttributes>), 0);
+        const NeuronID saved_neuron_id = current_node->get_cell_neuron_id();
+        ASSERT_TRUE(saved_neuron_id.is_virtual());
 
-        const auto virtual_node_index = rma_offset / sizeof(OctreeNode<AdditionalCellAttributes>);
+        if (parent == nullptr) {
+            ASSERT_EQ(&root, current_node);
+            const auto saved_rma_offset = saved_neuron_id.get_rma_offset();
+
+            ASSERT_EQ(saved_rma_offset, 0);
+
+            const auto mh_offset = MH::get_offset(current_node);
+            ASSERT_EQ(mh_offset, 0);
+
+            auto* mh_ptr = MH::get_node_from_offset(0);
+
+            for (auto child_id = 0; child_id < Constants::number_oct; child_id++) {
+                auto* child = current_node->get_child(child_id);
+                if (child == nullptr) {
+                    continue;
+                }
+
+                auto* expected_ptr = mh_ptr + child_id;
+                ASSERT_EQ(expected_ptr, child);
+            }
+
+            continue;
+        }
+
+        const auto saved_rma_offset = saved_neuron_id.get_rma_offset();
+        const auto mh_offset = MH::get_offset(current_node);
+
+        ASSERT_EQ(mh_offset, saved_rma_offset);
+
+        ASSERT_EQ(saved_rma_offset % size_of_node, 0);
+        const auto virtual_node_index = saved_rma_offset / size_of_node;
+
+        auto* mh_ptr = MH::get_node_from_offset(virtual_node_index);
+
+        for (auto child_id = 0; child_id < Constants::number_oct; child_id++) {
+            auto* child = current_node->get_child(child_id);
+            if (child == nullptr) {
+                continue;
+            }
+
+            auto* expected_ptr = mh_ptr + child_id;
+            ASSERT_EQ(expected_ptr, child);
+        }
     }
 }

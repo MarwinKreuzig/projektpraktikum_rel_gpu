@@ -200,6 +200,7 @@ if(WIN32) # Tests
 	list(APPEND relearn_tests_additional_files "neuron_models/test_neuron_models.h")	
 	list(APPEND relearn_tests_additional_files "neurons/test_neurons.h")	
 	list(APPEND relearn_tests_additional_files "octree/test_octree.h")
+	list(APPEND relearn_tests_additional_files "octree_node/test_octree_node.h")
 	list(APPEND relearn_tests_additional_files "parser/test_monitor_parser.h")
 	list(APPEND relearn_tests_additional_files "parser/test_step_parser.h")
 	list(APPEND relearn_tests_additional_files "partition/test_partition.h")
