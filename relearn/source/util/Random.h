@@ -53,9 +53,10 @@ enum class RandomHolderKey : char {
     NeuronsExtraInformation = 7,
     Connector = 8,
     BackgroundActivity = 9,
+    TransmissionDelay = 10,
 };
 
-constexpr size_t NUMBER_RANDOM_HOLDER_KEYS = 10;
+constexpr size_t NUMBER_RANDOM_HOLDER_KEYS = 11;
 
 enum class RNGType {
     Mersenne,

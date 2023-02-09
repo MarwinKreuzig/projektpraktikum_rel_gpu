@@ -253,6 +253,12 @@ int main(int argc, char** argv) {
             { "linear", TransformationFunctionType::Linear }
     };
 
+    TransmissionDelayType chosen_transmission_delay_type = TransmissionDelayType::Constant;
+    std::map<std::string, TransmissionDelayType> cli_parse_transmission_delay_type{
+            { "constant", TransmissionDelayType::Constant },
+            { "random", TransmissionDelayType::Random }
+    };
+
     RelearnTypes::step_type simulation_steps{};
     app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms.")->required();
 
@@ -476,8 +482,17 @@ int main(int argc, char** argv) {
     double percentage_initial_fired_neurons{ 0.0 };
     app.add_option("--percentage-initial-fired-neurons", percentage_initial_fired_neurons, "The percentage of neurons that fired in the (imaginary) 0th step. Must be from [0.0, 1.0]. Default ist 0.0");
 
-    RelearnTypes::step_type transmission_delay{ 0 };
-    app.add_option("--transmission-delay", transmission_delay, "The delay in steps that a synapse needs to transmit to another neuron. Default ist 0");
+    auto* const opt_transmission_delay_type = app.add_option("--transmission-delay", chosen_transmission_delay_type, "The type of the delay between the trnsmission of the firing of a source neuron to a target neuron. Default: constant");
+    opt_transmission_delay_type->transform(CLI::CheckedTransformer(cli_parse_transmission_delay_type, CLI::ignore_case));
+
+    RelearnTypes::step_type transmission_delay_constant{ 0 };
+    auto* const opt_transmission_delay_constant = app.add_option("--transmission-delay-constant", transmission_delay_constant, "The delay in steps that a synapse needs to transmit to another neuron. Default ist 0");
+
+    double transmission_delay_mean{ 0 };
+    auto* const opt_transmission_delay_mean = app.add_option("--transmission-delay-mean", transmission_delay_mean, "The mean of a normal distribution for the delay in steps that a synapse needs to transmit to another neuron");
+
+    double transmission_delay_stddev{ 1 };
+    auto* const opt_transmission_delay_stddev = app.add_option("--transmission-delay-stddev", transmission_delay_stddev, "The standard deviation of a normal distribution for the delay in steps that a synapse needs to transmit to another neuron");
 
     monitor_option->excludes(flag_monitor_all);
     flag_monitor_all->excludes(monitor_option);
@@ -516,6 +531,9 @@ int main(int argc, char** argv) {
     opt_log_path->check(CLI::ExistingDirectory);
 
     opt_file_external_stimulation->check(CLI::ExistingFile);
+
+    opt_transmission_delay_constant->excludes(opt_transmission_delay_mean);
+    opt_transmission_delay_constant->excludes(opt_transmission_delay_stddev);
 
     CLI11_PARSE(app, argc, argv);
 
@@ -770,7 +788,19 @@ int main(int argc, char** argv) {
         stimulus_calculator = std::make_unique<Stimulus>();
     }
 
-    std::unique_ptr<ConstantTransmissionDelayer> transmission_delayer = std::make_unique<ConstantTransmissionDelayer>(transmission_delay);
+    std::unique_ptr<TransmissionDelayer> transmission_delayer;
+    if(chosen_transmission_delay_type == TransmissionDelayType::Constant) {
+        transmission_delayer = std::make_unique<ConstantTransmissionDelayer>(transmission_delay_constant);
+    } else if(chosen_transmission_delay_type == TransmissionDelayType::Random) {
+        if(! *opt_transmission_delay_mean || !*opt_transmission_delay_stddev) {
+            RelearnException::fail("Mean and standard deviation are required for random transmission delay");
+        }
+        transmission_delayer = std::make_unique<RandomizedTransmissionDelayer>(transmission_delay_mean, transmission_delay_stddev);
+    } else {
+        RelearnException::fail("Unknown transmission delayer type {}", chosen_transmission_delay_type);
+    }
+
+
 
     std::unique_ptr<SynapticInputCalculator> input_calculator{};
     if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
