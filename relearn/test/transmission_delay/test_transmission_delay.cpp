@@ -32,7 +32,7 @@ TEST_F(TransmissionDelayTest, testNoDelay) {
 
     const auto& fired_status = NeuronTypesAdapter::get_fired_status(num_neurons, mt);
 
-    delayer.prepare_update();
+    delayer.prepare_update(num_neurons);
     for(auto neuron_id=0;neuron_id<num_neurons;neuron_id++) {
         const RankNeuronId source(MPIRank{0},NeuronID{neuron_id});
         if(fired_status[neuron_id] == FiredStatus::Fired) {
@@ -82,7 +82,7 @@ TEST_F(TransmissionDelayTest, testConstantDelay) {
 
     for(auto i=0;i<num_steps;i++) {
         //Update delayer
-        delayer.prepare_update();
+        delayer.prepare_update(num_neurons);
         for(auto neuron_id=0;neuron_id<num_neurons;neuron_id++) {
             const RankNeuronId source(MPIRank{0},NeuronID{neuron_id});
             if(fired_status_vector[i][neuron_id] == FiredStatus::Fired) {

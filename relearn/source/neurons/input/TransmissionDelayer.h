@@ -113,9 +113,14 @@ public:
     /**
      * Prepares the transmission delayer for a new simulation step. Call this method before register_fired_input and get_delayed_inputs for a new step
      */
-    void prepare_update() {
+    void prepare_update(RelearnTypes::number_neurons_type num_neurons) {
         if (!saved_fire_states.empty()) {
             saved_fire_states.pop_front();
+        }
+        if(saved_fire_states.empty()) {
+            std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::synapse_weight>>> empty_fire_states;
+            empty_fire_states.resize(num_neurons, {});
+            saved_fire_states.push_back(empty_fire_states);
         }
     }
 

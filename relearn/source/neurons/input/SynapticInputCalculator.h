@@ -112,7 +112,7 @@ public:
         std::fill(raw_ex_input.begin(), raw_ex_input.end(), 0.0);
         std::fill(raw_inh_input.begin(), raw_inh_input.end(), 0.0);
 
-        transmission_delayer->prepare_update();
+        transmission_delayer->prepare_update(number_local_neurons);
         fired_status_comm->set_local_fired_status(fired, disable_flags, network_graph_static, network_graph_plastic);
         fired_status_comm->exchange_fired_status();
 
