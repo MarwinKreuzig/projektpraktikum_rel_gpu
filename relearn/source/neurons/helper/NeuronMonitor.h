@@ -33,6 +33,8 @@ public:
      * @param ff The fraction of spikes in during the last period
      * @param s The current secondary variable of the model
      * @param i The current synaptic input
+     * @param ex_input number of fired excitatory input synapses
+     * @param inh_input number of fired inhibitory input synapses
      * @param b The current background activity
      * @param ax The current number of axonal elements
      * @param ax_c The current number of connected axonal elements
@@ -42,7 +44,7 @@ public:
      * @param di_c The current number of connected inhibitory dendritic elements
      */
     NeuronInformation(const RelearnTypes::step_type step, const double c, const double tc, const double x, const bool f, const double ff, const double s,
-        const double i, const double b, const double ax, const double ax_c, const double de, const double de_c, const double di, const double di_c) noexcept
+        const double i, const double ex_input, const double inh_input, const double b, const double ax, const double ax_c, const double de, const double de_c, const double di, const double di_c) noexcept
         : current_step(step)
         , calcium(c)
         , target_calcium(tc)
@@ -51,6 +53,8 @@ public:
         , fired_fraction(ff)
         , secondary(s)
         , synaptic_input(i)
+        , ex_input(ex_input)
+        , inh_input(inh_input)
         , background_activity(b)
         , axons_grown(ax)
         , axons_connected(ax_c)
@@ -125,6 +129,22 @@ public:
     }
 
     /**
+     * @brief Returns the number of fired excitatory input synapses
+     * @return Number of fired excitatory input synapses
+     */
+    [[nodiscard]] double get_ex_input() const noexcept {
+        return ex_input;
+    }
+
+    /**
+     * @brief Returns the number of fired inhibitory input synapses
+     * @return Number of fired inhibitory input synapses
+     */
+    [[nodiscard]] double get_inh_input() const noexcept {
+        return inh_input;
+    }
+
+    /**
      * @brief Returns the stored synaptic input
      * @return The stored synaptic input
      */
@@ -190,6 +210,8 @@ private:
     double fired_fraction{};
     double secondary{};
     double synaptic_input{};
+    double ex_input{};
+    double inh_input{};
     double background_activity{};
 
     double axons_grown{};
@@ -255,6 +277,8 @@ public:
         const auto secondary = neurons_to_monitor->neuron_model->get_secondary_variable(target_neuron_id);
         const auto synaptic_input = neurons_to_monitor->neuron_model->input_calculator->get_synaptic_input(target_neuron_id);
         const auto background_activity = neurons_to_monitor->neuron_model->background_calculator->get_background_activity(target_neuron_id);
+        const auto fired_ex_inputs = neurons_to_monitor->neuron_model->input_calculator->raw_ex_input[local_neuron_id];
+        const auto fired_inh_input = neurons_to_monitor->neuron_model->input_calculator->raw_inh_input[local_neuron_id];
 
         const auto axons = neurons_to_monitor->axons->grown_elements[local_neuron_id];
         const auto axons_connected = neurons_to_monitor->axons->connected_elements[local_neuron_id];
@@ -264,7 +288,7 @@ public:
         const auto inhibitory_dendrites_connected = neurons_to_monitor->dendrites_inh->connected_elements[local_neuron_id];
 
         information.emplace_back(current_step, calcium, target_calcium, x, fired, fired_fraction, secondary,
-            synaptic_input, background_activity, axons, axons_connected, excitatory_dendrites_grown,
+            synaptic_input, fired_ex_inputs, fired_inh_input, background_activity, axons, axons_connected, excitatory_dendrites_grown,
             excitatory_dendrites_connected, inhibitory_dendrites_grown, inhibitory_dendrites_connected);
     }
 

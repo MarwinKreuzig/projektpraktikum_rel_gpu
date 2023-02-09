@@ -109,6 +109,9 @@ public:
         RelearnException::check(fired.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of fired did not match number of local neurons: {} vs {}", fired.size(), number_local_neurons);
         RelearnException::check(disable_flags.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of disable_flags did not match number of local neurons: {} vs {}", disable_flags.size(), number_local_neurons);
 
+        std::fill(raw_ex_input.begin(), raw_ex_input.end(), 0.0);
+        std::fill(raw_inh_input.begin(), raw_inh_input.end(), 0.0);
+
         transmission_delayer->prepare_update();
         fired_status_comm->set_local_fired_status(fired, disable_flags, network_graph_static, network_graph_plastic);
         fired_status_comm->exchange_fired_status();
@@ -223,6 +226,9 @@ private:
     double synapse_conductance{ default_conductance }; // Proportionality factor for synapses in Hz
 
     std::vector<double> synaptic_input{};
+
+    std::vector<double> raw_ex_input{};
+    std::vector<double> raw_inh_input{};
 
     std::unique_ptr<FiredStatusCommunicator> fired_status_comm{};
 

@@ -21,6 +21,8 @@ void SynapticInputCalculator::init(const number_neurons_type number_neurons) {
 
     number_local_neurons = number_neurons;
     synaptic_input.resize(number_neurons, 0.0);
+    raw_ex_input.resize(number_neurons, 0.0);
+    raw_inh_input.resize(number_neurons,0.0);
 
     fired_status_comm = std::make_unique<FiredStatusCommunicationMap>(MPIWrapper::get_num_ranks(), number_neurons);
 }
@@ -34,6 +36,8 @@ void SynapticInputCalculator::create_neurons(const number_neurons_type creation_
 
     number_local_neurons = new_size;
     synaptic_input.resize(new_size, 0.0);
+    raw_ex_input.resize(new_size, 0.0);
+    raw_inh_input.resize(new_size, 0.0);
 
     fired_status_comm = std::make_unique<FiredStatusCommunicationMap>(MPIWrapper::get_num_ranks(), new_size);
 
@@ -50,6 +54,12 @@ double SynapticInputCalculator::get_local_and_distant_synaptic_input(const Neuro
     if(transmission_delayer->has_delayed_inputs()) {
         for (const auto &[src_neuron_id, edge_val]: transmission_delayer->get_delayed_inputs(neuron_id)) {
             local_input += synapse_conductance * edge_val;
+            if(edge_val > 0.0) {
+                raw_ex_input[neuron_id.get_neuron_id()] += edge_val;
+            }
+            else {
+                raw_inh_input[neuron_id.get_neuron_id()] += std::abs(edge_val);
+            }
         }
     }
 
