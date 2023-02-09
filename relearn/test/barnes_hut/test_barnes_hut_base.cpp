@@ -1332,8 +1332,6 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareFullChoice) {
         }
 
         if (_target_neuron_type == DistantNeuronRequest::TargetNeuronType::VirtualNode) {
-            // TODO(fabian): check later
-
             ASSERT_EQ(_target_identifier % sizeof(OctreeNode<additional_cell_attributes>), 0);
             const auto node_offset = _target_identifier / sizeof(OctreeNode<additional_cell_attributes>);
 
