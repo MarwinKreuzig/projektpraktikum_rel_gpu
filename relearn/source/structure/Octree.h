@@ -482,15 +482,15 @@ protected:
         Timers::start(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
         for (size_t i = 0; i < number_branch_nodes; i++) {
             auto& received_node = exchange_branch_nodes[i];
-            if (received_node.is_parent()) {
-                /* 
-                 * This part exists for the location-aware Barnes-Hut algorithm.
-                 * If the branch node is a leaf, it uses the leaf-case without problems.
-                 * Otherwise, we need to store the index of the branch node so that we
-                 * can later send it around.
-                 */
-                received_node.set_cell_neuron_id(NeuronID::virtual_id(i));
-            }
+            //if (received_node.is_parent()) {
+            //    /* 
+            //     * This part exists for the location-aware Barnes-Hut algorithm.
+            //     * If the branch node is a leaf, it uses the leaf-case without problems.
+            //     * Otherwise, we need to store the index of the branch node so that we
+            //     * can later send it around.
+            //     */
+            //    received_node.set_cell_neuron_id(NeuronID::virtual_id(i));
+            //}
 
             *branch_nodes[i] = exchange_branch_nodes[i];
         }
