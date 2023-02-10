@@ -41,6 +41,8 @@ public:
         current_filling = 0;
         parent_to_offset.clear();
         parent_to_offset.reserve(memory.size());
+        offset_to_parent.clear();
+        offset_to_parent.reserve(memory.size());
         std::ranges::uninitialized_default_construct(memory_holder);
     }
 
@@ -79,6 +81,7 @@ public:
 
         current_filling = 0;
         parent_to_offset.clear();
+        offset_to_parent.clear();
     }
 
     /**
@@ -95,6 +98,7 @@ public:
 
         if (!parent_to_offset.contains(parent)) {
             parent_to_offset[parent] = current_filling;
+            offset_to_parent[current_filling] = parent;
             current_filling += Constants::number_oct;
         }
 
@@ -111,13 +115,22 @@ public:
      * @exception Throws a RelearnException if parent_node does not have an associated children array
      * @return The offset of node wrt. the base pointer
      */
-    [[nodiscard]] static std::uint64_t get_offset(OctreeNode<AdditionalCellAttributes>* const parent_node) {
+    [[nodiscard]] static std::uint64_t get_offset_from_parent(OctreeNode<AdditionalCellAttributes>* const parent_node) {
         const auto iterator = parent_to_offset.find(parent_node);
 
-        RelearnException::check(iterator != parent_to_offset.end(), "MemoryHolder::get_offset: parent_node didn't have an offset.");
+        RelearnException::check(iterator != parent_to_offset.end(), "MemoryHolder::get_offset_from_parent: parent_node {} does not have an offset.", (void*)parent_node);
 
         const auto offset = iterator->second;
         return offset * sizeof(OctreeNode<AdditionalCellAttributes>);
+    }
+
+    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_parent_from_offset(const std::uint64_t offset) {
+        const auto iterator = offset_to_parent.find(offset);
+
+        RelearnException::check(iterator != offset_to_parent.end(), "MemoryHolder::get_parent_from_offset: offset {} does not have a parent node.", offset);
+
+        const auto parent = iterator->second;
+        return parent;
     }
 
     /**
@@ -127,8 +140,8 @@ public:
      * @return The OctreeNode with the specified offset
      */
     [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_node_from_offset(const std::uint64_t offset) {
-        RelearnException::check(offset < memory_holder.size(), "MemoryHolder::get_node_from_offset(): offset ({}) is too large: ({}).", offset, memory_holder.size());
-        RelearnException::check(offset < current_filling, "MemoryHolder::get_node_from_offset(): offset ({}) is too large: ({}).", offset, current_filling);
+        RelearnException::check(offset < memory_holder.size(), "MemoryHolder::get_node_from_offset(): offset ({}) is too large. The total size is: {}.", offset, memory_holder.size());
+        RelearnException::check(offset < current_filling, "MemoryHolder::get_node_from_offset(): offset ({}) is too large. I only contain: {} elements.", offset, current_filling);
         return &memory_holder[offset];
     }
 
@@ -138,4 +151,5 @@ private:
     static inline std::uint64_t current_filling{ 0 };
 
     static inline std::unordered_map<OctreeNode<AdditionalCellAttributes>*, std::uint64_t> parent_to_offset{};
+    static inline std::unordered_map<std::uint64_t, OctreeNode<AdditionalCellAttributes>*> offset_to_parent{};
 };

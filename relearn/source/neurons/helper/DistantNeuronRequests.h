@@ -31,14 +31,12 @@ class DistantNeuronRequest {
 public:
     /**
      * A target neuron can be one of the following:
-     * (a) The target is on the branch node level
-     * (b) The target is a leaf node
-     * (c) The target is a virtual node
+     * (a) The target is a leaf node
+     * (b) The target is a virtual node
      */
     enum class TargetNeuronType : char {
-        BranchNode = 0,
-        Leaf = 1,
-        VirtualNode = 2
+        Leaf,
+        VirtualNode
     };
 
     /**
@@ -83,16 +81,6 @@ public:
      */
     [[nodiscard]] constexpr RelearnTypes::position_type get_source_position() const noexcept {
         return source_position;
-    }
-
-    /**
-     * @brief Returns the id of the target node, if it is a branch node.
-     * @exception Throws a RelearnException if the target node type is not TargetNeuronType::BranchNode
-     * @return The branch node id
-     */
-    [[nodiscard]] constexpr NeuronID::value_type get_branch_node_id() const {
-        RelearnException::check(target_neuron_type == TargetNeuronType::BranchNode, "");
-        return target_neuron_identifier;
     }
 
     /**

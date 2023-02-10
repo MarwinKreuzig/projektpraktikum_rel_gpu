@@ -719,7 +719,7 @@ TYPED_TEST(OctreeNodeTest, testMemoryLayout) {
             ASSERT_EQ(&root, current_node);
             ASSERT_EQ(saved_rma_offset, 0);
 
-            const auto mh_offset = MH::get_offset(current_node);
+            const auto mh_offset = MH::get_offset_from_parent(current_node);
             ASSERT_EQ(mh_offset, 0);
 
             auto* mh_ptr = MH::get_node_from_offset(0);
@@ -737,7 +737,7 @@ TYPED_TEST(OctreeNodeTest, testMemoryLayout) {
             continue;
         }
 
-        const auto mh_offset = MH::get_offset(current_node);
+        const auto mh_offset = MH::get_offset_from_parent(current_node);
 
         ASSERT_EQ(mh_offset, saved_rma_offset);
 

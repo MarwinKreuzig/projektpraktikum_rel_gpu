@@ -314,31 +314,18 @@ public:
             return std::make_pair(target_rank, neuron_request);
         }
 
-        const auto level_of_target = target_node->get_level();
-
-        if (level_of_target == level_of_branch_nodes) {
-            const DistantNeuronRequest neuron_request(
-                source_neuron_id.get_neuron_id(),
-                source_position,
-                cell.get_neuron_id().get_branch_node_index(),
-                DistantNeuronRequest::TargetNeuronType::BranchNode,
-                signal_type);
-
-            return std::make_pair(target_rank, neuron_request);
+        if (target_node->get_level() < level_of_branch_nodes) {
+            return {};
         }
 
-        if (level_of_target > level_of_branch_nodes) {
-            const DistantNeuronRequest neuron_request(
-                source_neuron_id.get_neuron_id(),
-                source_position,
-                cell.get_neuron_id().get_rma_offset(),
-                DistantNeuronRequest::TargetNeuronType::VirtualNode,
-                signal_type);
+        const DistantNeuronRequest neuron_request(
+            source_neuron_id.get_neuron_id(),
+            source_position,
+            cell.get_neuron_id().get_rma_offset(),
+            DistantNeuronRequest::TargetNeuronType::VirtualNode,
+            signal_type);
 
-            return std::make_pair(target_rank, neuron_request);
-        }
-
-        return {};
+        return std::make_pair(target_rank, neuron_request);
     }
 
     /**
@@ -383,11 +370,11 @@ public:
         }
     }
 
-     static inline OctreeNode<AdditionalCellAttributes>* found{};
+    static inline OctreeNode<AdditionalCellAttributes>* found{};
 
-     static auto get_found_node() {
+    static auto get_found_node() {
         return found;
-     }
+    }
 
     /**
      * @brief Finds target neurons for a specified source neuron. No actual request is made.

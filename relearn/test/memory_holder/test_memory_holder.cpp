@@ -259,7 +259,7 @@ TYPED_TEST(MemoryHolderTest, testMakeAvailable) {
     ASSERT_EQ(MH::get_size(), number_objects);
 
     for (auto i = 0; i < number_requesting_objects; i++) {
-        ASSERT_THROW(auto val = MH::get_offset(&parents[i]), RelearnException);
+        ASSERT_THROW(auto val = MH::get_offset_from_parent(&parents[i]), RelearnException);
     }
 }
 
@@ -272,18 +272,18 @@ TYPED_TEST(MemoryHolderTest, testGetOffsetException) {
 
     MH::init(span_memory);
 
-    ASSERT_THROW(auto val = MH::get_offset(nullptr), RelearnException);
+    ASSERT_THROW(auto val = MH::get_offset_from_parent(nullptr), RelearnException);
 
     for (auto i = 0; i < 1024; i++) {
         auto* ptr = &memory[i];
-        ASSERT_THROW(auto val = MH::get_offset(ptr), RelearnException);
+        ASSERT_THROW(auto val = MH::get_offset_from_parent(ptr), RelearnException);
     }
 
     std::vector<OctreeNode<AdditionalCellAttributes>> other_memory(1024, OctreeNode<AdditionalCellAttributes>{});
 
     for (auto i = 0; i < 1024; i++) {
         auto* ptr = &other_memory[i];
-        ASSERT_THROW(auto val = MH::get_offset(ptr), RelearnException);
+        ASSERT_THROW(auto val = MH::get_offset_from_parent(ptr), RelearnException);
     }
 }
 
@@ -320,14 +320,14 @@ TYPED_TEST(MemoryHolderTest, testGetOffset) {
         }
     }
 
-    ASSERT_EQ(0, MH::get_offset(&root));
+    ASSERT_EQ(0, MH::get_offset_from_parent(&root));
 
     for (auto child_idx = 0; child_idx < Constants::number_oct; child_idx++) {
         auto* child = root.get_child(child_idx);
 
         const auto offset_index = Constants::number_oct + child_idx * Constants::number_oct;
 
-        ASSERT_EQ(offset_index * sizeof(OctreeNode<AdditionalCellAttributes>), MH::get_offset(child));
+        ASSERT_EQ(offset_index * sizeof(OctreeNode<AdditionalCellAttributes>), MH::get_offset_from_parent(child));
     }
 }
 
@@ -370,11 +370,11 @@ TYPED_TEST(MemoryHolderTest, testGetOffsetDisorganized) {
         }
     }
 
-    ASSERT_EQ(0, MH::get_offset(&root));
+    ASSERT_EQ(0, MH::get_offset_from_parent(&root));
 
     for (auto i = 0; i < Constants::number_oct; i++) {
         auto child_index = indices[i];
-        const auto offset = MH::get_offset(root.get_child(child_index));
+        const auto offset = MH::get_offset_from_parent(root.get_child(child_index));
         const auto expected_offset = (i + 1) * Constants::number_oct * sizeof(OctreeNode<AdditionalCellAttributes>);
 
         ASSERT_EQ(expected_offset, offset);

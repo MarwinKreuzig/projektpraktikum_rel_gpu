@@ -32,13 +32,9 @@ public:
     }
 
     static DistantNeuronRequest::TargetNeuronType get_random_target_neuron_type(std::mt19937& mt) {
-        const auto drawn = RandomAdapter::get_random_integer<int>(0, 2, mt);
+        const auto drawn = RandomAdapter::get_random_bool(mt);
 
-        if (drawn == 0) {
-            return DistantNeuronRequest::TargetNeuronType::BranchNode;
-        }
-
-        if (drawn == 1) {
+        if (drawn) {
             return DistantNeuronRequest::TargetNeuronType::Leaf;
         }
 

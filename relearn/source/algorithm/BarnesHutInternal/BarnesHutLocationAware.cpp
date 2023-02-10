@@ -104,15 +104,10 @@ BarnesHutLocationAware::process_requests(const CommunicationMap<DistantNeuronReq
                 continue;
             }
 
-            OctreeNode<AdditionalCellAttributes>* chosen_target = nullptr;
+            const auto rma_offset = current_request.get_rma_offset();
+            const auto idx_offset = rma_offset / sizeof(OctreeNode<BarnesHutCell>);
 
-            if (target_neuron_type == DistantNeuronRequest::TargetNeuronType::BranchNode) {
-                const auto branch_node_id = current_request.get_branch_node_id();
-                chosen_target = get_octree()->get_branch_node_pointer(branch_node_id);
-            } else {
-                const auto rma_offset = current_request.get_rma_offset();
-                chosen_target = MemoryHolder<AdditionalCellAttributes>::get_node_from_offset(rma_offset);
-            }
+            OctreeNode<AdditionalCellAttributes>* chosen_target = MemoryHolder<AdditionalCellAttributes>::get_parent_from_offset(idx_offset);
 
             // Otherwise get target through local barnes hut
             const auto source_position = current_request.get_source_position();

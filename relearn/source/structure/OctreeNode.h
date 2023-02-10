@@ -214,7 +214,7 @@ public:
                 // Set the child and mark the parent as virtual
                 parent_node->set_child(new_node, parent_own_octant);
 
-                const auto parent_node_offset = MemoryHolder<AdditionalCellAttributes>::get_offset(parent_node);
+                const auto parent_node_offset = MemoryHolder<AdditionalCellAttributes>::get_offset_from_parent(parent_node);
                 parent_node->set_cell_neuron_id(NeuronID::virtual_id(parent_node_offset));
 
                 if (const auto insert_octant = parent_cell.get_octant_for_position(position); insert_octant == parent_own_octant) {
