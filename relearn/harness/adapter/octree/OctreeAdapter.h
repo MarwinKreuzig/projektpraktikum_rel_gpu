@@ -33,10 +33,10 @@
 class OctreeAdapter {
 public:
     template <typename AdditionalCellAttributes>
-    static std::vector<std::tuple<Vec3d, size_t>> extract_virtual_neurons(OctreeNode<AdditionalCellAttributes>* root) {
+    static std::vector<std::tuple<Vec3d, size_t>> extract_virtual_neurons(const OctreeNode<AdditionalCellAttributes>* root) {
         std::vector<std::tuple<Vec3d, size_t>> return_value{};
 
-        std::stack<std::pair<OctreeNode<AdditionalCellAttributes>*, size_t>> octree_nodes{};
+        std::stack<std::pair<const OctreeNode<AdditionalCellAttributes>*, size_t>> octree_nodes{};
         octree_nodes.emplace(root, 0);
 
         while (!octree_nodes.empty()) {
@@ -63,14 +63,14 @@ public:
     }
 
     template <typename AdditionalCellAttributes>
-    static std::vector<OctreeNode<AdditionalCellAttributes>*> extract_branch_nodes(OctreeNode<AdditionalCellAttributes>* root) {
-        std::vector<OctreeNode<AdditionalCellAttributes>*> return_value{};
+    static std::vector<OctreeNode<AdditionalCellAttributes>*> extract_branch_nodes(const OctreeNode<AdditionalCellAttributes>* root) {
+        std::vector<const OctreeNode<AdditionalCellAttributes>*> return_value{};
 
-        std::stack<OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
+        std::stack<const OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
         octree_nodes.push(root);
 
         while (!octree_nodes.empty()) {
-            OctreeNode<AdditionalCellAttributes>* current_node = octree_nodes.top();
+            const OctreeNode<AdditionalCellAttributes>* current_node = octree_nodes.top();
             octree_nodes.pop();
 
             if (current_node->is_leaf()) {
@@ -90,14 +90,14 @@ public:
     }
 
     template <typename AdditionalCellAttributes>
-    static std::vector<std::tuple<Vec3d, NeuronID>> extract_neurons(OctreeNode<AdditionalCellAttributes>* root) {
+    static std::vector<std::tuple<Vec3d, NeuronID>> extract_neurons(const OctreeNode<AdditionalCellAttributes>* root) {
         std::vector<std::tuple<Vec3d, NeuronID>> return_value{};
 
-        std::stack<OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
+        std::stack<const OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
         octree_nodes.push(root);
 
         while (!octree_nodes.empty()) {
-            OctreeNode<AdditionalCellAttributes>* current_node = octree_nodes.top();
+            const OctreeNode<AdditionalCellAttributes>* current_node = octree_nodes.top();
             octree_nodes.pop();
 
             if (current_node->is_parent()) {

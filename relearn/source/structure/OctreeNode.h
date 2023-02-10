@@ -139,15 +139,14 @@ public:
      * @brief Inserts a neuron with the specified id and the specified position into the subtree that is induced by this object.
      * @param position The position of the new neuron
      * @param neuron_id The id of the new neuron (can be Constants::uninitialized to indicate a virtual neuron), <= Constants::uninitialized
-     * @param level_of_branch_nodes The level of the branch nodes in the Octree, is optional
      * @exception Throws a RelearnException if one of the following happens:
      *      (a) The position is not within the cell's boundaries
-     *      (b) neuron_id > Constants::uninitialized
+     *      (b) neuron_id is unitialized
      *      (c) Allocating a new object in the shared memory window fails
      *      (d) Something went wrong within the insertion
      * @return A pointer to the newly created and inserted node
      */
-    [[nodiscard]] OctreeNodePtr insert(const box_size_type& position, const NeuronID& neuron_id, [[maybe_unused]] std::uint16_t level_of_branch_nodes = 0) {
+    [[nodiscard]] OctreeNodePtr insert(const box_size_type& position, const NeuronID& neuron_id) {
         const auto& [cell_xyz_min, cell_xyz_max] = cell.get_size();
         const auto is_in_box = position.check_in_box(cell_xyz_min, cell_xyz_max);
 
@@ -208,12 +207,13 @@ public:
                 new_node->set_level(parent_node->get_level() + 1);
                 if (parent_neuron_id.is_local()) {
                     new_node->set_cell_neuron_id(parent_neuron_id);
+                } else {
+                    new_node->set_cell_neuron_id(NeuronID::virtual_id());
                 }
 
                 // Set the child and mark the parent as virtual
                 parent_node->set_child(new_node, parent_own_octant);
 
-                // If parent_node is larger than level_of_branch_nodes, it is in the RMA window and thus needs its offset
                 const auto parent_node_offset = MemoryHolder<AdditionalCellAttributes>::get_offset(parent_node);
                 parent_node->set_cell_neuron_id(NeuronID::virtual_id(parent_node_offset));
 
@@ -445,7 +445,7 @@ public:
      * @brief Returns the neuron id for the associated cell
      * @return The neuron id
      */
-    [[nodiscard]] constexpr const NeuronID& get_cell_neuron_id() const noexcept {
+    [[nodiscard]] constexpr NeuronID get_cell_neuron_id() const noexcept {
         return cell.get_neuron_id();
     }
 

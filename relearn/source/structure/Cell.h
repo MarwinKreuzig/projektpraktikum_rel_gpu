@@ -43,7 +43,7 @@ public:
      * @param neuron_id The neuron id
      * @exception Throws a RelearnException if the neuron_id is not initialized
      */
-    constexpr void set_neuron_id(const NeuronID& neuron_id) {
+    constexpr void set_neuron_id(const NeuronID neuron_id) {
         RelearnException::check(neuron_id.is_initialized(), "Cell::set:neuron_id: The neuron id was not initialized: {}", neuron_id);
         this->neuron_id = neuron_id;
     }
@@ -52,7 +52,7 @@ public:
      * @brief Returns the neuron id
      * @return The neuron id
      */
-    [[nodiscard]] constexpr const NeuronID& get_neuron_id() const noexcept {
+    [[nodiscard]] constexpr NeuronID get_neuron_id() const noexcept {
         return neuron_id;
     }
 

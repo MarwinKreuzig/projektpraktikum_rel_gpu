@@ -179,6 +179,71 @@ TYPED_TEST(OctreeNodeTest, testInsert) {
     }
 }
 
+TYPED_TEST(OctreeNodeTest, testInsertByHand) {
+    using AdditionalCellAttributes = TypeParam;
+
+    const auto my_rank = MPIWrapper::get_my_rank();
+
+    const Vec3d min{ 0.0, 0.0, 0.0 };
+    const Vec3d max{ 100.0, 100.0, 100.0 };
+
+    OctreeNode<AdditionalCellAttributes> node{};
+    node.set_level(0);
+    node.set_rank(my_rank);
+    node.set_cell_size(min, max);
+    node.set_cell_neuron_id(NeuronID::virtual_id());
+    node.set_cell_neuron_position(Vec3d{ 25.0, 25.0, 25.0 });
+
+    auto* _1 = node.insert(Vec3d{ 25.0, 25.0, 75.0 }, NeuronID::virtual_id());
+    auto* _2 = node.insert(Vec3d{ 25.0, 75.0, 25.0 }, NeuronID::virtual_id());
+    auto* _3 = node.insert(Vec3d{ 75.0, 25.0, 25.0 }, NeuronID::virtual_id());
+    auto* _4 = node.insert(Vec3d{ 25.0, 75.0, 75.0 }, NeuronID::virtual_id());
+    auto* _5 = node.insert(Vec3d{ 75.0, 25.0, 75.0 }, NeuronID::virtual_id());
+    auto* _6 = node.insert(Vec3d{ 75.0, 75.0, 25.0 }, NeuronID::virtual_id());
+    auto* _7 = node.insert(Vec3d{ 75.0, 75.0, 75.0 }, NeuronID::virtual_id());
+
+    ASSERT_TRUE(node.is_parent());
+    ASSERT_FALSE(node.is_leaf());
+    ASSERT_EQ(node.get_level(), 0);
+
+    for (auto child_id = 0; child_id < Constants::number_oct; child_id++) {
+        auto* child = node.get_child(child_id);
+        ASSERT_NE(nullptr, child);
+
+        ASSERT_FALSE(child->is_parent());
+        ASSERT_TRUE(child->is_leaf());
+
+        for (auto i = 0; i < Constants::number_oct; i++) {
+            ASSERT_EQ(nullptr, child->get_child(i));
+        }
+    }
+
+    auto* _10 = node.insert(Vec3d{ 24.0, 24.0, 24.0 }, NeuronID(11));
+    auto* _11 = node.insert(Vec3d{ 24.0, 24.0, 76.0 }, NeuronID(22));
+    auto* _12 = node.insert(Vec3d{ 24.0, 76.0, 24.0 }, NeuronID(33));
+    auto* _13 = node.insert(Vec3d{ 76.0, 24.0, 24.0 }, NeuronID(44));
+    auto* _14 = node.insert(Vec3d{ 24.0, 76.0, 76.0 }, NeuronID(55));
+    auto* _15 = node.insert(Vec3d{ 76.0, 24.0, 76.0 }, NeuronID(66));
+    auto* _16 = node.insert(Vec3d{ 76.0, 76.0, 24.0 }, NeuronID(77));
+    auto* _17 = node.insert(Vec3d{ 76.0, 76.0, 76.0 }, NeuronID(88));
+
+    ASSERT_TRUE(node.is_parent());
+    ASSERT_FALSE(node.is_leaf());
+    ASSERT_EQ(node.get_level(), 0);
+
+    for (auto child_id = 0; child_id < Constants::number_oct; child_id++) {
+        auto* child = node.get_child(child_id);
+        ASSERT_NE(nullptr, child);
+
+        ASSERT_FALSE(child->is_parent());
+        ASSERT_TRUE(child->is_leaf());
+
+        for (auto i = 0; i < Constants::number_oct; i++) {
+            ASSERT_EQ(nullptr, child->get_child(i));
+        }
+    }
+}
+
 TYPED_TEST(OctreeNodeTest, testContains) {
     const auto neuron_id = TaggedIdAdapter::get_random_neuron_id(100, this->mt);
     const auto mpi_rank = MPIRankAdapter::get_random_mpi_rank(20, this->mt);

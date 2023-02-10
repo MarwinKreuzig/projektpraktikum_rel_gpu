@@ -68,7 +68,7 @@ public:
      * @return The neuron id
      * @exception Throws a RelearnException if the id is not initialized
      */
-    [[nodiscard]] constexpr const NeuronID& get_neuron_id() const {
+    [[nodiscard]] constexpr NeuronID get_neuron_id() const {
         RelearnException::check(neuron_id.is_initialized(), "RankNeuronId::get_neuron_id: neuron_id is not initialized");
         return neuron_id;
     }
