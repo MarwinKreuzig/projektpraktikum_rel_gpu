@@ -587,7 +587,6 @@ TEST_F(NeuronsTest, testDisableNeuronsWithRanks) {
 }
 
 TEST_F(NeuronsTest, testDisableNeuronsWithRanksAndOnlyOneDisabledNeuron) {
-    RelearnException::hide_messages = false;
     const auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 30;
     const auto num_ranks = MPIRankAdapter::get_random_number_ranks(mt) + 1;
 

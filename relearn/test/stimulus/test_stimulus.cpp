@@ -271,7 +271,6 @@ TEST_F(StimulusTest, testInvalidNeuronId) {
 }
 
 TEST_F(StimulusTest, testInvalidAreaName) {
-    RelearnException::hide_messages = false;
     const auto local_area_translator = NeuronAssignmentAdapter::get_randomized_area_translator(mt);
     std::filesystem::path path = "stimulus.tmp";
 

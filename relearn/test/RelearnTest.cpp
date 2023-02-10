@@ -36,7 +36,6 @@ RelearnTest::RelearnTest() {
 }
 
 RelearnTest::~RelearnTest() {
-
 }
 
 void RelearnTest::SetUp() {

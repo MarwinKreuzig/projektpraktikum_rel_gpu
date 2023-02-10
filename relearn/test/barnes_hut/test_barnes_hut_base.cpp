@@ -1254,7 +1254,6 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareFullChoice) {
     auto root = OctreeAdapter::get_standard_tree<additional_cell_attributes>(number_neurons, minimum, maximum, mt);
     const auto& nodes = OctreeAdapter::find_nodes(&root);
     const auto& rma_dict = OctreeAdapter::find_child_offsets(&root);
-    const auto& branch_nodes = OctreeAdapter::mark_branch_nodes_with_ids(&root, branching_level);
 
     const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
