@@ -112,14 +112,14 @@ struct Interval {
 
         if (begin_ok && end_ok && frequency_ok) {
             if (end < begin) {
-                LogFiles::print_message_rank(0, "Parsed interval description has end before beginning : {}", description);
+                LogFiles::print_message_rank(MPIRank::root_rank(), "Parsed interval description has end before beginning : {}", description);
                 return {};
             }
 
             return Interval{ begin, end, frequency };
         }
 
-        LogFiles::print_message_rank(0, "Failed to parse string to match the pattern <uint64>-<uint64>:<uint64> : {}", description);
+        LogFiles::print_message_rank(MPIRank::root_rank(), "Failed to parse string to match the pattern <uint64>-<uint64>:<uint64> : {}", description);
         return {};
     }
 

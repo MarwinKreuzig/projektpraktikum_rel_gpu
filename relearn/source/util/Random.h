@@ -14,6 +14,7 @@
 #include "util/RelearnException.h"
 #include "util/shuffle/shuffle.h"
 
+#include <boost/container_hash/hash.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
@@ -157,18 +158,39 @@ public:
 
     /**
      * @brief Seeds the random number generators associated with the key.
-     *      The seed used is seed + omp_get_thread_num()
+     *      The seed used is boost::hash_combine(seed, omp_get_thread_num()).
      * @param key The type whose RNG shall be seeded
      * @param seed The base seed that should be used
      */
-    static void seed(const RandomHolderKey key, const unsigned int seed) {
+    static void seed(const RandomHolderKey key, const std::size_t seed) {
         // NOLINTNEXTLINE
 #pragma omp parallel shared(key, seed)
         {
             const auto thread_id = omp_get_thread_num();
             auto& generator = get_generator(key);
-            generator.seed(seed + thread_id);
+
+            std::size_t current_seed = seed;
+            boost::hash_combine(current_seed, thread_id);
+            generator.seed(current_seed);
         }
+    }
+
+    /**
+     * @brief Seeds all number generators.
+     *      The seed used is boost::hash_combine(seed, omp_get_thread_num()).
+     * @param seed The base seed that should be used
+     */
+    static void seed_all(const std::size_t seed) {
+        RandomHolder::seed(RandomHolderKey::Algorithm, seed);
+        RandomHolder::seed(RandomHolderKey::Partition, seed);
+        RandomHolder::seed(RandomHolderKey::Subdomain, seed);
+        RandomHolder::seed(RandomHolderKey::PoissonModel, seed);
+        RandomHolder::seed(RandomHolderKey::Neurons, seed);
+        RandomHolder::seed(RandomHolderKey::NeuronModel, seed);
+        RandomHolder::seed(RandomHolderKey::SynapticElements, seed);
+        RandomHolder::seed(RandomHolderKey::NeuronsExtraInformation, seed);
+        RandomHolder::seed(RandomHolderKey::Connector, seed);
+        RandomHolder::seed(RandomHolderKey::BackgroundActivity, seed);
     }
 
 private:

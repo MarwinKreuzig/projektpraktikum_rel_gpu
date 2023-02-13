@@ -159,7 +159,7 @@ void print_sizes() {
     ss << "Size of BaseCell<true, true, false, false>: " << sizeof_dendrites_base_cell << '\n';
     ss << "Size of BaseCell<false, false, true, true>: " << sizeof_axons_base_cell << '\n';
 
-    LogFiles::print_message_rank(0, ss.str());
+    LogFiles::print_message_rank(MPIRank::root_rank(), ss.str());
 }
 
 void print_arguments(int argc, char** argv) {
@@ -169,7 +169,7 @@ void print_arguments(int argc, char** argv) {
         ss << argv[i] << ' ';
     }
 
-    LogFiles::print_message_rank(0, ss.str());
+    LogFiles::print_message_rank(MPIRank::root_rank(), ss.str());
 }
 
 int main(int argc, char** argv) {
@@ -182,9 +182,9 @@ int main(int argc, char** argv) {
     print_sizes();
 
     if constexpr (Config::do_debug_checks) {
-        LogFiles::print_message_rank(0, "I'm performing Debug Checks");
+        LogFiles::print_message_rank(MPIRank::root_rank(), "I'm performing Debug Checks");
     } else {
-        LogFiles::print_message_rank(0, "I'm skipping Debug Checks");
+        LogFiles::print_message_rank(MPIRank::root_rank(), "I'm skipping Debug Checks");
     }
 
     const auto my_rank = MPIWrapper::get_my_rank();
@@ -289,9 +289,11 @@ int main(int argc, char** argv) {
     std::string log_prefix{};
     const auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
 
-    const auto* flag_disable_positions = app.add_flag("--no-print-positions", "Disables printing the positions to a file.");
-    const auto* flag_disable_network = app.add_flag("--no-print-network", "Disables printing the network to a file.");
-    const auto* flag_disable_plasticity = app.add_flag("--no-print-plasticity", "Disables printing the plasticity changes to a file.");
+    const auto* flag_disable_printing_positions = app.add_flag("--no-print-positions", "Disables printing the positions to a file.");
+    const auto* flag_disable_printing_network = app.add_flag("--no-print-network", "Disables printing the network to a file.");
+    const auto* flag_disable_printing_plasticity = app.add_flag("--no-print-plasticity", "Disables printing the plasticity changes to a file.");
+    const auto* flag_disable_printing_calcium = app.add_flag("--no-print-calcium", "Disables printing the calcium changes to a file.");
+    const auto* flag_disable_printing_overview = app.add_flag("--no-print-overview", "Disables printing the overviews to a file.");
 
     RelearnTypes::number_neurons_type number_neurons{};
     auto* const opt_num_neurons = app.add_option("-n,--num-neurons", number_neurons, "Number of neurons. This option only works with one MPI rank!");
@@ -444,7 +446,7 @@ int main(int argc, char** argv) {
     app.add_option("--min-calcium-inhibitory-dendrites", min_calcium_inhibitory_dendrites, "The minimum intercellular calcium for inhibitory dendrites to grow. Default is 0.0");
 
     std::string neuron_monitors_description{};
-    auto* const monitor_option = app.add_option("--neuron-monitors", neuron_monitors_description, 
+    auto* const monitor_option = app.add_option("--neuron-monitors", neuron_monitors_description,
         "The description which neurons to monitor. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;...<area_name>;... where <mpi_rank> can be -1 to indicate \"on every rank\"");
 
     auto* flag_monitor_all = app.add_flag("--neuron-monitors-all", "Monitors all neurons.");
@@ -601,10 +603,11 @@ int main(int argc, char** argv) {
         LogFiles::set_general_prefix(log_prefix);
     }
 
-    if (static_cast<bool>(*flag_disable_positions)) {
+    if (static_cast<bool>(*flag_disable_printing_positions)) {
         LogFiles::set_log_status(LogFiles::EventType::Positions, true);
     }
-    if (static_cast<bool>(*flag_disable_network)) {
+
+    if (static_cast<bool>(*flag_disable_printing_network)) {
         LogFiles::set_log_status(LogFiles::EventType::InNetwork, true);
         LogFiles::set_log_status(LogFiles::EventType::OutNetwork, true);
         LogFiles::set_log_status(LogFiles::EventType::Network, true);
@@ -612,17 +615,31 @@ int main(int argc, char** argv) {
         LogFiles::set_log_status(LogFiles::EventType::NetworkInInhibitoryHistogramLocal, true);
         LogFiles::set_log_status(LogFiles::EventType::NetworkOutHistogramLocal, true);
     }
-    if (static_cast<bool>(*flag_disable_plasticity)) {
+
+    if (static_cast<bool>(*flag_disable_printing_plasticity)) {
         LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdate, true);
         LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdateCSV, true);
         LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdateLocal, true);
     }
 
+    if (static_cast<bool>(*flag_disable_printing_calcium)) {
+        LogFiles::set_log_status(LogFiles::EventType::CalciumValues, true);
+        LogFiles::set_log_status(LogFiles::EventType::ExtremeCalciumValues, true);
+    }
+
+    if (static_cast<bool>(*flag_disable_printing_overview)) {
+        LogFiles::set_log_status(LogFiles::EventType::SynapticInput, true);
+        LogFiles::set_log_status(LogFiles::EventType::NeuronsOverview, true);
+        LogFiles::set_log_status(LogFiles::EventType::NeuronsOverviewCSV, true);
+    }
+
     LogFiles::init();
 
-    // Init random number seeds
-    RandomHolder::seed(RandomHolderKey::Partition, static_cast<unsigned int>(my_rank.is_initialized()));
-    RandomHolder::seed(RandomHolderKey::Algorithm, random_seed);
+    std::size_t current_seed = 0;
+    boost::hash_combine(current_seed, my_rank.get_rank());
+    boost::hash_combine(current_seed, random_seed);
+
+    RandomHolder::seed_all(current_seed);
 
     auto essentials = std::make_unique<Essentials>();
 
@@ -683,18 +700,18 @@ int main(int argc, char** argv) {
         }
 
         if (static_cast<bool>(*opt_num_neurons)) {
-                essentials->insert("number neurons", number_neurons);
-                essentials->insert("Fraction-excitatory-neurons",fraction_excitatory_neurons);
-                essentials->insert("um-per-neuron",um_per_neuron);
+            essentials->insert("number neurons", number_neurons);
+            essentials->insert("Fraction-excitatory-neurons", fraction_excitatory_neurons);
+            essentials->insert("um-per-neuron", um_per_neuron);
         } else if (static_cast<bool>(*opt_num_neurons_per_rank)) {
-                essentials->insert("number neurons per rank", number_neurons_per_rank);
-                essentials->insert("Fraction-excitatory-neurons",fraction_excitatory_neurons);
-                essentials->insert("um-per-neuron",um_per_neuron);
+            essentials->insert("number neurons per rank", number_neurons_per_rank);
+            essentials->insert("Fraction-excitatory-neurons", fraction_excitatory_neurons);
+            essentials->insert("um-per-neuron", um_per_neuron);
         } else {
-                essentials->insert("positions directory", file_positions.string());
+            essentials->insert("positions directory", file_positions.string());
 
-                essentials->insert("network directory",
-                    file_network.string());
+            essentials->insert("network directory",
+                file_network.string());
         }
         essentials->insert("external stimulation file", file_external_stimulation.string());
         essentials->insert("static neurons",
@@ -752,24 +769,23 @@ int main(int argc, char** argv) {
     std::unique_ptr<NeuronModel> neuron_model{};
     if (chosen_neuron_model == NeuronModelEnum::Poisson) {
         neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
-                                                              models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refractory_period);
+            models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refractory_period);
     } else if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
         neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
-                                                                 models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
-                                                                 models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
-                                                                 models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
+            models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
+            models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
+            models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
     } else if (chosen_neuron_model == NeuronModelEnum::FitzHughNagumo) {
         neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
-                                                                     models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
+            models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
     } else if (chosen_neuron_model == NeuronModelEnum::AEIF) {
         neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
-                                                           models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
-                                                           models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
-                                                           models::AEIFModel::default_V_spike);
+            models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
+            models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
+            models::AEIFModel::default_V_spike);
     } else {
         RelearnException::fail("Chose a neuron model that is not implemented");
     }
-
 
     auto calcium_calculator = std::make_unique<CalciumCalculator>(target_calcium_decay_type, target_calcium_decay_amount, target_calcium_decay_step, first_decay_step, last_decay_step);
     calcium_calculator->set_beta(beta);
@@ -921,7 +937,8 @@ int main(int argc, char** argv) {
         }
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "number of bytes send: {}, number of bytes received: {}, number of bytes accessed remotely: {}", MPIWrapper::get_number_bytes_sent(), MPIWrapper::get_number_bytes_received(), MPIWrapper::get_number_bytes_remote_accessed());
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Number of bytes send: {}, Number  of bytes received: {}, Number  of bytes accessed remotely: {}",
+        MPIWrapper::get_number_bytes_sent(), MPIWrapper::get_number_bytes_received(), MPIWrapper::get_number_bytes_remote_accessed());
 
     MPIWrapper::finalize();
 

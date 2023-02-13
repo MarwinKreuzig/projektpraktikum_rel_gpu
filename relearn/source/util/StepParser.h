@@ -47,7 +47,7 @@ public:
     [[nodiscard]] static std::function<bool(RelearnTypes::step_type)> generate_step_check_function(std::vector<Interval> intervals) noexcept {
         const auto intervals_intersect = Interval::check_intervals_for_intersection(intervals);
         if (intervals_intersect) {
-            LogFiles::print_message_rank(0, "The intervals for the step parser intersected, discarding all.");
+            LogFiles::print_message_rank(MPIRank::root_rank(), "The intervals for the step parser intersected, discarding all.");
             return {};
         }
 

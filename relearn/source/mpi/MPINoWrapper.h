@@ -73,7 +73,7 @@ public:
         std::span<OctreeNode<AdditionalCellAttributes>> span{ cast, max_num_objects };
         MemoryHolder<AdditionalCellAttributes>::init(span);
 
-        LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
+        LogFiles::print_message_rank(MPIRank::root_rank(), "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
     }
 
     static void barrier();

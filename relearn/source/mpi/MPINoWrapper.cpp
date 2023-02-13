@@ -30,7 +30,7 @@
 #include <cstring>
 
 void MPINoWrapper::init(int argc, char** argv) {
-    LogFiles::print_message_rank(0, "I'm using the MPINoWrapper");
+    LogFiles::print_message_rank(MPIRank::root_rank(), "I'm using the MPINoWrapper");
 }
 
 void MPINoWrapper::barrier() {

@@ -131,7 +131,7 @@ public:
         }
 
         if (Interval::check_intervals_for_intersection(intervals)) {
-            LogFiles::print_message_rank(0, "The intervals for the stimulus parser intersected, discarding all.");
+            LogFiles::print_message_rank(MPIRank::root_rank(), "The intervals for the stimulus parser intersected, discarding all.");
             return {};
         }
 

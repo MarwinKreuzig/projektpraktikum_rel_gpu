@@ -80,7 +80,7 @@ void MPIWrapper::init(int argc, char** argv) {
     const unsigned int num_digits = Util::num_digits(num_ranks - 1);
     my_rank_str = fmt::format("{1:0>{0}}", num_digits, my_rank.get_rank());
 
-    LogFiles::print_message_rank(0, "I'm using the MPIWrapper");
+    LogFiles::print_message_rank(MPIRank::root_rank(), "I'm using the MPIWrapper");
 }
 
 void MPIWrapper::init_globals() {

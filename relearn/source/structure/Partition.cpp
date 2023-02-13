@@ -48,7 +48,7 @@ Partition::Partition(const size_t num_ranks, const MPIRank my_rank)
     number_local_subdomains += (my_rank.get_rank() < rest) ? 1 : 0;
 
     if (rest != 0) {
-        LogFiles::print_message_rank(-1, "My rank is: {}; There are {} ranks in total; The rest is: {}", my_rank, num_ranks, rest);
+        LogFiles::print_message_rank(MPIRank::uninitialized_rank(), "My rank is: {}; There are {} ranks in total; The rest is: {}", my_rank, num_ranks, rest);
         RelearnException::fail("Partition::Partition: Number of ranks must be of the form 2^n but was {}", num_ranks);
     }
 
@@ -79,8 +79,8 @@ Partition::Partition(const size_t num_ranks, const MPIRank my_rank)
         current_subdomain.index_3d = space_curve.map_1d_to_3d(static_cast<uint64_t>(current_subdomain.index_1d));
     }
 
-    LogFiles::print_message_rank(0, "Total number local_subdomains        : {}", total_number_subdomains);
-    LogFiles::print_message_rank(0, "Number subdomains per dimension: {}", number_subdomains_per_dimension);
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Total number local_subdomains        : {}", total_number_subdomains);
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Number subdomains per dimension: {}", number_subdomains_per_dimension);
 }
 
 void Partition::print_my_subdomains_info_rank() {
@@ -147,8 +147,8 @@ void Partition::set_simulation_box_size(const box_size_type& min, const box_size
     const auto& simulation_box_length = max - min;
     const auto& subdomain_length = simulation_box_length / static_cast<double>(number_subdomains_per_dimension);
 
-    LogFiles::print_message_rank(0, "Simulation box length (height, width, depth)\t: ({}, {}, {})",
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Simulation box length (height, width, depth)\t: ({}, {}, {})",
         simulation_box_length.get_x(), simulation_box_length.get_y(), simulation_box_length.get_z());
-    LogFiles::print_message_rank(0, "Subdomain length (height, width, depth)\t: ({}, {}, {})",
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Subdomain length (height, width, depth)\t: ({}, {}, {})",
         subdomain_length.get_x(), subdomain_length.get_y(), subdomain_length.get_z());
 }

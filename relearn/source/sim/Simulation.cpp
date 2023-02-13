@@ -142,7 +142,7 @@ void Simulation::initialize() {
 
     partition->print_my_subdomains_info_rank();
 
-    LogFiles::print_message_rank(0, "Neurons created");
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Neurons created");
 
     const auto& [simulation_box_min, simulation_box_max] = partition->get_simulation_box_size();
     const auto level_of_branch_nodes = partition->get_level_of_subdomain_trees();
@@ -161,7 +161,7 @@ void Simulation::initialize() {
         RelearnException::fail("Simulation::initialize: Cannot construct the octree for an unknown algorithm.");
     }
 
-    LogFiles::print_message_rank(0, "Level of branch nodes is: {}", global_tree->get_level_of_branch_nodes());
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Level of branch nodes is: {}", global_tree->get_level_of_branch_nodes());
 
     for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
         const auto& position = neuron_positions[neuron_id.get_neuron_id()];
@@ -170,7 +170,7 @@ void Simulation::initialize() {
 
     global_tree->initializes_leaf_nodes(number_local_neurons);
 
-    LogFiles::print_message_rank(0, "Inserted a total of {} neurons", number_total_neurons);
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Inserted a total of {} neurons", number_total_neurons);
 
     if (algorithm_enum == AlgorithmEnum::BarnesHut) {
         auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutCell>>(global_tree);
@@ -235,8 +235,8 @@ void Simulation::initialize() {
     neurons->set_static_neurons(static_neurons);
     Timers::stop_and_add(TimerRegion::INITIALIZE_NETWORK_GRAPH);
 
-    LogFiles::print_message_rank(0, "Network graph created");
-    LogFiles::print_message_rank(0, "Synaptic elements initialized");
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Network graph created");
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Synaptic elements initialized");
 
     neurons->init_synaptic_elements();
 
@@ -466,23 +466,20 @@ void Simulation::simulate(const step_type number_steps) {
     // Stop timing simulation loop
     Timers::stop_and_add(TimerRegion::SIMULATION_LOOP);
 
-    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Final flush of neuron monitors");
-
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Final flush of neuron monitors");
     for (auto& monitor : *monitors) {
         monitor.flush_current_contents();
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Final flush of area monitors");
-
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Final flush of area monitors");
     for (auto& [area_id, area_monitor] : *area_monitors) {
         area_monitor.write_data_to_file();
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Print positions");
-
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Print positions");
     neurons->print_positions_to_log_file();
-    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Print area mapping");
 
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Print area mapping");
     neurons->print_area_mapping_to_log_file();
 }
 
@@ -492,7 +489,7 @@ void Simulation::finalize() const {
     const auto net_creations = total_synapse_creations - total_synapse_deletions;
     const auto previous_net_creations = delta_synapse_creations - delta_synapse_deletions;
 
-    LogFiles::print_message_rank(0,
+    LogFiles::print_message_rank(MPIRank::root_rank(),
         "Total up to now     (creations, deletions, net): {}\t{}\t{}\nDiff. from previous (creations, deletions, net): {}\t{}\t{}\nEND: {}",
         total_synapse_creations, total_synapse_deletions, net_creations,
         delta_synapse_creations, delta_synapse_deletions, previous_net_creations,

@@ -73,7 +73,7 @@ public:
             return RankNeuronId{ MPIRank(parsed_mpi_rank), NeuronID(neuron_id) };
         }
 
-        LogFiles::print_message_rank(0, "Failed to parse string to match the pattern <mpi_rank>:<neuron_id> : {}", description);
+        LogFiles::print_message_rank(MPIRank::root_rank(), "Failed to parse string to match the pattern <mpi_rank>:<neuron_id> : {}", description);
         return {};
     }
 

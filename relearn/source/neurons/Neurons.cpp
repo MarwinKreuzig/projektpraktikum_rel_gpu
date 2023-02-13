@@ -219,24 +219,24 @@ std::pair<size_t, CommunicationMap<SynapseDeletionRequest>> Neurons::disable_neu
     dendrites_exc->update_after_deletion(deleted_dend_ex_connections, local_neuron_ids);
     dendrites_inh->update_after_deletion(deleted_dend_in_connections, local_neuron_ids);
 
-    LogFiles::print_message_rank(0,
+    LogFiles::print_message_rank(MPIRank::root_rank(),
         "Deleted {} in-edges with and ({}, {}) out-edges (exc., inh.) within the deleted portion",
         number_deleted_edges_within,
         number_deleted_out_exc_edges_within,
         number_deleted_out_inh_edges_within);
 
-    LogFiles::print_message_rank(0,
+    LogFiles::print_message_rank(MPIRank::root_rank(),
         "Deleted {} in-edges and ({}, {}) out-edges  (exc., inh.) connecting to the outside",
         number_deleted_in_edges_from_outside,
         number_deleted_out_exc_edges_to_outside,
         number_deleted_out_inh_edges_to_outside);
 
-    LogFiles::print_message_rank(0,
+    LogFiles::print_message_rank(MPIRank::root_rank(),
         "Deleted ({},{}) in-edges (exc., inh.) and {} out-edges connecting to the other ranks",
         number_deleted_distant_in_exc, number_deleted_distant_in_inh,
         number_deleted_distant_out_axons);
 
-    LogFiles::print_message_rank(0,
+    LogFiles::print_message_rank(MPIRank::root_rank(),
         "Deleted {} in-edges and ({}, {}) out-edges (exc., inh.) altogether",
         number_deleted_edges_within + number_deleted_in_edges_from_outside,
         number_deleted_out_exc_edges_within + number_deleted_out_exc_edges_to_outside,
