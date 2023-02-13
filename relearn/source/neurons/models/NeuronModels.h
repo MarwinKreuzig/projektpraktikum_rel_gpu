@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <array>
+#include <boost/circular_buffer.hpp>
 #include <memory>
 #include <span>
 #include <utility>
@@ -81,10 +82,11 @@ public:
 
     enum FireRecorderPeriod {
         NeuronMonitor = 0,
-        AreaMonitor = 1
+        AreaMonitor = 1,
+        Plasticity = 2
     };
 
-    constexpr static size_t number_fire_recorders = 2;
+    constexpr static size_t number_fire_recorders = 3;
 
     /**
      * @brief Creates an object of type T wrapped inside an std::unique_ptr
@@ -125,6 +127,10 @@ public:
      */
     [[nodiscard]] std::span<const FiredStatus> get_fired() const noexcept {
         return fired;
+    }
+
+    [[nodiscard]] const boost::circular_buffer<FiredStatus>& get_fire_history(const NeuronID& neuron_id) {
+        return fire_history[neuron_id.get_neuron_id()];
     }
 
     /**
@@ -273,6 +279,8 @@ public:
         const auto local_neuron_id = neuron_id.get_neuron_id();
         fired[local_neuron_id] = new_value;
 
+        fire_history[local_neuron_id].push_back(new_value);
+
         if (new_value == FiredStatus::Fired) {
             for (int i = 0; i < number_fire_recorders; i++) {
                 fired_recorder[i][local_neuron_id]++;
@@ -280,6 +288,7 @@ public:
         }
     }
 
+    static constexpr unsigned int fire_history_length = 100;
     static constexpr unsigned int default_h{ 10 };
     static constexpr unsigned int min_h{ 1 };
     static constexpr unsigned int max_h{ 1000 };
@@ -344,6 +353,7 @@ private:
     std::vector<double> x{}; // The membrane potential (in equations usually v(t))
     std::array<std::vector<unsigned int>, number_fire_recorders> fired_recorder{}; // How often the neurons have spiked
     std::vector<FiredStatus> fired{}; // If the neuron fired in the current update step
+    std::vector<boost::circular_buffer<FiredStatus>> fire_history{};
 
     std::unique_ptr<SynapticInputCalculator> input_calculator{};
     std::unique_ptr<BackgroundActivityCalculator> background_calculator{};

@@ -60,6 +60,10 @@ void Simulation::set_calcium_calculator(std::unique_ptr<CalciumCalculator>&& cal
     calcium_calculator = std::move(calculator);
 }
 
+void Simulation::set_synapse_deletion_finder(std::unique_ptr<SynapseDeletionFinder>&& finder) noexcept {
+    synapse_deletion_finder = std::move(finder);
+}
+
 void Simulation::set_axons(std::shared_ptr<SynapticElements>&& se) noexcept {
     axons = std::move(se);
 }
@@ -123,7 +127,7 @@ void Simulation::initialize() {
     const auto my_rank = MPIWrapper::get_my_rank();
     RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank.get_rank());
 
-    neurons = std::make_shared<Neurons>(partition, std::move(neuron_models), std::move(calcium_calculator), axons, dendrites_ex, dendrites_in);
+    neurons = std::make_shared<Neurons>(partition, std::move(neuron_models), std::move(calcium_calculator), axons, dendrites_ex, dendrites_in, std::move(synapse_deletion_finder));
     neurons->init(number_local_neurons);
     NeuronMonitor::neurons_to_monitor = neurons;
 
@@ -135,6 +139,9 @@ void Simulation::initialize() {
     auto neuron_positions = neuron_to_subdomain_assignment->get_neuron_positions_in_subdomains();
     auto local_area_translator = neuron_to_subdomain_assignment->get_local_area_translator();
     auto signal_types = neuron_to_subdomain_assignment->get_neuron_types_in_subdomains();
+
+    global_area_mapper = std::make_shared<GlobalAreaMapper>(local_area_translator, MPIWrapper::get_num_ranks(), my_rank);
+
 
     RelearnException::check(neuron_positions.size() == number_local_neurons, "Simulation::initialize: neuron_positions had the wrong size");
     RelearnException::check(local_area_translator->get_number_neurons_in_total() == number_local_neurons, "Simulation::initialize: neuron_id_vs_area_id had the wrong size {} != {}", local_area_translator->get_number_neurons_in_total(), number_local_neurons);
@@ -217,7 +224,7 @@ void Simulation::initialize() {
             }
             auto path = dir / (MPIWrapper::get_my_rank_str() + "_area_" + std::to_string(area_id) + ".csv");
             area_monitors->insert(
-                    std::make_pair(area_id, AreaMonitor(this, area_id, area_name, my_rank.get_rank(), path)));
+                    std::make_pair(area_id, AreaMonitor(this, global_area_mapper, area_id, area_name, my_rank.get_rank(), path)));
         }
     }
 
@@ -310,6 +317,20 @@ void Simulation::simulate(const step_type number_steps) {
                 area_monitor.prepare_recording();
             }
 
+            for (const NeuronID &neuron_id : NeuronID::range(neurons->get_number_neurons())) {
+                if(neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
+                    continue;
+                }
+                const auto& area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(neuron_id.get_neuron_id());
+                if (!area_monitors->contains(area_id)) {
+                    continue;
+                }
+                auto& area_monitor = area_monitors->at(area_id);
+                    area_monitor.request_data(neuron_id);
+            }
+
+            global_area_mapper->exchange_requests();
+
             for (NeuronID neuron_id : NeuronID::range(neurons->get_number_neurons())) {
                 if(neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
                     continue;
@@ -346,6 +367,8 @@ void Simulation::simulate(const step_type number_steps) {
             }
 
             neurons->get_neuron_model()->reset_fired_recorder(NeuronModel::FireRecorderPeriod::AreaMonitor);
+            neurons->reset_deletion_log();
+            neurons->reset_deletion_log();
 
             Timers::stop_and_add(TimerRegion::CAPTURE_AREA_MONITORS);
         }
@@ -383,6 +406,8 @@ void Simulation::simulate(const step_type number_steps) {
                 total_synapse_deletions += global_deletions;
                 total_synapse_creations += global_creations;
             }
+
+            neurons->get_neuron_model()->reset_fired_recorder(NeuronModel::Plasticity);
 
             Timers::start(TimerRegion::PRINT_IO);
 

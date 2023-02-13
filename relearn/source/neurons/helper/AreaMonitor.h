@@ -14,6 +14,7 @@
 #include "neurons/LocalAreaTranslator.h"
 #include "neurons/enums/SignalType.h"
 #include "util/TaggedID.h"
+#include "GlobalAreaMapper.h"
 
 #include <boost/functional/hash.hpp>
 
@@ -52,7 +53,7 @@ public:
      * @param area_name Name of the area that will be monitored
      * @param my_rank The mpi rank of this process
      */
-    AreaMonitor(Simulation* simulation, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name, int my_rank, std::filesystem::path& path);
+    AreaMonitor(Simulation* simulation, std::shared_ptr<GlobalAreaMapper> global_area_mapper, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name, int my_rank, std::filesystem::path& path);
 
     /**
      * If a connected neuron is managed by another mpi rank. This area monitor cannot notify the other area about the connection to this area.
@@ -60,6 +61,8 @@ public:
      * @return Index i of the returned vector contains the information which shall be sent to mpi rank i. Each rank receives a vector of AreaConnections
      */
     [[nodiscard]] const std::vector<std::vector<AreaConnection>>& get_exchange_data() const;
+
+    void request_data(const NeuronID& neuron_id)  const ;
 
     /**
      * Add an ingoing connection to the area. This method shall be called by other area monitors with ingoing connections to this area
@@ -137,18 +140,22 @@ private:
     double fired_fraction = 0.0;
     size_t num_enabled_neurons = 0;
     using EnsembleConnections = std::unordered_map<std::pair<int, RelearnTypes::area_id>, ConnectionCount,
-        boost::hash<std::pair<int, RelearnTypes::area_id>>>;
+            boost::hash<std::pair<int, RelearnTypes::area_id>>>;
+    using EnsembleDeletions = std::unordered_map<std::pair<int, RelearnTypes::area_id>, long,
+            boost::hash<std::pair<int, RelearnTypes::area_id>>>;
 
     /**
      * For current logging step: Maps for each ensemble the number of connections
      */
     EnsembleConnections connections;
+    EnsembleDeletions deletions;
 
     /**
      * Complete data of all earlier logging steps
      */
-    std::vector<std::tuple<EnsembleConnections, double, double, double, double, double, double, double, double, size_t>> data;
+    std::vector<std::tuple<EnsembleConnections, EnsembleDeletions, double, double, double, double, double, double, double, double, size_t>> data;
 
     std::vector<std::vector<AreaConnection>> mpi_data{};
+    std::shared_ptr<GlobalAreaMapper> global_area_mapper{};
     void write_header();
 };

@@ -32,9 +32,11 @@ TEST_F(NeuronsTest, testNeuronsConstructor) {
     auto dends_ex = std::make_unique<SynapticElements>(ElementType::Dendrite, 0.2);
     auto dends_in = std::make_unique<SynapticElements>(ElementType::Dendrite, 0.2);
     auto axs = std::make_unique<SynapticElements>(ElementType::Axon, 0.2);
+    auto synapse_deletion_finder = std::make_unique<RandomSynapseDeletionFinder>();
+
 
     Neurons neurons{partition, std::move(model), std::move(calcium), std::move(axs), std::move(dends_ex),
-                    std::move(dends_in)};
+                    std::move(dends_in), std::move(synapse_deletion_finder)};
 }
 
 TEST_F(NeuronsTest, testSignalTypeCheck) {
@@ -127,9 +129,10 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
     auto dends_ex = std::make_unique<SynapticElements>(ElementType::Dendrite, 0.2);
     auto dends_in = std::make_unique<SynapticElements>(ElementType::Dendrite, 0.2);
     auto axs = std::make_unique<SynapticElements>(ElementType::Axon, 0.2);
+    auto synapse_deletion_finder = std::make_unique<RandomSynapseDeletionFinder>();
 
     Neurons neurons{partition, std::move(model), std::move(calcium), std::move(axs), std::move(dends_ex),
-                    std::move(dends_in)};
+                    std::move(dends_in), std::move(synapse_deletion_finder)};
 
     auto network_graph_static = std::make_shared<NetworkGraph>(num_neurons, MPIRank::root_rank());
     auto network_graph_plastic = std::make_shared<NetworkGraph>(num_neurons, MPIRank::root_rank());

@@ -35,8 +35,9 @@ protected:
         auto dends_ex = std::make_unique<SynapticElements>(ElementType::Dendrite, 0.2);
         auto dends_in = std::make_unique<SynapticElements>(ElementType::Dendrite, 0.2);
         auto axs = std::make_unique<SynapticElements>(ElementType::Axon, 0.2);
+        auto synapse_deletion_finder = std::make_unique<RandomSynapseDeletionFinder>();
 
-        Neurons neurons{ partition, std::move(model), std::move(calcium), std::move(axs), std::move(dends_ex), std::move(dends_in) };
+        Neurons neurons{ partition, std::move(model), std::move(calcium), std::move(axs), std::move(dends_ex), std::move(dends_in), std::move(synapse_deletion_finder) };
         return neurons;
     }
 };

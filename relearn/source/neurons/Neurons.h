@@ -25,6 +25,7 @@
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "neurons/helper/SynapseDeletionRequests.h"
+#include "neurons/SynapsesDeletionFinder.h"
 #include "util/RelearnException.h"
 #include "util/StatisticalMeasures.h"
 
@@ -34,6 +35,7 @@
 #include <tuple>
 #include <vector>
 
+class AreaMonitor;
 class Essentials;
 class LocalAreaTranslator;
 class NetworkGraph;
@@ -46,6 +48,7 @@ class Partition;
  */
 class Neurons {
     friend class NeuronMonitor;
+    friend class AreaMonitor;
 
 public:
     using step_type = RelearnTypes::step_type;
@@ -70,13 +73,15 @@ public:
         std::unique_ptr<CalciumCalculator> calculator_ptr,
         std::shared_ptr<Axons> axons_ptr,
         std::shared_ptr<DendritesExcitatory> dendrites_ex_ptr,
-        std::shared_ptr<DendritesInhibitory> dendrites_in_ptr)
+        std::shared_ptr<DendritesInhibitory> dendrites_in_ptr,
+        std::unique_ptr<SynapseDeletionFinder> synapse_deletion_finder)
         : partition(std::move(partition))
         , neuron_model(std::move(model_ptr))
         , calcium_calculator(std::move(calculator_ptr))
         , axons(std::move(axons_ptr))
         , dendrites_exc(std::move(dendrites_ex_ptr))
-        , dendrites_inh(std::move(dendrites_in_ptr)) {
+        , dendrites_inh(std::move(dendrites_in_ptr))
+        , synapse_deletion_finder(std::move(synapse_deletion_finder)) {
 
         const bool all_filled = this->partition && neuron_model && calcium_calculator && axons && dendrites_exc && dendrites_inh;
         RelearnException::check(all_filled, "Neurons::Neurons: Neurons was constructed with some null arguments");
@@ -225,7 +230,7 @@ public:
      * @brief Returns a constant reference to the neuron model
      * @return The neuron model for the neurons
      */
-    [[nodiscard]] const std::unique_ptr<NeuronModel>& get_neuron_model() const noexcept {
+    [[nodiscard]] const std::shared_ptr<NeuronModel>& get_neuron_model() const noexcept {
         return neuron_model;
     }
 
@@ -452,6 +457,11 @@ public:
      */
     [[nodiscard]] size_t delete_disabled_distant_synapses(const CommunicationMap<SynapseDeletionRequest> &list, const MPIRank& my_rank);
 
+    void reset_deletion_log() {
+        deletions_log.clear();
+        deletions_log.resize(number_neurons, {});
+    }
+
 private:
     [[nodiscard]] StatisticalMeasures global_statistics(std::span<const double> local_values, MPIRank root, std::span<const UpdateStatus> disable_flags) const;
 
@@ -471,8 +481,6 @@ private:
 
     [[nodiscard]] CommunicationMap<SynapseDeletionRequest> delete_synapses_find_synapses(const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete);
 
-    [[nodiscard]] std::vector<RankNeuronId> delete_synapses_find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete);
-
     [[nodiscard]] size_t delete_synapses_commit_deletions(const CommunicationMap<SynapseDeletionRequest>& list,  const MPIRank& my_rank);
 
     [[nodiscard]] size_t create_synapses();
@@ -489,14 +497,18 @@ private:
     std::shared_ptr<NetworkGraph> network_graph_plastic{};
     std::shared_ptr<NetworkGraph> network_graph_static{};
 
-    std::unique_ptr<NeuronModel> neuron_model{};
+    std::shared_ptr<NeuronModel> neuron_model{};
     std::unique_ptr<CalciumCalculator> calcium_calculator{};
 
     std::shared_ptr<Axons> axons{};
     std::shared_ptr<DendritesExcitatory> dendrites_exc{};
     std::shared_ptr<DendritesInhibitory> dendrites_inh{};
 
+    std::unique_ptr<SynapseDeletionFinder> synapse_deletion_finder{};
+
     std::vector<UpdateStatus> disable_flags{};
+
+    std::vector<std::vector<RankNeuronId>> deletions_log{};
 
     std::shared_ptr<NeuronsExtraInfo> extra_info{ std::make_shared<NeuronsExtraInfo>() };
 };
