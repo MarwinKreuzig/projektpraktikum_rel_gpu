@@ -54,22 +54,22 @@ public:
         const auto& synapse_creation_requests_outgoing = find_target_neurons(number_neurons);
         Timers::stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
 
-        Timers::start(TimerRegion::CREATE_SYNAPSES_EXCHANGE_REQUESTS);
+        Timers::start(TimerRegion::EXCHANGE_CREATION_REQUESTS);
         const auto& synapse_creation_requests_incoming = MPIWrapper::exchange_requests(synapse_creation_requests_outgoing);
-        Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_EXCHANGE_REQUESTS);
+        Timers::stop_and_add(TimerRegion::EXCHANGE_CREATION_REQUESTS);
 
-        Timers::start(TimerRegion::CREATE_SYNAPSES_PROCESS_REQUESTS);
+        Timers::start(TimerRegion::PROCESS_CREATION_REQUESTS);
         auto [responses_outgoing, synapses] = process_requests(synapse_creation_requests_incoming);
         auto& [local_synapses, distant_in_synapses] = synapses;
-        Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_PROCESS_REQUESTS);
+        Timers::stop_and_add(TimerRegion::PROCESS_CREATION_REQUESTS);
 
-        Timers::start(TimerRegion::CREATE_SYNAPSES_EXCHANGE_RESPONSES);
+        Timers::start(TimerRegion::CREATE_CREATION_RESPONSES);
         const auto& responses_incoming = MPIWrapper::exchange_requests(responses_outgoing);
-        Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_EXCHANGE_RESPONSES);
+        Timers::stop_and_add(TimerRegion::CREATE_CREATION_RESPONSES);
 
-        Timers::start(TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES);
+        Timers::start(TimerRegion::PROCESS_CREATION_RESPONSES);
         auto out_synapses = process_responses(synapse_creation_requests_outgoing, responses_incoming);
-        Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES);
+        Timers::stop_and_add(TimerRegion::PROCESS_CREATION_RESPONSES);
 
         Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES);
 
@@ -134,22 +134,22 @@ public:
         const auto& synapse_creation_requests_outgoing = find_target_neurons(number_neurons);
         Timers::stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
 
-        Timers::start(TimerRegion::CREATE_SYNAPSES_EXCHANGE_REQUESTS);
+        Timers::start(TimerRegion::EXCHANGE_CREATION_REQUESTS);
         const auto& synapse_creation_requests_incoming = MPIWrapper::exchange_requests(synapse_creation_requests_outgoing);
-        Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_EXCHANGE_REQUESTS);
+        Timers::stop_and_add(TimerRegion::EXCHANGE_CREATION_REQUESTS);
 
-        Timers::start(TimerRegion::CREATE_SYNAPSES_PROCESS_REQUESTS);
+        Timers::start(TimerRegion::PROCESS_CREATION_REQUESTS);
         auto [responses_outgoing, synapses] = process_requests(synapse_creation_requests_incoming);
         auto& [local_synapses, distant_out_synapses] = synapses;
-        Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_PROCESS_REQUESTS);
+        Timers::stop_and_add(TimerRegion::PROCESS_CREATION_REQUESTS);
 
-        Timers::start(TimerRegion::CREATE_SYNAPSES_EXCHANGE_RESPONSES);
+        Timers::start(TimerRegion::CREATE_CREATION_RESPONSES);
         const auto& responses_incoming = MPIWrapper::exchange_requests(responses_outgoing);
-        Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_EXCHANGE_RESPONSES);
+        Timers::stop_and_add(TimerRegion::CREATE_CREATION_RESPONSES);
 
-        Timers::start(TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES);
+        Timers::start(TimerRegion::PROCESS_CREATION_RESPONSES);
         auto distant_in_synapses = process_responses(synapse_creation_requests_outgoing, responses_incoming);
-        Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES);
+        Timers::stop_and_add(TimerRegion::PROCESS_CREATION_RESPONSES);
 
         Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES);
 

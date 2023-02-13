@@ -145,6 +145,10 @@ public:
 
     static void unlock_window(MPIRank rank);
 
+    static void start_measuring_communication() noexcept {};
+
+    static void stop_measureing_communication() noexcept {};
+
     static uint64_t get_number_bytes_sent() noexcept {
         return 0;
     }

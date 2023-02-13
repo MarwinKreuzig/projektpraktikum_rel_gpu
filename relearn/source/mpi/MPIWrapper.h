@@ -145,7 +145,7 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs
      * @return The final result of the reduction
      */
-    [[nodiscard]] static uint64_t all_reduce_uint64(uint64_t value, ReduceFunction function);
+    [[nodiscard]] static std::uint64_t all_reduce_uint64(std::uint64_t value, ReduceFunction function);
 
     /**
      * @brief Reduces multiple values for every MPI rank with a reduction function such that the root_rank has the final result. The reduction is performed componentwise
@@ -342,7 +342,7 @@ public:
      * @exception Throws a RelearnException if an MPI error occurs, if number_elements <= 0, if offset < 0, or if target_rank < 0
      */
     template <typename AdditionalCellAttributes>
-    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const MPIRank target_rank, const uint64_t offset, const int number_elements) {
+    static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const MPIRank target_rank, const std::uint64_t offset, const int number_elements) {
         RelearnException::check(number_elements > 0, "MPIWrapper::download_octree_node: number_elements is not positive");
         RelearnException::check(target_rank.is_initialized(), "MPIWrapper::download_octree_node: target_rank is not initialized");
 
@@ -393,7 +393,7 @@ public:
      *      E.g., it only counts reduce once, so this is an underapproximation.
      * @return The number of bytes sent
      */
-    static uint64_t get_number_bytes_sent() noexcept {
+    static std::uint64_t get_number_bytes_sent() noexcept {
         return bytes_sent.load(std::memory_order::relaxed);
     }
 
@@ -402,7 +402,7 @@ public:
      *      E.g., it only counts reduce on the root rank, so this is an underapproximation.
      * @return The number of bytes received
      */
-    static uint64_t get_number_bytes_received() noexcept {
+    static std::uint64_t get_number_bytes_received() noexcept {
         return bytes_received.load(std::memory_order::relaxed);
     }
 
@@ -410,8 +410,22 @@ public:
      * @brief Returns the number of bytes accessed remotely in windows
      * @return The number of bytes remotely accessed
      */
-    static uint64_t get_number_bytes_remote_accessed() noexcept {
+    static std::uint64_t get_number_bytes_remote_accessed() noexcept {
         return bytes_remote.load(std::memory_order::relaxed);
+    }
+
+    /**
+     * @brief Starts measuring the communication that is sent, received, or remotely accessed
+     */
+    static void start_measuring_communication() noexcept {
+        measure_communication.test_and_set(std::memory_order::relaxed);
+    }
+
+    /**
+     * @brief Stops measuring the communication that is sent, received, or remotely accessed
+     */
+    static void stop_measureing_communication() noexcept {
+        measure_communication.clear(std::memory_order::relaxed);
     }
 
     /**
@@ -422,6 +436,24 @@ public:
 
 private:
     MPIWrapper() = default;
+
+    static void add_to_sent(std::uint64_t number_bytes) {
+        if (measure_communication.test(std::memory_order::relaxed)) {
+            bytes_sent.fetch_add(number_bytes, std::memory_order::relaxed);
+        }
+    }
+
+    static void add_to_received(std::uint64_t number_bytes) {
+        if (measure_communication.test(std::memory_order::relaxed)) {
+            bytes_received.fetch_add(number_bytes, std::memory_order::relaxed);
+        }
+    }
+
+    static void add_to_remotely_accessed(std::uint64_t number_bytes) {
+        if (measure_communication.test(std::memory_order::relaxed)) {
+            bytes_remote.fetch_add(number_bytes, std::memory_order::relaxed);
+        }
+    }
 
     [[nodiscard]] static size_t init_window(size_t size_requested, size_t octree_node_size);
 
@@ -445,7 +477,7 @@ private:
 
     [[nodiscard]] static int translate_lock_type(MPI_Locktype lock_type);
 
-    static void get(void* origin, size_t size, int target_rank, uint64_t displacement, int number_elements);
+    static void get(void* origin, size_t size, int target_rank, std::uint64_t displacement, int number_elements);
 
     static void reduce_int64(const int64_t* src, int64_t* dst, size_t size, ReduceFunction function, int root_rank);
 
@@ -502,9 +534,10 @@ private:
     // NOLINTNEXTLINE
     static inline std::string my_rank_str{ "-1" };
 
-    static inline std::atomic<uint64_t> bytes_sent{ 0 };
-    static inline std::atomic<uint64_t> bytes_received{ 0 };
-    static inline std::atomic<uint64_t> bytes_remote{ 0 };
+    static inline std::atomic<std::uint64_t> bytes_sent{ 0 };
+    static inline std::atomic<std::uint64_t> bytes_received{ 0 };
+    static inline std::atomic<std::uint64_t> bytes_remote{ 0 };
+    static inline std::atomic_flag measure_communication{};
 };
 
 #endif

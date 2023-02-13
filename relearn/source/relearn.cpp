@@ -177,6 +177,7 @@ int main(int argc, char** argv) {
      * Init MPI and store some MPI infos
      */
     MPIWrapper::init(argc, argv);
+    MPIWrapper::stop_measureing_communication();
 
     print_arguments(argc, argv);
     print_sizes();
