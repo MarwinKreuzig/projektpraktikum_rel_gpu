@@ -115,7 +115,9 @@ std::string LogFiles::get_specific_file_prefix() {
 
 void LogFiles::save_and_open_new(EventType type, const std::string& new_file_name, const std::string& directory_prefix) {
     const auto iterator = log_files.find(type);
-    RelearnException::check(iterator != log_files.end(), "The LogFiles don't contain the requested type");
+    if (iterator == log_files.end()) {
+        return;
+    }
 
     auto complete_path = (directory_prefix.empty() ? output_path : (output_path / directory_prefix)) / (general_prefix + get_specific_file_prefix() + "_" + new_file_name + ".txt");
 

@@ -171,7 +171,7 @@ public:
 
             std::size_t current_seed = seed;
             boost::hash_combine(current_seed, thread_id);
-            generator.seed(current_seed);
+            generator.seed(static_cast<unsigned int>(current_seed));
         }
     }
 

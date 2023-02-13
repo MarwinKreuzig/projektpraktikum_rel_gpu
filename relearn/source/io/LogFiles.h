@@ -96,10 +96,10 @@ public:
     static void init();
 
     /**
-     * @brief Saves the specified file, closes it, and opens a new file as sink with the specified file name
+     * @brief Saves the specified file, closes it, and opens a new file as sink with the specified file name.
+     *      Does nothing if the file is not present
      * @param type The event type whose file should be replaced
      * @param new_file_name The new file name
-     * @exception Throws a RelearnException if the specified event type didn't have a file associated with it
      */
     static void save_and_open_new(EventType type, const std::string& new_file_name, const std::string& directory_prefix = "");
 
