@@ -295,6 +295,7 @@ int main(int argc, char** argv) {
     const auto* flag_disable_printing_plasticity = app.add_flag("--no-print-plasticity", "Disables printing the plasticity changes to a file.");
     const auto* flag_disable_printing_calcium = app.add_flag("--no-print-calcium", "Disables printing the calcium changes to a file.");
     const auto* flag_disable_printing_overview = app.add_flag("--no-print-overview", "Disables printing the overviews to a file.");
+    const auto* flag_disable_printing_area_mapping = app.add_flag("--no-print-mapping", "Disables printing the area mapping to a file.");
 
     RelearnTypes::number_neurons_type number_neurons{};
     auto* const opt_num_neurons = app.add_option("-n,--num-neurons", number_neurons, "Number of neurons. This option only works with one MPI rank!");
@@ -634,6 +635,10 @@ int main(int argc, char** argv) {
         LogFiles::set_log_status(LogFiles::EventType::NeuronsOverviewCSV, true);
     }
 
+    if (static_cast<bool>(*flag_disable_printing_area_mapping)) {
+        LogFiles::set_log_status(LogFiles::EventType::AreaMapping, true);
+    }
+
     LogFiles::init();
 
     std::size_t current_seed = 0;
@@ -938,7 +943,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    LogFiles::print_message_rank(MPIRank::root_rank(), "Number of bytes send: {}, Number  of bytes received: {}, Number  of bytes accessed remotely: {}",
+    LogFiles::write_to_file(LogFiles::EventType::Cout, false, "Number of bytes send: {}, Number  of bytes received: {}, Number  of bytes accessed remotely: {}",
         MPIWrapper::get_number_bytes_sent(), MPIWrapper::get_number_bytes_received(), MPIWrapper::get_number_bytes_remote_accessed());
 
     MPIWrapper::finalize();
