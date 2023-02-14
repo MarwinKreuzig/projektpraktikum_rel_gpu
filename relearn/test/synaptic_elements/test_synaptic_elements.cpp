@@ -1308,7 +1308,7 @@ TEST_F(SynapticElementsTest, testCommitUpdatesException) {
     const auto minimum_calcium_to_grow = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
     const auto growth_factor = RandomAdapter::get_random_double<double>(1e-6, 100.0, mt);
 
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -1336,7 +1336,7 @@ TEST_F(SynapticElementsTest, testCommitUpdatesException) {
 
     synaptic_elements.update_number_elements_delta(calcium, target_calcium);
 
-    const auto number_too_small_disable_flags = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt).get_neuron_id();
+    const auto number_too_small_disable_flags = TaggedIdAdapter::get_random_neuron_id(number_neurons - 1, mt).get_neuron_id() + 1;
     const auto number_too_large_disable_flags = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt).get_neuron_id() + number_neurons + 1;
 
     auto extra_info_too_small = std::make_shared<NeuronsExtraInfo>();
