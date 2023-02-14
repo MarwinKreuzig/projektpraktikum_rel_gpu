@@ -288,7 +288,7 @@ public:
         }
     }
 
-    static constexpr unsigned int fire_history_length = 100;
+    static constexpr unsigned int fire_history_length = 1000;
     static constexpr unsigned int default_h{ 10 };
     static constexpr unsigned int min_h{ 1 };
     static constexpr unsigned int max_h{ 1000 };
