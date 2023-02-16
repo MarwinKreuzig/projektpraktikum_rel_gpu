@@ -134,6 +134,16 @@ public:
     }
 
     /**
+     * @brief Flushes the associated file if it exists
+     * @param type The event type which should be flushed
+     */
+    static void flush_file(const EventType type) {
+        if (auto iterator = log_files.find(type); iterator != log_files.end()) {
+            iterator->second->flush();
+        }
+    }
+
+    /**
      * @brief Write the message into the file which is associated with the type.
      *      Optionally prints the message also to std::cout. The message can have place-holders of the form "{}", which are filled with additional arguments in the order of occurrence.
      *      If the log is disabled, nothing is written to the file (but to std::cout if specified so).
