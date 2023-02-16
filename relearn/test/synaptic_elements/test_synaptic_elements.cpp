@@ -19,6 +19,7 @@
 #include "neurons/NeuronsExtraInfo.h"
 #include "neurons/models/SynapticElements.h"
 #include "neurons/enums/UpdateStatus.h"
+#include "util/Random.h"
 
 #include <numeric>
 #include <sstream>

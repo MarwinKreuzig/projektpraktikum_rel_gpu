@@ -22,6 +22,7 @@
 #include "sim/NeuronToSubdomainAssignment.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
+#include "util/Random.h"
 #include "util/RelearnException.h"
 #include "util/Timers.h"
 

@@ -11,6 +11,46 @@
 #include "SynapticElements.h"
 
 #include "neurons/NeuronsExtraInfo.h"
+#include "util/Random.h"
+
+void SynapticElements::init(const number_neurons_type number_neurons) {
+    size = number_neurons;
+
+    grown_elements.resize(size);
+
+    if (initial_vacant_elements_lower_bound < initial_vacant_elements_upper_bound) {
+        RandomHolder::fill(RandomHolderKey::SynapticElements, grown_elements.begin(), grown_elements.end(), initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
+    } else if (initial_vacant_elements_lower_bound == initial_vacant_elements_upper_bound) {
+        std::ranges::fill(grown_elements, initial_vacant_elements_lower_bound);
+    } else {
+        RelearnException::fail("SynapticElements::init: Should initialize synaptic elements with values between in the wrong order (lower is larger than upper)");
+    }
+
+    connected_elements.resize(size, 0);
+    deltas_since_last_update.resize(size, 0.0);
+    signal_types.resize(size);
+}
+
+void SynapticElements::create_neurons(const number_neurons_type creation_count) {
+    const auto current_size = size;
+    const auto new_size = current_size + creation_count;
+
+    grown_elements.resize(new_size);
+
+    if (initial_vacant_elements_lower_bound < initial_vacant_elements_upper_bound) {
+        RandomHolder::fill(RandomHolderKey::SynapticElements, grown_elements.begin() + static_cast<std::int64_t>(current_size), grown_elements.end(), initial_vacant_elements_lower_bound, initial_vacant_elements_upper_bound);
+    } else if (initial_vacant_elements_lower_bound == initial_vacant_elements_upper_bound) {
+        std::fill(grown_elements.begin() + static_cast<std::int64_t>(current_size), grown_elements.end(), initial_vacant_elements_lower_bound);
+    } else {
+        RelearnException::fail("SynapticElements::create_neurons: Should initialize synaptic elements with values between in the wrong order (lower is larger than upper)");
+    }
+
+    connected_elements.resize(new_size, 0);
+    deltas_since_last_update.resize(new_size, 0.0);
+    signal_types.resize(new_size);
+
+    size = new_size;
+}
 
 std::pair<unsigned int, std::vector<unsigned int>> SynapticElements::commit_updates() {
     const auto& disable_flags = extra_infos->get_disable_flags();
@@ -142,7 +182,7 @@ unsigned int SynapticElements::update_number_elements(const NeuronID neuron_id) 
 
     const auto deleted_counts = current_connected_count - new_connected_count;
 
-    RelearnException::check(deleted_counts >= 0.0, "SynapticElements::update_number_elements:  deleted was negative");
+    RelearnException::check(deleted_counts >= 0.0, "SynapticElements::update_number_elements: deleted was negative");
     const auto num_delete_connected = static_cast<unsigned int>(deleted_counts);
 
     return num_delete_connected;
