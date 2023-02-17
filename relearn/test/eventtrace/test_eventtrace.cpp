@@ -103,7 +103,7 @@ TEST_F(EventTraceTest, testDurationBeginCategoriesPrint) {
 }
 
 TEST_F(EventTraceTest, testDurationBeginCategoriesArgumentsPrint) {
-    constexpr static auto expected_output = "{\"name\": \"this-name-123\", \"ph\": \"B\", \"pid\": 65, \"tid\": 135, \"ts\": 1236.05, \"cat\": \"sync,async\", \"args\": {\"arg1\": val1, \"arg3\": val3}}";
+    constexpr static auto expected_output = "{\"name\": \"this-name-123\", \"ph\": \"B\", \"pid\": 65, \"tid\": 135, \"ts\": 1236.05, \"cat\": \"async,sync\", \"args\": {\"arg1\": val1, \"arg3\": val3}}";
 
     const auto event_trace = EventTrace::create_duration_begin_event("this-name-123", { EventCategory::sync, EventCategory::async }, 1236.05, 65, 135, { { "arg1", "val1" }, { "arg3", "val3" } });
 

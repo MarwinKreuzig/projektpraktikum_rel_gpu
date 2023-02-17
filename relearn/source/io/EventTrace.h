@@ -16,7 +16,7 @@
 #include <optional>
 #include <ostream>
 #include <string>
-#include <unordered_set>
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -25,10 +25,10 @@
  * These are custom an can be extended
  */
 enum class EventCategory {
-    mpi,
-    calculation,
     async,
-    sync
+    calculation,
+    mpi,
+    sync,
 };
 
 /**
@@ -214,7 +214,7 @@ struct fmt::formatter<InstantEventScope> : ostream_formatter { };
 
 class EventTrace {
 public:
-    static EventTrace create_duration_begin_event(std::string&& name, std::unordered_set<EventCategory>&& categories,
+    static EventTrace create_duration_begin_event(std::string&& name, std::set<EventCategory>&& categories,
         const double tracing_clock, const std::uint64_t process_id, const std::uint64_t thread_id, std::vector<std::pair<std::string, std::string>>&& args) {
         return EventTrace(std::move(name), std::move(categories), EventPhase::DurationBegin, {}, tracing_clock, process_id, thread_id, std::move(args), {});
     }
@@ -223,23 +223,23 @@ public:
         return EventTrace({}, {}, EventPhase::DurationEnd, {}, tracing_clock, process_id, thread_id, {}, {});
     }
 
-    static EventTrace create_complete_event(std::string&& name, std::unordered_set<EventCategory>&& categories, const double duration,
+    static EventTrace create_complete_event(std::string&& name, std::set<EventCategory>&& categories, const double duration,
         const double tracing_clock, const std::uint64_t process_id, const std::uint64_t thread_id, std::vector<std::pair<std::string, std::string>>&& args) {
         return EventTrace(std::move(name), std::move(categories), EventPhase::Complete, {}, tracing_clock, process_id, thread_id, std::move(args), duration);
     }
 
-    static EventTrace create_instant_event(std::string&& name, std::unordered_set<EventCategory>&& categories, const InstantEventScope scope,
+    static EventTrace create_instant_event(std::string&& name, std::set<EventCategory>&& categories, const InstantEventScope scope,
         const double tracing_clock, const std::uint64_t process_id, const std::uint64_t thread_id, std::vector<std::pair<std::string, std::string>>&& args) {
         return EventTrace(std::move(name), std::move(categories), EventPhase::Instant, scope, tracing_clock, process_id, thread_id, std::move(args), {});
     }
 
-    static EventTrace create_counter_event(std::string&& name, std::unordered_set<EventCategory>&& categories,
+    static EventTrace create_counter_event(std::string&& name, std::set<EventCategory>&& categories,
         const double tracing_clock, const std::uint64_t process_id, const std::uint64_t thread_id, std::vector<std::pair<std::string, std::string>>&& args) {
         return EventTrace(std::move(name), std::move(categories), EventPhase::Counter, {}, tracing_clock, process_id, thread_id, std::move(args), {});
     }
 
 private:
-    EventTrace(std::optional<std::string>&& _name, std::unordered_set<EventCategory>&& _categories, const EventPhase _phase,
+    EventTrace(std::optional<std::string>&& _name, std::set<EventCategory>&& _categories, const EventPhase _phase,
         std::optional<InstantEventScope>&& _scope, const double _tracing_clock, const std::uint64_t _process_id,
         const std::uint64_t _thread_id, std::vector<std::pair<std::string, std::string>>&& _arguments, std::optional<double>&& _duration)
         : name(std::move(_name))
@@ -253,7 +253,7 @@ private:
         , duration(std::move(_duration)) { }
 
     std::optional<std::string> name{};
-    std::unordered_set<EventCategory> categories{};
+    std::set<EventCategory> categories{};
     EventPhase phase{};
     std::optional<InstantEventScope> scope{};
     double tracing_clock{};

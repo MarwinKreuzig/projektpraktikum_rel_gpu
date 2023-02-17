@@ -10,6 +10,7 @@ endif()
 	
 if(WIN32) # Harness
 	list(APPEND relearn_harness_additional_files "adapter/connector/ConnectorAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/eventtrace/EventTraceAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/helper/RankNeuronIdAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/interval/IntervalAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/kernel/KernelAdapter.h")
