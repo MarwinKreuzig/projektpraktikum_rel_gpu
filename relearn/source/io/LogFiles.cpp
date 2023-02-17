@@ -9,6 +9,7 @@
  */
 
 #include "LogFiles.h"
+#include "io/EventTrace.h"
 #include "mpi/MPIWrapper.h"
 
 #include "spdlog/sinks/basic_file_sink.h"
@@ -53,6 +54,10 @@ void LogFiles::init() {
         if (!std::filesystem::exists(output_path / "network")) {
             std::filesystem::create_directory(output_path / "network");
         }
+
+        if (!std::filesystem::exists(output_path / "events")) {
+            std::filesystem::create_directory(output_path / "events");
+        }
     }
 
     // Wait until directory is created before any rank proceeds
@@ -72,6 +77,9 @@ void LogFiles::init() {
 
     // Create log file for positions on all ranks
     LogFiles::add_logfile(EventType::Positions, "positions", MPIRank::uninitialized_rank(), ".txt", "positions/");
+
+    // Create log file for positions on all ranks
+    LogFiles::add_logfile(EventType::Events, "events", MPIRank::uninitialized_rank(), ".txt", "events/");
 
     // Create log file for positions on all ranks
     LogFiles::add_logfile(EventType::AreaMapping, "area_mapping", MPIRank::uninitialized_rank(), ".txt", "area_mapping/");
@@ -109,6 +117,15 @@ void LogFiles::init() {
     initialized = true;
 }
 
+void LogFiles::add_event_trace(const EventTrace& event) {
+    const auto iterator = log_files.find(EventType::Events);
+    if (iterator == log_files.end()) {
+        return;
+    }
+
+    iterator->second->info(event);
+}
+
 std::string LogFiles::get_specific_file_prefix() {
     return MPIWrapper::get_my_rank_str();
 }
@@ -131,10 +148,6 @@ void LogFiles::save_and_open_new(EventType type, const std::string& new_file_nam
 }
 
 void LogFiles::add_logfile(const EventType type, const std::string& file_name, const MPIRank rank, const std::string& file_ending, const std::string& directory_prefix) {
-    if (disable) {
-        return;
-    }
-
     if (do_i_print(type, rank)) {
         auto complete_path = (directory_prefix.empty() ? output_path : (output_path / directory_prefix)) / (general_prefix + get_specific_file_prefix() + "_" + file_name + file_ending);
         auto logger = spdlog::basic_logger_mt(file_name, complete_path.string());

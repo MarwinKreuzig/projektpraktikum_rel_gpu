@@ -23,6 +23,8 @@
 #include <type_traits>
 #include <utility>
 
+class EventTrace;
+
 /**
  * This class provides a static interface that allows for writing log messages to predefined files.
  * The path can be set and the filename's prefix can be chosen freely.
@@ -56,6 +58,7 @@ public:
         ExtremeCalciumValues,
         SynapticInput,
         AreaMapping,
+        Events,
     };
 
     /**
@@ -184,6 +187,8 @@ public:
             write_to_file(LogFiles::EventType::Cout, true, "[INFO:Rank {}] {}", get_my_rank_str(), fmt::format(fmt::runtime(std::forward<FormatString>(format)), std::forward<Args>(args)...));
         }
     }
+
+    static void add_event_trace(const EventTrace& event);
 
 private:
     using Logger = std::shared_ptr<spdlog::logger>;
