@@ -58,6 +58,18 @@ void LogFiles::init() {
         if (!std::filesystem::exists(output_path / "events")) {
             std::filesystem::create_directory(output_path / "events");
         }
+
+        if (!std::filesystem::exists(output_path / "timers")) {
+            std::filesystem::create_directory(output_path / "timers");
+        }
+
+        if (!std::filesystem::exists(output_path / "changes")) {
+            std::filesystem::create_directory(output_path / "changes");
+        }
+
+        if (!std::filesystem::exists(output_path / "cout")) {
+            std::filesystem::create_directory(output_path / "cout");
+        } 
     }
 
     // Wait until directory is created before any rank proceeds
@@ -71,7 +83,6 @@ void LogFiles::init() {
     LogFiles::add_logfile(EventType::Sums, "sums", MPIRank::root_rank());
 
     // Create log file for network on all ranks
-    // LogFiles::add_logfile(EventType::Network, "network", MPIRank::uninitialized_rank());
     LogFiles::add_logfile(EventType::InNetwork, "in_network", MPIRank::uninitialized_rank(), ".txt", "network/");
     LogFiles::add_logfile(EventType::OutNetwork, "out_network", MPIRank::uninitialized_rank(), ".txt", "network/");
 
@@ -85,20 +96,20 @@ void LogFiles::init() {
     LogFiles::add_logfile(EventType::AreaMapping, "area_mapping", MPIRank::uninitialized_rank(), ".txt", "area_mapping/");
 
     // Create log file for std::cout
-    LogFiles::add_logfile(EventType::Cout, "stdcout", MPIRank::uninitialized_rank());
+    LogFiles::add_logfile(EventType::Cout, "stdcout", MPIRank::uninitialized_rank(), ".txt", "cout/");
 
     // Create log file for the timers
     LogFiles::add_logfile(EventType::Timers, "timers", MPIRank::root_rank());
 
     // Create log file for the local timers
-    LogFiles::add_logfile(EventType::TimersLocal, "timers_local", MPIRank::uninitialized_rank());
+    LogFiles::add_logfile(EventType::TimersLocal, "timers_local", MPIRank::uninitialized_rank(), ".txt", "timers/");
 
     // Create log file for the synapse creation and deletion
     LogFiles::add_logfile(EventType::PlasticityUpdate, "plasticity_changes", MPIRank::root_rank());
     // LogFiles::add_logfile(EventType::PlasticityUpdateCSV, "plasticity_changes_csv", MPIRank::root_rank(), ".csv");
 
     // Create log file for the local synapse creation and deletion
-    LogFiles::add_logfile(EventType::PlasticityUpdateLocal, "plasticity_changes_local", MPIRank::uninitialized_rank());
+    LogFiles::add_logfile(EventType::PlasticityUpdateLocal, "plasticity_changes_local", MPIRank::uninitialized_rank(), ".txt", "changes/");
 
     // LogFiles::add_logfile(EventType::NetworkInInhibitoryHistogramLocal, "network_in_inhibitory_histogram_local", MPIRank::uninitialized_rank());
     // LogFiles::add_logfile(EventType::NetworkInExcitatoryHistogramLocal, "network_in_excitatory_histogram_local", MPIRank::uninitialized_rank());
