@@ -64,6 +64,8 @@ target_sources(
 		  
 		  connector/test_connector.cpp
 		  
+		  eventtrace/test_eventtrace.cpp
+		  
 		  fast_multipole_method/test_fast_multipole_method.cpp
 		  
 		  helper/test_distant_neuron_request.cpp
