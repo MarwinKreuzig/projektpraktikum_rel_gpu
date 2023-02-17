@@ -308,6 +308,8 @@ inline std::ostream& operator<<(std::ostream& out, const EventTrace& event) {
     }
 
     out << '}';
+
+    return out;
 }
 
 template <>

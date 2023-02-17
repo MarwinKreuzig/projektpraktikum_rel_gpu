@@ -612,7 +612,6 @@ int main(int argc, char** argv) {
     if (static_cast<bool>(*flag_disable_printing_network)) {
         LogFiles::set_log_status(LogFiles::EventType::InNetwork, true);
         LogFiles::set_log_status(LogFiles::EventType::OutNetwork, true);
-        LogFiles::set_log_status(LogFiles::EventType::Network, true);
         LogFiles::set_log_status(LogFiles::EventType::NetworkInExcitatoryHistogramLocal, true);
         LogFiles::set_log_status(LogFiles::EventType::NetworkInInhibitoryHistogramLocal, true);
         LogFiles::set_log_status(LogFiles::EventType::NetworkOutHistogramLocal, true);
