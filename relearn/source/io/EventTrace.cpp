@@ -1,0 +1,72 @@
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
+
+#include "EventTrace.h"
+
+#include "mpi/MPIWrapper.h"
+
+#include <omp.h>
+
+#include <chrono>
+
+EventTrace EventTrace::create_duration_begin_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args) {
+    const auto dur_since_epoch = std::chrono::system_clock::now().time_since_epoch();
+    const auto dur_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(dur_since_epoch).count();
+    const auto dur_in_ms = dur_in_ns / 1000000.0;
+
+    const auto process_id = static_cast<std::uint64_t>(MPIWrapper::get_my_rank().get_rank());
+    const auto thread_id = static_cast<std::uint64_t>(omp_get_thread_num());
+
+    return create_duration_begin_event(std::move(name), std::move(categories), dur_in_ms, process_id, thread_id, std::move(args));
+}
+
+EventTrace EventTrace::create_duration_end_event() {
+    const auto dur_since_epoch = std::chrono::system_clock::now().time_since_epoch();
+    const auto dur_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(dur_since_epoch).count();
+    const auto dur_in_ms = dur_in_ns / 1000000.0;
+
+    const auto process_id = static_cast<std::uint64_t>(MPIWrapper::get_my_rank().get_rank());
+    const auto thread_id = static_cast<std::uint64_t>(omp_get_thread_num());
+
+    return create_duration_end_event(dur_in_ms, process_id, thread_id);
+}
+
+EventTrace EventTrace::create_complete_event(std::string&& name, std::set<EventCategory>&& categories, const double duration, std::vector<std::pair<std::string, std::string>>&& args) {
+    const auto dur_since_epoch = std::chrono::system_clock::now().time_since_epoch();
+    const auto dur_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(dur_since_epoch).count();
+    const auto dur_in_ms = dur_in_ns / 1000000.0;
+
+    const auto process_id = static_cast<std::uint64_t>(MPIWrapper::get_my_rank().get_rank());
+    const auto thread_id = static_cast<std::uint64_t>(omp_get_thread_num());
+
+    return create_complete_event(std::move(name), std::move(categories), duration, dur_in_ms, process_id, thread_id, std::move(args));
+}
+
+EventTrace EventTrace::create_instant_event(std::string&& name, std::set<EventCategory>&& categories, const InstantEventScope scope, std::vector<std::pair<std::string, std::string>>&& args) {
+    const auto dur_since_epoch = std::chrono::system_clock::now().time_since_epoch();
+    const auto dur_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(dur_since_epoch).count();
+    const auto dur_in_ms = dur_in_ns / 1000000.0;
+
+    const auto process_id = static_cast<std::uint64_t>(MPIWrapper::get_my_rank().get_rank());
+    const auto thread_id = static_cast<std::uint64_t>(omp_get_thread_num());
+
+    return create_instant_event(std::move(name), std::move(categories), scope, dur_in_ms, process_id, thread_id, std::move(args));
+}
+
+EventTrace EventTrace::create_counter_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args) {
+    const auto dur_since_epoch = std::chrono::system_clock::now().time_since_epoch();
+    const auto dur_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(dur_since_epoch).count();
+    const auto dur_in_ms = dur_in_ns / 1000000.0;
+
+    const auto process_id = static_cast<std::uint64_t>(MPIWrapper::get_my_rank().get_rank());
+    const auto thread_id = static_cast<std::uint64_t>(omp_get_thread_num());
+
+    return create_counter_event(std::move(name), std::move(categories), dur_in_ms, process_id, thread_id, std::move(args));
+}
