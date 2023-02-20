@@ -14,7 +14,7 @@
 
 #include <sstream>
 
-TEST_F(EventTraceTest, testEventPhasePrint) {
+TEST_F(EventTest, testEventPhasePrint) {
     auto test = [](const EventPhase ep, const char expected) {
         std::stringstream ss{};
         ss << ep;
@@ -47,7 +47,7 @@ TEST_F(EventTraceTest, testEventPhasePrint) {
     test(EventPhase::ContextEnd, ')');
 }
 
-TEST_F(EventTraceTest, testInstantEventScopePrint) {
+TEST_F(EventTest, testInstantEventScopePrint) {
     auto test = [](const InstantEventScope es, const char expected) {
         std::stringstream ss{};
         ss << es;
@@ -63,10 +63,10 @@ TEST_F(EventTraceTest, testInstantEventScopePrint) {
     test(InstantEventScope::Thread, 't');
 }
 
-TEST_F(EventTraceTest, testDurationBeginPrint) {
+TEST_F(EventTest, testDurationBeginPrint) {
     constexpr static auto expected_output = "{\"name\": \"this-name-123\", \"ph\": \"B\", \"pid\": 65, \"tid\": 135, \"ts\": 1236.05}";
 
-    const auto event_trace = EventTrace::create_duration_begin_event("this-name-123", {}, 1236.05, 65, 135, {});
+    const auto event_trace = Event::create_duration_begin_event("this-name-123", {}, 1236.05, 65, 135, {});
 
     std::stringstream ss{};
     ss << event_trace;
@@ -76,10 +76,10 @@ TEST_F(EventTraceTest, testDurationBeginPrint) {
     EXPECT_EQ(str, expected_output);
 }
 
-TEST_F(EventTraceTest, testDurationBeginArgumentsPrint) {
+TEST_F(EventTest, testDurationBeginArgumentsPrint) {
     constexpr static auto expected_output = "{\"name\": \"this-name-123\", \"ph\": \"B\", \"pid\": 65, \"tid\": 135, \"ts\": 1236.05, \"args\": {\"arg1\": val1, \"arg3\": val3}}";
 
-    const auto event_trace = EventTrace::create_duration_begin_event("this-name-123", {}, 1236.05, 65, 135, { { "arg1", "val1" }, { "arg3", "val3" } });
+    const auto event_trace = Event::create_duration_begin_event("this-name-123", {}, 1236.05, 65, 135, { { "arg1", "val1" }, { "arg3", "val3" } });
 
     std::stringstream ss{};
     ss << event_trace;
@@ -89,10 +89,10 @@ TEST_F(EventTraceTest, testDurationBeginArgumentsPrint) {
     EXPECT_EQ(str, expected_output);
 }
 
-TEST_F(EventTraceTest, testDurationBeginCategoriesPrint) {
+TEST_F(EventTest, testDurationBeginCategoriesPrint) {
     constexpr static auto expected_output = "{\"name\": \"this-name-123\", \"ph\": \"B\", \"pid\": 65, \"tid\": 135, \"ts\": 1236.05, \"cat\": \"async,sync\"}";
 
-    const auto event_trace = EventTrace::create_duration_begin_event("this-name-123", { EventCategory::async, EventCategory::sync }, 1236.05, 65, 135, {});
+    const auto event_trace = Event::create_duration_begin_event("this-name-123", { EventCategory::async, EventCategory::sync }, 1236.05, 65, 135, {});
 
     std::stringstream ss{};
     ss << event_trace;
@@ -102,10 +102,10 @@ TEST_F(EventTraceTest, testDurationBeginCategoriesPrint) {
     EXPECT_EQ(str, expected_output);
 }
 
-TEST_F(EventTraceTest, testDurationBeginCategoriesArgumentsPrint) {
+TEST_F(EventTest, testDurationBeginCategoriesArgumentsPrint) {
     constexpr static auto expected_output = "{\"name\": \"this-name-123\", \"ph\": \"B\", \"pid\": 65, \"tid\": 135, \"ts\": 1236.05, \"cat\": \"async,sync\", \"args\": {\"arg1\": val1, \"arg3\": val3}}";
 
-    const auto event_trace = EventTrace::create_duration_begin_event("this-name-123", { EventCategory::sync, EventCategory::async }, 1236.05, 65, 135, { { "arg1", "val1" }, { "arg3", "val3" } });
+    const auto event_trace = Event::create_duration_begin_event("this-name-123", { EventCategory::sync, EventCategory::async }, 1236.05, 65, 135, { { "arg1", "val1" }, { "arg3", "val3" } });
 
     std::stringstream ss{};
     ss << event_trace;
@@ -115,10 +115,10 @@ TEST_F(EventTraceTest, testDurationBeginCategoriesArgumentsPrint) {
     EXPECT_EQ(str, expected_output);
 }
 
-TEST_F(EventTraceTest, testDurationEndPrint) {
+TEST_F(EventTest, testDurationEndPrint) {
     constexpr static auto expected_output = "{\"ph\": \"E\", \"pid\": 159, \"tid\": 951, \"ts\": 65423365}";
 
-    const auto event_trace = EventTrace::create_duration_end_event(65423365.0, 159, 951);
+    const auto event_trace = Event::create_duration_end_event(65423365.0, 159, 951);
 
     std::stringstream ss{};
     ss << event_trace;
@@ -128,10 +128,10 @@ TEST_F(EventTraceTest, testDurationEndPrint) {
     EXPECT_EQ(str, expected_output);
 }
 
-TEST_F(EventTraceTest, testCounterPrint) {
+TEST_F(EventTest, testCounterPrint) {
     constexpr static auto expected_output = "{\"name\": \"that-name-123\", \"ph\": \"C\", \"pid\": 12, \"tid\": 0, \"ts\": 165}";
 
-    const auto event_trace = EventTrace::create_counter_event("that-name-123", {}, 165, 12, 0, {});
+    const auto event_trace = Event::create_counter_event("that-name-123", {}, 165, 12, 0, {});
 
     std::stringstream ss{};
     ss << event_trace;
@@ -141,10 +141,10 @@ TEST_F(EventTraceTest, testCounterPrint) {
     EXPECT_EQ(str, expected_output);
 }
 
-TEST_F(EventTraceTest, testCounterCategoriesPrint) {
+TEST_F(EventTest, testCounterCategoriesPrint) {
     constexpr static auto expected_output = "{\"name\": \"that-name-123\", \"ph\": \"C\", \"pid\": 12, \"tid\": 0, \"ts\": 165, \"cat\": \"mpi\"}";
 
-    const auto event_trace = EventTrace::create_counter_event("that-name-123", { EventCategory::mpi }, 165, 12, 0, {});
+    const auto event_trace = Event::create_counter_event("that-name-123", { EventCategory::mpi }, 165, 12, 0, {});
 
     std::stringstream ss{};
     ss << event_trace;
@@ -154,10 +154,10 @@ TEST_F(EventTraceTest, testCounterCategoriesPrint) {
     EXPECT_EQ(str, expected_output);
 }
 
-TEST_F(EventTraceTest, testCounterArgumentsPrint) {
+TEST_F(EventTest, testCounterArgumentsPrint) {
     constexpr static auto expected_output = "{\"name\": \"that-name-123\", \"ph\": \"C\", \"pid\": 12, \"tid\": 0, \"ts\": 165, \"args\": {\"arg1\": val1, \"arg3\": val3}}";
 
-    const auto event_trace = EventTrace::create_counter_event("that-name-123", {}, 165, 12, 0, { { "arg1", "val1" }, { "arg3", "val3" } });
+    const auto event_trace = Event::create_counter_event("that-name-123", {}, 165, 12, 0, { { "arg1", "val1" }, { "arg3", "val3" } });
 
     std::stringstream ss{};
     ss << event_trace;
@@ -167,10 +167,10 @@ TEST_F(EventTraceTest, testCounterArgumentsPrint) {
     EXPECT_EQ(str, expected_output);
 }
 
-TEST_F(EventTraceTest, testCounterCategoriesArgumentsPrint) {
+TEST_F(EventTest, testCounterCategoriesArgumentsPrint) {
     constexpr static auto expected_output = "{\"name\": \"that-name-123\", \"ph\": \"C\", \"pid\": 12, \"tid\": 0, \"ts\": 165, \"cat\": \"async,calculation,mpi\", \"args\": {\"arg1\": val1, \"arg3\": val3}}";
 
-    const auto event_trace = EventTrace::create_counter_event("that-name-123", { EventCategory::async, EventCategory::calculation, EventCategory::mpi }, 165, 12, 0, { { "arg1", "val1" }, { "arg3", "val3" } });
+    const auto event_trace = Event::create_counter_event("that-name-123", { EventCategory::async, EventCategory::calculation, EventCategory::mpi }, 165, 12, 0, { { "arg1", "val1" }, { "arg3", "val3" } });
 
     std::stringstream ss{};
     ss << event_trace;
@@ -180,10 +180,10 @@ TEST_F(EventTraceTest, testCounterCategoriesArgumentsPrint) {
     EXPECT_EQ(str, expected_output);
 }
 
-TEST_F(EventTraceTest, testInstantGlobalPrint) {
+TEST_F(EventTest, testInstantGlobalPrint) {
     constexpr static auto expected_output = "{\"name\": \"instant-753-name\", \"ph\": \"i\", \"pid\": 111, \"tid\": 56654, \"ts\": 999, \"s\": \"g\"}";
 
-    const auto event_trace = EventTrace::create_instant_event("instant-753-name", {}, InstantEventScope::Global, 999, 111, 56654, {});
+    const auto event_trace = Event::create_instant_event("instant-753-name", {}, InstantEventScope::Global, 999, 111, 56654, {});
 
     std::stringstream ss{};
     ss << event_trace;
@@ -193,10 +193,10 @@ TEST_F(EventTraceTest, testInstantGlobalPrint) {
     EXPECT_EQ(str, expected_output);
 }
 
-TEST_F(EventTraceTest, testInstantProcessPrint) {
+TEST_F(EventTest, testInstantProcessPrint) {
     constexpr static auto expected_output = "{\"name\": \"instant-7532-name\", \"ph\": \"i\", \"pid\": 1112, \"tid\": 562654, \"ts\": 9992, \"s\": \"p\"}";
 
-    const auto event_trace = EventTrace::create_instant_event("instant-7532-name", {}, InstantEventScope::Process, 9992, 1112, 562654, {});
+    const auto event_trace = Event::create_instant_event("instant-7532-name", {}, InstantEventScope::Process, 9992, 1112, 562654, {});
 
     std::stringstream ss{};
     ss << event_trace;
@@ -206,10 +206,10 @@ TEST_F(EventTraceTest, testInstantProcessPrint) {
     EXPECT_EQ(str, expected_output);
 }
 
-TEST_F(EventTraceTest, testInstantThreadPrint) {
+TEST_F(EventTest, testInstantThreadPrint) {
     constexpr static auto expected_output = "{\"name\": \"instant-7853-name\", \"ph\": \"i\", \"pid\": 8111, \"tid\": 856654, \"ts\": 8999, \"s\": \"t\"}";
 
-    const auto event_trace = EventTrace::create_instant_event("instant-7853-name", {}, InstantEventScope::Thread, 8999, 8111, 856654, {});
+    const auto event_trace = Event::create_instant_event("instant-7853-name", {}, InstantEventScope::Thread, 8999, 8111, 856654, {});
 
     std::stringstream ss{};
     ss << event_trace;
@@ -219,10 +219,10 @@ TEST_F(EventTraceTest, testInstantThreadPrint) {
     EXPECT_EQ(str, expected_output);
 }
 
-TEST_F(EventTraceTest, testInstantGlobalArgumentsPrint) {
+TEST_F(EventTest, testInstantGlobalArgumentsPrint) {
     constexpr static auto expected_output = "{\"name\": \"instant-753-name\", \"ph\": \"i\", \"pid\": 111, \"tid\": 56654, \"ts\": 999, \"s\": \"g\", \"args\": {\"arg1\": val1, \"arg3\": val3}}";
 
-    const auto event_trace = EventTrace::create_instant_event("instant-753-name", {}, InstantEventScope::Global, 999, 111, 56654, { { "arg1", "val1" }, { "arg3", "val3" } });
+    const auto event_trace = Event::create_instant_event("instant-753-name", {}, InstantEventScope::Global, 999, 111, 56654, { { "arg1", "val1" }, { "arg3", "val3" } });
 
     std::stringstream ss{};
     ss << event_trace;
@@ -232,10 +232,10 @@ TEST_F(EventTraceTest, testInstantGlobalArgumentsPrint) {
     EXPECT_EQ(str, expected_output);
 }
 
-TEST_F(EventTraceTest, testInstantProcessArgumentsPrint) {
+TEST_F(EventTest, testInstantProcessArgumentsPrint) {
     constexpr static auto expected_output = "{\"name\": \"instant-7532-name\", \"ph\": \"i\", \"pid\": 1112, \"tid\": 562654, \"ts\": 9992, \"s\": \"p\", \"args\": {\"arg1\": val1, \"arg3\": val3}}";
 
-    const auto event_trace = EventTrace::create_instant_event("instant-7532-name", {}, InstantEventScope::Process, 9992, 1112, 562654, { { "arg1", "val1" }, { "arg3", "val3" } });
+    const auto event_trace = Event::create_instant_event("instant-7532-name", {}, InstantEventScope::Process, 9992, 1112, 562654, { { "arg1", "val1" }, { "arg3", "val3" } });
 
     std::stringstream ss{};
     ss << event_trace;
@@ -245,10 +245,10 @@ TEST_F(EventTraceTest, testInstantProcessArgumentsPrint) {
     EXPECT_EQ(str, expected_output);
 }
 
-TEST_F(EventTraceTest, testInstantThreadArgumentsPrint) {
+TEST_F(EventTest, testInstantThreadArgumentsPrint) {
     constexpr static auto expected_output = "{\"name\": \"instant-7853-name\", \"ph\": \"i\", \"pid\": 8111, \"tid\": 856654, \"ts\": 8999, \"s\": \"t\", \"args\": {\"arg1\": val1, \"arg3\": val3}}";
 
-    const auto event_trace = EventTrace::create_instant_event("instant-7853-name", {}, InstantEventScope::Thread, 8999, 8111, 856654, { { "arg1", "val1" }, { "arg3", "val3" } });
+    const auto event_trace = Event::create_instant_event("instant-7853-name", {}, InstantEventScope::Thread, 8999, 8111, 856654, { { "arg1", "val1" }, { "arg3", "val3" } });
 
     std::stringstream ss{};
     ss << event_trace;
@@ -258,10 +258,10 @@ TEST_F(EventTraceTest, testInstantThreadArgumentsPrint) {
     EXPECT_EQ(str, expected_output);
 }
 
-TEST_F(EventTraceTest, testCompletionPrint) {
+TEST_F(EventTest, testCompletionPrint) {
     constexpr static auto expected_output = "{\"name\": \"9119-completion-name\", \"ph\": \"X\", \"pid\": 333, \"tid\": 555, \"ts\": 777.777, \"dur\": 963.369}";
 
-    const auto event_trace = EventTrace::create_complete_event("9119-completion-name", {}, 963.369, 777.777, 333, 555, {});
+    const auto event_trace = Event::create_complete_event("9119-completion-name", {}, 963.369, 777.777, 333, 555, {});
 
     std::stringstream ss{};
     ss << event_trace;
@@ -271,10 +271,10 @@ TEST_F(EventTraceTest, testCompletionPrint) {
     EXPECT_EQ(str, expected_output);
 }
 
-TEST_F(EventTraceTest, testCompletionArgumentsPrint) {
+TEST_F(EventTest, testCompletionArgumentsPrint) {
     constexpr static auto expected_output = "{\"name\": \"9119-completion-name\", \"ph\": \"X\", \"pid\": 3333, \"tid\": 5555, \"ts\": 7777.7777, \"dur\": 9630.0369, \"args\": {\"arg1\": val1, \"arg3\": val3}}";
 
-    const auto event_trace = EventTrace::create_complete_event("9119-completion-name", {}, 9630.0369, 7777.7777, 3333, 5555, { { "arg1", "val1" }, { "arg3", "val3" } });
+    const auto event_trace = Event::create_complete_event("9119-completion-name", {}, 9630.0369, 7777.7777, 3333, 5555, { { "arg1", "val1" }, { "arg3", "val3" } });
 
     std::stringstream ss{};
     ss << event_trace;

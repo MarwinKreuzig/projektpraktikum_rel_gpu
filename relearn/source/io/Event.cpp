@@ -16,7 +16,7 @@
 
 #include <chrono>
 
-EventTrace EventTrace::create_duration_begin_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args) {
+Event Event::create_duration_begin_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args) {
     const auto dur_since_epoch = std::chrono::system_clock::now().time_since_epoch();
     const auto dur_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(dur_since_epoch).count();
     const auto dur_in_ms = dur_in_ns / 1000000.0;
@@ -27,7 +27,7 @@ EventTrace EventTrace::create_duration_begin_event(std::string&& name, std::set<
     return create_duration_begin_event(std::move(name), std::move(categories), dur_in_ms, process_id, thread_id, std::move(args));
 }
 
-EventTrace EventTrace::create_duration_end_event() {
+Event Event::create_duration_end_event() {
     const auto dur_since_epoch = std::chrono::system_clock::now().time_since_epoch();
     const auto dur_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(dur_since_epoch).count();
     const auto dur_in_ms = dur_in_ns / 1000000.0;
@@ -38,7 +38,7 @@ EventTrace EventTrace::create_duration_end_event() {
     return create_duration_end_event(dur_in_ms, process_id, thread_id);
 }
 
-EventTrace EventTrace::create_complete_event(std::string&& name, std::set<EventCategory>&& categories, const double duration, std::vector<std::pair<std::string, std::string>>&& args) {
+Event Event::create_complete_event(std::string&& name, std::set<EventCategory>&& categories, const double duration, std::vector<std::pair<std::string, std::string>>&& args) {
     const auto dur_since_epoch = std::chrono::system_clock::now().time_since_epoch();
     const auto dur_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(dur_since_epoch).count();
     const auto dur_in_ms = dur_in_ns / 1000000.0;
@@ -49,7 +49,7 @@ EventTrace EventTrace::create_complete_event(std::string&& name, std::set<EventC
     return create_complete_event(std::move(name), std::move(categories), duration, dur_in_ms, process_id, thread_id, std::move(args));
 }
 
-EventTrace EventTrace::create_instant_event(std::string&& name, std::set<EventCategory>&& categories, const InstantEventScope scope, std::vector<std::pair<std::string, std::string>>&& args) {
+Event Event::create_instant_event(std::string&& name, std::set<EventCategory>&& categories, const InstantEventScope scope, std::vector<std::pair<std::string, std::string>>&& args) {
     const auto dur_since_epoch = std::chrono::system_clock::now().time_since_epoch();
     const auto dur_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(dur_since_epoch).count();
     const auto dur_in_ms = dur_in_ns / 1000000.0;
@@ -60,7 +60,7 @@ EventTrace EventTrace::create_instant_event(std::string&& name, std::set<EventCa
     return create_instant_event(std::move(name), std::move(categories), scope, dur_in_ms, process_id, thread_id, std::move(args));
 }
 
-EventTrace EventTrace::create_counter_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args) {
+Event Event::create_counter_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args) {
     const auto dur_since_epoch = std::chrono::system_clock::now().time_since_epoch();
     const auto dur_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(dur_since_epoch).count();
     const auto dur_in_ms = dur_in_ns / 1000000.0;

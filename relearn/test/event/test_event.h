@@ -12,5 +12,5 @@
 
 #include "RelearnTest.hpp"
 
-class EventTraceTest : public RelearnTest {
+class EventTest : public RelearnTest {
 };

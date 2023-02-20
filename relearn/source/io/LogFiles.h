@@ -23,7 +23,7 @@
 #include <type_traits>
 #include <utility>
 
-class EventTrace;
+class Event;
 
 /**
  * This class provides a static interface that allows for writing log messages to predefined files.
@@ -187,7 +187,7 @@ public:
         }
     }
 
-    static void add_event_trace(const EventTrace& event);
+    static void add_event_to_trace(const Event& event);
 
 private:
     using Logger = std::shared_ptr<spdlog::logger>;

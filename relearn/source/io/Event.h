@@ -224,7 +224,7 @@ struct fmt::formatter<InstantEventScope> : ostream_formatter { };
  * Provides the possibility to create events in the style of the Google Trace Event Format:
  * https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview
  */
-class EventTrace {
+class Event {
 public:
     /**
      * @brief Creates an event that signals the begin of some duration
@@ -236,9 +236,9 @@ public:
      * @param args The arguments for the event, can be empty
      * @return The created object that can be printed using operator<<
      */
-    static EventTrace create_duration_begin_event(std::string&& name, std::set<EventCategory>&& categories,
+    static Event create_duration_begin_event(std::string&& name, std::set<EventCategory>&& categories,
         const double tracing_clock, const std::uint64_t process_id, const std::uint64_t thread_id, std::vector<std::pair<std::string, std::string>>&& args) {
-        return EventTrace(std::move(name), std::move(categories), EventPhase::DurationBegin, {}, tracing_clock, process_id, thread_id, std::move(args), {});
+        return Event(std::move(name), std::move(categories), EventPhase::DurationBegin, {}, tracing_clock, process_id, thread_id, std::move(args), {});
     }
 
     /**
@@ -248,7 +248,7 @@ public:
      * @param args The arguments for the event, can be empty
      * @return The created object that can be printed using operator<<
      */
-    static EventTrace create_duration_begin_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args);
+    static Event create_duration_begin_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args);
 
     /**
      * @brief Creates an event that signals the end of some duration. Always ends the latest begun event
@@ -257,15 +257,15 @@ public:
      * @param thread_id The id of the thread to which the event belongs
      * @return The created object that can be printed using operator<<
      */
-    static EventTrace create_duration_end_event(const double tracing_clock, const std::uint64_t process_id, const std::uint64_t thread_id) {
-        return EventTrace({}, {}, EventPhase::DurationEnd, {}, tracing_clock, process_id, thread_id, {}, {});
+    static Event create_duration_end_event(const double tracing_clock, const std::uint64_t process_id, const std::uint64_t thread_id) {
+        return Event({}, {}, EventPhase::DurationEnd, {}, tracing_clock, process_id, thread_id, {}, {});
     }
 
     /**
      * @brief Creates an event that signals the end of some duration with default arguments for process-id, thread-id, and tracing-clock. Always ends the latest begun event
      * @return The created object that can be printed using operator<<
      */
-    static EventTrace create_duration_end_event();
+    static Event create_duration_end_event();
 
     /**
      * @brief Creates an event that signals the completion of some event (not a duration)
@@ -278,9 +278,9 @@ public:
      * @param args The arguments for the event, can be empty
      * @return The created object that can be printed using operator<<
      */
-    static EventTrace create_complete_event(std::string&& name, std::set<EventCategory>&& categories, const double duration,
+    static Event create_complete_event(std::string&& name, std::set<EventCategory>&& categories, const double duration,
         const double tracing_clock, const std::uint64_t process_id, const std::uint64_t thread_id, std::vector<std::pair<std::string, std::string>>&& args) {
-        return EventTrace(std::move(name), std::move(categories), EventPhase::Complete, {}, tracing_clock, process_id, thread_id, std::move(args), duration);
+        return Event(std::move(name), std::move(categories), EventPhase::Complete, {}, tracing_clock, process_id, thread_id, std::move(args), duration);
     }
 
     /**
@@ -291,7 +291,7 @@ public:
      * @param args The arguments for the event, can be empty
      * @return The created object that can be printed using operator<<
      */
-    static EventTrace create_complete_event(std::string&& name, std::set<EventCategory>&& categories, double duration, std::vector<std::pair<std::string, std::string>>&& args);
+    static Event create_complete_event(std::string&& name, std::set<EventCategory>&& categories, double duration, std::vector<std::pair<std::string, std::string>>&& args);
 
     /**
      * @brief Creates an event that signals same instant
@@ -304,9 +304,9 @@ public:
      * @param args The arguments for the event, can be empty
      * @return The created object that can be printed using operator<<
      */
-    static EventTrace create_instant_event(std::string&& name, std::set<EventCategory>&& categories, const InstantEventScope scope,
+    static Event create_instant_event(std::string&& name, std::set<EventCategory>&& categories, const InstantEventScope scope,
         const double tracing_clock, const std::uint64_t process_id, const std::uint64_t thread_id, std::vector<std::pair<std::string, std::string>>&& args) {
-        return EventTrace(std::move(name), std::move(categories), EventPhase::Instant, scope, tracing_clock, process_id, thread_id, std::move(args), {});
+        return Event(std::move(name), std::move(categories), EventPhase::Instant, scope, tracing_clock, process_id, thread_id, std::move(args), {});
     }
 
     /**
@@ -317,7 +317,7 @@ public:
      * @param args The arguments for the event, can be empty
      * @return The created object that can be printed using operator<<
      */
-    static EventTrace create_instant_event(std::string&& name, std::set<EventCategory>&& categories, InstantEventScope scope, std::vector<std::pair<std::string, std::string>>&& args);
+    static Event create_instant_event(std::string&& name, std::set<EventCategory>&& categories, InstantEventScope scope, std::vector<std::pair<std::string, std::string>>&& args);
 
     /**
      * @brief Creates an event that signals the change of some counter (values specified in args)
@@ -329,9 +329,9 @@ public:
      * @param args The arguments for the event, should not be empty
      * @return The created object that can be printed using operator<<
      */
-    static EventTrace create_counter_event(std::string&& name, std::set<EventCategory>&& categories,
+    static Event create_counter_event(std::string&& name, std::set<EventCategory>&& categories,
         const double tracing_clock, const std::uint64_t process_id, const std::uint64_t thread_id, std::vector<std::pair<std::string, std::string>>&& args) {
-        return EventTrace(std::move(name), std::move(categories), EventPhase::Counter, {}, tracing_clock, process_id, thread_id, std::move(args), {});
+        return Event(std::move(name), std::move(categories), EventPhase::Counter, {}, tracing_clock, process_id, thread_id, std::move(args), {});
     }
 
     /**
@@ -341,10 +341,10 @@ public:
      * @param args The arguments for the event, should not be empty
      * @return The created object that can be printed using operator<<
      */
-    static EventTrace create_counter_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args);
+    static Event create_counter_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args);
 
 private:
-    EventTrace(std::optional<std::string>&& _name, std::set<EventCategory>&& _categories, const EventPhase _phase,
+    Event(std::optional<std::string>&& _name, std::set<EventCategory>&& _categories, const EventPhase _phase,
         std::optional<InstantEventScope>&& _scope, const double _tracing_clock, const std::uint64_t _process_id,
         const std::uint64_t _thread_id, std::vector<std::pair<std::string, std::string>>&& _arguments, std::optional<double>&& _duration)
         : name(std::move(_name))
@@ -367,10 +367,10 @@ private:
     std::vector<std::pair<std::string, std::string>> arguments{};
     std::optional<double> duration{};
 
-    friend std::ostream& operator<<(std::ostream& out, const EventTrace& event);
+    friend std::ostream& operator<<(std::ostream& out, const Event& event);
 };
 
-inline std::ostream& operator<<(std::ostream& out, const EventTrace& event) {
+inline std::ostream& operator<<(std::ostream& out, const Event& event) {
     out << '{';
 
     if (event.name.has_value()) {
@@ -418,4 +418,4 @@ inline std::ostream& operator<<(std::ostream& out, const EventTrace& event) {
 }
 
 template <>
-struct fmt::formatter<EventTrace> : ostream_formatter { };
+struct fmt::formatter<Event> : ostream_formatter { };

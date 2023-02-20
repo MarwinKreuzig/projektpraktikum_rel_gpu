@@ -128,7 +128,7 @@ void LogFiles::init() {
     initialized = true;
 }
 
-void LogFiles::add_event_trace(const EventTrace& event) {
+void LogFiles::add_event_to_trace(const Event& event) {
     const auto iterator = log_files.find(EventType::Events);
     if (iterator == log_files.end()) {
         return;
