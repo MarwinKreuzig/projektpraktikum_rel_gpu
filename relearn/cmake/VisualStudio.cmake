@@ -10,7 +10,7 @@ endif()
 	
 if(WIN32) # Harness
 	list(APPEND relearn_harness_additional_files "adapter/connector/ConnectorAdapter.h")
-	list(APPEND relearn_harness_additional_files "adapter/eventtrace/EventTraceAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/event/EventAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/helper/RankNeuronIdAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/interval/IntervalAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/kernel/KernelAdapter.h")
@@ -79,7 +79,7 @@ if(WIN32) # Lib
 	
 	# io
 	list(APPEND relearn_lib_additional_files "io/CalciumIO.h")
-	list(APPEND relearn_lib_additional_files "io/EventTrace.h")
+	list(APPEND relearn_lib_additional_files "io/Event.h")
 	list(APPEND relearn_lib_additional_files "io/FileValidator.h")
 	list(APPEND relearn_lib_additional_files "io/InteractiveNeuronIO.h")
 	list(APPEND relearn_lib_additional_files "io/LogFiles.h")
@@ -185,7 +185,7 @@ if(WIN32) # Tests
 	list(APPEND relearn_tests_additional_files "calcium_calculator/test_calcium_calculator.h")	
 	list(APPEND relearn_tests_additional_files "cell/test_cell.h")	
 	list(APPEND relearn_tests_additional_files "connector/test_connector.h")	
-	list(APPEND relearn_tests_additional_files "eventtrace/test_eventtrace.h")	
+	list(APPEND relearn_tests_additional_files "event/test_event.h")	
 	list(APPEND relearn_tests_additional_files "fast_multipole_method/test_fast_multipole_method.h")	
 	list(APPEND relearn_tests_additional_files "helper/test_distant_neuron_request.h")
 	list(APPEND relearn_tests_additional_files "helper/test_rank_neuron_id.h")

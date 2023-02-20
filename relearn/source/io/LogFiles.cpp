@@ -9,7 +9,7 @@
  */
 
 #include "LogFiles.h"
-#include "io/EventTrace.h"
+#include "io/Event.h"
 #include "mpi/MPIWrapper.h"
 
 #include "spdlog/sinks/basic_file_sink.h"

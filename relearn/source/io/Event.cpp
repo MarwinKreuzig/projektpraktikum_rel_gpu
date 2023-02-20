@@ -8,7 +8,7 @@
  *
  */
 
-#include "EventTrace.h"
+#include "Event.h"
 
 #include "mpi/MPIWrapper.h"
 

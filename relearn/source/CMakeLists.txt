@@ -11,7 +11,7 @@ target_sources(
 
           # io
           io/CalciumIO.cpp
-          io/EventTrace.cpp
+          io/Event.cpp
           io/InteractiveNeuronIO.cpp
           io/LogFiles.cpp
           io/NeuronIO.cpp

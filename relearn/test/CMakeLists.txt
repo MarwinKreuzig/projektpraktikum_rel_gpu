@@ -64,7 +64,7 @@ target_sources(
 		  
 		  connector/test_connector.cpp
 		  
-		  eventtrace/test_eventtrace.cpp
+		  event/test_event.cpp
 		  
 		  fast_multipole_method/test_fast_multipole_method.cpp
 		  

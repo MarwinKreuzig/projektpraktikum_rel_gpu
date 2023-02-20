@@ -8,9 +8,9 @@
  *
  */
 
-#include "test_eventtrace.h"
+#include "test_event.h"
 
-#include "io/EventTrace.h"
+#include "io/Event.h"
 
 #include <sstream>
 
