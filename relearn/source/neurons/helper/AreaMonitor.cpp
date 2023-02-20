@@ -13,7 +13,6 @@
 #include "mpi/MPIWrapper.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/LocalAreaTranslator.h"
-#include "neurons/helper/SynapseDeletionFinder.h"
 #include "neurons/Neurons.h"
 #include "neurons/NetworkGraph.h"
 #include "sim/Simulation.h"

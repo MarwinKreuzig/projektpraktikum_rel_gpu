@@ -23,6 +23,7 @@
 #include "neurons/enums/SignalType.h"
 #include "neurons/enums/UpdateStatus.h"
 #include "neurons/helper/SynapseCreationRequests.h"
+#include "neurons/helper/SynapseDeletionFinder.h"
 #include "neurons/helper/SynapseDeletionRequests.h"
 #include "util/RelearnException.h"
 #include "util/StatisticalMeasures.h"
@@ -39,7 +40,6 @@ class NetworkGraph;
 class NeuronMonitor;
 class Octree;
 class Partition;
-class SynapseDeletionFinder;
 
 /**
  * This class gathers all information for the neurons and provides the primary interface for the simulation

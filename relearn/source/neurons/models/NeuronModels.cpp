@@ -12,7 +12,6 @@
 
 #include "Config.h"
 #include "mpi/MPIWrapper.h"
-#include "neurons/helper/SynapseDeletionFinder.h"
 #include "neurons/NetworkGraph.h"
 #include "util/Random.h"
 #include "util/Timers.h"

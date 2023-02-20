@@ -12,7 +12,6 @@
 
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
-#include "neurons/helper/SynapseDeletionFinder.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/models/NeuronModels.h"
 #include "neurons/LocalAreaTranslator.h"

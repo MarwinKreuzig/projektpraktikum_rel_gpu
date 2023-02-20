@@ -15,6 +15,7 @@
 #include "neurons/enums/SignalType.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseDeletionRequests.h"
+#include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
 #include <memory>
@@ -24,35 +25,94 @@ class NetworkGraph;
 class NeuronsExtraInfo;
 class SynapticElements;
 
+/**
+ * This class encapsulates the logic of finding and deleting synapses
+ * based on the synaptic elements. It provides the communication via MPI
+ * and other house keeping, as well as a virtual method to implement.
+ */
 class SynapseDeletionFinder {
 public:
-    void set_network_graph(std::shared_ptr<NetworkGraph> ng) noexcept {
+    /**
+     * @brief Sets the network graph that stores the synapses
+     * @param ng The new network graph, must not be empty
+     * @exception Throws a RelearnException if ng is empty
+     */
+    void set_network_graph(std::shared_ptr<NetworkGraph> ng) {
+        const auto full = ng.operator bool();
+        RelearnException::check(full, "SynapseDeletionFinder::set_network_graph: The network graph is empty");
+
         network_graph = std::move(ng);
     }
 
-    void set_axons(std::shared_ptr<SynapticElements> se) noexcept {
+    /**
+     * @brief Sets the axons 
+     * @param se The axons, must not be empty
+     * @exception Throws a RelearnException if se is empty
+     */
+    void set_axons(std::shared_ptr<SynapticElements> se) {
+        const auto full = se.operator bool();
+        RelearnException::check(full, "SynapseDeletionFinder::set_axons: The synaptic elements is empty");
+
         axons = std::move(se);
     }
 
-    void set_dendrites_ex(std::shared_ptr<SynapticElements> se) noexcept {
+    /**
+     * @brief Sets the excitatory dendrites
+     * @param se The excitatory dendrites, must not be empty
+     * @exception Throws a RelearnException if se is empty
+     */
+    void set_dendrites_ex(std::shared_ptr<SynapticElements> se) {
+        const auto full = se.operator bool();
+        RelearnException::check(full, "SynapseDeletionFinder::set_dendrites_ex: The synaptic elements is empty");
+
         excitatory_dendrites = std::move(se);
     }
 
-    void set_dendrites_in(std::shared_ptr<SynapticElements> se) noexcept {
+    /**
+     * @brief Sets the inhibitory dendrites
+     * @param se The inhibitory dendrites, must not be empty
+     * @exception Throws a RelearnException if se is empty
+     */
+    void set_dendrites_in(std::shared_ptr<SynapticElements> se) {
+        const auto full = se.operator bool();
+        RelearnException::check(full, "SynapseDeletionFinder::set_dendrites_in: The synaptic elements is empty");
+
         inhibitory_dendrites = std::move(se);
     }
 
+    /**
+     * @brief Sets the extra information
+     * @param new_extra_info The extra information, must not be empty
+     * @exception Throws a RelearnException if new_extra_info is empty
+     */
     void set_extra_infos(std::shared_ptr<NeuronsExtraInfo> new_extra_info) {
+        const auto full = new_extra_info.operator bool();
+        RelearnException::check(full, "SynapseDeletionFinder::set_extra_infos: new_extra_info is empty");
+
         extra_info = std::move(new_extra_info);
     }
 
+    /**
+     * @brief Commits the updates for the synaptic elements, deletes synapses in the network graph,
+     *      exchanges the deletions between MPI ranks, and commits the deletions from other ranks as well
+     * @return The number of deleted synapses that are initiated by (1) the local axons and (2) the local dendrites
+     */
     [[nodiscard]] std::pair<std::uint64_t, std::uint64_t> delete_synapses();
 
 protected:
     [[nodiscard]] CommunicationMap<SynapseDeletionRequest> find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete);
 
-    [[nodiscard]] std::uint64_t commit_deletions(const CommunicationMap<SynapseDeletionRequest>& list, MPIRank my_rank);
+    [[nodiscard]] std::uint64_t commit_deletions(const CommunicationMap<SynapseDeletionRequest>& deletions, MPIRank my_rank);
 
+    /**
+     * @brief Finds identifiers for the specified neuron for the number of synapses
+     * @param neuron_id The neuron that shall delete synapses
+     * @param element_type The element type that shall delete the synapses (ElementType::Axon indicates that out-synapses shall be deleted)
+     * @param signal_type The signal type that shall delete the synapses (SignalType::Excitatory indicated that excitatory synapses shall be deleted)
+     * @param num_synapses_to_delete The number of synapses that shall be deleted
+     * @exception Can throw a RelearnException
+     * @return The ids of the partners that shall be notified of the deletion. Can contain an id multiple times
+     */
     [[nodiscard]] virtual std::vector<RankNeuronId> find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete) = 0;
 
     std::shared_ptr<SynapticElements> axons{};
@@ -63,7 +123,11 @@ protected:
     std::shared_ptr<NeuronsExtraInfo> extra_info{};
 };
 
+/**
+ * This class deletes synapses based on randomness, i.e., it picks the 
+ * synapses to delete uniformely at random.
+ */
 class RandomSynapseDeletionFinder : public SynapseDeletionFinder {
-public:
+protected:
     [[nodiscard]] std::vector<RankNeuronId> find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete) override;
 };

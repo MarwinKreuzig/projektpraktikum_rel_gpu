@@ -72,8 +72,6 @@ CommunicationMap<SynapseDeletionRequest> SynapseDeletionFinder::find_synapses_to
     const auto element_type = synaptic_elements->get_element_type();
 
     for (const auto& neuron_id : NeuronID::range(number_neurons)) {
-        const auto local_neuron_id = neuron_id.get_neuron_id();
-
         if (!extra_info->does_update_plasticity(neuron_id)) {
             continue;
         }
@@ -82,6 +80,7 @@ CommunicationMap<SynapseDeletionRequest> SynapseDeletionFinder::find_synapses_to
          * Create and delete synaptic elements as required.
          * This function only deletes elements (bound and unbound), no synapses.
          */
+        const auto local_neuron_id = neuron_id.get_neuron_id();
         const auto num_synapses_to_delete = number_deletions[local_neuron_id];
         if (num_synapses_to_delete == 0) {
             continue;
@@ -112,10 +111,10 @@ CommunicationMap<SynapseDeletionRequest> SynapseDeletionFinder::find_synapses_to
     return deletion_requests;
 }
 
-std::uint64_t SynapseDeletionFinder::commit_deletions(const CommunicationMap<SynapseDeletionRequest>& list, MPIRank my_rank) {
+std::uint64_t SynapseDeletionFinder::commit_deletions(const CommunicationMap<SynapseDeletionRequest>& deletions, const MPIRank my_rank) {
     auto num_synapses_deleted = std::uint64_t(0);
 
-    for (const auto& [other_rank, requests] : list) {
+    for (const auto& [other_rank, requests] : deletions) {
         num_synapses_deleted += requests.size();
 
         for (const auto& [other_neuron_id, my_neuron_id, element_type, signal_type] : requests) {
@@ -156,13 +155,13 @@ std::uint64_t SynapseDeletionFinder::commit_deletions(const CommunicationMap<Syn
     return num_synapses_deleted;
 }
 
-std::vector<RankNeuronId> RandomSynapseDeletionFinder::find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete) {
+std::vector<RankNeuronId> RandomSynapseDeletionFinder::find_synapses_on_neuron(const NeuronID neuron_id, const ElementType element_type, const SignalType signal_type, const unsigned int num_synapses_to_delete) {
     // Only do something if necessary
     if (0 == num_synapses_to_delete) {
         return {};
     }
 
-    auto register_edges = [](const std::vector<std::pair<RankNeuronId, RelearnTypes::synapse_weight>>& edges) {
+    auto register_edges = [](const auto& edges) {
         std::vector<RankNeuronId> neuron_ids{};
         neuron_ids.reserve(edges.size());
 
@@ -202,8 +201,6 @@ std::vector<RankNeuronId> RandomSynapseDeletionFinder::find_synapses_on_neuron(N
 
     std::vector<size_t> drawn_indices{};
     drawn_indices.reserve(num_synapses_to_delete);
-
-    uniform_int_distribution<unsigned int> uid{};
 
     for (unsigned int i = 0; i < num_synapses_to_delete; i++) {
         auto random_number = RandomHolder::get_random_uniform_integer(RandomHolderKey::SynapseDeletionFinder, size_t(0),

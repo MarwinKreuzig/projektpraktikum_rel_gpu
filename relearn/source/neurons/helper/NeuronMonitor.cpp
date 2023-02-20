@@ -13,7 +13,6 @@
 #include "Config.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
-#include "neurons/helper/SynapseDeletionFinder.h"
 #include "neurons/LocalAreaTranslator.h"
 
 #include <fstream>
