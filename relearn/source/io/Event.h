@@ -251,6 +251,16 @@ public:
     static Event create_duration_begin_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args);
 
     /**
+     * @brief Creates an event that signals the begin of some duration with default arguments for process-id, thread-id, and tracing-clock.
+     *      Prints the event directly to the file (if event tracing is enabled)
+     * @param name The name of the event
+     * @param categories The categories for the event, can be empty
+     * @param args The arguments for the event, can be empty
+     * @param flush True if the file should be flushed
+     */
+    static void create_and_print_duration_begin_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args, bool flush = false);
+
+    /**
      * @brief Creates an event that signals the end of some duration. Always ends the latest begun event
      * @param tracing_clock The clock at the start of the event
      * @param process_id The id of the process to which the event belongs
@@ -266,6 +276,13 @@ public:
      * @return The created object that can be printed using operator<<
      */
     static Event create_duration_end_event();
+
+    /**
+     * @brief Creates an event that signals the end of some duration with default arguments for process-id, thread-id, and tracing-clock. Always ends the latest begun event.
+     *      Prints the event directly to the file (if event tracing is enabled)
+     * @param flush True if the file should be flushed
+     */
+    static void create_and_print_duration_end_event(bool flush = false);
 
     /**
      * @brief Creates an event that signals the completion of some event (not a duration)
@@ -294,6 +311,17 @@ public:
     static Event create_complete_event(std::string&& name, std::set<EventCategory>&& categories, double duration, std::vector<std::pair<std::string, std::string>>&& args);
 
     /**
+     * @brief Creates an event that signals the completion of some event (not a duration event) with default arguments for process-id, thread-id, and tracing-clock.
+     *      Prints the event directly to the file (if event tracing is enabled)
+     * @param name The name of the event
+     * @param categories The categories for the event, can be empty
+     * @param duration The duration of the event
+     * @param args The arguments for the event, can be empty
+     * @param flush True if the file should be flushed
+     */
+    static void create_and_print_complete_event(std::string&& name, std::set<EventCategory>&& categories, double duration, std::vector<std::pair<std::string, std::string>>&& args, bool flush = false);
+
+    /**
      * @brief Creates an event that signals same instant
      * @param name The name of the event
      * @param categories The categories for the event, can be empty
@@ -320,6 +348,17 @@ public:
     static Event create_instant_event(std::string&& name, std::set<EventCategory>&& categories, InstantEventScope scope, std::vector<std::pair<std::string, std::string>>&& args);
 
     /**
+     * @brief Creates an event that signals same instant with default arguments for process-id, thread-id, and tracing-clock.
+     *      Prints the event directly to the file (if event tracing is enabled)
+     * @param name The name of the event
+     * @param categories The categories for the event, can be empty
+     * @param scope The scope of the event, can be global, process, or thread
+     * @param args The arguments for the event, can be empty
+     * @param flush True if the file should be flushed
+     */
+    static void create_and_print_instant_event(std::string&& name, std::set<EventCategory>&& categories, InstantEventScope scope, std::vector<std::pair<std::string, std::string>>&& args, bool flush = false);
+
+    /**
      * @brief Creates an event that signals the change of some counter (values specified in args)
      * @param name The name of the event
      * @param categories The categories for the event, can be empty
@@ -342,6 +381,16 @@ public:
      * @return The created object that can be printed using operator<<
      */
     static Event create_counter_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args);
+
+    /**
+     * @brief Creates an event that signals the change of some counter (values specified in args) with default arguments for process-id, thread-id, and tracing-clock.
+     *      Prints the event directly to the file (if event tracing is enabled)
+     * @param name The name of the event
+     * @param categories The categories for the event, can be empty
+     * @param args The arguments for the event, should not be empty
+     * @param flush True if the file should be flushed
+     */
+    static void create_and_print_counter_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args, bool flush = false);
 
 private:
     Event(std::optional<std::string>&& _name, std::set<EventCategory>&& _categories, const EventPhase _phase,

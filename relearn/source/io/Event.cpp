@@ -10,6 +10,7 @@
 
 #include "Event.h"
 
+#include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
 
 #include <omp.h>
@@ -27,6 +28,19 @@ Event Event::create_duration_begin_event(std::string&& name, std::set<EventCateg
     return create_duration_begin_event(std::move(name), std::move(categories), dur_in_ms, process_id, thread_id, std::move(args));
 }
 
+void Event::create_and_print_duration_begin_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args, const bool flush) {
+    if (!LogFiles::get_log_status(LogFiles::EventType::Events)) {
+        return;
+    }
+
+    auto event = create_duration_begin_event(std::move(name), std::move(categories), std::move(args));
+    LogFiles::add_event_to_trace(std::move(event));
+
+    if (flush) {
+        LogFiles::flush_file(LogFiles::EventType::Events);
+    }
+}
+
 Event Event::create_duration_end_event() {
     const auto dur_since_epoch = std::chrono::system_clock::now().time_since_epoch();
     const auto dur_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(dur_since_epoch).count();
@@ -36,6 +50,19 @@ Event Event::create_duration_end_event() {
     const auto thread_id = static_cast<std::uint64_t>(omp_get_thread_num());
 
     return create_duration_end_event(dur_in_ms, process_id, thread_id);
+}
+
+void Event::create_and_print_duration_end_event(bool flush) {
+    if (!LogFiles::get_log_status(LogFiles::EventType::Events)) {
+        return;
+    }
+
+    auto event = create_duration_end_event();
+    LogFiles::add_event_to_trace(std::move(event));
+
+    if (flush) {
+        LogFiles::flush_file(LogFiles::EventType::Events);
+    }
 }
 
 Event Event::create_complete_event(std::string&& name, std::set<EventCategory>&& categories, const double duration, std::vector<std::pair<std::string, std::string>>&& args) {
@@ -49,6 +76,19 @@ Event Event::create_complete_event(std::string&& name, std::set<EventCategory>&&
     return create_complete_event(std::move(name), std::move(categories), duration, dur_in_ms, process_id, thread_id, std::move(args));
 }
 
+void Event::create_and_print_complete_event(std::string&& name, std::set<EventCategory>&& categories, double duration, std::vector<std::pair<std::string, std::string>>&& args, bool flush) {
+    if (!LogFiles::get_log_status(LogFiles::EventType::Events)) {
+        return;
+    }
+
+    auto event = create_complete_event(std::move(name), std::move(categories), duration, std::move(args));
+    LogFiles::add_event_to_trace(std::move(event));
+
+    if (flush) {
+        LogFiles::flush_file(LogFiles::EventType::Events);
+    }
+}
+
 Event Event::create_instant_event(std::string&& name, std::set<EventCategory>&& categories, const InstantEventScope scope, std::vector<std::pair<std::string, std::string>>&& args) {
     const auto dur_since_epoch = std::chrono::system_clock::now().time_since_epoch();
     const auto dur_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(dur_since_epoch).count();
@@ -60,6 +100,19 @@ Event Event::create_instant_event(std::string&& name, std::set<EventCategory>&& 
     return create_instant_event(std::move(name), std::move(categories), scope, dur_in_ms, process_id, thread_id, std::move(args));
 }
 
+void Event::create_and_print_instant_event(std::string&& name, std::set<EventCategory>&& categories, InstantEventScope scope, std::vector<std::pair<std::string, std::string>>&& args, bool flush) {
+    if (!LogFiles::get_log_status(LogFiles::EventType::Events)) {
+        return;
+    }
+
+    auto event = create_instant_event(std::move(name), std::move(categories), scope, std::move(args));
+    LogFiles::add_event_to_trace(std::move(event));
+
+    if (flush) {
+        LogFiles::flush_file(LogFiles::EventType::Events);
+    }
+}
+
 Event Event::create_counter_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args) {
     const auto dur_since_epoch = std::chrono::system_clock::now().time_since_epoch();
     const auto dur_in_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(dur_since_epoch).count();
@@ -69,4 +122,17 @@ Event Event::create_counter_event(std::string&& name, std::set<EventCategory>&& 
     const auto thread_id = static_cast<std::uint64_t>(omp_get_thread_num());
 
     return create_counter_event(std::move(name), std::move(categories), dur_in_ms, process_id, thread_id, std::move(args));
+}
+
+void Event::create_and_print_counter_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args, bool flush) {
+    if (!LogFiles::get_log_status(LogFiles::EventType::Events)) {
+        return;
+    }
+
+    auto event = create_counter_event(std::move(name), std::move(categories), std::move(args));
+    LogFiles::add_event_to_trace(std::move(event));
+
+    if (flush) {
+        LogFiles::flush_file(LogFiles::EventType::Events);
+    }
 }

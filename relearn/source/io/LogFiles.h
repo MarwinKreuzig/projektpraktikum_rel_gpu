@@ -187,6 +187,10 @@ public:
         }
     }
 
+    /**
+     * @brief Adds an event to the trace
+     * @param event The event to print
+     */
     static void add_event_to_trace(const Event& event);
 
 private:
