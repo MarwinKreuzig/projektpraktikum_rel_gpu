@@ -541,53 +541,6 @@ int main(int argc, char** argv) {
         RelearnException::check(target_calcium_decay_amount > 0.0, "The target calcium decay amount must be larger than 0.0 for absolute decay.");
     }
 
-    /**
-     * Calculate what my partition of the domain consist of
-     */
-    auto partition = std::make_shared<Partition>(num_ranks, my_rank);
-
-    std::unique_ptr<NeuronToSubdomainAssignment> subdomain;
-    if (static_cast<bool>(*opt_num_neurons)) {
-        subdomain = std::make_unique<SubdomainFromNeuronDensity>(number_neurons, fraction_excitatory_neurons, um_per_neuron, partition);
-    } else if (static_cast<bool>(*opt_num_neurons_per_rank)) {
-        subdomain = std::make_unique<SubdomainFromNeuronPerRank>(number_neurons_per_rank, fraction_excitatory_neurons, um_per_neuron, partition);
-    } else {
-        std::optional<std::filesystem::path> path_to_network{};
-        if (static_cast<bool>(*opt_file_network)) {
-            path_to_network = file_network;
-        }
-
-        if (MPIWrapper::get_num_ranks() == 1) {
-            subdomain = std::make_unique<SubdomainFromFile>(file_positions, std::move(path_to_network), partition);
-        } else {
-            subdomain = std::make_unique<MultipleSubdomainsFromFile>(file_positions, std::move(path_to_network), partition);
-        }
-    }
-
-    std::unique_ptr<BackgroundActivityCalculator> background_activity_calculator{};
-    if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Null) {
-        RelearnException::check(!static_cast<bool>(*opt_base_background_activity), "Setting the base background activity is not valid when choosing the null-background calculator (or not setting it at all).");
-        RelearnException::check(!static_cast<bool>(*opt_mean_background_activity), "Setting the mean background activity is not valid when choosing the null-background calculator (or not setting it at all).");
-        RelearnException::check(!static_cast<bool>(*opt_stddev_background_activity), "Setting the stddev background activity is not valid when choosing the null-background calculator (or not setting it at all).");
-
-        background_activity_calculator = std::make_unique<NullBackgroundActivityCalculator>();
-    } else if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Constant) {
-        RelearnException::check(!static_cast<bool>(*opt_mean_background_activity), "Setting the mean background activity is not valid when choosing the constant-background calculator.");
-        RelearnException::check(!static_cast<bool>(*opt_stddev_background_activity), "Setting the stddev background activity is not valid when choosing the constant-background calculator.");
-
-        background_activity_calculator = std::make_unique<ConstantBackgroundActivityCalculator>(base_background_activity);
-    } else if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Normal) {
-        RelearnException::check(background_activity_stddev > 0.0, "When choosing the normal-background calculator, the standard deviation must be set to > 0.0.");
-
-        background_activity_calculator = std::make_unique<NormalBackgroundActivityCalculator>(background_activity_mean, background_activity_stddev);
-    } else if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::FastNormal) {
-        RelearnException::check(background_activity_stddev > 0.0, "When choosing the fast-normal-background calculator, the standard deviation must be set to > 0.0.");
-
-        background_activity_calculator = std::make_unique<FastNormalBackgroundActivityCalculator>(background_activity_mean, background_activity_stddev, 10);
-    } else {
-        RelearnException::fail("Chose a background activity calculator that is not implemented");
-    }
-
     RelearnException::check(nu_axon >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
     RelearnException::check(nu_axon <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
     RelearnException::check(nu_dend >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
@@ -595,56 +548,56 @@ int main(int argc, char** argv) {
 
     omp_set_num_threads(openmp_threads);
 
-    /**
-     * Initialize the simulation log files
-     */
-    if (static_cast<bool>(*opt_log_path)) {
-        LogFiles::set_output_path(log_path);
-    }
-    if (static_cast<bool>(*opt_log_prefix)) {
-        LogFiles::set_general_prefix(log_prefix);
-    }
-
-    if (static_cast<bool>(*flag_disable_printing_positions)) {
-        LogFiles::set_log_status(LogFiles::EventType::Positions, true);
-    }
-
-    if (static_cast<bool>(*flag_disable_printing_network)) {
-        LogFiles::set_log_status(LogFiles::EventType::InNetwork, true);
-        LogFiles::set_log_status(LogFiles::EventType::OutNetwork, true);
-        LogFiles::set_log_status(LogFiles::EventType::NetworkInExcitatoryHistogramLocal, true);
-        LogFiles::set_log_status(LogFiles::EventType::NetworkInInhibitoryHistogramLocal, true);
-        LogFiles::set_log_status(LogFiles::EventType::NetworkOutHistogramLocal, true);
-    }
-
-    if (static_cast<bool>(*flag_disable_printing_plasticity)) {
-        LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdate, true);
-        LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdateCSV, true);
-        LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdateLocal, true);
-    }
-
-    if (static_cast<bool>(*flag_disable_printing_calcium)) {
-        LogFiles::set_log_status(LogFiles::EventType::CalciumValues, true);
-        LogFiles::set_log_status(LogFiles::EventType::ExtremeCalciumValues, true);
-    }
-
-    if (static_cast<bool>(*flag_disable_printing_overview)) {
-        LogFiles::set_log_status(LogFiles::EventType::SynapticInput, true);
-        LogFiles::set_log_status(LogFiles::EventType::NeuronsOverview, true);
-        LogFiles::set_log_status(LogFiles::EventType::NeuronsOverviewCSV, true);
-    }
-
-    if (static_cast<bool>(*flag_disable_printing_area_mapping)) {
-        LogFiles::set_log_status(LogFiles::EventType::AreaMapping, true);
-    }
-
-    LogFiles::init();
-
     std::size_t current_seed = 0;
     boost::hash_combine(current_seed, my_rank.get_rank());
     boost::hash_combine(current_seed, random_seed);
 
     RandomHolder::seed_all(current_seed);
+
+    auto init_log_files = [&]() -> void {
+        if (static_cast<bool>(*opt_log_path)) {
+            LogFiles::set_output_path(log_path);
+        }
+        if (static_cast<bool>(*opt_log_prefix)) {
+            LogFiles::set_general_prefix(log_prefix);
+        }
+
+        if (static_cast<bool>(*flag_disable_printing_positions)) {
+            LogFiles::set_log_status(LogFiles::EventType::Positions, true);
+        }
+
+        if (static_cast<bool>(*flag_disable_printing_network)) {
+            LogFiles::set_log_status(LogFiles::EventType::InNetwork, true);
+            LogFiles::set_log_status(LogFiles::EventType::OutNetwork, true);
+            LogFiles::set_log_status(LogFiles::EventType::NetworkInExcitatoryHistogramLocal, true);
+            LogFiles::set_log_status(LogFiles::EventType::NetworkInInhibitoryHistogramLocal, true);
+            LogFiles::set_log_status(LogFiles::EventType::NetworkOutHistogramLocal, true);
+        }
+
+        if (static_cast<bool>(*flag_disable_printing_plasticity)) {
+            LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdate, true);
+            LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdateCSV, true);
+            LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdateLocal, true);
+        }
+
+        if (static_cast<bool>(*flag_disable_printing_calcium)) {
+            LogFiles::set_log_status(LogFiles::EventType::CalciumValues, true);
+            LogFiles::set_log_status(LogFiles::EventType::ExtremeCalciumValues, true);
+        }
+
+        if (static_cast<bool>(*flag_disable_printing_overview)) {
+            LogFiles::set_log_status(LogFiles::EventType::SynapticInput, true);
+            LogFiles::set_log_status(LogFiles::EventType::NeuronsOverview, true);
+            LogFiles::set_log_status(LogFiles::EventType::NeuronsOverviewCSV, true);
+        }
+
+        if (static_cast<bool>(*flag_disable_printing_area_mapping)) {
+            LogFiles::set_log_status(LogFiles::EventType::AreaMapping, true);
+        }
+
+        LogFiles::init();
+    };
+    init_log_files();
 
     auto essentials = std::make_unique<Essentials>();
 
@@ -729,86 +682,165 @@ int main(int argc, char** argv) {
 
     Timers::start(TimerRegion::INITIALIZATION);
 
-    // Set the correct kernel and initialize the MPIWrapper to return the correct type
-    if (chosen_algorithm == AlgorithmEnum::BarnesHut || chosen_algorithm == AlgorithmEnum::BarnesHutLocationAware) {
-        Kernel<BarnesHutCell>::set_kernel_type(chosen_kernel_type);
-        NodeCache<BarnesHutCell>::set_cache_type(chosen_cache_type);
-        MPIWrapper::init_buffer_octree<BarnesHutCell>();
-    } else if (chosen_algorithm == AlgorithmEnum::BarnesHutInverted) {
-        Kernel<BarnesHutInvertedCell>::set_kernel_type(chosen_kernel_type);
-        NodeCache<BarnesHutInvertedCell>::set_cache_type(chosen_cache_type);
-        MPIWrapper::init_buffer_octree<BarnesHutInvertedCell>();
-    } else if (chosen_algorithm == AlgorithmEnum::FastMultipoleMethods) {
-        Kernel<FastMultipoleMethodsCell>::set_kernel_type(chosen_kernel_type);
-        NodeCache<FastMultipoleMethodsCell>::set_cache_type(chosen_cache_type);
-        MPIWrapper::init_buffer_octree<FastMultipoleMethodsCell>();
-    } else {
-        RelearnException::check(chosen_algorithm == AlgorithmEnum::Naive, "An algorithm was chosen that is not supported");
-        Kernel<NaiveCell>::set_kernel_type(chosen_kernel_type);
-        NodeCache<NaiveCell>::set_cache_type(chosen_cache_type);
-        MPIWrapper::init_buffer_octree<NaiveCell>();
-    }
+    auto prepare_algorithm = [&]() -> void {
+        // Set the correct kernel and initialize the MPIWrapper to return the correct type
+        if (chosen_algorithm == AlgorithmEnum::BarnesHut || chosen_algorithm == AlgorithmEnum::BarnesHutLocationAware) {
+            Kernel<BarnesHutCell>::set_kernel_type(chosen_kernel_type);
+            NodeCache<BarnesHutCell>::set_cache_type(chosen_cache_type);
+            MPIWrapper::init_buffer_octree<BarnesHutCell>();
+        } else if (chosen_algorithm == AlgorithmEnum::BarnesHutInverted) {
+            Kernel<BarnesHutInvertedCell>::set_kernel_type(chosen_kernel_type);
+            NodeCache<BarnesHutInvertedCell>::set_cache_type(chosen_cache_type);
+            MPIWrapper::init_buffer_octree<BarnesHutInvertedCell>();
+        } else if (chosen_algorithm == AlgorithmEnum::FastMultipoleMethods) {
+            Kernel<FastMultipoleMethodsCell>::set_kernel_type(chosen_kernel_type);
+            NodeCache<FastMultipoleMethodsCell>::set_cache_type(chosen_cache_type);
+            MPIWrapper::init_buffer_octree<FastMultipoleMethodsCell>();
+        } else {
+            RelearnException::check(chosen_algorithm == AlgorithmEnum::Naive, "An algorithm was chosen that is not supported");
+            Kernel<NaiveCell>::set_kernel_type(chosen_kernel_type);
+            NodeCache<NaiveCell>::set_cache_type(chosen_cache_type);
+            MPIWrapper::init_buffer_octree<NaiveCell>();
+        }
 
-    if (is_fast_multipole_method(chosen_algorithm)) {
-        RelearnException::check(chosen_kernel_type == KernelType::Gaussian, "Setting the probability kernel type is not supported for the fast multipole methods!");
-    }
+        if (is_fast_multipole_method(chosen_algorithm)) {
+            RelearnException::check(chosen_kernel_type == KernelType::Gaussian, "Setting the probability kernel type is not supported for the fast multipole methods!");
+        }
 
-    std::unique_ptr<Stimulus> stimulus_calculator{};
-    if (static_cast<bool>(*opt_file_external_stimulation)) {
-        stimulus_calculator = std::make_unique<Stimulus>(file_external_stimulation, my_rank, subdomain->get_local_area_translator());
-    } else {
-        stimulus_calculator = std::make_unique<Stimulus>();
-    }
+        // Set the parameters for all kernel types, even though only one is used later one
+        GammaDistributionKernel::set_k(gamma_k);
+        GammaDistributionKernel::set_theta(gamma_theta);
 
-    std::unique_ptr<SynapticInputCalculator> input_calculator{};
-    if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
-        input_calculator = std::make_unique<LinearSynapticInputCalculator>(synapse_conductance);
-    } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic) {
-        input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, input_scale);
-    } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::HyperbolicTangent) {
-        input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(synapse_conductance, input_scale);
-    } else {
-        RelearnException::fail("Chose a synaptic input calculator that is not implemented");
-    }
+        GaussianDistributionKernel::set_sigma(gaussian_sigma);
+        GaussianDistributionKernel::set_mu(gaussian_mu);
 
-    std::unique_ptr<NeuronModel> neuron_model{};
-    if (chosen_neuron_model == NeuronModelEnum::Poisson) {
-        neuron_model = std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
-            models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refractory_period);
-    } else if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
-        neuron_model = std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
-            models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
-            models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
-            models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
-    } else if (chosen_neuron_model == NeuronModelEnum::FitzHughNagumo) {
-        neuron_model = std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
-            models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
-    } else if (chosen_neuron_model == NeuronModelEnum::AEIF) {
-        neuron_model = std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+        LinearDistributionKernel::set_cutoff(linear_cutoff);
+
+        WeibullDistributionKernel::set_b(weibull_b);
+        WeibullDistributionKernel::set_k(weibull_k);
+    };
+    prepare_algorithm();
+
+    auto partition = std::make_shared<Partition>(num_ranks, my_rank);
+
+    auto construct_subdomain = [&]() -> std::unique_ptr<NeuronToSubdomainAssignment> {
+        if (static_cast<bool>(*opt_num_neurons)) {
+            return std::make_unique<SubdomainFromNeuronDensity>(number_neurons, fraction_excitatory_neurons, um_per_neuron, partition);
+        }
+
+        if (static_cast<bool>(*opt_num_neurons_per_rank)) {
+            return std::make_unique<SubdomainFromNeuronPerRank>(number_neurons_per_rank, fraction_excitatory_neurons, um_per_neuron, partition);
+        }
+
+        std::optional<std::filesystem::path> path_to_network{};
+        if (static_cast<bool>(*opt_file_network)) {
+            path_to_network = file_network;
+        }
+
+        if (MPIWrapper::get_num_ranks() == 1) {
+            return std::make_unique<SubdomainFromFile>(file_positions, std::move(path_to_network), partition);
+        }
+
+        return std::make_unique<MultipleSubdomainsFromFile>(file_positions, std::move(path_to_network), partition);
+    };
+    auto subdomain = construct_subdomain();
+
+    auto construct_background_activity_calculator = [&]() -> std::unique_ptr<BackgroundActivityCalculator> {
+        if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Null) {
+            RelearnException::check(!static_cast<bool>(*opt_base_background_activity), "Setting the base background activity is not valid when choosing the null-background calculator (or not setting it at all).");
+            RelearnException::check(!static_cast<bool>(*opt_mean_background_activity), "Setting the mean background activity is not valid when choosing the null-background calculator (or not setting it at all).");
+            RelearnException::check(!static_cast<bool>(*opt_stddev_background_activity), "Setting the stddev background activity is not valid when choosing the null-background calculator (or not setting it at all).");
+            return std::make_unique<NullBackgroundActivityCalculator>();
+        }
+
+        if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Constant) {
+            RelearnException::check(!static_cast<bool>(*opt_mean_background_activity), "Setting the mean background activity is not valid when choosing the constant-background calculator.");
+            RelearnException::check(!static_cast<bool>(*opt_stddev_background_activity), "Setting the stddev background activity is not valid when choosing the constant-background calculator.");
+            return std::make_unique<ConstantBackgroundActivityCalculator>(base_background_activity);
+        }
+
+        if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Normal) {
+            RelearnException::check(background_activity_stddev > 0.0, "When choosing the normal-background calculator, the standard deviation must be set to > 0.0.");
+            return std::make_unique<NormalBackgroundActivityCalculator>(background_activity_mean, background_activity_stddev);
+        }
+
+        RelearnException::check(chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::FastNormal, "Chose a background activity calculator that is not implemented");
+        RelearnException::check(background_activity_stddev > 0.0, "When choosing the fast-normal-background calculator, the standard deviation must be set to > 0.0.");
+
+        return std::make_unique<FastNormalBackgroundActivityCalculator>(background_activity_mean, background_activity_stddev, 10);
+    };
+    auto background_activity_calculator = construct_background_activity_calculator();
+
+    auto construct_stimulus = [&]() -> std::unique_ptr<Stimulus> {
+        if (static_cast<bool>(*opt_file_external_stimulation)) {
+            return std::make_unique<Stimulus>(file_external_stimulation, my_rank, subdomain->get_local_area_translator());
+        }
+
+        return std::make_unique<Stimulus>();
+    };
+    auto stimulus_calculator = construct_stimulus();
+
+    auto construct_input = [&]() -> std::unique_ptr<SynapticInputCalculator> {
+        if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
+            return std::make_unique<LinearSynapticInputCalculator>(synapse_conductance);
+        }
+        if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic) {
+            return std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, input_scale);
+        }
+
+        RelearnException::check(chosen_synapse_input_calculator_type == SynapticInputCalculatorType::HyperbolicTangent, "Chose a synaptic input calculator that is not implemented");
+        return std::make_unique<HyperbolicTangentSynapticInputCalculator>(synapse_conductance, input_scale);
+    };
+    auto input_calculator = construct_input();
+
+    auto construct_neuron_model = [&]() -> std::unique_ptr<NeuronModel> {
+        if (chosen_neuron_model == NeuronModelEnum::Poisson) {
+            return std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+                models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refractory_period);
+        }
+
+        if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
+            return std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+                models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
+                models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
+                models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
+        }
+
+        if (chosen_neuron_model == NeuronModelEnum::FitzHughNagumo) {
+            return std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+                models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
+        }
+
+        RelearnException::check(chosen_neuron_model == NeuronModelEnum::AEIF, "Chose a neuron model that is not implemented");
+        return std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
             models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
             models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
             models::AEIFModel::default_V_spike);
-    } else {
-        RelearnException::fail("Chose a neuron model that is not implemented");
-    }
+    };
+    auto neuron_model = construct_neuron_model();
 
-    auto calcium_calculator = std::make_unique<CalciumCalculator>(target_calcium_decay_type, target_calcium_decay_amount, target_calcium_decay_step, first_decay_step, last_decay_step);
-    calcium_calculator->set_beta(beta);
-    calcium_calculator->set_tau_C(calcium_decay);
-    calcium_calculator->set_h(h);
+    auto construct_calcium_calculator = [&]() -> std::unique_ptr<CalciumCalculator> {
+        auto calcium_calculator = std::make_unique<CalciumCalculator>(target_calcium_decay_type, target_calcium_decay_amount, target_calcium_decay_step, first_decay_step, last_decay_step);
+        calcium_calculator->set_beta(beta);
+        calcium_calculator->set_tau_C(calcium_decay);
+        calcium_calculator->set_h(h);
 
-    if (*opt_file_calcium) {
-        auto [initial_calcium_calculator, target_calcium_calculator] = CalciumIO::load_initial_and_target_function(file_calcium);
+        if (*opt_file_calcium) {
+            auto [initial_calcium_calculator, target_calcium_calculator] = CalciumIO::load_initial_and_target_function(file_calcium);
 
-        calcium_calculator->set_initial_calcium_calculator(std::move(initial_calcium_calculator));
-        calcium_calculator->set_target_calcium_calculator(std::move(target_calcium_calculator));
-    } else {
-        auto initial_calcium_calculator = [initial = initial_calcium](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return initial; };
-        calcium_calculator->set_initial_calcium_calculator(std::move(initial_calcium_calculator));
+            calcium_calculator->set_initial_calcium_calculator(std::move(initial_calcium_calculator));
+            calcium_calculator->set_target_calcium_calculator(std::move(target_calcium_calculator));
+        } else {
+            auto initial_calcium_calculator = [initial = initial_calcium](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return initial; };
+            calcium_calculator->set_initial_calcium_calculator(std::move(initial_calcium_calculator));
 
-        auto target_calcium_calculator = [target = target_calcium](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return target; };
-        calcium_calculator->set_target_calcium_calculator(std::move(target_calcium_calculator));
-    }
+            auto target_calcium_calculator = [target = target_calcium](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return target; };
+            calcium_calculator->set_target_calcium_calculator(std::move(target_calcium_calculator));
+        }
+
+        return calcium_calculator;
+    };
+    auto calcium_calculator = construct_calcium_calculator();
 
     auto axons_model = std::make_shared<SynapticElements>(ElementType::Axon, min_calcium_axons,
         nu_axon, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
@@ -833,24 +865,11 @@ int main(int argc, char** argv) {
         sim.set_static_neurons(static_neurons);
     }
 
-    // Set the parameters for all kernel types, even though only one is used later one
-    GammaDistributionKernel::set_k(gamma_k);
-    GammaDistributionKernel::set_theta(gamma_theta);
-
-    GaussianDistributionKernel::set_sigma(gaussian_sigma);
-    GaussianDistributionKernel::set_mu(gaussian_mu);
-
-    LinearDistributionKernel::set_cutoff(linear_cutoff);
-
-    WeibullDistributionKernel::set_b(weibull_b);
-    WeibullDistributionKernel::set_k(weibull_k);
-
     if (is_barnes_hut(chosen_algorithm)) {
         sim.set_acceptance_criterion_for_barnes_hut(accept_criterion);
     }
 
     sim.set_algorithm(chosen_algorithm);
-
     sim.set_subdomain_assignment(std::move(subdomain));
 
     if (*opt_file_enable_interrupts) {
