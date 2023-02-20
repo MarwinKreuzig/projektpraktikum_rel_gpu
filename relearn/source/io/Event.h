@@ -370,6 +370,12 @@ private:
     friend std::ostream& operator<<(std::ostream& out, const Event& event);
 };
 
+/**
+ * @brief Prints the event in JSON format as one line to the stream. Does not add a line break
+ * @param out The stream to which to print the instant event scope
+ * @param event The event to print
+ * @return The argument out, now altered with the event
+ */
 inline std::ostream& operator<<(std::ostream& out, const Event& event) {
     out << '{';
 
