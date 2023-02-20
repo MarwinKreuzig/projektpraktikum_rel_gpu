@@ -111,6 +111,7 @@ if(WIN32) # Lib
 	list(APPEND relearn_lib_additional_files "neurons/helper/RankNeuronId.h")
 	list(APPEND relearn_lib_additional_files "neurons/helper/Synapse.h")
 	list(APPEND relearn_lib_additional_files "neurons/helper/SynapseCreationRequests.h")
+	list(APPEND relearn_lib_additional_files "neurons/helper/SynapseDeletionFinder.h")
 	list(APPEND relearn_lib_additional_files "neurons/helper/SynapseDeletionRequests.h")
 	
 	# input

@@ -24,6 +24,7 @@
 #include "neurons/enums/UpdateStatus.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseCreationRequests.h"
+#include "neurons/helper/SynapseDeletionFinder.h"
 #include "neurons/helper/SynapseDeletionRequests.h"
 #include "util/RelearnException.h"
 #include "util/StatisticalMeasures.h"
@@ -70,15 +71,17 @@ public:
         std::unique_ptr<CalciumCalculator> calculator_ptr,
         std::shared_ptr<Axons> axons_ptr,
         std::shared_ptr<DendritesExcitatory> dendrites_ex_ptr,
-        std::shared_ptr<DendritesInhibitory> dendrites_in_ptr)
+        std::shared_ptr<DendritesInhibitory> dendrites_in_ptr,
+        std::shared_ptr<SynapseDeletionFinder> synapse_del_ptr)
         : partition(std::move(partition))
         , neuron_model(std::move(model_ptr))
         , calcium_calculator(std::move(calculator_ptr))
         , axons(std::move(axons_ptr))
         , dendrites_exc(std::move(dendrites_ex_ptr))
-        , dendrites_inh(std::move(dendrites_in_ptr)) {
+        , dendrites_inh(std::move(dendrites_in_ptr))
+        , synapse_deletion_finder(std::move(synapse_del_ptr)) {
 
-        const bool all_filled = this->partition && neuron_model && calcium_calculator && axons && dendrites_exc && dendrites_inh;
+        const bool all_filled = this->partition && neuron_model && calcium_calculator && axons && dendrites_exc && dendrites_inh && synapse_deletion_finder;
         RelearnException::check(all_filled, "Neurons::Neurons: Neurons was constructed with some null arguments");
     }
 
@@ -494,6 +497,8 @@ private:
     std::shared_ptr<Axons> axons{};
     std::shared_ptr<DendritesExcitatory> dendrites_exc{};
     std::shared_ptr<DendritesInhibitory> dendrites_inh{};
+
+    std::shared_ptr<SynapseDeletionFinder> synapse_deletion_finder{};
 
     std::shared_ptr<NeuronsExtraInfo> extra_info{ std::make_shared<NeuronsExtraInfo>() };
 };
