@@ -183,15 +183,100 @@ std::vector<RankNeuronId> RandomSynapseDeletionFinder::find_synapses_on_neuron(c
         return neuron_ids;
     };
 
+    auto register_out_edges = [](const auto& distant_out_edges, const auto& local_out_edges) {
+        std::vector<RankNeuronId> neuron_ids{};
+        neuron_ids.reserve((distant_out_edges.size() + local_out_edges.size()) * 2);
+
+        const auto my_rank = MPIWrapper::get_my_rank();
+
+        for (const auto& [rni, weight] : distant_out_edges) {
+            /**
+             * Create "edge weight" number of synapses and add them to the synapse list
+             * NOTE: We take abs(it->second) here as DendriteType::Inhibitory synapses have count < 0
+             */
+
+            const auto abs_synapse_weight = std::abs(weight);
+            RelearnException::check(abs_synapse_weight > 0,
+                "RandomSynapseDeletionFinder::find_synapses_on_neuron: The absolute weight was 0");
+
+            for (auto synapse_id = 0; synapse_id < abs_synapse_weight; ++synapse_id) {
+                neuron_ids.emplace_back(rni);
+            }
+        }
+
+        for (const auto& [neuron_id, weight] : local_out_edges) {
+            const auto abs_synapse_weight = std::abs(weight);
+            RelearnException::check(abs_synapse_weight > 0,
+                "RandomSynapseDeletionFinder::find_synapses_on_neuron: The absolute weight was 0");
+
+            for (auto synapse_id = 0; synapse_id < abs_synapse_weight; ++synapse_id) {
+                neuron_ids.emplace_back(my_rank, neuron_id);
+            }
+        }
+
+        return neuron_ids;
+    };
+
+    auto register_in_edges = [](const auto& distant_in_edges, const auto& local_in_edges, const auto signal_type) {
+        std::vector<RankNeuronId> neuron_ids{};
+        neuron_ids.reserve((distant_in_edges.size() + local_in_edges.size()) * 2);
+
+        const auto my_rank = MPIWrapper::get_my_rank();
+
+        for (const auto& [rni, weight] : distant_in_edges) {
+            if (weight < 0 && signal_type == SignalType::Excitatory) {
+                // Searching excitatory synapses but found an inhibitory one
+                continue;
+            }
+
+            if (weight > 0 && signal_type == SignalType::Inhibitory) {
+                // Searching inhibitory synapses but found an excitatory one
+                continue;
+            }
+
+            const auto abs_synapse_weight = std::abs(weight);
+            RelearnException::check(abs_synapse_weight > 0,
+                "RandomSynapseDeletionFinder::find_synapses_on_neuron: The absolute weight was 0");
+
+            for (auto synapse_id = 0; synapse_id < abs_synapse_weight; ++synapse_id) {
+                neuron_ids.emplace_back(rni);
+            }
+        }
+
+        for (const auto& [neuron_id, weight] : local_in_edges) {
+            if (weight < 0 && signal_type == SignalType::Excitatory) {
+                // Searching excitatory synapses but found an inhibitory one
+                continue;
+            }
+
+            if (weight > 0 && signal_type == SignalType::Inhibitory) {
+                // Searching inhibitory synapses but found an excitatory one
+                continue;
+            }
+
+            const auto abs_synapse_weight = std::abs(weight);
+            RelearnException::check(abs_synapse_weight > 0,
+                "RandomSynapseDeletionFinder::find_synapses_on_neuron: The absolute weight was 0");
+
+            for (auto synapse_id = 0; synapse_id < abs_synapse_weight; ++synapse_id) {
+                neuron_ids.emplace_back(my_rank, neuron_id);
+            }
+        }
+
+        return neuron_ids;
+    };
+
     std::vector<RankNeuronId> current_synapses{};
     if (element_type == ElementType::Axon) {
-        // Walk through outgoing edges
-        NetworkGraph::DistantEdges out_edges = network_graph->get_all_out_edges(neuron_id);
-        current_synapses = register_edges(out_edges);
+        const auto& distant_out_edges = network_graph->get_distant_out_edges(neuron_id);
+        const auto& local_out_edges = network_graph->get_local_out_edges(neuron_id);
+
+        current_synapses = register_out_edges(distant_out_edges, local_out_edges);
     } else {
-        // Walk through ingoing edges
-        NetworkGraph::DistantEdges in_edges = network_graph->get_all_in_edges(neuron_id, signal_type);
-        current_synapses = register_edges(in_edges);
+        const auto& distant_in_edges = network_graph->get_distant_in_edges(neuron_id);
+        const auto& local_in_edges = network_graph->get_local_in_edges(neuron_id);
+
+        current_synapses = register_in_edges(distant_in_edges, local_in_edges, signal_type);
     }
 
     const auto number_synapses = current_synapses.size();

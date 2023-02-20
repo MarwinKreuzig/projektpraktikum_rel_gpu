@@ -123,7 +123,7 @@ public:
      * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      * @return A constant view of all distant in-edges.
      */
-    [[nodiscard]] const DistantEdges& get_distant_in_edges(const NeuronID& neuron_id) const {
+    [[nodiscard]] const DistantEdges& get_distant_in_edges(const NeuronID neuron_id) const {
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < neuron_distant_in_neighborhood.size(),
@@ -139,7 +139,7 @@ public:
      * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      * @return A constant view of all distant out-edges.
      */
-    [[nodiscard]] const DistantEdges& get_distant_out_edges(const NeuronID& neuron_id) const {
+    [[nodiscard]] const DistantEdges& get_distant_out_edges(const NeuronID neuron_id) const {
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < neuron_distant_out_neighborhood.size(),
@@ -155,7 +155,7 @@ public:
      * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      * @return A constant view of all local in-edges.
      */
-    [[nodiscard]] const LocalEdges& get_local_in_edges(const NeuronID& neuron_id) const {
+    [[nodiscard]] const LocalEdges& get_local_in_edges(const NeuronID neuron_id) const {
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < neuron_local_in_neighborhood.size(),
@@ -171,7 +171,7 @@ public:
      * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      * @return A constant view of all local out-edges.
      */
-    [[nodiscard]] const LocalEdges& get_local_out_edges(const NeuronID& neuron_id) const {
+    [[nodiscard]] const LocalEdges& get_local_out_edges(const NeuronID neuron_id) const {
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < neuron_local_out_neighborhood.size(),
@@ -221,7 +221,7 @@ public:
      *      Throws an exception if the allocation of memory fails
      * @return A copy of all in-edges from a certain neuron signal type
      */
-    [[nodiscard]] DistantEdges get_all_in_edges(const NeuronID& neuron_id, const SignalType signal_type) const {
+    [[nodiscard]] DistantEdges get_all_in_edges(const NeuronID neuron_id, const SignalType signal_type) const {
         const DistantEdges& all_distant_edges = get_distant_in_edges(neuron_id);
         const LocalEdges& all_local_edges = get_local_in_edges(neuron_id);
 
@@ -260,7 +260,7 @@ public:
      *      Throws an exception if the allocation of memory fails
      * @return A copy of all out-edges to a certain neuron signal type
      */
-    [[nodiscard]] DistantEdges get_all_out_edges(const NeuronID& neuron_id, const SignalType signal_type) const {
+    [[nodiscard]] DistantEdges get_all_out_edges(const NeuronID neuron_id, const SignalType signal_type) const {
         const DistantEdges& all_distant_edges = get_distant_out_edges(neuron_id);
         const LocalEdges& all_local_edges = get_local_out_edges(neuron_id);
 
@@ -299,7 +299,7 @@ public:
      *      Throws an exception if the allocation of memory fails
      * @return A copy of all in-edges
      */
-    [[nodiscard]] DistantEdges get_all_in_edges(const NeuronID& neuron_id) const {
+    [[nodiscard]] DistantEdges get_all_in_edges(const NeuronID neuron_id) const {
         const DistantEdges& all_distant_edges = get_distant_in_edges(neuron_id);
         const LocalEdges& all_local_edges = get_local_in_edges(neuron_id);
 
@@ -326,7 +326,7 @@ public:
      *      Throws an exception if the allocation of memory fails
      * @return A copy of all out-edges
      */
-    [[nodiscard]] DistantEdges get_all_out_edges(const NeuronID& neuron_id) const {
+    [[nodiscard]] DistantEdges get_all_out_edges(const NeuronID neuron_id) const {
         const DistantEdges& all_distant_edges = get_distant_out_edges(neuron_id);
         const LocalEdges& all_local_edges = get_local_out_edges(neuron_id);
 
@@ -350,7 +350,7 @@ public:
      * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      * @return The number of incoming synapses that the specified neuron formed from excitatory neurons
      */
-    [[nodiscard]] synapse_weight get_number_excitatory_in_edges(const NeuronID& neuron_id) const {
+    [[nodiscard]] synapse_weight get_number_excitatory_in_edges(const NeuronID neuron_id) const {
         const DistantEdges& all_distant_edges = get_distant_in_edges(neuron_id);
         const LocalEdges& all_local_edges = get_local_in_edges(neuron_id);
 
@@ -377,7 +377,7 @@ public:
      * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      * @return The number of incoming synapses that the specified neuron formed from inhibitory neurons
      */
-    [[nodiscard]] synapse_weight get_number_inhibitory_in_edges(const NeuronID& neuron_id) const {
+    [[nodiscard]] synapse_weight get_number_inhibitory_in_edges(const NeuronID neuron_id) const {
         const DistantEdges& all_distant_edges = get_distant_in_edges(neuron_id);
         const LocalEdges& all_local_edges = get_local_in_edges(neuron_id);
 
@@ -404,7 +404,7 @@ public:
      * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      * @return The number of outgoing synapses that the specified neuron formed
      */
-    [[nodiscard]] synapse_weight get_number_out_edges(const NeuronID& neuron_id) const {
+    [[nodiscard]] synapse_weight get_number_out_edges(const NeuronID neuron_id) const {
         const DistantEdges& all_distant_edges = get_distant_out_edges(neuron_id);
         const LocalEdges& all_local_edges = get_local_out_edges(neuron_id);
 
