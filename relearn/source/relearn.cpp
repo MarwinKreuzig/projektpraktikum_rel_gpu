@@ -21,6 +21,7 @@
 #include "neurons/enums/ElementType.h"
 #include "neurons/LocalAreaTranslator.h"
 #include "neurons/helper/NeuronMonitor.h"
+#include "neurons/helper/SynapseDeletionFinder.h"
 #include "neurons/input/BackgroundActivityCalculator.h"
 #include "neurons/input/BackgroundActivityCalculators.h"
 #include "neurons/input/SynapticInputCalculator.h"
@@ -854,12 +855,19 @@ int main(int argc, char** argv) {
     auto inhibitory_dendrites_model = std::make_shared<SynapticElements>(ElementType::Dendrite, min_calcium_inhibitory_dendrites,
         nu_dend, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
+    auto construct_synapse_deletion_finder = [&]() -> std::unique_ptr<SynapseDeletionFinder> {
+        auto synapse_deletion_finder = std::make_unique<RandomSynapseDeletionFinder>();
+        return synapse_deletion_finder;
+    };
+    auto synapse_deletion_finder = construct_synapse_deletion_finder();
+
     Simulation sim(std::move(essentials), partition);
     sim.set_neuron_model(std::move(neuron_model));
     sim.set_calcium_calculator(std::move(calcium_calculator));
     sim.set_axons(std::move(axons_model));
     sim.set_dendrites_ex(std::move(excitatory_dendrites_model));
     sim.set_dendrites_in(std::move(inhibitory_dendrites_model));
+    sim.set_synapse_deletion_finder(std::move(synapse_deletion_finder));
 
     sim.set_percentage_initial_fired_neurons(percentage_initial_fired_neurons);
 

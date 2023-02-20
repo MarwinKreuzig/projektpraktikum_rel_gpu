@@ -10,10 +10,11 @@
 
 #include "Neurons.h"
 
-#include "helper/RankNeuronId.h"
 #include "io/LogFiles.h"
-#include "models/NeuronModels.h"
 #include "mpi/MPIWrapper.h"
+#include "neurons/helper/SynapseDeletionFinder.h"
+#include "neurons/helper/RankNeuronId.h"
+#include "neurons/models/NeuronModels.h"
 #include "neurons/LocalAreaTranslator.h"
 #include "neurons/NetworkGraph.h"
 #include "io/NeuronIO.h"
@@ -44,9 +45,6 @@ void Neurons::init(const number_neurons_type number_neurons) {
     dendrites_exc->init(number_neurons);
     dendrites_inh->init(number_neurons);
 
-    /**
-     * Mark dendrites as exc./inh.
-     */
     for (const auto& id : NeuronID::range(number_neurons)) {
         dendrites_exc->set_signal_type(id, SignalType::Excitatory);
         dendrites_inh->set_signal_type(id, SignalType::Inhibitory);
@@ -60,7 +58,22 @@ void Neurons::init(const number_neurons_type number_neurons) {
     dendrites_exc->set_extra_infos(extra_info);
     dendrites_inh->set_extra_infos(extra_info);
 
+    synapse_deletion_finder->set_extra_infos(extra_info);
+
     calcium_calculator->set_extra_infos(extra_info);
+}
+
+/**
+ * @brief Sets the network graphs in which the synapses for the neurons are stored
+ * @param network_static The network graph for static connections
+ * @param network_plastic The network graph for plastic connections
+ */
+
+void Neurons::set_network_graph(std::shared_ptr<NetworkGraph> network_static, std::shared_ptr<NetworkGraph> network_plastic) {
+    synapse_deletion_finder->set_network_graph(network_plastic);
+
+    network_graph_static = std::move(network_static);
+    network_graph_plastic = std::move(network_plastic);
 }
 
 void Neurons::init_synaptic_elements() {
@@ -337,280 +350,7 @@ StatisticalMeasures Neurons::global_statistics(const std::span<const double> loc
     return { d_min, d_max, avg, var, std };
 }
 
-std::pair<uint64_t, uint64_t> Neurons::delete_synapses() {
-    auto deletion_helper = [this](const std::shared_ptr<SynapticElements>& synaptic_elements) {
-        Timers::start(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
-
-        Timers::start(TimerRegion::COMMIT_NUM_SYNAPTIC_ELEMENTS);
-        const auto to_delete = synaptic_elements->commit_updates();
-        Timers::stop_and_add(TimerRegion::COMMIT_NUM_SYNAPTIC_ELEMENTS);
-
-        Timers::start(TimerRegion::FIND_SYNAPSES_TO_DELETE);
-        const auto outgoing_deletion_requests = delete_synapses_find_synapses(*synaptic_elements, to_delete);
-        Timers::stop_and_add(TimerRegion::FIND_SYNAPSES_TO_DELETE);
-
-        Timers::start(TimerRegion::DELETE_SYNAPSES_ALL_TO_ALL);
-        const auto incoming_deletion_requests = MPIWrapper::exchange_requests(outgoing_deletion_requests);
-        Timers::stop_and_add(TimerRegion::DELETE_SYNAPSES_ALL_TO_ALL);
-
-        Timers::start(TimerRegion::PROCESS_DELETE_REQUESTS);
-        const auto newly_freed_dendrites = delete_synapses_commit_deletions(incoming_deletion_requests, MPIWrapper::get_my_rank());
-        Timers::stop_and_add(TimerRegion::PROCESS_DELETE_REQUESTS);
-
-        Timers::stop_and_add(TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
-
-        return newly_freed_dendrites;
-    };
-
-    const auto axons_deleted = deletion_helper(axons);
-    const auto excitatory_dendrites_deleted = deletion_helper(dendrites_exc);
-    const auto inhibitory_dendrites_deleted = deletion_helper(dendrites_inh);
-
-    return { axons_deleted, excitatory_dendrites_deleted + inhibitory_dendrites_deleted };
-}
-
-CommunicationMap<SynapseDeletionRequest>
-Neurons::delete_synapses_find_synapses(const SynapticElements& synaptic_elements,
-    const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) {
-    const auto& [sum_to_delete, number_deletions] = to_delete;
-
-    const auto number_ranks = MPIWrapper::get_num_ranks();
-    const auto my_rank = MPIWrapper::get_my_rank();
-
-    const auto size_hint = std::min(size_t(number_ranks), synaptic_elements.get_size());
-    CommunicationMap<SynapseDeletionRequest> deletion_requests(number_ranks, size_hint);
-
-    if (sum_to_delete == 0) {
-        return deletion_requests;
-    }
-
-    const auto element_type = synaptic_elements.get_element_type();
-
-    for (const auto& neuron_id : NeuronID::range(number_neurons)) {
-        const auto local_neuron_id = neuron_id.get_neuron_id();
-
-        if (!extra_info->does_update_plasticity(neuron_id)) {
-            continue;
-        }
-
-        /**
-         * Create and delete synaptic elements as required.
-         * This function only deletes elements (bound and unbound), no synapses.
-         */
-        const auto num_synapses_to_delete = number_deletions[local_neuron_id];
-        if (num_synapses_to_delete == 0) {
-            continue;
-        }
-
-        const auto signal_type = synaptic_elements.get_signal_type(neuron_id);
-        const auto affected_neuron_ids = delete_synapses_find_synapses_on_neuron(neuron_id, element_type, signal_type,
-            num_synapses_to_delete);
-
-        for (const auto& [rank, other_neuron_id] : affected_neuron_ids) {
-            SynapseDeletionRequest psd(neuron_id, other_neuron_id, element_type, signal_type);
-            deletion_requests.append(rank, psd);
-
-            if (my_rank == rank) {
-                continue;
-            }
-
-            const auto weight = (SignalType::Excitatory == signal_type) ? -1 : 1;
-            if (ElementType::Axon == element_type) {
-                network_graph_plastic->add_synapse(
-                    DistantOutSynapse(RankNeuronId(rank, other_neuron_id), neuron_id, weight));
-            } else {
-                network_graph_plastic->add_synapse(
-                    DistantInSynapse(neuron_id, RankNeuronId(rank, other_neuron_id), weight));
-            }
-        }
-    }
-
-    return deletion_requests;
-}
-
-std::vector<RankNeuronId> Neurons::delete_synapses_find_synapses_on_neuron(
-    const NeuronID neuron_id,
-    const ElementType element_type,
-    const SignalType signal_type,
-    const unsigned int num_synapses_to_delete) {
-
-    // Only do something if necessary
-    if (0 == num_synapses_to_delete) {
-        return {};
-    }
-
-    auto register_edges = [](const std::vector<std::pair<RankNeuronId, RelearnTypes::synapse_weight>>& edges) {
-        std::vector<RankNeuronId> neuron_ids{};
-        neuron_ids.reserve(edges.size());
-
-        for (const auto& [rni, weight] : edges) {
-            /**
-             * Create "edge weight" number of synapses and add them to the synapse list
-             * NOTE: We take abs(it->second) here as DendriteType::Inhibitory synapses have count < 0
-             */
-
-            const auto abs_synapse_weight = std::abs(weight);
-            RelearnException::check(abs_synapse_weight > 0,
-                "Neurons::delete_synapses_find_synapses_on_neuron::delete_synapses_register_edges: The absolute weight was 0");
-
-            for (auto synapse_id = 0; synapse_id < abs_synapse_weight; ++synapse_id) {
-                neuron_ids.emplace_back(rni);
-            }
-        }
-
-        return neuron_ids;
-    };
-
-    std::vector<RankNeuronId> current_synapses{};
-    if (element_type == ElementType::Axon) {
-        // Walk through outgoing edges
-        NetworkGraph::DistantEdges out_edges = network_graph_plastic->get_all_out_edges(neuron_id);
-        current_synapses = register_edges(out_edges);
-    } else {
-        // Walk through ingoing edges
-        NetworkGraph::DistantEdges in_edges = network_graph_plastic->get_all_in_edges(neuron_id, signal_type);
-        current_synapses = register_edges(in_edges);
-    }
-
-    const auto number_synapses = current_synapses.size();
-
-    RelearnException::check(num_synapses_to_delete <= number_synapses,
-        "Neurons::delete_synapses_find_synapses_on_neuron:: num_synapses_to_delete > current_synapses.size()");
-
-    std::vector<size_t> drawn_indices{};
-    drawn_indices.reserve(num_synapses_to_delete);
-
-    uniform_int_distribution<unsigned int> uid{};
-
-    for (unsigned int i = 0; i < num_synapses_to_delete; i++) {
-        auto random_number = RandomHolder::get_random_uniform_integer(RandomHolderKey::Neurons, size_t(0),
-            number_synapses - 1);
-        while (std::ranges::find(drawn_indices, random_number) != drawn_indices.end()) {
-            random_number = RandomHolder::get_random_uniform_integer(RandomHolderKey::Neurons, size_t(0),
-                number_synapses - 1);
-        }
-
-        drawn_indices.emplace_back(random_number);
-    }
-
-    std::vector<RankNeuronId> affected_neurons{};
-    affected_neurons.reserve(num_synapses_to_delete);
-
-    for (const auto index : drawn_indices) {
-        affected_neurons.emplace_back(current_synapses[index]);
-    }
-
-    return affected_neurons;
-}
-
-size_t Neurons::delete_synapses_commit_deletions(const CommunicationMap<SynapseDeletionRequest>& list, const MPIRank& my_rank) {
-
-    size_t num_synapses_deleted = 0;
-
-    for (const auto& [other_rank, requests] : list) {
-        num_synapses_deleted += requests.size();
-
-        for (const auto& [other_neuron_id, my_neuron_id, element_type, signal_type] : requests) {
-            const auto weight = (SignalType::Excitatory == signal_type) ? -1 : 1;
-
-            /**
-             *  Update network graph
-             */
-            if (my_rank == other_rank) {
-                if (ElementType::Dendrite == element_type) {
-                    network_graph_plastic->add_synapse(LocalSynapse(other_neuron_id, my_neuron_id, weight));
-                } else {
-                    network_graph_plastic->add_synapse(LocalSynapse(my_neuron_id, other_neuron_id, weight));
-                }
-            } else {
-                if (ElementType::Dendrite == element_type) {
-                    network_graph_plastic->add_synapse(
-                        DistantOutSynapse(RankNeuronId(other_rank, other_neuron_id), my_neuron_id, weight));
-                } else {
-                    network_graph_plastic->add_synapse(
-                        DistantInSynapse(my_neuron_id, RankNeuronId(other_rank, other_neuron_id), weight));
-                }
-            }
-
-            if (ElementType::Dendrite == element_type) {
-                axons->update_connected_elements(my_neuron_id, -1);
-                continue;
-            }
-
-            if (SignalType::Excitatory == signal_type) {
-                dendrites_exc->update_connected_elements(my_neuron_id, -1);
-            } else {
-                dendrites_inh->update_connected_elements(my_neuron_id, -1);
-            }
-        }
-    }
-
-    return num_synapses_deleted;
-}
-
-size_t Neurons::delete_disabled_distant_synapses(const CommunicationMap<SynapseDeletionRequest>& list, const MPIRank& my_rank) {
-
-    size_t num_synapses_deleted = 0;
-
-    const auto& disable_flags = extra_info->get_disable_flags();
-
-    for (const auto& [other_rank, requests] : list) {
-        num_synapses_deleted += requests.size();
-
-        for (const auto& [other_neuron_id, my_neuron_id, element_type, signal_type] : requests) {
-            if (disable_flags[my_neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
-                continue;
-            }
-
-            /**
-             *  Update network graph
-             */
-            if (my_rank == other_rank) {
-                RelearnException::fail("Local synapse deletion is not allowed via mpi");
-            }
-
-            if (ElementType::Dendrite == element_type) {
-                const auto& out_edges = network_graph_plastic->get_distant_out_edges(my_neuron_id);
-                RelearnTypes::synapse_weight weight = 0;
-                for (const auto& [target, edge_weight] : out_edges) {
-                    if (target.get_rank() == other_rank && target.get_neuron_id() == other_neuron_id) {
-                        weight = edge_weight;
-                        break;
-                    }
-                }
-                RelearnException::check(weight != 0, "Couldnot find the weight of the connection");
-                network_graph_plastic->add_synapse(
-                    DistantOutSynapse(RankNeuronId(other_rank, other_neuron_id), my_neuron_id, -weight));
-            } else {
-                const auto& in_edges = network_graph_plastic->get_distant_in_edges(my_neuron_id);
-                RelearnTypes::synapse_weight weight = 0;
-                for (const auto& [source, edge_weight] : in_edges) {
-                    if (source.get_rank() == other_rank && source.get_neuron_id() == other_neuron_id) {
-                        weight = edge_weight;
-                        break;
-                    }
-                }
-                network_graph_plastic->add_synapse(
-                    DistantInSynapse(my_neuron_id, RankNeuronId(other_rank, other_neuron_id), -weight));
-            }
-
-            if (ElementType::Dendrite == element_type) {
-                axons->update_connected_elements(my_neuron_id, -1);
-                continue;
-            }
-
-            if (SignalType::Excitatory == signal_type) {
-                dendrites_exc->update_connected_elements(my_neuron_id, -1);
-            } else {
-                dendrites_inh->update_connected_elements(my_neuron_id, -1);
-            }
-        }
-    }
-
-    return num_synapses_deleted;
-}
-
-size_t Neurons::create_synapses() {
+std::uint64_t Neurons::create_synapses() {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     // Lock local RMA memory for local stores and make them visible afterwards
@@ -739,14 +479,14 @@ StatisticalMeasures Neurons::get_statistics(const NeuronAttribute attribute) con
     return {};
 }
 
-std::tuple<uint64_t, uint64_t, uint64_t> Neurons::update_connectivity() {
+std::tuple<std::uint64_t, std::uint64_t, std::uint64_t> Neurons::update_connectivity() {
     RelearnException::check(network_graph_plastic != nullptr, "Network graph is nullptr");
     RelearnException::check(global_tree != nullptr, "Global octree is nullptr");
     RelearnException::check(algorithm != nullptr, "Algorithm is nullptr");
 
     debug_check_counts();
     network_graph_plastic->debug_check();
-    const auto& [num_axons_deleted, num_dendrites_deleted] = delete_synapses();
+    const auto& [num_axons_deleted, num_dendrites_deleted] = synapse_deletion_finder->delete_synapses();
     debug_check_counts();
     network_graph_plastic->debug_check();
     size_t num_synapses_created = create_synapses();
@@ -756,10 +496,71 @@ std::tuple<uint64_t, uint64_t, uint64_t> Neurons::update_connectivity() {
     return { num_axons_deleted, num_dendrites_deleted, num_synapses_created };
 }
 
+size_t Neurons::delete_disabled_distant_synapses(const CommunicationMap<SynapseDeletionRequest>& list, const MPIRank my_rank) {
+    size_t num_synapses_deleted = 0;
+
+    const auto& disable_flags = extra_info->get_disable_flags();
+
+    for (const auto& [other_rank, requests] : list) {
+        num_synapses_deleted += requests.size();
+
+        for (const auto& [other_neuron_id, my_neuron_id, element_type, signal_type] : requests) {
+            if (disable_flags[my_neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
+                continue;
+            }
+
+            /**
+             *  Update network graph
+             */
+            if (my_rank == other_rank) {
+                RelearnException::fail("Local synapse deletion is not allowed via mpi");
+            }
+
+            if (ElementType::Dendrite == element_type) {
+                const auto& out_edges = network_graph_plastic->get_distant_out_edges(my_neuron_id);
+                RelearnTypes::synapse_weight weight = 0;
+                for (const auto& [target, edge_weight] : out_edges) {
+                    if (target.get_rank() == other_rank && target.get_neuron_id() == other_neuron_id) {
+                        weight = edge_weight;
+                        break;
+                    }
+                }
+                RelearnException::check(weight != 0, "Couldnot find the weight of the connection");
+                network_graph_plastic->add_synapse(
+                    DistantOutSynapse(RankNeuronId(other_rank, other_neuron_id), my_neuron_id, -weight));
+            } else {
+                const auto& in_edges = network_graph_plastic->get_distant_in_edges(my_neuron_id);
+                RelearnTypes::synapse_weight weight = 0;
+                for (const auto& [source, edge_weight] : in_edges) {
+                    if (source.get_rank() == other_rank && source.get_neuron_id() == other_neuron_id) {
+                        weight = edge_weight;
+                        break;
+                    }
+                }
+                network_graph_plastic->add_synapse(
+                    DistantInSynapse(my_neuron_id, RankNeuronId(other_rank, other_neuron_id), -weight));
+            }
+
+            if (ElementType::Dendrite == element_type) {
+                axons->update_connected_elements(my_neuron_id, -1);
+                continue;
+            }
+
+            if (SignalType::Excitatory == signal_type) {
+                dendrites_exc->update_connected_elements(my_neuron_id, -1);
+            } else {
+                dendrites_inh->update_connected_elements(my_neuron_id, -1);
+            }
+        }
+    }
+
+    return num_synapses_deleted;
+}
+
 void Neurons::print_sums_of_synapses_and_elements_to_log_file_on_rank_0(const step_type step,
-    const uint64_t sum_axon_deleted,
-    const uint64_t sum_dendrites_deleted,
-    const uint64_t sum_synapses_created) {
+    const std::uint64_t sum_axon_deleted,
+    const std::uint64_t sum_dendrites_deleted,
+    const std::uint64_t sum_synapses_created) {
     int64_t sum_axons_excitatory_counts = 0;
     int64_t sum_axons_excitatory_connected_counts = 0;
     int64_t sum_axons_inhibitory_counts = 0;
@@ -1035,7 +836,7 @@ void Neurons::print_synaptic_changes_to_essentials(const std::unique_ptr<Essenti
     helper(*dendrites_inh, "Dendrites-Inhibitory-");
 }
 
-void Neurons::print_network_graph_to_log_file(const step_type step, bool with_prefix) const {
+void Neurons::print_network_graph_to_log_file(const step_type step, const bool with_prefix) const {
     std::string prefix = "";
     if (with_prefix) {
         prefix = "step_" + std::to_string(step) + "_";

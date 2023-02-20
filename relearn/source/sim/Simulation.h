@@ -38,6 +38,7 @@ class NeuronToSubdomainAssignment;
 class Neurons;
 class Octree;
 class Partition;
+class SynapseDeletionFinder;
 class SynapticElements;
 
 /**
@@ -108,6 +109,12 @@ public:
      * @param se The synaptic elements model
      */
     void set_dendrites_in(std::shared_ptr<SynapticElements>&& se) noexcept;
+
+    /**
+     * @brief Sets the synapse deletion finder
+     * @param se The synapse deletion finder
+     */
+    void set_synapse_deletion_finder(std::unique_ptr<SynapseDeletionFinder>&& sdf) noexcept;
 
     /**
      * @brief Sets the enable interrupts during the simulation.
@@ -350,6 +357,8 @@ private:
 
     std::shared_ptr<NetworkGraph> network_graph_plastic{};
     std::shared_ptr<NetworkGraph> network_graph_static{};
+
+    std::unique_ptr<SynapseDeletionFinder> synapse_deletion_finder{};
 
     std::shared_ptr<std::vector<NeuronMonitor>> monitors{};
     std::shared_ptr<std::unordered_map<RelearnTypes::area_id, AreaMonitor>> area_monitors{};

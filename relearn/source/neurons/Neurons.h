@@ -22,9 +22,7 @@
 #include "neurons/NeuronsExtraInfo.h"
 #include "neurons/enums/SignalType.h"
 #include "neurons/enums/UpdateStatus.h"
-#include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseCreationRequests.h"
-#include "neurons/helper/SynapseDeletionFinder.h"
 #include "neurons/helper/SynapseDeletionRequests.h"
 #include "util/RelearnException.h"
 #include "util/StatisticalMeasures.h"
@@ -41,6 +39,7 @@ class NetworkGraph;
 class NeuronMonitor;
 class Octree;
 class Partition;
+class SynapseDeletionFinder;
 
 /**
  * This class gathers all information for the neurons and provides the primary interface for the simulation
@@ -72,7 +71,7 @@ public:
         std::shared_ptr<Axons> axons_ptr,
         std::shared_ptr<DendritesExcitatory> dendrites_ex_ptr,
         std::shared_ptr<DendritesInhibitory> dendrites_in_ptr,
-        std::shared_ptr<SynapseDeletionFinder> synapse_del_ptr)
+        std::unique_ptr<SynapseDeletionFinder> synapse_del_ptr)
         : partition(std::move(partition))
         , neuron_model(std::move(model_ptr))
         , calcium_calculator(std::move(calculator_ptr))
@@ -136,10 +135,7 @@ public:
      * @param network_static The network graph for static connections
      * @param network_plastic The network graph for plastic connections
      */
-    void set_network_graph(std::shared_ptr<NetworkGraph> network_static, std::shared_ptr<NetworkGraph> network_plastic) {
-        network_graph_static = std::move(network_static);
-        network_graph_plastic = std::move(network_plastic);
-    }
+    void set_network_graph(std::shared_ptr<NetworkGraph> network_static, std::shared_ptr<NetworkGraph> network_plastic);
 
     /**
      * @brief Sets the area translator that translates between the local area id on the current mpi rank and its area name
@@ -230,7 +226,7 @@ public:
      * @param neuron_id Local neuron id
      * @return Calcium of the neuron
      */
-    [[nodiscard]] double get_calcium(const NeuronID& neuron_id) const {
+    [[nodiscard]] double get_calcium(const NeuronID neuron_id) const {
         return calcium_calculator->get_calcium()[neuron_id.get_neuron_id()];
     }
 
@@ -350,7 +346,7 @@ public:
      *      or something unexpected happens
      * @return Returns a tuple with (1) the number of deleted synapses, and (2) the number of created synapses
      */
-    [[nodiscard]] std::tuple<uint64_t, uint64_t, uint64_t> update_connectivity();
+    [[nodiscard]] std::tuple<std::uint64_t, std::uint64_t, std::uint64_t> update_connectivity();
 
     /**
      * @brief Calculates the number vacant axons and dendrites (excitatory, inhibitory) and prints them to LogFiles::EventType::Sums
@@ -359,7 +355,7 @@ public:
      * @param sum_synapses_deleted The number of deleted synapses (locally)
      * @param sum_synapses_created The number of created synapses (locally)
      */
-    void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step_type step, uint64_t sum_axon_deleted, uint64_t sum_dendrites_deleted, uint64_t sum_synapses_created);
+    void print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step_type step, std::uint64_t sum_axon_deleted, std::uint64_t sum_dendrites_deleted, std::uint64_t sum_synapses_created);
 
     /**
      * @brief Prints the overview of the neurons to LogFiles::EventType::NeuronsOverview
@@ -444,7 +440,7 @@ public:
      * @param signal_types Vector of SignalTypes. Neuron i has signal_type[i]
      * @throws RelearnException If signal_type does not match weight
      */
-    static void check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, std::span<const SignalType> signal_types, const MPIRank my_rank);
+    static void check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, std::span<const SignalType> signal_types, MPIRank my_rank);
 
     /**
      * Processes the requests of other mpi ranks to delete distant synapses on this rank to disabled remote neurons
@@ -452,7 +448,7 @@ public:
      * @param my_rank Current mpi rank
      * @return Number of deletions
      */
-    [[nodiscard]] size_t delete_disabled_distant_synapses(const CommunicationMap<SynapseDeletionRequest>& list, const MPIRank& my_rank);
+    [[nodiscard]] size_t delete_disabled_distant_synapses(const CommunicationMap<SynapseDeletionRequest>& list, MPIRank my_rank);
 
 private:
     [[nodiscard]] StatisticalMeasures global_statistics(std::span<const double> local_values, MPIRank root) const;
@@ -469,15 +465,7 @@ private:
         return global_statistics(converted_values, root);
     }
 
-    [[nodiscard]] std::pair<uint64_t, uint64_t> delete_synapses();
-
-    [[nodiscard]] CommunicationMap<SynapseDeletionRequest> delete_synapses_find_synapses(const SynapticElements& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete);
-
-    [[nodiscard]] std::vector<RankNeuronId> delete_synapses_find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete);
-
-    [[nodiscard]] size_t delete_synapses_commit_deletions(const CommunicationMap<SynapseDeletionRequest>& list, const MPIRank& my_rank);
-
-    [[nodiscard]] size_t create_synapses();
+    [[nodiscard]] std::uint64_t create_synapses();
 
     number_neurons_type number_neurons = 0;
 
@@ -498,7 +486,7 @@ private:
     std::shared_ptr<DendritesExcitatory> dendrites_exc{};
     std::shared_ptr<DendritesInhibitory> dendrites_inh{};
 
-    std::shared_ptr<SynapseDeletionFinder> synapse_deletion_finder{};
+    std::unique_ptr<SynapseDeletionFinder> synapse_deletion_finder{};
 
     std::shared_ptr<NeuronsExtraInfo> extra_info{ std::make_shared<NeuronsExtraInfo>() };
 };

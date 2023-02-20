@@ -48,15 +48,14 @@ enum class RandomHolderKey : char {
     Partition = 1,
     Subdomain = 2,
     PoissonModel = 3,
-    Neurons = 4,
-    NeuronModel = 5,
-    SynapticElements = 6,
-    NeuronsExtraInformation = 7,
-    Connector = 8,
-    BackgroundActivity = 9,
+    SynapseDeletionFinder = 4,
+    SynapticElements = 5,
+    NeuronsExtraInformation = 6,
+    Connector = 7,
+    BackgroundActivity = 8,
 };
 
-constexpr size_t NUMBER_RANDOM_HOLDER_KEYS = 10;
+constexpr size_t NUMBER_RANDOM_HOLDER_KEYS = 9;
 
 enum class RNGType {
     Mersenne,
@@ -185,8 +184,7 @@ public:
         RandomHolder::seed(RandomHolderKey::Partition, seed);
         RandomHolder::seed(RandomHolderKey::Subdomain, seed);
         RandomHolder::seed(RandomHolderKey::PoissonModel, seed);
-        RandomHolder::seed(RandomHolderKey::Neurons, seed);
-        RandomHolder::seed(RandomHolderKey::NeuronModel, seed);
+        RandomHolder::seed(RandomHolderKey::SynapseDeletionFinder, seed);
         RandomHolder::seed(RandomHolderKey::SynapticElements, seed);
         RandomHolder::seed(RandomHolderKey::NeuronsExtraInformation, seed);
         RandomHolder::seed(RandomHolderKey::Connector, seed);
