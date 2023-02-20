@@ -29,7 +29,7 @@ Event Event::create_duration_begin_event(std::string&& name, std::set<EventCateg
 }
 
 void Event::create_and_print_duration_begin_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args, const bool flush) {
-    if (!LogFiles::get_log_status(LogFiles::EventType::Events)) {
+    if (LogFiles::get_log_status(LogFiles::EventType::Events)) {
         return;
     }
 
@@ -53,7 +53,7 @@ Event Event::create_duration_end_event() {
 }
 
 void Event::create_and_print_duration_end_event(bool flush) {
-    if (!LogFiles::get_log_status(LogFiles::EventType::Events)) {
+    if (LogFiles::get_log_status(LogFiles::EventType::Events)) {
         return;
     }
 
@@ -77,7 +77,7 @@ Event Event::create_complete_event(std::string&& name, std::set<EventCategory>&&
 }
 
 void Event::create_and_print_complete_event(std::string&& name, std::set<EventCategory>&& categories, double duration, std::vector<std::pair<std::string, std::string>>&& args, bool flush) {
-    if (!LogFiles::get_log_status(LogFiles::EventType::Events)) {
+    if (LogFiles::get_log_status(LogFiles::EventType::Events)) {
         return;
     }
 
@@ -101,7 +101,7 @@ Event Event::create_instant_event(std::string&& name, std::set<EventCategory>&& 
 }
 
 void Event::create_and_print_instant_event(std::string&& name, std::set<EventCategory>&& categories, InstantEventScope scope, std::vector<std::pair<std::string, std::string>>&& args, bool flush) {
-    if (!LogFiles::get_log_status(LogFiles::EventType::Events)) {
+    if (LogFiles::get_log_status(LogFiles::EventType::Events)) {
         return;
     }
 
@@ -125,7 +125,7 @@ Event Event::create_counter_event(std::string&& name, std::set<EventCategory>&& 
 }
 
 void Event::create_and_print_counter_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args, bool flush) {
-    if (!LogFiles::get_log_status(LogFiles::EventType::Events)) {
+    if (LogFiles::get_log_status(LogFiles::EventType::Events)) {
         return;
     }
 

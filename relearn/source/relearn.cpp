@@ -290,6 +290,7 @@ int main(int argc, char** argv) {
     std::string log_prefix{};
     const auto* opt_log_prefix = app.add_option("-p,--log-prefix", log_prefix, "Prefix for log files.");
 
+    const auto* flag_enable_printing_events = app.add_flag("--print-events", "Enables printing the events to a file.");
     const auto* flag_disable_printing_positions = app.add_flag("--no-print-positions", "Disables printing the positions to a file.");
     const auto* flag_disable_printing_network = app.add_flag("--no-print-network", "Disables printing the network to a file.");
     const auto* flag_disable_printing_plasticity = app.add_flag("--no-print-plasticity", "Disables printing the plasticity changes to a file.");
@@ -561,6 +562,8 @@ int main(int argc, char** argv) {
         if (static_cast<bool>(*opt_log_prefix)) {
             LogFiles::set_general_prefix(log_prefix);
         }
+
+        LogFiles::set_log_status(LogFiles::EventType::Events, !static_cast<bool>(*flag_enable_printing_events));
 
         if (static_cast<bool>(*flag_disable_printing_positions)) {
             LogFiles::set_log_status(LogFiles::EventType::Positions, true);
