@@ -60,6 +60,10 @@ inline std::ostream& operator<<(std::ostream& out, const EventCategory event_cat
 template <>
 struct fmt::formatter<EventCategory> : ostream_formatter { };
 
+/**
+ * Specifies the phase of an event. These are not custom and should not change. See:
+ * https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview
+ */
 enum class EventPhase {
     DurationBegin,
     DurationEnd,
@@ -181,6 +185,10 @@ inline std::ostream& operator<<(std::ostream& out, const EventPhase event_phase)
 template <>
 struct fmt::formatter<EventPhase> : ostream_formatter { };
 
+/**
+ * An instant event can be of global, process, and thread level.
+ * There is a forth level (default), which collapses to thread.
+ */
 enum class InstantEventScope {
     Global,
     Process,
@@ -212,40 +220,127 @@ inline std::ostream& operator<<(std::ostream& out, const InstantEventScope event
 template <>
 struct fmt::formatter<InstantEventScope> : ostream_formatter { };
 
+/**
+ * Provides the possibility to create events in the style of the Google Trace Event Format:
+ * https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview
+ */
 class EventTrace {
 public:
+    /**
+     * @brief Creates an event that signals the begin of some duration
+     * @param name The name of the event
+     * @param categories The categories for the event, can be empty
+     * @param tracing_clock The clock at the start of the event
+     * @param process_id The id of the process to which the event belongs
+     * @param thread_id The id of the thread to which the event belongs
+     * @param args The arguments for the event, can be empty
+     * @return The created object that can be printed using operator<<
+     */
     static EventTrace create_duration_begin_event(std::string&& name, std::set<EventCategory>&& categories,
         const double tracing_clock, const std::uint64_t process_id, const std::uint64_t thread_id, std::vector<std::pair<std::string, std::string>>&& args) {
         return EventTrace(std::move(name), std::move(categories), EventPhase::DurationBegin, {}, tracing_clock, process_id, thread_id, std::move(args), {});
     }
 
+    /**
+     * @brief Creates an event that signals the begin of some duration with default arguments for process-id, thread-id, and tracing-clock
+     * @param name The name of the event
+     * @param categories The categories for the event, can be empty
+     * @param args The arguments for the event, can be empty
+     * @return The created object that can be printed using operator<<
+     */
     static EventTrace create_duration_begin_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args);
 
+    /**
+     * @brief Creates an event that signals the end of some duration. Always ends the latest begun event
+     * @param tracing_clock The clock at the start of the event
+     * @param process_id The id of the process to which the event belongs
+     * @param thread_id The id of the thread to which the event belongs
+     * @return The created object that can be printed using operator<<
+     */
     static EventTrace create_duration_end_event(const double tracing_clock, const std::uint64_t process_id, const std::uint64_t thread_id) {
         return EventTrace({}, {}, EventPhase::DurationEnd, {}, tracing_clock, process_id, thread_id, {}, {});
     }
 
+    /**
+     * @brief Creates an event that signals the end of some duration with default arguments for process-id, thread-id, and tracing-clock. Always ends the latest begun event
+     * @return The created object that can be printed using operator<<
+     */
     static EventTrace create_duration_end_event();
 
+    /**
+     * @brief Creates an event that signals the completion of some event (not a duration)
+     * @param name The name of the event
+     * @param categories The categories for the event, can be empty
+     * @param duration The duration of the event
+     * @param tracing_clock The clock at the start of the event
+     * @param process_id The id of the process to which the event belongs
+     * @param thread_id The id of the thread to which the event belongs
+     * @param args The arguments for the event, can be empty
+     * @return The created object that can be printed using operator<<
+     */
     static EventTrace create_complete_event(std::string&& name, std::set<EventCategory>&& categories, const double duration,
         const double tracing_clock, const std::uint64_t process_id, const std::uint64_t thread_id, std::vector<std::pair<std::string, std::string>>&& args) {
         return EventTrace(std::move(name), std::move(categories), EventPhase::Complete, {}, tracing_clock, process_id, thread_id, std::move(args), duration);
     }
 
+    /**
+     * @brief Creates an event that signals the completion of some event (not a duration event) with default arguments for process-id, thread-id, and tracing-clock.
+     * @param name The name of the event
+     * @param categories The categories for the event, can be empty
+     * @param duration The duration of the event
+     * @param args The arguments for the event, can be empty
+     * @return The created object that can be printed using operator<<
+     */
     static EventTrace create_complete_event(std::string&& name, std::set<EventCategory>&& categories, double duration, std::vector<std::pair<std::string, std::string>>&& args);
 
+    /**
+     * @brief Creates an event that signals same instant
+     * @param name The name of the event
+     * @param categories The categories for the event, can be empty
+     * @param scope The scope of the event, can be global, process, or thread
+     * @param tracing_clock The clock at the start of the event
+     * @param process_id The id of the process to which the event belongs
+     * @param thread_id The id of the thread to which the event belongs
+     * @param args The arguments for the event, can be empty
+     * @return The created object that can be printed using operator<<
+     */
     static EventTrace create_instant_event(std::string&& name, std::set<EventCategory>&& categories, const InstantEventScope scope,
         const double tracing_clock, const std::uint64_t process_id, const std::uint64_t thread_id, std::vector<std::pair<std::string, std::string>>&& args) {
         return EventTrace(std::move(name), std::move(categories), EventPhase::Instant, scope, tracing_clock, process_id, thread_id, std::move(args), {});
     }
 
+    /**
+     * @brief Creates an event that signals same instant with default arguments for process-id, thread-id, and tracing-clock.
+     * @param name The name of the event
+     * @param categories The categories for the event, can be empty
+     * @param scope The scope of the event, can be global, process, or thread
+     * @param args The arguments for the event, can be empty
+     * @return The created object that can be printed using operator<<
+     */
     static EventTrace create_instant_event(std::string&& name, std::set<EventCategory>&& categories, InstantEventScope scope, std::vector<std::pair<std::string, std::string>>&& args);
 
+    /**
+     * @brief Creates an event that signals the change of some counter (values specified in args)
+     * @param name The name of the event
+     * @param categories The categories for the event, can be empty
+     * @param tracing_clock The clock at the start of the event
+     * @param process_id The id of the process to which the event belongs
+     * @param thread_id The id of the thread to which the event belongs
+     * @param args The arguments for the event, should not be empty
+     * @return The created object that can be printed using operator<<
+     */
     static EventTrace create_counter_event(std::string&& name, std::set<EventCategory>&& categories,
         const double tracing_clock, const std::uint64_t process_id, const std::uint64_t thread_id, std::vector<std::pair<std::string, std::string>>&& args) {
         return EventTrace(std::move(name), std::move(categories), EventPhase::Counter, {}, tracing_clock, process_id, thread_id, std::move(args), {});
     }
 
+    /**
+     * @brief Creates an event that signals the change of some counter (values specified in args) with default arguments for process-id, thread-id, and tracing-clock.
+     * @param name The name of the event
+     * @param categories The categories for the event, can be empty
+     * @param args The arguments for the event, should not be empty
+     * @return The created object that can be printed using operator<<
+     */
     static EventTrace create_counter_event(std::string&& name, std::set<EventCategory>&& categories, std::vector<std::pair<std::string, std::string>>&& args);
 
 private:
