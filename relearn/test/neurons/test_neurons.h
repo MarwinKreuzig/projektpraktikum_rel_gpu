@@ -12,6 +12,7 @@
 
 #include "RelearnTest.hpp"
 #include "neurons/Neurons.h"
+#include "neurons/helper/SynapseDeletionFinder.h"
 #include "neurons/input/SynapticInputCalculators.h"
 #include "neurons/input/BackgroundActivityCalculators.h"
 
@@ -28,11 +29,16 @@ protected:
         auto calcium = std::make_unique<CalciumCalculator>();
         calcium->set_initial_calcium_calculator([](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
         calcium->set_target_calcium_calculator([](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
-        auto dends_ex = std::make_unique<SynapticElements>(ElementType::Dendrite, 0.2);
-        auto dends_in = std::make_unique<SynapticElements>(ElementType::Dendrite, 0.2);
-        auto axs = std::make_unique<SynapticElements>(ElementType::Axon, 0.2);
+        auto dends_ex = std::make_shared<SynapticElements>(ElementType::Dendrite, 0.2);
+        auto dends_in = std::make_shared<SynapticElements>(ElementType::Dendrite, 0.2);
+        auto axs = std::make_shared<SynapticElements>(ElementType::Axon, 0.2);
 
-        Neurons neurons{ partition, std::move(model), std::move(calcium), std::move(axs), std::move(dends_ex), std::move(dends_in) };
+        auto sdf = std::make_unique<RandomSynapseDeletionFinder>();
+        sdf->set_axons(axs);
+        sdf->set_dendrites_ex(dends_ex);
+        sdf->set_dendrites_in(dends_in);
+
+        Neurons neurons{ partition, std::move(model), std::move(calcium), std::move(axs), std::move(dends_ex), std::move(dends_in), std::move(sdf) };
         return neurons;
     }
 };

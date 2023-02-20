@@ -206,10 +206,10 @@ std::vector<RankNeuronId> RandomSynapseDeletionFinder::find_synapses_on_neuron(N
     uniform_int_distribution<unsigned int> uid{};
 
     for (unsigned int i = 0; i < num_synapses_to_delete; i++) {
-        auto random_number = RandomHolder::get_random_uniform_integer(RandomHolderKey::Neurons, size_t(0),
+        auto random_number = RandomHolder::get_random_uniform_integer(RandomHolderKey::SynapseDeletionFinder, size_t(0),
             number_synapses - 1);
         while (std::ranges::find(drawn_indices, random_number) != drawn_indices.end()) {
-            random_number = RandomHolder::get_random_uniform_integer(RandomHolderKey::Neurons, size_t(0),
+            random_number = RandomHolder::get_random_uniform_integer(RandomHolderKey::SynapseDeletionFinder, size_t(0),
                 number_synapses - 1);
         }
 

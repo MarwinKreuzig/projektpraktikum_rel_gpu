@@ -30,16 +30,20 @@ public:
         network_graph = std::move(ng);
     }
 
-    void set_axons(std::shared_ptr<SynapticElements>&& se) noexcept {
+    void set_axons(std::shared_ptr<SynapticElements> se) noexcept {
         axons = std::move(se);
     }
 
-    void set_dendrites_ex(std::shared_ptr<SynapticElements>&& se) noexcept {
+    void set_dendrites_ex(std::shared_ptr<SynapticElements> se) noexcept {
         excitatory_dendrites = std::move(se);
     }
 
-    void set_dendrites_in(std::shared_ptr<SynapticElements>&& se) noexcept {
+    void set_dendrites_in(std::shared_ptr<SynapticElements> se) noexcept {
         inhibitory_dendrites = std::move(se);
+    }
+
+    void set_extra_infos(std::shared_ptr<NeuronsExtraInfo> new_extra_info) {
+        extra_info = std::move(new_extra_info);
     }
 
     [[nodiscard]] std::pair<std::uint64_t, std::uint64_t> delete_synapses();

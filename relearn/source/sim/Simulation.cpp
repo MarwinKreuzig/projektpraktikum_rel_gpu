@@ -18,6 +18,7 @@
 #include "neurons/Neurons.h"
 #include "neurons/helper/AreaMonitor.h"
 #include "neurons/helper/NeuronMonitor.h"
+#include "neurons/helper/SynapseDeletionFinder.h"
 #include "neurons/models/NeuronModels.h"
 #include "sim/NeuronToSubdomainAssignment.h"
 #include "structure/Octree.h"
@@ -73,6 +74,10 @@ void Simulation::set_dendrites_in(std::shared_ptr<SynapticElements>&& se) noexce
     dendrites_in = std::move(se);
 }
 
+void Simulation::set_synapse_deletion_finder(std::unique_ptr<SynapseDeletionFinder>&& sdf) noexcept {
+    synapse_deletion_finder = std::move(sdf);
+}
+
 void Simulation::set_enable_interrupts(std::vector<std::pair<step_type, std::vector<NeuronID>>> interrupts) {
     enable_interrupts = std::move(interrupts);
 
@@ -124,7 +129,11 @@ void Simulation::initialize() {
     const auto my_rank = MPIWrapper::get_my_rank();
     RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank.get_rank());
 
-    neurons = std::make_shared<Neurons>(partition, std::move(neuron_models), std::move(calcium_calculator), axons, dendrites_ex, dendrites_in);
+    synapse_deletion_finder->set_axons(axons);
+    synapse_deletion_finder->set_dendrites_ex(dendrites_ex);
+    synapse_deletion_finder->set_dendrites_in(dendrites_in);
+
+    neurons = std::make_shared<Neurons>(partition, std::move(neuron_models), std::move(calcium_calculator), axons, dendrites_ex, dendrites_in, std::move(synapse_deletion_finder));
     neurons->init(number_local_neurons);
     NeuronMonitor::neurons_to_monitor = neurons;
 
@@ -245,7 +254,7 @@ void Simulation::initialize() {
     std::vector<FiredStatus> initial_fired(fired_neurons, FiredStatus::Fired);
     initial_fired.resize(number_local_neurons, FiredStatus::Inactive);
 
-    RandomHolder::shuffle(RandomHolderKey::Neurons, initial_fired.begin(), initial_fired.end());
+    RandomHolder::shuffle(RandomHolderKey::BackgroundActivity, initial_fired.begin(), initial_fired.end());
 
     neurons->set_fired(std::move(initial_fired));
 
