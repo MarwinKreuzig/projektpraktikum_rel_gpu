@@ -223,10 +223,9 @@ public:
      * @brief Performs one step of simulating the electrical activity for all neurons.
      *      This method performs communication via MPI.
      * @param step The current update step
-     * @param network_graph_static The network graph that specifies which neurons are connected with static connections. Is used to determine which spikes effect the local portion.
-     * @param network_graph_plastic The network graph that specifies which neurons are connected with plastic connections. Is used to determine which spikes effect the local portion.
+     * @param network_graph The network graph that specifies which neurons are connected with connections. Is used to determine which spikes effect the local portion.
      */
-    void update_electrical_activity(step_type step, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic);
+    void update_electrical_activity(step_type step, const NetworkGraph& network_graph);
 
     /**
      * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned

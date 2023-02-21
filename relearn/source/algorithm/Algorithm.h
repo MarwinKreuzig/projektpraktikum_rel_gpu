@@ -67,7 +67,7 @@ public:
      * @exception Can throw a RelearnException
      * @return A tuple with the created synapses that must be committed to the network graph
      */
-    [[nodiscard]] virtual std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(number_neurons_type number_neurons) = 0;
+    [[nodiscard]] virtual std::tuple<PlasticLocalSynapses, PlasticDistantInSynapses, PlasticDistantOutSynapses> update_connectivity(number_neurons_type number_neurons) = 0;
 
     /**
      * @brief Updates the octree according to the necessities of the algorithm. Updates only those neurons for which the extra infos specify so.

@@ -11,7 +11,6 @@
 #include "NeuronIO.h"
 
 #include "neurons/LocalAreaTranslator.h"
-#include "neurons/NetworkGraph.h"
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
 
@@ -407,12 +406,12 @@ std::optional<std::vector<NeuronID>> NeuronIO::read_neuron_ids(const std::filesy
     return ids;
 }
 
-std::pair<std::tuple<LocalSynapses, DistantInSynapses>, std::tuple<LocalSynapses, DistantInSynapses>> NeuronIO::read_in_synapses(const std::filesystem::path& file_path,
+NeuronIO::InSynapses NeuronIO::read_in_synapses(const std::filesystem::path& file_path,
     number_neurons_type number_local_neurons, MPIRank my_rank, size_t number_mpi_ranks) {
-    LocalSynapses local_in_synapses_static{};
-    DistantInSynapses distant_in_synapses_static{};
-    LocalSynapses local_in_synapses_plastic{};
-    DistantInSynapses distant_in_synapses_plastic{};
+    StaticLocalSynapses local_in_synapses_static{};
+    StaticDistantInSynapses distant_in_synapses_static{};
+    PlasticLocalSynapses local_in_synapses_plastic{};
+    PlasticDistantInSynapses distant_in_synapses_plastic{};
 
     std::ifstream file_synapses(file_path, std::ios::binary | std::ios::in);
 
@@ -431,7 +430,7 @@ std::pair<std::tuple<LocalSynapses, DistantInSynapses>, std::tuple<LocalSynapses
         NeuronID::value_type read_target_id = 0;
         int read_source_rank = 0;
         NeuronID::value_type read_source_id = 0;
-        RelearnTypes::synapse_weight weight = 0;
+        RelearnTypes::static_synapse_weight weight = 0;
         bool plastic;
 
         std::stringstream sstream(line);
@@ -458,13 +457,13 @@ std::pair<std::tuple<LocalSynapses, DistantInSynapses>, std::tuple<LocalSynapses
 
         if (read_source_rank != my_rank.get_rank()) {
             if (plastic) {
-                distant_in_synapses_plastic.emplace_back(target_id, RankNeuronId{ MPIRank(read_source_rank), source_id }, weight);
+                distant_in_synapses_plastic.emplace_back(target_id, RankNeuronId{ MPIRank(read_source_rank), source_id }, RelearnTypes::plastic_synapse_weight(weight));
             } else {
                 distant_in_synapses_static.emplace_back(target_id, RankNeuronId{ MPIRank(read_source_rank), source_id }, weight);
             }
         } else {
             if (plastic) {
-                local_in_synapses_plastic.emplace_back(target_id, source_id, weight);
+                local_in_synapses_plastic.emplace_back(target_id, source_id, RelearnTypes::plastic_synapse_weight(weight));
             } else {
                 local_in_synapses_static.emplace_back(target_id, source_id, weight);
             }
@@ -474,12 +473,12 @@ std::pair<std::tuple<LocalSynapses, DistantInSynapses>, std::tuple<LocalSynapses
     return { { local_in_synapses_static, distant_in_synapses_static }, { local_in_synapses_plastic, distant_in_synapses_plastic } };
 }
 
-std::pair<std::tuple<LocalSynapses, DistantOutSynapses>, std::tuple<LocalSynapses, DistantOutSynapses>> NeuronIO::read_out_synapses(const std::filesystem::path& file_path,
+NeuronIO::OutSynapses NeuronIO::read_out_synapses(const std::filesystem::path& file_path,
     number_neurons_type number_local_neurons, MPIRank my_rank, size_t number_mpi_ranks) {
-    LocalSynapses local_out_synapses_static{};
-    DistantOutSynapses distant_out_synapses_static{};
-    LocalSynapses local_out_synapses_plastic{};
-    DistantOutSynapses distant_out_synapses_plastic{};
+    StaticLocalSynapses local_out_synapses_static{};
+    StaticDistantOutSynapses distant_out_synapses_static{};
+    PlasticLocalSynapses local_out_synapses_plastic{};
+    PlasticDistantOutSynapses distant_out_synapses_plastic{};
 
     std::ifstream file_synapses(file_path, std::ios::binary | std::ios::in);
 
@@ -498,7 +497,7 @@ std::pair<std::tuple<LocalSynapses, DistantOutSynapses>, std::tuple<LocalSynapse
         NeuronID::value_type read_target_id = 0;
         int read_source_rank = 0;
         NeuronID::value_type read_source_id = 0;
-        RelearnTypes::synapse_weight weight = 0;
+        RelearnTypes::static_synapse_weight weight = 0;
 
         std::stringstream sstream(line);
         bool plastic;
@@ -525,13 +524,13 @@ std::pair<std::tuple<LocalSynapses, DistantOutSynapses>, std::tuple<LocalSynapse
 
         if (read_target_rank != my_rank.get_rank()) {
             if (plastic) {
-                distant_out_synapses_plastic.emplace_back(RankNeuronId{ MPIRank(read_target_rank), target_id }, source_id, weight);
+                distant_out_synapses_plastic.emplace_back(RankNeuronId{ MPIRank(read_target_rank), target_id }, source_id, RelearnTypes::plastic_synapse_weight(weight));
             } else {
                 distant_out_synapses_static.emplace_back(RankNeuronId{ MPIRank(read_target_rank), target_id }, source_id, weight);
             }
         } else {
             if (plastic) {
-                local_out_synapses_plastic.emplace_back(target_id, source_id, weight);
+                local_out_synapses_plastic.emplace_back(target_id, source_id, RelearnTypes::plastic_synapse_weight(weight));
             } else {
                 local_out_synapses_static.emplace_back(target_id, source_id, weight);
             }
@@ -541,8 +540,10 @@ std::pair<std::tuple<LocalSynapses, DistantOutSynapses>, std::tuple<LocalSynapse
     return { { local_out_synapses_static, distant_out_synapses_static }, { local_out_synapses_plastic, distant_out_synapses_plastic } };
 }
 
-void NeuronIO::write_out_synapses(const NetworkGraph::NeuronLocalOutNeighborhood& local_out_edges_static, const NetworkGraph::NeuronDistantOutNeighborhood& distant_out_edges_static,
-    const NetworkGraph::NeuronLocalOutNeighborhood& local_out_edges_plastic, const NetworkGraph::NeuronDistantOutNeighborhood& distant_out_edges_plastic,
+void NeuronIO::write_out_synapses(const std::vector<std::vector<std::pair<NeuronID, RelearnTypes::static_synapse_weight>>>& local_out_edges_static,
+    const std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>>>& distant_out_edges_static,
+    const std::vector<std::vector<std::pair<NeuronID, RelearnTypes::plastic_synapse_weight>>>& local_out_edges_plastic,
+    const std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>>>& distant_out_edges_plastic,
     const MPIRank my_rank, const size_t mpi_ranks, const RelearnTypes::number_neurons_type number_local_neurons, const RelearnTypes::number_neurons_type number_total_neurons,
     std::stringstream& ss, const size_t step) {
     const auto is_good = ss.good();
@@ -591,8 +592,10 @@ void NeuronIO::write_out_synapses(const NetworkGraph::NeuronLocalOutNeighborhood
     }
 }
 
-void NeuronIO::write_in_synapses(const NetworkGraph::NeuronLocalInNeighborhood& local_in_edges_static, const NetworkGraph::NeuronDistantInNeighborhood& distant_in_edges_static,
-    const NetworkGraph::NeuronLocalInNeighborhood& local_in_edges_plastic, const NetworkGraph::NeuronDistantInNeighborhood& distant_in_edges_plastic,
+void NeuronIO::write_in_synapses(const std::vector<std::vector<std::pair<NeuronID, RelearnTypes::static_synapse_weight>>>& local_in_edges_static,
+    const std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>>>& distant_in_edges_static,
+    const std::vector<std::vector<std::pair<NeuronID, RelearnTypes::plastic_synapse_weight>>>& local_in_edges_plastic,
+    const std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>>>& distant_in_edges_plastic,
     const MPIRank my_rank, const size_t mpi_ranks, const RelearnTypes::number_neurons_type number_local_neurons, const RelearnTypes::number_neurons_type number_total_neurons,
     std::stringstream& ss, const size_t step) {
     const auto is_good = ss.good();
@@ -641,15 +644,15 @@ void NeuronIO::write_in_synapses(const NetworkGraph::NeuronLocalInNeighborhood& 
     }
 }
 
-void NeuronIO::write_out_synapses(const LocalSynapses& local_out_synapses_static, const DistantOutSynapses& distant_out_synapses_static, const LocalSynapses& local_out_synapses_plastic,
-    const DistantOutSynapses& distant_out_synapses_plastic, MPIRank my_rank, RelearnTypes::number_neurons_type number_neurons, const std::filesystem::path& file_path) {
-    NetworkGraph::NeuronLocalOutNeighborhood local_neighborhood_static{};
+void NeuronIO::write_out_synapses(const StaticLocalSynapses& local_out_synapses_static, const StaticDistantOutSynapses& distant_out_synapses_static, const PlasticLocalSynapses& local_out_synapses_plastic,
+    const PlasticDistantOutSynapses& distant_out_synapses_plastic, MPIRank my_rank, RelearnTypes::number_neurons_type number_neurons, const std::filesystem::path& file_path) {
+    std::vector<std::vector<std::pair<NeuronID, RelearnTypes::static_synapse_weight>>> local_neighborhood_static{};
     local_neighborhood_static.resize(number_neurons);
-    NetworkGraph::NeuronDistantOutNeighborhood distant_neighborhood_static{};
+    std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>>> distant_neighborhood_static{};
     distant_neighborhood_static.resize(number_neurons);
-    NetworkGraph::NeuronLocalOutNeighborhood local_neighborhood_plastic{};
+    std::vector<std::vector<std::pair<NeuronID, RelearnTypes::plastic_synapse_weight>>> local_neighborhood_plastic{};
     local_neighborhood_plastic.resize(number_neurons);
-    NetworkGraph::NeuronDistantOutNeighborhood distant_neighborhood_plastic{};
+    std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>>> distant_neighborhood_plastic{};
     distant_neighborhood_plastic.resize(number_neurons);
 
     for (const auto& [target_id, source_id, weight] : local_out_synapses_static) {
@@ -675,15 +678,15 @@ void NeuronIO::write_out_synapses(const LocalSynapses& local_out_synapses_static
     of.close();
 }
 
-void NeuronIO::write_in_synapses(const LocalSynapses& local_in_synapses_static, const DistantInSynapses& distant_in_synapses_static, const LocalSynapses& local_in_synapses_plastic,
-    const DistantInSynapses& distant_in_synapses_plastic, MPIRank my_rank, RelearnTypes::number_neurons_type number_neurons, const std::filesystem::path& file_path) {
-    NetworkGraph::NeuronLocalInNeighborhood local_neighborhood_static{};
+void NeuronIO::write_in_synapses(const StaticLocalSynapses& local_in_synapses_static, const StaticDistantInSynapses& distant_in_synapses_static, const PlasticLocalSynapses& local_in_synapses_plastic,
+    const PlasticDistantInSynapses& distant_in_synapses_plastic, MPIRank my_rank, RelearnTypes::number_neurons_type number_neurons, const std::filesystem::path& file_path) {
+    std::vector<std::vector<std::pair<NeuronID, RelearnTypes::static_synapse_weight>>> local_neighborhood_static{};
     local_neighborhood_static.resize(number_neurons);
-    NetworkGraph::NeuronDistantInNeighborhood distant_neighborhood_static{};
+    std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>>> distant_neighborhood_static{};
     distant_neighborhood_static.resize(number_neurons);
-    NetworkGraph::NeuronLocalInNeighborhood local_neighborhood_plastic{};
+    std::vector<std::vector<std::pair<NeuronID, RelearnTypes::plastic_synapse_weight>>> local_neighborhood_plastic{};
     local_neighborhood_plastic.resize(number_neurons);
-    NetworkGraph::NeuronDistantInNeighborhood distant_neighborhood_plastic{};
+    std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>>> distant_neighborhood_plastic{};
     distant_neighborhood_plastic.resize(number_neurons);
 
     for (const auto& [target_id, source_id, weight] : local_in_synapses_static) {

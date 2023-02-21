@@ -214,12 +214,12 @@ std::vector<OctreeNode<NaiveCell>*> Naive::get_nodes_for_interval(const position
     return nodes_to_consider;
 }
 
-std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
+std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<PlasticLocalSynapses, PlasticDistantInSynapses>>
 Naive::process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) {
     return ForwardConnector::process_requests(creation_requests, excitatory_dendrites, inhibitory_dendrites);
 }
 
-DistantOutSynapses Naive::process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
+PlasticDistantOutSynapses Naive::process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
     const CommunicationMap<SynapseCreationResponse>& creation_responses) {
     return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
 }

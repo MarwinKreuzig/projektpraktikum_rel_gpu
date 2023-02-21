@@ -67,7 +67,9 @@ namespace RelearnTypes {
 using box_size_type = Vec3d;
 using position_type = Vec3d;
 
-using synapse_weight = double;
+using plastic_synapse_weight = int;
+using static_synapse_weight = double;
+
 using neuron_id = size_t;
 
 using counter_type = unsigned int;
@@ -83,12 +85,22 @@ using stimuli_function_type = std::function<stimuli_list_type(step_type)>;
 
 } // namespace RelearnTypes
 
-using LocalSynapse = Synapse<NeuronID, NeuronID, RelearnTypes::synapse_weight>;
-using DistantInSynapse = Synapse<NeuronID, RankNeuronId, RelearnTypes::synapse_weight>;
-using DistantOutSynapse = Synapse<RankNeuronId, NeuronID, RelearnTypes::synapse_weight>;
-using DistantSynapse = Synapse<RankNeuronId, RankNeuronId, RelearnTypes::synapse_weight>;
+using PlasticLocalSynapse = Synapse<NeuronID, NeuronID, RelearnTypes::plastic_synapse_weight>;
+using PlasticDistantInSynapse = Synapse<NeuronID, RankNeuronId, RelearnTypes::plastic_synapse_weight>;
+using PlasticDistantOutSynapse = Synapse<RankNeuronId, NeuronID, RelearnTypes::plastic_synapse_weight>;
+using PlasticDistantSynapse = Synapse<RankNeuronId, RankNeuronId, RelearnTypes::plastic_synapse_weight>;
 
-using LocalSynapses = std::vector<LocalSynapse>;
-using DistantInSynapses = std::vector<DistantInSynapse>;
-using DistantOutSynapses = std::vector<DistantOutSynapse>;
-using DistantSynapses = std::vector<DistantSynapse>;
+using PlasticLocalSynapses = std::vector<PlasticLocalSynapse>;
+using PlasticDistantInSynapses = std::vector<PlasticDistantInSynapse>;
+using PlasticDistantOutSynapses = std::vector<PlasticDistantOutSynapse>;
+using PlasticDistantSynapses = std::vector<PlasticDistantSynapse>;
+
+using StaticLocalSynapse = Synapse<NeuronID, NeuronID, RelearnTypes::static_synapse_weight>;
+using StaticDistantInSynapse = Synapse<NeuronID, RankNeuronId, RelearnTypes::static_synapse_weight>;
+using StaticDistantOutSynapse = Synapse<RankNeuronId, NeuronID, RelearnTypes::static_synapse_weight>;
+using StaticDistantSynapse = Synapse<RankNeuronId, RankNeuronId, RelearnTypes::static_synapse_weight>;
+      
+using StaticLocalSynapses = std::vector<StaticLocalSynapse>;
+using StaticDistantInSynapses = std::vector<StaticDistantInSynapse>;
+using StaticDistantOutSynapses = std::vector<StaticDistantOutSynapse>;
+using StaticDistantSynapses = std::vector<StaticDistantSynapse>;

@@ -62,17 +62,10 @@ void Neurons::init(const number_neurons_type number_neurons) {
     calcium_calculator->set_extra_infos(extra_info);
 }
 
-/**
- * @brief Sets the network graphs in which the synapses for the neurons are stored
- * @param network_static The network graph for static connections
- * @param network_plastic The network graph for plastic connections
- */
+void Neurons::set_network_graph(std::shared_ptr<NetworkGraph> network) {
+    synapse_deletion_finder->set_network_graph(network);
 
-void Neurons::set_network_graph(std::shared_ptr<NetworkGraph> network_static, std::shared_ptr<NetworkGraph> network_plastic) {
-    synapse_deletion_finder->set_network_graph(network_plastic);
-
-    network_graph_static = std::move(network_static);
-    network_graph_plastic = std::move(network_plastic);
+    network_graph = std::move(network);
 }
 
 void Neurons::init_synaptic_elements() {
@@ -81,9 +74,9 @@ void Neurons::init_synaptic_elements() {
     const auto& dendrites_exc_counts = dendrites_exc->get_grown_elements();
 
     for (const auto& id : NeuronID::range(number_neurons)) {
-        const auto axon_connections = network_graph_plastic->get_number_out_edges(id);
-        const auto dendrites_ex_connections = network_graph_plastic->get_number_excitatory_in_edges(id);
-        const auto dendrites_in_connections = network_graph_plastic->get_number_inhibitory_in_edges(id);
+        const auto [axon_connections, _1] = network_graph->get_number_out_edges(id);
+        const auto [dendrites_ex_connections, _2] = network_graph->get_number_excitatory_in_edges(id);
+        const auto [dendrites_in_connections, _3] = network_graph->get_number_inhibitory_in_edges(id);
 
         axons->update_grown_elements(id, static_cast<double>(axon_connections));
         dendrites_exc->update_grown_elements(id, static_cast<double>(dendrites_ex_connections));
@@ -103,7 +96,7 @@ void Neurons::init_synaptic_elements() {
             "Error is with: %d", local_id);
     }
 
-    check_signal_types(network_graph_plastic, axons->get_signal_types(), MPIWrapper::get_my_rank());
+    check_signal_types(network_graph, axons->get_signal_types(), MPIWrapper::get_my_rank());
 }
 
 void Neurons::check_signal_types(const std::shared_ptr<NetworkGraph> network_graph,
@@ -111,14 +104,14 @@ void Neurons::check_signal_types(const std::shared_ptr<NetworkGraph> network_gra
     for (const auto& neuron_id : NeuronID::range(signal_types.size())) {
         const auto& signal_type = signal_types[neuron_id.get_neuron_id()];
 
-        const auto& distant_out_edges = network_graph->get_distant_out_edges(neuron_id);
+        const auto& [distant_out_edges, _1] = network_graph->get_distant_out_edges(neuron_id);
         for (const auto& [tgt_rni, weight] : distant_out_edges) {
             RelearnException::check(SignalType::Excitatory == signal_type && weight > 0 || SignalType::Inhibitory == signal_type && weight < 0,
                 "Neuron has outgoing connections not matching its signal type. {} {} -> {} {} {}",
                 my_rank, neuron_id, tgt_rni, signal_type, weight);
         }
 
-        const auto& local_out_edges = network_graph->get_local_out_edges(neuron_id);
+        const auto& [local_out_edges, _2] = network_graph->get_local_out_edges(neuron_id);
         for (const auto& [tgt_rni, weight] : local_out_edges) {
             RelearnException::check(SignalType::Excitatory == signal_type && weight > 0 || SignalType::Inhibitory == signal_type && weight < 0,
                 "Neuron has outgoing connections not matching its signal type. {} {} -> {} {} {}",
@@ -154,11 +147,11 @@ std::pair<size_t, CommunicationMap<SynapseDeletionRequest>> Neurons::disable_neu
             "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id,
             number_neurons);
 
-        const auto local_out_edges = network_graph_plastic->get_local_out_edges(neuron_id);
-        const auto distant_out_edges = network_graph_plastic->get_distant_out_edges(neuron_id);
+        const auto [local_out_edges, _1] = network_graph->get_local_out_edges(neuron_id);
+        const auto [distant_out_edges, _2] = network_graph->get_distant_out_edges(neuron_id);
 
         for (const auto& [target_neuron_id, weight] : local_out_edges) {
-            network_graph_plastic->add_synapse(LocalSynapse(target_neuron_id, neuron_id, -weight));
+            network_graph->add_synapse(PlasticLocalSynapse(target_neuron_id, neuron_id, -weight));
 
             // Shall target_neuron_id also be disabled? Important: Do not remove synapse twice in this case
             const bool is_within = std::ranges::binary_search(local_neuron_ids, target_neuron_id);
@@ -188,7 +181,7 @@ std::pair<size_t, CommunicationMap<SynapseDeletionRequest>> Neurons::disable_neu
         }
 
         for (const auto& [target_neuron_id, weight] : distant_out_edges) {
-            network_graph_plastic->add_synapse(DistantOutSynapse(target_neuron_id, neuron_id, -weight));
+            network_graph->add_synapse(PlasticDistantOutSynapse(target_neuron_id, neuron_id, -weight));
             deleted_axon_connections[neuron_id.get_neuron_id()]++;
             number_deleted_distant_out_axons++;
             const auto signal_type = weight > 0 ? SignalType::Excitatory : SignalType::Inhibitory;
@@ -199,11 +192,11 @@ std::pair<size_t, CommunicationMap<SynapseDeletionRequest>> Neurons::disable_neu
     size_t number_deleted_in_edges_from_outside = 0;
 
     for (const auto& neuron_id : local_neuron_ids) {
-        const auto local_in_edges = network_graph_plastic->get_local_in_edges(neuron_id);
-        const auto distant_in_edges = network_graph_plastic->get_distant_in_edges(neuron_id);
+        const auto [_1, local_in_edges] = network_graph->get_local_in_edges(neuron_id);
+        const auto [_2, distant_in_edges] = network_graph->get_distant_in_edges(neuron_id);
 
         for (const auto& [source_neuron_id, weight] : local_in_edges) {
-            network_graph_plastic->add_synapse(LocalSynapse(neuron_id, source_neuron_id, -weight));
+            network_graph->add_synapse(PlasticLocalSynapse(neuron_id, source_neuron_id, -weight));
 
             deleted_axon_connections[source_neuron_id.get_neuron_id()]++;
 
@@ -218,7 +211,7 @@ std::pair<size_t, CommunicationMap<SynapseDeletionRequest>> Neurons::disable_neu
         }
 
         for (const auto& [source_neuron_id, weight] : distant_in_edges) {
-            network_graph_plastic->add_synapse(DistantInSynapse(neuron_id, source_neuron_id, -weight));
+            network_graph->add_synapse(PlasticDistantInSynapse(neuron_id, source_neuron_id, -weight));
 
             const auto signal_type = weight > 0 ? SignalType::Excitatory : SignalType::Inhibitory;
             synapse_deletion_requests_outgoing.append(source_neuron_id.get_rank(), { neuron_id, source_neuron_id.get_neuron_id(), ElementType::Dendrite, signal_type });
@@ -278,8 +271,7 @@ void Neurons::create_neurons(const number_neurons_type creation_count) {
     calcium_calculator->create_neurons(creation_count);
     extra_info->create_neurons(creation_count);
 
-    network_graph_plastic->create_neurons(creation_count);
-    network_graph_static->create_neurons(creation_count);
+    network_graph->create_neurons(creation_count);
 
     axons->create_neurons(creation_count);
     dendrites_exc->create_neurons(creation_count);
@@ -299,7 +291,7 @@ void Neurons::create_neurons(const number_neurons_type creation_count) {
 }
 
 void Neurons::update_electrical_activity(const step_type step) {
-    neuron_model->update_electrical_activity(step, *network_graph_static, *network_graph_plastic);
+    neuron_model->update_electrical_activity(step, *network_graph);
 
     const auto& fired = neuron_model->get_fired();
     calcium_calculator->update_calcium(step, fired);
@@ -378,7 +370,7 @@ std::uint64_t Neurons::create_synapses() {
 
     // Update the network graph all at once
     Timers::start(TimerRegion::ADD_SYNAPSES_TO_NETWORK_GRAPH);
-    network_graph_plastic->add_edges(local_synapses, distant_in_synapses, distant_out_synapses);
+    network_graph->add_edges(local_synapses, distant_in_synapses, distant_out_synapses);
     Timers::stop_and_add(TimerRegion::ADD_SYNAPSES_TO_NETWORK_GRAPH);
 
     // The distant_out_synapses are counted on the ranks where they are in
@@ -392,8 +384,8 @@ void Neurons::debug_check_counts() {
         return;
     }
 
-    RelearnException::check(network_graph_plastic != nullptr,
-        "Neurons::debug_check_counts: network_graph_plastic is nullptr");
+    RelearnException::check(network_graph != nullptr,
+        "Neurons::debug_check_counts: network_graph is nullptr");
 
     const auto my_rank = MPIWrapper::get_my_rank();
 
@@ -427,9 +419,9 @@ void Neurons::debug_check_counts() {
         const auto connected_excitatory_dendrites_neuron = connected_excitatory_dendrites[local_neuron_id];
         const auto connected_inhibitory_dendrites_neuron = connected_inhibitory_dendrites[local_neuron_id];
 
-        const auto number_out_edges = network_graph_plastic->get_number_out_edges(neuron_id);
-        const auto number_excitatory_in_edges = network_graph_plastic->get_number_excitatory_in_edges(neuron_id);
-        const auto number_inhibitory_in_edges = network_graph_plastic->get_number_inhibitory_in_edges(neuron_id);
+        const auto [number_out_edges, _1] = network_graph->get_number_out_edges(neuron_id);
+        const auto [number_excitatory_in_edges, _2] = network_graph->get_number_excitatory_in_edges(neuron_id);
+        const auto [number_inhibitory_in_edges, _3] = network_graph->get_number_inhibitory_in_edges(neuron_id);
 
         RelearnException::check(connected_axons_neuron == number_out_edges,
             "Neurons::debug_check_counts: Neuron {} has {} axons but {} out edges (rank {})",
@@ -487,18 +479,18 @@ StatisticalMeasures Neurons::get_statistics(const NeuronAttribute attribute) con
 }
 
 std::tuple<std::uint64_t, std::uint64_t, std::uint64_t> Neurons::update_connectivity() {
-    RelearnException::check(network_graph_plastic != nullptr, "Network graph is nullptr");
+    RelearnException::check(network_graph != nullptr, "Network graph is nullptr");
     RelearnException::check(global_tree != nullptr, "Global octree is nullptr");
     RelearnException::check(algorithm != nullptr, "Algorithm is nullptr");
 
     debug_check_counts();
-    network_graph_plastic->debug_check();
+    network_graph->debug_check();
     const auto& [num_axons_deleted, num_dendrites_deleted] = synapse_deletion_finder->delete_synapses();
     debug_check_counts();
-    network_graph_plastic->debug_check();
+    network_graph->debug_check();
     size_t num_synapses_created = create_synapses();
     debug_check_counts();
-    network_graph_plastic->debug_check();
+    network_graph->debug_check();
 
     return { num_axons_deleted, num_dendrites_deleted, num_synapses_created };
 }
@@ -524,8 +516,8 @@ size_t Neurons::delete_disabled_distant_synapses(const CommunicationMap<SynapseD
             }
 
             if (ElementType::Dendrite == element_type) {
-                const auto& out_edges = network_graph_plastic->get_distant_out_edges(my_neuron_id);
-                RelearnTypes::synapse_weight weight = 0;
+                const auto& [out_edges, _1] = network_graph->get_distant_out_edges(my_neuron_id);
+                RelearnTypes::plastic_synapse_weight weight = 0;
                 for (const auto& [target, edge_weight] : out_edges) {
                     if (target.get_rank() == other_rank && target.get_neuron_id() == other_neuron_id) {
                         weight = edge_weight;
@@ -533,19 +525,19 @@ size_t Neurons::delete_disabled_distant_synapses(const CommunicationMap<SynapseD
                     }
                 }
                 RelearnException::check(weight != 0, "Couldnot find the weight of the connection");
-                network_graph_plastic->add_synapse(
-                    DistantOutSynapse(RankNeuronId(other_rank, other_neuron_id), my_neuron_id, -weight));
+                network_graph->add_synapse(
+                    PlasticDistantOutSynapse(RankNeuronId(other_rank, other_neuron_id), my_neuron_id, -weight));
             } else {
-                const auto& in_edges = network_graph_plastic->get_distant_in_edges(my_neuron_id);
-                RelearnTypes::synapse_weight weight = 0;
+                const auto& [in_edges, _2] = network_graph->get_distant_in_edges(my_neuron_id);
+                RelearnTypes::plastic_synapse_weight weight = 0;
                 for (const auto& [source, edge_weight] : in_edges) {
                     if (source.get_rank() == other_rank && source.get_neuron_id() == other_neuron_id) {
                         weight = edge_weight;
                         break;
                     }
                 }
-                network_graph_plastic->add_synapse(
-                    DistantInSynapse(my_neuron_id, RankNeuronId(other_rank, other_neuron_id), -weight));
+                network_graph->add_synapse(
+                    PlasticDistantInSynapse(my_neuron_id, RankNeuronId(other_rank, other_neuron_id), -weight));
             }
 
             if (ElementType::Dendrite == element_type) {
@@ -854,17 +846,17 @@ void Neurons::print_network_graph_to_log_file(const step_type step, const bool w
     std::stringstream ss_in_network{};
     std::stringstream ss_out_network{};
 
-    NeuronIO::write_out_synapses(network_graph_static->get_all_local_out_edges(),
-        network_graph_static->get_all_distant_out_edges(),
-        network_graph_plastic->get_all_local_out_edges(),
-        network_graph_plastic->get_all_distant_out_edges(), MPIWrapper::get_my_rank(),
+    const auto& [plastic_distant_out, static_distant_out] = network_graph->get_all_distant_out_edges();
+    const auto& [plastic_local_out, static_local_out] = network_graph->get_all_local_out_edges();
+
+    const auto& [plastic_distant_in, static_distant_in] = network_graph->get_all_distant_in_edges();
+    const auto& [plastic_local_in, static_local_in] = network_graph->get_all_local_in_edges();
+
+    NeuronIO::write_out_synapses(static_local_out, static_distant_out, plastic_local_out, plastic_distant_out, MPIWrapper::get_my_rank(),
         partition->get_number_mpi_ranks(), partition->get_number_local_neurons(),
         partition->get_total_number_neurons(), ss_out_network, step);
 
-    NeuronIO::write_in_synapses(network_graph_static->get_all_local_in_edges(),
-        network_graph_static->get_all_distant_in_edges(),
-        network_graph_plastic->get_all_local_in_edges(),
-        network_graph_plastic->get_all_distant_in_edges(), MPIWrapper::get_my_rank(),
+    NeuronIO::write_in_synapses(static_local_in, static_distant_in, plastic_local_in, plastic_distant_in, MPIWrapper::get_my_rank(),
         partition->get_number_mpi_ranks(), partition->get_number_local_neurons(),
         partition->get_total_number_neurons(), ss_in_network, step);
 

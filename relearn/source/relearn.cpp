@@ -110,9 +110,13 @@ void print_sizes() {
     constexpr auto sizeof_mpi_rank = sizeof(MPIRank);
     constexpr auto sizeof_int = sizeof(int);
 
-    constexpr auto sizeof_local_synapse = sizeof(LocalSynapse);
-    constexpr auto sizeof_distant_in_synapse = sizeof(DistantInSynapse);
-    constexpr auto sizeof_distant_out_synapse = sizeof(DistantOutSynapse);
+    constexpr auto sizeof_plastic_local_synapse = sizeof(PlasticLocalSynapse);
+    constexpr auto sizeof_plastic_distant_in_synapse = sizeof(PlasticDistantInSynapse);
+    constexpr auto sizeof_plastic_distant_out_synapse = sizeof(PlasticDistantOutSynapse);
+
+    constexpr auto sizeof_static_local_synapse = sizeof(StaticLocalSynapse);
+    constexpr auto sizeof_static_distant_in_synapse = sizeof(StaticDistantInSynapse);
+    constexpr auto sizeof_static_distant_out_synapse = sizeof(StaticDistantOutSynapse);
 
     constexpr auto sizeof_empty_base_cell = sizeof(BaseCell<false, false, false, false>);
     constexpr auto sizeof_full_base_cell = sizeof(BaseCell<true, true, true, true>);
@@ -151,9 +155,13 @@ void print_sizes() {
     ss << "Size of MPIRank: " << sizeof_mpi_rank << '\n';
     ss << "Size of int: " << sizeof_int << '\n';
 
-    ss << "Size of LocalSynapse: " << sizeof_local_synapse << '\n';
-    ss << "Size of DistantInSynapse: " << sizeof_distant_in_synapse << '\n';
-    ss << "Size of DistantOutSynapse: " << sizeof_distant_out_synapse << '\n';
+    ss << "Size of PlasticLocalSynapse: " << sizeof_plastic_local_synapse << '\n';
+    ss << "Size of PlasticDistantInSynapse: " << sizeof_plastic_distant_in_synapse << '\n';
+    ss << "Size of PlasticDistantOutSynapse: " << sizeof_plastic_distant_out_synapse << '\n';
+
+    ss << "Size of StaticLocalSynapse: " << sizeof_static_local_synapse << '\n';
+    ss << "Size of StaticDistantInSynapse: " << sizeof_static_distant_in_synapse << '\n';
+    ss << "Size of StaticDistantOutSynapse: " << sizeof_static_distant_out_synapse << '\n';
 
     ss << "Size of BaseCell<false, false, false, false>: " << sizeof_empty_base_cell << '\n';
     ss << "Size of BaseCell<true, true, true, true>: " << sizeof_full_base_cell << '\n';

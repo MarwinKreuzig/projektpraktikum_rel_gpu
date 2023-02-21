@@ -48,11 +48,11 @@ CommunicationMap<SynapseCreationRequest> FastMultipoleMethods::find_target_neuro
     return synapse_creation_requests_outgoing;
 }
 
-std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>> FastMultipoleMethods::process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) {
+std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<PlasticLocalSynapses, PlasticDistantInSynapses>> FastMultipoleMethods::process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) {
     return ForwardConnector::process_requests(creation_requests, excitatory_dendrites, inhibitory_dendrites);
 }
 
-DistantOutSynapses FastMultipoleMethods::process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
+PlasticDistantOutSynapses FastMultipoleMethods::process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
     const CommunicationMap<SynapseCreationResponse>& creation_responses) {
     return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
 }

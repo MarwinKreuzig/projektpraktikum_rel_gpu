@@ -57,7 +57,7 @@ public:
      * @param network_graph The network graph that is currently being used
      * @exception Can throw a RelearnException
      */
-    virtual void set_local_fired_status(std::span<const FiredStatus> fired_status, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic) = 0;
+    virtual void set_local_fired_status(std::span<const FiredStatus> fired_status, const NetworkGraph& network_graph) = 0;
 
     /**
      * @brief Exchanges the fired status with all MPI ranks

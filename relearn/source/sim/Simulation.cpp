@@ -205,8 +205,7 @@ void Simulation::initialize() {
         RelearnException::fail("Simulation::initialize: AlgorithmEnum {} not yet implemented!", static_cast<int>(algorithm_enum));
     }
 
-    network_graph_static = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
-    network_graph_plastic = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
+    network_graph = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
 
     const auto& extra_infos = neurons->get_extra_info();
     algorithm->set_neuron_extra_infos(extra_infos);
@@ -216,7 +215,7 @@ void Simulation::initialize() {
     neurons->set_signal_types(std::move(signal_types));
     neurons->set_positions(std::move(neuron_positions));
 
-    neurons->set_network_graph(network_graph_static, network_graph_plastic);
+    neurons->set_network_graph(network_graph);
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 
@@ -240,8 +239,8 @@ void Simulation::initialize() {
     const auto& [local_synapses_plastic, in_synapses_plastic, out_synapses_plastic] = synapses_plastic;
 
     Timers::start(TimerRegion::INITIALIZE_NETWORK_GRAPH);
-    network_graph_plastic->add_edges(local_synapses_plastic, in_synapses_plastic, out_synapses_plastic);
-    network_graph_static->add_edges(local_synapses_static, in_synapses_static, out_synapses_static);
+    network_graph->add_edges(local_synapses_plastic, in_synapses_plastic, out_synapses_plastic);
+    network_graph->add_edges(local_synapses_static, in_synapses_static, out_synapses_static);
     neurons->set_static_neurons(static_neurons);
     Timers::stop_and_add(TimerRegion::INITIALIZE_NETWORK_GRAPH);
 
@@ -406,7 +405,7 @@ void Simulation::simulate(const step_type number_steps) {
 
             Timers::stop_and_add(TimerRegion::PRINT_IO);
 
-            network_graph_plastic->debug_check();
+            network_graph->debug_check();
         }
 
         if (interval_histogram_log.hits_step(step)) {

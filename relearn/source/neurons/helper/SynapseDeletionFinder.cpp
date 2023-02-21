@@ -99,9 +99,9 @@ CommunicationMap<SynapseDeletionRequest> SynapseDeletionFinder::find_synapses_to
 
             const auto weight = (SignalType::Excitatory == signal_type) ? -1 : 1;
             if (ElementType::Axon == element_type) {
-                network_graph->add_synapse(DistantOutSynapse(RankNeuronId(rank, other_neuron_id), neuron_id, weight));
+                network_graph->add_synapse(PlasticDistantOutSynapse(RankNeuronId(rank, other_neuron_id), neuron_id, weight));
             } else {
-                network_graph->add_synapse(DistantInSynapse(neuron_id, RankNeuronId(rank, other_neuron_id), weight));
+                network_graph->add_synapse(PlasticDistantInSynapse(neuron_id, RankNeuronId(rank, other_neuron_id), weight));
             }
         }
     }
@@ -125,17 +125,17 @@ std::uint64_t SynapseDeletionFinder::commit_deletions(const CommunicationMap<Syn
              */
             if (my_rank == other_rank) {
                 if (ElementType::Dendrite == element_type) {
-                    network_graph->add_synapse(LocalSynapse(other_neuron_id, my_neuron_id, weight));
+                    network_graph->add_synapse(PlasticLocalSynapse(other_neuron_id, my_neuron_id, weight));
                 } else {
-                    network_graph->add_synapse(LocalSynapse(my_neuron_id, other_neuron_id, weight));
+                    network_graph->add_synapse(PlasticLocalSynapse(my_neuron_id, other_neuron_id, weight));
                 }
             } else {
                 if (ElementType::Dendrite == element_type) {
                     network_graph->add_synapse(
-                        DistantOutSynapse(RankNeuronId(other_rank, other_neuron_id), my_neuron_id, weight));
+                        PlasticDistantOutSynapse(RankNeuronId(other_rank, other_neuron_id), my_neuron_id, weight));
                 } else {
                     network_graph->add_synapse(
-                        DistantInSynapse(my_neuron_id, RankNeuronId(other_rank, other_neuron_id), weight));
+                        PlasticDistantInSynapse(my_neuron_id, RankNeuronId(other_rank, other_neuron_id), weight));
                 }
             }
 
@@ -268,13 +268,13 @@ std::vector<RankNeuronId> RandomSynapseDeletionFinder::find_synapses_on_neuron(c
 
     std::vector<RankNeuronId> current_synapses{};
     if (element_type == ElementType::Axon) {
-        const auto& distant_out_edges = network_graph->get_distant_out_edges(neuron_id);
-        const auto& local_out_edges = network_graph->get_local_out_edges(neuron_id);
+        const auto& [distant_out_edges, _1] = network_graph->get_distant_out_edges(neuron_id);
+        const auto& [local_out_edges, _2] = network_graph->get_local_out_edges(neuron_id);
 
         current_synapses = register_out_edges(distant_out_edges, local_out_edges);
     } else {
-        const auto& distant_in_edges = network_graph->get_distant_in_edges(neuron_id);
-        const auto& local_in_edges = network_graph->get_local_in_edges(neuron_id);
+        const auto& [distant_in_edges, _1] = network_graph->get_distant_in_edges(neuron_id);
+        const auto& [local_in_edges, _2] = network_graph->get_local_in_edges(neuron_id);
 
         current_synapses = register_in_edges(distant_in_edges, local_in_edges, signal_type);
     }

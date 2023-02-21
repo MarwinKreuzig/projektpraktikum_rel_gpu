@@ -131,11 +131,10 @@ public:
     }
 
     /**
-     * @brief Sets the network graphs in which the synapses for the neurons are stored
-     * @param network_static The network graph for static connections
-     * @param network_plastic The network graph for plastic connections
+     * @brief Sets the network graph in which the synapses for the neurons are stored
+     * @param network The network graph for the connections
      */
-    void set_network_graph(std::shared_ptr<NetworkGraph> network_static, std::shared_ptr<NetworkGraph> network_plastic);
+    void set_network_graph(std::shared_ptr<NetworkGraph> network);
 
     /**
      * @brief Sets the area translator that translates between the local area id on the current mpi rank and its area name
@@ -154,16 +153,16 @@ public:
         extra_info->set_static_neurons(static_neurons);
 
         for (const auto neuron_id : static_neurons) {
-            const auto& distant_out_edges = network_graph_plastic->get_distant_out_edges(neuron_id);
+            const auto& [distant_out_edges, _1] = network_graph->get_distant_out_edges(neuron_id);
             RelearnException::check(distant_out_edges.empty(), "Plastic connection from a static neuron is forbidden. {} (static)  -> ?", neuron_id);
 
-            const auto& local_out_edges = network_graph_plastic->get_local_out_edges(neuron_id);
+            const auto& [local_out_edges, _2] = network_graph->get_local_out_edges(neuron_id);
             RelearnException::check(local_out_edges.empty(), "Plastic connection from a static neuron is forbidden. {} (static)  -> ?", neuron_id);
 
-            const auto& distant_in_edges = network_graph_plastic->get_distant_in_edges(neuron_id);
+            const auto& [distant_in_edges, _3] = network_graph->get_distant_in_edges(neuron_id);
             RelearnException::check(distant_in_edges.empty(), "Plastic connection from a static neuron is forbidden. ? -> {} (static)", neuron_id);
 
-            const auto& local_in_edges = network_graph_plastic->get_local_in_edges(neuron_id);
+            const auto& [local_in_edges, _4] = network_graph->get_local_in_edges(neuron_id);
             RelearnException::check(local_in_edges.empty(), "Plastic connection from a static neuron is forbidden. ? -> {} (static)", neuron_id);
         }
     }
@@ -482,8 +481,7 @@ private:
     std::shared_ptr<Octree> global_tree{};
     std::shared_ptr<Algorithm> algorithm{};
 
-    std::shared_ptr<NetworkGraph> network_graph_plastic{};
-    std::shared_ptr<NetworkGraph> network_graph_static{};
+    std::shared_ptr<NetworkGraph> network_graph{};
 
     std::unique_ptr<NeuronModel> neuron_model{};
     std::unique_ptr<CalciumCalculator> calcium_calculator{};

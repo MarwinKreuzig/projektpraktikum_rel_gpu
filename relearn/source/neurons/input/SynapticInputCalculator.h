@@ -110,22 +110,21 @@ public:
     /**
      * @brief Updates the synaptic input and the background activity based on the current network graph, whether the local neurons spikes, and which neuron to update
      * @param step The current update step
-     * @param network_graph_static The network graph of static connections
-     * @param network_graph_plastic The network graph of plastic connections
+     * @param network_graph The network graph of the connections
      * @param fired Which local neuron fired
      * @exception Throws a RelearnException if the number of local neurons didn't match the sizes of the arguments
      */
-    void update_input([[maybe_unused]] const step_type step, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::span<const FiredStatus> fired) {
+    void update_input([[maybe_unused]] const step_type step, const NetworkGraph& network_graph, const std::span<const FiredStatus> fired) {
         const auto& disable_flags = extra_infos->get_disable_flags();
 
         RelearnException::check(number_local_neurons > 0, "SynapticInputCalculator::update_input: There were no local neurons.");
         RelearnException::check(fired.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of fired did not match number of local neurons: {} vs {}", fired.size(), number_local_neurons);
         RelearnException::check(disable_flags.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of disable_flags did not match number of local neurons: {} vs {}", disable_flags.size(), number_local_neurons);
 
-        fired_status_comm->set_local_fired_status(fired, network_graph_static, network_graph_plastic);
+        fired_status_comm->set_local_fired_status(fired, network_graph);
         fired_status_comm->exchange_fired_status();
 
-        update_synaptic_input(network_graph_static, network_graph_plastic, fired);
+        update_synaptic_input(network_graph, fired);
     }
 
     /**
@@ -191,11 +190,10 @@ public:
 protected:
     /**
      * @brief This hook needs to update this->synaptic_input for every neuron. Can make use of this->fired_status_comm
-     * @param network_graph_static The network graph of static connections
-     * @param network_graph_plastic The network graph of plastic connections
+     * @param network_graph The network graph of the connections
      * @param fired If the local neurons fired
      */
-    virtual void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, std::span<const FiredStatus> fired) = 0;
+    virtual void update_synaptic_input(const NetworkGraph& network_graph, std::span<const FiredStatus> fired) = 0;
 
     /**
      * @brief Sets the synaptic input for the given neuron

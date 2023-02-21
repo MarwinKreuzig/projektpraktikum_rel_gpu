@@ -16,8 +16,7 @@
 
 #include <ranges>
 
-void FiredStatusCommunicationMap::set_local_fired_status(const std::span<const FiredStatus> fired_status,
-    const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic) {
+void FiredStatusCommunicationMap::set_local_fired_status(const std::span<const FiredStatus> fired_status, const NetworkGraph& network_graph) {
     outgoing_ids.clear();
 
     if (const auto number_ranks = get_number_ranks(); number_ranks == 1) {
@@ -47,12 +46,11 @@ void FiredStatusCommunicationMap::set_local_fired_status(const std::span<const F
         const auto id = NeuronID{ neuron_id };
 
         // Don't send firing neuron id to myself as I already have this info
-        const NetworkGraph::DistantEdges& distant_out_edges_static = network_graph_static.get_distant_out_edges(id);
-        const NetworkGraph::DistantEdges& distant_out_edges_plastic = network_graph_plastic.get_distant_out_edges(id);
+        const auto& [distant_out_edges_plastic, distant_out_edges_static] = network_graph.get_distant_out_edges(id);
 
         // Find all target neurons which should receive the signal fired.
         // That is, neurons which connect axons from neuron "neuron_id"
-        auto send_fired_neurons = [this, id](const NetworkGraph::DistantEdges& distant_out_edges) {
+        auto send_fired_neurons = [this, id](const auto& distant_out_edges) {
             for (const auto& [edge_key, _] : distant_out_edges) {
                 const auto target_rank = edge_key.get_rank();
 

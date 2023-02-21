@@ -75,12 +75,12 @@ CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(
     return synapse_creation_requests_outgoing;
 }
 
-std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantOutSynapses>>
+std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<PlasticLocalSynapses, PlasticDistantOutSynapses>>
 BarnesHutInverted::process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) {
     return BackwardConnector::process_requests(creation_requests, axons);
 }
 
-DistantInSynapses BarnesHutInverted::process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
+PlasticDistantInSynapses BarnesHutInverted::process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
     const CommunicationMap<SynapseCreationResponse>& creation_responses) {
     return BackwardConnector::process_responses(creation_requests, creation_responses, excitatory_dendrites, inhibitory_dendrites);
 }
