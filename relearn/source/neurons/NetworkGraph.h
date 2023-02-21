@@ -25,11 +25,9 @@
 #include <vector>
 
 /**
- * An object of type NetworkGraph stores the synaptic connections between neurons, that are relevant for the current MPI rank.
+ * An object of type NetworkGraph stores the synaptic connections between neurons that are relevant for the current MPI rank.
  * The neurons are referred to by indices in the range [0, num_local_neurons).
- * The class does not perform any communication or synchronization with other MPI ranks when messing with edges;
- * it only does so when calling NetworkGraph::translate_global_to_local, and in that, it does not
- * mess with edges.
+ * The class does not perform any communication or synchronization with other MPI ranks when messing with edges.
  * NetworkGraph differentiates between local edges (from the current MPI rank to the current MPI rank) and
  * distant edges (another MPI rank is the owner of the target or source neuron).
  */
@@ -210,138 +208,6 @@ public:
      */
     [[nodiscard]] const NeuronDistantInNeighborhood& get_all_distant_in_edges() const {
         return neuron_distant_in_neighborhood;
-    }
-
-    /**
-     * @brief Returns a copy of all in-edges to a neuron, i.e., a copy of all neurons that connect to the specified one via a synapse, of a specified type.
-     *      All local in-edges are added with the current MPI rank.
-     * @param neuron_id The id of the neuron
-     * @param signal_type The type of neurons that should be returned
-     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
-     *      Throws an exception if the allocation of memory fails
-     * @return A copy of all in-edges from a certain neuron signal type
-     */
-    [[nodiscard]] DistantEdges get_all_in_edges(const NeuronID neuron_id, const SignalType signal_type) const {
-        const DistantEdges& all_distant_edges = get_distant_in_edges(neuron_id);
-        const LocalEdges& all_local_edges = get_local_in_edges(neuron_id);
-
-        DistantEdges filtered_edges{};
-        filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
-
-        for (const auto& [neuron_id, edge_val] : all_local_edges) {
-            if (signal_type == SignalType::Excitatory && edge_val > 0) {
-                filtered_edges.emplace_back(RankNeuronId(my_rank, neuron_id), edge_val);
-            }
-
-            if (signal_type == SignalType::Inhibitory && edge_val < 0) {
-                filtered_edges.emplace_back(RankNeuronId(my_rank, neuron_id), edge_val);
-            }
-        }
-
-        for (const auto& [edge_key, edge_val] : all_distant_edges) {
-            if (signal_type == SignalType::Excitatory && edge_val > 0) {
-                filtered_edges.emplace_back(edge_key, edge_val);
-            }
-
-            if (signal_type == SignalType::Inhibitory && edge_val < 0) {
-                filtered_edges.emplace_back(edge_key, edge_val);
-            }
-        }
-
-        return filtered_edges;
-    }
-
-    /**
-     * @brief Returns a copy of all out-edges from a neuron, i.e., a copy of all neurons that the specified one connects to via a synapse, of a specified type
-     *      All local in-edges are added with the current MPI rank.
-     * @param neuron_id The id of the neuron
-     * @param signal_type The type of neurons that should be returned
-     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
-     *      Throws an exception if the allocation of memory fails
-     * @return A copy of all out-edges to a certain neuron signal type
-     */
-    [[nodiscard]] DistantEdges get_all_out_edges(const NeuronID neuron_id, const SignalType signal_type) const {
-        const DistantEdges& all_distant_edges = get_distant_out_edges(neuron_id);
-        const LocalEdges& all_local_edges = get_local_out_edges(neuron_id);
-
-        DistantEdges filtered_edges{};
-        filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
-
-        for (const auto& [edge_key, edge_val] : all_local_edges) {
-            if (signal_type == SignalType::Excitatory && edge_val > 0) {
-                filtered_edges.emplace_back(RankNeuronId(my_rank, edge_key), edge_val);
-            }
-
-            if (signal_type == SignalType::Inhibitory && edge_val < 0) {
-                filtered_edges.emplace_back(RankNeuronId(my_rank, edge_key), edge_val);
-            }
-        }
-
-        for (const auto& [edge_key, edge_val] : all_distant_edges) {
-            if (signal_type == SignalType::Excitatory && edge_val > 0) {
-                filtered_edges.emplace_back(edge_key, edge_val);
-            }
-
-            if (signal_type == SignalType::Inhibitory && edge_val < 0) {
-                filtered_edges.emplace_back(edge_key, edge_val);
-            }
-        }
-
-        return filtered_edges;
-    }
-
-    /**
-     * @brief Returns a copy of all in-edges to a neuron, i.e., a copy of all neurons that connect to the specified one via a synapse.
-     *      All local in-edges are added with the current MPI rank.
-     * @param neuron_id The id of the neuron
-     * @param signal_type The type of neurons that should be returned
-     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
-     *      Throws an exception if the allocation of memory fails
-     * @return A copy of all in-edges
-     */
-    [[nodiscard]] DistantEdges get_all_in_edges(const NeuronID neuron_id) const {
-        const DistantEdges& all_distant_edges = get_distant_in_edges(neuron_id);
-        const LocalEdges& all_local_edges = get_local_in_edges(neuron_id);
-
-        DistantEdges filtered_edges{};
-        filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
-
-        for (const auto& [edge_key, edge_val] : all_local_edges) {
-            filtered_edges.emplace_back(RankNeuronId(my_rank, edge_key), edge_val);
-        }
-
-        for (const auto& [edge_key, edge_val] : all_distant_edges) {
-            filtered_edges.emplace_back(edge_key, edge_val);
-        }
-
-        return filtered_edges;
-    }
-
-    /**
-     * @brief Returns a copy of all out-edges from a neuron, i.e., a copy of all neurons that the specified one connects to via a synapse
-     *      All local in-edges are added with the current MPI rank.
-     * @param neuron_id The id of the neuron
-     * @param signal_type The type of neurons that should be returned
-     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
-     *      Throws an exception if the allocation of memory fails
-     * @return A copy of all out-edges
-     */
-    [[nodiscard]] DistantEdges get_all_out_edges(const NeuronID neuron_id) const {
-        const DistantEdges& all_distant_edges = get_distant_out_edges(neuron_id);
-        const LocalEdges& all_local_edges = get_local_out_edges(neuron_id);
-
-        DistantEdges filtered_edges{};
-        filtered_edges.reserve(all_distant_edges.size() + all_local_edges.size());
-
-        for (const auto& [edge_key, edge_val] : all_local_edges) {
-            filtered_edges.emplace_back(RankNeuronId(my_rank, edge_key), edge_val);
-        }
-
-        for (const auto& [edge_key, edge_val] : all_distant_edges) {
-            filtered_edges.emplace_back(edge_key, edge_val);
-        }
-
-        return filtered_edges;
     }
 
     /**

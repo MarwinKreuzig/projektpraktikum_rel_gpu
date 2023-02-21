@@ -82,7 +82,7 @@ TEST_F(NeuronsTest, testSignalTypeCheck) {
         if (signal_types[src.get_neuron_id()] == SignalType::Excitatory) {
             weight = -weight;
         }
-        const auto& out_edges = network_graph->get_all_out_edges(src);
+        const auto& out_edges = NetworkGraphAdapter::get_all_out_edges(*network_graph, MPIRank::root_rank(), src);
         for (const auto& [out_tgt_rni, out_weight] : out_edges) {
             if (tgt_rni == out_tgt_rni) {
                 weight = weight - out_weight;

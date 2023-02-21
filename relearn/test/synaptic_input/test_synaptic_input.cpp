@@ -213,7 +213,7 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdate) {
 
         auto total_input = 0.0;
 
-        for (const auto& [other_id, weight] : ng_plastic.get_all_in_edges(NeuronID(neuron_id))) {
+        for (const auto& [other_id, weight] : NetworkGraphAdapter::get_all_in_edges(ng_plastic, MPIRank::root_rank(), NeuronID(neuron_id))) {
             if (fired_status[other_id.get_neuron_id().get_neuron_id()] == FiredStatus::Inactive) {
                 continue;
             }
@@ -325,7 +325,7 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate) {
 
         auto total_input = 0.0;
 
-        for (const auto& [other_id, weight] : ng_plastic.get_all_in_edges(NeuronID(neuron_id))) {
+        for (const auto& [other_id, weight] : NetworkGraphAdapter::get_all_in_edges(ng_plastic, MPIRank::root_rank(), NeuronID(neuron_id))) {
             if (fired_status[other_id.get_neuron_id().get_neuron_id()] == FiredStatus::Inactive) {
                 continue;
             }
@@ -439,7 +439,7 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputUpdate) {
 
         auto total_input = 0.0;
 
-        for (const auto& [other_id, weight] : ng_plastic.get_all_in_edges(NeuronID(neuron_id))) {
+        for (const auto& [other_id, weight] : NetworkGraphAdapter::get_all_in_edges(ng_plastic, MPIRank::root_rank(), NeuronID(neuron_id))) {
             if (fired_status[other_id.get_neuron_id().get_neuron_id()] == FiredStatus::Inactive) {
                 continue;
             }
