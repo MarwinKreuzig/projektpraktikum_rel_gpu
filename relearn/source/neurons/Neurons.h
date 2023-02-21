@@ -25,6 +25,7 @@
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "neurons/helper/SynapseDeletionFinder.h"
 #include "neurons/helper/SynapseDeletionRequests.h"
+#include "util/MPIRank.h"
 #include "util/RelearnException.h"
 #include "util/StatisticalMeasures.h"
 

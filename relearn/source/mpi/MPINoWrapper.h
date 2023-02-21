@@ -128,7 +128,7 @@ public:
         return base_pointers;
     }
 
-    [[nodiscard]] static size_t get_num_ranks();
+    [[nodiscard]] static int get_num_ranks();
 
     [[nodiscard]] static MPIRank get_my_rank();
 

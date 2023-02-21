@@ -18,8 +18,8 @@
 
 class NetworkGraphTest : public RelearnTest {
 protected:
-    template <typename T>
-    void erase_empty(std::map<T, RelearnTypes::synapse_weight>& edges) {
+    template <typename T, typename synapse_weight>
+    void erase_empty(std::map<T, synapse_weight>& edges) {
         for (auto iterator = edges.begin(); iterator != edges.end();) {
             if (iterator->second == 0) {
                 iterator = edges.erase(iterator);
@@ -29,8 +29,8 @@ protected:
         }
     }
 
-    template <typename T>
-    void erase_empties(std::map<T, std::map<T, RelearnTypes::synapse_weight>>& edges) {
+    template <typename T, typename synapse_weight>
+    void erase_empties(std::map<T, std::map<T, synapse_weight>>& edges) {
         for (auto iterator = edges.begin(); iterator != edges.end();) {
             erase_empty<T>(iterator->second);
 

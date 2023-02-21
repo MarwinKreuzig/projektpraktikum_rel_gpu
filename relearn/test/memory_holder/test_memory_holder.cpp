@@ -59,7 +59,7 @@ TYPED_TEST(MemoryHolderTest, testGetAvailableException) {
 
     MH::init(span_memory);
 
-    for (auto i = 0; i < Constants::number_oct; i++) {
+    for (auto i = 0U; i < Constants::number_oct; i++) {
         ASSERT_THROW(auto val = MH::get_available(nullptr, i), RelearnException);
     }
 
@@ -75,12 +75,12 @@ TYPED_TEST(MemoryHolderTest, testGetAvailableException) {
     MH::init(span_memory2);
 
     std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> arr{};
-    for (auto i = 0; i < Constants::number_oct; i++) {
+    for (auto i = 0U; i < Constants::number_oct; i++) {
         arr[i] = MH::get_available(&root, i);
     }
 
     for (auto& node : memory) {
-        for (auto i = 0; i < Constants::number_oct; i++) {
+        for (auto i = 0U; i < Constants::number_oct; i++) {
             ASSERT_THROW(auto val = MH::get_available(&node, i), RelearnException);
         }
     }
@@ -97,7 +97,7 @@ TYPED_TEST(MemoryHolderTest, testGetAvailable) {
 
     OctreeNode<AdditionalCellAttributes> root{};
 
-    for (auto i = 0; i < Constants::number_oct; i++) {
+    for (auto i = 0U; i < Constants::number_oct; i++) {
         auto* ptr = MH::get_available(&root, i);
         auto dist = std::distance(span_memory.data(), ptr);
 
@@ -106,10 +106,10 @@ TYPED_TEST(MemoryHolderTest, testGetAvailable) {
         root.set_child(ptr, i);
     }
 
-    for (auto child_idx = 0; child_idx < Constants::number_oct; child_idx++) {
+    for (auto child_idx = 0U; child_idx < Constants::number_oct; child_idx++) {
         auto* child = root.get_child(child_idx);
 
-        for (auto i = 0; i < Constants::number_oct; i++) {
+        for (auto i = 0U; i < Constants::number_oct; i++) {
             auto* ptr = MH::get_available(child, i);
             auto dist = std::distance(span_memory.data(), ptr);
 
@@ -126,7 +126,7 @@ TYPED_TEST(MemoryHolderTest, testGetAvailable) {
 
     OctreeNode<AdditionalCellAttributes> root2{};
 
-    for (auto i = 0; i < Constants::number_oct; i++) {
+    for (auto i = 0U; i < Constants::number_oct; i++) {
         auto* ptr = MH::get_available(&root2, i);
         auto dist = std::distance(span_memory2.data(), ptr);
 
@@ -135,10 +135,10 @@ TYPED_TEST(MemoryHolderTest, testGetAvailable) {
         root2.set_child(ptr, i);
     }
 
-    for (auto child_idx = 0; child_idx < Constants::number_oct; child_idx++) {
+    for (auto child_idx = 0U; child_idx < Constants::number_oct; child_idx++) {
         auto* child = root2.get_child(child_idx);
 
-        for (auto i = 0; i < Constants::number_oct; i++) {
+        for (auto i = 0U; i < Constants::number_oct; i++) {
             auto* ptr = MH::get_available(child, i);
             auto dist = std::distance(span_memory2.data(), ptr);
 
@@ -160,12 +160,12 @@ TYPED_TEST(MemoryHolderTest, testGetAvailableDisorganized) {
 
     OctreeNode<AdditionalCellAttributes> root{};
 
-    std::vector<size_t> indices(Constants::number_oct);
+    std::vector<unsigned int> indices(Constants::number_oct);
     std::iota(indices.begin(), indices.end(), 0);
 
     RandomAdapter::shuffle(indices.begin(), indices.end(), this->mt);
 
-    for (auto i = 0; i < Constants::number_oct; i++) {
+    for (auto i = 0U; i < Constants::number_oct; i++) {
         auto child_index = indices[i];
 
         auto* ptr = MH::get_available(&root, child_index);
@@ -176,17 +176,17 @@ TYPED_TEST(MemoryHolderTest, testGetAvailableDisorganized) {
         root.set_child(ptr, child_index);
     }
 
-    for (auto i = 0; i < Constants::number_oct; i++) {
+    for (auto i = 0U; i < Constants::number_oct; i++) {
         auto child_index = indices[i];
 
         auto* child = root.get_child(child_index);
 
-        std::vector<size_t> indices_child(Constants::number_oct);
+        std::vector<unsigned int> indices_child(Constants::number_oct);
         std::iota(indices_child.begin(), indices_child.end(), 0);
 
         RandomAdapter::shuffle(indices_child.begin(), indices_child.end(), this->mt);
 
-        for (auto j = 0; j < Constants::number_oct; j++) {
+        for (auto j = 0U; j < Constants::number_oct; j++) {
             auto child_child_index = indices_child[j];
 
             auto* ptr = MH::get_available(child, child_child_index);
@@ -212,13 +212,13 @@ TYPED_TEST(MemoryHolderTest, testGetAvailableFull) {
 
     std::vector<OctreeNode<AdditionalCellAttributes>> parents(1024, OctreeNode<AdditionalCellAttributes>{});
 
-    for (auto i = 0; i < 1024; i++) {
+    for (auto i = 0U; i < 1024U; i++) {
         const auto current_filling_expected = i * Constants::number_oct;
 
         ASSERT_EQ(current_filling_expected, MH::get_current_filling());
         ASSERT_EQ(number_objects, MH::get_size());
 
-        for (auto child_idx = 0; child_idx < Constants::number_oct; child_idx++) {
+        for (auto child_idx = 0U; child_idx < Constants::number_oct; child_idx++) {
             if (current_filling_expected + Constants::number_oct > number_objects) {
                 ASSERT_THROW(auto val = MH::get_available(&parents[i], child_idx), RelearnException);
             } else {
@@ -235,7 +235,7 @@ TYPED_TEST(MemoryHolderTest, testMakeAvailable) {
     using MH = MemoryHolder<AdditionalCellAttributes>;
 
     const auto number_objects = RandomAdapter::get_random_integer(Constants::number_oct, Constants::number_oct * 1024, this->mt);
-    const auto number_requesting_objects = RandomAdapter::get_random_integer(1, 1024, this->mt);
+    const auto number_requesting_objects = RandomAdapter::get_random_integer(1U, 1024U, this->mt);
 
     std::vector<OctreeNode<AdditionalCellAttributes>> memory(number_objects, OctreeNode<AdditionalCellAttributes>{});
     std::span<OctreeNode<AdditionalCellAttributes>> span_memory(memory);
@@ -244,7 +244,7 @@ TYPED_TEST(MemoryHolderTest, testMakeAvailable) {
 
     std::vector<OctreeNode<AdditionalCellAttributes>> parents(number_requesting_objects, OctreeNode<AdditionalCellAttributes>{});
 
-    for (auto i = 0; i < number_requesting_objects; i++) {
+    for (auto i = 0U; i < number_requesting_objects; i++) {
         if (i * Constants::number_oct + Constants::number_oct > number_objects) {
             ASSERT_THROW(auto val = MH::get_available(&parents[i], 0), RelearnException);
             continue;
@@ -258,7 +258,7 @@ TYPED_TEST(MemoryHolderTest, testMakeAvailable) {
     ASSERT_EQ(MH::get_current_filling(), 0);
     ASSERT_EQ(MH::get_size(), number_objects);
 
-    for (auto i = 0; i < number_requesting_objects; i++) {
+    for (auto i = 0U; i < number_requesting_objects; i++) {
         ASSERT_THROW(auto val = MH::get_offset_from_parent(&parents[i]), RelearnException);
     }
 }
@@ -274,14 +274,14 @@ TYPED_TEST(MemoryHolderTest, testGetOffsetException) {
 
     ASSERT_THROW(auto val = MH::get_offset_from_parent(nullptr), RelearnException);
 
-    for (auto i = 0; i < 1024; i++) {
+    for (auto i = 0U; i < 1024U; i++) {
         auto* ptr = &memory[i];
         ASSERT_THROW(auto val = MH::get_offset_from_parent(ptr), RelearnException);
     }
 
     std::vector<OctreeNode<AdditionalCellAttributes>> other_memory(1024, OctreeNode<AdditionalCellAttributes>{});
 
-    for (auto i = 0; i < 1024; i++) {
+    for (auto i = 0U; i < 1024U; i++) {
         auto* ptr = &other_memory[i];
         ASSERT_THROW(auto val = MH::get_offset_from_parent(ptr), RelearnException);
     }
@@ -298,7 +298,7 @@ TYPED_TEST(MemoryHolderTest, testGetOffset) {
 
     OctreeNode<AdditionalCellAttributes> root{};
 
-    for (auto i = 0; i < Constants::number_oct; i++) {
+    for (auto i = 0U; i < Constants::number_oct; i++) {
         auto* ptr = MH::get_available(&root, i);
         auto dist = std::distance(span_memory.data(), ptr);
 
@@ -307,10 +307,10 @@ TYPED_TEST(MemoryHolderTest, testGetOffset) {
         root.set_child(ptr, i);
     }
 
-    for (auto child_idx = 0; child_idx < Constants::number_oct; child_idx++) {
+    for (auto child_idx = 0U; child_idx < Constants::number_oct; child_idx++) {
         auto* child = root.get_child(child_idx);
 
-        for (auto i = 0; i < Constants::number_oct; i++) {
+        for (auto i = 0U; i < Constants::number_oct; i++) {
             auto* ptr = MH::get_available(child, i);
             auto dist = std::distance(span_memory.data(), ptr);
 
@@ -322,7 +322,7 @@ TYPED_TEST(MemoryHolderTest, testGetOffset) {
 
     ASSERT_EQ(0, MH::get_offset_from_parent(&root));
 
-    for (auto child_idx = 0; child_idx < Constants::number_oct; child_idx++) {
+    for (auto child_idx = 0U; child_idx < Constants::number_oct; child_idx++) {
         auto* child = root.get_child(child_idx);
 
         const auto offset_index = Constants::number_oct + child_idx * Constants::number_oct;
@@ -342,28 +342,28 @@ TYPED_TEST(MemoryHolderTest, testGetOffsetDisorganized) {
 
     OctreeNode<AdditionalCellAttributes> root{};
 
-    std::vector<size_t> indices(Constants::number_oct);
+    std::vector<unsigned int> indices(Constants::number_oct);
     std::iota(indices.begin(), indices.end(), 0);
 
     RandomAdapter::shuffle(indices.begin(), indices.end(), this->mt);
 
-    for (auto i = 0; i < Constants::number_oct; i++) {
+    for (auto i = 0U; i < Constants::number_oct; i++) {
         auto child_index = indices[i];
         auto* ptr = MH::get_available(&root, child_index);
         root.set_child(ptr, child_index);
     }
 
-    for (auto i = 0; i < Constants::number_oct; i++) {
+    for (auto i = 0U; i < Constants::number_oct; i++) {
         auto child_index = indices[i];
 
         auto* child = root.get_child(child_index);
 
-        std::vector<size_t> indices_child(Constants::number_oct);
+        std::vector<unsigned int> indices_child(Constants::number_oct);
         std::iota(indices_child.begin(), indices_child.end(), 0);
 
         RandomAdapter::shuffle(indices_child.begin(), indices_child.end(), this->mt);
 
-        for (auto j = 0; j < Constants::number_oct; j++) {
+        for (auto j = 0U; j < Constants::number_oct; j++) {
             auto child_child_index = indices_child[j];
             auto* ptr = MH::get_available(child, child_child_index);
             child->set_child(ptr, child_child_index);
@@ -372,7 +372,7 @@ TYPED_TEST(MemoryHolderTest, testGetOffsetDisorganized) {
 
     ASSERT_EQ(0, MH::get_offset_from_parent(&root));
 
-    for (auto i = 0; i < Constants::number_oct; i++) {
+    for (auto i = 0U; i < Constants::number_oct; i++) {
         auto child_index = indices[i];
         const auto offset = MH::get_offset_from_parent(root.get_child(child_index));
         const auto expected_offset = (i + 1) * Constants::number_oct * sizeof(OctreeNode<AdditionalCellAttributes>);
@@ -390,7 +390,7 @@ TYPED_TEST(MemoryHolderTest, testGetNodeFromOffsetException) {
 
     MH::init(span_memory);
 
-    for (auto i = std::uint64_t(0); i < 1024 * 10; i++) {
+    for (auto i = std::uint64_t(0); i < 1024 * 10ULL; i++) {
         ASSERT_THROW(auto val = MH::get_node_from_offset(i), RelearnException);
     }
 }
@@ -409,7 +409,7 @@ TYPED_TEST(MemoryHolderTest, testGetNodeFromOffset) {
 
     std::vector<OctreeNode<AdditionalCellAttributes>> parents(number_requesting_objects, OctreeNode<AdditionalCellAttributes>{});
 
-    for (auto i = 0; i < number_requesting_objects; i++) {
+    for (auto i = 0U; i < number_requesting_objects; i++) {
         auto* ptr = &parents[i];
         ASSERT_NO_THROW(auto val = MH::get_available(ptr, 0));
     }

@@ -60,7 +60,7 @@ void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size) {
     std::memcpy(buffer, own_data, size);
 }
 
-size_t MPINoWrapper::get_num_ranks() {
+int MPINoWrapper::get_num_ranks() {
     return 1;
 }
 

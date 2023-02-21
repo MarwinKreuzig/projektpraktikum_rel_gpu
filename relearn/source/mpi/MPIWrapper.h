@@ -357,7 +357,7 @@ public:
      * @exception Throws a RelearnException if the MPIWrapper is not initialized
      * @return The number of MPI ranks
      */
-    [[nodiscard]] static size_t get_num_ranks();
+    [[nodiscard]] static int get_num_ranks();
 
     /**
      * @brief Returns the current MPI rank's id
@@ -523,7 +523,7 @@ private:
      */
     static void wait_all_tokens(const std::vector<AsyncToken>& tokens);
 
-    static inline size_t num_ranks{ 0 }; // Number of ranks in MPI_COMM_WORLD
+    static inline int num_ranks{ 0 }; // Number of ranks in MPI_COMM_WORLD
     static inline MPIRank my_rank{ MPIRank::uninitialized_rank() }; // My rank in MPI_COMM_WORLD
 
     static inline int thread_level_provided{ -1 }; // Thread level provided by MPI

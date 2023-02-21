@@ -25,7 +25,7 @@ constexpr bool OPENMPAVAILABLE = false;
 
 class Constants {
 public:
-    constexpr static size_t number_oct = 8;
+    constexpr static unsigned int number_oct = 8;
     constexpr static size_t uninitialized = 1111222233334444;
 
     constexpr static size_t number_prealloc_space = 30;

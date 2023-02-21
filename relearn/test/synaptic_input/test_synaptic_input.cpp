@@ -143,8 +143,7 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdateEmptyGraph) {
     std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance);
     input_calculator->init(number_neurons);
 
-    NetworkGraph ng_plastic(number_neurons, MPIRank::root_rank());
-    NetworkGraph ng_static(number_neurons, MPIRank::root_rank());
+    NetworkGraph network_graph(number_neurons, MPIRank::root_rank());
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
 
@@ -153,7 +152,7 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdateEmptyGraph) {
 
     input_calculator->set_extra_infos(extra_info);
 
-    input_calculator->update_input(0, ng_static, ng_plastic, fired_status);
+    input_calculator->update_input(0, network_graph, fired_status);
 
     for (const auto& value : input_calculator->get_synaptic_input()) {
         ASSERT_EQ(0.0, value);
@@ -171,8 +170,7 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdate) {
     std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance);
     input_calculator->init(number_neurons);
 
-    NetworkGraph ng_plastic(number_neurons, MPIRank::root_rank());
-    NetworkGraph ng_static(number_neurons, MPIRank::root_rank());
+    NetworkGraph network_graph(number_neurons, MPIRank::root_rank());
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
 
@@ -182,11 +180,11 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdate) {
     input_calculator->set_extra_infos(extra_info);
 
     for (size_t synapse_id = 0; synapse_id < num_synapses; synapse_id++) {
-        const auto weight = std::abs(NetworkGraphAdapter::get_random_synapse_weight(mt));
+        const auto weight = std::abs(NetworkGraphAdapter::get_random_plastic_synapse_weight(mt));
         const auto source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
         const auto target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
 
-        ng_plastic.add_synapse(LocalSynapse(target_id, source_id, weight));
+        network_graph.add_synapse(PlasticLocalSynapse(target_id, source_id, weight));
     }
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
@@ -201,7 +199,7 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdate) {
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
 
-    input_calculator->update_input(step, ng_static, ng_plastic, fired_status);
+    input_calculator->update_input(step, network_graph, fired_status);
 
     const auto& inputs = input_calculator->get_synaptic_input();
 
@@ -213,7 +211,7 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdate) {
 
         auto total_input = 0.0;
 
-        for (const auto& [other_id, weight] : NetworkGraphAdapter::get_all_in_edges(ng_plastic, MPIRank::root_rank(), NeuronID(neuron_id))) {
+        for (const auto& [other_id, weight] : NetworkGraphAdapter::get_all_plastic_in_edges(network_graph, MPIRank::root_rank(), NeuronID(neuron_id))) {
             if (fired_status[other_id.get_neuron_id().get_neuron_id()] == FiredStatus::Inactive) {
                 continue;
             }
@@ -257,13 +255,12 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdateEmptyGraph) {
 
     input_calculator->set_extra_infos(extra_info);
 
-    NetworkGraph ng_plastic(number_neurons_init, MPIRank::root_rank());
-    NetworkGraph ng_static(number_neurons_init, MPIRank::root_rank());
+    NetworkGraph network_graph(number_neurons_init, MPIRank::root_rank());
 
     std::vector<FiredStatus> fired_status(number_neurons_init, FiredStatus::Inactive);
     std::vector<UpdateStatus> update_status(number_neurons_init, UpdateStatus::Enabled);
 
-    input_calculator->update_input(0, ng_static, ng_plastic, fired_status);
+    input_calculator->update_input(0, network_graph, fired_status);
 
     for (const auto& value : input_calculator->get_synaptic_input()) {
         ASSERT_EQ(0.0, value);
@@ -287,18 +284,17 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate) {
 
     input_calculator->set_extra_infos(extra_info);
 
-    NetworkGraph ng_static(number_neurons, MPIRank::root_rank());
-    NetworkGraph ng_plastic(number_neurons, MPIRank::root_rank());
+    NetworkGraph network_graph(number_neurons, MPIRank::root_rank());
 
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
 
     for (size_t synapse_id = 0; synapse_id < num_synapses; synapse_id++) {
-        const auto weight = std::abs(NetworkGraphAdapter::get_random_synapse_weight(mt));
+        const auto weight = std::abs(NetworkGraphAdapter::get_random_plastic_synapse_weight(mt));
         const auto source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
         const auto target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
 
-        ng_plastic.add_synapse(LocalSynapse(target_id, source_id, weight));
+        network_graph.add_synapse(PlasticLocalSynapse(target_id, source_id, weight));
     }
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
@@ -313,7 +309,7 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate) {
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
 
-    input_calculator->update_input(step, ng_static, ng_plastic, fired_status);
+    input_calculator->update_input(step, network_graph, fired_status);
 
     const auto& inputs = input_calculator->get_synaptic_input();
 
@@ -325,7 +321,7 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate) {
 
         auto total_input = 0.0;
 
-        for (const auto& [other_id, weight] : NetworkGraphAdapter::get_all_in_edges(ng_plastic, MPIRank::root_rank(), NeuronID(neuron_id))) {
+        for (const auto& [other_id, weight] : NetworkGraphAdapter::get_all_plastic_in_edges(network_graph, MPIRank::root_rank(), NeuronID(neuron_id))) {
             if (fired_status[other_id.get_neuron_id().get_neuron_id()] == FiredStatus::Inactive) {
                 continue;
             }
@@ -371,13 +367,12 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputUpdateEmptyGraph) {
 
     input_calculator->set_extra_infos(extra_info);
 
-    NetworkGraph ng_plastic(number_neurons_init, MPIRank::root_rank());
-    NetworkGraph ng_static(number_neurons_init, MPIRank::root_rank());
+    NetworkGraph network_graph(number_neurons_init, MPIRank::root_rank());
 
     std::vector<FiredStatus> fired_status(number_neurons_init, FiredStatus::Inactive);
     std::vector<UpdateStatus> update_status(number_neurons_init, UpdateStatus::Enabled);
 
-    input_calculator->update_input(0, ng_static, ng_plastic, fired_status);
+    input_calculator->update_input(0, network_graph, fired_status);
 
     for (const auto& value : input_calculator->get_synaptic_input()) {
         ASSERT_EQ(0.0, value);
@@ -401,18 +396,17 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputUpdate) {
 
     input_calculator->set_extra_infos(extra_info);
 
-    NetworkGraph ng_static(number_neurons, MPIRank::root_rank());
-    NetworkGraph ng_plastic(number_neurons, MPIRank::root_rank());
+    NetworkGraph network_graph(number_neurons, MPIRank::root_rank());
 
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
 
     for (size_t synapse_id = 0; synapse_id < num_synapses; synapse_id++) {
-        const auto weight = std::abs(NetworkGraphAdapter::get_random_synapse_weight(mt));
+        const auto weight = std::abs(NetworkGraphAdapter::get_random_plastic_synapse_weight(mt));
         const auto source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
         const auto target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
 
-        ng_plastic.add_synapse(LocalSynapse(target_id, source_id, weight));
+        network_graph.add_synapse(PlasticLocalSynapse(target_id, source_id, weight));
     }
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
@@ -427,7 +421,7 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputUpdate) {
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
 
-    input_calculator->update_input(step, ng_static, ng_plastic, fired_status);
+    input_calculator->update_input(step, network_graph, fired_status);
 
     const auto& inputs = input_calculator->get_synaptic_input();
 
@@ -439,7 +433,7 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputUpdate) {
 
         auto total_input = 0.0;
 
-        for (const auto& [other_id, weight] : NetworkGraphAdapter::get_all_in_edges(ng_plastic, MPIRank::root_rank(), NeuronID(neuron_id))) {
+        for (const auto& [other_id, weight] : NetworkGraphAdapter::get_all_plastic_in_edges(network_graph, MPIRank::root_rank(), NeuronID(neuron_id))) {
             if (fired_status[other_id.get_neuron_id().get_neuron_id()] == FiredStatus::Inactive) {
                 continue;
             }

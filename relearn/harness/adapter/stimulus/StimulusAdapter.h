@@ -23,7 +23,7 @@ public:
         std::vector<Interval> intervals{};
         const auto interval_max_size = num_steps / num_intervals / 10;
 
-        for (auto i = 0; i < num_intervals; i++) {
+        for (size_t i = 0; i < num_intervals; i++) {
             std::vector<Interval> test_interval{};
             Interval interval;
             do {

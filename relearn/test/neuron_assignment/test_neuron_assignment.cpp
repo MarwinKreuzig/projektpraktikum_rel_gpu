@@ -48,7 +48,7 @@ double calculate_excitatory_fraction(const std::vector<SignalType>& types) {
     return ratio;
 }
 
-void write_synapses_to_file(const std::vector<LocalSynapse>& synapses, std::filesystem::path path) {
+void write_synapses_to_file(const std::vector<PlasticLocalSynapse>& synapses, std::filesystem::path path) {
     std::ofstream in_of(path / "rank_0_in_network.txt");
     std::ofstream out_of(path / "rank_0_out_network.txt");
 
@@ -590,7 +590,7 @@ TEST_F(NeuronAssignmentTest, testFileLoadNetworkSingleSubdomain) {
     ASSERT_TRUE(in_synapses.empty());
     ASSERT_TRUE(out_synapses.empty());
 
-    std::map<std::pair<NeuronID, NeuronID>, RelearnTypes::synapse_weight> synapse_map{};
+    std::map<std::pair<NeuronID, NeuronID>, RelearnTypes::plastic_synapse_weight> synapse_map{};
 
     for (const auto& [target, source, weight] : local_synapses) {
         synapse_map[{ target, source }] += weight;

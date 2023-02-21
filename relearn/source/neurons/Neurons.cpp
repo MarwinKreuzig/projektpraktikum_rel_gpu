@@ -192,8 +192,8 @@ std::pair<size_t, CommunicationMap<SynapseDeletionRequest>> Neurons::disable_neu
     size_t number_deleted_in_edges_from_outside = 0;
 
     for (const auto& neuron_id : local_neuron_ids) {
-        const auto [_1, local_in_edges] = network_graph->get_local_in_edges(neuron_id);
-        const auto [_2, distant_in_edges] = network_graph->get_distant_in_edges(neuron_id);
+        const auto [local_in_edges, _1] = network_graph->get_local_in_edges(neuron_id);
+        const auto [distant_in_edges, _2] = network_graph->get_distant_in_edges(neuron_id);
 
         for (const auto& [source_neuron_id, weight] : local_in_edges) {
             network_graph->add_synapse(PlasticLocalSynapse(neuron_id, source_neuron_id, -weight));
