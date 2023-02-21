@@ -23,8 +23,8 @@ public:
         return network_graph;
     }
 
-    static LocalSynapses generate_local_synapses(RelearnTypes::number_neurons_type number_neurons, RelearnTypes::number_neurons_type number_synapses_per_neuron) {
-        std::vector<LocalSynapse> synapses{};
+    static PlasticLocalSynapses generate_local_synapses(RelearnTypes::number_neurons_type number_neurons, RelearnTypes::number_neurons_type number_synapses_per_neuron) {
+        std::vector<PlasticLocalSynapse> synapses{};
         synapses.reserve(number_neurons * number_synapses_per_neuron);
 
         std::mt19937 mt{};
@@ -46,8 +46,8 @@ public:
         return synapses;
     }
 
-    static DistantInSynapses generate_distant_in_synapses(RelearnTypes::number_neurons_type number_neurons, RelearnTypes::number_neurons_type number_synapses_per_neuron) {
-        std::vector<DistantInSynapse> synapses{};
+    static PlasticDistantInSynapses generate_distant_in_synapses(RelearnTypes::number_neurons_type number_neurons, RelearnTypes::number_neurons_type number_synapses_per_neuron) {
+        std::vector<PlasticDistantInSynapse> synapses{};
         synapses.reserve(number_neurons * number_synapses_per_neuron);
 
         std::mt19937 mt{};
@@ -73,8 +73,8 @@ public:
         return synapses;
     }
 
-    static DistantOutSynapses generate_distant_out_synapses(RelearnTypes::number_neurons_type number_neurons, RelearnTypes::number_neurons_type number_synapses_per_neuron) {
-        std::vector<DistantOutSynapse> synapses{};
+    static PlasticDistantOutSynapses generate_distant_out_synapses(RelearnTypes::number_neurons_type number_neurons, RelearnTypes::number_neurons_type number_synapses_per_neuron) {
+        std::vector<PlasticDistantOutSynapse> synapses{};
         synapses.reserve(number_neurons * number_synapses_per_neuron);
 
         std::mt19937 mt{};

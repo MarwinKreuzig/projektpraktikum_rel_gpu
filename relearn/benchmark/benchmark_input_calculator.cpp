@@ -20,13 +20,9 @@ static void BM_Linear_Input_No_Fired(benchmark::State& state) {
     const auto number_neurons = state.range(0);
     const auto number_synapses_per_neuron = state.range(1);
 
-    auto network_graph_plastic = NetworkGraphFactory::construct_network_graph(number_neurons);
+    auto network_graph = NetworkGraphFactory::construct_network_graph(number_neurons);
     auto synapses_plastic = NetworkGraphFactory::generate_local_synapses(number_neurons, number_synapses_per_neuron);
-    NetworkGraphFactory::add_synapses(*network_graph_plastic, synapses_plastic);
-
-    auto network_graph_static = NetworkGraphFactory::construct_network_graph(number_neurons);
-    auto synapses_static = NetworkGraphFactory::generate_local_synapses(number_neurons, number_synapses_per_neuron);
-    NetworkGraphFactory::add_synapses(*network_graph_static, synapses_static);
+    NetworkGraphFactory::add_synapses(*network_graph, synapses_plastic);
 
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
 
@@ -41,7 +37,7 @@ static void BM_Linear_Input_No_Fired(benchmark::State& state) {
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        input_calculator->update_input(1000, *network_graph_static, *network_graph_plastic, fired_status);
+        input_calculator->update_input(1000, *network_graph, fired_status);
         state.PauseTiming();
 
         auto sum = 0.0;
@@ -60,13 +56,9 @@ static void BM_Linear_Input_All_Fired(benchmark::State& state) {
     const auto number_neurons = state.range(0);
     const auto number_synapses_per_neuron = state.range(1);
 
-    auto network_graph_plastic = NetworkGraphFactory::construct_network_graph(number_neurons);
+    auto network_graph = NetworkGraphFactory::construct_network_graph(number_neurons);
     auto synapses_plastic = NetworkGraphFactory::generate_local_synapses(number_neurons, number_synapses_per_neuron);
-    NetworkGraphFactory::add_synapses(*network_graph_plastic, synapses_plastic);
-
-    auto network_graph_static = NetworkGraphFactory::construct_network_graph(number_neurons);
-    auto synapses_static = NetworkGraphFactory::generate_local_synapses(number_neurons, number_synapses_per_neuron);
-    NetworkGraphFactory::add_synapses(*network_graph_static, synapses_static);
+    NetworkGraphFactory::add_synapses(*network_graph, synapses_plastic);
 
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Fired);
 
@@ -81,7 +73,7 @@ static void BM_Linear_Input_All_Fired(benchmark::State& state) {
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        input_calculator->update_input(1000, *network_graph_static, *network_graph_plastic, fired_status);
+        input_calculator->update_input(1000, *network_graph, fired_status);
         state.PauseTiming();
 
         auto sum = 0.0;
@@ -100,13 +92,9 @@ static void BM_Logarithmic_Input_No_Fired(benchmark::State& state) {
     const auto number_neurons = state.range(0);
     const auto number_synapses_per_neuron = state.range(1);
 
-    auto network_graph_plastic = NetworkGraphFactory::construct_network_graph(number_neurons);
+    auto network_graph = NetworkGraphFactory::construct_network_graph(number_neurons);
     auto synapses_plastic = NetworkGraphFactory::generate_local_synapses(number_neurons, number_synapses_per_neuron);
-    NetworkGraphFactory::add_synapses(*network_graph_plastic, synapses_plastic);
-
-    auto network_graph_static = NetworkGraphFactory::construct_network_graph(number_neurons);
-    auto synapses_static = NetworkGraphFactory::generate_local_synapses(number_neurons, number_synapses_per_neuron);
-    NetworkGraphFactory::add_synapses(*network_graph_static, synapses_static);
+    NetworkGraphFactory::add_synapses(*network_graph, synapses_plastic);
 
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
 
@@ -121,7 +109,7 @@ static void BM_Logarithmic_Input_No_Fired(benchmark::State& state) {
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        input_calculator->update_input(1000, *network_graph_static, *network_graph_plastic, fired_status);
+        input_calculator->update_input(1000, *network_graph, fired_status);
         state.PauseTiming();
 
         auto sum = 0.0;
@@ -140,13 +128,9 @@ static void BM_Logarithmic_Input_All_Fired(benchmark::State& state) {
     const auto number_neurons = state.range(0);
     const auto number_synapses_per_neuron = state.range(1);
 
-    auto network_graph_plastic = NetworkGraphFactory::construct_network_graph(number_neurons);
+    auto network_graph = NetworkGraphFactory::construct_network_graph(number_neurons);
     auto synapses_plastic = NetworkGraphFactory::generate_local_synapses(number_neurons, number_synapses_per_neuron);
-    NetworkGraphFactory::add_synapses(*network_graph_plastic, synapses_plastic);
-
-    auto network_graph_static = NetworkGraphFactory::construct_network_graph(number_neurons);
-    auto synapses_static = NetworkGraphFactory::generate_local_synapses(number_neurons, number_synapses_per_neuron);
-    NetworkGraphFactory::add_synapses(*network_graph_static, synapses_static);
+    NetworkGraphFactory::add_synapses(*network_graph, synapses_plastic);
 
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Fired);
 
@@ -161,7 +145,7 @@ static void BM_Logarithmic_Input_All_Fired(benchmark::State& state) {
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        input_calculator->update_input(1000, *network_graph_static, *network_graph_plastic, fired_status);
+        input_calculator->update_input(1000, *network_graph, fired_status);
         state.PauseTiming();
 
         auto sum = 0.0;
@@ -180,13 +164,9 @@ static void BM_TanH_Input_No_Fired(benchmark::State& state) {
     const auto number_neurons = state.range(0);
     const auto number_synapses_per_neuron = state.range(1);
 
-    auto network_graph_plastic = NetworkGraphFactory::construct_network_graph(number_neurons);
+    auto network_graph = NetworkGraphFactory::construct_network_graph(number_neurons);
     auto synapses_plastic = NetworkGraphFactory::generate_local_synapses(number_neurons, number_synapses_per_neuron);
-    NetworkGraphFactory::add_synapses(*network_graph_plastic, synapses_plastic);
-
-    auto network_graph_static = NetworkGraphFactory::construct_network_graph(number_neurons);
-    auto synapses_static = NetworkGraphFactory::generate_local_synapses(number_neurons, number_synapses_per_neuron);
-    NetworkGraphFactory::add_synapses(*network_graph_static, synapses_static);
+    NetworkGraphFactory::add_synapses(*network_graph, synapses_plastic);
 
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
 
@@ -201,7 +181,7 @@ static void BM_TanH_Input_No_Fired(benchmark::State& state) {
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        input_calculator->update_input(1000, *network_graph_static, *network_graph_plastic, fired_status);
+        input_calculator->update_input(1000, *network_graph, fired_status);
         state.PauseTiming();
 
         auto sum = 0.0;
@@ -220,13 +200,9 @@ static void BM_TanH_Input_All_Fired(benchmark::State& state) {
     const auto number_neurons = state.range(0);
     const auto number_synapses_per_neuron = state.range(1);
 
-    auto network_graph_plastic = NetworkGraphFactory::construct_network_graph(number_neurons);
+    auto network_graph = NetworkGraphFactory::construct_network_graph(number_neurons);
     auto synapses_plastic = NetworkGraphFactory::generate_local_synapses(number_neurons, number_synapses_per_neuron);
-    NetworkGraphFactory::add_synapses(*network_graph_plastic, synapses_plastic);
-
-    auto network_graph_static = NetworkGraphFactory::construct_network_graph(number_neurons);
-    auto synapses_static = NetworkGraphFactory::generate_local_synapses(number_neurons, number_synapses_per_neuron);
-    NetworkGraphFactory::add_synapses(*network_graph_static, synapses_static);
+    NetworkGraphFactory::add_synapses(*network_graph, synapses_plastic);
 
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Fired);
 
@@ -241,7 +217,7 @@ static void BM_TanH_Input_All_Fired(benchmark::State& state) {
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        input_calculator->update_input(1000, *network_graph_static, *network_graph_plastic, fired_status);
+        input_calculator->update_input(1000, *network_graph, fired_status);
         state.PauseTiming();
 
         auto sum = 0.0;
