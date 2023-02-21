@@ -147,8 +147,11 @@ std::pair<size_t, CommunicationMap<SynapseDeletionRequest>> Neurons::disable_neu
             "Neurons::disable_neurons: There was a too large id: {} vs {}", neuron_id,
             number_neurons);
 
-        const auto [local_out_edges, _1] = network_graph->get_local_out_edges(neuron_id);
-        const auto [distant_out_edges, _2] = network_graph->get_distant_out_edges(neuron_id);
+        const auto [local_out_edges_ref, _1] = network_graph->get_local_out_edges(neuron_id);
+        const auto [distant_out_edges_ref, _2] = network_graph->get_distant_out_edges(neuron_id);
+
+        auto local_out_edges = local_out_edges_ref;
+        auto distant_out_edges = distant_out_edges_ref;
 
         for (const auto& [target_neuron_id, weight] : local_out_edges) {
             network_graph->add_synapse(PlasticLocalSynapse(target_neuron_id, neuron_id, -weight));
@@ -192,8 +195,11 @@ std::pair<size_t, CommunicationMap<SynapseDeletionRequest>> Neurons::disable_neu
     size_t number_deleted_in_edges_from_outside = 0;
 
     for (const auto& neuron_id : local_neuron_ids) {
-        const auto [local_in_edges, _1] = network_graph->get_local_in_edges(neuron_id);
-        const auto [distant_in_edges, _2] = network_graph->get_distant_in_edges(neuron_id);
+        const auto [local_in_edges_ref, _1] = network_graph->get_local_in_edges(neuron_id);
+        const auto [distant_in_edges_ref, _2] = network_graph->get_distant_in_edges(neuron_id);
+
+        auto local_in_edges = local_in_edges_ref;
+        auto distant_in_edges = distant_in_edges_ref;
 
         for (const auto& [source_neuron_id, weight] : local_in_edges) {
             network_graph->add_synapse(PlasticLocalSynapse(neuron_id, source_neuron_id, -weight));

@@ -78,26 +78,21 @@ TEST_F(NeuronsTest, testSignalTypeCheck) {
         const auto tgt_rank = MPIRankAdapter::get_random_mpi_rank(num_ranks, mt);
         const auto tgt = TaggedIdAdapter::get_random_neuron_id(num_neurons, src, mt);
         const RankNeuronId tgt_rni(tgt_rank, tgt);
-        auto weight = RandomAdapter::get_random_double(0.1, 20.0, mt);
+        auto weight = std::abs(NetworkGraphAdapter::get_random_plastic_synapse_weight(mt));
         if (signal_types[src.get_neuron_id()] == SignalType::Excitatory) {
             weight = -weight;
         }
-        const auto& out_edges = NetworkGraphAdapter::get_all_static_out_edges(*network_graph, MPIRank::root_rank(), src);
-        for (const auto& [out_tgt_rni, out_weight] : out_edges) {
-            if (tgt_rni == out_tgt_rni) {
-                weight = weight - out_weight;
-            }
-        }
+
         if (tgt_rank == MPIRank::root_rank()) {
-            network_graph->add_synapse(StaticLocalSynapse{ tgt, src, weight });
+            network_graph->add_synapse(PlasticLocalSynapse{ tgt, src, weight });
         } else {
-            network_graph->add_synapse(StaticDistantOutSynapse{ RankNeuronId(tgt_rank, tgt), src, weight });
+            network_graph->add_synapse(PlasticDistantOutSynapse{ RankNeuronId(tgt_rank, tgt), src, weight });
         }
         ASSERT_THROW(Neurons::check_signal_types(network_graph, signal_types, MPIRank::root_rank()), RelearnException);
         if (tgt_rank == MPIRank::root_rank()) {
-            network_graph->add_synapse(StaticLocalSynapse{ tgt, src, -weight });
+            network_graph->add_synapse(PlasticLocalSynapse{ tgt, src, -weight });
         } else {
-            network_graph->add_synapse(StaticDistantOutSynapse{ RankNeuronId(tgt_rank, tgt), src, -weight });
+            network_graph->add_synapse(PlasticDistantOutSynapse{ RankNeuronId(tgt_rank, tgt), src, -weight });
         }
         ASSERT_NO_THROW(Neurons::check_signal_types(network_graph, signal_types, MPIRank::root_rank()));
     }
@@ -223,8 +218,10 @@ TEST_F(NeuronsTest, testDisableNeuronsWithoutMPI) {
     const auto enabled_neurons = std::vector<NeuronID>{ disable_id };
     const auto mpi_rank = MPIRank{ 0 };
     std::set<NeuronID> out_ids, in_ids;
-    const auto [out_edges, _1] = network_graph->get_local_out_edges(disable_id);
-    const auto [in_edges, _2] = network_graph->get_local_in_edges(disable_id);
+    const auto [out_edges_ref, _1] = network_graph->get_local_out_edges(disable_id);
+    auto out_edges = out_edges_ref;
+    const auto [in_edges_ref, _2] = network_graph->get_local_in_edges(disable_id);
+    auto in_edges = in_edges_ref;
     std::transform(out_edges.begin(), out_edges.end(), std::inserter(out_ids, out_ids.end()),
         [](const auto& edge) {
             const auto& [target, weight] = edge;
