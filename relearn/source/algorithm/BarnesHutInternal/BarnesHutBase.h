@@ -101,7 +101,8 @@ public:
         const auto length = cell.get_maximal_dimension_difference();
 
         // Original Barnes-Hut acceptance criterion
-        const auto ret_val = (length / distance) < acceptance_criterion;
+        // const auto ret_val = (length / distance) < acceptance_criterion;
+        const auto ret_val = length < (acceptance_criterion * distance);
         return ret_val ? AcceptanceStatus::Accept : AcceptanceStatus::Expand;
     }
 
@@ -360,7 +361,6 @@ public:
 
             const auto& request = convert_target_node(source_neuron_id, source_position, node_selected, signal_type, level_of_branch_nodes);
             if (request.has_value()) {
-                found = node_selected;
                 return request.value();
             }
 
@@ -368,12 +368,6 @@ public:
             // We need to choose again, starting from the chosen virtual neuron
             root_of_subtree = node_selected;
         }
-    }
-
-    static inline OctreeNode<AdditionalCellAttributes>* found{};
-
-    static auto get_found_node() {
-        return found;
     }
 
     /**

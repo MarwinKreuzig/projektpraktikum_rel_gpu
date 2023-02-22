@@ -37,7 +37,7 @@ public:
     static void set_sigma(const double sigma) {
         RelearnException::check(sigma > 0.0, "In GaussianDistributionKernel::set_sigma, sigma was not greater than 0.0");
         GaussianDistributionKernel::sigma = sigma;
-        GaussianDistributionKernel::squared_sigma = sigma * sigma;
+        GaussianDistributionKernel::squared_sigma_inv = 1.0 / (sigma * sigma);
     }
 
     /**
@@ -82,7 +82,7 @@ public:
         const auto x = position_diff.calculate_2_norm();
         const auto numerator = (x - mu) * (x - mu);
 
-        const auto exponent = -numerator / squared_sigma;
+        const auto exponent = -numerator * squared_sigma_inv;
 
         // Criterion from Markus' paper with doi: 10.3389/fnsyn.2014.00007
         const auto exp_val = std::exp(exponent);
@@ -94,5 +94,5 @@ public:
 private:
     static inline double mu{ default_mu };
     static inline double sigma{ default_sigma };
-    static inline double squared_sigma{ default_sigma * default_sigma };
+    static inline double squared_sigma_inv{ 1.0 / (default_sigma * default_sigma) };
 };
