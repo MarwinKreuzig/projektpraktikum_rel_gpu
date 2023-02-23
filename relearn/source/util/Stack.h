@@ -43,11 +43,20 @@ public:
         return container.emplace_back(std::forward<ValueType>(Val)...);
     }
 
+    /**
+     * @brief Returns a mutable reference to the last element
+     * @exception Throws a RelearnException if the stack was empty
+     * @return A mutable reference to the last element
+     */
     [[nodiscard]] constexpr T& top() {
         RelearnException::check(!empty(), "Stack::top(): The stack was empty!");
         return container.back();
     }
 
+    /**
+     * @brief Removes the last element
+     * @exception Throws a RelearnException if the stack was empty
+     */
     constexpr void pop() {
         RelearnException::check(!empty(), "Stack::pop(): The stack was empty!");
         container.pop_back();

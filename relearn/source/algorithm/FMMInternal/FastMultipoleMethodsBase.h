@@ -32,11 +32,22 @@
 #include <ostream>
 #include <vector>
 
+/**
+ * This enum classifies the different calculation types for the Fast Multipole Method.
+ * The area-area interaction can be calculated directly, via a Hermite expansion, or 
+ * via a Taylor expansion.
+ */
 enum class CalculationType { Direct,
     Hermite,
     Taylor,
 };
 
+/**
+ * @brief Pretty-prints the calculation type to the chosen stream
+ * @param out The stream to which to print the calculation type
+ * @param calc_type The calculation type to print
+ * @return The argument out, now altered with the calculation type
+ */
 inline std::ostream& operator<<(std::ostream& out, const CalculationType& calc_type) {
     if (calc_type == CalculationType::Direct) {
         return out << "Direct";

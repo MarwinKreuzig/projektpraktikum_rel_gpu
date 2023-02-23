@@ -40,7 +40,7 @@ public:
      * @param signal_type The signal type of the synapse
      * @exception Throws a RelearnException if any neuron id is invalid or virtual
      */
-    constexpr SynapseDeletionRequest(const NeuronID& initiator_neuron, const NeuronID& affected_neuron,
+    constexpr SynapseDeletionRequest(const NeuronID initiator_neuron, const NeuronID affected_neuron,
         const ElementType element_type, const SignalType signal_type)
         : initiator_neuron_id(initiator_neuron)
         , affected_neuron_id(affected_neuron)
@@ -54,7 +54,7 @@ public:
      * @brief Returns the initiator neuron id, i.e., the neuron which started the deletion
      * @return The source neuron id
      */
-    [[nodiscard]] constexpr const NeuronID& get_initiator_neuron_id() const noexcept {
+    [[nodiscard]] constexpr const NeuronID get_initiator_neuron_id() const noexcept {
         return initiator_neuron_id;
     }
 
@@ -62,7 +62,7 @@ public:
      * @brief Returns the affected neuron id, i.e., the neuron that must be notified
      * @return The target neuron id
      */
-    [[nodiscard]] constexpr const NeuronID& get_affected_neuron_id() const noexcept {
+    [[nodiscard]] constexpr const NeuronID get_affected_neuron_id() const noexcept {
         return affected_neuron_id;
     }
 

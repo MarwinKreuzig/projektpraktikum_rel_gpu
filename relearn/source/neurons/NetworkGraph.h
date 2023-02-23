@@ -152,6 +152,14 @@ class NetworkGraph {
             return neuron_distant_in_neighborhood;
         }
 
+        /**
+         * @brief Returns all identifiers of neurons which connect to the specified neuron, i.e.,
+         *      <some_return_element> ---<signal_type>---> <neuron_id>
+         * @param neuron_id The local neuron id
+         * @param signal_type The type of synapse to search
+         * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
+         * @return A collection with all partnering neurons
+         */
         [[nodiscard]] std::unordered_set<RankNeuronId> get_all_partners_incoming(const NeuronID neuron_id, const SignalType signal_type) const {
             const auto local_neuron_id = neuron_id.get_neuron_id();
 
@@ -185,6 +193,14 @@ class NetworkGraph {
             return partners;
         }
 
+        /**
+         * @brief Returns all identifiers of neurons to which the specified neuron connects, i.e.,
+         *      <neuron_id> ------> <some_return_element>
+         * @param neuron_id The local neuron id
+         * @param signal_type The type of synapse to search
+         * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
+         * @return A collection with all partnering neurons
+         */
         [[nodiscard]] std::unordered_set<RankNeuronId> get_all_partners_outgoing(const NeuronID neuron_id) const {
             const auto local_neuron_id = neuron_id.get_neuron_id();
 
@@ -613,54 +629,136 @@ public:
         static_network_graph.create_neurons(creation_count);
     }
 
+    /**
+     * @brief Returns constant references to all incoming edges to the specified neuron from other MPI ranks 
+     * @param neuron_id The local neuron id
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
+     * @return A tuple of (1) the plastic edges and (2) the static edges
+     */
     [[nodiscard]] auto get_distant_in_edges(const NeuronID neuron_id) const {
         return std::tie(plastic_network_graph.get_distant_in_edges(neuron_id), static_network_graph.get_distant_in_edges(neuron_id));
     }
 
+    /**
+     * @brief Returns constant references to all outgoing edges from the specified neuron to other MPI ranks
+     * @param neuron_id The local neuron id
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
+     * @return A tuple of (1) the plastic edges and (2) the static edges
+     */
     [[nodiscard]] auto get_distant_out_edges(const NeuronID neuron_id) const {
         return std::tie(plastic_network_graph.get_distant_out_edges(neuron_id), static_network_graph.get_distant_out_edges(neuron_id));
     }
 
+    /**
+     * @brief Returns constant references to all incoming edges to the specified neuron from the current MPI rank
+     * @param neuron_id The local neuron id
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
+     * @return A tuple of (1) the plastic edges and (2) the static edges
+     */
     [[nodiscard]] auto get_local_in_edges(const NeuronID neuron_id) const {
         return std::tie(plastic_network_graph.get_local_in_edges(neuron_id), static_network_graph.get_local_in_edges(neuron_id));
     }
 
+    /**
+     * @brief Returns constant references to all outgoing edges from the specified neuron to the current MPI rank
+     * @param neuron_id The local neuron id
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
+     * @return A tuple of (1) the plastic edges and (2) the static edges
+     */
     [[nodiscard]] auto get_local_out_edges(const NeuronID neuron_id) const {
         return std::tie(plastic_network_graph.get_local_out_edges(neuron_id), static_network_graph.get_local_out_edges(neuron_id));
     }
 
+    /**
+     * @brief Returns constant references to all outgoing edges to the current MPI rank
+     * @param neuron_id The local neuron id
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
+     * @return A tuple of (1) the plastic edges and (2) the static edges
+     */
     [[nodiscard]] auto get_all_local_out_edges() const {
         return std::tie(plastic_network_graph.get_all_local_out_edges(), static_network_graph.get_all_local_out_edges());
     }
 
+    /**
+     * @brief Returns constant references to all outgoing edges to other MPI ranks
+     * @param neuron_id The local neuron id
+     * @return A tuple of (1) the plastic edges and (2) the static edges
+     */
     [[nodiscard]] auto get_all_distant_out_edges() const {
         return std::tie(plastic_network_graph.get_all_distant_out_edges(), static_network_graph.get_all_distant_out_edges());
     }
 
+    /**
+     * @brief Returns constant references to all outgoing edges from the current MPI rank
+     * @param neuron_id The local neuron id
+     * @return A tuple of (1) the plastic edges and (2) the static edges
+     */
     [[nodiscard]] auto get_all_local_in_edges() const {
         return std::tie(plastic_network_graph.get_all_local_in_edges(), static_network_graph.get_all_local_in_edges());
     }
 
+    /**
+     * @brief Returns constant references to all outgoing edges from other MPI ranks
+     * @param neuron_id The local neuron id
+     * @return A tuple of (1) the plastic edges and (2) the static edges
+     */
     [[nodiscard]] auto get_all_distant_in_edges() const {
         return std::tie(plastic_network_graph.get_all_distant_in_edges(), static_network_graph.get_all_distant_in_edges());
     }
 
+    /**
+     * @brief Returns the number of excitatory incoming edges to the specified neuron.
+     *      Sums all weights (does not count the number of distinct partner neurons)
+     * @param neuron_id The local neuron id
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
+     * @return A tuple of (1) the number of plastic edges and (2) the number of static edges
+     */
     [[nodiscard]] auto get_number_excitatory_in_edges(const NeuronID neuron_id) const {
         return std::make_tuple(plastic_network_graph.get_number_excitatory_in_edges(neuron_id), static_network_graph.get_number_excitatory_in_edges(neuron_id));
     }
 
+    /**
+     * @brief Returns the number of inhibitory incoming edges to the specified neuron.
+     *      Sums all weights (does not count the number of distinct partner neurons)
+     * @param neuron_id The local neuron id
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
+     * @return A tuple of (1) the number of plastic edges and (2) the number of static edges
+     */
     [[nodiscard]] auto get_number_inhibitory_in_edges(const NeuronID neuron_id) const {
         return std::make_tuple(plastic_network_graph.get_number_inhibitory_in_edges(neuron_id), static_network_graph.get_number_inhibitory_in_edges(neuron_id));
     }
 
+    /**
+     * @brief Returns the number of outgoing edges from the specified neuron.
+     *      Sums all weights (does not count the number of distinct partner neurons)
+     * @param neuron_id The local neuron id
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
+     * @return A tuple of (1) the number of plastic edges and (2) the number of static edges
+     */
     [[nodiscard]] auto get_number_out_edges(const NeuronID neuron_id) const {
         return std::make_tuple(plastic_network_graph.get_number_out_edges(neuron_id), static_network_graph.get_number_out_edges(neuron_id));
     }
 
+    /**
+     * @brief Returns all identifiers of neurons which connect to the specified neuron via plastic edges, i.e.,
+     *      <some_return_element> ---<signal_type>---> <neuron_id>
+     * @param neuron_id The local neuron id
+     * @param signal_type The type of synapse to search
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
+     * @return A collection with all partnering neurons
+     */
     [[nodiscard]] std::unordered_set<RankNeuronId> get_all_plastic_partners_incoming(const NeuronID neuron_id, const SignalType signal_type) const {
         return plastic_network_graph.get_all_partners_incoming(neuron_id, signal_type);
     }
 
+    /**
+     * @brief Returns all identifiers of neurons to which the specified neuron connects via plastic edges, i.e.,
+     *      <neuron_id> ------> <some_return_element>
+     * @param neuron_id The local neuron id
+     * @param signal_type The type of synapse to search
+     * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
+     * @return A collection with all partnering neurons
+     */
     [[nodiscard]] std::unordered_set<RankNeuronId> get_all_plastic_partners_outgoing(const NeuronID neuron_id) const {
         return plastic_network_graph.get_all_partners_outgoing(neuron_id);
     }

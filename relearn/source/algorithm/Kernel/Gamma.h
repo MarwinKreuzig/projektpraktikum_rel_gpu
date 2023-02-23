@@ -38,7 +38,7 @@ public:
     static void set_k(const double k) {
         RelearnException::check(k > 0.0, "In GammaDistributionKernel::set_k, k was not greater than 0.0");
         GammaDistributionKernel::k = k;
-        GammaDistributionKernel::gamma_divisor = std::tgamma(k) * std::pow(theta, k);
+        GammaDistributionKernel::gamma_divisor_inv = 1.0 / (std::tgamma(k) * std::pow(theta, k));
     }
 
     /**
@@ -57,7 +57,7 @@ public:
     static void set_theta(const double theta) {
         RelearnException::check(theta > 0.0, "In GammaDistributionKernel::set_theta, theta was not greater than 0.0");
         GammaDistributionKernel::theta = theta;
-        GammaDistributionKernel::gamma_divisor = std::tgamma(k) * std::pow(theta, k);
+        GammaDistributionKernel::gamma_divisor_inv = 1.0 / (std::tgamma(k) * std::pow(theta, k));
         GammaDistributionKernel::theta_divisor = -1.0 / theta;
     }
 
@@ -82,7 +82,7 @@ public:
             return 0.0;
         }
 
-        const auto factor_1 = number_free_elements / gamma_divisor;
+        const auto factor_1 = number_free_elements * gamma_divisor_inv;
 
         const auto x = (source_position - target_position).calculate_2_norm();
 
@@ -98,6 +98,6 @@ private:
     static inline double k{ default_k };
     static inline double theta{ default_theta };
 
-    static inline double gamma_divisor{ std::tgamma(k) * std::pow(theta, k) };
+    static inline double gamma_divisor_inv{ 1.0 / (std::tgamma(k) * std::pow(theta, k)) };
     static inline double theta_divisor{ -1.0 / theta };
 };

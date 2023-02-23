@@ -124,6 +124,12 @@ public:
         return offset * sizeof(OctreeNode<AdditionalCellAttributes>);
     }
 
+    /**
+     * @brief Returns the parent node for a node specified by the offset
+     * @param offset The offset
+     * @exception Throws a RelearnException if the offset is not saved for a parent
+     * @return A pointer to the parent of the node stored at the offset
+     */
     [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_parent_from_offset(const std::uint64_t offset) {
         const auto iterator = offset_to_parent.find(offset);
 

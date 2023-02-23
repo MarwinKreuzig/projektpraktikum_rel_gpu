@@ -164,6 +164,10 @@ public:
         return update_status;
     }
 
+    /**
+     * @brief Returns the number of stored neurons
+     * @return The number of neurons
+     */
     [[nodiscard]] number_neurons_type get_size() const noexcept {
         return size;
     }
