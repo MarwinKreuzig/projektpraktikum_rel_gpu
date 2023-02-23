@@ -75,7 +75,7 @@ public:
     void set_disabled_neurons(const std::span<const NeuronID> disabled_neurons) {
         for (const auto& neuron_id : disabled_neurons) {
             const auto local_neuron_id = neuron_id.get_neuron_id();
-            RelearnException::check(local_neuron_id < size, "NeuronsExtraInformation::set_disabled_neurons: NeuronID {} is too large: {}", neuron_id);
+            RelearnException::check(local_neuron_id < size, "NeuronsExtraInformation::set_disabled_neurons: NeuronID {} is too large: {}", neuron_id, size);
 
             RelearnException::check(update_status[local_neuron_id] != UpdateStatus::Static, "NeuronsExtraInformation::set_disabled_neurons: Cannot disable a static neuron");
             RelearnException::check(update_status[local_neuron_id] != UpdateStatus::Disabled, "NeuronsExtraInformation::set_disabled_neurons: Cannot disable an already disabled neuron");
