@@ -18,6 +18,7 @@
 #include <iomanip>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 /**
@@ -25,14 +26,32 @@
  */
 class StringUtil {
 public:
-    static std::vector<std::string> split_string(const std::string& string, char delim);
+    /**
+     * @brief Split a string based on a delimiter character in a list of substrings
+     * @param string The string to split
+     * @param delim Single char used as delimiter
+     * @return Vector of substrings
+     */
+    static std::vector<std::string> split_string(const std::string& string, char delim) {
+        std::vector<std::string> result{};
+        result.reserve(string.size());
+
+        std::stringstream ss(string);
+        std::string item{};
+
+        while (getline(ss, item, delim)) {
+            result.emplace_back(std::move(item));
+        }
+
+        return result;
+    }
 
     /**
      * @brief Checks if the string contains only digits
      * @param s a string
      * @return true if string is a number
      */
-    static bool is_number(const std::string& s) {
+    static bool is_number(const std::string_view s) {
         return std::all_of(s.begin(), s.end(), [](const char c) { return std::isdigit(c); });
     }
 

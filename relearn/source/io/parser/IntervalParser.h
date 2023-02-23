@@ -33,7 +33,7 @@ struct IntervalParser {
      * @param description The description of the interval
      * @return An optional which is empty if no interval could be parsed, and contains the interval if the parsing succeeded
      */
-    [[nodiscard]] static std::optional<Interval> parse_interval(std::string_view description) {
+    [[nodiscard]] static std::optional<Interval> parse_interval(const std::string_view description) {
         const auto hyphen_position = description.find('-');
         const auto colon_position = description.find(':');
 
@@ -77,7 +77,7 @@ struct IntervalParser {
      * @param description The description of the intervals
      * @return A vector with all successfully parsed intervals
      */
-    [[nodiscard]] static std::vector<Interval> parse_description_as_intervals(const std::string& description) {
+    [[nodiscard]] static std::vector<Interval> parse_description_as_intervals(const std::string_view description) {
         std::vector<Interval> intervals{};
         std::string::size_type current_position = 0;
 
@@ -87,8 +87,8 @@ struct IntervalParser {
                 semicolon_position = description.size();
             }
 
-            std::string_view substring{ description.data() + current_position, description.data() + semicolon_position };
-            const auto& opt_interval = parse_interval(substring);
+            const auto substring = description.substr(current_position, semicolon_position - current_position);
+            const auto opt_interval = parse_interval(substring);
 
             if (opt_interval.has_value()) {
                 intervals.emplace_back(opt_interval.value());

@@ -87,7 +87,7 @@ public:
      * @exception Throws a RelearnException if my_rank is not initialized or a <neuron_id> is 0
      * @return A vector with all successfully parsed RankNeuronIds
      */
-    [[nodiscard]] static std::vector<RankNeuronId> parse_multiple_description(const std::string& description, const MPIRank my_rank) {
+    [[nodiscard]] static std::vector<RankNeuronId> parse_multiple_description(const std::string_view description, const MPIRank my_rank) {
         RelearnException::check(my_rank.is_initialized(), "MonitorParser::parse_multiple_description: my_rank is not initialized.", my_rank);
 
         std::vector<RankNeuronId> parsed_ids{};
@@ -102,8 +102,8 @@ public:
                 semicolon_position = description.size();
             }
 
-            std::string_view substring{ description.data() + current_position, description.data() + semicolon_position };
-            const auto& opt_rank_neuron_id = parse_description(substring, my_rank);
+            const auto substring = description.substr(current_position, semicolon_position - current_position);
+            const auto opt_rank_neuron_id = parse_description(substring, my_rank);
 
             if (opt_rank_neuron_id.has_value()) {
                 parsed_ids.emplace_back(opt_rank_neuron_id.value());
@@ -126,9 +126,9 @@ public:
      * @param local_area_translator Translates between the local area id on the current mpi rank and its area name
      * @return List of area ids found in the string
      */
-    [[nodiscard]] static std::vector<RelearnTypes::area_id> parse_area_names(const std::string& description,
+    [[nodiscard]] static std::vector<RelearnTypes::area_id> parse_area_names(const std::string_view description,
         const std::shared_ptr<LocalAreaTranslator>& local_area_translator) {
-        const auto& vector = StringUtil::split_string(description, ';');
+        const auto& vector = StringUtil::split_string(std::string(description), ';');
         std::vector<RelearnTypes::area_name> parsed_area_names{};
         for (auto& desc : vector) {
             if (desc.find(':') != std::string::npos || StringUtil::is_number(desc)) {
@@ -213,7 +213,7 @@ public:
      * @exception Throws a RelearnException if my_rank is not initialized
      * @return A vector with all NeuronIDs that shall be monitored at the current rank, sorted and unique
      */
-    [[nodiscard]] static std::vector<NeuronID> parse_my_ids(const std::string& description, const MPIRank my_rank,
+    [[nodiscard]] static std::vector<NeuronID> parse_my_ids(const std::string_view description, const MPIRank my_rank,
         const std::shared_ptr<LocalAreaTranslator>& local_area_translator) {
         const auto& rank_neuron_ids = parse_multiple_description(description, my_rank);
         auto neuron_ids = extract_my_ids(rank_neuron_ids, my_rank);
