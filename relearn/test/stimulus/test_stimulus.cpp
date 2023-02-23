@@ -14,9 +14,9 @@
 #include "adapter/random/RandomAdapter.h"
 #include "adapter/stimulus/StimulusAdapter.h"
 
+#include "io/parser/StimulusParser.h"
 #include "io/InteractiveNeuronIO.h"
 #include "neurons/LocalAreaTranslator.h"
-#include "util/StimulusParser.h"
 
 #include <unordered_set>
 

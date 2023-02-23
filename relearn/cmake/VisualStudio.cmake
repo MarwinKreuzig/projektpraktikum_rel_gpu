@@ -85,6 +85,11 @@ if(WIN32) # Lib
 	list(APPEND relearn_lib_additional_files "io/LogFiles.h")
 	list(APPEND relearn_lib_additional_files "io/NeuronIO.h")
 	
+	# parser	
+	list(APPEND relearn_lib_additional_files "io/parser/MonitorParser.h")
+	list(APPEND relearn_lib_additional_files "io/parser/StepParser.h")
+	list(APPEND relearn_lib_additional_files "io/parser/StimulusParser.h")
+	
 	# mpi
 	list(APPEND relearn_lib_additional_files "mpi/CommunicationMap.h")
 	list(APPEND relearn_lib_additional_files "mpi/MPINoWrapper.h")
@@ -160,15 +165,12 @@ if(WIN32) # Lib
 	# util
 	list(APPEND relearn_lib_additional_files "util/Interval.h")
 	list(APPEND relearn_lib_additional_files "util/MemoryHolder.h")
-	list(APPEND relearn_lib_additional_files "util/MonitorParser.h")
 	list(APPEND relearn_lib_additional_files "util/MPIRank.h")
 	list(APPEND relearn_lib_additional_files "util/Random.h")
 	list(APPEND relearn_lib_additional_files "util/RelearnException.h")
 	list(APPEND relearn_lib_additional_files "util/SemiStableVector.h")
 	list(APPEND relearn_lib_additional_files "util/Stack.h")
 	list(APPEND relearn_lib_additional_files "util/StatisticalMeasures.h")
-	list(APPEND relearn_lib_additional_files "util/StepParser.h")
-	list(APPEND relearn_lib_additional_files "util/StimulusParser.h")
 	list(APPEND relearn_lib_additional_files "util/StringUtil.h")
 	list(APPEND relearn_lib_additional_files "util/TaggedID.h")
 	list(APPEND relearn_lib_additional_files "util/Timers.h")

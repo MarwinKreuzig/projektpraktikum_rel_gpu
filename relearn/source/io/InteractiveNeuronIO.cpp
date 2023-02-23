@@ -10,8 +10,8 @@
 
 #include "InteractiveNeuronIO.h"
 
+#include "io/parser/StimulusParser.h"
 #include "util/RelearnException.h"
-#include "util/StimulusParser.h"
 
 #include "spdlog/spdlog.h"
 

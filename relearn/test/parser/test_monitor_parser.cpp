@@ -15,8 +15,8 @@
 #include "adapter/mpi/MpiRankAdapter.h"
 #include "adapter/tagged_id/TaggedIdAdapter.h"
 
+#include "io/parser/MonitorParser.h"
 #include "neurons/LocalAreaTranslator.h"
-#include "util/MonitorParser.h"
 
 #include "gtest/gtest.h"
 #include <memory>
