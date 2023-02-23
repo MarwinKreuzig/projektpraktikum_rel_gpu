@@ -21,6 +21,7 @@
 #include <ostream>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -149,6 +150,64 @@ class NetworkGraph {
          */
         [[nodiscard]] const NeuronDistantInNeighborhood& get_all_distant_in_edges() const {
             return neuron_distant_in_neighborhood;
+        }
+
+        [[nodiscard]] std::unordered_set<RankNeuronId> get_all_partners_incoming(const NeuronID neuron_id, const SignalType signal_type) const {
+            const auto local_neuron_id = neuron_id.get_neuron_id();
+
+            RelearnException::check(local_neuron_id < number_local_neurons,
+                "NetworkGraph::NetworkGraphBase::get_all_connecting_neurons: Tried with a too large id of {}", neuron_id);
+
+            const auto& locals = neuron_local_in_neighborhood[local_neuron_id];
+            const auto& distants = neuron_distant_in_neighborhood[local_neuron_id];
+
+            const auto number_partners = locals.size() + distants.size();
+
+            std::unordered_set<RankNeuronId> partners{};
+            partners.reserve(number_partners * 2);
+
+            for (const auto& [partner_id, weight] : locals) {
+                if (signal_type == SignalType::Excitatory && weight < 0 || signal_type == SignalType::Inhibitory && weight > 0) {
+                    continue;
+                }
+
+                partners.emplace(my_rank, partner_id);
+            }
+
+            for (const auto& [partner_id, weight] : distants) {
+                if (signal_type == SignalType::Excitatory && weight < 0 || signal_type == SignalType::Inhibitory && weight > 0) {
+                    continue;
+                }
+
+                partners.emplace(partner_id);
+            }
+
+            return partners;
+        }
+
+        [[nodiscard]] std::unordered_set<RankNeuronId> get_all_partners_outgoing(const NeuronID neuron_id) const {
+            const auto local_neuron_id = neuron_id.get_neuron_id();
+
+            RelearnException::check(local_neuron_id < number_local_neurons,
+                "NetworkGraph::NetworkGraphBase::get_all_connecting_neurons: Tried with a too large id of {}", neuron_id);
+
+            const auto& locals = neuron_local_out_neighborhood[local_neuron_id];
+            const auto& distants = neuron_distant_out_neighborhood[local_neuron_id];
+
+            const auto number_partners = locals.size() + distants.size();
+
+            std::unordered_set<RankNeuronId> partners{};
+            partners.reserve(number_partners * 2);
+
+            for (const auto& [partner_id, _] : locals) {
+                partners.emplace(my_rank, partner_id);
+            }
+
+            for (const auto& [partner_id, _] : distants) {
+                partners.emplace(partner_id);
+            }
+
+            return partners;
         }
 
         /**
@@ -534,11 +593,6 @@ public:
     using plastic_synapse_weight = RelearnTypes::plastic_synapse_weight;
     using static_synapse_weight = RelearnTypes::static_synapse_weight;
 
-    enum class EdgeDirection {
-        In,
-        Out
-    };
-
     /**
      * @brief Constructs an object that has enough space to store the given number of neurons
      * @param number_neurons The number of neurons that the object shall handle, > 0
@@ -601,6 +655,14 @@ public:
 
     [[nodiscard]] auto get_number_out_edges(const NeuronID neuron_id) const {
         return std::make_tuple(plastic_network_graph.get_number_out_edges(neuron_id), static_network_graph.get_number_out_edges(neuron_id));
+    }
+
+    [[nodiscard]] std::unordered_set<RankNeuronId> get_all_plastic_partners_incoming(const NeuronID neuron_id, const SignalType signal_type) const {
+        return plastic_network_graph.get_all_partners_incoming(neuron_id, signal_type);
+    }
+
+    [[nodiscard]] std::unordered_set<RankNeuronId> get_all_plastic_partners_outgoing(const NeuronID neuron_id) const {
+        return plastic_network_graph.get_all_partners_outgoing(neuron_id);
     }
 
     /**

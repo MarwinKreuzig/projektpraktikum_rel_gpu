@@ -1,0 +1,71 @@
+#pragma once
+
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
+
+#include "util/Random.h"
+#include "util/RelearnException.h"
+
+#include <cmath>
+#include <numeric>
+#include <vector>
+
+/**
+ * This class provides the possibility to pick an element from a vector based on their probabilities.
+ * This is useful with, e.g., picking nodes to connect to or synapses to delete.
+ */
+class ProbabilityPicker {
+public:
+    /**
+     * @brief Given some probabilities and a random number, returns the index in the vector such that the sum of 
+     *      the probabilities before the element is smaller than the random number and the same sum plus the picked
+     *      element is larger or equal to the random number.
+     *      If the random number is larger than the sum of probabilities, returns the last index.
+     * @param probabilities The probabilities. Shall not be negative, must not be empty
+     * @param random_number The random number, not negative
+     * @exception Throws a RelearnException if probabilities is empty or random_number < 0.0
+     * @return The picked index
+     */
+    [[nodiscard]] static std::size_t pick_target(const std::vector<double>& probabilities, const double random_number) {
+        RelearnException::check(!probabilities.empty(), "ProbabilityPicker::pick_target: There were no probabilities to pick from");
+        RelearnException::check(random_number >= 0.0, "ProbabilityPicker::pick_target: random_number was smaller than 0.0");
+
+        if (!(0.0 < random_number)) {
+            // This exists for denormalized numbers
+            return 0;
+        }
+
+        auto counter = std::size_t(0);
+        for (auto sum_probabilities = 0.0; counter < probabilities.size() && sum_probabilities < random_number; counter++) {
+            sum_probabilities += probabilities[counter];
+        }
+
+        return counter - std::size_t(1);
+    }
+
+    /**
+     * @brief Given some probabilities, picks one element based on its probability. Uses the PRNG associated with the key
+     * @param probabilities The probabilities, shall not ne negative, must not be empty
+     * @param key The identifier or the PRNG
+     * @exception Throws a RelearnException if probabilities is empty or the total sum of probabilities is negative
+     * @return The picked index
+     */
+    [[nodiscard]] static std::size_t pick_target(const std::vector<double>& probabilities, const RandomHolderKey key) {
+        RelearnException::check(!probabilities.empty(), "ProbabilityPicker::pick_target: There were no probabilities to pick from");
+
+        const auto total_probability = std::reduce(probabilities.begin(), probabilities.end(), 0.0, std::plus<double>{});
+        RelearnException::check(total_probability >= 0.0, "ProbabilityPicker::pick_target: total_probability was smaller than 0.0");
+
+        const auto next = std::nextafter(total_probability, total_probability + Constants::eps);
+        const auto random_number = RandomHolder::get_random_uniform_double(key, 0.0, next);
+
+        return pick_target(probabilities, random_number);
+    }
+};

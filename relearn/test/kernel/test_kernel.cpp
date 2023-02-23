@@ -251,117 +251,117 @@ TEST_F(KernelTest, testKernelRandomVector) {
     }
 }
 
-TEST_F(KernelTest, testPickTargetEmpty) {
-    const std::vector<OctreeNode<BarnesHutCell>*> targets{};
-    const std::vector<double> probabilities{};
+//TEST_F(KernelTest, testPickTargetEmpty) {
+//    const std::vector<OctreeNode<BarnesHutCell>*> targets{};
+//    const std::vector<double> probabilities{};
+//
+//    const auto random_number = RandomAdapter::get_random_double<double>(0.0, 100.0, mt);
+//
+//    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
+//
+//    using TT = Kernel<BarnesHutCell>;
+//
+//    ASSERT_THROW(const auto& val = TT::pick_target(targets, probabilities, random_number);, RelearnException);
+//}
 
-    const auto random_number = RandomAdapter::get_random_double<double>(0.0, 100.0, mt);
+//TEST_F(KernelTest, testPickTargetMismatchSize) {
+//    const auto number_targets = RandomAdapter::get_random_integer<size_t>(1, 1000, mt);
+//    auto number_probabilities = RandomAdapter::get_random_integer<size_t>(1, 1000, mt);
+//    while (number_probabilities == number_targets) {
+//        number_probabilities = RandomAdapter::get_random_integer<size_t>(1, 1000, mt);
+//    }
+//
+//    std::vector<OctreeNode<BarnesHutCell>*> targets{ number_targets };
+//    std::vector<double> probabilities = std::vector<double>(number_probabilities, 0.0);
+//
+//    const auto random_number = RandomAdapter::get_random_double<double>(0.0, 100.0, mt);
+//
+//    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
+//
+//    using TT = Kernel<BarnesHutCell>;
+//
+//    ASSERT_THROW(const auto& val = TT::pick_target(targets, probabilities, random_number);, RelearnException);
+//}
 
-    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
+//TEST_F(KernelTest, testPickTargetNegativeRandomNumber) {
+//    const auto number_targets = RandomAdapter::get_random_integer<size_t>(1, 1000, mt);
+//
+//    std::vector<OctreeNode<BarnesHutCell>*> targets{ number_targets };
+//    std::vector<double> probabilities = std::vector<double>(number_targets, 0.0);
+//
+//    const auto random_number = -RandomAdapter::get_random_double<double>(0.001, 100.0, mt);
+//
+//    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
+//
+//    using TT = Kernel<BarnesHutCell>;
+//
+//    ASSERT_THROW(const auto& val = TT::pick_target(targets, probabilities, random_number);, RelearnException);
+//}
 
-    using TT = Kernel<BarnesHutCell>;
+//TEST_F(KernelTest, testPickTargetRandom) {
+//    const auto number_nodes = TaggedIdAdapter::get_random_number_neurons(mt);
+//
+//    std::vector<OctreeNode<BarnesHutCell>> nodes{ number_nodes, OctreeNode<BarnesHutCell>{} };
+//    std::vector<OctreeNode<BarnesHutCell>*> node_pointers{ number_nodes, nullptr };
+//    std::vector<double> probabilities{};
+//
+//    for (auto i = 0; i < number_nodes; i++) {
+//        node_pointers[i] = &nodes[i];
+//        probabilities.emplace_back(RandomAdapter::get_random_percentage<double>(mt));
+//    }
+//
+//    const auto total_probability = std::reduce(probabilities.begin(), probabilities.end(), 0.0);
+//
+//    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
+//
+//    for (auto it = 0; it < number_nodes; it++) {
+//        const auto random_number = RandomAdapter::get_random_double<double>(0.0, total_probability, mt);
+//
+//        auto current_probability = random_number;
+//        auto index = std::numeric_limits<size_t>::max();
+//
+//        for (auto i = 0; i < number_nodes; i++) {
+//            current_probability -= probabilities[i];
+//            if (current_probability <= 0.0) {
+//                index = i;
+//                break;
+//            }
+//        }
+//
+//        if (index == std::numeric_limits<size_t>::max()) {
+//            std::cerr << "testPickTargetRandom: the index was -1\n";
+//            index = number_nodes - 1;
+//        }
+//
+//        const auto* chosen_node = Kernel<BarnesHutCell>::pick_target(node_pointers, probabilities, random_number);
+//
+//        ASSERT_EQ(chosen_node, node_pointers[index]);
+//    }
+//}
 
-    ASSERT_THROW(const auto& val = TT::pick_target(targets, probabilities, random_number);, RelearnException);
-}
-
-TEST_F(KernelTest, testPickTargetMismatchSize) {
-    const auto number_targets = RandomAdapter::get_random_integer<size_t>(1, 1000, mt);
-    auto number_probabilities = RandomAdapter::get_random_integer<size_t>(1, 1000, mt);
-    while (number_probabilities == number_targets) {
-        number_probabilities = RandomAdapter::get_random_integer<size_t>(1, 1000, mt);
-    }
-
-    std::vector<OctreeNode<BarnesHutCell>*> targets{ number_targets };
-    std::vector<double> probabilities = std::vector<double>(number_probabilities, 0.0);
-
-    const auto random_number = RandomAdapter::get_random_double<double>(0.0, 100.0, mt);
-
-    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
-
-    using TT = Kernel<BarnesHutCell>;
-
-    ASSERT_THROW(const auto& val = TT::pick_target(targets, probabilities, random_number);, RelearnException);
-}
-
-TEST_F(KernelTest, testPickTargetNegativeRandomNumber) {
-    const auto number_targets = RandomAdapter::get_random_integer<size_t>(1, 1000, mt);
-
-    std::vector<OctreeNode<BarnesHutCell>*> targets{ number_targets };
-    std::vector<double> probabilities = std::vector<double>(number_targets, 0.0);
-
-    const auto random_number = -RandomAdapter::get_random_double<double>(0.001, 100.0, mt);
-
-    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
-
-    using TT = Kernel<BarnesHutCell>;
-
-    ASSERT_THROW(const auto& val = TT::pick_target(targets, probabilities, random_number);, RelearnException);
-}
-
-TEST_F(KernelTest, testPickTargetRandom) {
-    const auto number_nodes = TaggedIdAdapter::get_random_number_neurons(mt);
-
-    std::vector<OctreeNode<BarnesHutCell>> nodes{ number_nodes, OctreeNode<BarnesHutCell>{} };
-    std::vector<OctreeNode<BarnesHutCell>*> node_pointers{ number_nodes, nullptr };
-    std::vector<double> probabilities{};
-
-    for (auto i = 0; i < number_nodes; i++) {
-        node_pointers[i] = &nodes[i];
-        probabilities.emplace_back(RandomAdapter::get_random_percentage<double>(mt));
-    }
-
-    const auto total_probability = std::reduce(probabilities.begin(), probabilities.end(), 0.0);
-
-    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
-
-    for (auto it = 0; it < number_nodes; it++) {
-        const auto random_number = RandomAdapter::get_random_double<double>(0.0, total_probability, mt);
-
-        auto current_probability = random_number;
-        auto index = std::numeric_limits<size_t>::max();
-
-        for (auto i = 0; i < number_nodes; i++) {
-            current_probability -= probabilities[i];
-            if (current_probability <= 0.0) {
-                index = i;
-                break;
-            }
-        }
-
-        if (index == std::numeric_limits<size_t>::max()) {
-            std::cerr << "testPickTargetRandom: the index was -1\n";
-            index = number_nodes - 1;
-        }
-
-        const auto* chosen_node = Kernel<BarnesHutCell>::pick_target(node_pointers, probabilities, random_number);
-
-        ASSERT_EQ(chosen_node, node_pointers[index]);
-    }
-}
-
-TEST_F(KernelTest, testPickTargetTooLarge) {
-    const auto number_nodes = TaggedIdAdapter::get_random_number_neurons(mt);
-
-    std::vector<OctreeNode<BarnesHutCell>> nodes{ number_nodes, OctreeNode<BarnesHutCell>{} };
-    std::vector<OctreeNode<BarnesHutCell>*> node_pointers{ number_nodes, nullptr };
-    std::vector<double> probabilities{};
-
-    for (auto i = 0; i < number_nodes; i++) {
-        node_pointers[i] = &nodes[i];
-        probabilities.emplace_back(RandomAdapter::get_random_percentage<double>(mt));
-    }
-
-    const auto total_probability = std::reduce(probabilities.begin(), probabilities.end(), 0.0);
-
-    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
-
-    for (auto it = 0; it < number_nodes; it++) {
-        const auto random_number = RandomAdapter::get_random_double<double>(total_probability + eps, (total_probability + eps + 1) * 2, mt);
-        const auto* chosen_node = Kernel<BarnesHutCell>::pick_target(node_pointers, probabilities, random_number);
-
-        ASSERT_EQ(chosen_node, node_pointers[number_nodes - 1]);
-    }
-}
+//TEST_F(KernelTest, testPickTargetTooLarge) {
+//    const auto number_nodes = TaggedIdAdapter::get_random_number_neurons(mt);
+//
+//    std::vector<OctreeNode<BarnesHutCell>> nodes{ number_nodes, OctreeNode<BarnesHutCell>{} };
+//    std::vector<OctreeNode<BarnesHutCell>*> node_pointers{ number_nodes, nullptr };
+//    std::vector<double> probabilities{};
+//
+//    for (auto i = 0; i < number_nodes; i++) {
+//        node_pointers[i] = &nodes[i];
+//        probabilities.emplace_back(RandomAdapter::get_random_percentage<double>(mt));
+//    }
+//
+//    const auto total_probability = std::reduce(probabilities.begin(), probabilities.end(), 0.0);
+//
+//    const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
+//
+//    for (auto it = 0; it < number_nodes; it++) {
+//        const auto random_number = RandomAdapter::get_random_double<double>(total_probability + eps, (total_probability + eps + 1) * 2, mt);
+//        const auto* chosen_node = Kernel<BarnesHutCell>::pick_target(node_pointers, probabilities, random_number);
+//
+//        ASSERT_EQ(chosen_node, node_pointers[number_nodes - 1]);
+//    }
+//}
 
 TEST_F(KernelTest, testPickTargetEmpty2) {
     const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(1000, mt);

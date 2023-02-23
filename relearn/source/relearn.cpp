@@ -864,7 +864,7 @@ int main(int argc, char** argv) {
         nu_dend, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     auto construct_synapse_deletion_finder = [&]() -> std::unique_ptr<SynapseDeletionFinder> {
-        auto synapse_deletion_finder = std::make_unique<RandomSynapseDeletionFinder>();
+        auto synapse_deletion_finder = std::make_unique<InverseLengthSynapseDeletionFinder>();
         return synapse_deletion_finder;
     };
     auto synapse_deletion_finder = construct_synapse_deletion_finder();

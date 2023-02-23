@@ -10,6 +10,7 @@
  *
  */
 
+#include "Types.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/enums/ElementType.h"
 #include "neurons/enums/SignalType.h"
@@ -45,7 +46,7 @@ public:
     }
 
     /**
-     * @brief Sets the axons 
+     * @brief Sets the axons
      * @param se The axons, must not be empty
      * @exception Throws a RelearnException if se is empty
      */
@@ -100,20 +101,11 @@ public:
     [[nodiscard]] std::pair<std::uint64_t, std::uint64_t> delete_synapses();
 
 protected:
-    [[nodiscard]] CommunicationMap<SynapseDeletionRequest> find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete);
+    [[nodiscard]] virtual CommunicationMap<SynapseDeletionRequest> find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) = 0;
 
     [[nodiscard]] std::uint64_t commit_deletions(const CommunicationMap<SynapseDeletionRequest>& deletions, MPIRank my_rank);
 
-    /**
-     * @brief Finds identifiers for the specified neuron for the number of synapses
-     * @param neuron_id The neuron that shall delete synapses
-     * @param element_type The element type that shall delete the synapses (ElementType::Axon indicates that out-synapses shall be deleted)
-     * @param signal_type The signal type that shall delete the synapses (SignalType::Excitatory indicated that excitatory synapses shall be deleted)
-     * @param num_synapses_to_delete The number of synapses that shall be deleted
-     * @exception Can throw a RelearnException
-     * @return The ids of the partners that shall be notified of the deletion. Can contain an id multiple times
-     */
-    [[nodiscard]] virtual std::vector<RankNeuronId> find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete) = 0;
+    [[nodiscard]] std::vector<RankNeuronId> register_synapses(NeuronID neuron_id, ElementType element_type, SignalType signal_type);
 
     std::shared_ptr<SynapticElements> axons{};
     std::shared_ptr<SynapticElements> excitatory_dendrites{};
@@ -124,10 +116,33 @@ protected:
 };
 
 /**
- * This class deletes synapses based on randomness, i.e., it picks the 
+ * This class deletes synapses based on randomness, i.e., it picks the
  * synapses to delete uniformely at random.
  */
 class RandomSynapseDeletionFinder : public SynapseDeletionFinder {
 protected:
-    [[nodiscard]] std::vector<RankNeuronId> find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete) override;
+    [[nodiscard]] CommunicationMap<SynapseDeletionRequest> find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) override;
+
+private:
+    [[nodiscard]] std::vector<RankNeuronId> find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete);
+};
+
+/**
+ * This class deletes synapses based on their length, i.e., it picks the
+ * shorted synapses more likely (linearly dependent on the length)
+ */
+class InverseLengthSynapseDeletionFinder : public SynapseDeletionFinder {
+protected:
+    [[nodiscard]] CommunicationMap<SynapseDeletionRequest> find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) override;
+
+private:
+    [[nodiscard]] CommunicationMap<NeuronID> find_partners_to_locate(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete);
+
+    [[nodiscard]] CommunicationMap<RelearnTypes::position_type> find_local_locations(const CommunicationMap<NeuronID>& local_neurons);
+
+    [[nodiscard]] CommunicationMap<SynapseDeletionRequest> find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete,
+        const CommunicationMap<NeuronID>& ids, const CommunicationMap<RelearnTypes::position_type>& positions);
+
+    [[nodiscard]] std::vector<RankNeuronId> find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete,
+        const CommunicationMap<NeuronID>& ids, const CommunicationMap<RelearnTypes::position_type>& positions);
 };

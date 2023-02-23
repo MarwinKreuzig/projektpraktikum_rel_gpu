@@ -19,6 +19,7 @@
 #include "neurons/enums/SignalType.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "structure/OctreeNode.h"
+#include "util/ProbabilityPicker.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
@@ -194,39 +195,6 @@ public:
     }
 
     /**
-     * @brief Picks a target based on the supplied probabilities
-     * @param nodes The target nodes, must not be empty
-     * @param probabilities The associated probabilities to the target nodes, must be as large as nodes
-     * @param random_number The random number that determines which target node to pick, must be >= 0.0
-     * @exception Throws a RelearnException if there are no nodes, if the sizes of the vectors don't match,
-     *      if random_number is < 0.0, or if the selected node is nullptr
-     * @return The selected target node
-     */
-    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* pick_target(const std::vector<OctreeNode<AdditionalCellAttributes>*>& nodes,
-        const std::vector<double>& probabilities, const double random_number) {
-        RelearnException::check(nodes.size() == probabilities.size(), "Kernel::pick_target: Had a different number of probabilities than nodes: {} vs {}", nodes.size(), probabilities.size());
-        RelearnException::check(!nodes.empty(), "Kernel::pick_target: There were no nodes to pick from");
-        RelearnException::check(random_number >= 0.0, "Kernel::pick_target: random_number was smaller than 0.0");
-
-        if (!(0.0 < random_number)) {
-            auto* node_selected = nodes[0];
-            RelearnException::check(node_selected != nullptr, "Kernel::pick_target: node_selected was nullptr");
-            return node_selected;
-        }
-
-        auto counter = 0;
-        for (auto sum_probabilities = 0.0; counter < probabilities.size() && sum_probabilities < random_number; counter++) {
-            sum_probabilities += probabilities[counter];
-        }
-
-        auto* node_selected = nodes[counter - 1ULL];
-
-        RelearnException::check(node_selected != nullptr, "Kernel::pick_target: node_selected was nullptr");
-
-        return node_selected;
-    }
-
-    /**
      * @brief Picks a target based on the the KernelType
      * @param source_neuron_id The id of the source neuron, is used to prevent autapses
      * @param source_position The position of the source neuron
@@ -254,10 +222,13 @@ public:
             return nullptr;
         }
 
-        const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0,
-            std::nextafter(total_probability, total_probability + Constants::eps));
+        RelearnException::check(nodes.size() == all_probabilities.size(), "Kernel::pick_target: Had a different number of probabilities than nodes: {} vs {}", nodes.size(), all_probabilities.size());
 
-        auto* node_selected = pick_target(nodes, all_probabilities, random_number);
+        const auto picked_idx = ProbabilityPicker::pick_target(all_probabilities, RandomHolderKey::Algorithm);
+        auto* const node_selected = nodes[picked_idx];
+
+        RelearnException::check(node_selected != nullptr, "Kernel::pick_target: node_selected was nullptr");
+
         return node_selected;
     }
 
