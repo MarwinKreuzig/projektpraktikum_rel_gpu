@@ -11,12 +11,7 @@
  */
 
 #include "Types.h"
-#include "io/LogFiles.h"
 
-#include <charconv>
-#include <cstdint>
-#include <optional>
-#include <string_view>
 #include <vector>
 
 /**
@@ -77,82 +72,5 @@ struct Interval {
         }
 
         return false;
-    }
-
-    /**
-     * @brief Parses an interval from a description. The description must have the form
-     *      <begin>-<end>:<frequency> with <begin> <= <end>
-     * @param description The description of the interval
-     * @return An optional which is empty if no interval could be parsed, and contains the interval if the parsing succeeded
-     */
-    [[nodiscard]] static std::optional<Interval> parse_interval(std::string_view description) {
-        const auto hyphen_position = description.find('-');
-        const auto colon_position = description.find(':');
-
-        if (hyphen_position == std::string::npos || colon_position == std::string::npos) {
-            return {};
-        }
-
-        const auto& begin_string = description.substr(0, hyphen_position);
-        const auto& end_string = description.substr(hyphen_position + 1, colon_position - hyphen_position - 1);
-        const auto& frequency_string = description.substr(colon_position + 1, description.size() - colon_position);
-
-        step_type begin{};
-        const auto& [begin_ptr, begin_err] = std::from_chars(begin_string.data(), begin_string.data() + begin_string.size(), begin);
-
-        step_type end{};
-        const auto& [end_ptr, end_err] = std::from_chars(end_string.data(), end_string.data() + end_string.size(), end);
-
-        step_type frequency{};
-        const auto& [frequency_ptr, frequency_err] = std::from_chars(frequency_string.data(), frequency_string.data() + frequency_string.size(), frequency);
-
-        const auto begin_ok = (begin_err == std::errc{}) && (begin_ptr == begin_string.data() + begin_string.size());
-        const auto end_ok = (end_err == std::errc{}) && (end_ptr == end_string.data() + end_string.size());
-        const auto frequency_ok = (frequency_err == std::errc{}) && (frequency_ptr == frequency_string.data() + frequency_string.size());
-
-        if (begin_ok && end_ok && frequency_ok) {
-            if (end < begin) {
-                LogFiles::print_message_rank(MPIRank::root_rank(), "Parsed interval description has end before beginning : {}", description);
-                return {};
-            }
-
-            return Interval{ begin, end, frequency };
-        }
-
-        LogFiles::print_message_rank(MPIRank::root_rank(), "Failed to parse string to match the pattern <uint64>-<uint64>:<uint64> : {}", description);
-        return {};
-    }
-
-    /**
-     * @brief Parses multiple intervals from the description. Each interval must have the form
-     *      <begin>-<end>:<frequency> with ; separating the intervals
-     * @param description The description of the intervals
-     * @return A vector with all successfully parsed intervals
-     */
-    [[nodiscard]] static std::vector<Interval> parse_description_as_intervals(const std::string& description) {
-        std::vector<Interval> intervals{};
-        std::string::size_type current_position = 0;
-
-        while (true) {
-            auto semicolon_position = description.find(';', current_position);
-            if (semicolon_position == std::string_view::npos) {
-                semicolon_position = description.size();
-            }
-
-            std::string_view substring{ description.data() + current_position, description.data() + semicolon_position };
-            const auto& opt_interval = parse_interval(substring);
-
-            if (opt_interval.has_value()) {
-                intervals.emplace_back(opt_interval.value());
-            }
-
-            if (semicolon_position == description.size()) {
-                break;
-            }
-
-            current_position = semicolon_position + 1;
-        }
-
-        return intervals;
     }
 };

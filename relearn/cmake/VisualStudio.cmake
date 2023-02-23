@@ -86,6 +86,7 @@ if(WIN32) # Lib
 	list(APPEND relearn_lib_additional_files "io/NeuronIO.h")
 	
 	# parser	
+	list(APPEND relearn_lib_additional_files "io/parser/IntervalParser.h")
 	list(APPEND relearn_lib_additional_files "io/parser/MonitorParser.h")
 	list(APPEND relearn_lib_additional_files "io/parser/StepParser.h")
 	list(APPEND relearn_lib_additional_files "io/parser/StimulusParser.h")

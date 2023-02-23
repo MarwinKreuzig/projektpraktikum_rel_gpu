@@ -12,10 +12,10 @@
 
 #include "Types.h"
 #include "io/LogFiles.h"
+#include "io/parser/IntervalParser.h"
 #include "util/Interval.h"
 
 #include <algorithm>
-#include <cstdint>
 #include <functional>
 #include <string>
 #include <vector>
@@ -33,7 +33,7 @@ public:
      * @return The function indicating if the event shall occur
      */
     [[nodiscard]] static std::function<bool(RelearnTypes::step_type)> generate_step_check_function(const std::string& description) {
-        auto intervals = Interval::parse_description_as_intervals(description);
+        auto intervals = IntervalParser::parse_description_as_intervals(description);
         auto function = generate_step_check_function(std::move(intervals));
         return function;
     }

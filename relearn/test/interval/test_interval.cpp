@@ -13,6 +13,8 @@
 #include "adapter/interval/IntervalAdapter.h"
 #include "adapter/random/RandomAdapter.h"
 
+#include "io/parser/IntervalParser.h"
+
 #include <sstream>
 
 TEST_F(IntervalTest, testIntervalConstruction) {
@@ -85,7 +87,7 @@ TEST_F(IntervalTest, testIntervalIntersecions) {
 TEST_F(IntervalTest, testParseInterval) {
     const auto& [golden_interval, description] = IntervalAdapter::generate_random_interval_description(mt);
 
-    const auto& opt_interval = Interval::parse_interval(description);
+    const auto& opt_interval = IntervalParser::parse_interval(description);
 
     ASSERT_TRUE(opt_interval.has_value());
 
@@ -97,7 +99,7 @@ TEST_F(IntervalTest, testParseInterval) {
 }
 
 TEST_F(IntervalTest, testParseIntervalFail1) {
-    const auto& opt_interval = Interval::parse_interval({});
+    const auto& opt_interval = IntervalParser::parse_interval({});
 
     ASSERT_FALSE(opt_interval.has_value());
 }
@@ -116,7 +118,7 @@ TEST_F(IntervalTest, testParseIntervalFail2) {
 
     const auto& description = ss.str();
 
-    const auto& opt_interval = Interval::parse_interval(description);
+    const auto& opt_interval = IntervalParser::parse_interval(description);
 
     ASSERT_FALSE(opt_interval.has_value());
 }
@@ -135,7 +137,7 @@ TEST_F(IntervalTest, testParseIntervalFail3) {
 
     const auto& description = ss.str();
 
-    const auto& opt_interval = Interval::parse_interval(description);
+    const auto& opt_interval = IntervalParser::parse_interval(description);
 
     ASSERT_FALSE(opt_interval.has_value());
 }
@@ -155,7 +157,7 @@ TEST_F(IntervalTest, testParseIntervalFail4) {
 
     const auto& description = ss.str();
 
-    const auto& opt_interval = Interval::parse_interval(description);
+    const auto& opt_interval = IntervalParser::parse_interval(description);
 
     ASSERT_FALSE(opt_interval.has_value());
 }
@@ -175,7 +177,7 @@ TEST_F(IntervalTest, testParseIntervalFail5) {
 
     const auto& description = ss.str();
 
-    const auto& opt_interval = Interval::parse_interval(description);
+    const auto& opt_interval = IntervalParser::parse_interval(description);
 
     ASSERT_FALSE(opt_interval.has_value());
 }
@@ -195,7 +197,7 @@ TEST_F(IntervalTest, testParseIntervalFail6) {
 
     const auto& description = ss.str();
 
-    const auto& opt_interval = Interval::parse_interval(description);
+    const auto& opt_interval = IntervalParser::parse_interval(description);
 
     ASSERT_FALSE(opt_interval.has_value());
 }
@@ -214,7 +216,7 @@ TEST_F(IntervalTest, testParseIntervals1) {
         }
     }
 
-    const auto& intervals = Interval::parse_description_as_intervals(ss.str());
+    const auto& intervals = IntervalParser::parse_description_as_intervals(ss.str());
 
     for (auto i = 0; i < 10; i++) {
         ASSERT_EQ(golden_intervals[i], intervals[i]);
@@ -233,18 +235,18 @@ TEST_F(IntervalTest, testParseInterval2) {
         ss << ';';
     }
 
-    const auto& intervals = Interval::parse_description_as_intervals(ss.str());
+    const auto& intervals = IntervalParser::parse_description_as_intervals(ss.str());
 
     ASSERT_EQ(intervals.size(), 10);
 }
 
 TEST_F(IntervalTest, testParseIntervalsFail1) {
-    const auto& intervals = Interval::parse_description_as_intervals({});
+    const auto& intervals = IntervalParser::parse_description_as_intervals({});
     ASSERT_TRUE(intervals.empty());
 }
 
 TEST_F(IntervalTest, testParseIntervalsFail2) {
-    const auto& intervals = Interval::parse_description_as_intervals("sgahkllkrduf,'�.;f�lsa�df::SAfd--dfasdjf45");
+    const auto& intervals = IntervalParser::parse_description_as_intervals("sgahkllkrduf,'�.;f�lsa�df::SAfd--dfasdjf45");
     ASSERT_TRUE(intervals.empty());
 }
 
@@ -262,7 +264,7 @@ TEST_F(IntervalTest, testParseIntervalsFail3) {
         }
     }
 
-    const auto& intervals = Interval::parse_description_as_intervals(ss.str());
+    const auto& intervals = IntervalParser::parse_description_as_intervals(ss.str());
 
     ASSERT_TRUE(intervals.empty());
 }
@@ -281,7 +283,7 @@ TEST_F(IntervalTest, testParseIntervalsFail4) {
         }
     }
 
-    const auto& intervals = Interval::parse_description_as_intervals(ss.str());
+    const auto& intervals = IntervalParser::parse_description_as_intervals(ss.str());
 
     ASSERT_TRUE(intervals.empty());
 }
@@ -300,7 +302,7 @@ TEST_F(IntervalTest, testParseIntervalsFail5) {
 
     ss << "136546543135";
 
-    const auto& intervals = Interval::parse_description_as_intervals(ss.str());
+    const auto& intervals = IntervalParser::parse_description_as_intervals(ss.str());
 
     ASSERT_EQ(intervals.size(), 10);
 }
