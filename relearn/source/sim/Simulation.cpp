@@ -81,7 +81,7 @@ void Simulation::set_synapse_deletion_finder(std::unique_ptr<SynapseDeletionFind
 void Simulation::set_enable_interrupts(std::vector<std::pair<step_type, std::vector<NeuronID>>> interrupts) {
     enable_interrupts = std::move(interrupts);
 
-    for (auto& [step, ids] : enable_interrupts) {
+    for (auto& [_, ids] : enable_interrupts) {
         std::sort(ids.begin(), ids.end());
     }
 }
@@ -89,7 +89,7 @@ void Simulation::set_enable_interrupts(std::vector<std::pair<step_type, std::vec
 void Simulation::set_disable_interrupts(std::vector<std::pair<step_type, std::vector<NeuronID>>> interrupts) {
     disable_interrupts = std::move(interrupts);
 
-    for (auto& [step, ids] : disable_interrupts) {
+    for (auto& [_, ids] : disable_interrupts) {
         std::sort(ids.begin(), ids.end());
     }
 }
@@ -275,7 +275,7 @@ void Simulation::simulate(const step_type number_steps) {
      * Simulation loop
      */
     const auto final_step_count = step + number_steps;
-    for (; step <= final_step_count; ++step) { // NOLINT(altera-id-dependent-backward-branch)
+    for (; step < final_step_count; ++step) { // NOLINT(altera-id-dependent-backward-branch)
         for (const auto& [disable_step, disable_ids] : disable_interrupts) {
             if (disable_step == step) {
                 LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Disabling {} neurons in step {}", disable_ids.size(), disable_step);

@@ -64,6 +64,7 @@ void Neurons::init(const number_neurons_type number_neurons) {
 
 void Neurons::set_network_graph(std::shared_ptr<NetworkGraph> network) {
     synapse_deletion_finder->set_network_graph(network);
+    neuron_model->set_network_graph(network);
 
     network_graph = std::move(network);
 }
@@ -297,7 +298,7 @@ void Neurons::create_neurons(const number_neurons_type creation_count) {
 }
 
 void Neurons::update_electrical_activity(const step_type step) {
-    neuron_model->update_electrical_activity(step, *network_graph);
+    neuron_model->update_electrical_activity(step);
 
     const auto& fired = neuron_model->get_fired();
     calcium_calculator->update_calcium(step, fired);

@@ -51,13 +51,22 @@ public:
     }
 
     /**
+     * @brief Sets the network graph. It is used to determine which neurons to notify in case of a firing one.
+     * @param new_network_graph The new network graph, must not be empty
+     * @exception Throws a RelearnException if new_network_graph is empty
+     */
+    void set_network_graph(std::shared_ptr<NetworkGraph> new_network_graph) {
+        const auto is_filled = new_network_graph.operator bool();
+        RelearnException::check(is_filled, "FiredStatusCommunicator::set_network_graph: new_network_graph is empty");
+        network_graph = std::move(new_network_graph);
+    }
+
+    /**
      * @brief Registers the fired status of the local neurons that are not disabled.
-     *      Potentially uses the out-edges of the network graph
      * @param fired_status The current fired status of the neurons
-     * @param network_graph The network graph that is currently being used
      * @exception Can throw a RelearnException
      */
-    virtual void set_local_fired_status(std::span<const FiredStatus> fired_status, const NetworkGraph& network_graph) = 0;
+    virtual void set_local_fired_status(std::span<const FiredStatus> fired_status) = 0;
 
     /**
      * @brief Exchanges the fired status with all MPI ranks
@@ -94,6 +103,7 @@ public:
 
 protected:
     std::shared_ptr<NeuronsExtraInfo> extra_infos{};
+    std::shared_ptr<NetworkGraph> network_graph{};
 
 private:
     size_t number_ranks{ 0 };

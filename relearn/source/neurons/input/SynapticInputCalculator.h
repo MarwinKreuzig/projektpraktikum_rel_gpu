@@ -88,6 +88,21 @@ public:
     }
 
     /**
+     * @brief Sets the network graph. It is used to determine which neurons to notify in case of a firing one.
+     * @param new_network_graph The new network graph, must not be empty
+     * @exception Throws a RelearnException if new_network_graph is empty
+     */
+    void set_network_graph(std::shared_ptr<NetworkGraph> new_network_graph) {
+        const auto is_filled = new_network_graph.operator bool();
+        RelearnException::check(is_filled, "SynapticInputCalculator::set_network_graph: new_network_graph is empty");
+        network_graph = std::move(new_network_graph);
+
+        if (fired_status_comm.operator bool()) {
+            fired_status_comm->set_network_graph(network_graph);
+        }
+    }
+
+    /**
      * @brief Creates a clone of this instance (without neurons), copies all parameters
      * @return A copy of this instance
      */
@@ -110,21 +125,20 @@ public:
     /**
      * @brief Updates the synaptic input and the background activity based on the current network graph, whether the local neurons spikes, and which neuron to update
      * @param step The current update step
-     * @param network_graph The network graph of the connections
      * @param fired Which local neuron fired
      * @exception Throws a RelearnException if the number of local neurons didn't match the sizes of the arguments
      */
-    void update_input([[maybe_unused]] const step_type step, const NetworkGraph& network_graph, const std::span<const FiredStatus> fired) {
+    void update_input([[maybe_unused]] const step_type step, const std::span<const FiredStatus> fired) {
         const auto& disable_flags = extra_infos->get_disable_flags();
 
         RelearnException::check(number_local_neurons > 0, "SynapticInputCalculator::update_input: There were no local neurons.");
         RelearnException::check(fired.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of fired did not match number of local neurons: {} vs {}", fired.size(), number_local_neurons);
         RelearnException::check(disable_flags.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of disable_flags did not match number of local neurons: {} vs {}", disable_flags.size(), number_local_neurons);
 
-        fired_status_comm->set_local_fired_status(fired, network_graph);
+        fired_status_comm->set_local_fired_status(fired);
         fired_status_comm->exchange_fired_status();
 
-        update_synaptic_input(network_graph, fired);
+        update_synaptic_input(fired);
     }
 
     /**
@@ -190,10 +204,9 @@ public:
 protected:
     /**
      * @brief This hook needs to update this->synaptic_input for every neuron. Can make use of this->fired_status_comm
-     * @param network_graph The network graph of the connections
      * @param fired If the local neurons fired
      */
-    virtual void update_synaptic_input(const NetworkGraph& network_graph, std::span<const FiredStatus> fired) = 0;
+    virtual void update_synaptic_input(std::span<const FiredStatus> fired) = 0;
 
     /**
      * @brief Sets the synaptic input for the given neuron
@@ -212,12 +225,13 @@ protected:
      */
     void set_synaptic_input(double value) noexcept;
 
-    [[nodiscard]] double get_local_synaptic_input(const NetworkGraph& network_graph, std::span<const FiredStatus> fired, NeuronID neuron_id);
+    [[nodiscard]] double get_local_synaptic_input(std::span<const FiredStatus> fired, NeuronID neuron_id);
 
-    [[nodiscard]] double get_distant_synaptic_input(const NetworkGraph& network_graph, std::span<const FiredStatus> fired, NeuronID neuron_id);
+    [[nodiscard]] double get_distant_synaptic_input(std::span<const FiredStatus> fired, NeuronID neuron_id);
 
 protected:
     std::shared_ptr<NeuronsExtraInfo> extra_infos{};
+    std::shared_ptr<NetworkGraph> network_graph{};
 
 private:
     number_neurons_type number_local_neurons{};

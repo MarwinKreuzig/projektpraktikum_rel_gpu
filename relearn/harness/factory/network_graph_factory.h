@@ -18,8 +18,8 @@
 
 class NetworkGraphFactory {
 public:
-    static std::unique_ptr<NetworkGraph> construct_network_graph(RelearnTypes::number_neurons_type number_neurons) {
-        auto network_graph = std::make_unique<NetworkGraph>(number_neurons, MPIRank::root_rank());
+    static std::shared_ptr<NetworkGraph> construct_network_graph(RelearnTypes::number_neurons_type number_neurons) {
+        auto network_graph = std::make_shared<NetworkGraph>(number_neurons, MPIRank::root_rank());
         return network_graph;
     }
 

@@ -46,9 +46,9 @@ void SynapticInputCalculator::set_synaptic_input(const double value) noexcept {
     std::ranges::fill(synaptic_input, value);
 }
 
-double SynapticInputCalculator::get_local_synaptic_input(const NetworkGraph& network_graph, const std::span<const FiredStatus> fired, const NeuronID neuron_id) {
+double SynapticInputCalculator::get_local_synaptic_input(const std::span<const FiredStatus> fired, const NeuronID neuron_id) {
     // Walk through the local in-edges of my neuron
-    const auto& [local_in_edges_plastic, local_in_edges_static] = network_graph.get_local_in_edges(neuron_id);
+    const auto& [local_in_edges_plastic, local_in_edges_static] = network_graph->get_local_in_edges(neuron_id);
 
     auto local_input = 0.0;
 
@@ -69,9 +69,9 @@ double SynapticInputCalculator::get_local_synaptic_input(const NetworkGraph& net
     return local_input;
 }
 
-double SynapticInputCalculator::get_distant_synaptic_input(const NetworkGraph& network_graph, const std::span<const FiredStatus> fired, const NeuronID neuron_id) {
+double SynapticInputCalculator::get_distant_synaptic_input(const std::span<const FiredStatus> fired, const NeuronID neuron_id) {
     // Walk through the distant in-edges of my neuron
-    const auto& [in_edges_plastic, in_edges_static] = network_graph.get_distant_in_edges(neuron_id);
+    const auto& [in_edges_plastic, in_edges_static] = network_graph->get_distant_in_edges(neuron_id);
 
     auto distant_input = 0.0;
 

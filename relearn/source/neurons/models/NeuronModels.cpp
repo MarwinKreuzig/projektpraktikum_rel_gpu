@@ -46,8 +46,8 @@ void NeuronModel::create_neurons(number_neurons_type creation_count) {
     stimulus_calculator->create_neurons(creation_count);
 }
 
-void NeuronModel::update_electrical_activity(const step_type step, const NetworkGraph& network_graph) {
-    input_calculator->update_input(step, network_graph, fired);
+void NeuronModel::update_electrical_activity(const step_type step) {
+    input_calculator->update_input(step, fired);
     background_calculator->update_input(step);
     stimulus_calculator->update_stimulus(step);
 

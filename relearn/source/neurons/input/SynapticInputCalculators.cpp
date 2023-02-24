@@ -15,13 +15,13 @@
 
 #include <cmath>
 
-void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph, const std::span<const FiredStatus> fired) {
+void LinearSynapticInputCalculator::update_synaptic_input(const std::span<const FiredStatus> fired) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
     const auto& disable_flags = extra_infos->get_disable_flags();
     const auto number_local_neurons = get_number_neurons();
 
-#pragma omp parallel for shared(network_graph, disable_flags, number_local_neurons, fired) default(none)
+#pragma omp parallel for shared(disable_flags, number_local_neurons, fired) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
@@ -29,8 +29,8 @@ void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& ne
 
         NeuronID id{ neuron_id };
 
-        const auto local_input = get_local_synaptic_input(network_graph, fired, id);
-        const auto distant_input = get_distant_synaptic_input(network_graph, fired, id);
+        const auto local_input = get_local_synaptic_input(fired, id);
+        const auto distant_input = get_distant_synaptic_input(fired, id);
         const auto total_input = local_input + distant_input;
 
         set_synaptic_input(neuron_id, total_input);
@@ -39,13 +39,13 @@ void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& ne
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
 }
 
-void LogarithmicSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph, const std::span<const FiredStatus> fired) {
+void LogarithmicSynapticInputCalculator::update_synaptic_input(const std::span<const FiredStatus> fired) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
     const auto& disable_flags = extra_infos->get_disable_flags();
     const auto number_local_neurons = get_number_neurons();
 
-#pragma omp parallel for shared(network_graph, disable_flags, number_local_neurons, fired) default(none)
+#pragma omp parallel for shared(disable_flags, number_local_neurons, fired) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
@@ -53,8 +53,8 @@ void LogarithmicSynapticInputCalculator::update_synaptic_input(const NetworkGrap
 
         NeuronID id{ neuron_id };
 
-        const auto local_input = get_local_synaptic_input(network_graph, fired, id);
-        const auto distant_input = get_distant_synaptic_input(network_graph, fired, id);
+        const auto local_input = get_local_synaptic_input(fired, id);
+        const auto distant_input = get_distant_synaptic_input(fired, id);
         const auto total_input = local_input + distant_input;
 
         // Avoid negative numbers
@@ -67,13 +67,13 @@ void LogarithmicSynapticInputCalculator::update_synaptic_input(const NetworkGrap
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
 }
 
-void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph, const std::span<const FiredStatus> fired) {
+void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const std::span<const FiredStatus> fired) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
     const auto& disable_flags = extra_infos->get_disable_flags();
     const auto number_local_neurons = get_number_neurons();
 
-#pragma omp parallel for shared(network_graph, disable_flags, number_local_neurons, fired) default(none)
+#pragma omp parallel for shared(disable_flags, number_local_neurons, fired) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
@@ -81,8 +81,8 @@ void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const Netwo
 
         NeuronID id{ neuron_id };
 
-        const auto local_input = get_local_synaptic_input(network_graph, fired, id);
-        const auto distant_input = get_distant_synaptic_input(network_graph, fired, id);
+        const auto local_input = get_local_synaptic_input(fired, id);
+        const auto distant_input = get_distant_synaptic_input(fired, id);
         const auto total_input = local_input + distant_input;
 
         const auto hyp_tan_input = std::tanh(total_input);

@@ -46,11 +46,10 @@ public:
 
     /**
      * @brief Registers the fired status of the local neurons that are not disabled.
-     *      Potentially uses the out-edges of the network graph
      * @param fired_status The current fired status of the neurons
-     * @param network_graph The network graph of the connections
+     * @exception Can throw a RelearnException
      */
-    void set_local_fired_status(std::span<const FiredStatus> fired_status, const NetworkGraph& network_graph) override;
+    void set_local_fired_status(std::span<const FiredStatus> fired_status) override;
 
     /**
      * @brief Exchanges the fired status with all MPI ranks

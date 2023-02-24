@@ -33,11 +33,12 @@ static void BM_Linear_Input_No_Fired(benchmark::State& state) {
     extra_info->init(number_neurons);
 
     input_calculator->set_extra_infos(extra_info);
+    input_calculator->set_network_graph(network_graph);
 
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        input_calculator->update_input(1000, *network_graph, fired_status);
+        input_calculator->update_input(1000, fired_status);
         state.PauseTiming();
 
         auto sum = 0.0;
@@ -69,11 +70,12 @@ static void BM_Linear_Input_All_Fired(benchmark::State& state) {
     extra_info->init(number_neurons);
 
     input_calculator->set_extra_infos(extra_info);
+    input_calculator->set_network_graph(network_graph);
 
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        input_calculator->update_input(1000, *network_graph, fired_status);
+        input_calculator->update_input(1000, fired_status);
         state.PauseTiming();
 
         auto sum = 0.0;
@@ -105,11 +107,12 @@ static void BM_Logarithmic_Input_No_Fired(benchmark::State& state) {
     extra_info->init(number_neurons);
 
     input_calculator->set_extra_infos(extra_info);
+    input_calculator->set_network_graph(network_graph);
 
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        input_calculator->update_input(1000, *network_graph, fired_status);
+        input_calculator->update_input(1000, fired_status);
         state.PauseTiming();
 
         auto sum = 0.0;
@@ -141,11 +144,12 @@ static void BM_Logarithmic_Input_All_Fired(benchmark::State& state) {
     extra_info->init(number_neurons);
 
     input_calculator->set_extra_infos(extra_info);
+    input_calculator->set_network_graph(network_graph);
 
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        input_calculator->update_input(1000, *network_graph, fired_status);
+        input_calculator->update_input(1000, fired_status);
         state.PauseTiming();
 
         auto sum = 0.0;
@@ -177,11 +181,12 @@ static void BM_TanH_Input_No_Fired(benchmark::State& state) {
     extra_info->init(number_neurons);
 
     input_calculator->set_extra_infos(extra_info);
+    input_calculator->set_network_graph(network_graph);
 
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        input_calculator->update_input(1000, *network_graph, fired_status);
+        input_calculator->update_input(1000, fired_status);
         state.PauseTiming();
 
         auto sum = 0.0;
@@ -213,11 +218,12 @@ static void BM_TanH_Input_All_Fired(benchmark::State& state) {
     extra_info->init(number_neurons);
 
     input_calculator->set_extra_infos(extra_info);
+    input_calculator->set_network_graph(network_graph);
 
     NeuronsExtraInfoFactory::enable_all(extra_info);
 
     for (auto _ : state) {
-        input_calculator->update_input(1000, *network_graph, fired_status);
+        input_calculator->update_input(1000, fired_status);
         state.PauseTiming();
 
         auto sum = 0.0;

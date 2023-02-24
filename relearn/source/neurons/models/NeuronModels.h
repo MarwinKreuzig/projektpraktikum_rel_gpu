@@ -84,6 +84,19 @@ public:
         stimulus_calculator->set_extra_infos(extra_infos);
     }
 
+    /**
+     * @brief Sets the network graph. It is used to determine which neurons to notify in case of a firing one.
+     * @param new_network_graph The new network graph, must not be empty
+     * @exception Throws a RelearnException if new_network_graph is empty
+     */
+    void set_network_graph(std::shared_ptr<NetworkGraph> new_network_graph) {
+        const auto is_filled = new_network_graph.operator bool();
+        RelearnException::check(is_filled, "SynapticInputCalculator::set_network_graph: new_network_graph is empty");
+        network_graph = std::move(new_network_graph);
+
+        input_calculator->set_network_graph(network_graph);
+    }
+
     virtual ~NeuronModel() = default;
 
     NeuronModel(const NeuronModel& other) = delete;
@@ -223,9 +236,8 @@ public:
      * @brief Performs one step of simulating the electrical activity for all neurons.
      *      This method performs communication via MPI.
      * @param step The current update step
-     * @param network_graph The network graph that specifies which neurons are connected with connections. Is used to determine which spikes effect the local portion.
      */
-    void update_electrical_activity(step_type step, const NetworkGraph& network_graph);
+    void update_electrical_activity(step_type step);
 
     /**
      * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned
@@ -370,6 +382,7 @@ private:
     std::shared_ptr<Stimulus> stimulus_calculator{};
 
     std::shared_ptr<NeuronsExtraInfo> extra_infos{};
+    std::shared_ptr<NetworkGraph> network_graph{};
 };
 
 namespace models {
