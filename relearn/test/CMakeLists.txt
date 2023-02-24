@@ -105,6 +105,7 @@ target_sources(
 		  
 		  octree_node/test_octree_node.cpp
 
+		  parser/test_interval_parser.cpp
 		  parser/test_monitor_parser.cpp
 		  parser/test_step_parser.cpp
 
