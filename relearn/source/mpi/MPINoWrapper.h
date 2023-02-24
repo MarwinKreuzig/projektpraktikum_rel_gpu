@@ -152,7 +152,6 @@ public:
     template<typename T>
     static void set_in_window(MPIWindow::Window window_type, uint64_t index, const T& element) {
         std::any_cast<std::vector<T>&>(MPIWindow::mpi_windows[window_type])[index] = element;
-        std::cout << "set " << index << " to " << element << " " << std::any_cast<std::vector<T>&>(MPIWindow::mpi_windows[window_type])[index] << std::endl;
     }
 
     template<typename T>
