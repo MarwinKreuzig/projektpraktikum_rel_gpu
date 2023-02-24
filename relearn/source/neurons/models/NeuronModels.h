@@ -304,10 +304,6 @@ public:
         }
     }
 
-    void set_stimulus_calculator(std::shared_ptr<Stimulus> stimulus_calculator) {
-        this->stimulus_calculator = std::move(stimulus_calculator);
-    }
-
     static constexpr unsigned int default_h{ 10 };
     static constexpr unsigned int min_h{ 1 };
     static constexpr unsigned int max_h{ 1000 };
@@ -357,7 +353,7 @@ protected:
         return background_calculator;
     }
 
-    [[nodiscard]] const std::shared_ptr<Stimulus>& get_stimulus_calculator() const noexcept {
+    [[nodiscard]] const std::unique_ptr<Stimulus>& get_stimulus_calculator() const noexcept {
         return stimulus_calculator;
     }
 
@@ -379,7 +375,7 @@ private:
 
     std::unique_ptr<SynapticInputCalculator> input_calculator{};
     std::unique_ptr<BackgroundActivityCalculator> background_calculator{};
-    std::shared_ptr<Stimulus> stimulus_calculator{};
+    std::unique_ptr<Stimulus> stimulus_calculator{};
 
     std::shared_ptr<NeuronsExtraInfo> extra_infos{};
     std::shared_ptr<NetworkGraph> network_graph{};

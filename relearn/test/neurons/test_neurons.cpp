@@ -120,8 +120,6 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
         models::PoissonModel::default_tau_x,
         models::PoissonModel::default_refractory_period);
 
-    model->set_stimulus_calculator(std::make_shared<Stimulus>());
-
     auto calcium = std::make_unique<CalciumCalculator>();
     calcium->set_initial_calcium_calculator(
         [](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
