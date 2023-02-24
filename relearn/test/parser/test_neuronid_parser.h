@@ -12,5 +12,6 @@
 
 #include "RelearnTest.hpp"
 
-class MonitorParserTest : public RelearnTest {
+class NeuronIdParserTest : public RelearnTest {
+
 };

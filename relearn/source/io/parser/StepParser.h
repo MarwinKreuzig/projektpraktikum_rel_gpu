@@ -17,7 +17,7 @@
 
 #include <algorithm>
 #include <functional>
-#include <string>
+#include <string_view>
 #include <vector>
 
 /**
@@ -32,7 +32,7 @@ public:
      * @param description The description of the intervals
      * @return The function indicating if the event shall occur
      */
-    [[nodiscard]] static std::function<bool(RelearnTypes::step_type)> generate_step_check_function(const std::string& description) {
+    [[nodiscard]] static std::function<bool(RelearnTypes::step_type)> generate_step_check_function(const std::string_view description) {
         auto intervals = IntervalParser::parse_description_as_intervals(description);
         auto function = generate_step_check_function(std::move(intervals));
         return function;
@@ -51,7 +51,7 @@ public:
             return {};
         }
 
-        auto comparison = [](const Interval& first, const Interval& second) -> bool {
+        auto comparison = [](const Interval& first, const Interval& second) noexcept -> bool {
             return first.begin < second.begin;
         };
 

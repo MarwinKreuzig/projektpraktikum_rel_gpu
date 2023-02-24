@@ -88,6 +88,7 @@ if(WIN32) # Lib
 	# parser	
 	list(APPEND relearn_lib_additional_files "io/parser/IntervalParser.h")
 	list(APPEND relearn_lib_additional_files "io/parser/MonitorParser.h")
+	list(APPEND relearn_lib_additional_files "io/parser/NeuronIdParser.h")
 	list(APPEND relearn_lib_additional_files "io/parser/StepParser.h")
 	list(APPEND relearn_lib_additional_files "io/parser/StimulusParser.h")
 	
@@ -211,6 +212,7 @@ if(WIN32) # Tests
 	list(APPEND relearn_tests_additional_files "octree_node/test_octree_node.h")
 	list(APPEND relearn_tests_additional_files "parser/test_interval_parser.h")
 	list(APPEND relearn_tests_additional_files "parser/test_monitor_parser.h")
+	list(APPEND relearn_tests_additional_files "parser/test_neuronid_parser.h")
 	list(APPEND relearn_tests_additional_files "parser/test_step_parser.h")
 	list(APPEND relearn_tests_additional_files "partition/test_partition.h")
 	list(APPEND relearn_tests_additional_files "space_filling_curve/test_space_filling_curve.h")

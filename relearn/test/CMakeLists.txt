@@ -107,6 +107,7 @@ target_sources(
 
 		  parser/test_interval_parser.cpp
 		  parser/test_monitor_parser.cpp
+		  parser/test_neuronid_parser.cpp
 		  parser/test_step_parser.cpp
 
 		  partition/test_partition.cpp
