@@ -100,9 +100,9 @@ public:
             auto offset = node->get_cell_neuron_id().get_rma_offset();
 
             // Start access epoch to remote rank
-            MPIWrapper::lock_window(target_rank, MPI_Locktype::Shared);
+            MPIWrapper::lock_window(MPIWindow::Window::Octree, target_rank, MPI_Locktype::Shared);
             MPIWrapper::download_octree_node(where_to_insert, target_rank, offset, Constants::number_oct);
-            MPIWrapper::unlock_window(target_rank);
+            MPIWrapper::unlock_window(MPIWindow::Window::Octree, target_rank);
 
             for (auto child_index = 0; child_index < Constants::number_oct; child_index++) {
                 if (node->get_child(child_index) == nullptr) {
@@ -171,7 +171,7 @@ public:
             std::array<node_type*, Constants::number_oct> local_children{ nullptr };
 
             // Start access epoch to remote rank
-            MPIWrapper::lock_window(target_rank, MPI_Locktype::Shared);
+            MPIWrapper::lock_window(MPIWindow::Window::Octree, target_rank, MPI_Locktype::Shared);
 
             // Fetch remote children if they exist
             for (auto child_index = 0; child_index < Constants::number_oct; child_index++) {
@@ -206,7 +206,7 @@ public:
             }
 
             // Complete access epoch
-            MPIWrapper::unlock_window(target_rank);
+            MPIWrapper::unlock_window(MPIWindow::Window::Octree, target_rank);
 
             return local_children;
         };

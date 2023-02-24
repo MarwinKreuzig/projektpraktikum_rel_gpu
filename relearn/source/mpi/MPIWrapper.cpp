@@ -36,7 +36,6 @@
  * Solving the problem is future work. Until it is solved the total number of neurons is limited to 2^31-1.
  */
 
-static std::unique_ptr<MPI_Win> mpi_window{ nullptr }; // RMA window object
 
 static std::unique_ptr<MPI_Op> minsummax{ nullptr };
 
@@ -96,39 +95,6 @@ void MPIWrapper::init_globals() {
     my_rank = MPIRank(my_rank_int);
 }
 
-size_t MPIWrapper::init_window(const size_t size_requested, const size_t octree_node_size) {
-
-    // Number of objects "size_requested" Bytes correspond to
-    const auto max_num_objects = size_requested / octree_node_size;
-    const auto max_size = max_num_objects * octree_node_size;
-
-    // Store size of MPI_COMM_WORLD
-    int my_num_ranks = -1;
-    const int error_code_1 = MPI_Comm_size(MPI_COMM_WORLD, &my_num_ranks);
-    RelearnException::check(error_code_1 == 0, "MPI_RMA_MemAllocator::init: Error code received: {}", error_code_1);
-
-    const auto num_ranks = static_cast<size_t>(my_num_ranks);
-
-    // Allocate block of memory which is managed later on
-    if (MPI_SUCCESS != MPI_Alloc_mem(static_cast<std::int64_t>(max_size), MPI_INFO_NULL, &base_ptr)) {
-        RelearnException::fail("MPI_Alloc_mem failed");
-    }
-
-    // Set window's displacement unit
-    mpi_window = std::make_unique<MPI_Win>();
-
-    // NOLINTNEXTLINE
-    const int error_code_2 = MPI_Win_create(base_ptr, max_size, 1, MPI_INFO_NULL, MPI_COMM_WORLD, mpi_window.get());
-    RelearnException::check(error_code_2 == MPI_SUCCESS, "MPI_RMA_MemAllocator::init: Error code received: {}", error_code_2);
-
-    // Vector must have space for one pointer from each rank
-    base_pointers.resize(num_ranks);
-
-    const int error_code_3 = MPI_Allgather(&base_ptr, 1, MPI_AINT, base_pointers.data(), 1, MPI_AINT, MPI_COMM_WORLD);
-    RelearnException::check(error_code_3 == MPI_SUCCESS, "MPI_RMA_MemAllocator::init: Error code received: {}", error_code_3);
-
-    return max_num_objects;
-}
 
 void MPIWrapper::barrier() {
     const int error_code = MPI_Barrier(MPI_COMM_WORLD);
@@ -290,16 +256,16 @@ void MPIWrapper::all_gather_inl(void* ptr, const int count) {
     bytes_received.fetch_add(count, std::memory_order::relaxed);
 }
 
-void MPIWrapper::get(void* origin, const size_t size, const int target_rank, const uint64_t displacement, const int number_elements) {
+void MPIWrapper::get(MPIWindow::Window window_type, void* origin, const size_t size, const int target_rank, const uint64_t displacement, const int number_elements) {
     const MPI_Aint displacement_mpi(displacement);
-    const auto window = *mpi_window; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
+    const auto& window = MPIWindow::mpi_windows[window_type]; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
     const auto download_size = size * number_elements;
 
     RelearnException::check(download_size < std::numeric_limits<int>::max(), "MPIWrapper::get: Too much to download via RMA");
 
     const auto download_size_int = static_cast<int>(download_size);
 
-    const auto error_code = MPI_Get(origin, download_size_int, MPI_CHAR, target_rank, displacement_mpi, download_size_int, MPI_CHAR, window);
+    const auto error_code = MPI_Get(origin, download_size_int, MPI_CHAR, target_rank, displacement_mpi, download_size_int, MPI_CHAR, window->window);
     RelearnException::check(error_code == 0, "MPIWrapper::get: Error code received: {}", error_code);
 
     bytes_remote.fetch_add(size, std::memory_order::relaxed);
@@ -360,19 +326,19 @@ void MPIWrapper::free_custom_function() {
     minsummax.reset();
 }
 
-void MPIWrapper::lock_window(const MPIRank rank, const MPI_Locktype lock_type) {
+void MPIWrapper::lock_window(MPIWindow::Window window_type, const MPIRank rank, const MPI_Locktype lock_type) {
     RelearnException::check(rank.is_initialized(), "MPIWrapper::lock_window: rank was: {}", rank);
     const auto lock_type_int = translate_lock_type(lock_type);
 
-    const auto window = *mpi_window; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
-    const int error_code = MPI_Win_lock(lock_type_int, rank.get_rank(), MPI_MODE_NOCHECK, window);
+    const auto& window = MPIWindow::mpi_windows[window_type]; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
+    const int error_code = MPI_Win_lock(lock_type_int, rank.get_rank(), MPI_MODE_NOCHECK, window->window);
     RelearnException::check(error_code == 0, "MPIWrapper::lock_window: Error code received: {}", error_code);
 }
 
-void MPIWrapper::unlock_window(const MPIRank rank) {
+void MPIWrapper::unlock_window(MPIWindow::Window window_type, const MPIRank rank) {
     RelearnException::check(rank.is_initialized(), "MPIWrapper::unlock_window: rank was: {}", rank);
-    const auto window = *mpi_window; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
-    const int error_code = MPI_Win_unlock(rank.get_rank(), window);
+    const auto& window = MPIWindow::mpi_windows[window_type]; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
+    const int error_code = MPI_Win_unlock(rank.get_rank(), window->window);
     RelearnException::check(error_code == 0, "MPIWrapper::unlock_window: Error code received: {}", error_code);
 }
 
@@ -380,18 +346,18 @@ void MPIWrapper::finalize() {
     barrier();
     free_custom_function();
 
-    if (mpi_window != nullptr) {
-        const int error_code_1 = MPI_Win_free(mpi_window.get());
-        RelearnException::check(error_code_1 == 0, "MPIWrapper::finalize: Error code received: {}", error_code_1);
+    for(auto i=0U;i<MPIWindow::num_windows;i++) {
+        auto& window = MPIWindow::mpi_windows[i];
+        if (window != nullptr && window->initialized ) {
 
-        mpi_window.release();
-    }
+            const int error_code_1 = MPI_Win_free(&window->window);
+            RelearnException::check(error_code_1 == 0, "MPIWrapper::finalize: Error code received: {}", error_code_1);
+            const int error_code_2 = MPI_Free_mem(window->my_base_pointer);
+            RelearnException::check(error_code_2 == 0, "MPIWrapper::finalize: Error code received: {}", error_code_2);
 
-    if (base_ptr != nullptr) {
-        const int error_code_2 = MPI_Free_mem(base_ptr);
-        RelearnException::check(error_code_2 == 0, "MPIWrapper::finalize: Error code received: {}", error_code_2);
-
-        base_ptr = nullptr;
+        window->my_base_pointer = nullptr;
+        MPIWindow::mpi_windows[i].release();
+        }
     }
 
     const int error_code = MPI_Finalize();

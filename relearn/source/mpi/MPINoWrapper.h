@@ -21,6 +21,7 @@
 #include "util/RelearnException.h"
 
 #include <array>
+#include <any>
 #include <map>
 #include <memory>
 #include <span>
@@ -41,6 +42,23 @@ enum class MPI_Locktype : int {
     Shared = MPI_LOCK_SHARED,
 };
 
+class MPIWindow {
+public:
+    /**
+     * enum for the available rma windows
+     */
+    enum Window {
+        Octree = 0U,
+        FireHistory = 1U,
+    };
+    constexpr static size_t num_windows = 2;
+
+    /**
+     * Array that stores the rma windows based on the Window enum
+     */
+    inline static std::array<std::any, num_windows> mpi_windows{};
+};
+
 class MPINoWrapper {
     friend class RelearnTest;
 
@@ -59,18 +77,15 @@ public:
 
     template <typename AdditionalCellAttributes>
     static void init_buffer_octree() {
-        const auto max_num_objects = Constants::mpi_alloc_mem / sizeof(OctreeNode<AdditionalCellAttributes>);
+        const auto octree_node_size = sizeof(OctreeNode<AdditionalCellAttributes>);
+        const auto max_num_objects = Constants::mpi_alloc_mem / octree_node_size;
 
-        base_ptr<AdditionalCellAttributes>.resize(max_num_objects, OctreeNode<AdditionalCellAttributes>());
+        create_rma_window<OctreeNode<AdditionalCellAttributes>>(MPIWindow::Window::Octree, max_num_objects, 1);
+        auto& data = MPIWindow::mpi_windows[MPIWindow::Window::Octree];
+        auto& base_ptr = std::any_cast<std::vector<OctreeNode<AdditionalCellAttributes>>&>(data);
 
-        // create_rma_window();
-        // NOLINTNEXTLINE
-        base_pointers = reinterpret_cast<int64_t>(base_ptr<AdditionalCellAttributes>.data());
 
-        // NOLINTNEXTLINE
-        auto cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(base_ptr<AdditionalCellAttributes>.data());
-
-        std::span<OctreeNode<AdditionalCellAttributes>> span{ cast, max_num_objects };
+        std::span<OctreeNode<AdditionalCellAttributes>> span{ base_ptr.data(), max_num_objects };
         MemoryHolder<AdditionalCellAttributes>::init(span);
 
         LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
@@ -119,13 +134,36 @@ public:
         }
     }
 
+    template<typename T>
+    static void create_rma_window(MPIWindow::Window window_type,std::uint64_t num_elements, size_t number_ranks) {
+        std::vector<T> vector{};
+        vector.resize(num_elements);
+        MPIWindow::mpi_windows[window_type] = std::move(vector);
+    }
+
+    template<typename T>
+    static std::vector<T> get_from_window(MPIWindow::Window window_type, int target_rank, uint64_t index, size_t number_elements) {
+
+        const auto& begin_it = std::any_cast<std::vector<T>&>(MPIWindow::mpi_windows[window_type]).begin();
+
+        return std::vector<T>(begin_it+index, begin_it+index+number_elements);
+    }
+
+    template<typename T>
+    static void set_in_window(MPIWindow::Window window_type, uint64_t index, const T& element) {
+        std::any_cast<std::vector<T>&>(MPIWindow::mpi_windows[window_type])[index] = element;
+        std::cout << "set " << index << " to " << element << " " << std::any_cast<std::vector<T>&>(MPIWindow::mpi_windows[window_type])[index] << std::endl;
+    }
+
+    template<typename T>
+    static void set_in_window(MPIWindow::Window window_type, uint64_t index, const std::vector<T>& element) {
+        const auto& begin_it = std::any_cast<std::vector<T>&>(MPIWindow::mpi_windows[window_type]).begin();
+        std::copy(element.begin(), element.end(), begin_it+index);
+    }
+
     template <typename AdditionalCellAttributes>
     static void download_octree_node(OctreeNode<AdditionalCellAttributes>* dst, const MPIRank target_rank, const uint64_t offset, const int number_elements) {
         RelearnException::fail("MPINoWrapper::download_octree_node: Cannot perform the offset version without MPI.");
-    }
-
-    [[nodiscard]] static int64_t get_base_pointers() noexcept {
-        return base_pointers;
     }
 
     [[nodiscard]] static size_t get_num_ranks();
@@ -141,9 +179,12 @@ public:
         return return_value;
     }
 
-    static void lock_window(MPIRank rank, MPI_Locktype lock_type);
 
-    static void unlock_window(MPIRank rank);
+    static void lock_window(MPIWindow::Window window, MPIRank rank, MPI_Locktype lock_type);
+
+
+    static void unlock_window(MPIWindow::Window window, MPIRank rank);
+
 
     static uint64_t get_number_bytes_sent() noexcept {
         return 0;
@@ -161,11 +202,6 @@ public:
 
 private:
     MPINoWrapper() = default;
-
-    template <typename AdditionalCellAttributes>
-    static inline std::vector<OctreeNode<AdditionalCellAttributes>> base_ptr{ 0 }; // Start address of MPI-allocated memory
-
-    static inline int64_t base_pointers{}; // RMA window base pointers of all procs
 
     static inline std::string my_rank_str{ '0' };
 

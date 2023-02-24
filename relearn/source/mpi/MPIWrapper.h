@@ -31,6 +31,7 @@ using MPIWrapper = MPINoWrapper;
 #include <span>
 #include <string>
 #include <vector>
+#include <mpi.h>
 
 template <typename T>
 class OctreeNode;
@@ -63,6 +64,49 @@ void min_sum_max(const void* invec, void* inoutvec, const int* len, void* dtype)
  * It wraps functionality in a C++ type safe manner.
  * The first call must be MPIWrapper::init(...) and the last one MPIWrapper::finalize(), not calling any of those inbetween.
  */
+
+
+/**
+ * Represents one rma window for mpi
+ */
+struct RMAWindow {
+    MPI_Win window{};
+    std::uint64_t size{};
+    std::vector<int64_t> base_pointers{};
+    void* my_base_pointer{};
+
+    bool initialized = false;
+
+    RMAWindow() =delete;
+
+    RMAWindow(void* ptr) : my_base_pointer(ptr) {
+
+    }
+
+    RMAWindow(const RMAWindow& other) = delete;
+    RMAWindow(RMAWindow&& other) = delete;
+
+    RMAWindow& operator=(const RMAWindow& other) = delete;
+    RMAWindow& operator=(RMAWindow&& other) = default;
+};
+
+class MPIWindow {
+public:
+    /**
+     * enum for the available rma windows
+     */
+    enum Window {
+        Octree = 0U,
+        FireHistory = 1U,
+    };
+    constexpr static size_t num_windows = 2;
+
+    /**
+     * Array that stores the rma windows based on the Window enum
+     */
+    inline static std::array<std::unique_ptr<RMAWindow>, num_windows> mpi_windows{};
+};
+
 class MPIWrapper {
     friend class RelearnTest;
 
@@ -94,11 +138,10 @@ public:
      */
     template <typename AdditionalCellAttributes>
     static void init_buffer_octree() {
-        const auto octree_node_size = sizeof(OctreeNode<AdditionalCellAttributes>);
-        size_t max_num_objects = init_window(Constants::mpi_alloc_mem, octree_node_size);
+        size_t max_num_objects = init_window<AdditionalCellAttributes>(Constants::mpi_alloc_mem);
 
         // NOLINTNEXTLINE
-        auto* cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(base_ptr);
+        auto* cast = reinterpret_cast<OctreeNode<AdditionalCellAttributes>*>(MPIWindow::mpi_windows[MPIWindow::Window::Octree]->my_base_pointer);
 
         std::span<OctreeNode<AdditionalCellAttributes>> span{ cast, max_num_objects };
         MemoryHolder<AdditionalCellAttributes>::init(span);
@@ -317,13 +360,13 @@ public:
         RelearnException::check(number_elements > 0, "MPIWrapper::download_octree_node: number_elements is not positive");
         RelearnException::check(target_rank.is_initialized(), "MPIWrapper::download_octree_node: target_rank is not initialized");
 
-        const auto& base_ptrs = get_base_pointers();
+        const auto& base_ptrs = get_base_pointers(MPIWindow::Window::Octree);
         RelearnException::check(target_rank.get_rank() < base_ptrs.size(), "MPIWrapper::download_octree_node: target_rank is larger than the pointers");
         const auto displacement = int64_t(src) - base_ptrs[target_rank.get_rank()];
 
         RelearnException::check(displacement >= 0, "MPIWrapper::download_octree_node: displacement is too small: {:X} - {:X}", int64_t(src), base_ptrs[target_rank.get_rank()]);
 
-        get(dst, sizeof(OctreeNode<AdditionalCellAttributes>), target_rank.get_rank(), displacement, number_elements);
+        get(MPIWindow::Window::Octree, dst, sizeof(OctreeNode<AdditionalCellAttributes>), target_rank.get_rank(), displacement, number_elements);
     }
 
     /**
@@ -339,10 +382,10 @@ public:
         RelearnException::check(number_elements > 0, "MPIWrapper::download_octree_node: number_elements is not positive");
         RelearnException::check(target_rank.is_initialized(), "MPIWrapper::download_octree_node: target_rank is not initialized");
 
-        const auto& base_ptrs = get_base_pointers();
+        const auto& base_ptrs = get_base_pointers(MPIWindow::Window::Octree);
         RelearnException::check(target_rank.get_rank() < base_ptrs.size(), "MPIWrapper::download_octree_node: target_rank is larger than the pointers");
 
-        get(dst, sizeof(OctreeNode<AdditionalCellAttributes>), target_rank.get_rank(), offset, number_elements);
+        get(MPIWindow::Window::Octree, dst, sizeof(OctreeNode<AdditionalCellAttributes>), target_rank.get_rank(), offset, number_elements);
     }
 
     /**
@@ -368,18 +411,41 @@ public:
 
     /**
      * @brief Locks the memory window on another MPI rank with the desired read/write protections
+     * @param window RMA window that shall be locked
      * @param rank The other MPI rank
      * @param lock_type The type of locking
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
-    static void lock_window(MPIRank rank, MPI_Locktype lock_type);
+    static void lock_window(MPIWindow::Window window, MPIRank rank, MPI_Locktype lock_type);
 
     /**
      * @brief Unlocks the memory window on another MPI rank
+     * @param window RMA window that shall be unlocked
      * @param The other MPI rank
      * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
      */
-    static void unlock_window(MPIRank rank);
+    static void unlock_window(MPIWindow::Window window, MPIRank rank);
+
+    /**
+     * Downloads data from the rma window
+     * @tparam T Type of the data
+     * @param window_type Window type
+     * @param target_rank Rank of the rma window
+     * @param index Start index that shall be copied
+     * @param number_elements Number of elements that shall be copied
+     * @return Copied vector from the rma window
+     */
+    template<typename T>
+    static std::vector<T> get_from_window(MPIWindow::Window window_type, int target_rank, uint64_t index, size_t number_elements) {
+        const auto size = sizeof(T);
+        const auto displacement = index * size;
+        std::vector<T> buffer;
+        buffer.resize(number_elements);
+        lock_window(window_type, MPIRank{target_rank}, MPI_Locktype::Shared);
+        get(window_type, buffer.data(), size, target_rank, displacement, number_elements);
+        unlock_window(window_type, MPIRank{target_rank});
+        return buffer;
+    }
 
     /**
      * @brief Returns an approximation of how many bytes were sent.
@@ -413,10 +479,97 @@ public:
      */
     static void finalize();
 
+    /**
+    * Creates and initializes a new rma window
+    * @param window The rma window that shall be created
+    * @param size Size of the window
+    * @param number_ranks Number of ranks
+    */
+    template<typename T>
+    static void create_rma_window(MPIWindow::Window window_type, std::uint64_t number_elements, size_t number_ranks) {
+        void* ptr = nullptr;
+
+        const auto size = number_elements * sizeof(T);
+
+        if (const auto error_code = MPI_Alloc_mem(size, MPI_INFO_NULL, &ptr); error_code != 0) {
+            RelearnException::fail("Allocating the shared memory returned the error: {}", error_code);
+        }
+
+        auto window =std::make_unique<RMAWindow>(ptr);
+
+        window->size = size;
+
+        const int error_code_2 = MPI_Win_create(window->my_base_pointer, size, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &window->window);
+        RelearnException::check(error_code_2 == MPI_SUCCESS, "MPI_RMA_MemAllocator::init: Error code received: {}", error_code_2);
+
+        auto base_ptr = reinterpret_cast<int64_t>(&window->my_base_pointer);
+        std::vector<int64_t> base_pointers{};
+        base_pointers.resize(number_ranks);
+
+        const int error_code_3 = MPI_Allgather(&base_ptr, 1, MPI_AINT, base_pointers.data(), 1, MPI_AINT, MPI_COMM_WORLD);
+        RelearnException::check(error_code_3 == MPI_SUCCESS, "MPI_RMA_MemAllocator::init: Error code received: {}", error_code_3);
+
+        window->base_pointers = base_pointers;
+
+
+        window->initialized = true;
+        MPIWindow::mpi_windows[window_type] = std::move(window);
+    }
+
+    /**
+     * @brief Stores an element of elements in a rma window
+     * @param window_type Window type
+     * @param Start index in the window
+     * @param element The element to copy in the rma window
+     */
+    template<typename T>
+    static void set_in_window(MPIWindow::Window window_type, uint64_t index, const T& element) {
+        auto* base_ptr = static_cast<T*>(MPIWindow::mpi_windows[window_type]->my_base_pointer);
+        auto* ptr = base_ptr+index;
+        lock_window(window_type, my_rank, MPI_Locktype::Exclusive);
+        *ptr = element;
+        unlock_window(window_type, my_rank);
+    }
+
+    /**
+     * @brief Stores a vector of elements in a rma window
+     * @param window_type Window type
+     * @param Start index in the window
+     * @param vector The vector to copy in the rma window
+     */
+    template<typename T>
+    static void set_in_window(MPIWindow::Window window_type, uint64_t index, const std::vector<T>& vector) {
+        const auto size = sizeof(T);
+        auto* base_ptr = static_cast<T*>(MPIWindow::mpi_windows[window_type]->my_base_pointer);
+        auto* ptr = base_ptr+index;
+        lock_window(window_type, my_rank, MPI_Locktype::Exclusive);
+        std::copy(vector.begin(), vector.end(), ptr);
+        unlock_window(window_type, my_rank);
+    }
+
 private:
     MPIWrapper() = default;
 
-    [[nodiscard]] static size_t init_window(size_t size_requested, size_t octree_node_size);
+    template <typename AdditionalCellAttributes>
+    [[nodiscard]] static size_t init_window(size_t size_requested) {
+
+        const auto octree_node_size = sizeof(OctreeNode<AdditionalCellAttributes>);
+
+        // Number of objects "size_requested" Bytes correspond to
+        const auto max_num_objects = size_requested / octree_node_size;
+
+        // Store size of MPI_COMM_WORLD
+        int my_num_ranks = -1;
+        const int error_code_1 = MPI_Comm_size(MPI_COMM_WORLD, &my_num_ranks);
+        RelearnException::check(error_code_1 == 0, "MPI_RMA_MemAllocator::init: Error code received: {}", error_code_1);
+
+        const auto num_ranks = static_cast<size_t>(my_num_ranks);
+
+        // Set window's displacement unit
+        create_rma_window<OctreeNode<AdditionalCellAttributes>>(MPIWindow::Window::Octree, max_num_objects, num_ranks);
+
+        return max_num_objects;
+    }
 
     static void init_globals();
 
@@ -438,7 +591,7 @@ private:
 
     [[nodiscard]] static int translate_lock_type(MPI_Locktype lock_type);
 
-    static void get(void* origin, size_t size, int target_rank, uint64_t displacement, int number_elements);
+    static void get(MPIWindow::Window window, void* origin, size_t size, int target_rank, uint64_t displacement, int number_elements);
 
     static void reduce_int64(const int64_t* src, int64_t* dst, size_t size, ReduceFunction function, int root_rank);
 
@@ -446,11 +599,12 @@ private:
 
     /**
      * @brief Returns the base addresses of the memory windows of all memory windows.
+     * @param window RMA window that we want the base pointers from
      * @return The base addresses of the memory windows. The base address for MPI rank i
      *      is found at <return>[i]
      */
-    [[nodiscard]] static const std::vector<int64_t>& get_base_pointers() noexcept {
-        return base_pointers;
+    [[nodiscard]] static const std::vector<int64_t>& get_base_pointers(MPIWindow::Window window_type) noexcept {
+        return MPIWindow::mpi_windows[window_type]->base_pointers;
     }
 
     /**
@@ -488,9 +642,6 @@ private:
     static inline MPIRank my_rank{ MPIRank::uninitialized_rank() }; // My rank in MPI_COMM_WORLD
 
     static inline int thread_level_provided{ -1 }; // Thread level provided by MPI
-
-    static inline void* base_ptr{ nullptr }; // Start address of MPI-allocated memory
-    static inline std::vector<int64_t> base_pointers{}; // RMA window base pointers of all procs
 
     // NOLINTNEXTLINE
     static inline std::string my_rank_str{ "-1" };

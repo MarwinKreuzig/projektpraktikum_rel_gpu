@@ -22,7 +22,6 @@
 #include <bitset>
 #include <cstdlib>
 #include <iomanip>
-#include <iostream>
 #include <limits>
 #include <sstream>
 #include <string>
@@ -72,11 +71,11 @@ std::string MPINoWrapper::get_my_rank_str() {
     return my_rank_str;
 }
 
-void MPINoWrapper::lock_window(MPIRank rank, MPI_Locktype /*lock_type*/) {
+void MPINoWrapper::lock_window(MPIWindow::Window window,MPIRank rank, MPI_Locktype /*lock_type*/) {
     RelearnException::check(rank.is_initialized(), "rank was: %d", rank);
 }
 
-void MPINoWrapper::unlock_window(MPIRank rank) {
+void MPINoWrapper::unlock_window(MPIWindow::Window window,MPIRank rank) {
     RelearnException::check(rank.is_initialized(), "rank was: %d", rank);
 }
 

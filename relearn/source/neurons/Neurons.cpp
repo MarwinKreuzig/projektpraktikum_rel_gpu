@@ -545,9 +545,9 @@ size_t Neurons::create_synapses() {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     // Lock local RMA memory for local stores and make them visible afterwards
-    MPIWrapper::lock_window(my_rank, MPI_Locktype::Exclusive);
+    MPIWrapper::lock_window(MPIWindow::Window::Octree,my_rank, MPI_Locktype::Exclusive);
     algorithm->update_octree(disable_flags);
-    MPIWrapper::unlock_window(my_rank);
+    MPIWrapper::unlock_window(MPIWindow::Window::Octree, my_rank);
 
     // Makes sure that all ranks finished their local access epoch
     // before a remote origin opens an access epoch

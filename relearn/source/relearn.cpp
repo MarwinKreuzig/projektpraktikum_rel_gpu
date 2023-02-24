@@ -938,7 +938,7 @@ int main(int argc, char** argv) {
     MPIWrapper::barrier(); // TODO(future) Really needed?
 
     // Lock local RMA memory for local stores
-    MPIWrapper::lock_window(my_rank, MPI_Locktype::Exclusive);
+    MPIWrapper::lock_window(MPIWindow::Window::Octree, my_rank, MPI_Locktype::Exclusive);
 
     sim.initialize();
 
@@ -955,7 +955,7 @@ int main(int argc, char** argv) {
     }
 
     // Unlock local RMA memory and make local stores visible in public window copy
-    MPIWrapper::unlock_window(my_rank);
+    MPIWrapper::unlock_window(MPIWindow::Window::Octree, my_rank);
 
     Timers::stop_and_add(TimerRegion::INITIALIZATION);
 
