@@ -31,7 +31,8 @@ public:
      */
     FiredStatusApproximator(const size_t number_ranks, const number_neurons_type number_neurons)
         : FiredStatusCommunicator(number_ranks, number_neurons)
-        , accumulated_fired(number_neurons, 0) {
+        , accumulated_fired(number_neurons, 0)
+        , latest_firing_rate(number_neurons, 0.0) {
         RelearnException::check(number_ranks > 0, "FiredStatusApproximator::FiredStatusApproximator: number_ranks is too small: {}", number_ranks);
     }
 
@@ -67,4 +68,8 @@ public:
 
 private:
     std::vector<size_t> accumulated_fired{};
+    std::vector<double> latest_firing_rate{};
+    std::vector<std::unordered_map<NeuronID, double>> firing_rate_cache{};
+
+    step_type last_synced{ 0 };
 };
