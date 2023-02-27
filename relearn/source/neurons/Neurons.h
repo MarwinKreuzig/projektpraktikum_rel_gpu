@@ -304,10 +304,11 @@ public:
      *      If a neuron is already disabled, nothing happens for that one
      *      Otherwise, also deletes all synapses from the disabled neurons
      *      Returns a CommunicationMap containing the mpi requests for deleting distant connections on other ranks to the disabled neurons on this rank.
+     * @param step The current simulation step
      * @exception Throws RelearnExceptions if something unexpected happens
      * @return Pair of number of local synapse deletion and requests for deletions on other ranks
      */
-    std::pair<size_t, CommunicationMap<SynapseDeletionRequest>> disable_neurons(std::span<const NeuronID> local_neuron_ids, int num_ranks);
+    std::pair<size_t, CommunicationMap<SynapseDeletionRequest>> disable_neurons(step_type step, std::span<const NeuronID> local_neuron_ids, int num_ranks);
 
     /**
      * @brief Enables all neurons with specified ids
@@ -348,11 +349,12 @@ public:
      * @brief Updates the plasticity by
      *      (1) Deleting superfluous synapses
      *      (2) Creating new synapses with the stored algorithm
+     * @param step The current simulation step
      * @exception Throws a RelearnException if the network graph, the octree, or the algorithm is empty,
      *      or something unexpected happens
      * @return Returns a tuple with (1) the number of deleted synapses, and (2) the number of created synapses
      */
-    [[nodiscard]] std::tuple<std::uint64_t, std::uint64_t, std::uint64_t> update_connectivity();
+    [[nodiscard]] std::tuple<std::uint64_t, std::uint64_t, std::uint64_t> update_connectivity(step_type step);
 
     /**
      * @brief Calculates the number vacant axons and dendrites (excitatory, inhibitory) and prints them to LogFiles::EventType::Sums

@@ -56,6 +56,10 @@ void NeuronModel::update_electrical_activity(const step_type step) {
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
 }
 
+void NeuronModel::notify_of_plasticity_change(const step_type step) {
+    input_calculator->notify_of_plasticity_change(step);
+}
+
 std::vector<std::unique_ptr<NeuronModel>> NeuronModel::get_models() {
     std::vector<std::unique_ptr<NeuronModel>> res;
     res.push_back(NeuronModel::create<models::PoissonModel>());

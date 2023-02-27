@@ -279,7 +279,7 @@ void Simulation::simulate(const step_type number_steps) {
         for (const auto& [disable_step, disable_ids] : disable_interrupts) {
             if (disable_step == step) {
                 LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Disabling {} neurons in step {}", disable_ids.size(), disable_step);
-                const auto& [num_deleted_synapses, synapse_deletion_requests_outgoing] = neurons->disable_neurons(disable_ids, MPIWrapper::get_num_ranks());
+                const auto& [num_deleted_synapses, synapse_deletion_requests_outgoing] = neurons->disable_neurons(step, disable_ids, MPIWrapper::get_num_ranks());
                 total_synapse_deletions += static_cast<int64_t>(num_deleted_synapses);
                 const auto& synapse_deletion_requests_ingoing = MPIWrapper::exchange_requests(synapse_deletion_requests_outgoing);
                 total_synapse_deletions += neurons->delete_disabled_distant_synapses(synapse_deletion_requests_ingoing, my_rank);
@@ -376,7 +376,7 @@ void Simulation::simulate(const step_type number_steps) {
         if (interval_update_plasticity.hits_step(step)) {
             Timers::start(TimerRegion::UPDATE_CONNECTIVITY);
 
-            const auto& [num_axons_deleted, num_dendrites_deleted, num_synapses_created] = neurons->update_connectivity();
+            const auto& [num_axons_deleted, num_dendrites_deleted, num_synapses_created] = neurons->update_connectivity(step);
 
             Timers::stop_and_add(TimerRegion::UPDATE_CONNECTIVITY);
 

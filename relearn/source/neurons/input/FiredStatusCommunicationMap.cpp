@@ -16,7 +16,7 @@
 
 #include <ranges>
 
-void FiredStatusCommunicationMap::set_local_fired_status(const std::span<const FiredStatus> fired_status) {
+void FiredStatusCommunicationMap::set_local_fired_status([[maybe_unused]] const step_type step, const std::span<const FiredStatus> fired_status) {
     outgoing_ids.clear();
 
     if (const auto number_ranks = get_number_ranks(); number_ranks == 1) {
@@ -67,13 +67,13 @@ void FiredStatusCommunicationMap::set_local_fired_status(const std::span<const F
     Timers::stop_and_add(TimerRegion::PREPARE_SENDING_SPIKES);
 }
 
-void FiredStatusCommunicationMap::exchange_fired_status() {
+void FiredStatusCommunicationMap::exchange_fired_status([[maybe_unused]] const step_type step) {
     Timers::start(TimerRegion::EXCHANGE_NEURON_IDS);
     incoming_ids = MPIWrapper::exchange_requests(outgoing_ids);
     Timers::stop_and_add(TimerRegion::EXCHANGE_NEURON_IDS);
 }
 
-bool FiredStatusCommunicationMap::contains(MPIRank rank, NeuronID neuron_id) const {
+bool FiredStatusCommunicationMap::contains(const MPIRank rank, const NeuronID neuron_id) const {
     const auto number_ranks = get_number_ranks();
     RelearnException::check(rank.is_initialized(), "FiredStatusCommunicationMap::contains: rank is not initialized");
     RelearnException::check(rank.get_rank() < number_ranks, "FiredStatusCommunicationMap::contains: rank {} is larger than the number of ranks {}", rank, number_ranks);

@@ -121,7 +121,7 @@ void Neurons::check_signal_types(const std::shared_ptr<NetworkGraph> network_gra
     }
 }
 
-std::pair<size_t, CommunicationMap<SynapseDeletionRequest>> Neurons::disable_neurons(const std::span<const NeuronID> local_neuron_ids, const int num_ranks) {
+std::pair<size_t, CommunicationMap<SynapseDeletionRequest>> Neurons::disable_neurons(const step_type step, const std::span<const NeuronID> local_neuron_ids, const int num_ranks) {
     extra_info->set_disabled_neurons(local_neuron_ids);
 
     neuron_model->disable_neurons(local_neuron_ids);
@@ -238,6 +238,8 @@ std::pair<size_t, CommunicationMap<SynapseDeletionRequest>> Neurons::disable_neu
     axons->update_after_deletion(deleted_axon_connections, local_neuron_ids);
     dendrites_exc->update_after_deletion(deleted_dend_ex_connections, local_neuron_ids);
     dendrites_inh->update_after_deletion(deleted_dend_in_connections, local_neuron_ids);
+
+    neuron_model->notify_of_plasticity_change(step);
 
     LogFiles::print_message_rank(MPIRank::root_rank(),
         "Deleted {} in-edges with and ({}, {}) out-edges (exc., inh.) within the deleted portion",
@@ -485,7 +487,7 @@ StatisticalMeasures Neurons::get_statistics(const NeuronAttribute attribute) con
     return {};
 }
 
-std::tuple<std::uint64_t, std::uint64_t, std::uint64_t> Neurons::update_connectivity() {
+std::tuple<std::uint64_t, std::uint64_t, std::uint64_t> Neurons::update_connectivity(const step_type step) {
     RelearnException::check(network_graph != nullptr, "Network graph is nullptr");
     RelearnException::check(global_tree != nullptr, "Global octree is nullptr");
     RelearnException::check(algorithm != nullptr, "Algorithm is nullptr");
@@ -498,6 +500,8 @@ std::tuple<std::uint64_t, std::uint64_t, std::uint64_t> Neurons::update_connecti
     size_t num_synapses_created = create_synapses();
     debug_check_counts();
     network_graph->debug_check();
+        
+    neuron_model->notify_of_plasticity_change(step);
 
     return { num_axons_deleted, num_dendrites_deleted, num_synapses_created };
 }

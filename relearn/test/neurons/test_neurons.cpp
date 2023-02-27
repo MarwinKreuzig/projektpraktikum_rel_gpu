@@ -236,12 +236,12 @@ TEST_F(NeuronsTest, testDisableNeuronsWithoutMPI) {
 
     std::vector<NeuronID> disabled_neurons_vector;
     std::copy(disabled_neurons.begin(), disabled_neurons.end(), std::back_inserter(disabled_neurons_vector));
-    const auto& [num_deletions, synapse_deletion_Requests] = neurons.disable_neurons(disabled_neurons_vector, 1);
+    const auto& [num_deletions, synapse_deletion_Requests] = neurons.disable_neurons(1, disabled_neurons_vector, 1);
     ASSERT_EQ(synapse_deletion_Requests.get_total_number_requests(), 0);
     ASSERT_EQ(num_deletions, out_edges.size() + in_edges.size());
     const auto& num_distant_deletions = neurons.delete_disabled_distant_synapses(synapse_deletion_Requests, MPIRank(0));
     ASSERT_EQ(num_distant_deletions, 0);
-    ASSERT_THROW(neurons.disable_neurons(disabled_neurons_vector, 1), RelearnException);
+    ASSERT_THROW(neurons.disable_neurons(1, disabled_neurons_vector, 1), RelearnException);
 
     ASSERT_EQ(std::get<0>(network_graph->get_local_in_edges(disable_id)).size(), 0);
     ASSERT_EQ(std::get<0>(network_graph->get_local_out_edges(disable_id)).size(), 0);
@@ -341,7 +341,7 @@ TEST_F(NeuronsTest, testDisableMultipleNeuronsWithoutMPI) {
     std::copy(den_ex.begin(), den_ex.end(), std::back_inserter(den_ex_old));
     std::copy(den_inh.begin(), den_inh.end(), std::back_inserter(den_inh_old));
 
-    const auto& [num_deletions, synapse_deletion_Requests] = neurons.disable_neurons(disabled_neurons_vector, 1);
+    const auto& [num_deletions, synapse_deletion_Requests] = neurons.disable_neurons(1, disabled_neurons_vector, 1);
     ASSERT_EQ(synapse_deletion_Requests.get_total_number_requests(), 0);
     ASSERT_EQ(num_deletions, expected_num_deletions);
     const auto& num_distant_deletions = neurons.delete_disabled_distant_synapses(synapse_deletion_Requests, MPIRank(0));
@@ -501,7 +501,7 @@ TEST_F(NeuronsTest, testDisableNeuronsWithRanks) {
             }
         }
 
-        const auto& [num_deletions, synapse_deletion_Requests] = neurons.disable_neurons(disabled_neurons_vector,
+        const auto& [num_deletions, synapse_deletion_Requests] = neurons.disable_neurons(1, disabled_neurons_vector,
             num_ranks);
         ASSERT_EQ(synapse_deletion_Requests.get_total_number_requests(),
             expected_distant_out_deletions_initiated[rank] + expected_distant_in_deletions_initiated[rank]);
@@ -671,7 +671,7 @@ TEST_F(NeuronsTest, testDisableNeuronsWithRanksAndOnlyOneDisabledNeuron) {
         }
         auto& neurons = rank_to_neurons[rank];
 
-        const auto& [num_deletions, synapse_deletion_Requests] = neurons.disable_neurons(disabled_neurons_vector,
+        const auto& [num_deletions, synapse_deletion_Requests] = neurons.disable_neurons(1, disabled_neurons_vector,
             num_ranks);
         ASSERT_FALSE(synapse_deletion_Requests.contains(MPIRank(rank)));
 

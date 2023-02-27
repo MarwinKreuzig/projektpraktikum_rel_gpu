@@ -12,8 +12,6 @@
 
 #include "neurons/input/SynapticInputCalculator.h"
 
-class NetworkGraph;
-
 /**
  * This class returns the input from the synapses directly
  */

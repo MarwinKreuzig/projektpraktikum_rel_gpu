@@ -128,17 +128,26 @@ public:
      * @param fired Which local neuron fired
      * @exception Throws a RelearnException if the number of local neurons didn't match the sizes of the arguments
      */
-    void update_input([[maybe_unused]] const step_type step, const std::span<const FiredStatus> fired) {
+    void update_input(const step_type step, const std::span<const FiredStatus> fired) {
         const auto& disable_flags = extra_infos->get_disable_flags();
 
         RelearnException::check(number_local_neurons > 0, "SynapticInputCalculator::update_input: There were no local neurons.");
         RelearnException::check(fired.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of fired did not match number of local neurons: {} vs {}", fired.size(), number_local_neurons);
         RelearnException::check(disable_flags.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of disable_flags did not match number of local neurons: {} vs {}", disable_flags.size(), number_local_neurons);
 
-        fired_status_comm->set_local_fired_status(fired);
-        fired_status_comm->exchange_fired_status();
+        fired_status_comm->set_local_fired_status(step, fired);
+        fired_status_comm->exchange_fired_status(step);
 
         update_synaptic_input(fired);
+    }
+
+    /**
+     * @brief Notifies this class and the input calculators that the plasticity has changed.
+     *      Some might cache values, which than can be recalculated
+     * @param step The current simulation step
+     */
+    void notify_of_plasticity_change(const step_type step) {
+        fired_status_comm->notify_of_plasticity_change(step);
     }
 
     /**

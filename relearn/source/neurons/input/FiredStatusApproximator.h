@@ -13,33 +13,26 @@
 #include "FiredStatusCommunicator.h"
 
 #include "Types.h"
-#include "mpi/CommunicationMap.h"
 #include "neurons/enums/FiredStatus.h"
-#include "neurons/enums/UpdateStatus.h"
+#include "util/MPIRank.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
-#include <algorithm>
+#include <unordered_map>
 #include <span>
 #include <vector>
 
-/**
- * This class communicates the fired status of the local neurons
- * via two separate CommunicationMap<FiredStatus>
- */
-class FiredStatusCommunicationMap : public FiredStatusCommunicator {
+class FiredStatusApproximator : public FiredStatusCommunicator {
 public:
     /**
-     * @brief Constructs a new object with the given number of ranks and local neurons (mainly used for pre-allocating memory)
-     * @param number_ranks The number of MPI ranks
+     * @brief Approximates the firing rate of distant neurons by a constant frequency
+     * @param number_ranks The number of ranks
      * @param number_neurons The number of local neurons
-     * @exception Throws a RelearnException if number_ranks <= 0
      */
-    FiredStatusCommunicationMap(const size_t number_ranks, const number_neurons_type number_neurons)
+    FiredStatusApproximator(const size_t number_ranks, const number_neurons_type number_neurons)
         : FiredStatusCommunicator(number_ranks, number_neurons)
-        , outgoing_ids(number_ranks, std::min(number_neurons_type(number_ranks), number_neurons))
-        , incoming_ids(number_ranks, std::min(number_neurons_type(number_ranks), number_neurons)) {
-        RelearnException::check(number_ranks > 0, "FiredStatusCommunicationMap::FiredStatusCommunicationMap: number_ranks is too small: {}", number_ranks);
+        , accumulated_fired(number_neurons, 0) {
+        RelearnException::check(number_ranks > 0, "FiredStatusApproximator::FiredStatusApproximator: number_ranks is too small: {}", number_ranks);
     }
 
     /**
@@ -66,7 +59,12 @@ public:
      */
     bool contains(MPIRank rank, NeuronID neuron_id) const override;
 
+    /**
+     * @brief Recalculate the cached firing rates for the distant neurons
+     * @param step The current simulation step
+     */
+    void notify_of_plasticity_change(step_type step) override;
+
 private:
-    CommunicationMap<NeuronID> outgoing_ids;
-    CommunicationMap<NeuronID> incoming_ids;
+    std::vector<size_t> accumulated_fired{};
 };

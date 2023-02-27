@@ -240,6 +240,13 @@ public:
     void update_electrical_activity(step_type step);
 
     /**
+     * @brief Notifies this class and the input calculators that the plasticity has changed.
+     *      Some might cache values, which than can be recalculated
+     * @param step The current simulation step
+     */
+    void notify_of_plasticity_change(step_type step);
+
+    /**
      * @brief Returns a vector with an std::unique_ptr for each class inherited from NeuronModels which can be cloned
      * @return A vector with all inherited classes
      */

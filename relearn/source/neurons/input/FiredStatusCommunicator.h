@@ -26,6 +26,7 @@ class NetworkGraph;
 class FiredStatusCommunicator {
 public:
     using number_neurons_type = RelearnTypes::number_neurons_type;
+    using step_type = RelearnTypes::step_type;
 
     /**
      * @brief Constructs a new object with the given number of ranks and local neurons (mainly used for pre-allocating memory)
@@ -63,16 +64,18 @@ public:
 
     /**
      * @brief Registers the fired status of the local neurons that are not disabled.
+     * @param step The current update step
      * @param fired_status The current fired status of the neurons
      * @exception Can throw a RelearnException
      */
-    virtual void set_local_fired_status(std::span<const FiredStatus> fired_status) = 0;
+    virtual void set_local_fired_status(step_type step, std::span<const FiredStatus> fired_status) = 0;
 
     /**
      * @brief Exchanges the fired status with all MPI ranks
+     * @param step The current update step
      * @exception Can throw a RelearnException
      */
-    virtual void exchange_fired_status() = 0;
+    virtual void exchange_fired_status(step_type step) = 0;
 
     /**
      * @brief Checks if the communicator contains the specified neuron of the rank,
@@ -82,6 +85,15 @@ public:
      * @exception Can throw a RelearnException
      */
     [[nodiscard]] virtual bool contains(MPIRank rank, NeuronID neuron_id) const = 0;
+
+    /**
+     * @brief Notifies this class and the input calculators that the plasticity has changed.
+     *      Some might cache values, which than can be recalculated
+     * @param step The current simulation step
+     */
+    virtual void notify_of_plasticity_change(const step_type step) {
+
+    }
 
     /**
      * @brief Returns the number of MPI ranks
