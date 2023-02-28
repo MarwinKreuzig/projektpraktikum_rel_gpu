@@ -251,6 +251,12 @@ int main(int argc, char** argv) {
         { "hyptan", SynapticInputCalculatorType::HyperbolicTangent },
     };
 
+    FiredStatusCommunicatorType chosen_fired_status_communicator_type = FiredStatusCommunicatorType::Map;
+    std::map<std::string, FiredStatusCommunicatorType> cli_parse_fired_status_communicator_type{
+        { "map", FiredStatusCommunicatorType::Map },
+        { "approximator", FiredStatusCommunicatorType::Approximator },
+    };
+
     BackgroundActivityCalculatorType chosen_background_activity_calculator_type = BackgroundActivityCalculatorType::Null;
     std::map<std::string, BackgroundActivityCalculatorType> cli_parse_background_activity_calculator_type{
         { "null", BackgroundActivityCalculatorType::Null },
@@ -402,6 +408,9 @@ int main(int argc, char** argv) {
 
     auto* const opt_synapse_input_calculator_type = app.add_option("--synapse-input-calculator-type", chosen_synapse_input_calculator_type, "The type calculator that transforms the synapse input.");
     opt_synapse_input_calculator_type->transform(CLI::CheckedTransformer(cli_parse_synapse_input_calculator_type, CLI::ignore_case));
+
+    auto* const opt_fired_status_communicator_type = app.add_option("--fired-status-communicator-type", chosen_fired_status_communicator_type, "The type of communicator between MPI ranks that exchange the fired status.");
+    opt_fired_status_communicator_type->transform(CLI::CheckedTransformer(cli_parse_fired_status_communicator_type, CLI::ignore_case));
 
     double calcium_decay{ CalciumCalculator::default_tau_C };
     app.add_option("--calcium-decay", calcium_decay, "The decay constant for the intercellular calcium. Must be greater than 0.0");
@@ -795,8 +804,13 @@ int main(int argc, char** argv) {
     };
     auto stimulus_calculator = construct_stimulus();
 
-    auto construct_fired_status_communicator = [&]() {
-        return std::make_unique<FiredStatusCommunicationMap>(MPIWrapper::get_num_ranks());
+    auto construct_fired_status_communicator = [&]() -> std::unique_ptr<FiredStatusCommunicator> {
+        if (chosen_fired_status_communicator_type == FiredStatusCommunicatorType::Map) {
+            return std::make_unique<FiredStatusCommunicationMap>(MPIWrapper::get_num_ranks());
+        }
+
+        RelearnException::check(chosen_fired_status_communicator_type == FiredStatusCommunicatorType::Approximator, "Type {} of fired status communicator is not supported.", chosen_fired_status_communicator_type);
+        return std::make_unique<FiredStatusApproximator>(MPIWrapper::get_num_ranks());
     };
 
     auto construct_input = [&]() -> std::unique_ptr<SynapticInputCalculator> {

@@ -31,7 +31,7 @@ void FiredStatusApproximator::exchange_fired_status(const step_type step) {
 
 bool FiredStatusApproximator::contains(const MPIRank rank, const NeuronID neuron_id) const {
     const auto rank_it = rank.get_rank();
-    RelearnException::check(rank_it < firing_rate_cache.size(), "");
+    RelearnException::check(rank_it < firing_rate_cache.size(), "FiredStatusApproximator::contains: Rank {} is too large for the sizes {}.", rank, firing_rate_cache.size());
 
     const auto& rank_cache = firing_rate_cache[rank_it];
 
@@ -43,12 +43,11 @@ bool FiredStatusApproximator::contains(const MPIRank rank, const NeuronID neuron
     const auto firing_rate = pos->second;
 
     const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::FiringStatusApproximator, 0.0, 1.0);
-
     return firing_rate >= random_number;
 }
 
 void FiredStatusApproximator::notify_of_plasticity_change(const step_type step) {
-    RelearnException::check(last_synced <= step, "");
+    RelearnException::check(last_synced <= step, "FiredStatusApproximator::notify_of_plasticity_change: step is smaller than last_synced: {} > {}", last_synced, step);
     const auto steps_since_last_sync = step - last_synced;
 
     if (steps_since_last_sync > 0) {
@@ -56,6 +55,8 @@ void FiredStatusApproximator::notify_of_plasticity_change(const step_type step) 
         for (auto i = size_t(0); i < accumulated_fired.size(); i++) {
             latest_firing_rate[i] = steps_since_last_sync_inv * static_cast<double>(accumulated_fired[i]);
         }
+
+        std::ranges::fill(accumulated_fired, 0);
     }
 
     struct communication_type {
@@ -92,7 +93,10 @@ void FiredStatusApproximator::notify_of_plasticity_change(const step_type step) 
 
     for (const auto& [rank, values] : incoming_firing_rates) {
         for (const auto& [neuron_id, firing_rate] : values) {
-            firing_rate_cache[rank.get_rank()][neuron_id] = firing_rate;
+            auto& cache = firing_rate_cache[rank.get_rank()];
+            cache[neuron_id] = firing_rate;
         }
     }
+
+    last_synced = step;
 }

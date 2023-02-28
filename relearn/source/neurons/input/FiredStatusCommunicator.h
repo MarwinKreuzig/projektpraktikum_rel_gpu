@@ -16,9 +16,40 @@
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
+#include "fmt/ostream.h"
+
 #include <vector>
 
 class NetworkGraph;
+
+/**
+ * This enums lists all types of fired status communicator
+ */
+enum class FiredStatusCommunicatorType : char {
+    Map,
+    Approximator,
+};
+
+/**
+ * @brief Pretty-prints the fired status communicator type to the chosen stream
+ * @param out The stream to which to print the fired status communicator
+ * @param element_type The fired status communicator to print
+ * @return The argument out, now altered with the fired status communicator
+ */
+inline std::ostream& operator<<(std::ostream& out, const FiredStatusCommunicatorType& calculator_type) {
+    if (calculator_type == FiredStatusCommunicatorType::Map) {
+        return out << "Map";
+    }
+
+    if (calculator_type == FiredStatusCommunicatorType::Approximator) {
+        return out << "Approximator";
+    }
+
+    return out;
+}
+
+template <>
+struct fmt::formatter<FiredStatusCommunicatorType> : ostream_formatter { };
 
 /**
  * This class provides a virtual interface for exchanging the NeuronID of those that fired in the simulation step.
@@ -61,7 +92,7 @@ public:
 
         const auto old_size = number_local_neurons;
         const auto new_size = old_size + creation_count;
-        
+
         number_local_neurons = new_size;
     }
 
@@ -123,7 +154,6 @@ public:
      * @param step The current simulation step
      */
     virtual void notify_of_plasticity_change(const step_type step) {
-
     }
 
     /**

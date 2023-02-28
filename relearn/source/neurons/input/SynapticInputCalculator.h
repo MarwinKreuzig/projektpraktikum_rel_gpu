@@ -19,12 +19,17 @@
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
+#include "fmt/ostream.h"
+
 #include <memory>
 #include <vector>
 
 class NetworkGraph;
 class NeuronMonitor;
 
+/**
+ * This enums lists all types of synaptic input calculators
+ */
 enum class SynapticInputCalculatorType : char {
     Linear,
     Logarithmic,
@@ -52,6 +57,9 @@ inline std::ostream& operator<<(std::ostream& out, const SynapticInputCalculator
 
     return out;
 }
+
+template <>
+struct fmt::formatter<SynapticInputCalculatorType> : ostream_formatter { };
 
 /**
  * This class provides an interface to calculate the background activity and synaptic input

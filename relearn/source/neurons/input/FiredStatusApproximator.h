@@ -31,7 +31,8 @@ public:
      * @param number_neurons The number of local neurons
      */
     FiredStatusApproximator(const size_t number_ranks)
-        : FiredStatusCommunicator(number_ranks){
+        : FiredStatusCommunicator(number_ranks)
+        , firing_rate_cache(number_ranks) {
         RelearnException::check(number_ranks > 0, "FiredStatusApproximator::FiredStatusApproximator: number_ranks is too small: {}", number_ranks);
     }
 
@@ -41,7 +42,7 @@ public:
      */
     [[nodiscard]] std::unique_ptr<FiredStatusCommunicator> clone() const override {
         return std::make_unique<FiredStatusApproximator>(get_number_ranks());
-     }
+    }
 
     /**
      * @brief Initializes this instance to hold the given number of neurons
