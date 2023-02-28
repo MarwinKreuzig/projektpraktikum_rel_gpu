@@ -24,6 +24,7 @@ target_sources(
 		  neurons/helper/AreaMonitor.cpp
           neurons/helper/NeuronMonitor.cpp
           neurons/helper/SynapseDeletionFinder.cpp
+          neurons/input/FiredStatusApproximator.cpp
           neurons/input/FiredStatusCommunicationMap.cpp
           neurons/input/SynapticInputCalculator.cpp
           neurons/input/SynapticInputCalculators.cpp

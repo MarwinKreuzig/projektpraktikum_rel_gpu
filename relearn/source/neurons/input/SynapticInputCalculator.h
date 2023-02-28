@@ -85,6 +85,8 @@ public:
         RelearnException::check(fired_status_comm.operator bool(), "SynapticInputCalculator::SynapticInputCalculator: communicator was empty.");
     }
 
+    ~SynapticInputCalculator() = default;
+
     /**
      * @brief Sets the extra infos. These are used to determine which neuron updates its electrical activity
      * @param new_extra_info The new extra infos, must not be empty
