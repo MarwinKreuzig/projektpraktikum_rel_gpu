@@ -21,16 +21,18 @@ public:
      * @brief Constructs a new instance of type LinearSynapticInputCalculator with 0 neurons and the passed values for all parameters.
      *      Does not check the parameters against the min and max values defined below in order to allow other values besides in the GUI
      * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
+     * @param communicator The communicator for the fired status of distant neurons, not nullptr
+     * @exception Throws a RelearnException if communicator is empty
      */
-    LinearSynapticInputCalculator(const double synapse_conductance)
-        : SynapticInputCalculator(synapse_conductance) { }
+    LinearSynapticInputCalculator(const double synapse_conductance, std::unique_ptr<FiredStatusCommunicator>&& communicator)
+        : SynapticInputCalculator(synapse_conductance, std::move(communicator)) { }
 
     /**
      * @brief Creates a clone of this instance (without neurons), copies all parameters
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<SynapticInputCalculator> clone() const final {
-        return std::make_unique<LinearSynapticInputCalculator>(get_synapse_conductance());
+        return std::make_unique<LinearSynapticInputCalculator>(get_synapse_conductance(), get_fired_status_communicator()->clone());
     }
 
 protected:
@@ -47,9 +49,11 @@ public:
      *      Does not check the parameters against the min and max values defined below in order to allow other values besides in the GUI
      * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
      * @param scaling_factor The factor that scales the logarithmic input
+     * @param communicator The communicator for the fired status of distant neurons, not nullptr
+     * @exception Throws a RelearnException if communicator is empty
      */
-    LogarithmicSynapticInputCalculator(const double synapse_conductance, const double scaling_factor)
-        : SynapticInputCalculator(synapse_conductance)
+    LogarithmicSynapticInputCalculator(const double synapse_conductance, const double scaling_factor, std::unique_ptr<FiredStatusCommunicator>&& communicator)
+        : SynapticInputCalculator(synapse_conductance, std::move(communicator))
         , scale_factor(scaling_factor) { }
 
     /**
@@ -57,7 +61,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<SynapticInputCalculator> clone() const final {
-        return std::make_unique<LogarithmicSynapticInputCalculator>(get_synapse_conductance(), get_scale_factor());
+        return std::make_unique<LogarithmicSynapticInputCalculator>(get_synapse_conductance(), get_scale_factor(), get_fired_status_communicator()->clone());
     }
 
     /**
@@ -97,9 +101,11 @@ public:
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
      * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
      * @param scaling_factor The factor that scales the hyperbolic tanget input
+     * @param communicator The communicator for the fired status of distant neurons, not nullptr
+     * @exception Throws a RelearnException if communicator is empty
      */
-    HyperbolicTangentSynapticInputCalculator(const double synapse_conductance, const double scaling_factor)
-        : SynapticInputCalculator(synapse_conductance)
+    HyperbolicTangentSynapticInputCalculator(const double synapse_conductance, const double scaling_factor, std::unique_ptr<FiredStatusCommunicator>&& communicator)
+        : SynapticInputCalculator(synapse_conductance, std::move(communicator))
         , scale_factor(scaling_factor) { }
 
     /**
@@ -107,7 +113,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<SynapticInputCalculator> clone() const final {
-        return std::make_unique<HyperbolicTangentSynapticInputCalculator>(get_synapse_conductance(), get_scale_factor());
+        return std::make_unique<HyperbolicTangentSynapticInputCalculator>(get_synapse_conductance(), get_scale_factor(), get_fired_status_communicator()->clone());
     }
 
     /**

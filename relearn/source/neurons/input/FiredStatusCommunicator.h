@@ -31,14 +31,45 @@ public:
     /**
      * @brief Constructs a new object with the given number of ranks and local neurons (mainly used for pre-allocating memory)
      * @param number_ranks The number of MPI ranks
-     * @param number_neurons The number of local neurons
      * @exception Throws a RelearnException if number_ranks <= 0
      */
-    FiredStatusCommunicator(const size_t number_ranks, const number_neurons_type number_local_neurons)
-        : number_ranks(number_ranks)
-        , number_local_neurons(number_local_neurons) {
+    FiredStatusCommunicator(const size_t number_ranks)
+        : number_ranks(number_ranks) {
         RelearnException::check(number_ranks > 0, "FiredStatusCommunicator::FiredStatusCommunicator: number_ranks is too small: {}", number_ranks);
     }
+
+    /**
+     * @brief Initializes this instance to hold the given number of neurons
+     * @param number_neurons The number of neurons for this instance, must be > 0
+     * @exception Throws a RelearnException if number_neurons == 0
+     */
+    virtual void init(const number_neurons_type number_neurons) {
+        RelearnException::check(number_local_neurons == 0, "");
+        RelearnException::check(number_neurons > 0, "");
+
+        number_local_neurons = number_neurons;
+    }
+
+    /**
+     * @brief Additionally created the given number of neurons
+     * @param creation_count The number of neurons to create, must be > 0
+     * @exception Throws a RelearnException if creation_count == 0 or if init(...) was not called before
+     */
+    virtual void create_neurons(const number_neurons_type creation_count) {
+        RelearnException::check(number_local_neurons > 0, "");
+        RelearnException::check(creation_count > 0, "");
+
+        const auto old_size = number_local_neurons;
+        const auto new_size = old_size + creation_count;
+        
+        number_local_neurons = new_size;
+    }
+
+    /**
+     * @brief Creates a clone of this instance (without neurons), copies all parameters
+     * @return A copy of this instance
+     */
+    [[nodiscard]] virtual std::unique_ptr<FiredStatusCommunicator> clone() const = 0;
 
     /**
      * @brief Sets the extra infos. These are used to determine which neuron updates its electrical activity

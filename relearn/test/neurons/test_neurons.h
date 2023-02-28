@@ -13,6 +13,7 @@
 #include "RelearnTest.hpp"
 #include "neurons/Neurons.h"
 #include "neurons/helper/SynapseDeletionFinder.h"
+#include "neurons/input/FiredStatusCommunicationMap.h"
 #include "neurons/input/SynapticInputCalculators.h"
 #include "neurons/input/BackgroundActivityCalculators.h"
 
@@ -20,7 +21,7 @@ class NeuronsTest : public RelearnTest {
 protected:
     static Neurons create_neurons_object(std::shared_ptr<Partition>& partition) {
         auto model = std::make_unique<models::PoissonModel>(models::PoissonModel::default_h,
-                                                            std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_conductance),
+                                                            std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_conductance, std::make_unique<FiredStatusCommunicationMap>(1)),
                                                             std::make_unique<NullBackgroundActivityCalculator>(),
                                                             std::make_unique<Stimulus>(),
                                                             models::PoissonModel::default_x_0,

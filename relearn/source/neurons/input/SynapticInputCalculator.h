@@ -68,9 +68,14 @@ public:
      * @brief Constructs a new instance of type SynapticInputCalculator with 0 neurons and the passed values for all parameters.
      *      Does not check the parameters against the min and max values defined below in order to allow other values besides in the GUI
      * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
+     * @param communicator The communicator for the fired status of distant neurons, not nullptr
+     * @exception Throws a RelearnException if communicator is empty
      */
-    SynapticInputCalculator(const double synapse_conductance)
-        : synapse_conductance(synapse_conductance) { }
+    SynapticInputCalculator(const double synapse_conductance, std::unique_ptr<FiredStatusCommunicator>&& communicator)
+        : synapse_conductance(synapse_conductance)
+        , fired_status_comm(std::move(communicator)) {
+        RelearnException::check(fired_status_comm.operator bool(), "SynapticInputCalculator::SynapticInputCalculator: communicator was empty.");
+    }
 
     /**
      * @brief Sets the extra infos. These are used to determine which neuron updates its electrical activity
@@ -80,11 +85,9 @@ public:
     void set_extra_infos(std::shared_ptr<NeuronsExtraInfo> new_extra_info) {
         const auto is_filled = new_extra_info.operator bool();
         RelearnException::check(is_filled, "SynapticInputCalculator::set_extra_infos: new_extra_info is empty");
-        extra_infos = std::move(new_extra_info);
 
-        if (fired_status_comm.operator bool()) {
-            fired_status_comm->set_extra_infos(extra_infos);
-        }
+        extra_infos = new_extra_info;
+        fired_status_comm->set_extra_infos(std::move(new_extra_info));
     }
 
     /**
@@ -95,11 +98,9 @@ public:
     void set_network_graph(std::shared_ptr<NetworkGraph> new_network_graph) {
         const auto is_filled = new_network_graph.operator bool();
         RelearnException::check(is_filled, "SynapticInputCalculator::set_network_graph: new_network_graph is empty");
-        network_graph = std::move(new_network_graph);
 
-        if (fired_status_comm.operator bool()) {
-            fired_status_comm->set_network_graph(network_graph);
-        }
+        network_graph = new_network_graph;
+        fired_status_comm->set_network_graph(std::move(new_network_graph));
     }
 
     /**

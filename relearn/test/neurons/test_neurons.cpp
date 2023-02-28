@@ -113,7 +113,7 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
 
     auto partition = std::make_shared<Partition>(1, MPIRank::root_rank());
     auto model = std::make_unique<models::PoissonModel>(models::PoissonModel::default_h,
-        std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_conductance),
+        std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_conductance, std::make_unique<FiredStatusCommunicationMap>(1)),
         std::make_unique<NullBackgroundActivityCalculator>(),
         std::make_unique<Stimulus>(),
         models::PoissonModel::default_x_0,

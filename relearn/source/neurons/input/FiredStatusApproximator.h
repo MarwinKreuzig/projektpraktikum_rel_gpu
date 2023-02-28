@@ -18,6 +18,7 @@
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
+#include <memory>
 #include <unordered_map>
 #include <span>
 #include <vector>
@@ -29,11 +30,44 @@ public:
      * @param number_ranks The number of ranks
      * @param number_neurons The number of local neurons
      */
-    FiredStatusApproximator(const size_t number_ranks, const number_neurons_type number_neurons)
-        : FiredStatusCommunicator(number_ranks, number_neurons)
-        , accumulated_fired(number_neurons, 0)
-        , latest_firing_rate(number_neurons, 0.0) {
+    FiredStatusApproximator(const size_t number_ranks)
+        : FiredStatusCommunicator(number_ranks){
         RelearnException::check(number_ranks > 0, "FiredStatusApproximator::FiredStatusApproximator: number_ranks is too small: {}", number_ranks);
+    }
+
+    /**
+     * @brief Creates a clone of this instance (without neurons), copies all parameters
+     * @return A copy of this instance
+     */
+    [[nodiscard]] std::unique_ptr<FiredStatusCommunicator> clone() const override {
+        return std::make_unique<FiredStatusApproximator>(get_number_ranks());
+     }
+
+    /**
+     * @brief Initializes this instance to hold the given number of neurons
+     * @param number_neurons The number of neurons for this instance, must be > 0
+     * @exception Throws a RelearnException if number_neurons == 0
+     */
+    void init(const number_neurons_type number_neurons) override {
+        FiredStatusCommunicator::init(number_neurons);
+
+        accumulated_fired.resize(number_neurons, 0);
+        latest_firing_rate.resize(number_neurons, 0.0);
+    }
+
+    /**
+     * @brief Additionally created the given number of neurons
+     * @param creation_count The number of neurons to create, must be > 0
+     * @exception Throws a RelearnException if creation_count == 0 or if init(...) was not called before
+     */
+    void create_neurons(const number_neurons_type creation_count) override {
+        FiredStatusCommunicator::create_neurons(creation_count);
+
+        const auto old_size = get_number_local_neurons();
+        const auto new_size = old_size + creation_count;
+
+        accumulated_fired.resize(new_size, 0);
+        latest_firing_rate.resize(new_size, 0.0);
     }
 
     /**

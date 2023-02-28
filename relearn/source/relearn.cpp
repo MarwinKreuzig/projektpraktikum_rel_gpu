@@ -25,6 +25,9 @@
 #include "neurons/helper/SynapseDeletionFinder.h"
 #include "neurons/input/BackgroundActivityCalculator.h"
 #include "neurons/input/BackgroundActivityCalculators.h"
+#include "neurons/input/FiredStatusApproximator.h"
+#include "neurons/input/FiredStatusCommunicationMap.h"
+#include "neurons/input/FiredStatusCommunicator.h"
 #include "neurons/input/SynapticInputCalculator.h"
 #include "neurons/input/SynapticInputCalculators.h"
 #include "neurons/models/NeuronModels.h"
@@ -792,16 +795,22 @@ int main(int argc, char** argv) {
     };
     auto stimulus_calculator = construct_stimulus();
 
+    auto construct_fired_status_communicator = [&]() {
+        return std::make_unique<FiredStatusCommunicationMap>(MPIWrapper::get_num_ranks());
+    };
+
     auto construct_input = [&]() -> std::unique_ptr<SynapticInputCalculator> {
+        auto fired_status_communicator = construct_fired_status_communicator();
+
         if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
-            return std::make_unique<LinearSynapticInputCalculator>(synapse_conductance);
+            return std::make_unique<LinearSynapticInputCalculator>(synapse_conductance, std::move(fired_status_communicator));
         }
         if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic) {
-            return std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, input_scale);
+            return std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, input_scale, std::move(fired_status_communicator));
         }
 
         RelearnException::check(chosen_synapse_input_calculator_type == SynapticInputCalculatorType::HyperbolicTangent, "Chose a synaptic input calculator that is not implemented");
-        return std::make_unique<HyperbolicTangentSynapticInputCalculator>(synapse_conductance, input_scale);
+        return std::make_unique<HyperbolicTangentSynapticInputCalculator>(synapse_conductance, input_scale, std::move(fired_status_communicator));
     };
     auto input_calculator = construct_input();
 
