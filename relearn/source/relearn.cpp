@@ -223,6 +223,12 @@ int main(int argc, char** argv) {
         { "fitzhughnagumo", NeuronModelEnum::FitzHughNagumo }
     };
 
+    SynapseDeletionFinderType chosen_synapse_deleter = SynapseDeletionFinderType::Random;
+    std::map<std::string, SynapseDeletionFinderType> cli_parse_synapse_deleter{
+        { "random", SynapseDeletionFinderType::Random },
+        { "inverse", SynapseDeletionFinderType::InverseLength},
+    };
+
     KernelType chosen_kernel_type = KernelType::Gaussian;
     std::map<std::string, KernelType> cli_parse_kernel_type{
         { "gamma", KernelType::Gamma },
@@ -376,8 +382,11 @@ int main(int argc, char** argv) {
     double weibull_b{ WeibullDistributionKernel::default_b };
     app.add_option("--weibull-b", weibull_b, "Scale parameter for the weibull probability kernel.");
 
-    auto* const opt_neuron_model = app.add_option("--neuron-model", chosen_neuron_model, "The neuron model");
+    auto* const opt_neuron_model = app.add_option("--neuron-model", chosen_neuron_model, "The neuron model.");
     opt_neuron_model->transform(CLI::CheckedTransformer(cli_parse_neuron_model, CLI::ignore_case));
+
+    auto* const opt_synapse_deleter = app.add_option("--synapse-deleter", chosen_synapse_deleter, "The algorithm for deleting synapses.");
+    opt_synapse_deleter->transform(CLI::CheckedTransformer(cli_parse_synapse_deleter, CLI::ignore_case));
 
     std::string static_neurons_str{};
     auto* opt_static_neurons = app.add_option("--static-neurons", static_neurons_str, "String with neuron ids for static neurons. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;... where <mpi_rank> can be -1 to indicate \"on every rank\". Alternatively use area names instead of neuron ids");
@@ -887,8 +896,12 @@ int main(int argc, char** argv) {
         nu_dend, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     auto construct_synapse_deletion_finder = [&]() -> std::unique_ptr<SynapseDeletionFinder> {
-        auto synapse_deletion_finder = std::make_unique<InverseLengthSynapseDeletionFinder>();
-        return synapse_deletion_finder;
+        if (chosen_synapse_deleter == SynapseDeletionFinderType::Random) {
+            return std::make_unique<RandomSynapseDeletionFinder>();
+        }
+
+        RelearnException::check(chosen_synapse_deleter == SynapseDeletionFinderType::InverseLength, "Type {} of synapse deleter is not supported.", chosen_synapse_deleter);
+        return std::make_unique<InverseLengthSynapseDeletionFinder>();
     };
     auto synapse_deletion_finder = construct_synapse_deletion_finder();
 

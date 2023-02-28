@@ -239,7 +239,7 @@ public:
         requests.clear();
 
         for (const auto& [mpi_rank, size_for_rank] : sizes) {
-            RelearnException::check(mpi_rank.get_rank() < number_ranks, "");
+            RelearnException::check(mpi_rank.get_rank() < number_ranks, "CommunicationMap::resize: The rank {} is larger than the number of ranks {}", mpi_rank, number_ranks);
             requests[mpi_rank].resize(size_for_rank);
         }
     }

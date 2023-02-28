@@ -27,12 +27,43 @@ class NeuronsExtraInfo;
 class SynapticElements;
 
 /**
+ * This enums lists all types of synapse deletion finders
+ */
+enum class SynapseDeletionFinderType : char {
+    Random,
+    InverseLength,
+};
+
+/**
+ * @brief Pretty-prints the synapse deletion finder type to the chosen stream
+ * @param out The stream to which to print the synapse deletion finder
+ * @param element_type The synapse deletion finder to print
+ * @return The argument out, now altered with the synapse deletion finder
+ */
+inline std::ostream& operator<<(std::ostream& out, const SynapseDeletionFinderType& calculator_type) {
+    if (calculator_type == SynapseDeletionFinderType::Random) {
+        return out << "Random";
+    }
+
+    if (calculator_type == SynapseDeletionFinderType::InverseLength) {
+        return out << "InverseLength";
+    }
+
+    return out;
+}
+
+template <>
+struct fmt::formatter<SynapseDeletionFinderType> : ostream_formatter { };
+
+/**
  * This class encapsulates the logic of finding and deleting synapses
  * based on the synaptic elements. It provides the communication via MPI
  * and other house keeping, as well as a virtual method to implement.
  */
 class SynapseDeletionFinder {
 public:
+    virtual ~SynapseDeletionFinder() = default;
+
     /**
      * @brief Sets the network graph that stores the synapses
      * @param ng The new network graph, must not be empty

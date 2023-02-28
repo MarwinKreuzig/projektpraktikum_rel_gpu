@@ -75,8 +75,8 @@ public:
      * @exception Throws a RelearnException if number_neurons == 0
      */
     virtual void init(const number_neurons_type number_neurons) {
-        RelearnException::check(number_local_neurons == 0, "");
-        RelearnException::check(number_neurons > 0, "");
+        RelearnException::check(number_local_neurons == 0, "FiredStatusCommunicator::init: Was already initialized");
+        RelearnException::check(number_neurons > 0, "FiredStatusCommunicator::init: Cannot initialize with 0 neurons");
 
         number_local_neurons = number_neurons;
     }
@@ -87,8 +87,8 @@ public:
      * @exception Throws a RelearnException if creation_count == 0 or if init(...) was not called before
      */
     virtual void create_neurons(const number_neurons_type creation_count) {
-        RelearnException::check(number_local_neurons > 0, "");
-        RelearnException::check(creation_count > 0, "");
+        RelearnException::check(number_local_neurons > 0, "FiredStatusCommunicator::create_neurons: Was not previously initialized");
+        RelearnException::check(creation_count > 0, "FiredStatusCommunicator::create_neurons: Cannot create 0 neurons");
 
         const auto old_size = number_local_neurons;
         const auto new_size = old_size + creation_count;

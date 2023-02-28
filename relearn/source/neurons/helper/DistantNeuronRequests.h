@@ -89,7 +89,7 @@ public:
      * @return The leaf node id
      */
     [[nodiscard]] constexpr NeuronID::value_type get_leaf_node_id() const {
-        RelearnException::check(target_neuron_type == TargetNeuronType::Leaf, "");
+        RelearnException::check(target_neuron_type == TargetNeuronType::Leaf, "DistantNeuronRequest::get_leaf_node_id: The target_neuron_type was not Leaf.");
         return target_neuron_identifier;
     }
 
@@ -99,7 +99,7 @@ public:
      * @return The RMA offset
      */
     [[nodiscard]] constexpr NeuronID::value_type get_rma_offset() const {
-        RelearnException::check(target_neuron_type == TargetNeuronType::VirtualNode, "");
+        RelearnException::check(target_neuron_type == TargetNeuronType::VirtualNode, "DistantNeuronRequest::get_leaf_node_id: The target_neuron_type was not VirtualNode.");
         return target_neuron_identifier;
     }
 

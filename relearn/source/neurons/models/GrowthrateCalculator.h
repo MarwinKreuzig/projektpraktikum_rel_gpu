@@ -69,22 +69,22 @@ public:
     }
 
     void init(const number_neurons_type number_neurons) override {
-        RelearnException::check(growth_rates.empty(), "");
-        RelearnException::check(number_neurons > 0, "");
+        RelearnException::check(growth_rates.empty(), "AdaptiveGrowthrateCalculator::init: Was already initialized");
+        RelearnException::check(number_neurons > 0, "AdaptiveGrowthrateCalculator::init: Cannot initialize with 0 neurons");
 
         growth_rates.resize(number_neurons, intended_growth_rate);
     }
 
     void create_neurons(const number_neurons_type creation_count) override {
-        RelearnException::check(!growth_rates.empty(), "");
-        RelearnException::check(creation_count > 0, "");
+        RelearnException::check(!growth_rates.empty(), "AdaptiveGrowthrateCalculator::create_neurons: Was not initialized previously");
+        RelearnException::check(creation_count > 0, "AdaptiveGrowthrateCalculator::create_neurons: Cannot create 0 neurons");
 
         growth_rates.resize(growth_rates.size() + creation_count, intended_growth_rate);
     }
 
     [[nodiscard]] double get_growth_rate(const NeuronID neuron_id) const override {
         const auto local_neuron_id = neuron_id.get_neuron_id();
-        RelearnException::check(local_neuron_id < growth_rates.size(), "");
+        RelearnException::check(local_neuron_id < growth_rates.size(), "AdaptiveGrowthrateCalculator::get_growth_rate: NeuronID {} is larger than the number of neurons {}", neuron_id, growth_rates.size());
 
         return growth_rates[local_neuron_id];
     }
