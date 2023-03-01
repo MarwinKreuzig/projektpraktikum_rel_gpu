@@ -482,8 +482,10 @@ int main(int argc, char** argv) {
     auto* const monitor_option = app.add_option("--neuron-monitors", neuron_monitors_description,
         "The description which neurons to monitor. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;...<area_name>;... where <mpi_rank> can be -1 to indicate \"on every rank\"");
 
-    auto* flag_monitor_all = app.add_flag("--neuron-monitors-all", "Monitors all neurons.");
+    auto* const flag_monitor_all = app.add_flag("--neuron-monitors-all", "Monitors all neurons.");
     // auto* flag_area_monitor_all = app.add_flag("--area-monitors-all", "Monitors all areas.");
+
+    auto* const opt_flush_monintor = app.add_option("--monitor-flush-step", Config::flush_area_monitor_step, "The steps when to flush the neuron monitors. Must be > 0");
 
     double percentage_initial_fired_neurons{ 0.0 };
     app.add_option("--percentage-initial-fired-neurons", percentage_initial_fired_neurons, "The percentage of neurons that fired in the (imaginary) 0th step. Must be from [0.0, 1.0]. Default ist 0.0");
@@ -576,6 +578,8 @@ int main(int argc, char** argv) {
     RelearnException::check(nu_axon <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
     RelearnException::check(nu_dend >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
     RelearnException::check(nu_dend <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
+
+    RelearnException::check(Config::flush_area_monitor_step > 0, "The step for flushing the neuron monitors must be > 0.");
 
     omp_set_num_threads(openmp_threads);
 
