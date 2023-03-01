@@ -462,6 +462,11 @@ NeuronIO::InSynapses NeuronIO::read_in_synapses(const std::filesystem::path& fil
                 distant_in_synapses_static.emplace_back(target_id, RankNeuronId{ MPIRank(read_source_rank), source_id }, weight);
             }
         } else {
+            //if (target_id == source_id) {
+            //    spdlog::info("Skipping line: {}", line);
+            //    continue;
+            //}
+
             if (plastic) {
                 local_in_synapses_plastic.emplace_back(target_id, source_id, RelearnTypes::plastic_synapse_weight(weight));
             } else {
@@ -529,6 +534,11 @@ NeuronIO::OutSynapses NeuronIO::read_out_synapses(const std::filesystem::path& f
                 distant_out_synapses_static.emplace_back(RankNeuronId{ MPIRank(read_target_rank), target_id }, source_id, weight);
             }
         } else {
+            //if (target_id == source_id) {
+            //    spdlog::info("Skipping line: {}", line);
+            //    continue;
+            //}
+
             if (plastic) {
                 local_out_synapses_plastic.emplace_back(target_id, source_id, RelearnTypes::plastic_synapse_weight(weight));
             } else {

@@ -108,13 +108,14 @@ public:
      *      Uses the RNG that is associated with the key.
      * @param key The type whose RNG shall be used
      * @param lower_inclusive The lower inclusive bound for the random double
-     * @param upper_exclusive The upper exclusive bound for the random double
-     * @exception Throws a RelearnException if lower_inclusive >= upper_exclusive
+     * @param upper_exclusive The upper exclusive bound for the random double, not inf
+     * @exception Throws a RelearnException if lower_inclusive >= upper_exclusive or if upper_exclusive is inf
      * @return A uniformly distributed double in [lower_inclusive, upper_exclusive)
      */
     static double get_random_uniform_double(const RandomHolderKey key, const double lower_inclusive, const double upper_exclusive) {
         RelearnException::check(lower_inclusive < upper_exclusive,
             "RandomHolder::get_random_uniform_double: Random number from invalid interval [{}, {}) for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
+        RelearnException::check(upper_exclusive <= std::numeric_limits<double>::max(), "RandomHolder::get_random_uniform_double: upper_exclusive was inf");
         uniform_real_distribution<double> dist(lower_inclusive, upper_exclusive);
         auto& generator = get_generator(key);
         return dist(generator);

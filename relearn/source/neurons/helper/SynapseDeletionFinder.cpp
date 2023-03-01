@@ -363,9 +363,10 @@ CommunicationMap<RelearnTypes::position_type> InverseLengthSynapseDeletionFinder
     positions.resize(local_neurons.get_request_sizes());
 
     for (const auto& [source_rank, requests] : local_neurons) {
-        for (const auto neuron_id : requests) {
+        for (auto i = 0; i < requests.size(); i++) {
+            const auto neuron_id = requests[i];
             const auto& position = extra_info->get_position(neuron_id);
-            positions.append(source_rank, position);
+            positions.set_request(source_rank, i, position);
         }
     }
 
@@ -452,12 +453,17 @@ std::vector<RankNeuronId> InverseLengthSynapseDeletionFinder::find_synapses_on_n
             const auto pos = std::find(relevant_ids.begin(), relevant_ids.end(), other_id);
             RelearnException::check(pos != relevant_ids.end(), "InverseLengthSynapseDeletionFinder::find_synapses_on_neuron: Did not find the id {} in the CommunicationMap at rank {}", other_id, other_rank);
 
-            const auto distance = std::distance(relevant_ids.begin(), relevant_ids.end());
+            const auto distance = std::distance(relevant_ids.begin(), pos);
 
             const auto other_pos = positions.get_request(other_rank, distance);
 
             const auto& diff = other_pos - my_position;
             const auto euclidean_distance = diff.calculate_2_norm();
+
+            if (euclidean_distance == 0.0) {
+                // In case a neuron has a synapse to itself, return 1.0
+                return 1.0;
+            }
 
             return 1.0 / euclidean_distance;
         });
