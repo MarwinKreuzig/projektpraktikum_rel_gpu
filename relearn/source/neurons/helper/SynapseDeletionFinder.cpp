@@ -337,6 +337,10 @@ CommunicationMap<NeuronID> InverseLengthSynapseDeletionFinder::find_partners_to_
         partners_to_locate.emplace_back(rank, id);
     }
 
+    for (auto& [rank, requests] : partners_to_locate) {
+        std::ranges::sort(requests);
+    }
+
     return partners_to_locate;
 }
 
@@ -353,15 +357,20 @@ std::vector<RankNeuronId> InverseLengthSynapseDeletionFinder::find_synapses_on_n
 
     const auto& my_position = extra_info->get_position(neuron_id);
 
-    auto get_probabilities = [&my_position, this](const std::vector<RankNeuronId>& others) -> std::vector<double> {
+    auto get_probabilities = [&my_position, &neuron_id, this](const std::vector<RankNeuronId>& others) -> std::vector<double> {
         std::vector<double> probabilities{};
         probabilities.reserve(others.size());
 
-        std::transform(others.begin(), others.end(), std::back_inserter(probabilities), [&my_position, this](const RankNeuronId& rni) {
+        std::transform(others.begin(), others.end(), std::back_inserter(probabilities), [&my_position, &neuron_id, this](const RankNeuronId& rni) {
             const auto& [other_rank, other_id] = rni;
+            if (neuron_id == other_id) {
+                // In case a neuron has a synapse to itself, return 1.0
+                return 1.0;
+            }
+
             const auto& relevant_ids = partners.get_requests(other_rank);
 
-            const auto pos = std::find(relevant_ids.begin(), relevant_ids.end(), other_id);
+            const auto pos = std::lower_bound(relevant_ids.begin(), relevant_ids.end(), other_id);
             RelearnException::check(pos != relevant_ids.end(), "InverseLengthSynapseDeletionFinder::find_synapses_on_neuron: Did not find the id {} in the CommunicationMap at rank {}", other_id, other_rank);
 
             const auto distance = std::distance(relevant_ids.begin(), pos);
@@ -370,11 +379,6 @@ std::vector<RankNeuronId> InverseLengthSynapseDeletionFinder::find_synapses_on_n
 
             const auto& diff = other_pos - my_position;
             const auto euclidean_distance = diff.calculate_2_norm();
-
-            if (euclidean_distance == 0.0) {
-                // In case a neuron has a synapse to itself, return 1.0
-                return 1.0;
-            }
 
             return 1.0 / euclidean_distance;
         });
