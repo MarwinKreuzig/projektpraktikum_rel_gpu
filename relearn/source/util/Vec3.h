@@ -482,6 +482,7 @@ public:
      * @exception Throws a RelearnException if lower <= upper is violated
      * @return True iff *this is in [lower, upper]
      */
+     static constexpr double epsilon = 0.0001;
     [[nodiscard]] constexpr bool check_in_box(const Vec3<T>& lower, const Vec3<T>& upper) const {
         RelearnException::check(lower.x <= upper.x, "Vec3::check_in_box: lower.x ({}) is larger than upper.x ({})", lower.x, upper.x);
         RelearnException::check(lower.y <= upper.y, "Vec3::check_in_box: lower.y ({}) is larger than upper.y ({})", lower.y, upper.y);
@@ -491,12 +492,12 @@ public:
         const auto is_in_y_range = lower.y <= y && y <= upper.y;
         const auto is_in_z_range = lower.z <= z && z <= upper.z;
 
-        const auto is_equal_x_lower = std::fabs(x - lower.x) <= std::numeric_limits<double>::epsilon();
-        const auto is_equal_x_upper = std::fabs(x - upper.x) <= std::numeric_limits<double>::epsilon();
-        const auto is_equal_y_lower = std::fabs(y - lower.y) <= std::numeric_limits<double>::epsilon();
-        const auto is_equal_y_upper = std::fabs(y - upper.y) <= std::numeric_limits<double>::epsilon();
-        const auto is_equal_z_lower = std::fabs(z - lower.z) <= std::numeric_limits<double>::epsilon();
-        const auto is_equal_z_upper = std::fabs(z - upper.z) <= std::numeric_limits<double>::epsilon();
+        const auto is_equal_x_lower = std::fabs(x - lower.x) <= epsilon;
+        const auto is_equal_x_upper = std::fabs(x - upper.x) <= epsilon;
+        const auto is_equal_y_lower = std::fabs(y - lower.y) <= epsilon;
+        const auto is_equal_y_upper = std::fabs(y - upper.y) <= epsilon;
+        const auto is_equal_z_lower = std::fabs(z - lower.z) <= epsilon;
+        const auto is_equal_z_upper = std::fabs(z - upper.z) <= epsilon;
 
         const auto is_in_box = (is_in_x_range || is_equal_x_lower || is_equal_x_upper ) && ( is_in_y_range || is_equal_y_lower || is_equal_y_upper) && (is_in_z_range || is_equal_z_lower || is_equal_z_upper);
 
