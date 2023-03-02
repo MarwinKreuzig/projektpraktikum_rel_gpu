@@ -132,7 +132,9 @@ public:
     [[nodiscard]] std::pair<std::uint64_t, std::uint64_t> delete_synapses();
 
 protected:
-    [[nodiscard]] virtual CommunicationMap<SynapseDeletionRequest> find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) = 0;
+    [[nodiscard]] virtual CommunicationMap<SynapseDeletionRequest> find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete);
+
+    [[nodiscard]] virtual std::vector<RankNeuronId> find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete) = 0;
 
     [[nodiscard]] std::uint64_t commit_deletions(const CommunicationMap<SynapseDeletionRequest>& deletions, MPIRank my_rank);
 
@@ -152,10 +154,7 @@ protected:
  */
 class RandomSynapseDeletionFinder : public SynapseDeletionFinder {
 protected:
-    [[nodiscard]] CommunicationMap<SynapseDeletionRequest> find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) override;
-
-private:
-    [[nodiscard]] std::vector<RankNeuronId> find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete);
+    [[nodiscard]] std::vector<RankNeuronId> find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete) override;
 };
 
 /**
@@ -166,12 +165,11 @@ class InverseLengthSynapseDeletionFinder : public SynapseDeletionFinder {
 protected:
     [[nodiscard]] CommunicationMap<SynapseDeletionRequest> find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) override;
 
+    [[nodiscard]] std::vector<RankNeuronId> find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete) override;
+
 private:
     [[nodiscard]] CommunicationMap<NeuronID> find_partners_to_locate(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete);
 
-    [[nodiscard]] CommunicationMap<SynapseDeletionRequest> find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete,
-        const CommunicationMap<NeuronID>& ids, const CommunicationMap<RelearnTypes::position_type>& positions);
-
-    [[nodiscard]] std::vector<RankNeuronId> find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete,
-        const CommunicationMap<NeuronID>& ids, const CommunicationMap<RelearnTypes::position_type>& positions);
+    CommunicationMap<NeuronID> partners{ 1, 1 };
+    CommunicationMap<RelearnTypes::position_type> positions{ 1, 1 };
 };

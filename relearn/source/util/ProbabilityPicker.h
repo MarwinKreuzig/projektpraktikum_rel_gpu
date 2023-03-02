@@ -43,8 +43,17 @@ public:
         }
 
         auto counter = std::size_t(0);
-        for (auto sum_probabilities = 0.0; counter < probabilities.size() && sum_probabilities < random_number; counter++) {
+        auto sum_probabilities = 0.0;
+
+        for (; counter < probabilities.size() && sum_probabilities < random_number; counter++) {
             sum_probabilities += probabilities[counter];
+        }
+
+        RelearnException::check(sum_probabilities > 0.0, "ProbabilityPicker::pick_target: The sum of probabilities was <= 0.0");
+
+        while (probabilities[counter - std::size_t(1)] <= 0.0) {
+            // Ignore all probabilities that are <= 0.0
+            counter--;
         }
 
         return counter - std::size_t(1);

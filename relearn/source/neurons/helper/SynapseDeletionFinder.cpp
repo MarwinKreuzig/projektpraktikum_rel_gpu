@@ -54,6 +54,60 @@ std::pair<uint64_t, uint64_t> SynapseDeletionFinder::delete_synapses() {
     return { axons_deleted, excitatory_dendrites_deleted + inhibitory_dendrites_deleted };
 }
 
+CommunicationMap<SynapseDeletionRequest> SynapseDeletionFinder::find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) {
+    const auto& [sum_to_delete, number_deletions] = to_delete;
+
+    const auto number_ranks = MPIWrapper::get_num_ranks();
+
+    const auto size_hint = std::min(size_t(number_ranks), synaptic_elements->get_size());
+    CommunicationMap<SynapseDeletionRequest> deletion_requests(number_ranks, size_hint);
+
+    if (sum_to_delete == 0) {
+        return deletion_requests;
+    }
+
+    const auto number_neurons = extra_info->get_size();
+    const auto my_rank = MPIWrapper::get_my_rank();
+    const auto element_type = synaptic_elements->get_element_type();
+
+    for (const auto& neuron_id : NeuronID::range(number_neurons)) {
+        if (!extra_info->does_update_plasticity(neuron_id)) {
+            continue;
+        }
+
+        /**
+         * Create and delete synaptic elements as required.
+         * This function only deletes elements (bound and unbound), no synapses.
+         */
+        const auto local_neuron_id = neuron_id.get_neuron_id();
+        const auto num_synapses_to_delete = number_deletions[local_neuron_id];
+        if (num_synapses_to_delete == 0) {
+            continue;
+        }
+
+        const auto signal_type = synaptic_elements->get_signal_type(neuron_id);
+        const auto affected_neuron_ids = find_synapses_on_neuron(neuron_id, element_type, signal_type, num_synapses_to_delete);
+
+        for (const auto& [rank, other_neuron_id] : affected_neuron_ids) {
+            SynapseDeletionRequest psd(neuron_id, other_neuron_id, element_type, signal_type);
+            deletion_requests.append(rank, psd);
+
+            if (my_rank == rank) {
+                continue;
+            }
+
+            const auto weight = (SignalType::Excitatory == signal_type) ? -1 : 1;
+            if (ElementType::Axon == element_type) {
+                network_graph->add_synapse(PlasticDistantOutSynapse(RankNeuronId(rank, other_neuron_id), neuron_id, weight));
+            } else {
+                network_graph->add_synapse(PlasticDistantInSynapse(neuron_id, RankNeuronId(rank, other_neuron_id), weight));
+            }
+        }
+    }
+
+    return deletion_requests;
+}
+
 std::uint64_t SynapseDeletionFinder::commit_deletions(const CommunicationMap<SynapseDeletionRequest>& deletions, const MPIRank my_rank) {
     auto num_synapses_deleted = std::uint64_t(0);
 
@@ -198,60 +252,6 @@ std::vector<RankNeuronId> SynapseDeletionFinder::register_synapses(const NeuronI
     return current_synapses;
 }
 
-CommunicationMap<SynapseDeletionRequest> RandomSynapseDeletionFinder::find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) {
-    const auto& [sum_to_delete, number_deletions] = to_delete;
-
-    const auto number_ranks = MPIWrapper::get_num_ranks();
-
-    const auto size_hint = std::min(size_t(number_ranks), synaptic_elements->get_size());
-    CommunicationMap<SynapseDeletionRequest> deletion_requests(number_ranks, size_hint);
-
-    if (sum_to_delete == 0) {
-        return deletion_requests;
-    }
-
-    const auto number_neurons = extra_info->get_size();
-    const auto my_rank = MPIWrapper::get_my_rank();
-    const auto element_type = synaptic_elements->get_element_type();
-
-    for (const auto& neuron_id : NeuronID::range(number_neurons)) {
-        if (!extra_info->does_update_plasticity(neuron_id)) {
-            continue;
-        }
-
-        /**
-         * Create and delete synaptic elements as required.
-         * This function only deletes elements (bound and unbound), no synapses.
-         */
-        const auto local_neuron_id = neuron_id.get_neuron_id();
-        const auto num_synapses_to_delete = number_deletions[local_neuron_id];
-        if (num_synapses_to_delete == 0) {
-            continue;
-        }
-
-        const auto signal_type = synaptic_elements->get_signal_type(neuron_id);
-        const auto affected_neuron_ids = find_synapses_on_neuron(neuron_id, element_type, signal_type, num_synapses_to_delete);
-
-        for (const auto& [rank, other_neuron_id] : affected_neuron_ids) {
-            SynapseDeletionRequest psd(neuron_id, other_neuron_id, element_type, signal_type);
-            deletion_requests.append(rank, psd);
-
-            if (my_rank == rank) {
-                continue;
-            }
-
-            const auto weight = (SignalType::Excitatory == signal_type) ? -1 : 1;
-            if (ElementType::Axon == element_type) {
-                network_graph->add_synapse(PlasticDistantOutSynapse(RankNeuronId(rank, other_neuron_id), neuron_id, weight));
-            } else {
-                network_graph->add_synapse(PlasticDistantInSynapse(neuron_id, RankNeuronId(rank, other_neuron_id), weight));
-            }
-        }
-    }
-
-    return deletion_requests;
-}
-
 std::vector<RankNeuronId> RandomSynapseDeletionFinder::find_synapses_on_neuron(const NeuronID neuron_id, const ElementType element_type, const SignalType signal_type, const unsigned int num_synapses_to_delete) {
     // Only do something if necessary
     if (0 == num_synapses_to_delete) {
@@ -276,13 +276,16 @@ std::vector<RankNeuronId> RandomSynapseDeletionFinder::find_synapses_on_neuron(c
 }
 
 CommunicationMap<SynapseDeletionRequest> InverseLengthSynapseDeletionFinder::find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) {
-    const auto& partners = find_partners_to_locate(synaptic_elements, to_delete);
-    const auto& requests = MPIWrapper::exchange_requests(partners);
+    auto partners = find_partners_to_locate(synaptic_elements, to_delete);
+    auto requests = MPIWrapper::exchange_requests(partners);
 
-    const auto& my_positions = extra_info->get_positions_for(requests);
-    const auto& responses = MPIWrapper::exchange_requests(my_positions);
+    auto my_positions = extra_info->get_positions_for(requests);
+    auto responses = MPIWrapper::exchange_requests(my_positions);
 
-    return find_synapses_to_delete(synaptic_elements, to_delete, partners, responses);
+    this->partners = std::move(partners);
+    this->positions = std::move(responses);
+
+    return SynapseDeletionFinder::find_synapses_to_delete(synaptic_elements, to_delete);
 }
 
 CommunicationMap<NeuronID> InverseLengthSynapseDeletionFinder::find_partners_to_locate(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) {
@@ -337,63 +340,7 @@ CommunicationMap<NeuronID> InverseLengthSynapseDeletionFinder::find_partners_to_
     return partners_to_locate;
 }
 
-CommunicationMap<SynapseDeletionRequest> InverseLengthSynapseDeletionFinder::find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete,
-    const CommunicationMap<NeuronID>& ids, const CommunicationMap<RelearnTypes::position_type>& positions) {
-    const auto& [sum_to_delete, number_deletions] = to_delete;
-
-    const auto number_ranks = MPIWrapper::get_num_ranks();
-
-    const auto size_hint = std::min(size_t(number_ranks), synaptic_elements->get_size());
-    CommunicationMap<SynapseDeletionRequest> deletion_requests(number_ranks, size_hint);
-
-    if (sum_to_delete == 0) {
-        return deletion_requests;
-    }
-
-    const auto number_neurons = extra_info->get_size();
-    const auto my_rank = MPIWrapper::get_my_rank();
-    const auto element_type = synaptic_elements->get_element_type();
-
-    for (const auto& neuron_id : NeuronID::range(number_neurons)) {
-        if (!extra_info->does_update_plasticity(neuron_id)) {
-            continue;
-        }
-
-        /**
-         * Create and delete synaptic elements as required.
-         * This function only deletes elements (bound and unbound), no synapses.
-         */
-        const auto local_neuron_id = neuron_id.get_neuron_id();
-        const auto num_synapses_to_delete = number_deletions[local_neuron_id];
-        if (num_synapses_to_delete == 0) {
-            continue;
-        }
-
-        const auto signal_type = synaptic_elements->get_signal_type(neuron_id);
-        const auto affected_neuron_ids = find_synapses_on_neuron(neuron_id, element_type, signal_type, num_synapses_to_delete, ids, positions);
-
-        for (const auto& [rank, other_neuron_id] : affected_neuron_ids) {
-            SynapseDeletionRequest psd(neuron_id, other_neuron_id, element_type, signal_type);
-            deletion_requests.append(rank, psd);
-
-            if (my_rank == rank) {
-                continue;
-            }
-
-            const auto weight = (SignalType::Excitatory == signal_type) ? -1 : 1;
-            if (ElementType::Axon == element_type) {
-                network_graph->add_synapse(PlasticDistantOutSynapse(RankNeuronId(rank, other_neuron_id), neuron_id, weight));
-            } else {
-                network_graph->add_synapse(PlasticDistantInSynapse(neuron_id, RankNeuronId(rank, other_neuron_id), weight));
-            }
-        }
-    }
-
-    return deletion_requests;
-}
-
-std::vector<RankNeuronId> InverseLengthSynapseDeletionFinder::find_synapses_on_neuron(const NeuronID neuron_id, const ElementType element_type, const SignalType signal_type, const unsigned int num_synapses_to_delete,
-    const CommunicationMap<NeuronID>& ids, const CommunicationMap<RelearnTypes::position_type>& positions) {
+std::vector<RankNeuronId> InverseLengthSynapseDeletionFinder::find_synapses_on_neuron(const NeuronID neuron_id, const ElementType element_type, const SignalType signal_type, const unsigned int num_synapses_to_delete) {
     if (0 == num_synapses_to_delete) {
         return {};
     }
@@ -406,13 +353,13 @@ std::vector<RankNeuronId> InverseLengthSynapseDeletionFinder::find_synapses_on_n
 
     const auto& my_position = extra_info->get_position(neuron_id);
 
-    auto get_probabilities = [&my_position, &ids, &positions](const std::vector<RankNeuronId>& others) -> std::vector<double> {
+    auto get_probabilities = [&my_position, this](const std::vector<RankNeuronId>& others) -> std::vector<double> {
         std::vector<double> probabilities{};
         probabilities.reserve(others.size());
 
-        std::transform(others.begin(), others.end(), std::back_inserter(probabilities), [&my_position, &ids, &positions](const RankNeuronId& rni) {
+        std::transform(others.begin(), others.end(), std::back_inserter(probabilities), [&my_position, this](const RankNeuronId& rni) {
             const auto& [other_rank, other_id] = rni;
-            const auto& relevant_ids = ids.get_requests(other_rank);
+            const auto& relevant_ids = partners.get_requests(other_rank);
 
             const auto pos = std::find(relevant_ids.begin(), relevant_ids.end(), other_id);
             RelearnException::check(pos != relevant_ids.end(), "InverseLengthSynapseDeletionFinder::find_synapses_on_neuron: Did not find the id {} in the CommunicationMap at rank {}", other_id, other_rank);
@@ -438,14 +385,12 @@ std::vector<RankNeuronId> InverseLengthSynapseDeletionFinder::find_synapses_on_n
     std::vector<RankNeuronId> affected_neurons{};
     affected_neurons.reserve(num_synapses_to_delete);
 
-    for (unsigned int i = 0; i < num_synapses_to_delete; i++) {
-        const auto& probabilities = get_probabilities(current_synapses);
+    auto probabilities = get_probabilities(current_synapses);
+    for (auto i = 0U; i < num_synapses_to_delete; i++) {
         const auto idx = ProbabilityPicker::pick_target(probabilities, RandomHolderKey::SynapseDeletionFinder);
 
         affected_neurons.emplace_back(current_synapses[idx]);
-
-        std::swap(current_synapses[idx], current_synapses[current_synapses.size() - 1]);
-        current_synapses.pop_back();
+        probabilities[idx] = 0.0;
     }
 
     return affected_neurons;
