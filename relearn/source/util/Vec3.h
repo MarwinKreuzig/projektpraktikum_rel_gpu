@@ -491,7 +491,14 @@ public:
         const auto is_in_y_range = lower.y <= y && y <= upper.y;
         const auto is_in_z_range = lower.z <= z && z <= upper.z;
 
-        const auto is_in_box = is_in_x_range && is_in_y_range && is_in_z_range;
+        const auto is_equal_x_lower = std::fabs(x - lower.x) <= std::numeric_limits<double>::epsilon();
+        const auto is_equal_x_upper = std::fabs(x - upper.x) <= std::numeric_limits<double>::epsilon();
+        const auto is_equal_y_lower = std::fabs(y - lower.y) <= std::numeric_limits<double>::epsilon();
+        const auto is_equal_y_upper = std::fabs(y - upper.y) <= std::numeric_limits<double>::epsilon();
+        const auto is_equal_z_lower = std::fabs(z - lower.z) <= std::numeric_limits<double>::epsilon();
+        const auto is_equal_z_upper = std::fabs(z - upper.z) <= std::numeric_limits<double>::epsilon();
+
+        const auto is_in_box = (is_in_x_range || is_equal_x_lower || is_equal_x_upper )&& ( is_in_y_range || is_equal_y_lower || is_equal_y_upper) && (is_in_z_range || is_equal_z_lower || is_equal_z_upper);
 
         return is_in_box;
     }
