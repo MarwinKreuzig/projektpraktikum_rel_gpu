@@ -24,6 +24,7 @@
 #include <iomanip>
 #include <sstream>
 #include <iostream>
+#include <iostream>
 
 std::vector<std::string> NeuronIO::read_comments(const std::filesystem::path& file_path) {
     std::ifstream file(file_path);
@@ -96,9 +97,9 @@ std::tuple<std::vector<LoadedNeuron>, std::vector<RelearnTypes::area_name>, Load
         RelearnException::check(pos_x >= 0, "NeuronIO::read_neurons: x position of neuron {} was negative: {}", id, pos_x);
         RelearnException::check(pos_y >= 0, "NeuronIO::read_neurons: y position of neuron {} was negative: {}", id, pos_y);
         RelearnException::check(pos_z >= 0, "NeuronIO::read_neurons: z position of neuron {} was negative: {}", id, pos_z);
+        RelearnException::check(id >= 1, "NeuronIO::read_neurons: neuron id is too small {}", id);
 
         id--;
-
         RelearnException::check(id == expected_id, "NeuronIO::read_neurons: Loaded neuron with id {} but expected: {}", id, expected_id);
 
         expected_id++;
