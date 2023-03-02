@@ -25,7 +25,8 @@ void NeuronModel::init(number_neurons_type number_neurons) {
     for (auto i = 0; i < number_fire_recorders; i++) {
         fired_recorder[i].resize(number_local_neurons, 0U);
     }
-    fire_history.resize(number_local_neurons, boost::circular_buffer<FiredStatus>{fire_history_length});
+    MPIWrapper::create_rma_window<std::bitset<fire_history_length>>(MPIWindow::FireHistory, number_local_neurons, MPIWrapper::get_num_ranks());
+    fire_history.resize(number_local_neurons);
 
     input_calculator->init(number_neurons);
     background_calculator->init(number_neurons);
@@ -42,7 +43,7 @@ void NeuronModel::create_neurons(number_neurons_type creation_count) {
     for (auto i = 0; i < number_fire_recorders; i++) {
         fired_recorder[i].resize(new_size, 0U);
     }
-    fire_history.resize(new_size, boost::circular_buffer<FiredStatus>{fire_history_length});
+    fire_history.resize(new_size);
 
 
     input_calculator->create_neurons(creation_count);

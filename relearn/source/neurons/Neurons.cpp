@@ -676,6 +676,8 @@ std::tuple<uint64_t, uint64_t, uint64_t> Neurons::update_connectivity() {
     RelearnException::check(global_tree != nullptr, "Global octree is nullptr");
     RelearnException::check(algorithm != nullptr, "Algorithm is nullptr");
 
+    neuron_model->publish_fire_history();
+
     debug_check_counts();
     network_graph_plastic->debug_check();
     const auto &[num_axons_deleted, num_dendrites_deleted] = delete_synapses();

@@ -163,10 +163,10 @@ public:
             double co_activation;
             if(element_type == ElementType::Axon) {
                 co_activation = calculate_co_activation(neuron_model->get_fire_history(neuron_id),
-                                        neuron_model->get_fire_history(rank_neuron_id.get_neuron_id()));
+                                        neuron_model->get_fire_history(rank_neuron_id));
             }
             else {
-                co_activation = calculate_co_activation(neuron_model->get_fire_history(rank_neuron_id.get_neuron_id()),
+                co_activation = calculate_co_activation(neuron_model->get_fire_history(rank_neuron_id),
                                                         neuron_model->get_fire_history(neuron_id));
             }
             for(auto i=0;i<std::abs(weight);i++) {
@@ -186,12 +186,12 @@ public:
         return affected_neurons;
     }
 private:
-    double calculate_co_activation(const boost::circular_buffer<FiredStatus>& pre_synaptic, const boost::circular_buffer<FiredStatus>& post_synaptic) {
+    double calculate_co_activation(const std::bitset<NeuronModel::fire_history_length>& pre_synaptic, const std::bitset<NeuronModel::fire_history_length>& post_synaptic) {
         RelearnException::check(pre_synaptic.size() == post_synaptic.size(), "SynapseDeletionFinder::calculate_co_activation: Fire histories have different sizes");
 
         auto intersection=0U;
         for(auto i=0;i<pre_synaptic.size();i++) {
-            if(FiredStatus::Fired == pre_synaptic[i] && pre_synaptic[i] == post_synaptic[i]) {
+            if(static_cast<bool>(FiredStatus::Fired) == pre_synaptic[i] && pre_synaptic[i] == post_synaptic[i]) {
                 intersection++;
             }
         }
