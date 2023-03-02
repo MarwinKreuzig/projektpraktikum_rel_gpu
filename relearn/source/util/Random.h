@@ -22,6 +22,7 @@
 
 #include <array>
 #include <random>
+#include <vector>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -85,6 +86,31 @@ public:
         uniform_int_distribution<integer_type> uid(lower_inclusive, upper_inclusive);
         auto& generator = get_generator(key);
         return uid(generator);
+    }
+
+    /**
+     * @brief Returns the desired number of indices from a total number of elements, drawn uniformly.
+     * @param key The type whose RNG shall be used
+     * @param number_indices The number of indices, must be <= number_elements
+     * @param number_elements The total number of elements
+     * @exception Throws a RelearnException if number_indices > number_elements
+     * @return The vector of indices in no particular order
+     */
+    static std::vector<size_t> get_random_uniform_indices(const RandomHolderKey key, const size_t number_indices, const size_t number_elements) {
+        RelearnException::check(number_indices <= number_elements, "RandomHolder::get_uniform_indices: Cannot get more indices than elements");
+
+        std::vector<size_t> drawn_indices(number_indices);
+
+        for (auto i = size_t(0); i < number_indices; i++) {
+            auto random_number = get_random_uniform_integer(key, size_t(0), number_elements - 1);
+            while (std::ranges::find(drawn_indices, random_number) != drawn_indices.end()) {
+                random_number = get_random_uniform_integer(key, size_t(0), number_elements - 1);
+            }
+
+            drawn_indices.emplace_back(random_number);
+        }
+
+        return drawn_indices;
     }
 
     /**

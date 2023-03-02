@@ -261,22 +261,9 @@ std::vector<RankNeuronId> RandomSynapseDeletionFinder::find_synapses_on_neuron(c
     const auto& current_synapses = register_synapses(neuron_id, element_type, signal_type);
     const auto number_synapses = current_synapses.size();
 
-    RelearnException::check(num_synapses_to_delete <= number_synapses,
-        "RandomSynapseDeletionFinder::find_synapses_on_neuron:: num_synapses_to_delete > current_synapses.size()");
+    RelearnException::check(num_synapses_to_delete <= number_synapses, "RandomSynapseDeletionFinder::find_synapses_on_neuron:: num_synapses_to_delete > current_synapses.size()");
 
-    std::vector<size_t> drawn_indices{};
-    drawn_indices.reserve(num_synapses_to_delete);
-
-    for (auto i = 0U; i < num_synapses_to_delete; i++) {
-        auto random_number = RandomHolder::get_random_uniform_integer(RandomHolderKey::SynapseDeletionFinder, size_t(0),
-            number_synapses - 1);
-        while (std::ranges::find(drawn_indices, random_number) != drawn_indices.end()) {
-            random_number = RandomHolder::get_random_uniform_integer(RandomHolderKey::SynapseDeletionFinder, size_t(0),
-                number_synapses - 1);
-        }
-
-        drawn_indices.emplace_back(random_number);
-    }
+    const auto& drawn_indices = RandomHolder::get_random_uniform_indices(RandomHolderKey::SynapseDeletionFinder, num_synapses_to_delete, number_synapses);
 
     std::vector<RankNeuronId> affected_neurons{};
     affected_neurons.reserve(num_synapses_to_delete);
@@ -292,7 +279,7 @@ CommunicationMap<SynapseDeletionRequest> InverseLengthSynapseDeletionFinder::fin
     const auto& partners = find_partners_to_locate(synaptic_elements, to_delete);
     const auto& requests = MPIWrapper::exchange_requests(partners);
 
-    const auto& my_positions = find_local_locations(requests);
+    const auto& my_positions = extra_info->get_positions_for(requests);
     const auto& responses = MPIWrapper::exchange_requests(my_positions);
 
     return find_synapses_to_delete(synaptic_elements, to_delete, partners, responses);
@@ -348,29 +335,6 @@ CommunicationMap<NeuronID> InverseLengthSynapseDeletionFinder::find_partners_to_
     }
 
     return partners_to_locate;
-}
-
-CommunicationMap<RelearnTypes::position_type> InverseLengthSynapseDeletionFinder::find_local_locations(const CommunicationMap<NeuronID>& local_neurons) {
-    const auto number_ranks = local_neurons.get_number_ranks();
-    const auto size_hint = local_neurons.size();
-
-    CommunicationMap<RelearnTypes::position_type> positions(number_ranks, size_hint);
-
-    if (local_neurons.empty()) {
-        return positions;
-    }
-
-    positions.resize(local_neurons.get_request_sizes());
-
-    for (const auto& [source_rank, requests] : local_neurons) {
-        for (auto i = 0; i < requests.size(); i++) {
-            const auto neuron_id = requests[i];
-            const auto& position = extra_info->get_position(neuron_id);
-            positions.set_request(source_rank, i, position);
-        }
-    }
-
-    return positions;
 }
 
 CommunicationMap<SynapseDeletionRequest> InverseLengthSynapseDeletionFinder::find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete,

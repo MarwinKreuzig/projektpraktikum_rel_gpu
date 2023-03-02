@@ -46,3 +46,26 @@ void NeuronsExtraInfo::create_neurons(const number_neurons_type creation_count) 
 
     size = new_size;
 }
+
+CommunicationMap<RelearnTypes::position_type> NeuronsExtraInfo::get_positions_for(const CommunicationMap<NeuronID>& local_neurons) {
+    const auto number_ranks = local_neurons.get_number_ranks();
+    const auto size_hint = local_neurons.size();
+
+    CommunicationMap<RelearnTypes::position_type> positions(number_ranks, size_hint);
+
+    if (local_neurons.empty()) {
+        return positions;
+    }
+
+    positions.resize(local_neurons.get_request_sizes());
+
+    for (const auto& [source_rank, requests] : local_neurons) {
+        for (auto i = 0; i < requests.size(); i++) {
+            const auto neuron_id = requests[i];
+            const auto& position = get_position(neuron_id);
+            positions.set_request(source_rank, i, position);
+        }
+    }
+
+    return positions;
+}

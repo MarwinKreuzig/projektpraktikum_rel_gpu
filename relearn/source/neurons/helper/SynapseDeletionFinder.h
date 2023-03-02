@@ -169,8 +169,6 @@ protected:
 private:
     [[nodiscard]] CommunicationMap<NeuronID> find_partners_to_locate(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete);
 
-    [[nodiscard]] CommunicationMap<RelearnTypes::position_type> find_local_locations(const CommunicationMap<NeuronID>& local_neurons);
-
     [[nodiscard]] CommunicationMap<SynapseDeletionRequest> find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete,
         const CommunicationMap<NeuronID>& ids, const CommunicationMap<RelearnTypes::position_type>& positions);
 

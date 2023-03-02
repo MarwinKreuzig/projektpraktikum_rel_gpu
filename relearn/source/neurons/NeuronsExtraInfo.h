@@ -11,6 +11,7 @@
  */
 
 #include "Types.h"
+#include "mpi/CommunicationMap.h"
 #include "neurons/enums/UpdateStatus.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
@@ -171,6 +172,13 @@ public:
     [[nodiscard]] number_neurons_type get_size() const noexcept {
         return size;
     }
+
+    /**
+     * @brief Translates a collection of local neuron ids to their positions
+     * @param local_neurons The local neuron ids
+     * @return The position of the local neurons, has the same size as the argument
+     */
+    [[nodiscard]] CommunicationMap<RelearnTypes::position_type> get_positions_for(const CommunicationMap<NeuronID>& local_neurons);
 
 private:
     number_neurons_type size{ 0 };
