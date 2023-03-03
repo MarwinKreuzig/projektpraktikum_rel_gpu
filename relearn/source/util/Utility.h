@@ -12,11 +12,14 @@
 
 #include "neurons/enums/UpdateStatus.h"
 #include "util/RelearnException.h"
+#include "util/StringUtil.h"
 
+#include <filesystem>
 #include <functional>
 #include <span>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 
 namespace Util {
 
@@ -143,6 +146,40 @@ static bool transform_contains(const std::vector<T>& container, const U& element
         }
     }
     return false;
+}
+
+template <typename T>
+static void stack_vectors(std::vector<std::vector<T>>& first, const std::vector<std::vector<T>>& second) {
+    RelearnException::check(first.size() == second.size(), "StringUtil::stack_vectors: Cannot stack vectors with different size {} != {} ", first.size(), second.size());
+
+    for (size_t i = 0; i < first.size(); i++) {
+        first[i].insert(first[i].end(), second[i].begin(), second[i].end());
+    }
+}
+
+/**
+ * @brief Looks for a given file in a directory. Path: directory / prefix rank suffix. Tries different formats for the rank.
+ * @param directory The directory where it looks for the file
+ * @param rank The mpi rank
+ * @param prefix Filename part before the mpi rank
+ * @param suffix Filename after the mpi rank
+ * @param max_digits Max width of the string which represents the rank
+ * @return The file path for the found file
+ * @throws RelearnException When no file was found
+ */
+static std::filesystem::path find_file_for_rank(const std::filesystem::path& directory, const int rank,
+    const std::string& prefix, const std::string& suffix, const unsigned int max_digits) {
+    std::filesystem::path path_to_file{};
+
+    for (auto nr_digits = 1U; nr_digits < max_digits; nr_digits++) {
+        const auto my_position_filename = prefix + StringUtil::format_int_with_leading_zeros(rank, nr_digits) + suffix;
+        path_to_file = directory / my_position_filename;
+        if (std::filesystem::exists(path_to_file)) {
+            return path_to_file;
+        }
+    }
+
+    RelearnException::fail("StringUtil::find_file_for_rank: No file found for {}{}{}", prefix, rank, suffix);
 }
 
 } // namespace Util

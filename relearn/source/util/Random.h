@@ -77,7 +77,7 @@ public:
      * @param lower_inclusive The lower inclusive bound for the random integer
      * @param upper_inclusive The upper inclusive bound for the random integer
      * @exception Throws a RelearnException if lower_inclusive > upper_inclusive
-     * @return A uniformly integer double in [lower_inclusive, upper_inclusive)
+     * @return A uniformly integer double in [lower_inclusive, upper_inclusive]
      */
     template <typename integer_type>
     static integer_type get_random_uniform_integer(const RandomHolderKey key, const integer_type lower_inclusive, const integer_type upper_inclusive) {
@@ -99,7 +99,8 @@ public:
     static std::vector<size_t> get_random_uniform_indices(const RandomHolderKey key, const size_t number_indices, const size_t number_elements) {
         RelearnException::check(number_indices <= number_elements, "RandomHolder::get_uniform_indices: Cannot get more indices than elements");
 
-        std::vector<size_t> drawn_indices(number_indices);
+        std::vector<size_t> drawn_indices{};
+        drawn_indices.reserve(number_indices);
 
         for (auto i = size_t(0); i < number_indices; i++) {
             auto random_number = get_random_uniform_integer(key, size_t(0), number_elements - 1);
@@ -164,7 +165,7 @@ public:
         uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
         auto& generator = get_generator(key);
 
-        for (auto it = begin; it != end; it++) {
+        for (auto it = begin; it != end; ++it) {
             *it = urd(generator);
         }
     }

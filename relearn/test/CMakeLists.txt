@@ -111,10 +111,16 @@ target_sources(
 		  parser/test_step_parser.cpp
 
 		  partition/test_partition.cpp
+		  
+		  random/test_random.cpp
 
 		  space_filling_curve/test_space_filling_curve.cpp
 
+		  stack/test_stack.cpp
+
 		  stimulus/test_stimulus.cpp
+		  
+		  string_util/test_string_util.cpp
 
 		  synaptic_elements/test_synaptic_elements.cpp
 

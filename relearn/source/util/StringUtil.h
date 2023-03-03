@@ -14,7 +14,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <filesystem>
 #include <iomanip>
 #include <sstream>
 #include <string>
@@ -27,7 +26,8 @@
 class StringUtil {
 public:
     /**
-     * @brief Split a string based on a delimiter character in a list of substrings
+     * @brief Split a string based on a delimiter character in a list of substrings.
+     *      Empty strings within two delimiters are or at the beginning kept while one at the end is discarded
      * @param string The string to split
      * @param delim Single char used as delimiter
      * @return Vector of substrings
@@ -56,9 +56,10 @@ public:
     }
 
     /**
-     * Converts an integer to a string with leading zeros
+     * Converts an integer to a string with leading zeros, having at least the number of specified digits
      * @param number The number will be converted to a string
      * @param nr_of_digits Number of digits including the leading zeros
+     * @exception Throws a RelearnException if nr_of_digits == 0
      * @return string with the number and leading zeros if necessary
      */
     static std::string format_int_with_leading_zeros(const int number, const unsigned int nr_of_digits) {
@@ -66,39 +67,5 @@ public:
         std::stringstream ss{};
         ss << std::setw(nr_of_digits) << std::setfill('0') << number;
         return ss.str();
-    }
-
-    template <typename T>
-    static void stack_vectors(std::vector<std::vector<T>>& first, const std::vector<std::vector<T>>& second) {
-        RelearnException::check(first.size() == second.size(), "StringUtil::stack_vectors: Cannot stack vectors with different size {} != {} ", first.size(), second.size());
-
-        for (size_t i = 0; i < first.size(); i++) {
-            first[i].insert(first[i].end(), second[i].begin(), second[i].end());
-        }
-    }
-
-    /**
-     * @brief Looks for a given file in a directory. Path: directory / prefix rank suffix. Tries different formats for the rank.
-     * @param directory The directory where it looks for the file
-     * @param rank The mpi rank
-     * @param prefix Filename part before the mpi rank
-     * @param suffix Filename after the mpi rank
-     * @param max_digits Max width of the string which represents the rank
-     * @return The file path for the found file
-     * @throws RelearnException When no file was found
-     */
-    static std::filesystem::path find_file_for_rank(const std::filesystem::path& directory, const int rank,
-        const std::string& prefix, const std::string& suffix, const unsigned int max_digits) {
-        std::filesystem::path path_to_file{};
-
-        for (auto nr_digits = 1U; nr_digits < max_digits; nr_digits++) {
-            const auto my_position_filename = prefix + StringUtil::format_int_with_leading_zeros(rank, nr_digits) + suffix;
-            path_to_file = directory / my_position_filename;
-            if (std::filesystem::exists(path_to_file)) {
-                return path_to_file;
-            }
-        }
-
-        RelearnException::fail("StringUtil::find_file_for_rank: No file found for {}{}{}", prefix, rank, suffix);
     }
 };
