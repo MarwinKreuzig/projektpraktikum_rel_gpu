@@ -133,14 +133,15 @@ void Timers::print(const std::unique_ptr<Essentials>& essentials) {
     print_timer("      Calculate target calcium                 : ", TimerRegion::UPDATE_TARGET_CALCIUM);
     print_timer("    Update #synaptic elements delta            : ", TimerRegion::UPDATE_SYNAPTIC_ELEMENTS_DELTA);
     print_timer("    Connectivity update                        : ", TimerRegion::UPDATE_CONNECTIVITY);
+    print_timer("      Update fire history                      : ", TimerRegion::UPDATE_FIRE_HISTORY);
     print_timer("      Delete synapses                          : ", TimerRegion::UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES);
     print_timer("        Commit #synaptic elements              : ", TimerRegion::COMMIT_NUM_SYNAPTIC_ELEMENTS);
     print_timer("        Find synapses to delete                : ", TimerRegion::FIND_SYNAPSES_TO_DELETE);
-    print_timer("        Exchange deletions (w/ all to all)       : ", TimerRegion::DELETE_SYNAPSES_ALL_TO_ALL);
+    print_timer("        Exchange deletions (w/ all to all)     : ", TimerRegion::DELETE_SYNAPSES_ALL_TO_ALL);
     print_timer("        Process deletion requests              : ", TimerRegion::PROCESS_DELETE_REQUESTS);
     print_timer("      Update leaf nodes                        : ", TimerRegion::UPDATE_LEAF_NODES);
     print_timer("      Update local trees                       : ", TimerRegion::UPDATE_LOCAL_TREES);
-    print_timer("      Exchange branch nodes (w/ All-gather)     : ", TimerRegion::EXCHANGE_BRANCH_NODES);
+    print_timer("      Exchange branch nodes (w/ All-gather)    : ", TimerRegion::EXCHANGE_BRANCH_NODES);
     print_timer("      Insert branch nodes into global tree     : ", TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
     print_timer("      Update global tree                       : ", TimerRegion::UPDATE_GLOBAL_TREE);
     print_timer("      Find target neurons (w/ RMA)             : ", TimerRegion::FIND_TARGET_NEURONS);
@@ -155,6 +156,12 @@ void Timers::print(const std::unique_ptr<Essentials>& essentials) {
     print_timer("      Add synapses in local network graphs     : ", TimerRegion::ADD_SYNAPSES_TO_NETWORK_GRAPH);
     print_timer("    Capture neuron monitors                    : ", TimerRegion::CAPTURE_MONITORS);
     print_timer("    Capture area monitors                      : ", TimerRegion::CAPTURE_AREA_MONITORS);
+    print_timer("      Prepare                                  : ", TimerRegion::AREA_MONITORS_PREPARE);
+    print_timer("      Request                                  : ", TimerRegion::AREA_MONITORS_REQUEST);
+    print_timer("      Exchange                                 : ", TimerRegion::AREA_MONITORS_EXCHANGE);
+    print_timer("      Record                                   : ", TimerRegion::AREA_MONITORS_RECORD_DATA);
+    print_timer("      Finish                                   : ", TimerRegion::AREA_MONITORS_FINISH);
+
     print_timer("    Print IO                                   : ", TimerRegion::PRINT_IO);
 
     sstring << "\n\n";

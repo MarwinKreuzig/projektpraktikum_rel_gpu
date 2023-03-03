@@ -55,20 +55,13 @@ public:
      */
     AreaMonitor(Simulation* simulation, std::shared_ptr<GlobalAreaMapper> global_area_mapper, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name, int my_rank, std::filesystem::path& path);
 
-    /**
-     * If a connected neuron is managed by another mpi rank. This area monitor cannot notify the other area about the connection to this area.
-     * Hence, it creates a vector with information for each mpi rank that shall be sent to the other mpi ranks
-     * @return Index i of the returned vector contains the information which shall be sent to mpi rank i. Each rank receives a vector of AreaConnections
-     */
-    [[nodiscard]] const std::vector<std::vector<AreaConnection>>& get_exchange_data() const;
-
     void request_data(const NeuronID& neuron_id)  const ;
 
     /**
      * Add an ingoing connection to the area. This method shall be called by other area monitors with ingoing connections to this area
      * @param connection Connection whose source is this area
      */
-    void add_outgoing_connection(const AreaConnection& connection);
+    void add_ingoing_connection(const AreaConnection& connection);
 
     /**
      * Prepares the monitor for a new logging step. Call this method before each logging step.
@@ -155,7 +148,6 @@ private:
      */
     std::vector<std::tuple<EnsembleConnections, EnsembleDeletions, double, double, double, double, double, double, double, double, size_t>> data;
 
-    std::vector<std::vector<AreaConnection>> mpi_data{};
     std::shared_ptr<GlobalAreaMapper> global_area_mapper{};
     void write_header();
 };

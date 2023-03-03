@@ -44,6 +44,8 @@ enum class TimerRegion : unsigned int {
 
     UPDATE_CONNECTIVITY,
 
+    UPDATE_FIRE_HISTORY,
+
     UPDATE_NUM_SYNAPTIC_ELEMENTS_AND_DELETE_SYNAPSES,
     COMMIT_NUM_SYNAPTIC_ELEMENTS,
     FIND_SYNAPSES_TO_DELETE,
@@ -71,14 +73,21 @@ enum class TimerRegion : unsigned int {
     ADD_SYNAPSES_TO_NETWORK_GRAPH,
 
     CAPTURE_MONITORS,
+
     CAPTURE_AREA_MONITORS,
+    AREA_MONITORS_PREPARE,
+    AREA_MONITORS_REQUEST,
+    AREA_MONITORS_EXCHANGE,
+    AREA_MONITORS_RECORD_DATA,
+    AREA_MONITORS_FINISH,
+
     PRINT_IO,
 };
 
 /**
  * This number is used as a shortcut to count the number of values valid for TimerRegion
  */
-constexpr size_t NUMBER_TIMERS = 38;
+constexpr size_t NUMBER_TIMERS = 44;
 
 /**
  * This class is used to collect all sorts of different timers (see TimerRegion).

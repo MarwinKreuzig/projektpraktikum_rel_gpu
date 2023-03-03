@@ -313,9 +313,13 @@ void Simulation::simulate(const step_type number_steps) {
         if (interval_area_monitor.hits_step(step)) {
             Timers::start(TimerRegion::CAPTURE_AREA_MONITORS);
 
+            Timers::start(TimerRegion::AREA_MONITORS_PREPARE);
             for (auto& [_, area_monitor] : *area_monitors) {
                 area_monitor.prepare_recording();
             }
+
+            Timers::stop_and_add(TimerRegion::AREA_MONITORS_PREPARE);
+            Timers::start(TimerRegion::AREA_MONITORS_REQUEST);
 
             for (const NeuronID &neuron_id : NeuronID::range(neurons->get_number_neurons())) {
                 if(neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
@@ -329,7 +333,13 @@ void Simulation::simulate(const step_type number_steps) {
                     area_monitor.request_data(neuron_id);
             }
 
+            Timers::stop_and_add(TimerRegion::AREA_MONITORS_REQUEST);
+            Timers::start(TimerRegion::AREA_MONITORS_EXCHANGE);
+
             global_area_mapper->exchange_requests();
+
+            Timers::stop_and_add(TimerRegion::AREA_MONITORS_EXCHANGE);
+            Timers::start(TimerRegion::AREA_MONITORS_RECORD_DATA);
 
             for (NeuronID neuron_id : NeuronID::range(neurons->get_number_neurons())) {
                 if(neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
@@ -343,28 +353,13 @@ void Simulation::simulate(const step_type number_steps) {
                 area_monitor.record_data(NeuronID(neuron_id));
             }
 
-            std::vector<std::vector<AreaMonitor::AreaConnection>> all_exchange_data(MPIWrapper::get_num_ranks());
-            for (auto& [_, area_monitor] : *area_monitors) {
-                const auto& exchange_data_single = area_monitor.get_exchange_data();
-                StringUtil::stack_vectors<AreaMonitor::AreaConnection>(all_exchange_data, exchange_data_single);
-            }
-
-            const auto& received_data = MPIWrapper::exchange_values<AreaMonitor::AreaConnection>(all_exchange_data);
-            RelearnException::check(received_data.size() == MPIWrapper::get_num_ranks(), "Simulation::simulate: MPI Communication for area monitor failed {} != {}", received_data.size() != MPIWrapper::get_num_ranks());
-            for (int rank = 0; rank < received_data.size(); rank++) {
-                const auto& received_data_single = received_data[rank];
-                if (MPIRank(rank) == my_rank) {
-                    RelearnException::check(received_data_single.empty(), "Simulation::simulate: Send MPI {} messages to myself", received_data_single.size());
-                }
-                for (const AreaMonitor::AreaConnection& connection : received_data_single) {
-                    const auto& area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(connection.to_local_neuron_id.get_neuron_id());
-                    area_monitors->at(area_id).add_outgoing_connection(connection);
-                }
-            }
+            Timers::stop_and_add(TimerRegion::AREA_MONITORS_RECORD_DATA);
+            Timers::start(TimerRegion::AREA_MONITORS_FINISH);
 
             for (auto& [_, area_monitor] : *area_monitors) {
                 area_monitor.finish_recording();
             }
+            Timers::stop_and_add(TimerRegion::AREA_MONITORS_FINISH);
 
             neurons->get_neuron_model()->reset_fired_recorder(NeuronModel::FireRecorderPeriod::AreaMonitor);
             neurons->reset_deletion_log();

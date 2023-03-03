@@ -274,8 +274,11 @@ public:
         if(!fire_history_enabled) {
             return;
         }
+        Timers::start(TimerRegion::UPDATE_FIRE_HISTORY);
 
         MPIWrapper::set_in_window(MPIWindow::FireHistory, 0, fire_history);
+
+        Timers::stop_and_add(TimerRegion::UPDATE_FIRE_HISTORY);
     }
 
     /**

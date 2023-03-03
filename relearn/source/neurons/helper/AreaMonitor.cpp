@@ -37,18 +37,18 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
         // Other area is on the same rank. Notify the responsible area monitor directly
         const auto other_area_id = sim->get_neurons()->get_local_area_translator()->get_area_id_for_neuron_id(
                 other_neuron_id.get_neuron_id());
-        AreaMonitor &other_area_monitor = sim->get_area_monitors()->at(other_area_id);
+
         const auto signal_type = weight > 0 ? SignalType::Excitatory : SignalType::Inhibitory;
-        other_area_monitor.add_outgoing_connection({my_rank, area_id, other_neuron_id, signal_type});
+        add_ingoing_connection({my_rank,other_area_id, neuron_id, signal_type});
     }
     for (const auto &[rank_neuron_id, weight]: distant_in_edges) {
         // Other area is on different mpi rank. Save connection for communication over mpi
         const NeuronID other_neuron_id = rank_neuron_id.get_neuron_id();
-        const SignalType signal_type = (weight > 0) ? SignalType::Excitatory : SignalType::Inhibitory;
-        RelearnException::check(mpi_data.size() == MPIWrapper::get_num_ranks(),
-                                "AreaMonitor::record_data: mpi_data has wrong size {} != {}", mpi_data.size(),
-                                MPIWrapper::get_num_ranks());
-        mpi_data[rank_neuron_id.get_rank().get_rank()].emplace_back(my_rank, area_id, other_neuron_id, signal_type);
+        const auto& other_rank = rank_neuron_id.get_rank().get_rank();
+        const auto other_area_id = global_area_mapper->get_area_id(rank_neuron_id);
+
+        const auto signal_type = weight > 0 ? SignalType::Excitatory : SignalType::Inhibitory;
+        add_ingoing_connection({other_rank,other_area_id, neuron_id, signal_type});
     }
 
     //Deletions
@@ -95,19 +95,13 @@ void AreaMonitor::prepare_recording() {
     calcium = 0;
     fired_fraction = 0;
     num_enabled_neurons = 0;
-    mpi_data.clear();
     const auto num_areas = sim->get_neurons()->get_local_area_translator()->get_number_of_areas();
-    mpi_data.resize(MPIWrapper::get_num_ranks());
-    for(auto& d: mpi_data) {
-        d.reserve(num_areas);
-    }
 }
 
 void AreaMonitor::finish_recording() {
     data.emplace_back(connections, deletions, axons_grown, static_cast<double>(axons_conn), den_ex_grown,
                       static_cast<double>(den_ex_conn), den_inh_grown, static_cast<double>(den_inh_conn), calcium,
                       fired_fraction, num_enabled_neurons);
-    mpi_data.clear();
 }
 
 void AreaMonitor::write_header() {
@@ -182,19 +176,20 @@ void AreaMonitor::write_data_to_file() {
     //Timers::stop_and_add();
 }
 
-const std::vector<std::vector<AreaMonitor::AreaConnection>> &AreaMonitor::get_exchange_data() const {
-    return mpi_data;
-}
-
 void AreaMonitor::request_data(const NeuronID& neuron_id) const {
     //Deletions
     const auto& deletions = sim->get_neurons()->deletions_log[neuron_id.get_neuron_id()];
     for(const auto& other_neuron_id : deletions) {
         global_area_mapper->request_area_id(other_neuron_id);
     }
+
+    const auto &distant_in_edges = sim->get_network_graph()->get_distant_in_edges(neuron_id);
+    for (const auto &[rank_neuron_id, weight]: distant_in_edges) {
+        global_area_mapper->request_area_id(rank_neuron_id);
+    }
 }
 
-void AreaMonitor::add_outgoing_connection(const AreaMonitor::AreaConnection &connection) {
+void AreaMonitor::add_ingoing_connection(const AreaMonitor::AreaConnection &connection) {
     auto pair = std::make_pair(connection.from_rank, connection.from_area);
     if (connections.contains(pair)) {
         auto &conn = connections[pair];
