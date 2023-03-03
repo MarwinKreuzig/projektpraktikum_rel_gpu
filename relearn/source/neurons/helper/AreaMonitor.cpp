@@ -20,18 +20,19 @@
 #include <fstream>
 #include <set>
 #include <tuple>
+#include <utility>
 
 AreaMonitor::AreaMonitor(Simulation *simulation, std::shared_ptr<GlobalAreaMapper> global_area_mapper, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name,
                          int my_rank, std::filesystem::path &path)
-        : sim(simulation), area_id(area_id), area_name(std::move(area_name)), my_rank(my_rank), path(std::move(path)), global_area_mapper(global_area_mapper) {
+        : sim(simulation), area_id(area_id), area_name(std::move(area_name)), my_rank(my_rank), path(std::move(path)), global_area_mapper(std::move(global_area_mapper)) {
     write_header();
 }
 
 void AreaMonitor::record_data(NeuronID neuron_id) {
     // Notify the areas of the ingoing connections of this area about the connections
     // We only store the outgoing connections for the notified area to reduce the need of memory and mpi communication
+    Timers::start(TimerRegion::AREA_MONITORS_LOCAL_EDGES);
     const auto &local_in_edges = sim->get_network_graph()->get_local_in_edges(neuron_id);
-    const auto &distant_in_edges = sim->get_network_graph()->get_distant_in_edges(neuron_id);
 
     for (const auto &[other_neuron_id, weight]: local_in_edges) {
         // Other area is on the same rank. Notify the responsible area monitor directly
@@ -41,15 +42,22 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
         const auto signal_type = weight > 0 ? SignalType::Excitatory : SignalType::Inhibitory;
         add_ingoing_connection({my_rank,other_area_id, neuron_id, signal_type});
     }
+
+    Timers::stop_and_add(TimerRegion::AREA_MONITORS_LOCAL_EDGES);
+    Timers::start(TimerRegion::AREA_MONITORS_DISTANT_EDGES);
+
+    const auto &distant_in_edges = sim->get_network_graph()->get_distant_in_edges(neuron_id);
     for (const auto &[rank_neuron_id, weight]: distant_in_edges) {
         // Other area is on different mpi rank. Save connection for communication over mpi
-        const NeuronID other_neuron_id = rank_neuron_id.get_neuron_id();
         const auto& other_rank = rank_neuron_id.get_rank().get_rank();
         const auto other_area_id = global_area_mapper->get_area_id(rank_neuron_id);
 
         const auto signal_type = weight > 0 ? SignalType::Excitatory : SignalType::Inhibitory;
         add_ingoing_connection({other_rank,other_area_id, neuron_id, signal_type});
     }
+
+    Timers::stop_and_add(TimerRegion::AREA_MONITORS_DISTANT_EDGES);
+    Timers::start(TimerRegion::AREA_MONITORS_DELETIONS);
 
     //Deletions
     const auto& deletions_in_step = sim->get_neurons()->deletions_log[neuron_id.get_neuron_id()];
@@ -66,6 +74,8 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
         }
     }
 
+    Timers::stop_and_add(TimerRegion::AREA_MONITORS_DELETIONS);
+    Timers::start(TimerRegion::AREA_MONITORS_STATISTICS);
 
     // Store statistics
     axons_grown += sim->get_neurons()->get_axons().get_grown_elements(neuron_id);
@@ -81,6 +91,8 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
             static_cast<double>(sim->get_neurons()->get_neuron_model()->fired_recorder[NeuronModel::FireRecorderPeriod::AreaMonitor][neuron_id.get_neuron_id()]) /
             static_cast<double>(Config::area_monitor_log_step);
     num_enabled_neurons++;
+
+    Timers::stop_and_add(TimerRegion::AREA_MONITORS_STATISTICS);
 }
 
 void AreaMonitor::prepare_recording() {

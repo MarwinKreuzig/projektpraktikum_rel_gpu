@@ -79,6 +79,10 @@ enum class TimerRegion : unsigned int {
     AREA_MONITORS_REQUEST,
     AREA_MONITORS_EXCHANGE,
     AREA_MONITORS_RECORD_DATA,
+    AREA_MONITORS_LOCAL_EDGES,
+    AREA_MONITORS_DISTANT_EDGES,
+    AREA_MONITORS_DELETIONS,
+    AREA_MONITORS_STATISTICS,
     AREA_MONITORS_FINISH,
 
     PRINT_IO,
@@ -87,7 +91,7 @@ enum class TimerRegion : unsigned int {
 /**
  * This number is used as a shortcut to count the number of values valid for TimerRegion
  */
-constexpr size_t NUMBER_TIMERS = 44;
+constexpr size_t NUMBER_TIMERS = 48;
 
 /**
  * This class is used to collect all sorts of different timers (see TimerRegion).

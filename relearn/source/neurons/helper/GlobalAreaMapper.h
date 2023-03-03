@@ -36,7 +36,7 @@ public:
      * @param rni The neuron whose area id we want to know
      */
     void request_area_id(const RankNeuronId& rni) {
-        if(my_rank == rni.get_rank()) {
+        if(my_rank == rni.get_rank() || known_mappings.contains(rni)) {
             return;
         }
         next_request[rni.get_rank().get_rank()].emplace_back(rni.get_neuron_id().get_neuron_id());
@@ -51,19 +51,13 @@ public:
         if(rni.get_rank() == my_rank) {
             return local_area_translator->get_area_id_for_neuron_id(rni.get_neuron_id().get_neuron_id());
         }
-        const auto& rank = rni.get_rank().get_rank();
-        auto it = std::find(requested_mapping[rank].begin(), requested_mapping[rank].end(), rni.get_neuron_id());
-        RelearnException::check(it!=requested_mapping[rank].end(), "G");
-        const auto index = it - requested_mapping[rank].begin();
-        return received_mapping[rank][index];
+        return known_mappings[rni];
     }
 
     /**
      * Start communication with other mpi ranks and exchange requested area ids
      */
     void exchange_requests() {
-        received_mapping.clear();
-        received_mapping.resize(MPIWrapper::get_num_ranks(), {});
         send_requests();
         requested_mapping = next_request;
         next_request.clear();
@@ -72,12 +66,14 @@ public:
 
 private:
     std::shared_ptr<LocalAreaTranslator> local_area_translator{};
-    std::vector<std::vector<RelearnTypes::area_id>> received_mapping{};
+    std::unordered_map<RankNeuronId, RelearnTypes::area_id> known_mappings{};
     std::vector<std::vector<NeuronID>> requested_mapping{};
     std::vector<std::vector<NeuronID>> next_request{};
 
     int num_ranks;
     MPIRank my_rank;
+
+    static constexpr auto max_size_map = 100000;
 
     void send_requests() {
         const auto& received_requested_data = MPIWrapper::exchange_values<NeuronID>(next_request);
@@ -98,6 +94,17 @@ private:
     }
 
     void parse_answer(const std::vector<std::vector<RelearnTypes::area_id>>& answer) {
-        received_mapping = answer;
+        if(known_mappings.size() > max_size_map) {
+            known_mappings.clear();
+        }
+
+        for(auto rank = 0; rank < answer.size();rank++) {
+            for(auto i = 0; i< answer[rank].size();i++) {
+                auto area_id = answer[rank][i];
+                auto neuron_id = requested_mapping[rank][i];
+                const RankNeuronId rank_neuron_id{MPIRank{rank}, NeuronID {neuron_id}};
+                known_mappings.insert(std::make_pair(rank_neuron_id, area_id));
+            }
+        }
     }
 };

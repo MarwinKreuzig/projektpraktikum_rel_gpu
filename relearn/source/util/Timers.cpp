@@ -160,6 +160,10 @@ void Timers::print(const std::unique_ptr<Essentials>& essentials) {
     print_timer("      Request                                  : ", TimerRegion::AREA_MONITORS_REQUEST);
     print_timer("      Exchange                                 : ", TimerRegion::AREA_MONITORS_EXCHANGE);
     print_timer("      Record                                   : ", TimerRegion::AREA_MONITORS_RECORD_DATA);
+    print_timer("        Local edges                            : ", TimerRegion::AREA_MONITORS_LOCAL_EDGES);
+    print_timer("        Distant edges                          : ", TimerRegion::AREA_MONITORS_DISTANT_EDGES);
+    print_timer("        Deletions                              : ", TimerRegion::AREA_MONITORS_DELETIONS);
+    print_timer("        Statistics                             : ", TimerRegion::AREA_MONITORS_STATISTICS);
     print_timer("      Finish                                   : ", TimerRegion::AREA_MONITORS_FINISH);
 
     print_timer("    Print IO                                   : ", TimerRegion::PRINT_IO);
