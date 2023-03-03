@@ -113,10 +113,16 @@ target_sources(
 		  partition/test_partition.cpp
 		  
 		  random/test_random.cpp
+		  
+		  relearn_exception/test_relearn_exception.cpp
+		  
+		  semi_stable_vector/test_semi_stable_vector.cpp
 
 		  space_filling_curve/test_space_filling_curve.cpp
 
 		  stack/test_stack.cpp
+		  
+		  statistical_measure/test_statistical_measure.cpp
 
 		  stimulus/test_stimulus.cpp
 		  
@@ -127,6 +133,8 @@ target_sources(
 		  synaptic_input/test_synaptic_input.cpp
 
 		  tagged_id/test_tagged_id.cpp
+		  
+		  timers/test_timers.cpp
 
 		  vector/test_vector.cpp
 
