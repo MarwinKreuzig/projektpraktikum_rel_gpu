@@ -14,6 +14,8 @@
 #include "neurons/LocalAreaTranslator.h"
 #include "Types.h"
 
+#include <unordered_map>
+
 /**
  * Class finds the area id of neurons on other ranks through mpi communication
  */
@@ -59,7 +61,6 @@ public:
      */
     void exchange_requests() {
         send_requests();
-        requested_mapping = next_request;
         next_request.clear();
         next_request.resize(MPIWrapper::get_num_ranks(), {});
     }
@@ -67,7 +68,6 @@ public:
 private:
     std::shared_ptr<LocalAreaTranslator> local_area_translator{};
     std::unordered_map<RankNeuronId, RelearnTypes::area_id> known_mappings{};
-    std::vector<std::vector<NeuronID>> requested_mapping{};
     std::vector<std::vector<NeuronID>> next_request{};
 
     int num_ranks;
@@ -101,7 +101,7 @@ private:
         for(auto rank = 0; rank < answer.size();rank++) {
             for(auto i = 0; i< answer[rank].size();i++) {
                 auto area_id = answer[rank][i];
-                auto neuron_id = requested_mapping[rank][i];
+                auto neuron_id = next_request[rank][i];
                 const RankNeuronId rank_neuron_id{MPIRank{rank}, NeuronID {neuron_id}};
                 known_mappings.insert(std::make_pair(rank_neuron_id, area_id));
             }
