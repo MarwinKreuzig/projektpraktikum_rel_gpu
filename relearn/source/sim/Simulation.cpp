@@ -321,6 +321,7 @@ void Simulation::simulate(const step_type number_steps) {
             Timers::stop_and_add(TimerRegion::AREA_MONITORS_PREPARE);
             Timers::start(TimerRegion::AREA_MONITORS_REQUEST);
 
+            #pragma omp parallel for default(none)
             for (const NeuronID &neuron_id : NeuronID::range(neurons->get_number_neurons())) {
                 if(neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
                     continue;
@@ -341,6 +342,7 @@ void Simulation::simulate(const step_type number_steps) {
             Timers::stop_and_add(TimerRegion::AREA_MONITORS_EXCHANGE);
             Timers::start(TimerRegion::AREA_MONITORS_RECORD_DATA);
 
+            #pragma omp parallel for default(none)
             for (NeuronID neuron_id : NeuronID::range(neurons->get_number_neurons())) {
                 if(neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
                     continue;

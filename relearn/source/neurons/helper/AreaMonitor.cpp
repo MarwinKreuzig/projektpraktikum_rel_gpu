@@ -192,17 +192,20 @@ void AreaMonitor::request_data(const NeuronID& neuron_id) const {
     //Deletions
     const auto& deletions = sim->get_neurons()->deletions_log[neuron_id.get_neuron_id()];
     for(const auto& other_neuron_id : deletions) {
+        #pragma omp critical
         global_area_mapper->request_area_id(other_neuron_id);
     }
 
     const auto &distant_in_edges = sim->get_network_graph()->get_distant_in_edges(neuron_id);
     for (const auto &[rank_neuron_id, weight]: distant_in_edges) {
+        #pragma omp critical
         global_area_mapper->request_area_id(rank_neuron_id);
     }
 }
 
 void AreaMonitor::add_ingoing_connection(const AreaMonitor::AreaConnection &connection) {
     auto pair = std::make_pair(connection.from_rank, connection.from_area);
+#pragma omp critical
     if (connections.contains(pair)) {
         auto &conn = connections[pair];
         if (connection.signal_type == SignalType::Excitatory) {
