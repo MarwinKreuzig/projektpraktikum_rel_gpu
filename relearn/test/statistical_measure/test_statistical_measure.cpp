@@ -9,3 +9,15 @@
  */
 
 #include "test_statistical_measure.h"
+
+#include "util/StatisticalMeasures.h"
+
+TEST_F(StatisticalMeasuresTest, testDefaultValues) {
+    StatisticalMeasures sm{};
+
+    ASSERT_EQ(sm.avg, 0.0);
+    ASSERT_EQ(sm.max, 0.0);
+    ASSERT_EQ(sm.min, 0.0);
+    ASSERT_EQ(sm.std, 0.0);
+    ASSERT_EQ(sm.var, 0.0);
+}

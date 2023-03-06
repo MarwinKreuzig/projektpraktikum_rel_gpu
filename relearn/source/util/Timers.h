@@ -142,6 +142,18 @@ public:
     }
 
     /**
+     * @brief Returns the elapsed time for the respective timer
+     * @param timer The timer for which to return the elapsed time
+     * @exception Throws a RelearnException if the timer casts to an index that is >= NUMBER_TIMERS
+     * @return The elapsed time
+     */
+    [[nodiscard]] static std::chrono::nanoseconds get_elapsed(const TimerRegion timer) {
+        const auto timer_id = get_timer_index(timer);
+        RelearnException::check(timer_id < NUMBER_TIMERS, "Timers::get_elapsed: timer_id was: {}", timer_id);
+        return time_elapsed[timer_id];
+    }
+
+    /**
      * @brief Prints all timers with min, max, and sum across all MPI ranks to LogFiles::EventType::Timers.
      *      Performs MPI communication.
      * @param essentials The essentials
@@ -155,18 +167,6 @@ public:
     [[nodiscard]] static std::string wall_clock_time();
 
 private:
-    /**
-     * @brief Returns the elapsed time for the respective timer
-     * @param timer The timer for which to return the elapsed time
-     * @exception Throws a RelearnException if the timer casts to an index that is >= NUMBER_TIMERS
-     * @return The elapsed time
-     */
-    [[nodiscard]] static std::chrono::nanoseconds get_elapsed(const TimerRegion timer) {
-        const auto timer_id = get_timer_index(timer);
-        RelearnException::check(timer_id < NUMBER_TIMERS, "Timers::get_elapsed: timer_id was: {}", timer_id);
-        return time_elapsed[timer_id];
-    }
-
     /**
      * @brief Casts the value of timer to an index for the vectors
      * @param timer The timer as an enum value

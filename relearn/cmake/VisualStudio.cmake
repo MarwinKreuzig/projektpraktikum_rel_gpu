@@ -26,6 +26,7 @@ if(WIN32) # Harness
 	list(APPEND relearn_harness_additional_files "adapter/stimulus/StimulusAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/synaptic_elements/SynapticElementsAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/tagged_id/TaggedIdAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/timers/TimersAdapter.h")
 	
 	list(APPEND relearn_harness_additional_files "factory/background_factory.h")
 	list(APPEND relearn_harness_additional_files "factory/calcium_factory.h")
