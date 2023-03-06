@@ -124,23 +124,6 @@ public:
      * @return The check function. Empty if the stimuli intersect
      */
     [[nodiscard]] static RelearnTypes::stimuli_function_type generate_stimulus_function(std::vector<StimulusParser::Stimulus> stimuli) {
-        std::vector<Interval> intervals{};
-        intervals.reserve(stimuli.size());
-
-        for (const auto& [interval, _1, _2, _3] : stimuli) {
-            intervals.emplace_back(interval);
-        }
-
-        if (Interval::check_intervals_for_intersection(intervals)) {
-            LogFiles::print_message_rank(0, "The intervals for the stimulus parser intersected, discarding all.");
-            return {};
-        }
-
-        auto comparison = [](const StimulusParser::Stimulus& first, const StimulusParser::Stimulus& second) -> bool {
-            return first.interval.begin < second.interval.begin;
-        };
-
-        std::ranges::sort(stimuli, comparison);
 
         auto step_checker_function = [stimuli = std::move(stimuli)](step_type current_step) noexcept -> RelearnTypes::stimuli_list_type {
             RelearnTypes::stimuli_list_type stimuli_vector;
