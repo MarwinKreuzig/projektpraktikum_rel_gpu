@@ -10,6 +10,8 @@
  *
  */
 
+#include "util/RelearnException.h"
+
 #include <utility>
 #include <vector>
 
