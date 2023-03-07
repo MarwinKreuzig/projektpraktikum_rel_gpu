@@ -12,6 +12,8 @@
 
 #include "algorithm/Cells.h"
 #include "io/LogFiles.h"
+
+#include "mpi/MPIWrapper.h"
 #include "structure/OctreeNode.h"
 #include "util/MemoryHolder.h"
 #include "util/RelearnException.h"
@@ -30,9 +32,6 @@ std::vector<OctreeNode<BarnesHutInvertedCell>> holder_bhi_cells{};
 std::vector<OctreeNode<FastMultipoleMethodsCell>> holder_fmm_cells{};
 
 RelearnTest::RelearnTest() {
-    MemoryHolder<BarnesHutCell>::init(holder_bh_cells);
-    MemoryHolder<BarnesHutInvertedCell>::init(holder_bhi_cells);
-    MemoryHolder<FastMultipoleMethodsCell>::init(holder_fmm_cells);
 }
 
 RelearnTest::~RelearnTest() {
@@ -66,6 +65,15 @@ void RelearnTest::TearDown() {
     std::cerr << "Test finished\n";
 }
 
+RelearnMemoryTest::RelearnMemoryTest() {
+    MemoryHolder<BarnesHutCell>::init(holder_bh_cells);
+    MemoryHolder<BarnesHutInvertedCell>::init(holder_bhi_cells);
+    MemoryHolder<FastMultipoleMethodsCell>::init(holder_fmm_cells);
+}
+
+RelearnMemoryTest::~RelearnMemoryTest() {
+}
+
 int main(int argc, char** argv) {
     MPIWrapper::init(1, argv);
     ::testing::InitGoogleTest(&argc, argv);
@@ -76,6 +84,10 @@ int main(int argc, char** argv) {
 
     RelearnException::hide_messages = true;
     LogFiles::disable = true;
+
+    MemoryHolder<BarnesHutCell>::init(holder_bh_cells);
+    MemoryHolder<BarnesHutInvertedCell>::init(holder_bhi_cells);
+    MemoryHolder<FastMultipoleMethodsCell>::init(holder_fmm_cells);
 
     const auto tests_return_code = RUN_ALL_TESTS();
 

@@ -314,7 +314,7 @@ void Simulation::simulate(const step_type number_steps) {
             Timers::stop_and_add(TimerRegion::CAPTURE_MONITORS);
         }
 
-        if (interval_area_monitor.hits_step(step)) {
+        if (interval_area_monitor.hits_step(step) && area_monitor_enabled) {
             Timers::start(TimerRegion::CAPTURE_AREA_MONITORS);
 
             for (auto& [_, area_monitor] : *area_monitors) {

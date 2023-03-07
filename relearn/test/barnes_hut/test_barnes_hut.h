@@ -12,14 +12,14 @@
 
 #include "RelearnTest.hpp"
 
-class BarnesHutBaseTest : public RelearnTest {
+class BarnesHutBaseTest : public RelearnMemoryTest {
 };
 
-class BarnesHutInvertedBaseTest : public RelearnTest {
+class BarnesHutInvertedBaseTest : public RelearnMemoryTest {
 };
 
-class BarnesHutTest : public RelearnTest {
+class BarnesHutTest : public RelearnMemoryTest {
 };
 
-class BarnesHutInvertedTest : public RelearnTest {
+class BarnesHutInvertedTest : public RelearnMemoryTest {
 };

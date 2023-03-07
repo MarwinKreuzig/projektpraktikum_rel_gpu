@@ -10,6 +10,7 @@
 
 #include "Neurons.h"
 
+#include "io/Event.h"
 #include "io/LogFiles.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/helper/RankNeuronId.h"
@@ -361,10 +362,12 @@ StatisticalMeasures Neurons::global_statistics(const std::span<const double> loc
 std::uint64_t Neurons::create_synapses() {
     const auto my_rank = MPIWrapper::get_my_rank();
 
+    Event::create_and_print_duration_begin_event("Neurons::update_octree", { EventCategory::mpi, EventCategory::calculation }, {}, true);
     // Lock local RMA memory for local stores and make them visible afterwards
     MPIWrapper::lock_window(my_rank, MPI_Locktype::Exclusive);
     algorithm->update_octree();
     MPIWrapper::unlock_window(my_rank);
+    Event::create_and_print_duration_end_event(true);
 
     // Makes sure that all ranks finished their local access epoch
     // before a remote origin opens an access epoch
@@ -372,14 +375,18 @@ std::uint64_t Neurons::create_synapses() {
 
     MPIWrapper::start_measuring_communication();
     // Delegate the creation of new synapses to the algorithm
+    Event::create_and_print_duration_begin_event("Neurons::update_connectivity", { EventCategory::mpi, EventCategory::calculation }, {}, true);
     const auto& [local_synapses, distant_in_synapses, distant_out_synapses]
         = algorithm->update_connectivity(number_neurons);
+    Event::create_and_print_duration_end_event(true);
 
     MPIWrapper::stop_measureing_communication();
 
     // Update the network graph all at once
     Timers::start(TimerRegion::ADD_SYNAPSES_TO_NETWORK_GRAPH);
+    Event::create_and_print_duration_begin_event("Neurons::add_edges", { EventCategory::mpi, EventCategory::calculation }, {}, true);
     network_graph->add_edges(local_synapses, distant_in_synapses, distant_out_synapses);
+    Event::create_and_print_duration_end_event(true);
     Timers::stop_and_add(TimerRegion::ADD_SYNAPSES_TO_NETWORK_GRAPH);
 
     // The distant_out_synapses are counted on the ranks where they are in

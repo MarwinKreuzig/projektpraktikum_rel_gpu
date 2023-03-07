@@ -13,9 +13,8 @@
 #include "gtest/gtest.h"
 #include "gtest/gtest-typed-test.h"
 
-#include "mpi/MPIWrapper.h"
-
 #include <cmath>
+#include <filesystem>
 #include <random>
 #include <span>
 #include <type_traits>
@@ -67,4 +66,11 @@ protected:
 private:
     static bool use_predetermined_seed;
     static unsigned int predetermined_seed;
+};
+
+class RelearnMemoryTest : public RelearnTest {
+protected:
+    RelearnMemoryTest();
+
+    virtual ~RelearnMemoryTest();
 };

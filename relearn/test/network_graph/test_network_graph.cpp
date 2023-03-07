@@ -14,6 +14,7 @@
 #include "adapter/network_graph/NetworkGraphAdapter.h"
 #include "adapter/tagged_id/TaggedIdAdapter.h"
 
+#include "mpi/MPIWrapper.h"
 #include "neurons/NetworkGraph.h"
 
 #include <cstddef>

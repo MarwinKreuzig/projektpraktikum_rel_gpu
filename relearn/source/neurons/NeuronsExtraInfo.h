@@ -23,8 +23,7 @@
 /**
  * An object of type NeuronsExtraInfo additional information of neurons.
  * For a single neuron, these additional information are: its x-, y-, and z- position and the name of the area the neuron is in.
- * It furthermore stores a map from the MPI rank to the (global) starting neuron id.
- * This is useful whenever one wants to print all neurons across multiple MPI ranks, while omitting the MPI rank itself.
+ * It further stores which neurons update their electrical activity and their plasticity.
  */
 class NeuronsExtraInfo {
 public:

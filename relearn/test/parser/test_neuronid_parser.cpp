@@ -18,7 +18,6 @@
 
 #include "io/parser/NeuronIdParser.h"
 
-
 TEST_F(NeuronIdParserTest, testParseDescriptionFixed) {
     auto checker = [](std::string_view description, MPIRank rank, NeuronID::value_type neuron_id) {
         auto opt_rni = NeuronIdParser::parse_description(description, rank);
@@ -33,6 +32,17 @@ TEST_F(NeuronIdParserTest, testParseDescriptionFixed) {
     checker("2:1", MPIRank(2), 1);
     checker("155:377", MPIRank(155), 377);
     checker("-1:17", MPIRank(5), 17);
+}
+
+TEST_F(NeuronIdParserTest, testUninitRank) {
+    auto val1 = NeuronIdParser::parse_description("", MPIRank());
+    ASSERT_FALSE(val1.has_value());
+
+    auto val2 = NeuronIdParser::parse_description("155:377", MPIRank());
+    ASSERT_FALSE(val2.has_value());
+
+    auto val3 = NeuronIdParser::parse_description("-1:17", MPIRank());
+    ASSERT_FALSE(val3.has_value());
 }
 
 TEST_F(NeuronIdParserTest, testParseDescriptionFail) {
