@@ -249,7 +249,7 @@ TEST_F(SemiStableVectorTest, testIterators) {
     SemiStableVector<float> ssv{};
 
     for (auto i = 0; i < iterations; i++) {
-        ssv.push_back(i);
+        ssv.push_back(float(i));
     }
 
     for (auto i = 0; i < iterations; i++) {
