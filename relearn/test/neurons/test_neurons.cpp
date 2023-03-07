@@ -249,16 +249,15 @@ TEST_F(NeuronsTest, testDisableNeuronsWithoutMPI) {
     for (const auto& id : out_ids) {
         auto [edges, _1] = network_graph->get_local_in_edges(id);
 
-        const bool contains = Util::transform_contains<std::pair<NeuronID, RelearnTypes::plastic_synapse_weight>, NeuronID>(
-            edges, disable_id, [](const auto& edge) { return edge.first; });
+        const bool contains = std::none_of(edges.begin(), edges.end(), [disable_id](std::pair<NeuronID, RelearnTypes::plastic_synapse_weight> pair) { return pair.first != disable_id; });
         ASSERT_FALSE(contains);
+
         ASSERT_EQ(neurons.get_extra_info()->get_disable_flags()[id.get_neuron_id()], UpdateStatus::Enabled);
     }
     for (const auto& id : in_ids) {
         auto [edges, _1] = network_graph->get_local_out_edges(id);
 
-        const bool contains = Util::transform_contains<std::pair<NeuronID, RelearnTypes::plastic_synapse_weight>, NeuronID>(
-            edges, disable_id, [](const auto& edge) { return edge.first; });
+        const bool contains = std::none_of(edges.begin(), edges.end(), [disable_id](std::pair<NeuronID, RelearnTypes::plastic_synapse_weight> pair) { return pair.first != disable_id; });
         ASSERT_FALSE(contains);
         ASSERT_EQ(neurons.get_extra_info()->get_disable_flags()[id.get_neuron_id()], UpdateStatus::Enabled);
         ASSERT_EQ(neurons.get_axons().get_connected_elements(id), 7);
