@@ -991,6 +991,8 @@ int main(int argc, char** argv) {
 
     Timers::stop_and_add(TimerRegion::INITIALIZATION);
 
+    MPIWrapper::barrier();
+
     auto simulate = [&sim, &simulation_steps]() {
         sim.simulate(simulation_steps);
 
