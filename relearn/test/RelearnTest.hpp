@@ -13,9 +13,8 @@
 #include "gtest/gtest.h"
 #include "gtest/gtest-typed-test.h"
 
-#include "mpi/MPIWrapper.h"
-
 #include <cmath>
+#include <filesystem>
 #include <random>
 #include <span>
 #include <type_traits>

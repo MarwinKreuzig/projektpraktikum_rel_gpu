@@ -12,6 +12,8 @@
 
 #include "algorithm/Cells.h"
 #include "io/LogFiles.h"
+
+#include "mpi/MPIWrapper.h"
 #include "structure/OctreeNode.h"
 #include "util/MemoryHolder.h"
 #include "util/RelearnException.h"
