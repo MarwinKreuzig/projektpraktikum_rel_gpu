@@ -65,7 +65,7 @@ std::unique_ptr<MPI_Op> translate_reduce_function(const MPIWrapper::ReduceFuncti
 }
 
 void MPIWrapper::init(int argc, char** argv) {
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_SINGLE, &thread_level_provided);
+    MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &thread_level_provided);
 
     init_globals();
 
