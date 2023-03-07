@@ -301,15 +301,10 @@ void Neurons::create_neurons(const number_neurons_type creation_count) {
 }
 
 void Neurons::update_electrical_activity(const step_type step) {
-    Event::create_and_print_duration_begin_event("Neurons::update_electrical_activity", { EventCategory::calculation }, {}, true);
     neuron_model->update_electrical_activity(step);
-    Event::create_and_print_duration_end_event(true);
 
     const auto& fired = neuron_model->get_fired();
-
-    Event::create_and_print_duration_begin_event("Neurons::update_calcium", { EventCategory::calculation }, {}, true);
     calcium_calculator->update_calcium(step, fired);
-    Event::create_and_print_duration_end_event(true);
 
     const auto& calcium_values = calcium_calculator->get_calcium();
     const auto& current_min_id = calcium_calculator->get_current_minimum().get_neuron_id();
@@ -323,11 +318,9 @@ void Neurons::update_number_synaptic_elements_delta() {
     const auto& calcium = calcium_calculator->get_calcium();
     const auto& target_calcium = calcium_calculator->get_target_calcium();
 
-    Event::create_and_print_duration_begin_event("Neurons::update_number_elements_delta", { EventCategory::calculation }, {}, true);
     axons->update_number_elements_delta(calcium, target_calcium);
     dendrites_exc->update_number_elements_delta(calcium, target_calcium);
     dendrites_inh->update_number_elements_delta(calcium, target_calcium);
-    Event::create_and_print_duration_end_event(true);
 }
 
 StatisticalMeasures Neurons::global_statistics(const std::span<const double> local_values, const MPIRank root) const {
@@ -372,11 +365,8 @@ std::uint64_t Neurons::create_synapses() {
     Event::create_and_print_duration_begin_event("Neurons::update_octree", { EventCategory::mpi, EventCategory::calculation }, {}, true);
     // Lock local RMA memory for local stores and make them visible afterwards
     MPIWrapper::lock_window(my_rank, MPI_Locktype::Exclusive);
-    Event::create_and_print_instant_event("Neurons::lock_window", { EventCategory::mpi }, InstantEventScope::Process, {}, true);
     algorithm->update_octree();
-    Event::create_and_print_instant_event("Neurons::update_octree completed", { EventCategory::mpi }, InstantEventScope::Process, {}, true);
     MPIWrapper::unlock_window(my_rank);
-    Event::create_and_print_instant_event("Neurons::unlock_window", { EventCategory::mpi }, InstantEventScope::Process, {}, true);
     Event::create_and_print_duration_end_event(true);
 
     // Makes sure that all ranks finished their local access epoch

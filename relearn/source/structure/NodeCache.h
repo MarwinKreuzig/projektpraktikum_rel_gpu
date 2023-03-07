@@ -128,10 +128,25 @@ public:
         return local_children;
     }
 
+    /**
+     * @brief Returns the currently used memory
+     * @return The currently used memory
+     */
+    [[nodiscard]] static std::size_t get_memory_size() noexcept {
+        return memory.size();
+    }
+
+    /**
+     * @brief Returns the current number of cached values
+     * @return The current number of cached values
+     */
+    [[nodiscard]] static std::size_t get_cache_size() noexcept {
+        return remote_nodes_cache.size();
+    }
+
 private:
     static inline SemiStableVector<array_type> memory{}; // NOLINT
     static inline NodesCache remote_nodes_cache{};
-    static inline NodesCache inverse_remote_nodes_cache{};
 };
 
 /**
@@ -221,11 +236,25 @@ public:
         return local_children;
     }
 
+    /**
+     * @brief Returns the currently used memory
+     * @return The currently used memory
+     */
+    [[nodiscard]] static std::size_t get_memory_size() noexcept {
+        return memory.size();
+    }
+
+    /**
+     * @brief Returns the current number of cached values
+     * @return The current number of cached values
+     */
+    [[nodiscard]] static std::size_t get_cache_size() noexcept {
+        return remote_nodes_cache.size();
+    }
+
 private:
     static inline SemiStableVector<node_type> memory{}; // NOLINT
     static inline NodesCache remote_nodes_cache{};
-
-    static inline NodesCache inverse_remote_nodes_cache{};
 };
 
 /**
@@ -291,6 +320,36 @@ public:
         RelearnException::fail("NodeCache::download_children: {} is an unknown cache type!", currently_used_cache);
 
         return {};
+    }
+
+    /**
+     * @brief Returns the currently used memory
+     * @return The currently used memory
+     */
+    [[nodiscard]] static std::size_t get_memory_size() noexcept {
+        switch (currently_used_cache) {
+        case NodeCacheType::Combined:
+            return NodeCacheCombined<AdditionalCellAttributes>::get_memory_size();
+        case NodeCacheType::Separate:
+            return NodeCacheSeparate<AdditionalCellAttributes>::get_memory_size();
+        }
+
+        return 0;
+    }
+
+    /**
+     * @brief Returns the current number of cached values
+     * @return The current number of cached values
+     */
+    [[nodiscard]] static std::size_t get_cache_size() noexcept {
+        switch (currently_used_cache) {
+        case NodeCacheType::Combined:
+            return NodeCacheCombined<AdditionalCellAttributes>::get_cache_size();
+        case NodeCacheType::Separate:
+            return NodeCacheSeparate<AdditionalCellAttributes>::get_cache_size();
+        }
+
+        return 0;
     }
 
 private:

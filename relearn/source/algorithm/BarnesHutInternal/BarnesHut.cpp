@@ -12,6 +12,7 @@
 
 #include "algorithm/BarnesHutInternal/BarnesHutBase.h"
 #include "algorithm/Connector.h"
+#include "io/Event.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "structure/NodeCache.h"
 #include "structure/OctreeNode.h"
@@ -58,6 +59,8 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const nu
 #pragma omp critical(BHrequests)
             synapse_creation_requests_outgoing.append(target_rank, creation_request);
         }
+
+        Event::create_and_print_counter_event("BH", {}, { { "ID:", std::to_string(neuron_id) }, { "Cache:", std::to_string(NodeCache<BarnesHutCell>::get_cache_size()) }, { "Memory:", std::to_string(NodeCache<BarnesHutCell>::get_memory_size()) } }, true);
     }
 
     // Make cache empty for next connectivity update
