@@ -112,6 +112,8 @@ target_sources(
 
 		  partition/test_partition.cpp
 		  
+		  probability_picker/test_probability_picker.cpp
+		  
 		  random/test_random.cpp
 		  
 		  relearn_exception/test_relearn_exception.cpp

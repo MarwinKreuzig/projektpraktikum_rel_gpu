@@ -426,3 +426,49 @@ TYPED_TEST(MemoryHolderTest, testGetNodeFromOffset) {
         ASSERT_EQ(dist, offset);
     }
 }
+
+TYPED_TEST(MemoryHolderTest, testGetParentFromOffsetException) {
+    using AdditionalCellAttributes = TypeParam;
+    using MH = MemoryHolder<AdditionalCellAttributes>;
+
+    std::vector<OctreeNode<AdditionalCellAttributes>> memory(1024, OctreeNode<AdditionalCellAttributes>{});
+    std::span<OctreeNode<AdditionalCellAttributes>> span_memory(memory);
+
+    MH::init(span_memory);
+
+    for (auto i = std::uint64_t(0); i < 1024 * 10ULL; i++) {
+        ASSERT_THROW(auto val = MH::get_parent_from_offset(i), RelearnException);
+    }
+}
+
+TYPED_TEST(MemoryHolderTest, testGetParentFromOffset) {
+    using AdditionalCellAttributes = TypeParam;
+    using MH = MemoryHolder<AdditionalCellAttributes>;
+    using Node = OctreeNode<AdditionalCellAttributes>;
+
+    std::vector<Node> memory(128 * Constants::number_oct, Node{});
+    std::span<Node> span_memory(memory);
+
+    MH::init(span_memory);
+
+    std::vector<Node> nodes(128, Node{});
+    std::vector<std::pair<Node*, Node*>> relations{};
+
+    for (auto& node : nodes) {
+        for (auto i = 0; i < Constants::number_oct; i++) {
+            auto* ptr = MH::get_available(&node, i);
+            relations.emplace_back(&node, ptr);
+        }
+    }
+
+    for (const auto [parent, child] : relations) {
+        auto offset = std::distance(memory.data(), child);
+        if (offset % Constants::number_oct != 0) {
+            ASSERT_THROW(auto saved_parent = MH::get_parent_from_offset(offset), RelearnException);
+            continue;
+        }
+
+        auto saved_parent = MH::get_parent_from_offset(offset);
+        ASSERT_EQ(parent, saved_parent);
+    }
+}

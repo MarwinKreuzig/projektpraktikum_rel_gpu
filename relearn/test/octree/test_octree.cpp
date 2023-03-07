@@ -170,15 +170,13 @@ TYPED_TEST(OctreeTest, testStructure) {
         octree.insert(position, id);
     }
 
-    const auto root = octree.get_root();
+    auto* root = octree.get_root();
 
     std::stack<std::pair<OctreeNode<AdditionalCellAttributes>*, size_t>> octree_nodes{};
+    octree_nodes.emplace(root, size_t(0));
 
     while (!octree_nodes.empty()) {
-        const auto& elem = octree_nodes.top();
-
-        OctreeNode<AdditionalCellAttributes>* current_node = elem.first;
-        auto level = elem.second;
+        const auto [current_node, level] = octree_nodes.top();
 
         octree_nodes.pop();
         ASSERT_EQ(level, current_node->get_level());

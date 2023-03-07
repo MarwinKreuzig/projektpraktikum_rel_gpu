@@ -17,7 +17,7 @@
 
 #include <sstream>
 
-TEST_F(IntervalTest, testIntervalConstruction) {
+TEST_F(IntervalTest, testConstruction) {
     using int_type = Interval::step_type;
 
     constexpr auto min = std::numeric_limits<int_type>::min();
@@ -34,7 +34,69 @@ TEST_F(IntervalTest, testIntervalConstruction) {
     ASSERT_EQ(i.frequency, frequency);
 }
 
-TEST_F(IntervalTest, testIntervalIntersection) {
+TEST_F(IntervalTest, testHitsStep) {
+    using int_type = Interval::step_type;
+
+    constexpr auto min = 0;
+    constexpr auto max = 100000;
+
+    const auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto frequency = RandomAdapter::get_random_integer<int_type>(1, 200, mt);
+
+    Interval i{ begin, end, frequency };
+
+    for (int_type step = begin; step != end; step++) {
+        const auto diff = step - begin;
+        if (diff % frequency == 0) {
+            ASSERT_TRUE(i.hits_step(step));
+        } else {
+            ASSERT_FALSE(i.hits_step(step));
+        }
+    }
+}
+
+TEST_F(IntervalTest, testEquality) {
+    using int_type = Interval::step_type;
+
+    constexpr auto min = std::numeric_limits<int_type>::min();
+    constexpr auto max = std::numeric_limits<int_type>::max();
+
+    const auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto frequency = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+
+    Interval i{ begin, end, frequency };
+
+    ASSERT_EQ(i, i);
+    ASSERT_EQ(i, Interval(begin, end, frequency));
+    ASSERT_EQ(Interval(begin, end, frequency), i);
+
+    ASSERT_NE(i, Interval(begin + 1, end, frequency));
+    ASSERT_NE(Interval(begin + 1, end, frequency), i);
+
+    ASSERT_NE(i, Interval(begin, end + 1, frequency));
+    ASSERT_NE(Interval(begin, end + 1, frequency), i);
+
+    ASSERT_NE(i, Interval(begin, end, frequency + 1));
+    ASSERT_NE(Interval(begin, end, frequency + 1), i);
+
+    const auto other_begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto other_end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto other_frequency = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+
+    Interval other_i{ other_begin, other_end, other_frequency };
+
+    if (begin == other_begin && end == other_end && frequency == other_frequency) {
+        ASSERT_EQ(i, other_i);
+        ASSERT_EQ(other_i, i);
+    } else {
+        ASSERT_NE(i, other_i);
+        ASSERT_NE(other_i, i);
+    }
+}
+
+TEST_F(IntervalTest, testIntersection) {
     Interval i1{ 10, 20, 1 };
     Interval i2{ 30, 40, 1 };
 
@@ -60,7 +122,7 @@ TEST_F(IntervalTest, testIntervalIntersection) {
     ASSERT_TRUE(i8.check_for_intersection(i7));
 }
 
-TEST_F(IntervalTest, testIntervalIntersecions) {
+TEST_F(IntervalTest, testIntersecions) {
     std::vector<Interval> intervals{};
 
     intervals.emplace_back(IntervalAdapter::generate_random_interval(mt));
@@ -83,4 +145,3 @@ TEST_F(IntervalTest, testIntervalIntersecions) {
 
     ASSERT_EQ(golden_intersect, all_intersect);
 }
-

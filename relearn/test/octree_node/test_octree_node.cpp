@@ -538,6 +538,7 @@ TYPED_TEST(OctreeNodeTest, testUpdateTree) {
     }
 
     OctreeNodeUpdater<AdditionalCellAttributes>::update_tree(&node);
+    stack.push(&node);
 
     while (!stack.empty()) {
         OctreeNode<AdditionalCellAttributes>* current = stack.top();

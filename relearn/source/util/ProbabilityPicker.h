@@ -15,7 +15,7 @@
 
 #include <cmath>
 #include <numeric>
-#include <vector>
+#include <span>
 
 /**
  * This class provides the possibility to pick an element from a vector based on their probabilities.
@@ -24,18 +24,19 @@
 class ProbabilityPicker {
 public:
     /**
-     * @brief Given some probabilities and a random number, returns the index in the vector such that the sum of 
+     * @brief Given some probabilities and a random number, returns the index in the span such that the sum of 
      *      the probabilities before the element is smaller than the random number and the same sum plus the picked
      *      element is larger or equal to the random number.
-     *      If the random number is larger than the sum of probabilities, returns the last index.
-     * @param probabilities The probabilities. Shall not be negative, must not be empty
+     *      If the random number is larger than the sum of probabilities, returns the last index with probability > 0.0.
+     * @param probabilities The probabilities. Not negative, not empty, sum must be > 0.0
      * @param random_number The random number, not negative
-     * @exception Throws a RelearnException if probabilities is empty or random_number < 0.0
-     * @return The picked index
+     * @exception Throws a RelearnException if probabilities is empty, some are negative, all were 0.0, or random_number < 0.0
+     * @return The picked index, the probability was > 0.0
      */
-    [[nodiscard]] static std::size_t pick_target(const std::vector<double>& probabilities, const double random_number) {
+    [[nodiscard]] static std::size_t pick_target(const std::span<const double> probabilities, const double random_number) {
         RelearnException::check(!probabilities.empty(), "ProbabilityPicker::pick_target: There were no probabilities to pick from");
         RelearnException::check(random_number >= 0.0, "ProbabilityPicker::pick_target: random_number was smaller than 0.0");
+        RelearnException::check(std::all_of(probabilities.begin(), probabilities.end(), [](const double num) { return num >= 0.0; }), "ProbabilityPicker::pick_target: Some probability was negative");
 
         if (!(0.0 < random_number)) {
             // This exists for denormalized numbers
@@ -61,16 +62,16 @@ public:
 
     /**
      * @brief Given some probabilities, picks one element based on its probability. Uses the PRNG associated with the key
-     * @param probabilities The probabilities, shall not ne negative, must not be empty
+     * @param probabilities The probabilities. Not negative, not empty, sum must be > 0.0
      * @param key The identifier or the PRNG
-     * @exception Throws a RelearnException if probabilities is empty or the total sum of probabilities is negative
-     * @return The picked index
+     * @exception Throws a RelearnException if probabilities is empty, some are negative, or the total sum of probabilities is negative or 0.0
+     * @return The picked index, the probability was > 0.0
      */
-    [[nodiscard]] static std::size_t pick_target(const std::vector<double>& probabilities, const RandomHolderKey key) {
+    [[nodiscard]] static std::size_t pick_target(const std::span<const double> probabilities, const RandomHolderKey key) {
         RelearnException::check(!probabilities.empty(), "ProbabilityPicker::pick_target: There were no probabilities to pick from");
 
         const auto total_probability = std::reduce(probabilities.begin(), probabilities.end(), 0.0, std::plus<double>{});
-        RelearnException::check(total_probability >= 0.0, "ProbabilityPicker::pick_target: total_probability was smaller than 0.0");
+        RelearnException::check(total_probability > 0.0, "ProbabilityPicker::pick_target: total_probability was smaller than or equal to 0.0");
 
         const auto next = std::nextafter(total_probability, total_probability + Constants::eps);
         const auto random_number = RandomHolder::get_random_uniform_double(key, 0.0, next);
