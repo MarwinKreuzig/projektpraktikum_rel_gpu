@@ -10,7 +10,7 @@
 
 #include "test_timers.h"
 
-#include "adapter/Random/RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 #include "adapter/timers/TimersAdapter.h"
 
 #include "util/Timers.h"

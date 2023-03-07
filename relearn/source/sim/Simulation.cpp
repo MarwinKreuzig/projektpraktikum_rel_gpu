@@ -336,7 +336,13 @@ void Simulation::simulate(const step_type number_steps) {
             std::vector<std::vector<AreaMonitor::AreaConnection>> all_exchange_data(MPIWrapper::get_num_ranks());
             for (auto& [_, area_monitor] : *area_monitors) {
                 const auto& exchange_data_single = area_monitor.get_exchange_data();
-                Util::stack_vectors<AreaMonitor::AreaConnection>(all_exchange_data, exchange_data_single);
+                RelearnException::check(all_exchange_data.size() == exchange_data_single.size(), 
+                    "StringUtil::stack_vectors: Cannot stack vectors with different size {} != {} ", all_exchange_data.size(), exchange_data_single.size());
+
+                for (size_t i = 0; i < all_exchange_data.size(); i++) {
+                    all_exchange_data[i].insert(all_exchange_data[i].end(), exchange_data_single[i].begin(), exchange_data_single[i].end());
+                }
+
             }
 
             const auto& received_data = MPIWrapper::exchange_values<AreaMonitor::AreaConnection>(all_exchange_data);

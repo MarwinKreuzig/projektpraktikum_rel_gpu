@@ -117,47 +117,6 @@ static constexpr T factorial(T value) noexcept {
 }
 
 /**
- * Check if a container (e.g. vector) contains an element
- * @tparam Container  Container class (e.g. std::vector)
- * @param container The actual container
- * @param element The element
- * @return True if element inside of container. Otherwise false
- */
-template <class Container>
-static bool contains(const Container& container, const typename Container::value_type& element) {
-    return std::find(container.begin(), container.end(), element) != container.end();
-}
-
-/**
- * Maps each element of a vector to a new objects and checks if one of this transformed objects equals to the searched element
- * @tparam T Type of the elements in the vector
- * @tparam U Type of the transformed elements
- * @param container The vector
- * @param element The transformed element, we are looking for
- * @param function Function which transforms the elements of the vector
- * @return True if the transformed list contains the element. Otherwise false
- */
-template <typename T, typename U>
-static bool transform_contains(const std::vector<T>& container, const U& element, std::function<U(T)> function) {
-    for (const auto& el : container) {
-        const U transformed = function(el);
-        if (transformed == element) {
-            return true;
-        }
-    }
-    return false;
-}
-
-template <typename T>
-static void stack_vectors(std::vector<std::vector<T>>& first, const std::vector<std::vector<T>>& second) {
-    RelearnException::check(first.size() == second.size(), "StringUtil::stack_vectors: Cannot stack vectors with different size {} != {} ", first.size(), second.size());
-
-    for (size_t i = 0; i < first.size(); i++) {
-        first[i].insert(first[i].end(), second[i].begin(), second[i].end());
-    }
-}
-
-/**
  * @brief Looks for a given file in a directory. Path: directory / prefix rank suffix. Tries different formats for the rank.
  * @param directory The directory where it looks for the file
  * @param rank The mpi rank
@@ -179,7 +138,7 @@ static std::filesystem::path find_file_for_rank(const std::filesystem::path& dir
         }
     }
 
-    RelearnException::fail("StringUtil::find_file_for_rank: No file found for {}{}{}", prefix, rank, suffix);
+    RelearnException::fail("Util::find_file_for_rank: No file found for {}{}{}", prefix, rank, suffix);
 }
 
 } // namespace Util
