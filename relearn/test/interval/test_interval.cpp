@@ -40,8 +40,11 @@ TEST_F(IntervalTest, testHitsStep) {
     constexpr auto min = 0;
     constexpr auto max = 100000;
 
-    const auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
-    const auto end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto first = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto second = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+
+    const auto begin = first < second ? first : second;
+    const auto end = first < second ? second : first;
     const auto frequency = RandomAdapter::get_random_integer<int_type>(1, 200, mt);
 
     Interval i{ begin, end, frequency };
@@ -49,9 +52,9 @@ TEST_F(IntervalTest, testHitsStep) {
     for (int_type step = begin; step != end; step++) {
         const auto diff = step - begin;
         if (diff % frequency == 0) {
-            ASSERT_TRUE(i.hits_step(step));
+            ASSERT_TRUE(i.hits_step(step)) << begin << '-' << end << ':' << frequency << '\t' << step;
         } else {
-            ASSERT_FALSE(i.hits_step(step));
+            ASSERT_FALSE(i.hits_step(step)) << begin << '-' << end << ':' << frequency << '\t' << step;
         }
     }
 }

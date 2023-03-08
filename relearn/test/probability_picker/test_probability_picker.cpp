@@ -85,6 +85,20 @@ TEST_F(ProbabilityPickerTest, testPickTargetDouble) {
     }
 }
 
+TEST_F(ProbabilityPickerTest, testPickTargetDoubleManual) {
+    auto val1 = ProbabilityPicker::pick_target(std::vector{ 0.0, 2.0, 0.0, 1.421, 1.0 }, 1.0);
+    ASSERT_EQ(val1, 1);
+
+    auto val2 = ProbabilityPicker::pick_target(std::vector{ 0.0, 2.0, 0.0, 1.421, 1.0 }, 4.0);
+    ASSERT_EQ(val2, 4);
+
+    auto val3 = ProbabilityPicker::pick_target(std::vector{ 1.0, 0.0, 0.0, 1.0 }, 1.0);
+    ASSERT_EQ(val3, 0);
+
+    auto val4 = ProbabilityPicker::pick_target(std::vector{ 1.0, 0.0, 0.0, 1.0 }, std::nextafter(1.0, 2.0));
+    ASSERT_EQ(val4, 3);
+}
+
 TEST_F(ProbabilityPickerTest, testPickTargetDoubleWithZerosInbetween) {
     const auto number_probability = RandomAdapter::get_random_integer<size_t>(1, 100, mt);
 
@@ -206,4 +220,18 @@ TEST_F(ProbabilityPickerTest, testPickTargetKeyWithZeros) {
         const auto it = ProbabilityPicker::pick_target(probabilities, RandomHolderKey::SynapseDeletionFinder);
         ASSERT_GE(probabilities[it], 0.0);
     }
+}
+
+TEST_F(ProbabilityPickerTest, testPickTargetKeyManual) {
+    auto val1 = ProbabilityPicker::pick_target(std::vector{ 1.0, 0.0, 0.0, 0.0 }, 0.5);
+    ASSERT_EQ(val1, 0);
+
+    auto val2 = ProbabilityPicker::pick_target(std::vector{ 0.0, 1.0, 0.0, 0.0 }, 0.5);
+    ASSERT_EQ(val2, 1);
+
+    auto val3 = ProbabilityPicker::pick_target(std::vector{ 0.0, 0.0, 1.0, 0.0 }, 0.5);
+    ASSERT_EQ(val3, 2);
+
+    auto val4 = ProbabilityPicker::pick_target(std::vector{ 0.0, 0.0, 0.0, 1.0 }, 0.5);
+    ASSERT_EQ(val4, 3);
 }
