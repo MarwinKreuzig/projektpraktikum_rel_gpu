@@ -253,6 +253,8 @@ TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
 
         partition.calculate_and_set_subdomain_boundaries();
 
+        std::vector<std::pair<RelearnTypes::box_size_type, RelearnTypes::box_size_type>> local_subdomain_boundaries{};
+
         for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
             const auto& [min, max] = partition.get_subdomain_boundaries(my_subdomain);
             const auto index_1 = partition.get_1d_index_of_subdomain(my_subdomain);
@@ -261,7 +263,16 @@ TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
 
             ASSERT_EQ(min, min1) << min << min1;
             ASSERT_EQ(max, max1) << max << max1;
+
+            local_subdomain_boundaries.emplace_back(min, max);
         }
+
+        auto partition_local_subdomain_boundaries = partition.get_all_local_subdomain_boundaries();
+
+        std::sort(local_subdomain_boundaries.begin(), local_subdomain_boundaries.end());
+        std::sort(partition_local_subdomain_boundaries.begin(), partition_local_subdomain_boundaries.end());
+
+        ASSERT_EQ(local_subdomain_boundaries, partition_local_subdomain_boundaries);
 
         for (auto my_subdomain = 0; my_subdomain < num_ranks; my_subdomain++) {
             ASSERT_THROW(auto val = partition.get_subdomain_boundaries(my_subdomain + num_subdomains), RelearnException) << my_subdomain << num_ranks;
