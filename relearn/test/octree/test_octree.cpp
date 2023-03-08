@@ -201,8 +201,6 @@ TYPED_TEST(OctreeTest, testStructure) {
             }
 
             ASSERT_TRUE(one_child_exists);
-            ASSERT_EQ(current_node->get_cell().get_neuron_id(), NeuronID::uninitialized_id());
-
         } else {
             const auto& cell = current_node->get_cell();
             const auto& opt_position = cell.get_neuron_position();

@@ -552,10 +552,14 @@ TYPED_TEST(OctreeNodeTest, testUpdateTree) {
                 auto expected_position = position_excitatory_dendrites[current];
 
                 auto vacant_elements = cell.get_number_excitatory_dendrites();
-                auto position = cell.get_excitatory_dendrites_position().value();
-
                 ASSERT_EQ(expected_vacant_elements, vacant_elements);
-                ASSERT_EQ(expected_position, position);
+
+                if (vacant_elements != 0) {
+                    ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
+                    auto position = cell.get_excitatory_dendrites_position().value();
+
+                    ASSERT_EQ(expected_position, position);
+                } 
             }
 
             if constexpr (AdditionalCellAttributes::has_inhibitory_dendrite) {
@@ -563,10 +567,14 @@ TYPED_TEST(OctreeNodeTest, testUpdateTree) {
                 auto expected_position = position_inhibitory_dendrites[current];
 
                 auto vacant_elements = cell.get_number_inhibitory_dendrites();
-                auto position = cell.get_inhibitory_dendrites_position().value();
-
                 ASSERT_EQ(expected_vacant_elements, vacant_elements);
-                ASSERT_EQ(expected_position, position);
+
+                if (vacant_elements != 0) {
+                    ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
+                    auto position = cell.get_inhibitory_dendrites_position().value();
+
+                    ASSERT_EQ(expected_position, position);
+                }
             }
 
             if constexpr (AdditionalCellAttributes::has_excitatory_axon) {
@@ -574,10 +582,14 @@ TYPED_TEST(OctreeNodeTest, testUpdateTree) {
                 auto expected_position = position_excitatory_axons[current];
 
                 auto vacant_elements = cell.get_number_excitatory_axons();
-                auto position = cell.get_excitatory_axons_position().value();
-
                 ASSERT_EQ(expected_vacant_elements, vacant_elements);
-                ASSERT_EQ(expected_position, position);
+
+                if (vacant_elements != 0) {
+                    ASSERT_TRUE(cell.get_excitatory_axons_position().has_value());
+                    auto position = cell.get_excitatory_axons_position().value();
+
+                    ASSERT_EQ(expected_position, position);
+                } 
             }
 
             if constexpr (AdditionalCellAttributes::has_inhibitory_axon) {
@@ -585,10 +597,14 @@ TYPED_TEST(OctreeNodeTest, testUpdateTree) {
                 auto expected_position = position_inhibitory_axons[current];
 
                 auto vacant_elements = cell.get_number_inhibitory_axons();
-                auto position = cell.get_inhibitory_axons_position().value();
-
                 ASSERT_EQ(expected_vacant_elements, vacant_elements);
-                ASSERT_EQ(expected_position, position);
+
+                if (vacant_elements != 0) {
+                    ASSERT_TRUE(cell.get_inhibitory_axons_position().has_value());
+                    auto position = cell.get_inhibitory_axons_position().value();
+
+                    ASSERT_EQ(expected_position, position);
+                } 
             }
 
             continue;
@@ -612,68 +628,117 @@ TYPED_TEST(OctreeNodeTest, testUpdateTree) {
 
                 if constexpr (AdditionalCellAttributes::has_excitatory_dendrite) {
                     auto vacant_elements = child_cell.get_number_excitatory_dendrites();
-                    auto position = child_cell.get_excitatory_dendrites_position().value();
+                    if (vacant_elements != 0) {
+                        ASSERT_TRUE(child_cell.get_excitatory_dendrites_position().has_value());
+                        auto position = child_cell.get_excitatory_dendrites_position().value();
 
-                    golden_number_excitatory_dendrites += vacant_elements;
-                    golden_position_excitatory_dendrites += position * vacant_elements;
+                        golden_number_excitatory_dendrites += vacant_elements;
+                        golden_position_excitatory_dendrites += position * vacant_elements;
+                    } 
                 }
 
                 if constexpr (AdditionalCellAttributes::has_inhibitory_dendrite) {
                     auto vacant_elements = child_cell.get_number_inhibitory_dendrites();
-                    auto position = child_cell.get_inhibitory_dendrites_position().value();
+                    if (vacant_elements != 0) {
+                        ASSERT_TRUE(child_cell.get_inhibitory_dendrites_position().has_value());
+                        auto position = child_cell.get_inhibitory_dendrites_position().value();
 
-                    golden_number_inhibitory_dendrites += vacant_elements;
-                    golden_position_inhibitory_dendrites += position * vacant_elements;
+                        golden_number_inhibitory_dendrites += vacant_elements;
+                        golden_position_inhibitory_dendrites += position * vacant_elements;
+                    } 
                 }
 
                 if constexpr (AdditionalCellAttributes::has_excitatory_axon) {
                     auto vacant_elements = child_cell.get_number_excitatory_axons();
-                    auto position = child_cell.get_excitatory_axons_position().value();
+                    if (vacant_elements != 0) {
+                        ASSERT_TRUE(child_cell.get_excitatory_axons_position().has_value());
+                        auto position = child_cell.get_excitatory_axons_position().value();
 
-                    golden_number_excitatory_axons += vacant_elements;
-                    golden_position_excitatory_axons += position * vacant_elements;
+                        golden_number_excitatory_axons += vacant_elements;
+                        golden_position_excitatory_axons += position * vacant_elements;
+                    } 
                 }
 
                 if constexpr (AdditionalCellAttributes::has_inhibitory_axon) {
                     auto vacant_elements = child_cell.get_number_inhibitory_axons();
-                    auto position = child_cell.get_inhibitory_axons_position().value();
+                    if (vacant_elements != 0) {
+                        ASSERT_TRUE(child_cell.get_inhibitory_axons_position().has_value());
+                        auto position = child_cell.get_inhibitory_axons_position().value();
 
-                    golden_number_inhibitory_axons += vacant_elements;
-                    golden_position_inhibitory_axons += position * vacant_elements;
+                        golden_number_inhibitory_axons += vacant_elements;
+                        golden_position_inhibitory_axons += position * vacant_elements;
+                    } 
                 }
             }
         }
 
+        if (golden_number_excitatory_dendrites != 0) {
+            golden_position_excitatory_dendrites /= golden_number_excitatory_dendrites;
+        }
+
+        if (golden_number_inhibitory_dendrites != 0) {
+            golden_position_inhibitory_dendrites /= golden_number_inhibitory_dendrites;
+        }
+
+        if (golden_number_excitatory_axons != 0) {
+            golden_position_excitatory_axons /= golden_number_excitatory_axons;
+        }
+
+        if (golden_number_inhibitory_axons != 0) {
+            golden_position_inhibitory_axons /= golden_number_inhibitory_axons;
+        }
+
         if constexpr (AdditionalCellAttributes::has_excitatory_dendrite) {
             auto vacant_elements = cell.get_number_excitatory_dendrites();
-            auto position = cell.get_excitatory_dendrites_position().value();
-
             ASSERT_EQ(vacant_elements, golden_number_excitatory_dendrites);
-            ASSERT_EQ(position, golden_position_excitatory_dendrites);
+
+            if (vacant_elements != 0) {
+                ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
+                auto position = cell.get_excitatory_dendrites_position().value();
+                ASSERT_EQ(position, golden_position_excitatory_dendrites);
+            } else {
+                ASSERT_FALSE(cell.get_excitatory_dendrites_position().has_value());
+            }
         }
 
         if constexpr (AdditionalCellAttributes::has_inhibitory_dendrite) {
             auto vacant_elements = cell.get_number_inhibitory_dendrites();
-            auto position = cell.get_inhibitory_dendrites_position().value();
-
             ASSERT_EQ(vacant_elements, golden_number_inhibitory_dendrites);
-            ASSERT_EQ(position, golden_position_inhibitory_dendrites);
+
+            if (vacant_elements != 0) {
+
+                ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
+                auto position = cell.get_inhibitory_dendrites_position().value();
+                ASSERT_EQ(position, golden_position_inhibitory_dendrites);
+            } else {
+                ASSERT_FALSE(cell.get_inhibitory_dendrites_position().has_value());
+            }
         }
 
         if constexpr (AdditionalCellAttributes::has_excitatory_axon) {
             auto vacant_elements = cell.get_number_excitatory_axons();
-            auto position = cell.get_excitatory_axons_position().value();
-
             ASSERT_EQ(vacant_elements, golden_number_excitatory_axons);
-            ASSERT_EQ(position, golden_position_excitatory_axons);
+
+            if (vacant_elements != 0) {
+                ASSERT_TRUE(cell.get_excitatory_axons_position().has_value());
+                auto position = cell.get_excitatory_axons_position().value();
+                ASSERT_EQ(position, golden_position_excitatory_axons);
+            } else {
+                ASSERT_FALSE(cell.get_excitatory_axons_position().has_value());
+            }
         }
 
         if constexpr (AdditionalCellAttributes::has_inhibitory_axon) {
             auto vacant_elements = cell.get_number_inhibitory_axons();
-            auto position = cell.get_inhibitory_axons_position().value();
-
             ASSERT_EQ(vacant_elements, golden_number_inhibitory_axons);
-            ASSERT_EQ(position, golden_position_inhibitory_axons);
+
+            if (vacant_elements != 0) {
+                ASSERT_TRUE(cell.get_inhibitory_axons_position().has_value());
+                auto position = cell.get_inhibitory_axons_position().value();
+                ASSERT_EQ(position, golden_position_inhibitory_axons);
+            } else {
+                ASSERT_FALSE(cell.get_inhibitory_axons_position().has_value());
+            }
         }
     }
 }
