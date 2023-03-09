@@ -214,51 +214,54 @@ TEST_F(NeuronsTest, testDisableNeuronsWithoutMPI) {
     const auto disable_id = TaggedIdAdapter::get_random_neuron_id(num_neurons, mt);
     const auto disabled_neurons = std::vector<NeuronID>{ disable_id };
     const auto enabled_neurons = std::vector<NeuronID>{ disable_id };
-    const auto mpi_rank = MPIRank{ 0 };
-    std::set<NeuronID> out_ids, in_ids;
+
     const auto [out_edges_ref, _1] = network_graph->get_local_out_edges(disable_id);
     auto out_edges = out_edges_ref;
+    ASSERT_GT(out_edges.size(), 0);
+
     const auto [in_edges_ref, _2] = network_graph->get_local_in_edges(disable_id);
     auto in_edges = in_edges_ref;
-    std::transform(out_edges.begin(), out_edges.end(), std::inserter(out_ids, out_ids.end()),
-        [](const auto& edge) {
-            const auto& [target, weight] = edge;
-            return target;
-        });
-    std::transform(in_edges.begin(), in_edges.end(), std::inserter(in_ids, in_ids.end()),
-        [](const auto& edge) {
-            const auto& [source, weight] = edge;
-            return source;
-        });
-    ASSERT_GT(out_edges.size(), 0);
     ASSERT_GT(in_edges.size(), 0);
+
+    std::set<NeuronID> out_ids{};
+    for (const auto& [source, weight] : out_edges) {
+        out_ids.emplace(source);
+    }
+
+    std::set<NeuronID> in_ids{};
+    for (const auto& [source, weight] : in_edges) {
+        in_ids.emplace(source);
+    }
+
     ASSERT_THROW(neurons.enable_neurons(enabled_neurons), RelearnException);
 
-    std::vector<NeuronID> disabled_neurons_vector;
-    std::copy(disabled_neurons.begin(), disabled_neurons.end(), std::back_inserter(disabled_neurons_vector));
-    const auto& [num_deletions, synapse_deletion_Requests] = neurons.disable_neurons(1, disabled_neurons_vector, 1);
+    const auto& [num_deletions, synapse_deletion_Requests] = neurons.disable_neurons(1, disabled_neurons, 1);
     ASSERT_EQ(synapse_deletion_Requests.get_total_number_requests(), 0);
     ASSERT_EQ(num_deletions, out_edges.size() + in_edges.size());
+
     const auto& num_distant_deletions = neurons.delete_disabled_distant_synapses(synapse_deletion_Requests, MPIRank(0));
     ASSERT_EQ(num_distant_deletions, 0);
-    ASSERT_THROW(neurons.disable_neurons(1, disabled_neurons_vector, 1), RelearnException);
 
-    ASSERT_EQ(std::get<0>(network_graph->get_local_in_edges(disable_id)).size(), 0);
-    ASSERT_EQ(std::get<0>(network_graph->get_local_out_edges(disable_id)).size(), 0);
+    ASSERT_THROW(neurons.disable_neurons(1, disabled_neurons, 1), RelearnException);
+
+    ASSERT_EQ(out_edges_ref.size(), 0);
+    ASSERT_EQ(in_edges_ref.size(), 0);
 
     for (const auto& id : out_ids) {
         auto [edges, _1] = network_graph->get_local_in_edges(id);
 
-        const bool contains = std::none_of(edges.begin(), edges.end(), [disable_id](std::pair<NeuronID, RelearnTypes::plastic_synapse_weight> pair) { return pair.first != disable_id; });
-        ASSERT_FALSE(contains);
+        const bool contains = std::all_of(edges.begin(), edges.end(), [disable_id](std::pair<NeuronID, RelearnTypes::plastic_synapse_weight> pair) { return pair.first != disable_id; });
+        ASSERT_TRUE(contains);
 
         ASSERT_EQ(neurons.get_extra_info()->get_disable_flags()[id.get_neuron_id()], UpdateStatus::Enabled);
     }
+
     for (const auto& id : in_ids) {
         auto [edges, _1] = network_graph->get_local_out_edges(id);
 
-        const bool contains = std::none_of(edges.begin(), edges.end(), [disable_id](std::pair<NeuronID, RelearnTypes::plastic_synapse_weight> pair) { return pair.first != disable_id; });
-        ASSERT_FALSE(contains);
+        const bool contains = std::all_of(edges.begin(), edges.end(), [disable_id](std::pair<NeuronID, RelearnTypes::plastic_synapse_weight> pair) { return pair.first != disable_id; });
+        ASSERT_TRUE(contains);
+
         ASSERT_EQ(neurons.get_extra_info()->get_disable_flags()[id.get_neuron_id()], UpdateStatus::Enabled);
         ASSERT_EQ(neurons.get_axons().get_connected_elements(id), 7);
     }
