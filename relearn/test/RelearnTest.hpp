@@ -67,3 +67,10 @@ private:
     static bool use_predetermined_seed;
     static unsigned int predetermined_seed;
 };
+
+class RelearnMemoryTest : public RelearnTest {
+protected:
+    RelearnMemoryTest();
+
+    virtual ~RelearnMemoryTest();
+};
