@@ -542,6 +542,86 @@ public:
     [[nodiscard]] std::optional<position_type> get_position_for(const ElementType element_type, const SignalType signal_type) const {
         return additional_cell_attributes.get_position_for(element_type, signal_type);
     }
+
+    /**
+     * @brief Sets the number of free dendrites for the associated type in this cell
+     * @param dendrite_type The requested dendrite type
+     * @param num_dendrites The number of free dendrites
+     * @exception Throws a RelearnException if the requested type is not in this cell
+     */
+    constexpr void set_number_dendrites_for(const SignalType dendrite_type, const counter_type num_dendrites) {
+        additional_cell_attributes.set_number_dendrites_for(dendrite_type, num_dendrites);
+    }
+
+    /**
+     * @brief Sets the number of free axons for the associated type in this cell
+     * @param axon_type The requested axon type
+     * @param num_axons The number of free axons
+     * @exception Throws a RelearnException if the requested type is not in this cell
+     */
+    constexpr void set_number_axons_for(const SignalType axon_type, const counter_type num_axons) {
+        additional_cell_attributes.set_number_axons_for(axon_type, num_axons);
+    }
+
+    /**
+     * @brief Sets the number of free elements for the associated type in this cell
+     * @param element_type The requested elements' type
+     * @param signal_type The requested elements' signal type
+     * @param num_elements The number of free elements
+     * @exception Throws a RelearnException if the requested type is not in this cell
+     */
+    constexpr void set_number_elements_for(const ElementType element_type, const SignalType signal_type, const counter_type num_elements) {
+        additional_cell_attributes.set_number_elements_for(element_type, signal_type, num_elements);
+     }
+
+    /**
+     * @brief Sets the position of the free dendrites for the associated type in this cell
+     * @param dendrite_type The requested dendrite type
+     * @param opt_position The position, can be empty
+     * @exception Throws a RelearnException if the requested type is not in this cell
+     */
+    constexpr void set_dendrites_position_for(const SignalType dendrite_type, const std::optional<position_type>& opt_position) {
+        if (opt_position.has_value()) {
+            const auto& position = opt_position.value();
+            const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
+            RelearnException::check(is_in_box, "Cell::set_dendrites_position_for: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
+        }
+
+        additional_cell_attributes.set_dendrites_position_for(dendrite_type, opt_position);
+    }
+
+    /**
+     * @brief Sets the position of the free axons for the associated type in this cell
+     * @param axon_type The requested axon type
+     * @param opt_position The position, can be empty
+     * @exception Throws a RelearnException if the requested type is not in this cell
+     */
+    constexpr void set_axons_position_for(const SignalType axon_type, const std::optional<position_type>& opt_position) {
+        if (opt_position.has_value()) {
+            const auto& position = opt_position.value();
+            const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
+            RelearnException::check(is_in_box, "Cell::set_axons_position_for: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
+        }
+
+        additional_cell_attributes.set_axons_position_for(axon_type, opt_position);
+    }
+
+    /**
+     * @brief Sets the position of the free elements for the associated type in this cell
+     * @param element_type The requested elements' type
+     * @param signal_type The requested elements' signal type
+     * @param virtual_position The position of the free elements
+     * @exception Throws a RelearnException if the requested type is not in this cell
+     */
+    constexpr void set_position_for(const ElementType element_type, const SignalType signal_type, const std::optional<position_type>& opt_position) {
+        if (opt_position.has_value()) {
+            const auto& position = opt_position.value();
+            const auto is_in_box = position.check_in_box(minimum_position, maximum_position);
+            RelearnException::check(is_in_box, "Cell::set_position_for: position is not in box: {} in [{}, {}]", position, minimum_position, maximum_position);
+        }
+
+        additional_cell_attributes.set_position_for(element_type, signal_type, opt_position);
+    }
 };
 
 #undef RELEARN_NUA
