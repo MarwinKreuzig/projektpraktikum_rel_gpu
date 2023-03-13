@@ -1331,3 +1331,127 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronsLocationAwareException) {
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neurons_location_aware(source, position, 1, &root, ElementType::Dendrite, searched_signal_type, branching_level, too_small_acceptance_criterion);, RelearnException);
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neurons_location_aware(source, position, 1, &root, ElementType::Dendrite, searched_signal_type, branching_level, too_large_acceptance_criterion);, RelearnException);
 }
+
+TEST_F(BarnesHutBaseTest, testFindTargetNeuronsLocationAwareFuullChoice) {
+    using additional_cell_attributes = BarnesHutCell;
+
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
+    const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
+
+    auto root = OctreeAdapter::get_standard_tree<additional_cell_attributes>(number_neurons, minimum, maximum, mt);
+    const auto& nodes = OctreeAdapter::find_nodes(&root);
+    const auto& rma_dict = OctreeAdapter::find_child_offsets(&root);
+
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
+
+    for (const auto neuron_id : NeuronID::range(number_neurons)) {
+        const auto number_vacant_elements = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 10, mt);
+        const auto acceptance_criterion = RandomAdapter::get_random_double<double>(eps, Constants::bh_max_theta, mt);
+        const auto& position = SimulationAdapter::get_random_position(mt);
+
+        const RankNeuronId searching_id{ MPIRank::root_rank(), neuron_id };
+        auto found_targets = BarnesHutBase<additional_cell_attributes>::find_target_neurons_location_aware(searching_id, position, number_vacant_elements, &root, ElementType::Dendrite, searched_signal_type, branching_level, acceptance_criterion);
+
+        ASSERT_EQ(found_targets.size(), number_vacant_elements);
+
+        for (RelearnTypes::counter_type i = 0; i < number_vacant_elements; i++) {
+            const auto& [rank, distant_creation_request] = found_targets[i];
+            ASSERT_EQ(rank, MPIRank::root_rank());
+
+            const auto& source_id = distant_creation_request.get_source_id();
+            const auto& source_position = distant_creation_request.get_source_position();
+            const auto& signal_type = distant_creation_request.get_signal_type();
+
+            ASSERT_EQ(source_id, neuron_id);
+            ASSERT_EQ(source_position, position);
+            ASSERT_EQ(signal_type, searched_signal_type);
+
+            const auto& target_type = distant_creation_request.get_target_neuron_type();
+
+            if (target_type == DistantNeuronRequest::TargetNeuronType::Leaf) {
+                const auto& leaf_id = distant_creation_request.get_leaf_node_id();
+                ASSERT_LT(leaf_id, number_neurons);
+
+                ASSERT_NE(NeuronID(leaf_id), neuron_id);
+
+                RankNeuronId rni(MPIRank::root_rank(), NeuronID(leaf_id));
+
+                ASSERT_TRUE(nodes.contains(rni));
+                auto* node = nodes.at(rni);
+                ASSERT_GT(node->get_cell().get_number_dendrites_for(signal_type), 0);
+            } else {
+                const auto& rma_offset = distant_creation_request.get_rma_offset();
+
+                ASSERT_TRUE(rma_dict.contains(rma_offset));
+                auto* node = rma_dict.at(rma_offset);
+
+                ASSERT_GT(node->get_cell().get_number_dendrites_for(signal_type), 0);
+            }
+        }
+    }
+}
+
+TEST_F(BarnesHutBaseTest, testFindTargetNeuronsLocationAwareFuullChoiceDistributed) {
+    using additional_cell_attributes = BarnesHutCell;
+
+    NodeCacheAdapter::set_node_cache_testing_purposes();
+
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
+    const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
+
+    auto root = OctreeAdapter::get_standard_tree<additional_cell_attributes>(number_neurons, minimum, maximum, mt);
+    OctreeAdapter::mark_node_as_distributed(&root, branching_level);
+
+    const auto& nodes = OctreeAdapter::find_nodes(&root);
+    const auto& rma_dict = OctreeAdapter::find_child_offsets(&root);
+
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
+
+    for (const auto neuron_id : NeuronID::range(number_neurons)) {
+        const auto number_vacant_elements = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 10, mt);
+        const auto acceptance_criterion = RandomAdapter::get_random_double<double>(eps, Constants::bh_max_theta, mt);
+        const auto& position = SimulationAdapter::get_random_position(mt);
+
+        const RankNeuronId searching_id{ MPIRank::root_rank(), neuron_id };
+        auto found_targets = BarnesHutBase<additional_cell_attributes>::find_target_neurons_location_aware(searching_id, position, number_vacant_elements, &root, ElementType::Dendrite, searched_signal_type, branching_level, acceptance_criterion);
+
+        ASSERT_EQ(found_targets.size(), number_vacant_elements);
+
+        for (RelearnTypes::counter_type i = 0; i < number_vacant_elements; i++) {
+            const auto& [rank, distant_creation_request] = found_targets[i];
+
+            const auto& source_id = distant_creation_request.get_source_id();
+            const auto& source_position = distant_creation_request.get_source_position();
+            const auto& signal_type = distant_creation_request.get_signal_type();
+
+            ASSERT_EQ(source_id, neuron_id);
+            ASSERT_EQ(source_position, position);
+            ASSERT_EQ(signal_type, searched_signal_type);
+
+            const auto& target_type = distant_creation_request.get_target_neuron_type();
+
+            if (target_type == DistantNeuronRequest::TargetNeuronType::Leaf) {
+                const auto& leaf_id = distant_creation_request.get_leaf_node_id();
+                ASSERT_LT(leaf_id, number_neurons);
+
+                ASSERT_NE(NeuronID(leaf_id), neuron_id);
+
+                RankNeuronId rni(rank, NeuronID(leaf_id));
+
+                ASSERT_TRUE(nodes.contains(rni));
+                auto* node = nodes.at(rni);
+                ASSERT_GT(node->get_cell().get_number_dendrites_for(signal_type), 0);
+            } else {
+                const auto& rma_offset = distant_creation_request.get_rma_offset();
+
+                ASSERT_TRUE(rma_dict.contains(rma_offset));
+                auto* node = rma_dict.at(rma_offset);
+
+                ASSERT_GT(node->get_cell().get_number_dendrites_for(signal_type), 0);
+                ASSERT_GE(node->get_level(), branching_level);
+            }
+        }
+    }
+}
