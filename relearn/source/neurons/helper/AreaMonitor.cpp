@@ -203,20 +203,10 @@ void AreaMonitor::request_data(const NeuronID& neuron_id) const {
 
 void AreaMonitor::add_ingoing_connection(const AreaMonitor::AreaConnection &connection) {
     auto pair = std::make_pair(connection.from_rank, connection.from_area);
-    if (connections.contains(pair)) {
-        auto &conn = connections[pair];
-        if (connection.signal_type == SignalType::Excitatory) {
-            conn.den_ex += 1;
-        } else {
-            conn.den_inh += 1;
-        }
+    auto &conn = connections[pair];
+    if (connection.signal_type == SignalType::Excitatory) {
+        conn.den_ex += 1;
     } else {
-        auto conn = ConnectionCount();
-        if (connection.signal_type == SignalType::Excitatory) {
-            conn.den_ex += 1;
-        } else {
-            conn.den_inh += 1;
-        }
-        connections.insert(std::make_pair(pair, conn));
+        conn.den_inh += 1;
     }
 }
