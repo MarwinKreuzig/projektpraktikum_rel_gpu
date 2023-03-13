@@ -33,10 +33,10 @@ TEST_F(MonitorParserTest, testParseDescriptionFixed) {
         ASSERT_EQ(rni, parsed_rni);
     };
 
-    checker("0:0", MPIRank(0), MPIRank(0), 0);
-    checker("2:0", MPIRank(0), MPIRank(2), 0);
-    checker("155:377", MPIRank(17), MPIRank(155), 377);
-    checker("-1:17", MPIRank(5), MPIRank(5), 17);
+    checker("0:1", MPIRank(0), MPIRank(0), 0);
+    checker("2:1", MPIRank(0), MPIRank(2), 0);
+    checker("155:378", MPIRank(17), MPIRank(155), 377);
+    checker("-1:18", MPIRank(5), MPIRank(5), 17);
 }
 
 TEST_F(MonitorParserTest, testParseDescriptionFail) {
@@ -103,10 +103,10 @@ TEST_F(MonitorParserTest, testParseDescriptionsFixed) {
         { MPIRank(0), NeuronID(0) },
     };
 
-    constexpr auto description_1 = "2:100;5:6;0:122;2:100;1674:0;89512:6;0:0;0:0";
-    constexpr auto description_2 = "2:100;-1:6;0:122;2:100;1674:0;89512:6;0:0;0:0";
-    constexpr auto description_3 = "2:100;5:6;-1:122;2:100;1674:0;89512:6;-1:0;0:0";
-    constexpr auto description_4 = "2:100;5:6;-1:122;-8:800;2:100;6:;1674:0;-999:5;89512:6;-1:0;0:0";
+    constexpr auto description_1 = "2:101;5:7;0:123;2:101;1674:1;89512:7;0:1;0:1";
+    constexpr auto description_2 = "2:101;-1:7;0:123;2:101;1674:1;89512:7;0:1;0:1";
+    constexpr auto description_3 = "2:101;5:7;-1:123;2:101;1674:1;89512:7;-1:1;0:1";
+    constexpr auto description_4 = "2:101;5:7;-1:123;-8:801;2:101;6:;1674:1;-999:6;89512:7;-1:1;0:1";
 
     const auto& parsed_rnis_1 = MonitorParser::parse_multiple_description(description_1, MPIRank(3));
     ASSERT_EQ(rank_neuron_ids, parsed_rnis_1);
@@ -237,7 +237,7 @@ TEST_F(MonitorParserTest, testParseIds) {
     std::shuffle(rank_neuron_ids.begin(), rank_neuron_ids.end(), mt);
 
     std::stringstream ss{};
-    ss << "0:0";
+    ss << "0:1";
 
     for (const auto& rni : rank_neuron_ids) {
         if (rni.get_rank() != my_rank) {
@@ -248,7 +248,7 @@ TEST_F(MonitorParserTest, testParseIds) {
         const auto use_default = RandomAdapter::get_random_bool(mt);
 
         if (use_default) {
-            ss << ";-1:" << rni.get_neuron_id();
+            ss << ";-1:" << rni.get_neuron_id().get_neuron_id() + 1;
         } else {
             ss << ';' << codify_rank_neuron_id(rni);
         }

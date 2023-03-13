@@ -28,7 +28,7 @@ protected:
 
     std::string codify_rank_neuron_id(const RankNeuronId& rni) {
         std::stringstream ss{};
-        ss << rni.get_rank().get_rank() << ':' << rni.get_neuron_id();
+        ss << rni.get_rank().get_rank() << ':' << rni.get_neuron_id().get_neuron_id()+1;
         return ss.str();
     }
 
