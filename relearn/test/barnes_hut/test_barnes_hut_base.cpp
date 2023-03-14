@@ -293,6 +293,19 @@ TEST_F(BarnesHutBaseTest, testNodesToConsiderLeaf) {
         const auto discard_nodes_early = BarnesHutBase<additional_cell_attributes>::get_nodes_to_consider(position, &node, ElementType::Dendrite, searched_signal_type, acceptance_criterion);
         ASSERT_TRUE(discard_nodes_early.empty());
     }
+
+    node.set_cell_number_dendrites(0, 0);
+
+    for (auto it = 0; it < 1000; it++) {
+        const auto& position = SimulationAdapter::get_random_position(mt);
+        const auto acceptance_criterion = RandomAdapter::get_random_double<double>(eps, Constants::bh_max_theta, mt);
+
+        const auto accept_nodes = BarnesHutBase<additional_cell_attributes>::get_nodes_to_consider(position, &node, ElementType::Dendrite, searched_signal_type, acceptance_criterion);
+        ASSERT_TRUE(accept_nodes.empty());
+
+        const auto discard_nodes_early = BarnesHutBase<additional_cell_attributes>::get_nodes_to_consider(position, &node, ElementType::Dendrite, searched_signal_type, acceptance_criterion);
+        ASSERT_TRUE(discard_nodes_early.empty());
+    }
 }
 
 TEST_F(BarnesHutBaseTest, testNodesToConsiderNoDendrites) {
@@ -628,6 +641,26 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronException) {
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron({ MPIRank::root_rank(), neuron_id }, position, &root, ElementType::Dendrite, searched_signal_type, Constants::bh_max_theta + eps);, RelearnException);
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron({ MPIRank::root_rank(), neuron_id }, position, &root, ElementType::Dendrite, searched_signal_type, too_small_acceptance_criterion);, RelearnException);
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron({ MPIRank::root_rank(), neuron_id }, position, &root, ElementType::Dendrite, searched_signal_type, too_large_acceptance_criterion);, RelearnException);
+}
+
+TEST_F(BarnesHutBaseTest, testFindTargetNeuronNoDendrites) {
+    using additional_cell_attributes = BarnesHutCell;
+
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
+
+    auto root = OctreeAdapter::get_tree_no_dendrites<additional_cell_attributes>(number_neurons, minimum, maximum, mt);
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
+
+    for (const auto neuron_id : NeuronID::range(number_neurons)) {
+        const auto acceptance_criterion = RandomAdapter::get_random_double<double>(eps, Constants::bh_max_theta, mt);
+        const auto& position = SimulationAdapter::get_random_position(mt);
+
+        const RankNeuronId searching_id{ MPIRank::root_rank(), neuron_id };
+        auto found_target = BarnesHutBase<additional_cell_attributes>::find_target_neuron(searching_id, position, &root, ElementType::Dendrite, searched_signal_type, acceptance_criterion);
+
+        ASSERT_FALSE(found_target.has_value());
+    }
 }
 
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronNoChoice) {
@@ -1242,6 +1275,27 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareException) {
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron_location_aware(source, position, &root, ElementType::Dendrite, searched_signal_type, branching_level, Constants::bh_max_theta + eps);, RelearnException);
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron_location_aware(source, position, &root, ElementType::Dendrite, searched_signal_type, branching_level, too_small_acceptance_criterion);, RelearnException);
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neuron_location_aware(source, position, &root, ElementType::Dendrite, searched_signal_type, branching_level, too_large_acceptance_criterion);, RelearnException);
+}
+
+TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareNoDendrites) {
+    using additional_cell_attributes = BarnesHutCell;
+
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
+    const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
+
+    auto root = OctreeAdapter::get_tree_no_dendrites<additional_cell_attributes>(number_neurons, minimum, maximum, mt);
+    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
+
+    for (const auto neuron_id : NeuronID::range(number_neurons)) {
+        const auto acceptance_criterion = RandomAdapter::get_random_double<double>(eps, Constants::bh_max_theta, mt);
+        const auto& position = SimulationAdapter::get_random_position(mt);
+
+        const RankNeuronId searching_id{ MPIRank::root_rank(), neuron_id };
+        auto found_target = BarnesHutBase<additional_cell_attributes>::find_target_neuron_location_aware(searching_id, position, &root, ElementType::Dendrite, searched_signal_type, branching_level, acceptance_criterion);
+
+        ASSERT_FALSE(found_target.has_value());
+    }
 }
 
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareFullChoice) {
