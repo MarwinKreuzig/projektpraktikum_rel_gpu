@@ -323,6 +323,23 @@ public:
     }
 
     /**
+     * @brief Returns the children of the node. Downloads them from another MPI rank if necessary
+     * @param node The node, must not be nullptr and not a leaf
+     * @exception Throws a RelearnException if node is nullptr or node is a leaf
+     * @return The children (perfect copies of the actual children), does not transfer ownership
+     */
+    [[nodiscard]] static std::array<node_type*, Constants::number_oct> get_children(node_type* const node) {
+        RelearnException::check(node != nullptr, "NodeCache::get_children: node is nullptr");
+        RelearnException::check(node->is_parent(), "NodeCache::get_children: node is a leaf");
+
+        if (node->is_local()) {
+            return node->get_children();
+        }
+
+        return download_children(node);
+    }
+
+    /**
      * @brief Returns the currently used memory
      * @return The currently used memory
      */

@@ -11,6 +11,7 @@ endif()
 if(WIN32) # Harness
 	list(APPEND relearn_harness_additional_files "adapter/connector/ConnectorAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/event/EventAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/fast_multipole_method/FMMAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/helper/RankNeuronIdAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/interval/IntervalAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/kernel/KernelAdapter.h")
@@ -162,6 +163,7 @@ if(WIN32) # Lib
 	list(APPEND relearn_lib_additional_files "structure/NodeCache.h")
 	list(APPEND relearn_lib_additional_files "structure/Octree.h")
 	list(APPEND relearn_lib_additional_files "structure/OctreeNode.h")
+	list(APPEND relearn_lib_additional_files "structure/OctreeNodeHelper.h")
 	list(APPEND relearn_lib_additional_files "structure/Partition.h")
 	list(APPEND relearn_lib_additional_files "structure/SpaceFillingCurve.h")
 	

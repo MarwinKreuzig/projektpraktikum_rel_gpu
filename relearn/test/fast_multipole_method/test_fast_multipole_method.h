@@ -10,6 +10,12 @@
  *
  */
 
+#include "RelearnTest.hpp"
+
+class FMMTest : public RelearnTest {
+
+};
+
 // class FMMTest : public RelearnTest {
 // protected:
 //     static void SetUpTestSuite() {

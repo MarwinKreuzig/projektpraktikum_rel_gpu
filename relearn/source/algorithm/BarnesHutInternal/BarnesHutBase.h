@@ -150,8 +150,7 @@ public:
         Stack<OctreeNode<AdditionalCellAttributes>*> stack(Constants::number_prealloc_space);
 
         const auto add_children = [&stack](OctreeNode<AdditionalCellAttributes>* node) {
-            const auto is_local = node->is_local();
-            const auto& children = is_local ? node->get_children() : NodeCache<AdditionalCellAttributes>::download_children(node);
+            const auto& children = NodeCache<AdditionalCellAttributes>::get_children(node);
 
             for (auto* it : children) {
                 if (it != nullptr) {

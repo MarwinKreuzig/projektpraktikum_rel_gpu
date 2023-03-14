@@ -19,6 +19,8 @@
 #include "neurons/enums/SignalType.h"
 #include "structure/NodeCache.h"
 #include "structure/OctreeNode.h"
+#include "structure/OctreeNodeHelper.h"
+#include "util/ProbabilityPicker.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
 #include "util/Stack.h"
@@ -34,7 +36,7 @@
 
 /**
  * This enum classifies the different calculation types for the Fast Multipole Method.
- * The area-area interaction can be calculated directly, via a Hermite expansion, or 
+ * The area-area interaction can be calculated directly, via a Hermite expansion, or
  * via a Taylor expansion.
  */
 enum class CalculationType { Direct,
@@ -65,14 +67,12 @@ inline std::ostream& operator<<(std::ostream& out, const CalculationType& calc_t
  * series expansions and coefficient calculations.
  */
 class MultiIndex {
-    friend class FMMTest;
-
 public:
     /**
      * @brief Returns the number of all three-dimensional indices that the multi-index has. This depends on the selected p.
      * @return Returns the number of all indices.
      */
-    static constexpr unsigned int get_number_of_indices() noexcept {
+    [[nodiscard]] constexpr static unsigned int get_number_of_indices() noexcept {
         return Constants::p3;
     }
 
@@ -80,7 +80,7 @@ public:
      * @brief Returns the multi-index as a matrix with the dimensions (p^3, 3).
      * @return Returns a array of arrays which represents the corresponding multi-index.
      */
-    static constexpr std::array<Vec3u, Constants::p3> get_indices() noexcept {
+    [[nodiscard]] constexpr static std::array<Vec3u, Constants::p3> get_indices() noexcept {
         std::array<Vec3u, Constants::p3> result{};
 
         auto index = 0U;
@@ -123,7 +123,7 @@ public:
      * @param t Point of evaluation.
      * @return Value of the Hermite function of the n-th order at the point t.
      */
-    static double h(unsigned int n, double t) {
+    [[nodiscard]] static double h(unsigned int n, double t) {
         const auto t_squared = t * t;
 
         const auto fac_1 = std::exp(-t_squared);
@@ -140,7 +140,7 @@ public:
      * @param vector A 3D vector.
      * @return Value of the Hermite function.
      */
-    static double h_multi_index(const Vec3u& multi_index, const Vec3d& vector) {
+    [[nodiscard]] static double h_multi_index(const Vec3u& multi_index, const Vec3d& vector) {
         const auto h1 = h(multi_index.get_x(), vector.get_x());
         const auto h2 = h(multi_index.get_y(), vector.get_y());
         const auto h3 = h(multi_index.get_z(), vector.get_z());
@@ -158,59 +158,11 @@ public:
      * @param sigma scaling parameter.
      * @return Returns the attraction between the two neurons.
      */
-    static double kernel(const Vec3d& a, const Vec3d& b, const double sigma) {
+    [[nodiscard]] static double kernel(const Vec3d& a, const Vec3d& b, const double sigma) {
         const auto diff = a - b;
         const auto squared_norm = diff.calculate_squared_2_norm();
 
         return std::exp(-squared_norm / (sigma * sigma));
-    }
-
-    /**
-     * @brief Randomly selects one of the different target nodes, to which the source node should connect.
-     * @param attractiveness Vector in which the attraction forces for different nodes are entered.
-     * @return Returns the index of the choosen node.
-     */
-    static unsigned int choose_interval(const std::vector<double>& attractiveness) {
-        const auto random_number = RandomHolder::get_random_uniform_double(RandomHolderKey::Algorithm, 0.0, std::nextafter(1.0, Constants::eps));
-        const auto vec_len = attractiveness.size();
-
-        std::vector<double> intervals(vec_len + 1);
-        intervals[0] = 0;
-
-        double sum = 0;
-        for (int i = 0; i < vec_len; i++) {
-            sum = sum + attractiveness[i];
-        }
-
-        for (auto i = 1; i < vec_len + 1; i++) {
-            intervals[i] = intervals[i - 1ULL] + (attractiveness[i - 1ULL] / sum);
-        }
-
-        int i = 0;
-        while (random_number > intervals[i + 1ULL] && i <= vec_len) {
-            i++;
-        }
-
-        if (i >= vec_len + 1) {
-            return 0;
-        }
-
-        return i;
-    }
-
-    /**
-     * @brief Counts the elements in an interaction list that are not nullptr.
-     * @param arr Interaction list containing OctreeNodes.
-     * @return Number of elements unequal to nullptr.
-     */
-    static unsigned int count_non_zero_elements(const interaction_list_type& arr) noexcept {
-        auto non_zero_counter = 0U;
-        for (auto i = 0U; i < arr.size(); i++) {
-            if (arr[i] != nullptr) {
-                non_zero_counter++;
-            }
-        }
-        return non_zero_counter;
     }
 
     /**
@@ -219,7 +171,7 @@ public:
      * @param index Index of the desired node.
      * @return The specified element, can be nullptr if not enough non-nullptr elements are present
      */
-    static OctreeNode<AdditionalCellAttributes>* extract_element(const interaction_list_type& arr, const unsigned int index) noexcept {
+    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* extract_element(const interaction_list_type& arr, const unsigned int index) noexcept {
         auto non_zero_counter = 0U;
         for (auto i = 0U; i < arr.size(); i++) {
             if (arr[i] != nullptr) {
@@ -233,74 +185,6 @@ public:
     }
 
     /**
-     * @brief Checks whether a node is already in the cache and reloads the child nodes if necessary. Sets a children to nullptr, when it has no vacant dendrites.
-     * @param node Node which is checked.
-     * @exception Throws a RelearnException if node == nullptr or if node->is_parent()
-     * @return Interaction list with all children.
-     */
-    static std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct> get_children_to_array(OctreeNode<AdditionalCellAttributes>* node) {
-        RelearnException::check(node != nullptr, "FastMultipoleMethodsBase::get_children_to_array: Node was a nullptr.");
-        RelearnException::check(node->is_parent(), "FastMultipoleMethodsBase::get_children_to_array: Node has no children.");
-
-        const auto is_local = node->is_local();
-        const auto result = is_local ? node->get_children() : NodeCache<AdditionalCellAttributes>::download_children(node);
-
-        return result;
-    }
-
-    /**
-     * @brief Returns a vector of all positions of the selected type that have a free port of the requested SignalType.
-     * @param node OctreeNode from which the elements are to be counted.
-     * @param type Type of synaptic elements (axon or dendrite).
-     * @param needed The requested SignalType.
-     * @exception Throws a RelearnException if node == nullptr
-     * @return A vector of all actual positions.
-     */
-    static std::vector<std::pair<position_type, counter_type>> get_all_positions_for(OctreeNode<AdditionalCellAttributes>* node, const ElementType element_type, const SignalType signal_type) {
-        RelearnException::check(node != nullptr, "FastMultipoleMethodsBase::get_all_positions_for: node is nullptr");
-
-        std::vector<std::pair<position_type, counter_type>> result{};
-        result.reserve(30);
-
-        Stack<OctreeNode<AdditionalCellAttributes>*> stack{ 30 };
-        stack.emplace_back(node);
-
-        while (!stack.empty()) {
-            auto* current_node = stack.pop_back();
-            if (current_node == nullptr) {
-                continue;
-            }
-
-            if (current_node->is_leaf()) {
-                // Get number and position, depending on which types were chosen.
-                const auto& cell = current_node->get_cell();
-                const auto& opt_position = cell.get_position_for(element_type, signal_type);
-                RelearnException::check(opt_position.has_value(), "FastMultipoleMethodsBase::get_all_positions_for: opt_position has no value.");
-
-                const auto number_elements = cell.get_number_elements_for(element_type, signal_type);
-                result.emplace_back(opt_position.value(), number_elements);
-                continue;
-            }
-
-            const auto& children = get_children_to_array(current_node);
-            for (auto* child : children) {
-                if (child == nullptr) {
-                    continue;
-                }
-
-                if (const auto number_elements = child->get_cell().get_number_elements_for(element_type, signal_type); number_elements == 0) {
-                    continue;
-                }
-
-                // push children to stack that have relevant elements
-                stack.emplace_back(child);
-            }
-        }
-
-        return result;
-    }
-
-    /**
      * @brief Checks which calculation type is suitable for a given source and target node
      * @param source Node with vacant searching elements
      * @param target Node with vacant searched elements
@@ -309,7 +193,7 @@ public:
      * @exception Throws a RelearnException if source or target are nullptr
      * @return The calculation type that is appropriate for the forces
      */
-    static CalculationType check_calculation_requirements(const OctreeNode<AdditionalCellAttributes>* source, const OctreeNode<AdditionalCellAttributes>* target,
+    [[nodiscard]] static CalculationType check_calculation_requirements(const OctreeNode<AdditionalCellAttributes>* source, const OctreeNode<AdditionalCellAttributes>* target,
         const ElementType element_type, const SignalType signal_type) {
         RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::check_calculation_requirements: source is nullptr");
         RelearnException::check(target != nullptr, "FastMultipoleMethodsBase::check_calculation_requirements: target is nullptr");
@@ -342,7 +226,7 @@ public:
      * @exception Throws a RelearnException if source or target are nullptr
      * @return Returns the total attraction of the neurons.
      */
-    static double calc_direct_gauss(OctreeNode<AdditionalCellAttributes>* source, OctreeNode<AdditionalCellAttributes>* target,
+    [[nodiscard]] static double calc_direct_gauss(OctreeNode<AdditionalCellAttributes>* source, OctreeNode<AdditionalCellAttributes>* target,
         const ElementType element_type, const SignalType signal_type_needed) {
         RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::calc_direct_gauss: source is nullptr");
         RelearnException::check(target != nullptr, "FastMultipoleMethodsBase::calc_direct_gauss: target is nullptr");
@@ -350,8 +234,8 @@ public:
         const auto sigma = GaussianDistributionKernel::get_sigma();
         const auto other_element_type = get_other_element_type(element_type);
 
-        const auto& sources = get_all_positions_for(source, element_type, signal_type_needed);
-        const auto& targets = get_all_positions_for(target, other_element_type, signal_type_needed);
+        const auto& sources = OctreeNodeExtractor<AdditionalCellAttributes>::get_all_positions_for(source, element_type, signal_type_needed);
+        const auto& targets = OctreeNodeExtractor<AdditionalCellAttributes>::get_all_positions_for(target, other_element_type, signal_type_needed);
 
         auto result = 0.0;
 
@@ -375,7 +259,7 @@ public:
      *      the children have no valid position for it
      * @returns Returns the hermite coefficients.
      */
-    static std::vector<double> calc_hermite_coefficients(const OctreeNode<AdditionalCellAttributes>* source, const ElementType element_type, const SignalType signal_type_needed) {
+    [[nodiscard]] static std::vector<double> calc_hermite_coefficients(const OctreeNode<AdditionalCellAttributes>* source, const ElementType element_type, const SignalType signal_type_needed) {
         RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::calc_hermite_coefficients: source is nullptr");
         RelearnException::check(source->is_parent(), "FastMultipoleMethodsBase::calc_hermite_coefficients: source node was a leaf node");
 
@@ -433,7 +317,7 @@ public:
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @return Returns the taylor coefficients.
      */
-    static std::vector<double> calc_taylor_coefficients(const OctreeNode<AdditionalCellAttributes>* source, const position_type& target_center,
+    [[nodiscard]] static std::vector<double> calc_taylor_coefficients(const OctreeNode<AdditionalCellAttributes>* source, const position_type& target_center,
         const ElementType element_type, const SignalType signal_type_needed) {
         RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::calc_taylor_coefficients: source is nullptr");
         RelearnException::check(source->is_parent(), "FastMultipoleMethodsBase::calc_taylor_coefficients: source node was a leaf node");
@@ -498,7 +382,7 @@ public:
      * @exception Can throw a RelearnException.
      * @return Returns the attraction force.
      */
-    static double calc_hermite(const OctreeNode<AdditionalCellAttributes>* source, OctreeNode<AdditionalCellAttributes>* target,
+    [[nodiscard]] static double calc_hermite(const OctreeNode<AdditionalCellAttributes>* source, OctreeNode<AdditionalCellAttributes>* target,
         const std::vector<double>& coefficients_buffer, const ElementType element_type, const SignalType signal_type_needed) {
         RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::calc_hermite::calc_direct_gauss: source is nullptr");
         RelearnException::check(target != nullptr, "FastMultipoleMethodsBase::calc_hermite::calc_direct_gauss: target is nullptr");
@@ -518,7 +402,7 @@ public:
 
         double total_attraction = 0.0;
 
-        const auto& interaction_list = get_children_to_array(target);
+        const auto& interaction_list = NodeCache<AdditionalCellAttributes>::get_children(target);
         for (const auto* child_target : interaction_list) {
             if (child_target == nullptr) {
                 continue;
@@ -556,7 +440,7 @@ public:
      * @exception Can throw a RelearnException.
      * @return Returns the attraction force.
      */
-    static double calc_taylor(const OctreeNode<AdditionalCellAttributes>* source, OctreeNode<AdditionalCellAttributes>* target,
+    [[nodiscard]] static double calc_taylor(const OctreeNode<AdditionalCellAttributes>* source, OctreeNode<AdditionalCellAttributes>* target,
         const ElementType element_type, const SignalType signal_type_needed) {
         RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::calc_taylor: source is nullptr");
         RelearnException::check(target != nullptr, "FastMultipoleMethodsBase::calc_taylor: target is nullptr");
@@ -571,7 +455,7 @@ public:
         const auto& taylor_coefficients = calc_taylor_coefficients(source, target_center, other_element_type, signal_type_needed);
 
         const auto& indices = MultiIndex::get_indices();
-        const auto& target_children = get_children_to_array(target);
+        const auto& target_children = NodeCache<AdditionalCellAttributes>::get_children(target);
 
         auto result = 0.0;
         for (const auto* target_child : target_children) {
@@ -610,7 +494,7 @@ public:
      * @exception Can throw a RelearnException
      * @return Returns a vector with the calculated forces of attraction. This contains as many elements as the interaction list.
      */
-    static std::vector<double> calc_attractiveness_to_connect(OctreeNode<AdditionalCellAttributes>* source, const interaction_list_type& interaction_list,
+    [[nodiscard]] static std::vector<double> calc_attractiveness_to_connect(OctreeNode<AdditionalCellAttributes>* source, const interaction_list_type& interaction_list,
         const ElementType element_type, const SignalType signal_type_needed) {
         RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::calc_attractiveness_to_connect: Source was a nullptr.");
 
@@ -665,7 +549,7 @@ public:
      * @param signal_type Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @return The corresponding interaction list suitable for one source node.
      */
-    static interaction_list_type align_interaction_list(OctreeNode<AdditionalCellAttributes>* source_node, OctreeNode<AdditionalCellAttributes>* target_parent,
+    [[nodiscard]] static interaction_list_type align_interaction_list(OctreeNode<AdditionalCellAttributes>* source_node, OctreeNode<AdditionalCellAttributes>* target_parent,
         const ElementType element_type, const SignalType signal_type) {
         RelearnException::check(source_node != nullptr, "FastMultipoleMethodsBase::align_interaction_list: source_node was null!");
         RelearnException::check(target_parent != nullptr, "FastMultipoleMethodsBase::align_interaction_list: target_parent was null!");
@@ -690,7 +574,7 @@ public:
                 continue;
             }
 
-            const auto& children = get_children_to_array(current_node);
+            const auto& children = NodeCache<AdditionalCellAttributes>::get_children(current_node);
             for (auto* child : children) {
                 if (child == nullptr) {
                     continue;
@@ -716,7 +600,7 @@ public:
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @return Returns selected targets, which were chosen according to probability and together have more dendrites than there are axons.
      */
-    static std::vector<OctreeNode<AdditionalCellAttributes>*> make_target_list(OctreeNode<AdditionalCellAttributes>* source_node, const interaction_list_type& interaction_list,
+    [[nodiscard]] static std::vector<OctreeNode<AdditionalCellAttributes>*> make_target_list(OctreeNode<AdditionalCellAttributes>* source_node, const interaction_list_type& interaction_list,
         const ElementType element_type, const SignalType signal_type_needed) {
         RelearnException::check(source_node != nullptr, "FastMultipoleMethodsBase::make_target_list: source_node is nullptr");
         RelearnException::check(source_node->is_leaf(), "FastMultipoleMethodsBase::make_target_list: source_node is not a leaf");
@@ -727,14 +611,14 @@ public:
         auto source_number = source_node->get_cell().get_number_elements_for(element_type, signal_type_needed);
 
         // How many target children we still have left
-        auto number_target_children = count_non_zero_elements(interaction_list);
+        auto number_target_children = std::count_if(interaction_list.begin(), interaction_list.end(), [](auto* ptr) { return ptr != nullptr; });
         std::vector<OctreeNode<AdditionalCellAttributes>*> target_list{};
         target_list.reserve(number_target_children);
 
         auto connection_probabilities = calc_attractiveness_to_connect(source_node, interaction_list, element_type, signal_type_needed);
 
         while (source_number > 0 && number_target_children > 0) {
-            const auto chosen_index = choose_interval(connection_probabilities);
+            const auto chosen_index = ProbabilityPicker::pick_target(connection_probabilities, RandomHolderKey::Algorithm);
             const auto target_node = extract_element(interaction_list, chosen_index);
 
             source_number -= target_node->get_cell().get_number_elements_for(other_element_type, signal_type_needed);
@@ -757,7 +641,7 @@ public:
      * @param stack Reference to the stack on which the pairs must be pushed back.
      * @param source_children Reference on the children of the source node.
      */
-    static void make_stack_entries_for_leaf(OctreeNode<AdditionalCellAttributes>* target_node, const SignalType signal_type_needed, const ElementType element_type,
+    [[nodiscard]] static void make_stack_entries_for_leaf(OctreeNode<AdditionalCellAttributes>* target_node, const SignalType signal_type_needed, const ElementType element_type,
         Stack<stack_entry>& stack, const std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct>& source_children) {
         RelearnException::check(target_node != nullptr, "FastMultipoleMethodsBase::make_stack_entries_for_leaf: target_node is nullptr");
         RelearnException::check(target_node->is_leaf(), "FastMultipoleMethodsBase::make_stack_entries_for_leaf: target_node wasn't a leaf");
@@ -788,7 +672,7 @@ public:
         }
 
         while (number_searched_elements > 0 && number_source_children > 0) {
-            const auto chosen_index = choose_interval(attractiveness);
+            const auto chosen_index = ProbabilityPicker::pick_target(attractiveness, RandomHolderKey::Algorithm);
 
             number_searched_elements -= source_children[chosen_index]->get_cell().get_number_elements_for(element_type, signal_type_needed);
             attractiveness[chosen_index] = 0;
@@ -807,7 +691,7 @@ public:
      * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
      * @return Returns the initialised stack.
      */
-    static Stack<stack_entry> init_stack(OctreeNode<AdditionalCellAttributes>* root, const std::vector<OctreeNode<AdditionalCellAttributes>*>& local_roots,
+    [[nodiscard]] static Stack<stack_entry> init_stack(OctreeNode<AdditionalCellAttributes>* root, const std::vector<OctreeNode<AdditionalCellAttributes>*>& local_roots,
         const std::uint16_t branch_level, const ElementType element_type, const SignalType signal_type_needed) {
 
         Stack<stack_entry> stack{ 200 };
@@ -816,7 +700,7 @@ public:
         }
 
         if (branch_level == 0) {
-            const auto& root_children = FastMultipoleMethodsBase::get_children_to_array(root);
+            const auto& root_children = NodeCache<AdditionalCellAttributes>::get_children(root);
             for (auto* child : root_children) {
                 if (child == nullptr) {
                     continue;
@@ -866,7 +750,7 @@ public:
      *      When Constants::unpacking == 0 the stack is not changed.
      * @param stack Stack on which node pairs are located and on which is worked on.
      */
-    static void unpack_node_pair(Stack<stack_entry>& stack) {
+    [[nodiscard]] static void unpack_node_pair(Stack<stack_entry>& stack) {
         if (Constants::unpacking == 0) {
             return;
         }
@@ -914,7 +798,7 @@ public:
      * @param request SynapseCreationRequest which should be extended. This must be created before the method is called.
      * @exception Can throw a RelearnException.
      */
-    static void make_creation_request_for(OctreeNode<AdditionalCellAttributes>* root, const std::vector<OctreeNode<AdditionalCellAttributes>*>& local_roots,
+    [[nodiscard]] static void make_creation_request_for(OctreeNode<AdditionalCellAttributes>* root, const std::vector<OctreeNode<AdditionalCellAttributes>*>& local_roots,
         const std::uint16_t branch_level, const ElementType element_type, const SignalType signal_type_needed, CommunicationMap<SynapseCreationRequest>& request) {
         RelearnException::check(root != nullptr, "FastMultipoleMethodsBase::make_creation_request_for: root is nullptr");
 
@@ -967,7 +851,7 @@ public:
 
             // source is an inner node
             const auto& connection_probabilities = calc_attractiveness_to_connect(source_node, interaction_list, element_type, signal_type_needed);
-            const auto chosen_index = choose_interval(connection_probabilities);
+            const auto chosen_index = ProbabilityPicker::pick_target(connection_probabilities, RandomHolderKey::Algorithm);
             auto* target_node = extract_element(interaction_list, chosen_index);
             const auto& source_children = source_node->get_children();
 
@@ -984,7 +868,7 @@ public:
         }
     }
 
-    static void print_calculation(std::ostream& out_stream, OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target,
+    [[nodiscard]] static void print_calculation(std::ostream& out_stream, OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target,
         const ElementType element_type, const SignalType needed) {
 
         const auto other_element_type = get_other_element_type(element_type);

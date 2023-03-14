@@ -63,7 +63,7 @@ public:
     }
 
     template <typename AdditionalCellAttributes>
-    static std::vector<OctreeNode<AdditionalCellAttributes>*> extract_branch_nodes(const OctreeNode<AdditionalCellAttributes>* root) {
+    static std::vector<OctreeNode<AdditionalCellAttributes>*> extract_leaf_nodes(const OctreeNode<AdditionalCellAttributes>* root) {
         std::vector<const OctreeNode<AdditionalCellAttributes>*> return_value{};
 
         std::stack<const OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
