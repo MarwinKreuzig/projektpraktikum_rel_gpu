@@ -1386,7 +1386,7 @@ TEST_F(BarnesHutInvertedBaseTest, testFindTargetNeuronsLocationAwareException) {
     ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::find_target_neurons_location_aware(source, position, 1, &root, ElementType::Axon, searched_signal_type, branching_level, too_large_acceptance_criterion);, RelearnException);
 }
 
-TEST_F(BarnesHutInvertedBaseTest, testFindTargetNeuronsLocationAwareFuullChoice) {
+TEST_F(BarnesHutInvertedBaseTest, testFindTargetNeuronsLocationAwareFullChoice) {
     using additional_cell_attributes = BarnesHutInvertedCell;
 
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
@@ -1446,7 +1446,7 @@ TEST_F(BarnesHutInvertedBaseTest, testFindTargetNeuronsLocationAwareFuullChoice)
     }
 }
 
-TEST_F(BarnesHutInvertedBaseTest, testFindTargetNeuronsLocationAwareFuullChoiceDistributed) {
+TEST_F(BarnesHutInvertedBaseTest, testFindTargetNeuronsLocationAwareFullChoiceDistributed) {
     using additional_cell_attributes = BarnesHutInvertedCell;
 
     NodeCacheAdapter::set_node_cache_testing_purposes();
@@ -1490,9 +1490,9 @@ TEST_F(BarnesHutInvertedBaseTest, testFindTargetNeuronsLocationAwareFuullChoiceD
                 const auto& leaf_id = distant_creation_request.get_leaf_node_id();
                 ASSERT_LT(leaf_id, number_neurons);
 
-                ASSERT_NE(NeuronID(leaf_id), neuron_id);
-
                 RankNeuronId rni(rank, NeuronID(leaf_id));
+
+                ASSERT_NE(rni, searching_id);
 
                 ASSERT_TRUE(nodes.contains(rni));
                 auto* node = nodes.at(rni);

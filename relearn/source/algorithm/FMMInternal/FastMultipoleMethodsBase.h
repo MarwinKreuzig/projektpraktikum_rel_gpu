@@ -32,6 +32,7 @@
 #include <cmath>
 #include <optional>
 #include <ostream>
+#include <span>
 #include <vector>
 
 /**
@@ -171,7 +172,7 @@ public:
      * @param index Index of the desired node.
      * @return The specified element, can be nullptr if not enough non-nullptr elements are present
      */
-    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* extract_element(const interaction_list_type& arr, const unsigned int index) noexcept {
+    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* extract_element(const interaction_list_type& arr, const interaction_list_type::size_type index) noexcept {
         auto non_zero_counter = 0U;
         for (auto i = 0U; i < arr.size(); i++) {
             if (arr[i] != nullptr) {
@@ -188,13 +189,13 @@ public:
      * @brief Checks which calculation type is suitable for a given source and target node
      * @param source Node with vacant searching elements
      * @param target Node with vacant searched elements
-     * @param element_type Specifies which type of synaptic element initiates the search
-     * @param signal_type Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory)
+     * @param searched_element_type The element type that is seached for (in the targets)
+     * @param signal_type Specifies for which type of neurons the calculation is to be executed
      * @exception Throws a RelearnException if source or target are nullptr
      * @return The calculation type that is appropriate for the forces
      */
     [[nodiscard]] static CalculationType check_calculation_requirements(const OctreeNode<AdditionalCellAttributes>* source, const OctreeNode<AdditionalCellAttributes>* target,
-        const ElementType element_type, const SignalType signal_type) {
+        const ElementType searched_element_type, const SignalType signal_type) {
         RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::check_calculation_requirements: source is nullptr");
         RelearnException::check(target != nullptr, "FastMultipoleMethodsBase::check_calculation_requirements: target is nullptr");
 
@@ -205,12 +206,12 @@ public:
         const auto& source_cell = source->get_cell();
         const auto& target_cell = target->get_cell();
 
-        const auto other_element_type = get_other_element_type(element_type);
-        if (target_cell.get_number_elements_for(other_element_type, signal_type) <= Constants::max_neurons_in_target) {
+        const auto other_element_type = get_other_element_type(searched_element_type);
+        if (target_cell.get_number_elements_for(searched_element_type, signal_type) <= Constants::max_neurons_in_target) {
             return CalculationType::Direct;
         }
 
-        if (source_cell.get_number_elements_for(element_type, signal_type) > Constants::max_neurons_in_source) {
+        if (source_cell.get_number_elements_for(other_element_type, signal_type) > Constants::max_neurons_in_source) {
             return CalculationType::Hermite;
         }
 
@@ -221,21 +222,21 @@ public:
      * @brief Calculates the force of attraction between all neurons from the subtrees
      * @param source The subtree that has all the sources in it
      * @param targets The subtree that has all the targets in it
-     * @param element_type The element type that is looking for a connection
-     * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
+     * @param searched_element_type The element type that is seached for (in the targets)
+     * @param signal_type Specifies for which type of neurons the calculation is to be executed
      * @exception Throws a RelearnException if source or target are nullptr
      * @return Returns the total attraction of the neurons.
      */
     [[nodiscard]] static double calc_direct_gauss(OctreeNode<AdditionalCellAttributes>* source, OctreeNode<AdditionalCellAttributes>* target,
-        const ElementType element_type, const SignalType signal_type_needed) {
+        const ElementType searched_element_type, const SignalType signal_type) {
         RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::calc_direct_gauss: source is nullptr");
         RelearnException::check(target != nullptr, "FastMultipoleMethodsBase::calc_direct_gauss: target is nullptr");
 
         const auto sigma = GaussianDistributionKernel::get_sigma();
-        const auto other_element_type = get_other_element_type(element_type);
+        const auto other_element_type = get_other_element_type(searched_element_type);
 
-        const auto& sources = OctreeNodeExtractor<AdditionalCellAttributes>::get_all_positions_for(source, element_type, signal_type_needed);
-        const auto& targets = OctreeNodeExtractor<AdditionalCellAttributes>::get_all_positions_for(target, other_element_type, signal_type_needed);
+        const auto& sources = OctreeNodeExtractor<AdditionalCellAttributes>::get_all_positions_for(source, other_element_type, signal_type);
+        const auto& targets = OctreeNodeExtractor<AdditionalCellAttributes>::get_all_positions_for(target, searched_element_type, signal_type);
 
         auto result = 0.0;
 
@@ -253,13 +254,13 @@ public:
      * @brief Calculates the hermite coefficients for a source node. The calculation of coefficients and series
      *      expansion is executed separately, because the coefficients can be reused.
      * @param source Node with vacant elements
-     * @param element_type The type of synaptic elements that searches for partners
-     * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
+     * @param seaching_element_type The type of synaptic elements that searches for partners (in the sources)
+     * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed
      * @exception Throws a RelearnException if source is nullptr, has no children, has no valid position for the specified combination of element type and signal type, or
      *      the children have no valid position for it
      * @returns Returns the hermite coefficients.
      */
-    [[nodiscard]] static std::vector<double> calc_hermite_coefficients(const OctreeNode<AdditionalCellAttributes>* source, const ElementType element_type, const SignalType signal_type_needed) {
+    [[nodiscard]] static std::vector<double> calc_hermite_coefficients(const OctreeNode<AdditionalCellAttributes>* source, const ElementType seaching_element_type, const SignalType signal_type_needed) {
         RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::calc_hermite_coefficients: source is nullptr");
         RelearnException::check(source->is_parent(), "FastMultipoleMethodsBase::calc_hermite_coefficients: source node was a leaf node");
 
@@ -269,15 +270,15 @@ public:
         const auto& indices = MultiIndex::get_indices();
 
         std::vector<double> hermite_coefficients{};
-        hermite_coefficients.reserve(Constants::p3);
+        hermite_coefficients.resize(Constants::p3);
 
         const auto& source_cell = source->get_cell();
-        const auto& source_position_opt = source_cell.get_position_for(element_type, signal_type_needed);
+        const auto& source_position_opt = source_cell.get_position_for(seaching_element_type, signal_type_needed);
         RelearnException::check(source_position_opt.has_value(), "FastMultipoleMethodsBase::calc_hermite_coefficients: source has no valid position.");
 
         const auto& source_position = source_position_opt.value();
 
-        for (auto a = 0U; a < Constants::p3; a++) {
+        for (auto index = 0U; index < Constants::p3; index++) {
             auto child_attraction = 0.0;
 
             const auto& children = source->get_children();
@@ -287,20 +288,20 @@ public:
                 }
 
                 const auto& cell = child->get_cell();
-                const auto child_number_axons = cell.get_number_elements_for(element_type, signal_type_needed);
+                const auto child_number_axons = cell.get_number_elements_for(seaching_element_type, signal_type_needed);
                 if (child_number_axons == 0) {
                     continue;
                 }
 
-                const auto& child_pos = cell.get_position_for(element_type, signal_type_needed);
+                const auto& child_pos = cell.get_position_for(seaching_element_type, signal_type_needed);
                 RelearnException::check(child_pos.has_value(), "FastMultipoleMethodsBase::calc_hermite_coefficients: source child has no valid position.");
 
                 const auto& temp_vec = (child_pos.value() - source_position) / sigma;
-                child_attraction += child_number_axons * (temp_vec.get_componentwise_power(indices[a]));
+                child_attraction += child_number_axons * (temp_vec.get_componentwise_power(indices[index]));
             }
 
-            const auto hermite_coefficient = child_attraction / indices[a].get_componentwise_factorial();
-            hermite_coefficients[a] = hermite_coefficient;
+            const auto hermite_coefficient = child_attraction / indices[index].get_componentwise_factorial();
+            hermite_coefficients[index] = hermite_coefficient;
         }
 
         Timers::stop_and_add(TimerRegion::CALC_HERMITE_COEFFICIENTS);
@@ -312,13 +313,15 @@ public:
      * @brief Calculates the taylor coefficients for a pair of nodes. The calculation of coefficients and series
      *      expansion is executed separately.
      * @param source Node with vacant elements
-     * @param target_center Position of the target node.
-     * @param element_type The type of synaptic elements that searches for partners
-     * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
+     * @param target_center Position of the target node
+     * @param seaching_element_type The type of synaptic elements that searches for partners (in the sources)
+     * @param signal_type Specifies for which type of neurons the calculation is to be executed
+     * @exception Throws a RelearnException if source is nullptr, has no children, has no valid position for the specified combination of element type and signal type, or
+     *      the children have no valid position for it
      * @return Returns the taylor coefficients.
      */
     [[nodiscard]] static std::vector<double> calc_taylor_coefficients(const OctreeNode<AdditionalCellAttributes>* source, const position_type& target_center,
-        const ElementType element_type, const SignalType signal_type_needed) {
+        const ElementType seaching_element_type, const SignalType signal_type) {
         RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::calc_taylor_coefficients: source is nullptr");
         RelearnException::check(source->is_parent(), "FastMultipoleMethodsBase::calc_taylor_coefficients: source node was a leaf node");
 
@@ -327,12 +330,12 @@ public:
         const auto sigma = GaussianDistributionKernel::get_sigma();
         const auto& indices = MultiIndex::get_indices();
 
-        std::vector<double> taylor_coefficients{ 0.0 };
-        taylor_coefficients.reserve(Constants::p3);
+        std::vector<double> taylor_coefficients{};
+        taylor_coefficients.resize(Constants::p3);
 
         const auto& children = source->get_children();
 
-        for (auto index = 0; index < Constants::p3; index++) {
+        for (auto index = 0U; index < Constants::p3; index++) {
             // NOLINTNEXTLINE
             const auto& current_index = indices[index];
 
@@ -343,12 +346,12 @@ public:
                 }
 
                 const auto& cell = source_child->get_cell();
-                const auto number_elements = cell.get_number_elements_for(element_type, signal_type_needed);
+                const auto number_elements = cell.get_number_elements_for(seaching_element_type, signal_type);
                 if (number_elements == 0) {
                     continue;
                 }
 
-                const auto& child_pos = cell.get_position_for(element_type, signal_type_needed);
+                const auto& child_pos = cell.get_position_for(seaching_element_type, signal_type);
                 RelearnException::check(child_pos.has_value(), "FastMultipoleMethodsBase::calc_taylor_coefficients: source child has no position.");
 
                 const auto& temp_vec = (child_pos.value() - target_center) / sigma;
@@ -377,22 +380,25 @@ public:
      * @param source Node with vacant searching elements.
      * @param target Node with vacant searched elements.
      * @param coefficients_buffer Memory location where the coefficients are stored.
-     * @param element_type The element type that searches
-     * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed (inhibitory or excitatory).
-     * @exception Can throw a RelearnException.
+     * @param seaching_element_type The type of synaptic elements that searches for partners (in the sources)
+     * @param signal_type_needed Specifies for which type of neurons the calculation is to be executed
+     * @exception Throws a RelearnException if source or target is nullptr, the buffer does not have the size Constants::p3,
+     *      target is a leaf node, or source does not have a position of the requested tuple
      * @return Returns the attraction force.
      */
     [[nodiscard]] static double calc_hermite(const OctreeNode<AdditionalCellAttributes>* source, OctreeNode<AdditionalCellAttributes>* target,
-        const std::vector<double>& coefficients_buffer, const ElementType element_type, const SignalType signal_type_needed) {
+        std::span<const double> coefficients_buffer, const ElementType seaching_element_type, const SignalType signal_type_needed) {
         RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::calc_hermite::calc_direct_gauss: source is nullptr");
         RelearnException::check(target != nullptr, "FastMultipoleMethodsBase::calc_hermite::calc_direct_gauss: target is nullptr");
-
-        const auto sigma = GaussianDistributionKernel::get_sigma();
-        const auto other_element_type = get_other_element_type(element_type);
+        RelearnException::check(coefficients_buffer.size() == Constants::p3,
+            "FastMultipoleMethodsBase::calc_hermite::calc_direct_gauss: The coefficients must have size {} but have size {}", Constants::p3, coefficients_buffer.size());
 
         RelearnException::check(target->is_parent(), "FastMultipoleMethodsBase::calc_hermite: target node was a leaf node");
 
-        const auto& opt_source_center = source->get_cell().get_position_for(element_type, signal_type_needed);
+        const auto sigma = GaussianDistributionKernel::get_sigma();
+        const auto other_element_type = get_other_element_type(seaching_element_type);
+
+        const auto& opt_source_center = source->get_cell().get_position_for(seaching_element_type, signal_type_needed);
         RelearnException::check(opt_source_center.has_value(), "FastMultipoleMethodsBase::calc_hermite: source node has no axon position.");
 
         const auto& source_center = opt_source_center.value();
