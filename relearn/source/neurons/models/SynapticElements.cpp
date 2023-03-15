@@ -14,6 +14,9 @@
 #include "util/Random.h"
 
 void SynapticElements::init(const number_neurons_type number_neurons) {
+    RelearnException::check(size == 0, "SynapticElements::init: Was already initialized");
+    RelearnException::check(number_neurons > 0, "SynapticElements::init: Cannot initialize with 0 neurons");
+
     size = number_neurons;
 
     grown_elements.resize(size);
@@ -32,6 +35,9 @@ void SynapticElements::init(const number_neurons_type number_neurons) {
 }
 
 void SynapticElements::create_neurons(const number_neurons_type creation_count) {
+    RelearnException::check(size > 0, "SynapticElements::create_neurons: Was not initialized");
+    RelearnException::check(creation_count > 0, "SynapticElements::create_neurons: Cannot create 0 neurons");
+
     const auto current_size = size;
     const auto new_size = current_size + creation_count;
 

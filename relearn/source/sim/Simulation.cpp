@@ -133,7 +133,9 @@ void Simulation::initialize() {
     synapse_deletion_finder->set_dendrites_ex(dendrites_ex);
     synapse_deletion_finder->set_dendrites_in(dendrites_in);
 
-    neurons = std::make_shared<Neurons>(partition, std::move(neuron_models), std::move(calcium_calculator), axons, dendrites_ex, dendrites_in, std::move(synapse_deletion_finder));
+    network_graph = std::make_shared<NetworkGraph>(my_rank);
+
+    neurons = std::make_shared<Neurons>(partition, std::move(neuron_models), std::move(calcium_calculator), network_graph, axons, dendrites_ex, dendrites_in, std::move(synapse_deletion_finder));
     neurons->init(number_local_neurons);
     NeuronMonitor::neurons_to_monitor = neurons;
 
@@ -205,8 +207,6 @@ void Simulation::initialize() {
         RelearnException::fail("Simulation::initialize: AlgorithmEnum {} not yet implemented!", static_cast<int>(algorithm_enum));
     }
 
-    network_graph = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
-
     const auto& extra_infos = neurons->get_extra_info();
     algorithm->set_neuron_extra_infos(extra_infos);
     algorithm->set_synaptic_elements(axons, dendrites_ex, dendrites_in);
@@ -214,8 +214,6 @@ void Simulation::initialize() {
     neurons->set_local_area_translator(local_area_translator);
     neurons->set_signal_types(std::move(signal_types));
     neurons->set_positions(std::move(neuron_positions));
-
-    neurons->set_network_graph(network_graph);
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 

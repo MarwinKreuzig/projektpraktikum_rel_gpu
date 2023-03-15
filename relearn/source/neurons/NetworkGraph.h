@@ -403,20 +403,30 @@ class NetworkGraph {
         NetworkGraphBase() = default;
 
         /**
-         * @brief Constructs an object that has enough space to store the given number of neurons
-         * @param number_neurons The number of neurons that the object shall handle, > 0
+         * @brief Constructs an object and saves the given rank
          * @param mpi_rank The mpi rank that handles this portion of the graph, must be initialized
-         * @exception Throws a RelearnException if mpi_rank is not initialized or number_neurons == 0
+         * @exception Throws a RelearnException if mpi_rank is not initialized
          */
-        NetworkGraphBase(const number_neurons_type number_neurons, const MPIRank mpi_rank)
-            : neuron_distant_in_neighborhood(number_neurons)
-            , neuron_distant_out_neighborhood(number_neurons)
-            , neuron_local_in_neighborhood(number_neurons)
-            , neuron_local_out_neighborhood(number_neurons)
-            , number_local_neurons(number_neurons)
-            , my_rank(mpi_rank) {
-            RelearnException::check(number_neurons > 0, "NetworkGraph::NetworkGraphBase::NetworkGraphBase: The number of neurons must be positive");
+        NetworkGraphBase(const MPIRank mpi_rank)
+            : my_rank(mpi_rank) {
             RelearnException::check(my_rank.is_initialized(), "NetworkGraph::NetworkGraphBase::NetworkGraphBase: The mpi rank must be initialized");
+        }
+
+        /**
+         * @brief Initializes the base with the number of neurons
+         * @param number_neurons The number of neurons, must be > 0
+         * @exception Throws a RelearnException if already called or if number_neurons == 0
+         */
+        void init(const number_neurons_type number_neurons) {
+            RelearnException::check(number_local_neurons == 0, "NetworkGraph::NetworkGraphBase::init: Was already initialized");
+            RelearnException::check(number_neurons > 0, "NetworkGraph::NetworkGraphBase::init: Cannot initialize with 0 neurons");
+
+            number_local_neurons = number_neurons;
+
+            neuron_distant_in_neighborhood.resize(number_neurons);
+            neuron_distant_out_neighborhood.resize(number_neurons);
+            neuron_local_in_neighborhood.resize(number_neurons);
+            neuron_local_out_neighborhood.resize(number_neurons);
         }
 
         /**
@@ -425,6 +435,7 @@ class NetworkGraph {
          * @exception Throws a RelearnException if creation_count == 0
          */
         void create_neurons(const number_neurons_type creation_count) {
+            RelearnException::check(number_local_neurons > 0, "NetworkGraph::NetworkGraphBase::create_neurons: Was not initialized");
             RelearnException::check(creation_count > 0, "NetworkGraph::NetworkGraphBase::create_neurons: creation_count was 0");
 
             const auto old_size = number_local_neurons;
@@ -599,7 +610,7 @@ class NetworkGraph {
         NeuronLocalInNeighborhood neuron_local_in_neighborhood{};
         NeuronLocalOutNeighborhood neuron_local_out_neighborhood{};
 
-        number_neurons_type number_local_neurons{ Constants::uninitialized };
+        number_neurons_type number_local_neurons{ 0 };
         MPIRank my_rank{ MPIRank::uninitialized_rank() };
     };
 
@@ -610,14 +621,23 @@ public:
     using static_synapse_weight = RelearnTypes::static_synapse_weight;
 
     /**
-     * @brief Constructs an object that has enough space to store the given number of neurons
-     * @param number_neurons The number of neurons that the object shall handle, > 0
+     * @brief Constructs an network graph for the MPI rank
      * @param mpi_rank The mpi rank that handles this portion of the graph, must be initialized
-     * @exception Throws a RelearnException if mpi_rank is not initialized or number_neurons == 0
+     * @exception Throws a RelearnException if mpi_rank is not initialized
      */
-    NetworkGraph(const number_neurons_type number_neurons, const MPIRank mpi_rank)
-        : plastic_network_graph(number_neurons, mpi_rank)
-        , static_network_graph(number_neurons, mpi_rank) { }
+    NetworkGraph(const MPIRank mpi_rank)
+        : plastic_network_graph(mpi_rank)
+        , static_network_graph(mpi_rank) { }
+
+    /**
+     * @brief Initializes the network graph with the number of neurons
+     * @param number_neurons The number of neurons, must be > 0
+     * @exception Throws a RelearnException if already called or if number_neurons == 0
+     */
+    void init(const number_neurons_type number_neurons) {
+        plastic_network_graph.init(number_neurons);
+        static_network_graph.init(number_neurons);
+    }
 
     /**
      * @brief Resizes the network graph by adding space for more neurons. Invalidates iterators
@@ -630,7 +650,7 @@ public:
     }
 
     /**
-     * @brief Returns constant references to all incoming edges to the specified neuron from other MPI ranks 
+     * @brief Returns constant references to all incoming edges to the specified neuron from other MPI ranks
      * @param neuron_id The local neuron id
      * @exception Throws a RelearnException if neuron_id is larger or equal to the number of neurons stored
      * @return A tuple of (1) the plastic edges and (2) the static edges

@@ -19,7 +19,8 @@ static void BM_NetworkGraph_InsertLocal(benchmark::State& state) {
     for (auto _ : state) {
         state.PauseTiming();
 
-        NetworkGraph ng(number_neurons, MPIRank::root_rank());
+        NetworkGraph ng(MPIRank::root_rank());
+        ng.init(number_neurons);
         const auto& synapses = NetworkGraphFactory::generate_local_synapses(number_neurons, number_synapses_per_neuron);
 
         state.ResumeTiming();
@@ -35,7 +36,8 @@ static void BM_NetworkGraph_RemoveLocal(benchmark::State& state) {
     for (auto _ : state) {
         state.PauseTiming();
 
-        NetworkGraph ng(number_neurons, MPIRank::root_rank());
+        NetworkGraph ng(MPIRank::root_rank());
+        ng.init(number_neurons);
 
         const auto& synapses = NetworkGraphFactory::generate_local_synapses(number_neurons, number_synapses_per_neuron);
         NetworkGraphFactory::add_synapses(ng, synapses);
@@ -55,7 +57,9 @@ static void BM_NetworkGraph_InsertDistantIn(benchmark::State& state) {
     for (auto _ : state) {
         state.PauseTiming();
 
-        NetworkGraph ng(number_neurons, MPIRank::root_rank());
+        NetworkGraph ng(MPIRank::root_rank());
+        ng.init(number_neurons);
+
         const auto& synapses = NetworkGraphFactory::generate_distant_in_synapses(number_neurons, number_synapses_per_neuron);
 
         state.ResumeTiming();
@@ -71,7 +75,8 @@ static void BM_NetworkGraph_RemoveDistantIn(benchmark::State& state) {
     for (auto _ : state) {
         state.PauseTiming();
 
-        NetworkGraph ng(number_neurons, MPIRank::root_rank());
+        NetworkGraph ng(MPIRank::root_rank());
+        ng.init(number_neurons);
 
         const auto& synapses = NetworkGraphFactory::generate_distant_in_synapses(number_neurons, number_synapses_per_neuron);
         NetworkGraphFactory::add_synapses(ng, synapses);
@@ -91,7 +96,9 @@ static void BM_NetworkGraph_InsertDistantOut(benchmark::State& state) {
     for (auto _ : state) {
         state.PauseTiming();
 
-        NetworkGraph ng(number_neurons, MPIRank::root_rank());
+        NetworkGraph ng(MPIRank::root_rank());
+        ng.init(number_neurons);
+
         const auto& synapses = NetworkGraphFactory::generate_distant_out_synapses(number_neurons, number_synapses_per_neuron);
 
         state.ResumeTiming();
@@ -107,7 +114,8 @@ static void BM_NetworkGraph_RemoveDistantOut(benchmark::State& state) {
     for (auto _ : state) {
         state.PauseTiming();
 
-        NetworkGraph ng(number_neurons, MPIRank::root_rank());
+        NetworkGraph ng(MPIRank::root_rank());
+        ng.init(number_neurons);
 
         const auto& synapses = NetworkGraphFactory::generate_distant_out_synapses(number_neurons, number_synapses_per_neuron);
         NetworkGraphFactory::add_synapses(ng, synapses);

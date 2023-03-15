@@ -95,7 +95,8 @@ public:
     }
 
     static std::shared_ptr<NetworkGraph> create_network_graph_all_to_all(size_t number_neurons, MPIRank mpi_rank, std::mt19937& mt) {
-        auto ptr = std::make_shared<NetworkGraph>(number_neurons, mpi_rank);
+        auto ptr = std::make_shared<NetworkGraph>(mpi_rank);
+        ptr->init(number_neurons);
 
         for (const auto& source_id : NeuronID::range(number_neurons)) {
             for (const auto& target_id : NeuronID::range(number_neurons)) {
@@ -114,7 +115,8 @@ public:
     }
 
     static std::shared_ptr<NetworkGraph> create_network_graph(size_t number_neurons, MPIRank mpi_rank, unsigned long long number_connections_per_vertex, std::mt19937& mt) {
-        auto ptr = std::make_shared<NetworkGraph>(number_neurons, mpi_rank);
+        auto ptr = std::make_shared<NetworkGraph>(mpi_rank);
+        ptr->init(number_neurons);
 
         for (auto i = 0ULL; i < number_connections_per_vertex; i++) {
             const auto& source_ids = NeuronID::range(number_neurons);
@@ -132,7 +134,8 @@ public:
     }
 
     static std::shared_ptr<NetworkGraph> create_empty_network_graph(size_t number_neurons, MPIRank mpi_rank) {
-        auto ptr = std::make_shared<NetworkGraph>(number_neurons, mpi_rank);
+        auto ptr = std::make_shared<NetworkGraph>(mpi_rank);
+        ptr->init(number_neurons);
         return ptr;
     }
 

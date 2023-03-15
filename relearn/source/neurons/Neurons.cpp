@@ -34,9 +34,15 @@
 #include <sstream>
 
 void Neurons::init(const number_neurons_type number_neurons) {
+    RelearnException::check(this->number_neurons == 0, "Neurons::init: Was already initialized");
     RelearnException::check(number_neurons > 0, "Neurons::init: number_neurons was 0");
 
     this->number_neurons = number_neurons;
+
+    network_graph->init(number_neurons);
+
+    neuron_model->set_network_graph(network_graph);
+    neuron_model->set_extra_infos(extra_info);
 
     neuron_model->init(number_neurons);
     extra_info->init(number_neurons);
@@ -50,24 +56,15 @@ void Neurons::init(const number_neurons_type number_neurons) {
         dendrites_inh->set_signal_type(id, SignalType::Inhibitory);
     }
 
+    calcium_calculator->set_extra_infos(extra_info);
     calcium_calculator->init(number_neurons);
-
-    neuron_model->set_extra_infos(extra_info);
 
     axons->set_extra_infos(extra_info);
     dendrites_exc->set_extra_infos(extra_info);
     dendrites_inh->set_extra_infos(extra_info);
 
     synapse_deletion_finder->set_extra_infos(extra_info);
-
-    calcium_calculator->set_extra_infos(extra_info);
-}
-
-void Neurons::set_network_graph(std::shared_ptr<NetworkGraph> network) {
-    synapse_deletion_finder->set_network_graph(network);
-    neuron_model->set_network_graph(network);
-
-    network_graph = std::move(network);
+    synapse_deletion_finder->set_network_graph(network_graph);
 }
 
 void Neurons::init_synaptic_elements() {
@@ -273,6 +270,9 @@ std::pair<size_t, CommunicationMap<SynapseDeletionRequest>> Neurons::disable_neu
 }
 
 void Neurons::create_neurons(const number_neurons_type creation_count) {
+    RelearnException::check(number_neurons > 0, "Neurons::create_neurons: Was not initialized");
+    RelearnException::check(creation_count > 0, "Neurons::create_neurons: Cannot create 0 neurons");
+
     const auto current_size = number_neurons;
     const auto new_size = current_size + creation_count;
 

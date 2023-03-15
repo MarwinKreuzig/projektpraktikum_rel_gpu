@@ -126,6 +126,7 @@ if(WIN32) # Lib
 	# input
 	list(APPEND relearn_lib_additional_files "neurons/input/BackgroundActivityCalculator.h")
 	list(APPEND relearn_lib_additional_files "neurons/input/BackgroundActivityCalculators.h")
+	list(APPEND relearn_lib_additional_files "neurons/input/FiredStatusApproximator.h")
 	list(APPEND relearn_lib_additional_files "neurons/input/FiredStatusCommunicationMap.h")
 	list(APPEND relearn_lib_additional_files "neurons/input/FiredStatusCommunicator.h")
 	list(APPEND relearn_lib_additional_files "neurons/input/Stimulus.h")

@@ -62,9 +62,10 @@ public:
      * @exception Throws a RelearnException if creation_count == 0 or if init(...) was not called before
      */
     void create_neurons(const number_neurons_type creation_count) override {
+        const auto old_size = get_number_local_neurons();
+
         FiredStatusCommunicator::create_neurons(creation_count);
 
-        const auto old_size = get_number_local_neurons();
         const auto new_size = old_size + creation_count;
 
         accumulated_fired.resize(new_size, 0);

@@ -17,6 +17,9 @@
 #include "util/Timers.h"
 
 void NeuronModel::init(number_neurons_type number_neurons) {
+    RelearnException::check(number_local_neurons == 0, "NeuronModel::init: Was already initialized");
+    RelearnException::check(number_neurons > 0, "NeuronModel::init: Must initialize with more than 0 neurons");
+
     number_local_neurons = number_neurons;
 
     x.resize(number_neurons, 0.0);
@@ -31,6 +34,9 @@ void NeuronModel::init(number_neurons_type number_neurons) {
 }
 
 void NeuronModel::create_neurons(number_neurons_type creation_count) {
+    RelearnException::check(number_local_neurons > 0, "NeuronModel::create_neurons: Was not initialized");
+    RelearnException::check(creation_count > 0, "NeuronModel::create_neurons: Must create more than 0 neurons");
+
     const auto current_size = number_local_neurons;
     const auto new_size = current_size + creation_count;
     number_local_neurons = new_size;

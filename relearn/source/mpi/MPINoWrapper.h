@@ -136,7 +136,7 @@ public:
 
     template <typename T>
     static std::vector<std::vector<T>> exchange_values(const std::vector<std::vector<T>>& values) {
-        RelearnException::check(values.size() == 1 && values[0].size() == 0, "MPINoWrapper::exchange_values: There were values!");
+        RelearnException::check(values.size() == 1 && values[0].empty(), "MPINoWrapper::exchange_values: There were values!");
         std::vector<std::vector<T>> return_value(1, std::vector<T>(0));
         return return_value;
     }

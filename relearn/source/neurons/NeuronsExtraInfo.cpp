@@ -14,9 +14,8 @@
 #include "util/Random.h"
 
 void NeuronsExtraInfo::create_neurons(const number_neurons_type creation_count) {
+    RelearnException::check(!positions.empty(), "NeuronsExtraInfo::create_neurons: Was not initialized");
     RelearnException::check(creation_count != 0, "Cannot add 0 neurons");
-
-    RelearnException::check(!positions.empty(), "NeuronsExtraInfo::create_neurons: positions must not be empty");
 
     const auto num_ranks = MPIWrapper::get_num_ranks();
 

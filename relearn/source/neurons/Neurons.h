@@ -61,6 +61,7 @@ public:
      * @param partition The partition, is only used for printing, must not be empty
      * @param model_ptr The electrical model for the neurons, must not be empty
      * @param calculator_ptr The calcium calculator, must not be empty
+     * @param network The network graph for the connections, must not be empty
      * @param axons_ptr The model for the axons, must not be empty
      * @param dendrites_ex_ptr The model for the excitatory dendrites, must not be empty
      * @param dendrites_in_ptr The model for the inhibitory dendrites, must not be empty
@@ -69,6 +70,7 @@ public:
     Neurons(std::shared_ptr<Partition> partition,
         std::unique_ptr<NeuronModel> model_ptr,
         std::unique_ptr<CalciumCalculator> calculator_ptr,
+        std::shared_ptr<NetworkGraph> network_graph,
         std::shared_ptr<Axons> axons_ptr,
         std::shared_ptr<DendritesExcitatory> dendrites_ex_ptr,
         std::shared_ptr<DendritesInhibitory> dendrites_in_ptr,
@@ -76,12 +78,13 @@ public:
         : partition(std::move(partition))
         , neuron_model(std::move(model_ptr))
         , calcium_calculator(std::move(calculator_ptr))
+        , network_graph(std::move(network_graph))
         , axons(std::move(axons_ptr))
         , dendrites_exc(std::move(dendrites_ex_ptr))
         , dendrites_inh(std::move(dendrites_in_ptr))
         , synapse_deletion_finder(std::move(synapse_del_ptr)) {
 
-        const bool all_filled = this->partition && neuron_model && calcium_calculator && axons && dendrites_exc && dendrites_inh && synapse_deletion_finder;
+        const bool all_filled = this->partition && this->network_graph && neuron_model && calcium_calculator && axons && dendrites_exc && dendrites_inh && synapse_deletion_finder;
         RelearnException::check(all_filled, "Neurons::Neurons: Neurons was constructed with some null arguments");
     }
 
@@ -130,12 +133,6 @@ public:
     void set_algorithm(std::shared_ptr<Algorithm> algorithm_ptr) noexcept {
         algorithm = std::move(algorithm_ptr);
     }
-
-    /**
-     * @brief Sets the network graph in which the synapses for the neurons are stored
-     * @param network The network graph for the connections
-     */
-    void set_network_graph(std::shared_ptr<NetworkGraph> network);
 
     /**
      * @brief Sets the area translator that translates between the local area id on the current mpi rank and its area name

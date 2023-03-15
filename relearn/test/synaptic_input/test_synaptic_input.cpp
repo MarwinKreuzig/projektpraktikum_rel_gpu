@@ -146,7 +146,9 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdateEmptyGraph) {
     std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance, std::move(fired_status_communicator));
     input_calculator->init(number_neurons);
 
-    auto network_graph = std::make_shared<NetworkGraph>(number_neurons, MPIRank::root_rank());
+    auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
+    network_graph->init(number_neurons);
+
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
 
@@ -175,7 +177,9 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdate) {
     std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance, std::move(fired_status_communicator));
     input_calculator->init(number_neurons);
 
-    auto network_graph = std::make_shared<NetworkGraph>(number_neurons, MPIRank::root_rank());
+    auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
+    network_graph->init(number_neurons);
+
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
 
@@ -258,7 +262,8 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdateEmptyGraph) {
     std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_conductance, random_scale, std::move(fired_status_communicator));
     input_calculator->init(number_neurons_init);
 
-    auto network_graph = std::make_shared<NetworkGraph>(number_neurons_init, MPIRank::root_rank());
+    auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
+    network_graph->init(number_neurons_init);
 
     auto extra_info = std::make_shared<NeuronsExtraInfo>();
     extra_info->init(number_neurons_init);
@@ -289,7 +294,8 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate) {
     std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_conductance, random_scale, std::move(fired_status_communicator));
     input_calculator->init(number_neurons);
 
-    auto network_graph = std::make_shared<NetworkGraph>(number_neurons, MPIRank::root_rank());
+    auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
+    network_graph->init(number_neurons);
 
     auto extra_info = std::make_shared<NeuronsExtraInfo>();
     extra_info->init(number_neurons);
@@ -375,7 +381,8 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputUpdateEmptyGraph) {
     std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_conductance, random_scale, std::move(fired_status_communicator));
     input_calculator->init(number_neurons_init);
 
-    auto network_graph = std::make_shared<NetworkGraph>(number_neurons_init, MPIRank::root_rank());
+    auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
+    network_graph->init(number_neurons_init);
 
     auto extra_info = std::make_shared<NeuronsExtraInfo>();
     extra_info->init(number_neurons_init);
@@ -406,7 +413,8 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputUpdate) {
     std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(random_conductance, random_scale, std::move(fired_status_communicator));
     input_calculator->init(number_neurons);
 
-    auto network_graph = std::make_shared<NetworkGraph>(number_neurons, MPIRank::root_rank());
+    auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
+    network_graph->init(number_neurons);
 
     auto extra_info = std::make_shared<NeuronsExtraInfo>();
     extra_info->init(number_neurons);
