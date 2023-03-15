@@ -219,8 +219,8 @@ TEST_F(FMMTest, testCheckCalculationRequirements) {
     const auto& target_cell = target.get_cell();
 
     auto check_combi = [&](const ElementType e, const SignalType s) {
-        const auto has_enough_in_source = source_cell.get_number_elements_for(e, s) > Constants::max_neurons_in_source;
-        const auto has_enough_in_target = target_cell.get_number_elements_for(get_other_element_type(e), s) > Constants::max_neurons_in_target;
+        const auto has_enough_in_source = source_cell.get_number_elements_for(get_other_element_type(e), s) > Constants::max_neurons_in_source;
+        const auto has_enough_in_target = target_cell.get_number_elements_for(e, s) > Constants::max_neurons_in_target;
 
         const auto type = FastMultipoleMethodsBase::check_calculation_requirements(&source, &target, e, s);
 
