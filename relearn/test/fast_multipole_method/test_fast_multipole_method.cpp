@@ -317,9 +317,6 @@ TEST_F(FMMTest, testHermiteCoefficientsException) {
 
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
     const auto& own_position = SimulationAdapter::get_random_position_in_box(min, max, this->mt);
-    const auto level = SimulationAdapter::get_small_refinement_level(this->mt);
-
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     OctreeNode<FastMultipoleMethodsCell> node{};
     node.set_level(0);
@@ -340,13 +337,8 @@ TEST_F(FMMTest, testHermiteCoefficientsException) {
 }
 
 TEST_F(FMMTest, testHermiteCoefficientsException2) {
-    const auto my_rank = MPIWrapper::get_my_rank();
-
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
-    const auto& own_position = SimulationAdapter::get_random_position_in_box(min, max, this->mt);
-    const auto level = SimulationAdapter::get_small_refinement_level(this->mt);
-
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 10;
 
     auto no_axon_tree = OctreeAdapter::get_tree_no_axons<FastMultipoleMethodsCell>(number_neurons, min, max, mt);
     auto no_dendrite_tree = OctreeAdapter::get_tree_no_dendrites<FastMultipoleMethodsCell>(number_neurons, min, max, mt);
@@ -364,13 +356,8 @@ TEST_F(FMMTest, testHermiteCoefficientsException2) {
 }
 
 TEST_F(FMMTest, testHermiteCoefficientsForm) {
-    const auto my_rank = MPIWrapper::get_my_rank();
-
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
-    const auto& own_position = SimulationAdapter::get_random_position_in_box(min, max, this->mt);
-    const auto level = SimulationAdapter::get_small_refinement_level(this->mt);
-
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 10;
 
     auto tree = OctreeAdapter::get_standard_tree<FastMultipoleMethodsCell>(number_neurons, min, max, mt);
 
@@ -397,7 +384,6 @@ TEST_F(FMMTest, testTaylorCoefficientsException) {
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
     const auto& own_position = SimulationAdapter::get_random_position_in_box(min, max, this->mt);
     const auto& other_position = SimulationAdapter::get_random_position_in_box(min, max, this->mt);
-    const auto level = SimulationAdapter::get_small_refinement_level(this->mt);
 
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
@@ -423,11 +409,8 @@ TEST_F(FMMTest, testTaylorCoefficientsZero) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
-    const auto& own_position = SimulationAdapter::get_random_position_in_box(min, max, this->mt);
     const auto& other_position = SimulationAdapter::get_random_position_in_box(min, max, this->mt);
-    const auto level = SimulationAdapter::get_small_refinement_level(this->mt);
-
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 10;
 
     auto no_axon_tree = OctreeAdapter::get_tree_no_axons<FastMultipoleMethodsCell>(number_neurons, min, max, mt);
     auto no_dendrite_tree = OctreeAdapter::get_tree_no_dendrites<FastMultipoleMethodsCell>(number_neurons, min, max, mt);
@@ -450,11 +433,8 @@ TEST_F(FMMTest, testTaylorCoefficientsForm) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
-    const auto& own_position = SimulationAdapter::get_random_position_in_box(min, max, this->mt);
     const auto& other_position = SimulationAdapter::get_random_position_in_box(min, max, this->mt);
-    const auto level = SimulationAdapter::get_small_refinement_level(this->mt);
-
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 10;
 
     auto tree = OctreeAdapter::get_standard_tree<FastMultipoleMethodsCell>(number_neurons, min, max, mt);
 
@@ -480,7 +460,6 @@ TEST_F(FMMTest, testCalcHermiteException) {
 
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
     const auto& own_position = SimulationAdapter::get_random_position_in_box(min, max, this->mt);
-    const auto level = SimulationAdapter::get_small_refinement_level(this->mt);
 
     OctreeNode<FastMultipoleMethodsCell> node{};
     node.set_level(0);
