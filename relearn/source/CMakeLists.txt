@@ -85,6 +85,7 @@ target_sources(relearn_analysis
                PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/relearn_analysis.cpp)
 target_link_libraries(relearn_analysis PRIVATE relearn_lib)
 target_link_libraries(relearn_analysis PRIVATE CLI11::CLI11)
+target_link_libraries(relearn_lib PUBLIC project_options project_libraries)
 set_target_properties(relearn_analysis PROPERTIES ENABLE_EXPORTS 1)
 
 get_target_property(relearn_lib_sources relearn_lib SOURCES)

@@ -58,7 +58,7 @@ public:
      * @brief Returns the number of objects that fit into the memory portion
      * @return The number of objects that fit into the memory portion
      */
-    [[nodiscard]] static std::span<OctreeNode<AdditionalCellAttributes>>::size_type get_size() noexcept {
+    [[nodiscard]] static typename std::span<OctreeNode<AdditionalCellAttributes>>::size_type get_size() noexcept {
         return memory_holder.size();
     }
 
