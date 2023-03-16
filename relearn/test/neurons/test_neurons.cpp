@@ -212,7 +212,7 @@ TEST_F(NeuronsTest, testDisableNeuronsWithoutMPI) {
     NetworkGraphAdapter::create_dense_network(network_graph_plastic, neurons.get_axons().get_signal_types(),
                                               num_neurons, 8, 1, MPIRank(0), mt);
     neurons.set_network_graph(network_graph_static, network_graph_plastic);
-    neurons.init_synaptic_elements();
+    neurons.init_synaptic_elements({},{},{});
 
     const auto disable_id = TaggedIdAdapter::get_random_neuron_id(num_neurons, mt);
     const auto disabled_neurons = std::vector<NeuronID>{disable_id};
@@ -331,7 +331,7 @@ TEST_F(NeuronsTest, testDisableMultipleNeuronsWithoutMPI) {
         }
     }
 
-    neurons.init_synaptic_elements();
+    neurons.init_synaptic_elements({},{},{});
 
     const auto axons = neurons.get_axons().get_connected_elements();
     const auto den_ex = neurons.get_dendrites_exc().get_connected_elements();
@@ -448,7 +448,7 @@ TEST_F(NeuronsTest, testDisableNeuronsWithRanks) {
     expected_den_inh.resize(num_ranks);
     for (auto rank = 0; rank < num_ranks; rank++) {
         auto &neurons = rank_to_neurons[rank];
-        neurons.init_synaptic_elements();
+        neurons.init_synaptic_elements({},{},{});
 
         const auto axons = neurons.get_axons().get_connected_elements();
         const auto den_ex = neurons.get_dendrites_exc().get_connected_elements();
@@ -637,7 +637,7 @@ TEST_F(NeuronsTest, testDisableNeuronsWithRanksAndOnlyOneDisabledNeuron) {
     expected_den_inh.resize(num_ranks);
     for (auto rank = 0; rank < num_ranks; rank++) {
         auto &neurons = rank_to_neurons[rank];
-        neurons.init_synaptic_elements();
+        neurons.init_synaptic_elements({},{},{});
 
         const auto axons = neurons.get_axons().get_connected_elements();
         const auto den_ex = neurons.get_dendrites_exc().get_connected_elements();

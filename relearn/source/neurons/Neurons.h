@@ -304,7 +304,7 @@ public:
      * @brief Initializes the synaptic elements with respect to the network graph, i.e.,
      *      adds the synapses from the network graph as connected counts to the synaptic elements models
      */
-    void init_synaptic_elements();
+    void init_synaptic_elements(const LocalSynapses & local_synapses_plastic,const DistantInSynapses & in_synapses_plastic,const DistantOutSynapses & out_synapses_plastic);
 
     /**
      * @brief Disables all neurons with specified ids
@@ -487,6 +487,10 @@ private:
 
     number_neurons_type number_neurons = 0;
 
+    LocalSynapses last_created_local_synapses{};
+    DistantInSynapses last_created_in_synapses{};
+    DistantOutSynapses last_created_out_synapses{};
+
     std::shared_ptr<Partition> partition{};
 
     std::shared_ptr<LocalAreaTranslator> local_area_translator{};
@@ -508,7 +512,7 @@ private:
 
     std::vector<UpdateStatus> disable_flags{};
 
-    std::vector<std::vector<RankNeuronId>> deletions_log{};
+    std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::synapse_weight>>> deletions_log{};
 
     std::shared_ptr<NeuronsExtraInfo> extra_info{ std::make_shared<NeuronsExtraInfo>() };
 };

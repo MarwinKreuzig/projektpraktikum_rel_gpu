@@ -240,10 +240,49 @@ void Simulation::initialize() {
     neurons->set_static_neurons(static_neurons);
     Timers::stop_and_add(TimerRegion::INITIALIZE_NETWORK_GRAPH);
 
+
     LogFiles::print_message_rank(0, "Network graph created");
     LogFiles::print_message_rank(0, "Synaptic elements initialized");
 
-    neurons->init_synaptic_elements();
+    neurons->init_synaptic_elements(local_synapses_plastic, in_synapses_plastic, out_synapses_plastic);
+
+    if(area_monitor_enabled) {
+        //Update area monitor
+        Timers::start(TimerRegion::CAPTURE_AREA_MONITORS);
+
+        Timers::start(TimerRegion::AREA_MONITORS_PREPARE);
+        for (auto &[_, area_monitor]: *area_monitors) {
+            area_monitor.prepare_recording();
+        }
+
+        Timers::stop_and_add(TimerRegion::AREA_MONITORS_PREPARE);
+        Timers::start(TimerRegion::AREA_MONITORS_REQUEST);
+
+        for (auto &[_, area_monitor]: *area_monitors) {
+            area_monitor.request_data();
+        }
+
+        Timers::stop_and_add(TimerRegion::AREA_MONITORS_REQUEST);
+        Timers::start(TimerRegion::AREA_MONITORS_EXCHANGE);
+
+        global_area_mapper->exchange_requests();
+
+        Timers::stop_and_add(TimerRegion::AREA_MONITORS_EXCHANGE);
+        Timers::start(TimerRegion::AREA_MONITORS_RECORD_DATA);
+
+        for (auto &[_, area_monitor]: *area_monitors) {
+            area_monitor.monitor_connectivity();
+        }
+
+        Timers::stop_and_add(TimerRegion::AREA_MONITORS_RECORD_DATA);
+        Timers::start(TimerRegion::AREA_MONITORS_FINISH);
+
+        for (auto &[_, area_monitor]: *area_monitors) {
+            area_monitor.finish_recording();
+        }
+        Timers::stop_and_add(TimerRegion::AREA_MONITORS_FINISH);
+        Timers::stop_and_add(TimerRegion::CAPTURE_AREA_MONITORS);
+    }
 
     const auto fired_neurons = static_cast<size_t>(number_local_neurons * percentage_initially_fired);
     std::vector<FiredStatus> initial_fired(fired_neurons, FiredStatus::Fired);
@@ -310,64 +349,6 @@ void Simulation::simulate(const step_type number_steps) {
             Timers::stop_and_add(TimerRegion::CAPTURE_MONITORS);
         }
 
-        if (interval_area_monitor.hits_step(step)) {
-            Timers::start(TimerRegion::CAPTURE_AREA_MONITORS);
-
-            Timers::start(TimerRegion::AREA_MONITORS_PREPARE);
-            for (auto& [_, area_monitor] : *area_monitors) {
-                area_monitor.prepare_recording();
-            }
-
-            Timers::stop_and_add(TimerRegion::AREA_MONITORS_PREPARE);
-            Timers::start(TimerRegion::AREA_MONITORS_REQUEST);
-
-            for (const NeuronID &neuron_id : NeuronID::range(neurons->get_number_neurons())) {
-                if(neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
-                    continue;
-                }
-                const auto& area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(neuron_id.get_neuron_id());
-                if (!area_monitors->contains(area_id)) {
-                    continue;
-                }
-                auto& area_monitor = area_monitors->at(area_id);
-                    area_monitor.request_data(neuron_id);
-            }
-
-            Timers::stop_and_add(TimerRegion::AREA_MONITORS_REQUEST);
-            Timers::start(TimerRegion::AREA_MONITORS_EXCHANGE);
-
-            global_area_mapper->exchange_requests();
-
-            Timers::stop_and_add(TimerRegion::AREA_MONITORS_EXCHANGE);
-            Timers::start(TimerRegion::AREA_MONITORS_RECORD_DATA);
-
-            for (NeuronID neuron_id : NeuronID::range(neurons->get_number_neurons())) {
-                if(neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
-                    continue;
-                }
-                const auto& area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(neuron_id.get_neuron_id());
-                if (!area_monitors->contains(area_id)) {
-                    continue;
-                }
-                auto& area_monitor = area_monitors->at(area_id);
-                area_monitor.record_data(NeuronID(neuron_id));
-            }
-
-            Timers::stop_and_add(TimerRegion::AREA_MONITORS_RECORD_DATA);
-            Timers::start(TimerRegion::AREA_MONITORS_FINISH);
-
-            for (auto& [_, area_monitor] : *area_monitors) {
-                area_monitor.finish_recording();
-            }
-            Timers::stop_and_add(TimerRegion::AREA_MONITORS_FINISH);
-
-            neurons->get_neuron_model()->reset_fired_recorder(NeuronModel::FireRecorderPeriod::AreaMonitor);
-            neurons->reset_deletion_log();
-            neurons->reset_deletion_log();
-
-            Timers::stop_and_add(TimerRegion::CAPTURE_AREA_MONITORS);
-        }
-
         if (interval_update_electrical_activity.hits_step(step)) {
             Timers::start(TimerRegion::UPDATE_ELECTRICAL_ACTIVITY);
             neurons->update_electrical_activity(step);
@@ -415,6 +396,76 @@ void Simulation::simulate(const step_type number_steps) {
             Timers::stop_and_add(TimerRegion::PRINT_IO);
 
             network_graph_plastic->debug_check();
+
+            if(area_monitor_enabled) {
+
+                //Update area monitor
+                Timers::start(TimerRegion::CAPTURE_AREA_MONITORS);
+
+                Timers::start(TimerRegion::AREA_MONITORS_PREPARE);
+                for (auto &[_, area_monitor]: *area_monitors) {
+                    area_monitor.prepare_recording();
+                }
+
+                Timers::stop_and_add(TimerRegion::AREA_MONITORS_PREPARE);
+                Timers::start(TimerRegion::AREA_MONITORS_REQUEST);
+
+                for (auto &[_, area_monitor]: *area_monitors) {
+                    area_monitor.request_data();
+                }
+
+                for (const NeuronID &neuron_id: NeuronID::range(neurons->get_number_neurons())) {
+                    if (neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
+                        continue;
+                    }
+                    const auto &area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(
+                            neuron_id.get_neuron_id());
+                    if (!area_monitors->contains(area_id)) {
+                        continue;
+                    }
+                    auto &area_monitor = area_monitors->at(area_id);
+                    area_monitor.request_data(neuron_id);
+                }
+
+                Timers::stop_and_add(TimerRegion::AREA_MONITORS_REQUEST);
+                Timers::start(TimerRegion::AREA_MONITORS_EXCHANGE);
+
+                global_area_mapper->exchange_requests();
+
+                Timers::stop_and_add(TimerRegion::AREA_MONITORS_EXCHANGE);
+                Timers::start(TimerRegion::AREA_MONITORS_RECORD_DATA);
+
+                for (NeuronID neuron_id: NeuronID::range(neurons->get_number_neurons())) {
+                    if (neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
+                        continue;
+                    }
+                    const auto &area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(
+                            neuron_id.get_neuron_id());
+                    if (!area_monitors->contains(area_id)) {
+                        continue;
+                    }
+                    auto &area_monitor = area_monitors->at(area_id);
+                    area_monitor.record_data(NeuronID(neuron_id));
+                }
+
+                for (auto &[_, area_monitor]: *area_monitors) {
+                    area_monitor.monitor_connectivity();
+                }
+
+                Timers::stop_and_add(TimerRegion::AREA_MONITORS_RECORD_DATA);
+                Timers::start(TimerRegion::AREA_MONITORS_FINISH);
+
+                for (auto &[_, area_monitor]: *area_monitors) {
+                    area_monitor.finish_recording();
+                }
+                Timers::stop_and_add(TimerRegion::AREA_MONITORS_FINISH);
+
+                neurons->get_neuron_model()->reset_fired_recorder(NeuronModel::FireRecorderPeriod::AreaMonitor);
+                neurons->reset_deletion_log();
+                neurons->reset_deletion_log();
+
+                Timers::stop_and_add(TimerRegion::CAPTURE_AREA_MONITORS);
+            }
         }
 
         if (interval_histogram_log.hits_step(step)) {

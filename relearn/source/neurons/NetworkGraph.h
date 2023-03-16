@@ -87,31 +87,6 @@ public:
         number_local_neurons = new_size;
     }
 
-//    [[nodiscard]] DistantOutSynapses find_neurons_with_outgoing_connections_to_distant_neuron(const RankNeuronId &neuron_id) const {
-//        DistantOutSynapses found_synapses{};
-//        for (auto local_neuron_id = 0; local_neuron_id < neuron_distant_out_neighborhood.size(); local_neuron_id++) {
-//            const auto neighborhood = neuron_distant_out_neighborhood[local_neuron_id];
-//            for (const auto edge: neighborhood) {
-//                if (edge.first == neuron_id) {
-//                    found_synapses.emplace_back(edge.first, NeuronID(local_neuron_id), edge.second);
-//                }
-//            }
-//        }
-//        return found_synapses;
-//    }
-//
-//    [[nodiscard]] DistantInSynapses find_neurons_with_ingoing_connections_from_distant_neuron(const RankNeuronId &neuron_id) const {
-//        DistantInSynapses found_synapses{};
-//        for (auto local_neuron_id = 0; local_neuron_id < neuron_distant_in_neighborhood.size(); local_neuron_id++) {
-//            const auto neighborhood = neuron_distant_in_neighborhood[local_neuron_id];
-//            for (const auto edge: neighborhood) {
-//                if (edge.first == neuron_id) {
-//                    found_synapses.emplace_back(NeuronID(local_neuron_id), edge.first, edge.second);
-//                }
-//            }
-//        }
-//        return found_synapses;
-//    }
 
     /**
      * @brief Returns a constant reference to all distant in-edges to a neuron, i.e., a view on neurons that connect to the specified one via a synapse

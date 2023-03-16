@@ -59,7 +59,11 @@ void Neurons::init(const number_neurons_type number_neurons) {
     calcium_calculator->init(number_neurons);
 }
 
-void Neurons::init_synaptic_elements() {
+void Neurons::init_synaptic_elements(const LocalSynapses & local_synapses_plastic, const DistantInSynapses & in_synapses_plastic, const DistantOutSynapses & out_synapses_plastic) {
+    last_created_local_synapses= local_synapses_plastic;
+    last_created_in_synapses = in_synapses_plastic;
+    last_created_out_synapses = out_synapses_plastic;
+
     const auto &axons_counts = axons->get_grown_elements();
     const auto &dendrites_inh_counts = dendrites_inh->get_grown_elements();
     const auto &dendrites_exc_counts = dendrites_exc->get_grown_elements();
@@ -444,7 +448,7 @@ size_t Neurons::delete_synapses_commit_deletions(const CommunicationMap<SynapseD
         for (const auto &[other_neuron_id, my_neuron_id, element_type, signal_type]: requests) {
             const auto weight = (SignalType::Excitatory == signal_type) ? -1 : 1;
 
-            deletions_log[my_neuron_id.get_neuron_id()].push_back(RankNeuronId(other_rank,other_neuron_id));
+            deletions_log[my_neuron_id.get_neuron_id()].emplace_back(RankNeuronId(other_rank,other_neuron_id), -weight);
 
             /**
              *  Update network graph
@@ -564,6 +568,10 @@ size_t Neurons::create_synapses() {
 
     // The distant_out_synapses are counted on the ranks where they are in
     const auto num_synapses_created = local_synapses.size() + distant_in_synapses.size();
+
+    last_created_local_synapses = std::move(local_synapses);
+    last_created_in_synapses = std::move(distant_in_synapses);
+    last_created_out_synapses = std::move(distant_out_synapses);
 
     return num_synapses_created;
 }

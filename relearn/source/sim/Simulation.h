@@ -192,14 +192,6 @@ public:
     }
 
     /**
-     * @brief Sets the new interval determining when the area monitors are updated
-     * @param interval The new interval with first and last step, as well as the frequency
-     */
-    void set_update_area_monitor_interval(const auto& interval) {
-        interval_area_monitor = interval;
-    }
-
-    /**
      * @brief Sets the new interval determining when the calcium is logged
      * @param interval The new interval with first and last step, as well as the frequency
      */
@@ -374,7 +366,6 @@ private:
     Interval interval_update_plasticity{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::plasticity_update_step };
 
     Interval interval_neuron_monitor{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::neuron_monitor_log_step };
-    Interval interval_area_monitor{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::area_monitor_log_step };
 
     Interval interval_calcium_log{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::calcium_log_step };
     Interval interval_synaptic_input_log{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), Config::synaptic_input_log_step };

@@ -285,9 +285,6 @@ int main(int argc, char** argv) {
     RelearnTypes::step_type monitor_steps{ Config::neuron_monitor_log_step };
     auto* opt_monitor_steps = app.add_option("--monitor-steps", monitor_steps, "Every time the neuron state is captured");
 
-    RelearnTypes::step_type monitor_ensemble_steps{ Config::area_monitor_log_step };
-    auto* opt_monitor_ensemble_steps = app.add_option("--monitor-ensemble-steps", monitor_ensemble_steps, "Every time the ensemble information are captured");
-
     const auto* flag_interactive = app.add_flag("-i,--interactive", "Run interactively.");
 
     unsigned int random_seed{ 0 };
@@ -923,7 +920,6 @@ int main(int argc, char** argv) {
     sim.set_log_network_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), network_log_step });
     sim.set_update_neuron_monitor_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), monitor_steps });
     sim.enable_area_monitor(static_cast<bool>(*flag_area_monitor));
-    sim.set_update_area_monitor_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), monitor_ensemble_steps });
 
     NeuronMonitor::log_frequency = monitor_steps;
 

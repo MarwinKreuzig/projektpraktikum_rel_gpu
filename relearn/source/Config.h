@@ -78,11 +78,6 @@ public:
     // By default: Capture individual neuron informations ever <neuron_monitor_log_step> ms
     constexpr static std::uint32_t neuron_monitor_log_step = 100; // NOLINT
 
-    // Capture ensemble information ever <monitor_area_step> ms
-    inline static std::uint32_t monitor_area_step = 100; // NOLINT
-    // By default: Capture ensemble informations ever <area_monitor_log_step> ms
-    constexpr static std::uint32_t area_monitor_log_step = 100; // NOLINT
-
     // By default: Capture the global statistics every <statistics_log_step> ms
     constexpr static std::uint32_t statistics_log_step = 100; // NOLINT
 

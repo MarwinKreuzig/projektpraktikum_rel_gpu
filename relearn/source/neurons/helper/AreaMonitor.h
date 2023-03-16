@@ -56,12 +56,15 @@ public:
     AreaMonitor(Simulation* simulation, std::shared_ptr<GlobalAreaMapper> global_area_mapper, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name, int my_rank, std::filesystem::path& path);
 
     void request_data(const NeuronID& neuron_id)  const ;
+    void request_data()  const ;
 
     /**
      * Add an ingoing connection to the area. This method shall be called by other area monitors with ingoing connections to this area
      * @param connection Connection whose source is this area
      */
     void add_ingoing_connection(const AreaConnection& connection);
+
+    void remove_ingoing_connection(const AreaMonitor::AreaConnection &connection);
 
     /**
      * Prepares the monitor for a new logging step. Call this method before each logging step.
@@ -93,6 +96,8 @@ public:
     [[nodiscard]] const RelearnTypes::area_name& get_area_name() const noexcept {
         return area_name;
     }
+
+    void monitor_connectivity();
 
     /**
      * Returns the id of the area that is monitored
