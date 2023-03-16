@@ -16,6 +16,8 @@
 
 #include <map>
 
+class NetworkGraph;
+
 class NetworkGraphTest : public RelearnTest {
 protected:
     template <typename T, typename synapse_weight>
@@ -41,4 +43,20 @@ protected:
             }
         }
     }
+
+    void assert_local_plastic_empty(const NetworkGraph& network_graph);
+
+    void assert_distant_plastic_empty(const NetworkGraph& network_graph);
+
+    void assert_plastic_empty(const NetworkGraph& network_graph);
+
+    void assert_local_static_empty(const NetworkGraph& network_graph);
+
+    void assert_distant_static_empty(const NetworkGraph& network_graph);
+
+    void assert_static_empty(const NetworkGraph& network_graph);
+
+    void assert_plastic_size(const NetworkGraph& network_graph, RelearnTypes::number_neurons_type);
+
+    void assert_static_size(const NetworkGraph& network_graph, RelearnTypes::number_neurons_type);
 };

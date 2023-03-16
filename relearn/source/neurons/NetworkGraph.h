@@ -399,6 +399,14 @@ class NetworkGraph {
             RelearnException::check(edges.empty(), "NetworkGraph::debug_check: Edges is not empty");
         }
 
+        /**
+         * @brief Returns the number of stored local neurons
+         * @return The number of neurons
+         */
+        [[nodiscard]] number_neurons_type get_number_neurons() const noexcept {
+            return number_local_neurons;
+        }
+
     private:
         NetworkGraphBase() = default;
 
@@ -647,6 +655,15 @@ public:
     void create_neurons(const number_neurons_type creation_count) {
         plastic_network_graph.create_neurons(creation_count);
         static_network_graph.create_neurons(creation_count);
+    }
+
+    /**
+     * @brief Returns the number of stored local neurons
+     * @return The number of neurons
+     */
+    [[nodiscard]] number_neurons_type get_number_neurons() const noexcept {
+        // plastic and static bases habe the same number
+        return plastic_network_graph.get_number_neurons();
     }
 
     /**

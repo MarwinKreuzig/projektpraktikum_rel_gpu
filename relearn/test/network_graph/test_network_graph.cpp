@@ -26,236 +26,313 @@
 #include <utility>
 #include <vector>
 
-TEST_F(NetworkGraphTest, testNetworkGraphConstructor) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
-    NetworkGraph ng(MPIRank::root_rank());
-    ng.init(number_neurons);
+void NetworkGraphTest::assert_local_plastic_empty(const NetworkGraph& network_graph) {
+    const auto number_neurons = network_graph.get_number_neurons();
 
-    std::stringstream ss{};
+    auto [all_local_in_edges, _1] = network_graph.get_all_local_in_edges();
+    auto [all_local_out_edges, _2] = network_graph.get_all_local_out_edges();
 
-    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        ss.clear();
-        ss << number_neurons << ' ' << neuron_id << '\n';
+    for (const auto& neighborhood : all_local_in_edges) {
+        ASSERT_TRUE(neighborhood.empty());
+    }
 
-        const auto id = NeuronID{ neuron_id };
+    for (const auto& neighborhood : all_local_out_edges) {
+        ASSERT_TRUE(neighborhood.empty());
+    }
 
-        const auto [exc_in_edges_count_1, exc_in_edges_count_2] = ng.get_number_excitatory_in_edges(id);
-        const auto [inh_in_edges_count_1, inh_in_edges_count_2] = ng.get_number_inhibitory_in_edges(id);
-        const auto [out_edges_count_1, out_edges_count_2] = ng.get_number_out_edges(id);
+    for (const auto neuron_id : NeuronID::range(number_neurons)) {
+        const auto& [local_in_edges, _3] = network_graph.get_local_in_edges(neuron_id);
+        const auto& [all_local_out_edges, _4] = network_graph.get_local_out_edges(neuron_id);
 
-        ASSERT_EQ(exc_in_edges_count_1, 0) << ss.str();
-        ASSERT_EQ(inh_in_edges_count_1, 0) << ss.str();
-        ASSERT_EQ(out_edges_count_1, 0) << ss.str();
-        ASSERT_EQ(exc_in_edges_count_2, 0) << ss.str();
-        ASSERT_EQ(inh_in_edges_count_2, 0) << ss.str();
-        ASSERT_EQ(out_edges_count_2, 0) << ss.str();
-
-        const auto& [local_in_edges_plastic, local_in_edges_static] = ng.get_local_in_edges(id);
-        const auto& [distant_in_edges_plastic, distant_in_edges_static] = ng.get_distant_in_edges(id);
-        const auto& [local_out_edges_plastic, local_ou_edges_static] = ng.get_local_out_edges(id);
-        const auto& [distant_out_edges_plastic, distant_out_edges_static] = ng.get_distant_out_edges(id);
-
-        ASSERT_EQ(local_in_edges_plastic.size(), 0) << ss.str();
-        ASSERT_EQ(distant_in_edges_plastic.size(), 0) << ss.str();
-        ASSERT_EQ(local_out_edges_plastic.size(), 0) << ss.str();
-        ASSERT_EQ(distant_out_edges_plastic.size(), 0) << ss.str();
-
-        ASSERT_EQ(local_in_edges_static.size(), 0) << ss.str();
-        ASSERT_EQ(distant_in_edges_static.size(), 0) << ss.str();
-        ASSERT_EQ(local_ou_edges_static.size(), 0) << ss.str();
-        ASSERT_EQ(distant_out_edges_static.size(), 0) << ss.str();
-
-        const auto& all_in_edges_excitatory_plastic = NetworkGraphAdapter::get_all_plastic_in_edges(ng, MPIRank::root_rank(), id, SignalType::Excitatory);
-        const auto& all_in_edges_inhibitory_plastic = NetworkGraphAdapter::get_all_plastic_in_edges(ng, MPIRank::root_rank(), id, SignalType::Inhibitory);
-        const auto& all_out_edges_excitatory_plastic = NetworkGraphAdapter::get_all_plastic_out_edges(ng, MPIRank::root_rank(), id, SignalType::Excitatory);
-        const auto& all_out_edges_inhibitory_plastic = NetworkGraphAdapter::get_all_plastic_out_edges(ng, MPIRank::root_rank(), id, SignalType::Inhibitory);
-
-        ASSERT_EQ(all_in_edges_excitatory_plastic.size(), 0) << ss.str();
-        ASSERT_EQ(all_in_edges_inhibitory_plastic.size(), 0) << ss.str();
-        ASSERT_EQ(all_out_edges_excitatory_plastic.size(), 0) << ss.str();
-        ASSERT_EQ(all_out_edges_inhibitory_plastic.size(), 0) << ss.str();
-
-        const auto& in_edges_plastic = NetworkGraphAdapter::get_all_plastic_in_edges(ng, MPIRank::root_rank(), id);
-        const auto& out_edges_plastic = NetworkGraphAdapter::get_all_plastic_out_edges(ng, MPIRank::root_rank(), id);
-
-        ASSERT_EQ(in_edges_plastic.size(), 0) << ss.str();
-        ASSERT_EQ(out_edges_plastic.size(), 0) << ss.str();
-
-        const auto& all_in_edges_excitatory_static = NetworkGraphAdapter::get_all_static_in_edges(ng, MPIRank::root_rank(), id, SignalType::Excitatory);
-        const auto& all_in_edges_inhibitory_static = NetworkGraphAdapter::get_all_static_in_edges(ng, MPIRank::root_rank(), id, SignalType::Inhibitory);
-        const auto& all_out_edges_excitatory_static = NetworkGraphAdapter::get_all_static_out_edges(ng, MPIRank::root_rank(), id, SignalType::Excitatory);
-        const auto& all_out_edges_inhibitory_static = NetworkGraphAdapter::get_all_static_out_edges(ng, MPIRank::root_rank(), id, SignalType::Inhibitory);
-
-        ASSERT_EQ(all_in_edges_excitatory_static.size(), 0) << ss.str();
-        ASSERT_EQ(all_in_edges_inhibitory_static.size(), 0) << ss.str();
-        ASSERT_EQ(all_out_edges_excitatory_static.size(), 0) << ss.str();
-        ASSERT_EQ(all_out_edges_inhibitory_static.size(), 0) << ss.str();
-
-        const auto& in_edges_static = NetworkGraphAdapter::get_all_static_in_edges(ng, MPIRank::root_rank(), id);
-        const auto& out_edges_static = NetworkGraphAdapter::get_all_static_out_edges(ng, MPIRank::root_rank(), id);
-
-        ASSERT_EQ(in_edges_static.size(), 0) << ss.str();
-        ASSERT_EQ(out_edges_static.size(), 0) << ss.str();
+        ASSERT_TRUE(local_in_edges.empty());
+        ASSERT_TRUE(all_local_out_edges.empty());
     }
 }
 
-TEST_F(NetworkGraphTest, testNetworkGraphConstructorExceptions) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
-    NetworkGraph ng(MPIRank::root_rank());
-    ng.init(number_neurons);
-    ASSERT_THROW(NetworkGraph ng_exception(MPIRank::uninitialized_rank());, RelearnException);
+void NetworkGraphTest::assert_distant_plastic_empty(const NetworkGraph& network_graph) {
+    const auto number_neurons = network_graph.get_number_neurons();
 
-    std::stringstream ss{};
-    for (auto j = 0; j < number_neurons_out_of_scope; j++) {
-        const auto neuron_id = number_neurons + TaggedIdAdapter::get_random_number_neurons(mt);
+    auto [all_distant_in_edges, _1] = network_graph.get_all_distant_in_edges();
+    auto [all_distant_out_edges, _2] = network_graph.get_all_distant_out_edges();
 
-        ss.clear();
-        ss << number_neurons << ' ' << neuron_id;
-
-        const auto id = NeuronID{ neuron_id };
-
-        ASSERT_THROW(const auto exc_in_edges_count = ng.get_number_excitatory_in_edges(id);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto inh_in_edges_count = ng.get_number_inhibitory_in_edges(id);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto out_edges_count = ng.get_number_out_edges(id);, RelearnException) << ss.str();
-
-        ASSERT_THROW(const auto& local_in_edges = ng.get_local_in_edges(id);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& distant_in_edges = ng.get_distant_in_edges(id);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& local_out_edges = ng.get_local_out_edges(id);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& distant_out_edges = ng.get_distant_out_edges(id);, RelearnException) << ss.str();
-
-        ASSERT_THROW(const auto& all_in_edges_excitatory = NetworkGraphAdapter::get_all_plastic_in_edges(ng, MPIRank::root_rank(), id, SignalType::Excitatory);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& all_in_edges_inhibitory = NetworkGraphAdapter::get_all_plastic_in_edges(ng, MPIRank::root_rank(), id, SignalType::Inhibitory);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& all_out_edges_excitatory = NetworkGraphAdapter::get_all_plastic_out_edges(ng, MPIRank::root_rank(), id, SignalType::Excitatory);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& all_out_edges_inhibitory = NetworkGraphAdapter::get_all_plastic_out_edges(ng, MPIRank::root_rank(), id, SignalType::Inhibitory);, RelearnException) << ss.str();
-
-        ASSERT_THROW(const auto& all_in_edges_excitatory = NetworkGraphAdapter::get_all_static_in_edges(ng, MPIRank::root_rank(), id, SignalType::Excitatory);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& all_in_edges_inhibitory = NetworkGraphAdapter::get_all_static_in_edges(ng, MPIRank::root_rank(), id, SignalType::Inhibitory);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& all_out_edges_excitatory = NetworkGraphAdapter::get_all_static_out_edges(ng, MPIRank::root_rank(), id, SignalType::Excitatory);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& all_out_edges_inhibitory = NetworkGraphAdapter::get_all_static_out_edges(ng, MPIRank::root_rank(), id, SignalType::Inhibitory);, RelearnException) << ss.str();
+    for (const auto& neighborhood : all_distant_in_edges) {
+        ASSERT_TRUE(neighborhood.empty());
     }
+
+    for (const auto& neighborhood : all_distant_out_edges) {
+        ASSERT_TRUE(neighborhood.empty());
+    }
+
+    for (const auto neuron_id : NeuronID::range(number_neurons)) {
+        const auto& [distant_in_edges, _3] = network_graph.get_distant_in_edges(neuron_id);
+        const auto& [distant_out_edges, _4] = network_graph.get_distant_out_edges(neuron_id);
+
+        ASSERT_TRUE(distant_in_edges.empty());
+        ASSERT_TRUE(distant_out_edges.empty());
+
+        const auto& incoming_excitatory_partners = network_graph.get_all_plastic_partners_incoming(neuron_id, SignalType::Excitatory);
+        const auto& incoming_inhibitory_partners = network_graph.get_all_plastic_partners_incoming(neuron_id, SignalType::Inhibitory);
+        const auto& outgoing_partners = network_graph.get_all_plastic_partners_outgoing(neuron_id);
+
+        ASSERT_TRUE(incoming_excitatory_partners.empty());
+        ASSERT_TRUE(incoming_inhibitory_partners.empty());
+        ASSERT_TRUE(outgoing_partners.empty());
+    }
+}
+
+void NetworkGraphTest::assert_plastic_empty(const NetworkGraph& network_graph) {
+    assert_local_plastic_empty(network_graph);
+    assert_distant_plastic_empty(network_graph);
+
+    const auto number_neurons = network_graph.get_number_neurons();
+
+    for (const auto neuron_id : NeuronID::range(number_neurons)) {
+        const auto [number_excitatory_in_edges, _1] = network_graph.get_number_excitatory_in_edges(neuron_id);
+        const auto [number_inhibitiry_in_edges, _2] = network_graph.get_number_inhibitory_in_edges(neuron_id);
+        const auto [number_out_edges, _3] = network_graph.get_number_out_edges(neuron_id);
+
+        ASSERT_EQ(number_excitatory_in_edges, 0);
+        ASSERT_EQ(number_inhibitiry_in_edges, 0);
+        ASSERT_EQ(number_out_edges, 0);
+    }
+}
+
+void NetworkGraphTest::assert_local_static_empty(const NetworkGraph& network_graph) {
+    const auto number_neurons = network_graph.get_number_neurons();
+
+    auto [_1, all_local_in_edges] = network_graph.get_all_local_in_edges();
+    auto [_2, all_local_out_edges] = network_graph.get_all_local_out_edges();
+
+    for (const auto& neighborhood : all_local_in_edges) {
+        ASSERT_TRUE(neighborhood.empty());
+    }
+
+    for (const auto& neighborhood : all_local_out_edges) {
+        ASSERT_TRUE(neighborhood.empty());
+    }
+
+    for (const auto neuron_id : NeuronID::range(number_neurons)) {
+        const auto& [_3, local_in_edges] = network_graph.get_local_in_edges(neuron_id);
+        const auto& [_4, all_local_out_edges] = network_graph.get_local_out_edges(neuron_id);
+
+        ASSERT_TRUE(local_in_edges.empty());
+        ASSERT_TRUE(all_local_out_edges.empty());
+    }
+}
+
+void NetworkGraphTest::assert_distant_static_empty(const NetworkGraph& network_graph) {
+    const auto number_neurons = network_graph.get_number_neurons();
+
+    auto [_1, all_distant_in_edges] = network_graph.get_all_distant_in_edges();
+    auto [_2, all_distant_out_edges] = network_graph.get_all_distant_out_edges();
+
+    for (const auto& neighborhood : all_distant_in_edges) {
+        ASSERT_TRUE(neighborhood.empty());
+    }
+
+    for (const auto& neighborhood : all_distant_out_edges) {
+        ASSERT_TRUE(neighborhood.empty());
+    }
+
+    for (const auto neuron_id : NeuronID::range(number_neurons)) {
+        const auto& [_3, distant_in_edges] = network_graph.get_distant_in_edges(neuron_id);
+        const auto& [_4, distant_out_edges] = network_graph.get_distant_out_edges(neuron_id);
+
+        ASSERT_TRUE(distant_in_edges.empty());
+        ASSERT_TRUE(distant_out_edges.empty());
+    }
+}
+
+void NetworkGraphTest::assert_static_empty(const NetworkGraph& network_graph) {
+    assert_local_static_empty(network_graph);
+    assert_distant_static_empty(network_graph);
+
+    const auto number_neurons = network_graph.get_number_neurons();
+
+    for (const auto neuron_id : NeuronID::range(number_neurons)) {
+        const auto [_1, number_excitatory_in_edges] = network_graph.get_number_excitatory_in_edges(neuron_id);
+        const auto [_2, number_inhibitiry_in_edges] = network_graph.get_number_inhibitory_in_edges(neuron_id);
+        const auto [_3, number_out_edges] = network_graph.get_number_out_edges(neuron_id);
+
+        ASSERT_EQ(number_excitatory_in_edges, 0);
+        ASSERT_EQ(number_inhibitiry_in_edges, 0);
+        ASSERT_EQ(number_out_edges, 0);
+    }
+}
+
+void NetworkGraphTest::assert_plastic_size(const NetworkGraph& network_graph, RelearnTypes::number_neurons_type expected_number_neurons) {
+    const auto number_neurons = network_graph.get_number_neurons();
+    ASSERT_EQ(number_neurons, expected_number_neurons);
+
+    auto [all_distant_in_edges, _1] = network_graph.get_all_distant_in_edges();
+    auto [all_distant_out_edges, _2] = network_graph.get_all_distant_out_edges();
+    auto [all_local_in_edges, _3] = network_graph.get_all_local_in_edges();
+    auto [all_local_out_edges, _4] = network_graph.get_all_local_out_edges();
+
+    ASSERT_EQ(expected_number_neurons, all_distant_in_edges.size());
+    ASSERT_EQ(expected_number_neurons, all_distant_out_edges.size());
+    ASSERT_EQ(expected_number_neurons, all_local_in_edges.size());
+    ASSERT_EQ(expected_number_neurons, all_local_out_edges.size());
+
+    for (const auto neuron_id : NeuronID::range(number_neurons)) {
+        ASSERT_NO_THROW(const auto& incoming_excitatory_partners = network_graph.get_all_plastic_partners_incoming(neuron_id, SignalType::Excitatory););
+        ASSERT_NO_THROW(const auto& incoming_inhibitory_partners = network_graph.get_all_plastic_partners_incoming(neuron_id, SignalType::Inhibitory););
+        ASSERT_NO_THROW(const auto& outgoing_partners = network_graph.get_all_plastic_partners_outgoing(neuron_id););
+    }
+
+    for (const auto neuron_id : NeuronID::range(number_neurons, number_neurons + number_neurons_out_of_scope)) {
+        ASSERT_THROW(const auto& incoming_excitatory_partners = network_graph.get_all_plastic_partners_incoming(neuron_id, SignalType::Excitatory);, RelearnException);
+        ASSERT_THROW(const auto& incoming_inhibitory_partners = network_graph.get_all_plastic_partners_incoming(neuron_id, SignalType::Inhibitory);, RelearnException);
+        ASSERT_THROW(const auto& outgoing_partners = network_graph.get_all_plastic_partners_outgoing(neuron_id);, RelearnException);
+    }
+}
+
+void NetworkGraphTest::assert_static_size(const NetworkGraph& network_graph, RelearnTypes::number_neurons_type expected_number_neurons) {
+    const auto number_neurons = network_graph.get_number_neurons();
+    ASSERT_EQ(number_neurons, expected_number_neurons);
+
+    auto [_1, all_distant_in_edges] = network_graph.get_all_distant_in_edges();
+    auto [_2, all_distant_out_edges] = network_graph.get_all_distant_out_edges();
+    auto [_3, all_local_in_edges] = network_graph.get_all_local_in_edges();
+    auto [_4, all_local_out_edges] = network_graph.get_all_local_out_edges();
+
+    ASSERT_EQ(expected_number_neurons, all_distant_in_edges.size());
+    ASSERT_EQ(expected_number_neurons, all_distant_out_edges.size());
+    ASSERT_EQ(expected_number_neurons, all_local_in_edges.size());
+    ASSERT_EQ(expected_number_neurons, all_local_out_edges.size());
+}
+
+TEST_F(NetworkGraphTest, testNetworkGraphConstructor) {
+    const auto rank = MPIRankAdapter::get_random_mpi_rank(mt);
+
+    NetworkGraph ng(rank);
+
+    ASSERT_EQ(ng.get_number_neurons(), 0);
+
+    assert_plastic_empty(ng);
+    assert_static_empty(ng);
+}
+
+TEST_F(NetworkGraphTest, testNetworkGraphConstructorException) {
+    ASSERT_THROW(NetworkGraph ng_exception(MPIRank::uninitialized_rank());, RelearnException);
+}
+
+TEST_F(NetworkGraphTest, testNetworkGraphInit) {
+    const auto rank = MPIRankAdapter::get_random_mpi_rank(mt);
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+
+    NetworkGraph ng(rank);
+    ng.init(number_neurons);
+
+    assert_plastic_empty(ng);
+    assert_static_empty(ng);
+
+    assert_plastic_size(ng, number_neurons);
+    assert_static_size(ng, number_neurons);
+}
+
+TEST_F(NetworkGraphTest, testNetworkGraphInitException) {
+    const auto rank = MPIRankAdapter::get_random_mpi_rank(mt);
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+
+    NetworkGraph ng(rank);
+
+    ASSERT_THROW(ng.init(0), RelearnException);
+
+    assert_plastic_empty(ng);
+    assert_static_empty(ng);
+
+    assert_plastic_size(ng, 0);
+    assert_static_size(ng, 0);
+
+    ng.init(number_neurons);
+
+    ASSERT_THROW(ng.init(0), RelearnException);
+    ASSERT_THROW(ng.init(number_neurons), RelearnException);
+
+    assert_plastic_empty(ng);
+    assert_static_empty(ng);
+
+    assert_plastic_size(ng, number_neurons);
+    assert_static_size(ng, number_neurons);
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphCreateNeurons) {
-    const auto initial_num_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
-    NetworkGraph ng(MPIRank::root_rank());
-    ng.init(initial_num_neurons);
+    const auto rank = MPIRankAdapter::get_random_mpi_rank(mt);
+    const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_create = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    const auto new_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
-    ng.create_neurons(new_neurons);
+    const auto number_neurons = number_neurons_init + number_neurons_create;
 
-    std::stringstream ss{};
+    NetworkGraph ng(rank);
+    ng.init(number_neurons_init);
+    ng.create_neurons(number_neurons_create);
 
-    const auto number_neurons = initial_num_neurons + new_neurons;
+    assert_plastic_empty(ng);
+    assert_static_empty(ng);
 
-    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        ss.clear();
-        ss << number_neurons << ' ' << neuron_id;
-
-        const auto id = NeuronID{ neuron_id };
-
-        const auto [exc_in_edges_count_1, exc_in_edges_count_2] = ng.get_number_excitatory_in_edges(id);
-        const auto [inh_in_edges_count_1, inh_in_edges_count_2] = ng.get_number_inhibitory_in_edges(id);
-        const auto [out_edges_count_1, out_edges_count_2] = ng.get_number_out_edges(id);
-
-        ASSERT_EQ(exc_in_edges_count_1, 0) << ss.str();
-        ASSERT_EQ(inh_in_edges_count_1, 0) << ss.str();
-        ASSERT_EQ(out_edges_count_1, 0) << ss.str();
-        ASSERT_EQ(exc_in_edges_count_2, 0) << ss.str();
-        ASSERT_EQ(inh_in_edges_count_2, 0) << ss.str();
-        ASSERT_EQ(out_edges_count_2, 0) << ss.str();
-
-        const auto& [local_in_edges_plastic, local_in_edges_static] = ng.get_local_in_edges(id);
-        const auto& [distant_in_edges_plastic, distant_in_edges_static] = ng.get_distant_in_edges(id);
-        const auto& [local_out_edges_plastic, local_ou_edges_static] = ng.get_local_out_edges(id);
-        const auto& [distant_out_edges_plastic, distant_out_edges_static] = ng.get_distant_out_edges(id);
-
-        ASSERT_EQ(local_in_edges_plastic.size(), 0) << ss.str();
-        ASSERT_EQ(distant_in_edges_plastic.size(), 0) << ss.str();
-        ASSERT_EQ(local_out_edges_plastic.size(), 0) << ss.str();
-        ASSERT_EQ(distant_out_edges_plastic.size(), 0) << ss.str();
-
-        ASSERT_EQ(local_in_edges_static.size(), 0) << ss.str();
-        ASSERT_EQ(distant_in_edges_static.size(), 0) << ss.str();
-        ASSERT_EQ(local_ou_edges_static.size(), 0) << ss.str();
-        ASSERT_EQ(distant_out_edges_static.size(), 0) << ss.str();
-
-        const auto& all_in_edges_excitatory_plastic = NetworkGraphAdapter::get_all_plastic_in_edges(ng, MPIRank::root_rank(), id, SignalType::Excitatory);
-        const auto& all_in_edges_inhibitory_plastic = NetworkGraphAdapter::get_all_plastic_in_edges(ng, MPIRank::root_rank(), id, SignalType::Inhibitory);
-        const auto& all_out_edges_excitatory_plastic = NetworkGraphAdapter::get_all_plastic_out_edges(ng, MPIRank::root_rank(), id, SignalType::Excitatory);
-        const auto& all_out_edges_inhibitory_plastic = NetworkGraphAdapter::get_all_plastic_out_edges(ng, MPIRank::root_rank(), id, SignalType::Inhibitory);
-
-        ASSERT_EQ(all_in_edges_excitatory_plastic.size(), 0) << ss.str();
-        ASSERT_EQ(all_in_edges_inhibitory_plastic.size(), 0) << ss.str();
-        ASSERT_EQ(all_out_edges_excitatory_plastic.size(), 0) << ss.str();
-        ASSERT_EQ(all_out_edges_inhibitory_plastic.size(), 0) << ss.str();
-
-        const auto& in_edges_plastic = NetworkGraphAdapter::get_all_plastic_in_edges(ng, MPIRank::root_rank(), id);
-        const auto& out_edges_plastic = NetworkGraphAdapter::get_all_plastic_out_edges(ng, MPIRank::root_rank(), id);
-
-        ASSERT_EQ(in_edges_plastic.size(), 0) << ss.str();
-        ASSERT_EQ(out_edges_plastic.size(), 0) << ss.str();
-
-        const auto& all_in_edges_excitatory_static = NetworkGraphAdapter::get_all_static_in_edges(ng, MPIRank::root_rank(), id, SignalType::Excitatory);
-        const auto& all_in_edges_inhibitory_static = NetworkGraphAdapter::get_all_static_in_edges(ng, MPIRank::root_rank(), id, SignalType::Inhibitory);
-        const auto& all_out_edges_excitatory_static = NetworkGraphAdapter::get_all_static_out_edges(ng, MPIRank::root_rank(), id, SignalType::Excitatory);
-        const auto& all_out_edges_inhibitory_static = NetworkGraphAdapter::get_all_static_out_edges(ng, MPIRank::root_rank(), id, SignalType::Inhibitory);
-
-        ASSERT_EQ(all_in_edges_excitatory_static.size(), 0) << ss.str();
-        ASSERT_EQ(all_in_edges_inhibitory_static.size(), 0) << ss.str();
-        ASSERT_EQ(all_out_edges_excitatory_static.size(), 0) << ss.str();
-        ASSERT_EQ(all_out_edges_inhibitory_static.size(), 0) << ss.str();
-
-        const auto& in_edges_static = NetworkGraphAdapter::get_all_static_in_edges(ng, MPIRank::root_rank(), id);
-        const auto& out_edges_static = NetworkGraphAdapter::get_all_static_out_edges(ng, MPIRank::root_rank(), id);
-
-        ASSERT_EQ(in_edges_static.size(), 0) << ss.str();
-        ASSERT_EQ(out_edges_static.size(), 0) << ss.str();
-    }
+    assert_plastic_size(ng, number_neurons);
+    assert_static_size(ng, number_neurons);
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphCreateNeuronsException) {
-    const auto initial_num_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
-    NetworkGraph ng(MPIRank::root_rank());
-    ng.init(initial_num_neurons);
+    const auto rank = MPIRankAdapter::get_random_mpi_rank(mt);
+    const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_create = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    const auto new_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
-    ng.create_neurons(new_neurons);
+    const auto number_neurons = number_neurons_init + number_neurons_create;
 
-    const auto number_neurons = initial_num_neurons + new_neurons;
-    std::stringstream ss{};
+    NetworkGraph ng(rank);
 
-    for (auto j = 0; j < number_neurons_out_of_scope; j++) {
-        const auto neuron_id = number_neurons + TaggedIdAdapter::get_random_number_neurons(mt);
+    ASSERT_THROW(ng.create_neurons(0), RelearnException);
 
-        ss.clear();
-        ss << number_neurons << ' ' << neuron_id;
-        const auto id = NeuronID{ neuron_id };
+    assert_plastic_empty(ng);
+    assert_static_empty(ng);
 
-        ASSERT_THROW(const auto exc_in_edges_count = ng.get_number_excitatory_in_edges(id);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto inh_in_edges_count = ng.get_number_inhibitory_in_edges(id);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto out_edges_count = ng.get_number_out_edges(id);, RelearnException) << ss.str();
+    assert_plastic_size(ng, 0);
+    assert_static_size(ng, 0);
 
-        ASSERT_THROW(const auto& local_in_edges = ng.get_local_in_edges(id);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& distant_in_edges = ng.get_distant_in_edges(id);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& local_out_edges = ng.get_local_out_edges(id);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& distant_out_edges = ng.get_distant_out_edges(id);, RelearnException) << ss.str();
+    ASSERT_THROW(ng.create_neurons(number_neurons_create), RelearnException);
 
-        ASSERT_THROW(const auto& all_in_edges_excitatory = NetworkGraphAdapter::get_all_plastic_in_edges(ng, MPIRank::root_rank(), id, SignalType::Excitatory);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& all_in_edges_inhibitory = NetworkGraphAdapter::get_all_plastic_in_edges(ng, MPIRank::root_rank(), id, SignalType::Inhibitory);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& all_out_edges_excitatory = NetworkGraphAdapter::get_all_plastic_out_edges(ng, MPIRank::root_rank(), id, SignalType::Excitatory);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& all_out_edges_inhibitory = NetworkGraphAdapter::get_all_plastic_out_edges(ng, MPIRank::root_rank(), id, SignalType::Inhibitory);, RelearnException) << ss.str();
+    assert_plastic_empty(ng);
+    assert_static_empty(ng);
 
-        ASSERT_THROW(const auto& in_edges = NetworkGraphAdapter::get_all_plastic_in_edges(ng, MPIRank::root_rank(), id);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& out_edges = NetworkGraphAdapter::get_all_plastic_out_edges(ng, MPIRank::root_rank(), id);, RelearnException) << ss.str();
+    assert_plastic_size(ng, 0);
+    assert_static_size(ng, 0);
 
-        ASSERT_THROW(const auto& all_in_edges_excitatory = NetworkGraphAdapter::get_all_static_in_edges(ng, MPIRank::root_rank(), id, SignalType::Excitatory);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& all_in_edges_inhibitory = NetworkGraphAdapter::get_all_static_in_edges(ng, MPIRank::root_rank(), id, SignalType::Inhibitory);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& all_out_edges_excitatory = NetworkGraphAdapter::get_all_static_out_edges(ng, MPIRank::root_rank(), id, SignalType::Excitatory);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& all_out_edges_inhibitory = NetworkGraphAdapter::get_all_static_out_edges(ng, MPIRank::root_rank(), id, SignalType::Inhibitory);, RelearnException) << ss.str();
+    ASSERT_THROW(ng.create_neurons(0), RelearnException);
 
-        ASSERT_THROW(const auto& in_edges = NetworkGraphAdapter::get_all_static_in_edges(ng, MPIRank::root_rank(), id);, RelearnException) << ss.str();
-        ASSERT_THROW(const auto& out_edges = NetworkGraphAdapter::get_all_static_out_edges(ng, MPIRank::root_rank(), id);, RelearnException) << ss.str();
-    }
+    assert_plastic_empty(ng);
+    assert_static_empty(ng);
+
+    assert_plastic_size(ng, 0);
+    assert_static_size(ng, 0);
+
+    ng.init(number_neurons_init);
+
+    ASSERT_THROW(ng.create_neurons(0), RelearnException);
+
+    assert_plastic_empty(ng);
+    assert_static_empty(ng);
+
+    assert_plastic_size(ng, number_neurons_init);
+    assert_static_size(ng, number_neurons_init);
+
+    ng.create_neurons(number_neurons_create);
+
+    assert_plastic_empty(ng);
+    assert_static_empty(ng);
+
+    assert_plastic_size(ng, number_neurons);
+    assert_static_size(ng, number_neurons);
+
+    ASSERT_THROW(ng.create_neurons(0), RelearnException);
+
+    assert_plastic_empty(ng);
+    assert_static_empty(ng);
+
+    assert_plastic_size(ng, number_neurons);
+    assert_static_size(ng, number_neurons);
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphLocalEdges) {
@@ -267,8 +344,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphLocalEdges) {
     NetworkGraph ng(MPIRank::root_rank());
     ng.init(number_neurons);
 
-    std::map<size_t, std::map<size_t, RelearnTypes::plastic_synapse_weight>> incoming_edges{};
-    std::map<size_t, std::map<size_t, RelearnTypes::plastic_synapse_weight>> outgoing_edges{};
+    std::map<NeuronID::value_type, std::map<NeuronID::value_type, RelearnTypes::plastic_synapse_weight>> incoming_edges{};
+    std::map<NeuronID::value_type, std::map<NeuronID::value_type, RelearnTypes::plastic_synapse_weight>> outgoing_edges{};
 
     for (size_t synapse_id = 0; synapse_id < num_synapses; synapse_id++) {
         const auto weight = NetworkGraphAdapter::get_random_plastic_synapse_weight(mt);
