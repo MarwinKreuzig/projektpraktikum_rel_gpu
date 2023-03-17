@@ -13,8 +13,8 @@
 #include "Types.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/enums/UpdateStatus.h"
+#include "util/NeuronID.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
 
 #include <span>
 #include <string>

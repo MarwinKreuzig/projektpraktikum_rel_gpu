@@ -15,7 +15,7 @@
 #include "neurons/enums/TargetCalciumDecay.h"
 #include "util/MPIRank.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include <functional>
 #include <limits>

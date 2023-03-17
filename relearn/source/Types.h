@@ -13,7 +13,7 @@
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/Synapse.h"
 #include "util/MPIRank.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 #include "util/Vec3.h"
 
 #include <cstdint>
@@ -99,7 +99,7 @@ using StaticLocalSynapse = Synapse<NeuronID, NeuronID, RelearnTypes::static_syna
 using StaticDistantInSynapse = Synapse<NeuronID, RankNeuronId, RelearnTypes::static_synapse_weight>;
 using StaticDistantOutSynapse = Synapse<RankNeuronId, NeuronID, RelearnTypes::static_synapse_weight>;
 using StaticDistantSynapse = Synapse<RankNeuronId, RankNeuronId, RelearnTypes::static_synapse_weight>;
-      
+
 using StaticLocalSynapses = std::vector<StaticLocalSynapse>;
 using StaticDistantInSynapses = std::vector<StaticDistantInSynapse>;
 using StaticDistantOutSynapses = std::vector<StaticDistantOutSynapse>;

@@ -17,7 +17,12 @@
 #include "adapter/neuron_assignment/NeuronAssignmentAdapter.h"
 #include "adapter/neurons/NeuronTypesAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/network_graph/NetworkGraphAdapter.h"
+#include "adapter/neuron_assignment/NeuronAssignmentAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
 
 #include "io/NeuronIO.h"
 #include "neurons/LocalAreaTranslator.h"
@@ -25,7 +30,7 @@
 #include <random>
 
 TEST_F(IOTest, testNeuronIOWriteComponentwiseSizeExceptions) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     const auto correct_ids = std::vector<NeuronID>{ number_neurons };
     const auto correct_position = std::vector<RelearnTypes::position_type>{ number_neurons };
@@ -59,7 +64,7 @@ TEST_F(IOTest, testNeuronIOWriteComponentwiseSizeExceptions) {
 }
 
 TEST_F(IOTest, testNeuronIOWriteComponentwiseFileNotFound) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -84,7 +89,7 @@ TEST_F(IOTest, testNeuronIOWriteComponentwiseFileNotFound) {
 }
 
 TEST_F(IOTest, testNeuronIOWriteComponentwise) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -109,7 +114,7 @@ TEST_F(IOTest, testNeuronIOWriteComponentwise) {
 }
 
 TEST_F(IOTest, testNeuronIOReadComponentwise) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -180,7 +185,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwiseFileNotFound) {
 }
 
 TEST_F(IOTest, testNeuronIOReadComponentwiseIDException) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -219,7 +224,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwiseIDException) {
 }
 
 TEST_F(IOTest, testNeuronIOReadComponentwisePositionXException) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -251,7 +256,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionXException) {
 }
 
 TEST_F(IOTest, testNeuronIOReadComponentwisePositionYException) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -283,7 +288,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionYException) {
 }
 
 TEST_F(IOTest, testNeuronIOReadComponentwisePositionZException) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -315,7 +320,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionZException) {
 }
 
 TEST_F(IOTest, testNeuronIOWrite1) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -343,7 +348,7 @@ TEST_F(IOTest, testNeuronIOWrite1) {
 }
 
 TEST_F(IOTest, testNeuronIOWrite2) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -412,7 +417,7 @@ TEST_F(IOTest, testNeuronIOWrite2) {
 }
 
 TEST_F(IOTest, testNeuronIOWriteFileNotFound) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -441,7 +446,7 @@ TEST_F(IOTest, testNeuronIOWriteFileNotFound) {
 }
 
 TEST_F(IOTest, testNeuronIORead) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_neurons = std::vector<LoadedNeuron>{};
 
@@ -450,6 +455,7 @@ TEST_F(IOTest, testNeuronIORead) {
     std::vector<RelearnTypes::area_name> area_names{};
     std::vector<RelearnTypes::area_id> area_ids{};
 
+    for (NeuronID::value_type i = 0; i < number_neurons; i++) {
     for (auto i = 0; i < number_neurons; i++) {
         preliminary_neurons.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt), NeuronID{ false, i }, NeuronTypesAdapter::get_random_signal_type(mt), i);
         area_names.emplace_back("area_" + std::to_string(i));
@@ -511,7 +517,7 @@ TEST_F(IOTest, testNeuronIOReadFileNotFound) {
 }
 
 TEST_F(IOTest, testNeuronIOReadIDException) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 3;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 3;
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -550,7 +556,7 @@ TEST_F(IOTest, testNeuronIOReadIDException) {
 }
 
 TEST_F(IOTest, testNeuronIOReadPositionXException) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -582,7 +588,7 @@ TEST_F(IOTest, testNeuronIOReadPositionXException) {
 }
 
 TEST_F(IOTest, testNeuronIOReadPositionYException) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -614,7 +620,7 @@ TEST_F(IOTest, testNeuronIOReadPositionYException) {
 }
 
 TEST_F(IOTest, testNeuronIOReadPositionZException) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -646,7 +652,7 @@ TEST_F(IOTest, testNeuronIOReadPositionZException) {
 }
 
 TEST_F(IOTest, testNeuronIOReadIDs) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -675,7 +681,7 @@ TEST_F(IOTest, testNeuronIOReadIDs) {
 }
 
 TEST_F(IOTest, testNeuronIOReadIDsEmpty1) {
-    const auto number_neurons = RandomAdapter::get_random_integer<NeuronID::value_type>(2, TaggedIdAdapter::upper_bound_num_neurons, mt);
+    const auto number_neurons = RandomAdapter::get_random_integer<NeuronID::value_type>(2, NeuronIdAdapter::upper_bound_num_neurons, mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -715,7 +721,7 @@ TEST_F(IOTest, testNeuronIOReadIDsEmpty1) {
 }
 
 TEST_F(IOTest, testNeuronIOReadIDsEmpty2) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -818,7 +824,7 @@ TEST_F(IOTest, testReadInSynapses) {
     const auto my_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
     const auto number_synapses = NetworkGraphAdapter::get_random_number_synapses(mt);
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     StaticLocalSynapses preliminary_local_synapses_static{};
     StaticDistantInSynapses preliminary_distant_synapses_static{};
@@ -829,8 +835,8 @@ TEST_F(IOTest, testReadInSynapses) {
     std::ofstream ofstream(path);
 
     for (auto synapse_id = 0; synapse_id < number_synapses; synapse_id++) {
-        const auto& source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-        const auto& target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto& source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto& target_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
         const auto source_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
@@ -924,7 +930,7 @@ TEST_F(IOTest, testReadOutSynapses) {
     const auto my_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
     const auto number_synapses = NetworkGraphAdapter::get_random_number_synapses(mt);
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     StaticLocalSynapses preliminary_local_synapses_static{};
     StaticDistantOutSynapses preliminary_distant_synapses_static{};
@@ -935,8 +941,8 @@ TEST_F(IOTest, testReadOutSynapses) {
     std::ofstream ofstream(path);
 
     for (auto synapse_id = 0; synapse_id < number_synapses; synapse_id++) {
-        const auto& source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-        const auto& target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto& source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto& target_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
         const auto target_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
@@ -1030,7 +1036,7 @@ TEST_F(IOTest, testWriteInSynapses) {
     const auto my_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
     const auto number_synapses = NetworkGraphAdapter::get_random_number_synapses(mt);
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     StaticLocalSynapses preliminary_local_synapses_static{};
     StaticDistantInSynapses preliminary_distant_synapses_static{};
@@ -1040,8 +1046,8 @@ TEST_F(IOTest, testWriteInSynapses) {
     std::filesystem::path path{ "./in_network.tmp" };
 
     for (auto synapse_id = 0; synapse_id < number_synapses; synapse_id++) {
-        const auto& source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-        const auto& target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto& source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto& target_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
         const auto source_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
@@ -1126,7 +1132,7 @@ TEST_F(IOTest, testWriteOutSynapses) {
     const auto my_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
     const auto number_synapses = NetworkGraphAdapter::get_random_number_synapses(mt);
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     StaticLocalSynapses preliminary_local_synapses_static{};
     StaticDistantOutSynapses preliminary_distant_synapses_static{};
@@ -1136,8 +1142,8 @@ TEST_F(IOTest, testWriteOutSynapses) {
     std::filesystem::path path{ "./out_network.tmp" };
 
     for (auto synapse_id = 0; synapse_id < number_synapses; synapse_id++) {
-        const auto& source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-        const auto& target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto& source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto& target_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
         const auto target_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 

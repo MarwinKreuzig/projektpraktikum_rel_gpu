@@ -15,7 +15,7 @@
 #include "neurons/NeuronsExtraInfo.h"
 #include "neurons/LocalAreaTranslator.h"
 #include "util/MPIRank.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 #include "util/Timers.h"
 
 #include <filesystem>

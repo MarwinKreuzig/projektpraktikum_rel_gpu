@@ -12,11 +12,13 @@
 
 #include "adapter/kernel/KernelAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/kernel/KernelAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
 
+#include "algorithm/Cells.h"
 #include "algorithm/Kernel/Gaussian.h"
 #include "algorithm/Kernel/Kernel.h"
-#include "algorithm/Cells.h"
 #include "util/Random.h"
 
 #include "gtest/gtest.h"
@@ -129,8 +131,8 @@ TEST_F(ProbabilityKernelTest, testGammaPrecalculatedValues) {
 
 
 TEST_F(KernelTest, testGammaKernelIntegration) {
-    const auto& neuron_id_1 = TaggedIdAdapter::get_random_neuron_id(1000, mt);
-    const auto& neuron_id_2 = TaggedIdAdapter::get_random_neuron_id(1000, 1000, mt);
+    const auto& neuron_id_1 = NeuronIdAdapter::get_random_neuron_id(1000, mt);
+    const auto& neuron_id_2 = NeuronIdAdapter::get_random_neuron_id(1000, 1000, mt);
 
     const auto& source_position = SimulationAdapter::get_random_position(mt);
 

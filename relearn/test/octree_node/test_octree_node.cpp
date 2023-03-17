@@ -14,15 +14,15 @@
 #include "adapter/neurons/NeuronsAdapter.h"
 #include "adapter/octree/OctreeAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
 
 #include "algorithm/Algorithms.h"
 #include "algorithm/Cells.h"
 #include "neurons/models/SynapticElements.h"
 #include "structure/Cell.h"
-#include "structure/Partition.h"
 #include "structure/OctreeNode.h"
 #include "structure/OctreeNodeHelper.h"
+#include "structure/Partition.h"
 #include "util/RelearnException.h"
 #include "util/Vec3.h"
 
@@ -156,8 +156,8 @@ TYPED_TEST(OctreeNodeTest, testInsert) {
     node.set_cell_neuron_id(NeuronID::virtual_id());
     node.set_cell_neuron_position(own_position);
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(this->mt);
-    const auto num_additional_ids = TaggedIdAdapter::get_random_number_neurons(this->mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(this->mt);
+    const auto num_additional_ids = NeuronIdAdapter::get_random_number_neurons(this->mt);
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
 
@@ -246,7 +246,7 @@ TYPED_TEST(OctreeNodeTest, testInsertByHand) {
 }
 
 TYPED_TEST(OctreeNodeTest, testContains) {
-    const auto neuron_id = TaggedIdAdapter::get_random_neuron_id(100, this->mt);
+    const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(100, this->mt);
     const auto mpi_rank = MPIRankAdapter::get_random_mpi_rank(20, this->mt);
 
     RankNeuronId rni{ mpi_rank, neuron_id };
@@ -290,8 +290,8 @@ TYPED_TEST(OctreeNodeTest, testLevel) {
     node.set_cell_neuron_id(NeuronID::virtual_id());
     node.set_cell_neuron_position(own_position);
 
-    size_t number_neurons = TaggedIdAdapter::get_random_number_neurons(this->mt);
-    size_t num_additional_ids = TaggedIdAdapter::get_random_number_neurons(this->mt);
+    size_t number_neurons = NeuronIdAdapter::get_random_number_neurons(this->mt);
+    size_t num_additional_ids = NeuronIdAdapter::get_random_number_neurons(this->mt);
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
 
@@ -469,8 +469,8 @@ TYPED_TEST(OctreeNodeTest, testUpdateTree) {
     node.set_cell_neuron_id(NeuronID::virtual_id());
     node.set_cell_neuron_position(own_position);
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(this->mt);
-    const auto num_additional_ids = TaggedIdAdapter::get_random_number_neurons(this->mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(this->mt);
+    const auto num_additional_ids = NeuronIdAdapter::get_random_number_neurons(this->mt);
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
 
@@ -749,7 +749,7 @@ TYPED_TEST(OctreeNodeTest, testMemoryLayout) {
     using MH = MemoryHolder<AdditionalCellAttributes>;
     const auto size_of_node = sizeof(OctreeNode<AdditionalCellAttributes>);
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(this->mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(this->mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(this->mt);
 
     auto root = OctreeAdapter::get_standard_tree<AdditionalCellAttributes>(number_neurons, minimum, maximum, this->mt);
@@ -844,8 +844,8 @@ TYPED_TEST(OctreeNodeTest, testNodeExtractor) {
     node.set_cell_neuron_id(NeuronID::virtual_id());
     node.set_cell_neuron_position(own_position);
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(this->mt);
-    const auto num_additional_ids = TaggedIdAdapter::get_random_number_neurons(this->mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(this->mt);
+    const auto num_additional_ids = NeuronIdAdapter::get_random_number_neurons(this->mt);
 
     std::vector<std::tuple<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
 

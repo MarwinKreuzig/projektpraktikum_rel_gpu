@@ -11,12 +11,12 @@
 #include "test_barnes_hut.h"
 
 #include "adapter/mpi/MpiRankAdapter.h"
-#include "adapter/neurons/NeuronsAdapter.h"
 #include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/neurons/NeuronsAdapter.h"
 #include "adapter/node_cache/NodeCacheAdapter.h"
 #include "adapter/octree/OctreeAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
 
 #include "algorithm/BarnesHutInternal/BarnesHutBase.h"
 #include "algorithm/Cells.h"
@@ -36,7 +36,7 @@ TEST_F(BarnesHutBaseTest, testACException) {
 
     const auto rank = MPIRankAdapter::get_random_mpi_rank(1024, mt);
     const auto level = RandomAdapter::get_random_integer<std::uint16_t>(0, 24, mt);
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
+    const auto& neuron_id = NeuronIdAdapter::get_random_neuron_id(10000, mt);
     const auto& node_position = SimulationAdapter::get_random_position_in_box(minimum, maximum, mt);
 
     OctreeNode<additional_cell_attributes> node{};
@@ -77,7 +77,7 @@ TEST_F(BarnesHutBaseTest, testACLeafDendrites) {
 
     const auto rank = MPIRankAdapter::get_random_mpi_rank(1024, mt);
     const auto level = RandomAdapter::get_random_integer<std::uint16_t>(0, 24, mt);
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
+    const auto& neuron_id = NeuronIdAdapter::get_random_neuron_id(10000, mt);
     const auto& node_position = SimulationAdapter::get_random_position_in_box(minimum, maximum, mt);
 
     OctreeNode<additional_cell_attributes> node{};
@@ -124,7 +124,7 @@ TEST_F(BarnesHutBaseTest, testACLeafSamePositionDendrites) {
 
     const auto rank = MPIRankAdapter::get_random_mpi_rank(1024, mt);
     const auto level = RandomAdapter::get_random_integer<std::uint16_t>(0, 24, mt);
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
+    const auto& neuron_id = NeuronIdAdapter::get_random_neuron_id(10000, mt);
     const auto& node_position = SimulationAdapter::get_random_position_in_box(minimum, maximum, mt);
 
     OctreeNode<additional_cell_attributes> node{};
@@ -159,7 +159,7 @@ TEST_F(BarnesHutBaseTest, testACParentDendrite) {
 
     const auto rank = MPIRankAdapter::get_random_mpi_rank(1024, mt);
     const auto level = RandomAdapter::get_random_integer<std::uint16_t>(0, 24, mt);
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
+    const auto& neuron_id = NeuronIdAdapter::get_random_neuron_id(10000, mt);
     const auto& node_position = SimulationAdapter::get_random_position_in_box(scaled_minimum, scaled_maximum, mt);
 
     OctreeNode<additional_cell_attributes> node{};
@@ -214,7 +214,7 @@ TEST_F(BarnesHutBaseTest, testACParentDendrite) {
 TEST_F(BarnesHutBaseTest, testNodesToConsiderException) {
     using additional_cell_attributes = BarnesHutCell;
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
     const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
@@ -248,7 +248,7 @@ TEST_F(BarnesHutBaseTest, testNodesToConsiderLeaf) {
 
     const auto rank = MPIRankAdapter::get_random_mpi_rank(1024, mt);
     const auto level = RandomAdapter::get_random_integer<std::uint16_t>(0, 24, mt);
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
+    const auto& neuron_id = NeuronIdAdapter::get_random_neuron_id(10000, mt);
     const auto& node_position = SimulationAdapter::get_random_position_in_box(minimum, maximum, mt);
 
     OctreeNode<additional_cell_attributes> node{};
@@ -311,7 +311,7 @@ TEST_F(BarnesHutBaseTest, testNodesToConsiderLeaf) {
 TEST_F(BarnesHutBaseTest, testNodesToConsiderNoDendrites) {
     using additional_cell_attributes = BarnesHutCell;
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     auto root = OctreeAdapter::get_tree_no_dendrites<additional_cell_attributes>(number_neurons, minimum, maximum, mt);
@@ -330,7 +330,7 @@ TEST_F(BarnesHutBaseTest, testNodesToConsiderNoDendrites) {
 TEST_F(BarnesHutBaseTest, testNodesToConsiderNoElements) {
     using additional_cell_attributes = BarnesHutCell;
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     auto root = OctreeAdapter::get_tree_no_synaptic_elements<additional_cell_attributes>(number_neurons, minimum, maximum, mt);
@@ -349,7 +349,7 @@ TEST_F(BarnesHutBaseTest, testNodesToConsiderNoElements) {
 TEST_F(BarnesHutBaseTest, testNodesToConsider) {
     using additional_cell_attributes = BarnesHutCell;
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     auto root = OctreeAdapter::get_standard_tree<additional_cell_attributes>(number_neurons, minimum, maximum, mt);
@@ -401,7 +401,7 @@ TEST_F(BarnesHutBaseTest, testNodesToConsider) {
 TEST_F(BarnesHutBaseTest, testNodesToConsiderNoAxons) {
     using additional_cell_attributes = BarnesHutCell;
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     auto root = OctreeAdapter::get_tree_no_axons<additional_cell_attributes>(number_neurons, minimum, maximum, mt);
@@ -455,7 +455,7 @@ TEST_F(BarnesHutBaseTest, testNodesToConsiderDistributedTree) {
 
     NodeCacheAdapter::set_node_cache_testing_purposes();
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
@@ -510,7 +510,7 @@ TEST_F(BarnesHutBaseTest, testNodesToConsiderDistributedTree) {
 TEST_F(BarnesHutBaseTest, testNodesToConsiderEarlyReturn) {
     using additional_cell_attributes = BarnesHutCell;
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     auto root = OctreeAdapter::get_standard_tree<additional_cell_attributes>(number_neurons, minimum, maximum, mt);
@@ -564,7 +564,7 @@ TEST_F(BarnesHutBaseTest, testNodesToConsiderEarlyReturnDistributedTree) {
 
     NodeCacheAdapter::set_node_cache_testing_purposes();
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
@@ -628,7 +628,7 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronException) {
     const Vec3d position{ 0.0 };
 
     const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     const auto too_small_acceptance_criterion = RandomAdapter::get_random_double<double>(-1000.0, 0.0, mt);
@@ -646,7 +646,7 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronException) {
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronNoDendrites) {
     using additional_cell_attributes = BarnesHutCell;
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     auto root = OctreeAdapter::get_tree_no_dendrites<additional_cell_attributes>(number_neurons, minimum, maximum, mt);
@@ -750,7 +750,7 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronOneChoice) {
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronFullChoice) {
     using additional_cell_attributes = BarnesHutCell;
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     auto root = OctreeAdapter::get_standard_tree<additional_cell_attributes>(number_neurons, minimum, maximum, mt);
@@ -826,7 +826,7 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronFullChoiceDistributed) {
 
     NodeCacheAdapter::set_node_cache_testing_purposes();
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
     const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
 
@@ -860,7 +860,7 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronsException) {
     const Vec3d position{ 0.0 };
 
     const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     const auto too_small_acceptance_criterion = RandomAdapter::get_random_double<double>(-1000.0, 0.0, mt);
@@ -994,7 +994,7 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronsOneChoice) {
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronsFullChoice) {
     using additional_cell_attributes = BarnesHutCell;
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     auto root = OctreeAdapter::get_standard_tree<additional_cell_attributes>(number_neurons, minimum, maximum, mt);
@@ -1088,7 +1088,7 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronsFullChoiceDistributed) {
 
     NodeCacheAdapter::set_node_cache_testing_purposes();
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
     const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
 
@@ -1259,7 +1259,7 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareException) {
     const Vec3d position{ 0.0 };
 
     const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
     const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
 
@@ -1280,7 +1280,7 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareException) {
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareNoDendrites) {
     using additional_cell_attributes = BarnesHutCell;
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
     const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
 
@@ -1301,7 +1301,7 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareNoDendrites) {
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronLocationAwareFullChoice) {
     using additional_cell_attributes = BarnesHutCell;
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
     const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
 
@@ -1368,7 +1368,7 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronsLocationAwareException) {
     const Vec3d position{ 0.0 };
 
     const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
     const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
 
@@ -1389,7 +1389,7 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronsLocationAwareException) {
 TEST_F(BarnesHutBaseTest, testFindTargetNeuronsLocationAwareFullChoice) {
     using additional_cell_attributes = BarnesHutCell;
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
     const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
 
@@ -1451,7 +1451,7 @@ TEST_F(BarnesHutBaseTest, testFindTargetNeuronsLocationAwareFullChoiceDistribute
 
     NodeCacheAdapter::set_node_cache_testing_purposes();
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
     const auto branching_level = SimulationAdapter::get_small_refinement_level(mt) + 1;
 

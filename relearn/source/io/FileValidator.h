@@ -10,7 +10,7 @@
  *
  */
 
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include <algorithm>
 #include <filesystem>

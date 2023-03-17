@@ -227,7 +227,7 @@ public:
 
         pre_drawn_values.resize(number_neurons * multiplier);
 
-        for (auto neuron_id = size_t(0); neuron_id < number_neurons * multiplier; neuron_id++) {
+        for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons * multiplier; neuron_id++) {
             const auto input = RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
             pre_drawn_values[neuron_id] = input;
         }
@@ -246,7 +246,7 @@ public:
         const auto now_number_neurons = get_number_neurons();
         pre_drawn_values.resize(now_number_neurons * multiplier);
 
-        for (auto neuron_id = previous_number_neurons * multiplier; neuron_id < now_number_neurons * multiplier; neuron_id++) {
+        for (NeuronID::value_type neuron_id = previous_number_neurons * multiplier; neuron_id < now_number_neurons * multiplier; neuron_id++) {
             const auto input = RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
             pre_drawn_values[neuron_id] = input;
         }

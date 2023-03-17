@@ -11,6 +11,7 @@
  */
 
 #include "Types.h"
+#include "util/NeuronID.h"
 
 #include <set>
 #include <unordered_set>

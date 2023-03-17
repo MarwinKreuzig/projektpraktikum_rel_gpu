@@ -16,8 +16,8 @@
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "structure/NodeCache.h"
 #include "structure/OctreeNode.h"
-#include "util/Random.h"
 #include "util/RelearnException.h"
+#include "util/NeuronID.h"
 #include "util/Timers.h"
 
 #include <algorithm>
@@ -40,7 +40,7 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
 
     // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
 #pragma omp parallel for default(none) shared(root, number_neurons, disable_flags, neuron_requests_outgoing, level_of_branch_nodes, my_rank)
-    for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
+    for (NeuronID::value_type neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] != UpdateStatus::Enabled) {
             continue;
         }

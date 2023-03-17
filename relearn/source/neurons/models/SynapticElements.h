@@ -15,7 +15,7 @@
 #include "neurons/enums/SignalType.h"
 #include "neurons/models/ModelParameter.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include <cmath>
 #include <map>

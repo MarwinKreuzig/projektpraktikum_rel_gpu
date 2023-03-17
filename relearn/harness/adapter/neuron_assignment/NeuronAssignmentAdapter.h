@@ -10,8 +10,8 @@
  *
  */
 
+#include "adapter/neuron_id/NeuronIdAdapter.h"
 #include "adapter/random/RandomAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "Types.h"
 #include "neurons/enums/SignalType.h"
@@ -23,10 +23,10 @@
 
 class NeuronAssignmentAdapter {
 public:
-    static void generate_random_neurons(std::vector<RelearnTypes::position_type>& positions, std::vector<RelearnTypes::area_id>& neuron_id_to_area_ids, 
+    static void generate_random_neurons(std::vector<RelearnTypes::position_type>& positions, std::vector<RelearnTypes::area_id>& neuron_id_to_area_ids,
         std::vector<RelearnTypes::area_name>& area_id_to_area_name, std::vector<SignalType>& types, std::mt19937& mt) {
 
-        const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+        const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
         const auto fraction_excitatory_neurons = RandomAdapter::get_random_percentage<double>(mt);
         const auto um_per_neuron = RandomAdapter::get_random_percentage<double>(mt) * 100.0;
 
@@ -88,7 +88,7 @@ public:
     }
 
     static std::shared_ptr<LocalAreaTranslator> get_randomized_area_translator(std::mt19937& mt) {
-        const auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+        const auto num_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
         const auto num_areas = std::max(size_t{ 1 }, num_neurons / 10);
         auto area_id_to_area_name = NeuronAssignmentAdapter::get_random_area_names(num_areas, mt);
         auto neuron_id_to_area_id = NeuronAssignmentAdapter::get_random_area_ids(area_id_to_area_name.size(), num_neurons, mt);

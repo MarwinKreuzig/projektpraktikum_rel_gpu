@@ -10,10 +10,10 @@
 
 #include "test_local_area_translator.h"
 
-#include "adapter/random/RandomAdapter.h"
-
 #include "adapter/neuron_assignment/NeuronAssignmentAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/random/RandomAdapter.h"
+#include "adapter/neuron_assignment/NeuronAssignmentAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
 
 #include "neurons/LocalAreaTranslator.h"
 
@@ -22,7 +22,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-result"
 TEST_F(LocalAreaTranslatorTest, simpleTest) {
-    const auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto num_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto num_areas_max = std::min(size_t{ 50 }, num_neurons);
     auto area_id_to_area_name = NeuronAssignmentAdapter::get_random_area_names(num_areas_max, mt);
     auto neuron_id_to_area_id = NeuronAssignmentAdapter::get_random_area_ids(area_id_to_area_name.size(), num_neurons, mt);
@@ -46,9 +46,11 @@ TEST_F(LocalAreaTranslatorTest, simpleTest) {
 }
 
 TEST_F(LocalAreaTranslatorTest, simpleExceptionTest) {
-    const auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 10;
-    auto too_many_area_id_to_area_name = NeuronAssignmentAdapter::get_random_area_names_specific(num_neurons + 1, mt);
-    auto neuron_id_to_area_id = NeuronAssignmentAdapter::get_random_area_ids(num_neurons, num_neurons, mt);
+    const auto num_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 10;
+    auto too_many_area_id_to_area_name = NeuronAssignmentAdapter::get_random_area_names_specific(num_neurons + 1,
+        mt);
+    auto neuron_id_to_area_id = NeuronAssignmentAdapter::get_random_area_ids(
+        num_neurons, num_neurons, mt);
     auto area_id_to_area_name = NeuronAssignmentAdapter::get_random_area_names_specific(num_neurons, mt);
 
     auto one_wrong_area_id = std::vector<RelearnTypes::area_id>{};
@@ -79,7 +81,7 @@ TEST_F(LocalAreaTranslatorTest, simpleExceptionTest) {
 }
 
 TEST_F(LocalAreaTranslatorTest, getterAreaTest) {
-    auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 10;
+    auto num_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 10;
     auto area_id_to_area_name = NeuronAssignmentAdapter::get_random_area_names_specific(2, mt);
     std::vector<RelearnTypes::area_id> neuron_id_to_area_id{};
     std::vector<RelearnTypes::neuron_id> area0{};
@@ -121,6 +123,7 @@ TEST_F(LocalAreaTranslatorTest, getterAreaTest) {
 }
 
 TEST_F(LocalAreaTranslatorTest, getterExceptionTest) {
+    auto num_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
     auto area_id_to_area_name = NeuronAssignmentAdapter::get_random_area_names_specific(RandomAdapter::get_random_integer(size_t{ 1 }, num_neurons, mt), mt);
     auto num_areas = area_id_to_area_name.size();

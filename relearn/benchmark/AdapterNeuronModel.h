@@ -11,7 +11,7 @@
  */
 
 #include "neurons/enums/FiredStatus.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include <span>
 #include <vector>

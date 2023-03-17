@@ -10,7 +10,7 @@
 
 #include "test_misc.h"
 
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
 
 #include "util/Utility.h"
 
@@ -153,9 +153,9 @@ TEST_F(MiscTest, testMinMaxAccSizeAllStatic) {
 }
 
 TEST_F(MiscTest, testMinMaxAccDouble) {
-    const auto number_enabled = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto number_disabled = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto number_static = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_enabled = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_disabled = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_static = NeuronIdAdapter::get_random_number_neurons(mt);
 
     const auto number_values = number_enabled + number_disabled + number_static;
 
@@ -193,9 +193,9 @@ TEST_F(MiscTest, testMinMaxAccDouble) {
 }
 
 TEST_F(MiscTest, testMinMaxAccSizet) {
-    const auto number_enabled = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto number_disabled = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto number_static = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_enabled = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_disabled = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_static = NeuronIdAdapter::get_random_number_neurons(mt);
 
     const auto number_values = number_enabled + number_disabled + number_static;
 

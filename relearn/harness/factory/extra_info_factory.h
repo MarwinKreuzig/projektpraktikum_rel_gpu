@@ -11,7 +11,7 @@
  */
 
 #include "neurons/NeuronsExtraInfo.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include <memory>
 

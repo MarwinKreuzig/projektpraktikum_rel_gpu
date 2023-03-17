@@ -14,7 +14,7 @@
 
 #include "adapter/simulation/SimulationAdapter.h"
 
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 #include "util/Vec3.h"
 
 #include <random>

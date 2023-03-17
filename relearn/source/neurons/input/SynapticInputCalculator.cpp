@@ -11,8 +11,10 @@
 #include "SynapticInputCalculator.h"
 
 #include "mpi/MPIWrapper.h"
+#include "neurons/enums/FiredStatus.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/input/FiredStatusCommunicationMap.h"
+#include "util/NeuronID.h"
 
 #include <algorithm>
 

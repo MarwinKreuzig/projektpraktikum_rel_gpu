@@ -11,7 +11,8 @@
 #include "test_calcium_calculator.h"
 
 #include "adapter/neurons/NeuronTypesAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
 
 #include "neurons/CalciumCalculator.h"
 #include "neurons/NeuronsExtraInfo.h"
@@ -281,7 +282,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorGetterSetterException) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorInitialTargetCalcium) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         if (v >= number_neurons) {
@@ -355,7 +356,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorInitialTargetCalcium) {
     ASSERT_EQ(targets2.size(), number_neurons);
     ASSERT_EQ(targets3.size(), number_neurons);
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         const auto initial = static_cast<double>(neuron_id) / 7.342;
         const auto target = static_cast<double>(neuron_id) * 5.98;
 
@@ -371,8 +372,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorInitialTargetCalcium) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorCreate) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto number_created_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_created_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         if (v >= number_neurons) {
@@ -483,7 +484,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorCreate) {
     ASSERT_EQ(targets2.size(), number_neurons + number_created_neurons);
     ASSERT_EQ(targets3.size(), number_neurons + number_created_neurons);
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         const auto initial = static_cast<double>(neuron_id) / 7.342;
         const auto target = static_cast<double>(neuron_id) * 5.98;
 
@@ -497,7 +498,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorCreate) {
         ASSERT_EQ(targets3[neuron_id], target);
     }
 
-    for (auto neuron_id = number_neurons; neuron_id < number_neurons + number_created_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = number_neurons; neuron_id < number_neurons + number_created_neurons; neuron_id++) {
         const auto initial = static_cast<double>(neuron_id) / 1.52;
         const auto target = static_cast<double>(neuron_id) * 86.2;
 
@@ -513,7 +514,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorCreate) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorZeroNeurons) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         if (v >= number_neurons) {
@@ -576,7 +577,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorZeroNeurons) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorEmptyFunctions) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         if (v >= number_neurons) {
@@ -661,7 +662,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorEmptyFunctions) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateException) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
@@ -717,8 +718,8 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateException) {
     ASSERT_THROW(cc2.update_calcium(step, std::span<const FiredStatus>{ { FiredStatus::Fired } }), RelearnException);
     ASSERT_THROW(cc3.update_calcium(step, std::span<const FiredStatus>{ { FiredStatus::Fired } }), RelearnException);
 
-    const auto fired_size = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto update_size = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto fired_size = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto update_size = NeuronIdAdapter::get_random_number_neurons(mt);
 
     std::vector<FiredStatus> fired_status(fired_size);
 
@@ -741,7 +742,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateException) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
@@ -765,7 +766,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
     extra_info->init(number_neurons);
 
     extra_info->set_disabled_neurons(NeuronID::range(number_neurons));
-    
+
     cc.set_beta(beta);
     cc.set_tau_C(tau_C);
     cc.set_h(h);
@@ -786,7 +787,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
     const auto now_calcium = cc.get_calcium();
     const auto now_target = cc.get_target_calcium();
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         ASSERT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
         ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
     }
@@ -798,7 +799,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
     const auto now_calcium_2 = cc.get_calcium();
     const auto now_target_2 = cc.get_target_calcium();
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         ASSERT_EQ(previous_calcium[neuron_id], now_calcium_2[neuron_id]);
         ASSERT_EQ(previous_target[neuron_id], now_target_2[neuron_id]);
     }
@@ -808,7 +809,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
 
     ASSERT_NO_THROW(cc.update_calcium(0, fired_status2));
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         ASSERT_EQ(previous_calcium[neuron_id], now_calcium_3[neuron_id]);
         ASSERT_EQ(previous_target[neuron_id], now_target_3[neuron_id]);
     }
@@ -818,14 +819,14 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneDisabled) {
     const auto now_calcium_4 = cc.get_calcium();
     const auto now_target_4 = cc.get_target_calcium();
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         ASSERT_EQ(previous_calcium[neuron_id], now_calcium_4[neuron_id]);
         ASSERT_EQ(previous_target[neuron_id], now_target_4[neuron_id]);
     }
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneStep0) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
@@ -869,7 +870,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneStep0) {
     const auto now_calcium = cc.get_calcium();
     const auto now_target = cc.get_target_calcium();
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
 
         if (update_status[neuron_id] == UpdateStatus::Disabled) {
@@ -891,7 +892,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNoneStep0) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNone) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
@@ -937,7 +938,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNone) {
     const auto now_calcium = cc.get_calcium();
     const auto now_target = cc.get_target_calcium();
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
 
         if (update_status[neuron_id] == UpdateStatus::Disabled) {
@@ -959,7 +960,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateNone) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
@@ -1007,7 +1008,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
     const auto now_calcium = cc.get_calcium();
     const auto now_target = cc.get_target_calcium();
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         ASSERT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
         ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
     }
@@ -1019,7 +1020,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
     const auto now_calcium_2 = cc.get_calcium();
     const auto now_target_2 = cc.get_target_calcium();
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         ASSERT_EQ(previous_calcium[neuron_id], now_calcium_2[neuron_id]);
         ASSERT_EQ(previous_target[neuron_id], now_target_2[neuron_id]);
     }
@@ -1029,7 +1030,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
 
     ASSERT_NO_THROW(cc.update_calcium(0, fired_status2));
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         ASSERT_EQ(previous_calcium[neuron_id], now_calcium_3[neuron_id]);
         ASSERT_EQ(previous_target[neuron_id], now_target_3[neuron_id]);
     }
@@ -1039,14 +1040,14 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
     const auto now_calcium_4 = cc.get_calcium();
     const auto now_target_4 = cc.get_target_calcium();
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         ASSERT_EQ(previous_calcium[neuron_id], now_calcium_4[neuron_id]);
         ASSERT_EQ(previous_target[neuron_id], now_target_4[neuron_id]);
     }
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeStep0) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
@@ -1093,7 +1094,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeStep0) {
     const auto now_calcium = cc.get_calcium();
     const auto now_target = cc.get_target_calcium();
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         if (update_status[neuron_id] == UpdateStatus::Disabled) {
             ASSERT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
             ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
@@ -1116,7 +1117,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeStep0) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelative) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
@@ -1166,7 +1167,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelative) {
     const auto now_target = cc.get_target_calcium();
 
     if (step % decay_step == 0) {
-        for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
             if (update_status[neuron_id] == UpdateStatus::Disabled) {
                 ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
                 continue;
@@ -1174,12 +1175,12 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelative) {
             ASSERT_NEAR(previous_target[neuron_id] * decay_amount_relative, now_target[neuron_id], eps);
         }
     } else {
-        for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
             ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
         }
     }
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         if (update_status[neuron_id] == UpdateStatus::Disabled) {
             ASSERT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
             continue;
@@ -1199,7 +1200,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelative) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
@@ -1248,7 +1249,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
     const auto now_calcium = cc.get_calcium();
     const auto now_target = cc.get_target_calcium();
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         ASSERT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
         ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
     }
@@ -1260,7 +1261,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
     const auto now_calcium_2 = cc.get_calcium();
     const auto now_target_2 = cc.get_target_calcium();
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         ASSERT_EQ(previous_calcium[neuron_id], now_calcium_2[neuron_id]);
         ASSERT_EQ(previous_target[neuron_id], now_target_2[neuron_id]);
     }
@@ -1270,7 +1271,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
 
     ASSERT_NO_THROW(cc.update_calcium(0, fired_status2));
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         ASSERT_EQ(previous_calcium[neuron_id], now_calcium_3[neuron_id]);
         ASSERT_EQ(previous_target[neuron_id], now_target_3[neuron_id]);
     }
@@ -1280,14 +1281,15 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteDisabled) {
     const auto now_calcium_4 = cc.get_calcium();
     const auto now_target_4 = cc.get_target_calcium();
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons;
+         neuron_id++) {
         ASSERT_EQ(previous_calcium[neuron_id], now_calcium_4[neuron_id]);
         ASSERT_EQ(previous_target[neuron_id], now_target_4[neuron_id]);
     }
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteStep0) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
@@ -1335,7 +1337,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteStep0) {
     const auto now_calcium = cc.get_calcium();
     const auto now_target = cc.get_target_calcium();
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         if (update_status[neuron_id] == UpdateStatus::Disabled) {
             ASSERT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
             ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
@@ -1358,7 +1360,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsoluteStep0) {
 }
 
 TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsolute) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     auto initiator = [number_neurons](MPIRank i, NeuronID::value_type v) {
         return static_cast<double>(v) / 7.342;
@@ -1409,7 +1411,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsolute) {
     const auto now_target = cc.get_target_calcium();
 
     if (step % decay_step == 0) {
-        for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
             if (update_status[neuron_id] == UpdateStatus::Disabled) {
                 ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
                 continue;
@@ -1417,12 +1419,12 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateAbsolute) {
             ASSERT_NEAR(previous_target[neuron_id] - decay_amount_absolute, now_target[neuron_id], eps);
         }
     } else {
-        for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
             ASSERT_EQ(previous_target[neuron_id], now_target[neuron_id]);
         }
     }
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         if (update_status[neuron_id] == UpdateStatus::Disabled) {
             ASSERT_EQ(previous_calcium[neuron_id], now_calcium[neuron_id]);
             continue;

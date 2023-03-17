@@ -12,7 +12,9 @@
 
 #include "adapter/mpi/MpiRankAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
 
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
@@ -95,7 +97,7 @@ TEST_F(PartitionTest, testPartitionNumberNeurons) {
         number_local_neurons[my_rank] = std::vector<size_t>(my_subdomains);
 
         for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
-            const auto num_local_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+            const auto num_local_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
             number_local_neurons[my_rank][my_subdomain] = num_local_neurons;
             number_total_neurons += num_local_neurons;

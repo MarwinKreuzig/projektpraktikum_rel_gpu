@@ -101,6 +101,10 @@ target_sources(
 
 		  neurons/test_neurons.cpp
 
+		  neurons/test_neurons.cpp
+
+		  neuron_id/test_neuron_id.cpp
+
 		  octree/test_octree.cpp
 		  
 		  octree_node/test_octree_node.cpp
@@ -134,8 +138,6 @@ target_sources(
 
 		  synaptic_input/test_synaptic_input.cpp
 
-		  tagged_id/test_tagged_id.cpp
-		  
 		  timers/test_timers.cpp
 
 		  vector/test_vector.cpp

@@ -14,7 +14,7 @@
 #include "neurons/helper/RankNeuronId.h"
 #include "util/MPIRank.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include <algorithm>
 #include <charconv>
@@ -169,4 +169,3 @@ public:
         return neuron_ids;
     }
 };
-

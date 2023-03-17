@@ -569,9 +569,7 @@ void NeuronIO::write_out_synapses(const std::vector<std::vector<std::pair<Neuron
     ss << "# Current simulation step: " << step << '\n';
     ss << "# <target rank> <target neuron id>\t<source rank> <source neuron id>\t<weight>\t<plastic>\n";
 
-    for (const auto& source_id : NeuronID::range(number_local_neurons)) {
-        const auto& source_local_id = source_id.get_neuron_id();
-
+    for (const auto& source_local_id : NeuronID::range_id(number_local_neurons)) {
         for (const auto& [target_id, weight] : local_out_edges_static[source_local_id]) {
             const auto& target_local_id = target_id.get_neuron_id();
 
@@ -621,9 +619,7 @@ void NeuronIO::write_in_synapses(const std::vector<std::vector<std::pair<NeuronI
     ss << "# Current simulation step: " << step << '\n';
     ss << "# <target rank> <target neuron id>\t<source rank> <source neuron id>\t<weight>\t<plastic>\n";
 
-    for (const auto& target_id : NeuronID::range(number_local_neurons)) {
-        const auto& target_local_id = target_id.get_neuron_id();
-
+    for (const auto& target_local_id : NeuronID::range_id(number_local_neurons)) {
         for (const auto& [source_id, weight] : local_in_edges_static[target_local_id]) {
             const auto& source_local_id = source_id.get_neuron_id();
 

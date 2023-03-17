@@ -10,11 +10,12 @@
 
 #include "test_monitor_parser.h"
 
-#include "adapter/random/RandomAdapter.h"
 #include "adapter/helper/RankNeuronIdAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
 #include "adapter/mpi/MpiRankAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
 
 #include "io/parser/MonitorParser.h"
 #include "neurons/LocalAreaTranslator.h"
@@ -28,18 +29,18 @@ TEST_F(MonitorParserTest, testParseIds) {
     const auto my_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
     std::vector<RankNeuronId> rank_neuron_ids{};
-    rank_neuron_ids.reserve(number_ranks * TaggedIdAdapter::upper_bound_num_neurons);
+    rank_neuron_ids.reserve(number_ranks * NeuronIdAdapter::upper_bound_num_neurons);
 
     size_t my_number_neurons = 0;
 
     for (const auto rank : MPIRank::range(number_ranks)) {
-        const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+        const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
         if (rank == my_rank) {
             my_number_neurons = number_neurons;
         }
 
-        for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        for (NeuronID::value_type neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
             rank_neuron_ids.emplace_back(rank, NeuronID(neuron_id));
         }
     }

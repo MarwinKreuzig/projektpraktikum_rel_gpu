@@ -18,7 +18,7 @@
 #include "neurons/input/SynapticInputCalculator.h"
 #include "neurons/models/ModelParameter.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include <algorithm>
 #include <array>

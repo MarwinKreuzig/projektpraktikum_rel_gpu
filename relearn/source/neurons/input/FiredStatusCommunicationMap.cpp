@@ -12,6 +12,7 @@
 
 #include "mpi/MPIWrapper.h"
 #include "neurons/NetworkGraph.h"
+#include "util/NeuronID.h"
 #include "util/Timers.h"
 
 #include <ranges>
@@ -34,7 +35,7 @@ void FiredStatusCommunicationMap::set_local_fired_status([[maybe_unused]] const 
     Timers::start(TimerRegion::PREPARE_SENDING_SPIKES);
 
     // For my neurons
-    for (size_t neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }

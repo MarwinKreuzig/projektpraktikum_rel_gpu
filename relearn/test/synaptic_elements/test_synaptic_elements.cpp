@@ -14,11 +14,13 @@
 
 #include "adapter/neurons/NeuronTypesAdapter.h"
 #include "adapter/synaptic_elements/SynapticElementsAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/synaptic_elements/SynapticElementsAdapter.h"
 
 #include "neurons/NeuronsExtraInfo.h"
-#include "neurons/models/SynapticElements.h"
 #include "neurons/enums/UpdateStatus.h"
+#include "neurons/models/SynapticElements.h"
 #include "util/Random.h"
 
 #include <numeric>
@@ -222,7 +224,7 @@ TEST_F(SynapticElementsTest, testConstructor) {
 }
 
 TEST_F(SynapticElementsTest, testParameters) {
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& C = RandomAdapter::get_random_percentage<double>(mt);
 
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
@@ -283,7 +285,7 @@ TEST_F(SynapticElementsTest, testParameters) {
 }
 
 TEST_F(SynapticElementsTest, testClone) {
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& C = RandomAdapter::get_random_percentage<double>(mt);
 
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
@@ -339,7 +341,7 @@ TEST_F(SynapticElementsTest, testClone) {
 }
 
 TEST_F(SynapticElementsTest, testInitialize) {
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -361,7 +363,7 @@ TEST_F(SynapticElementsTest, testInitialize) {
     }
 
     for (auto iteration = 0; iteration < number_neurons_out_of_scope; iteration++) {
-        const auto neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, number_neurons, mt);
+        const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, number_neurons, mt);
 
         ASSERT_THROW(auto ret = synaptic_elements.get_grown_elements(neuron_id), RelearnException) << ss.str() << neuron_id;
         ASSERT_THROW(auto ret = synaptic_elements.get_connected_elements(neuron_id), RelearnException) << ss.str() << neuron_id;
@@ -392,8 +394,8 @@ TEST_F(SynapticElementsTest, testInitialize) {
 }
 
 TEST_F(SynapticElementsTest, testCreateNeurons) {
-    const auto& number_neurons_initially = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto& number_neurons_added = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons_initially = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons_added = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -418,7 +420,7 @@ TEST_F(SynapticElementsTest, testCreateNeurons) {
     }
 
     for (auto iteration = 0; iteration < number_neurons_out_of_scope; iteration++) {
-        const auto neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, number_neurons, mt);
+        const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, number_neurons, mt);
 
         ASSERT_THROW(auto ret = synaptic_elements.get_grown_elements(neuron_id), RelearnException) << ss.str() << neuron_id;
         ASSERT_THROW(auto ret = synaptic_elements.get_connected_elements(neuron_id), RelearnException) << ss.str() << neuron_id;
@@ -449,8 +451,8 @@ TEST_F(SynapticElementsTest, testCreateNeurons) {
 }
 
 TEST_F(SynapticElementsTest, testInitialElementsConstant) {
-    const auto& number_neurons_initially = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto& number_neurons_added = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons_initially = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons_added = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     const auto& number_neurons = number_neurons_initially + number_neurons_added;
@@ -473,7 +475,8 @@ TEST_F(SynapticElementsTest, testInitialElementsConstant) {
 
     const auto& counts = synaptic_elements.get_grown_elements();
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons;
+         neuron_id++) {
         const auto grown_elements_1 = synaptic_elements.get_grown_elements(NeuronID{ neuron_id });
         const auto grown_elements_2 = counts[neuron_id];
 
@@ -483,8 +486,8 @@ TEST_F(SynapticElementsTest, testInitialElementsConstant) {
 }
 
 TEST_F(SynapticElementsTest, testInitialElements) {
-    const auto& number_neurons_initially = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto& number_neurons_added = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons_initially = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons_added = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     const auto& number_neurons = number_neurons_initially + number_neurons_added;
@@ -511,7 +514,7 @@ TEST_F(SynapticElementsTest, testInitialElements) {
 
     const auto& counts = synaptic_elements.get_grown_elements();
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         const auto grown_elements_1 = synaptic_elements.get_grown_elements(NeuronID{ neuron_id });
         const auto grown_elements_2 = counts[neuron_id];
 
@@ -523,8 +526,8 @@ TEST_F(SynapticElementsTest, testInitialElements) {
 }
 
 TEST_F(SynapticElementsTest, testInitialElementsException) {
-    const auto& number_neurons_initially = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto& number_neurons_added = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons_initially = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons_added = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -549,8 +552,8 @@ TEST_F(SynapticElementsTest, testInitialElementsException) {
 }
 
 TEST_F(SynapticElementsTest, testInitialElementsMultipleBounds) {
-    const auto& number_neurons_initially = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto& number_neurons_added = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons_initially = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons_added = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     const auto& number_neurons = number_neurons_initially + number_neurons_added;
@@ -601,7 +604,7 @@ TEST_F(SynapticElementsTest, testInitialElementsMultipleBounds) {
         ASSERT_TRUE(grown_elements_1 <= upper_bound_1) << ss.str() << neuron_id;
     }
 
-    for (auto neuron_id = number_neurons_initially; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = number_neurons_initially; neuron_id < number_neurons; neuron_id++) {
         const auto id = NeuronID{ neuron_id };
         const auto grown_elements_1 = synaptic_elements.get_grown_elements(id);
         const auto grown_elements_2 = counts[neuron_id];
@@ -614,7 +617,7 @@ TEST_F(SynapticElementsTest, testInitialElementsMultipleBounds) {
 }
 
 TEST_F(SynapticElementsTest, testSignalTypes) {
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -626,7 +629,7 @@ TEST_F(SynapticElementsTest, testSignalTypes) {
     std::vector<SignalType> signal_types(number_neurons);
     std::vector<SignalType> golden_signal_types(number_neurons);
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         const auto& signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
         signal_types[neuron_id] = signal_type;
@@ -641,7 +644,7 @@ TEST_F(SynapticElementsTest, testSignalTypes) {
 }
 
 TEST_F(SynapticElementsTest, testSingleUpdate) {
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -692,7 +695,7 @@ TEST_F(SynapticElementsTest, testSingleUpdate) {
 }
 
 TEST_F(SynapticElementsTest, testHistogram) {
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -717,7 +720,7 @@ TEST_F(SynapticElementsTest, testHistogram) {
 }
 
 TEST_F(SynapticElementsTest, testUpdateException) {
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -727,7 +730,7 @@ TEST_F(SynapticElementsTest, testUpdateException) {
     synaptic_elements.init(number_neurons);
 
     for (auto iteration = 0; iteration < number_neurons_out_of_scope; iteration++) {
-        const auto neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, number_neurons, mt);
+        const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, number_neurons, mt);
 
         ASSERT_THROW(auto ret = synaptic_elements.get_grown_elements(neuron_id), RelearnException) << ss.str() << neuron_id;
         ASSERT_THROW(auto ret = synaptic_elements.get_connected_elements(neuron_id), RelearnException) << ss.str() << neuron_id;
@@ -735,7 +738,7 @@ TEST_F(SynapticElementsTest, testUpdateException) {
     }
 
     for (auto iteration = 0; iteration < number_neurons_out_of_scope; iteration++) {
-        const auto neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, number_neurons, mt);
+        const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, number_neurons, mt);
 
         const auto& grown_element = SynapticElementsAdapter::get_random_synaptic_element_count(mt);
         const auto& connected_grown_element = SynapticElementsAdapter::get_random_synaptic_element_connected_count(static_cast<unsigned int>(grown_element), mt);
@@ -750,7 +753,7 @@ TEST_F(SynapticElementsTest, testUpdateException) {
 TEST_F(SynapticElementsTest, testMultipleUpdate) {
     uniform_int_distribution<unsigned int> uid_connected(0, 10);
 
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -804,7 +807,7 @@ TEST_F(SynapticElementsTest, testMultipleUpdate) {
 TEST_F(SynapticElementsTest, testFreeElements) {
     uniform_int_distribution<unsigned int> uid_connected(0, 10);
 
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -851,7 +854,7 @@ TEST_F(SynapticElementsTest, testFreeElements) {
 }
 
 TEST_F(SynapticElementsTest, testDisable) {
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -864,7 +867,7 @@ TEST_F(SynapticElementsTest, testDisable) {
     std::vector<NeuronID> disabled_neurons{};
     std::vector<bool> disabled(number_neurons, false);
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         const auto disable = RandomAdapter::get_random_bool(mt);
         if (disable) {
             disabled_neurons.emplace_back(neuron_id);
@@ -893,7 +896,7 @@ TEST_F(SynapticElementsTest, testDisable) {
 }
 
 TEST_F(SynapticElementsTest, testDisableException) {
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -906,14 +909,14 @@ TEST_F(SynapticElementsTest, testDisableException) {
         std::vector<unsigned int> changes(number_neurons, 0);
         std::vector<NeuronID> disabled_neurons{};
 
-        for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
             const auto disable = RandomAdapter::get_random_bool(mt);
             if (disable) {
                 disabled_neurons.emplace_back(neuron_id);
             }
         }
 
-        const auto faulty_id = TaggedIdAdapter::get_random_number_neurons(mt) + number_neurons;
+        const auto faulty_id = NeuronIdAdapter::get_random_number_neurons(mt) + number_neurons;
         disabled_neurons.emplace_back(faulty_id);
 
         std::shuffle(disabled_neurons.begin(), disabled_neurons.end(), mt);
@@ -923,7 +926,7 @@ TEST_F(SynapticElementsTest, testDisableException) {
 }
 
 TEST_F(SynapticElementsTest, testDelete) {
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -935,7 +938,7 @@ TEST_F(SynapticElementsTest, testDelete) {
     std::vector<unsigned int> changes(number_neurons, 0);
     std::vector<NeuronID> disabled_neurons{};
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         const auto change = RandomAdapter::get_random_integer<unsigned int>(0, golden_connected_counts[neuron_id], mt);
         changes[neuron_id] = change;
     }
@@ -952,7 +955,7 @@ TEST_F(SynapticElementsTest, testDelete) {
 }
 
 TEST_F(SynapticElementsTest, testDeleteException) {
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -962,7 +965,7 @@ TEST_F(SynapticElementsTest, testDeleteException) {
         = SynapticElementsAdapter::create_random_synaptic_elements(number_neurons, element_type, 0.0, mt);
 
     for (auto iteration = 0; iteration < 10; iteration++) {
-        auto wrong_number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+        auto wrong_number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
         if (wrong_number_neurons == number_neurons) {
             wrong_number_neurons++;
         }
@@ -974,12 +977,12 @@ TEST_F(SynapticElementsTest, testDeleteException) {
 
         std::vector<unsigned int> changes(number_neurons, 0);
 
-        for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
             const auto change = RandomAdapter::get_random_integer<unsigned int>(0, golden_connected_counts[neuron_id], mt) + 1;
             changes[neuron_id] = change;
         }
 
-        const auto faulty_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto faulty_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
         changes[faulty_id.get_neuron_id()] += golden_connected_counts[faulty_id.get_neuron_id()];
 
         ASSERT_THROW(synaptic_elements.update_after_deletion(changes, disabled_neurons), RelearnException) << ss.str() << ' ' << faulty_id;
@@ -990,7 +993,7 @@ TEST_F(SynapticElementsTest, testUpdateNumberElements) {
     const auto minimum_calcium_to_grow = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
     const auto growth_factor = RandomAdapter::get_random_double<double>(1e-6, 100.0, mt);
 
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -1007,7 +1010,7 @@ TEST_F(SynapticElementsTest, testUpdateNumberElements) {
     extra_info->init(number_neurons);
     synaptic_elements.set_extra_infos(extra_info);
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         calcium[neuron_id] = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
         target_calcium[neuron_id] = RandomAdapter::get_random_double<double>(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0, mt);
         if (RandomAdapter::get_random_bool(mt)) {
@@ -1042,7 +1045,7 @@ TEST_F(SynapticElementsTest, testMultipleUpdateNumberElements) {
     const auto minimum_calcium_to_grow = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
     const auto growth_factor = RandomAdapter::get_random_double<double>(1e-6, 100.0, mt);
 
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto& number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -1061,7 +1064,7 @@ TEST_F(SynapticElementsTest, testMultipleUpdateNumberElements) {
         extra_info->init(number_neurons);
         synaptic_elements.set_extra_infos(extra_info);
 
-        for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+        for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
             calcium[neuron_id] = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
             target_calcium[neuron_id] = RandomAdapter::get_random_double<double>(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0, mt);
             if (RandomAdapter::get_random_bool(mt)) {
@@ -1091,14 +1094,19 @@ TEST_F(SynapticElementsTest, testMultipleUpdateNumberElements) {
 }
 
 TEST_F(SynapticElementsTest, testUpdateNumberElementsException) {
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto& number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
     ss << number_neurons << ' ' << element_type << '\n';
 
-    auto [synaptic_elements, grown_elements, connected_elements, signal_types]
-        = SynapticElementsAdapter::create_random_synaptic_elements(number_neurons, element_type, 0.0, mt);
+    auto random_elements = SynapticElementsAdapter::create_random_synaptic_elements(
+        number_neurons, element_type, 0.0, mt);
+
+    auto& synaptic_elements = std::get<0>(random_elements);
+    auto& grown_elements = std::get<1>(random_elements);
+    auto& connected_elements = std::get<2>(random_elements);
+    auto& signal_types = std::get<3>(random_elements);
 
     const auto number_too_small_calcium = RandomAdapter::get_random_integer<size_t>(1, number_neurons - 1, mt);
     const auto number_too_large_calcium = RandomAdapter::get_random_integer<size_t>(number_neurons + 1, number_neurons * 2 + 1, mt);
@@ -1174,7 +1182,7 @@ TEST_F(SynapticElementsTest, testCommitUpdates) {
     const auto minimum_calcium_to_grow = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
     const auto growth_factor = RandomAdapter::get_random_double<double>(1e-6, 100.0, mt);
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     const auto retract_ratio = RandomAdapter::get_random_double<double>(0.0, 1.0, mt);
@@ -1214,7 +1222,7 @@ TEST_F(SynapticElementsTest, testCommitUpdates) {
     std::vector<UpdateStatus> enable_flags(number_neurons, UpdateStatus::Enabled);
     std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         calcium[neuron_id] = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
         target_calcium[neuron_id] = RandomAdapter::get_random_double<double>(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0, mt);
         if (RandomAdapter::get_random_bool(mt)) {
@@ -1309,7 +1317,7 @@ TEST_F(SynapticElementsTest, testCommitUpdatesException) {
     const auto minimum_calcium_to_grow = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
     const auto growth_factor = RandomAdapter::get_random_double<double>(1e-6, 100.0, mt);
 
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
+    const auto& number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -1326,7 +1334,7 @@ TEST_F(SynapticElementsTest, testCommitUpdatesException) {
     std::vector<double> target_calcium(number_neurons, 0.0);
     std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
         calcium[neuron_id] = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
         target_calcium[neuron_id] = RandomAdapter::get_random_double<double>(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0, mt);
         if (RandomAdapter::get_random_bool(mt)) {
@@ -1337,8 +1345,8 @@ TEST_F(SynapticElementsTest, testCommitUpdatesException) {
 
     synaptic_elements.update_number_elements_delta(calcium, target_calcium);
 
-    const auto number_too_small_disable_flags = TaggedIdAdapter::get_random_neuron_id(number_neurons - 1, mt).get_neuron_id() + 1;
-    const auto number_too_large_disable_flags = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt).get_neuron_id() + number_neurons + 1;
+    const auto number_too_small_disable_flags = NeuronIdAdapter::get_random_neuron_id(number_neurons - 1, mt).get_neuron_id() + 1;
+    const auto number_too_large_disable_flags = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt).get_neuron_id() + number_neurons + 1;
 
     auto extra_info_too_small = std::make_shared<NeuronsExtraInfo>();
     extra_info_too_small->init(number_too_small_disable_flags);

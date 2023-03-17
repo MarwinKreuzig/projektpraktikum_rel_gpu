@@ -12,12 +12,12 @@
 
 #include "adapter/random/RandomAdapter.h"
 
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include <random>
 #include <unordered_set>
 
-class TaggedIdAdapter {
+class NeuronIdAdapter {
 public:
     constexpr static int upper_bound_num_neurons = 1000;
 

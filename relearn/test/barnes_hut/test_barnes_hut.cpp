@@ -11,12 +11,18 @@
 #include "test_barnes_hut.h"
 
 #include "adapter/mpi/MpiRankAdapter.h"
-#include "adapter/neurons/NeuronsAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
 #include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/neurons/NeuronsAdapter.h"
 #include "adapter/octree/OctreeAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"
 #include "adapter/synaptic_elements/SynapticElementsAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/neurons/NeuronsAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
+#include "adapter/synaptic_elements/SynapticElementsAdapter.h"
 
 #include "algorithm/Algorithms.h"
 #include "algorithm/BarnesHutInternal/BarnesHutBase.h"
@@ -49,7 +55,7 @@ TEST_F(BarnesHutTest, testBarnesHutGetterSetter) {
 }
 
 TEST_F(BarnesHutTest, testUpdateFunctor) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) * 0 + 4;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) * 0 + 4;
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     const auto& axons = SynapticElementsAdapter::create_axons(number_neurons, mt);

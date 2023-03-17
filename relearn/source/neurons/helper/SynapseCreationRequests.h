@@ -12,7 +12,7 @@
 
 #include "neurons/enums/SignalType.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include <cstddef>
 #include <utility>

@@ -66,9 +66,8 @@ std::pair<unsigned int, std::vector<unsigned int>> SynapticElements::commit_upda
     auto current_additions = 0.0;
     auto current_deletions = 0.0;
 
-#pragma omp parallel for reduction(+ \
-                                   : current_additions, current_deletions) shared(disable_flags) default(none)
-    for (auto neuron_id = 0; neuron_id < size; ++neuron_id) {
+#pragma omp parallel for reduction(+ : current_additions, current_deletions) shared(disable_flags) default(none)
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < size; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
@@ -91,9 +90,8 @@ std::pair<unsigned int, std::vector<unsigned int>> SynapticElements::commit_upda
     std::vector<unsigned int> number_deletions(size, 0);
     unsigned int sum_to_delete = 0;
 
-#pragma omp parallel for reduction(+ \
-                                   : sum_to_delete) shared(number_deletions, disable_flags) default(none)
-    for (auto neuron_id = 0; neuron_id < size; ++neuron_id) {
+#pragma omp parallel for reduction(+ : sum_to_delete) shared(number_deletions, disable_flags) default(none)
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < size; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
@@ -120,7 +118,7 @@ void SynapticElements::update_number_elements_delta(const std::span<const double
     RelearnException::check(disable_flags.size() == size, "SynapticElements::update_number_elements_delta: disable_flags was not of the right size");
 
 #pragma omp parallel for shared(calcium, target_calcium, disable_flags) default(none)
-    for (auto neuron_id = 0; neuron_id < size; ++neuron_id) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < size; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }

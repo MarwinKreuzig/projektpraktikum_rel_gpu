@@ -10,10 +10,9 @@
 
 #include "NeuronModels.h"
 
-#include "Config.h"
-#include "mpi/MPIWrapper.h"
 #include "neurons/NetworkGraph.h"
 #include "util/Random.h"
+#include "util/NeuronID.h"
 #include "util/Timers.h"
 
 void NeuronModel::init(number_neurons_type number_neurons) {

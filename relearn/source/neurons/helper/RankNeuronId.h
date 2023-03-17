@@ -12,7 +12,7 @@
 
 #include "util/MPIRank.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include <boost/functional/hash.hpp>
 

@@ -16,7 +16,7 @@
 #include "neurons/LocalAreaTranslator.h"
 #include "util/StringUtil.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include <string>
 #include <string_view>

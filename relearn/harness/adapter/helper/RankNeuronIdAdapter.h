@@ -10,9 +10,9 @@
  *
  */
 
-#include "adapter/random/RandomAdapter.h"
 #include "adapter/mpi/MpiRankAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/random/RandomAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
 
 #include "neurons/helper/RankNeuronId.h"
 
@@ -25,7 +25,7 @@ class RankNeuronIdAdapter {
 public:
     static RankNeuronId generate_random_rank_neuron_id(std::mt19937& mt) {
         const auto rank = MPIRankAdapter::get_random_mpi_rank(mt);
-        const auto neuron_id = TaggedIdAdapter::get_random_neuron_id(mt);
+        const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(mt);
 
         return { rank, neuron_id };
     }

@@ -22,8 +22,7 @@
 #include "util/ProbabilityPicker.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
-#include "util/Vec3.h"
+#include "util/NeuronID.h"
 
 #include "fmt/ostream.h"
 

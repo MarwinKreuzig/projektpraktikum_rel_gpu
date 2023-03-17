@@ -12,7 +12,9 @@
 
 #include "adapter/neurons/NeuronTypesAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
 
 #include "neurons/helper/DistantNeuronRequests.h"
 
@@ -32,10 +34,10 @@ TEST_F(DistantNeuronRequestTest, testDefaultConstructor) {
 }
 
 TEST_F(DistantNeuronRequestTest, testConstructor) {
-    const auto& golden_source_neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
+    const auto& golden_source_neuron_id = NeuronIdAdapter::get_random_neuron_id(10000, mt);
     const auto& golden_source_position = SimulationAdapter::get_random_position(mt);
 
-    const auto golden_target_id = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto golden_target_id = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto golden_target_neuron_type = NeuronTypesAdapter::get_random_target_neuron_type(mt);
 
     const auto golden_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
@@ -71,7 +73,7 @@ TEST_F(DistantNeuronRequestTest, testConstructor) {
 TEST_F(DistantNeuronRequestTest, testConstructorException) {
     const auto& golden_source_position = SimulationAdapter::get_random_position(mt);
 
-    const auto golden_target_id = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto golden_target_id = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto golden_target_neuron_type = NeuronTypesAdapter::get_random_target_neuron_type(mt);
 
     const auto golden_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);

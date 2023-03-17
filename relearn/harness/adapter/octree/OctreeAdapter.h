@@ -18,7 +18,7 @@
 #include "structure/Cell.h"
 #include "structure/Octree.h"
 #include "structure/OctreeNode.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 #include "util/Vec3.h"
 
 #include "gtest/gtest.h"
@@ -386,8 +386,7 @@ public:
             current_rank++;
         }
 
-        auto mark_children
-            = [](OctreeNode<AdditionalCellAttributes>* node) {
+        auto mark_children = [](OctreeNode<AdditionalCellAttributes>* node) {
             auto rank = node->get_mpi_rank();
 
             std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
@@ -404,7 +403,8 @@ public:
                         stack.push(child);
                     }
                 }
-            } };
+            }
+        };
 
         std::for_each(branch_nodes.begin(), branch_nodes.end(), mark_children);
     }

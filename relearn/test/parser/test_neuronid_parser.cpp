@@ -1,4 +1,4 @@
-﻿/*
+/*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
  * Copyright (c) 2020, Technical University of Darmstadt, Germany
@@ -10,11 +10,10 @@
 
 #include "test_neuronid_parser.h"
 
-#include "adapter/random/RandomAdapter.h"
 #include "adapter/helper/RankNeuronIdAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
 #include "adapter/mpi/MpiRankAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "io/parser/NeuronIdParser.h"
 
@@ -85,7 +84,7 @@ TEST_F(NeuronIdParserTest, testParseDescriptionRandom) {
 }
 
 TEST_F(NeuronIdParserTest, testParseDescriptions) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     std::vector<RankNeuronId> rank_neuron_ids{};
     rank_neuron_ids.reserve(number_neurons + 1);
@@ -139,7 +138,7 @@ TEST_F(NeuronIdParserTest, testParseDescriptionsFixed) {
 }
 
 TEST_F(NeuronIdParserTest, testExtractNeuronIDs) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     std::vector<RankNeuronId> rank_neuron_ids{};
     rank_neuron_ids.reserve(number_neurons + 2);
@@ -169,13 +168,14 @@ TEST_F(NeuronIdParserTest, testExtractNeuronIDs) {
 }
 
 TEST_F(NeuronIdParserTest, testRemoveAndSort) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     std::vector<NeuronID> neuron_ids{};
     neuron_ids.reserve(number_neurons);
 
     for (auto i = 0; i < number_neurons; i++) {
-        neuron_ids.emplace_back(TaggedIdAdapter::get_random_neuron_id(number_neurons, mt));
+        neuron_ids.emplace_back(
+            NeuronIdAdapter::get_random_neuron_id(number_neurons, mt));
     }
 
     const auto& unique_and_filtered = NeuronIdParser::remove_duplicates_and_sort(neuron_ids);
@@ -196,13 +196,14 @@ TEST_F(NeuronIdParserTest, testRemoveAndSort) {
 }
 
 TEST_F(NeuronIdParserTest, testRemoveAndSortException1) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     std::vector<NeuronID> neuron_ids{};
     neuron_ids.reserve(number_neurons);
 
     for (auto i = 0; i < number_neurons; i++) {
-        neuron_ids.emplace_back(TaggedIdAdapter::get_random_neuron_id(number_neurons, mt));
+        neuron_ids.emplace_back(
+            NeuronIdAdapter::get_random_neuron_id(number_neurons, mt));
     }
 
     const auto virtual_rma = RandomAdapter::get_random_integer<NeuronID::value_type>(0, 100000, mt);
@@ -214,13 +215,14 @@ TEST_F(NeuronIdParserTest, testRemoveAndSortException1) {
 }
 
 TEST_F(NeuronIdParserTest, testRemoveAndSortException2) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     std::vector<NeuronID> neuron_ids{};
     neuron_ids.reserve(number_neurons);
 
     for (auto i = 0; i < number_neurons; i++) {
-        neuron_ids.emplace_back(TaggedIdAdapter::get_random_neuron_id(number_neurons, mt));
+        neuron_ids.emplace_back(
+            NeuronIdAdapter::get_random_neuron_id(number_neurons, mt));
     }
 
     const auto position = RandomAdapter::get_random_integer<size_t>(0, number_neurons, mt);

@@ -11,12 +11,11 @@
 #include "Naive.h"
 
 #include "algorithm/Connector.h"
-#include "algorithm/Kernel/Gaussian.h"
 #include "algorithm/Kernel/Kernel.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "structure/NodeCache.h"
 #include "structure/OctreeNode.h"
-#include "util/Random.h"
+#include "util/NeuronID.h"
 #include "util/Timers.h"
 
 #include <algorithm>
@@ -71,7 +70,7 @@ CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const number
     const auto& axons_counts = axons->get_grown_elements();
     const auto& axons_connected_counts = axons->get_connected_elements();
     // For my neurons
-    for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] != UpdateStatus::Enabled) {
             continue;
         }

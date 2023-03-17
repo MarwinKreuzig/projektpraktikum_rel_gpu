@@ -125,7 +125,7 @@ void AEIFModel::update_activity_benchmark() {
     const auto disable_flags = get_extra_infos()->get_disable_flags();
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons) default(none)
-    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
+    for (NeuronID::value_type neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
@@ -147,7 +147,7 @@ void AEIFModel::update_activity() {
     const auto C_inverse = 1.0 / C;
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons, h, scale, d_T_inverse, tau_w_inverse, C_inverse) default(none)
-    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
+    for (NeuronID::value_type neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
@@ -188,7 +188,7 @@ void AEIFModel::update_activity() {
 }
 
 void AEIFModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {
-    for (auto neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
+    for (NeuronID::value_type neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
         const auto id = NeuronID{ neuron_id };
 
         w[neuron_id] = 0.0;

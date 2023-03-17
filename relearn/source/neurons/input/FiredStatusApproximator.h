@@ -15,12 +15,12 @@
 #include "Types.h"
 #include "neurons/enums/FiredStatus.h"
 #include "util/MPIRank.h"
+#include "util/NeuronID.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
 
 #include <memory>
-#include <unordered_map>
 #include <span>
+#include <unordered_map>
 #include <vector>
 
 class FiredStatusApproximator : public FiredStatusCommunicator {

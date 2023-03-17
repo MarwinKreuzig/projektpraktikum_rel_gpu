@@ -50,7 +50,7 @@ TEST_F(StimulusTest, testStimulusWithNeuronIds) {
         Interval interval = intervals[i];
 
         const auto intensity = RandomAdapter::get_random_double(0.001, 100.0, mt);
-        const auto& ids = TaggedIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(RelearnTypes::number_neurons_type(1), num_neurons, mt), mt);
+        const auto& ids = NeuronIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(RelearnTypes::number_neurons_type(1), num_neurons, mt), mt);
         std::unordered_set<std::string> rank_ids{};
         std::unordered_set<NeuronID> my_ids{};
         for (const auto& neuron_id : ids) {
@@ -162,7 +162,7 @@ TEST_F(StimulusTest, testFrequency) {
     const auto frequency = RandomAdapter::get_random_integer(2, 10, mt);
 
     const auto intensity = RandomAdapter::get_random_double(0.001, 100.0, mt);
-    const auto& ids = TaggedIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(RelearnTypes::number_neurons_type(1), num_neurons, mt), mt);
+    const auto& ids = NeuronIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(RelearnTypes::number_neurons_type(1), num_neurons, mt), mt);
     std::unordered_set<std::string> rank_ids{};
     for (const auto& neuron_id : ids) {
         rank_ids.insert("0:" + std::to_string(neuron_id.get_neuron_id()+1));
@@ -200,7 +200,7 @@ TEST_F(StimulusTest, testEmptyNeurons) {
         Interval interval = intervals[i];
         const auto intensity = RandomAdapter::get_random_double(0.001, 100.0, mt);
 
-        const auto& ids = (i % 2 == 0) ? TaggedIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(RelearnTypes::number_neurons_type(1), num_neurons, mt), mt) : std::unordered_set<NeuronID>{};
+        const auto& ids = (i % 2 == 0) ? NeuronIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(RelearnTypes::number_neurons_type(1), num_neurons, mt), mt) : std::unordered_set<NeuronID>{};
         std::unordered_set<std::string> rank_ids{};
         for (const auto& neuron_id : ids) {
             rank_ids.insert("0:" + std::to_string(neuron_id.get_neuron_id()+1));

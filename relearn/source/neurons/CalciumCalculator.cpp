@@ -154,7 +154,7 @@ void CalciumCalculator::update_target_calcium(const step_type step) noexcept {
 
     if (decay_type == TargetCalciumDecay::Absolute) {
 #pragma omp parallel for default(none) shared(disable_flags)
-        for (auto neuron_id = 0; neuron_id < target_calcium.size(); ++neuron_id) {
+        for (NeuronID::value_type neuron_id = 0U; neuron_id < target_calcium.size(); ++neuron_id) {
             if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
                 continue;
             }
@@ -166,7 +166,7 @@ void CalciumCalculator::update_target_calcium(const step_type step) noexcept {
 
     if (decay_type == TargetCalciumDecay::Relative) {
 #pragma omp parallel for default(none) shared(disable_flags)
-        for (auto neuron_id = 0; neuron_id < target_calcium.size(); ++neuron_id) {
+        for (NeuronID::value_type neuron_id = 0U; neuron_id < target_calcium.size(); ++neuron_id) {
             if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
                 continue;
             }

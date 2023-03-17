@@ -10,14 +10,14 @@
  *
  */
 
-#include "adapter/random/RandomAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
 #include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/random/RandomAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
 
 #include "Types.h"
 #include "neurons/NetworkGraph.h"
-#include "util/TaggedID.h"
 #include "neurons/helper/SynapseDeletionRequests.h"
+#include "util/NeuronID.h"
 
 #include <map>
 #include <memory>
@@ -59,8 +59,8 @@ public:
         std::vector<std::tuple<NeuronID, NeuronID, RelearnTypes::plastic_synapse_weight>> synapses(number_synapses);
 
         for (auto i = 0; i < number_synapses; i++) {
-            const auto source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-            const auto target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+            const auto source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+            const auto target_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
             const auto weight = get_random_plastic_synapse_weight(mt);
 
             synapses[i] = { source_id, target_id, weight };
@@ -74,8 +74,8 @@ public:
 
         std::map<std::pair<NeuronID, NeuronID>, RelearnTypes::plastic_synapse_weight> synapse_map{};
         for (auto i = 0; i < number_synapses; i++) {
-            const auto source = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-            const auto target = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+            const auto source = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+            const auto target = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
             const auto weight = get_random_plastic_synapse_weight(mt);
 
             synapse_map[{ target, source }] += weight;
@@ -347,9 +347,7 @@ public:
             for (auto i = 0; i < number_outgoing_connections_per_neuron; i++) {
                 NeuronID target_neuron_id;
                 do {
-                    target_neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons,
-                        NeuronID(local_neuron_id),
-                        mt);
+                    target_neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, NeuronID(local_neuron_id), mt);
                 } while (target_neurons.contains(target_neuron_id));
                 target_neurons.insert(target_neuron_id);
                 const auto rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);

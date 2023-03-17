@@ -11,8 +11,8 @@
  */
 
 #include "Types.h"
+#include "util/NeuronID.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
 
 #include <vector>
 

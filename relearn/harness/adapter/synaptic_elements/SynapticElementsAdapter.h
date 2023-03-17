@@ -18,7 +18,7 @@
 #include "neurons/CalciumCalculator.h"
 #include "neurons/enums/ElementType.h"
 #include "neurons/enums/SignalType.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include <memory>
 #include <random>

@@ -10,14 +10,12 @@
  *
  */
 
-#include "Config.h"
 #include "Types.h"
 #include "io/parser/IntervalParser.h"
 #include "io/LogFiles.h"
 #include "neurons/LocalAreaTranslator.h"
-#include "neurons/NeuronsExtraInfo.h"
 #include "util/Interval.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 #include "util/StringUtil.h"
 
 #include <algorithm>

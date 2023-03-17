@@ -13,18 +13,22 @@
 #include "adapter/connector/ConnectorAdapter.h"
 #include "adapter/mpi/MpiRankAdapter.h"
 #include "adapter/synaptic_elements/SynapticElementsAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/connector/ConnectorAdapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/synaptic_elements/SynapticElementsAdapter.h"
 
 #include "algorithm/Connector.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/models/SynapticElements.h"
+#include "util/NeuronID.h"
 
 #include <map>
 #include <vector>
 
 TEST_F(ConnectorTest, testForwardConnectorExceptions) {
-    const auto number_neurons_1 = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto number_neurons_2 = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_1 = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_2 = NeuronIdAdapter::get_random_number_neurons(mt);
 
     const auto final_number_neurons = number_neurons_1 == number_neurons_2 ? number_neurons_2 + 1 : number_neurons_2;
 
@@ -53,7 +57,7 @@ TEST_F(ConnectorTest, testForwardConnectorExceptions) {
 }
 
 TEST_F(ConnectorTest, testForwardConnectorEmptyMap) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt) + 1;
 
     const auto& excitatory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Excitatory, mt);
@@ -106,7 +110,7 @@ TEST_F(ConnectorTest, testForwardConnectorEmptyMap) {
 }
 
 TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt) + 1;
 
     const auto& excitatory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Excitatory, mt);
@@ -185,7 +189,7 @@ TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
 }
 
 TEST_F(ConnectorTest, testForwardConnectorIncoming) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt) + 1;
 
     const auto& axons = SynapticElementsAdapter::create_axons(number_neurons, mt);
