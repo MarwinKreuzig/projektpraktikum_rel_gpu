@@ -11,7 +11,7 @@
  */
 
 #include "RelearnTest.hpp"
-#include "RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
 #include "util/Interval.h"
 
@@ -21,10 +21,6 @@
 
 class StepParserTest : public RelearnTest {
 protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-
     Interval generate_random_interval() {
         using int_type = Interval::step_type;
 

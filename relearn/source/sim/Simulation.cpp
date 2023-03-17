@@ -205,6 +205,8 @@ void Simulation::initialize() {
     network_graph_static = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
     network_graph_plastic = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
 
+    const auto& extra_infos = neurons->get_extra_info();
+    algorithm->set_neuron_extra_infos(extra_infos);
     algorithm->set_synaptic_elements(axons, dendrites_ex, dendrites_in);
 
     neurons->set_local_area_translator(local_area_translator);
@@ -215,9 +217,9 @@ void Simulation::initialize() {
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 
-    if(area_monitor_enabled) {
+    if (area_monitor_enabled) {
         for (size_t area_id = 0; area_id < local_area_translator->get_number_of_areas(); area_id++) {
-            const auto &area_name = local_area_translator->get_area_name_for_area_id(area_id);
+            const auto& area_name = local_area_translator->get_area_name_for_area_id(area_id);
             const std::filesystem::path dir = LogFiles::get_output_path() / "area_monitors";
             if (!std::filesystem::exists(dir)) {
                 std::filesystem::create_directories(dir);
@@ -334,7 +336,7 @@ void Simulation::simulate(const step_type number_steps) {
                 neurons->create_neurons(creation_count);
             }
         }
-        
+
         if (interval_neuron_monitor.hits_step(step)) {
             const auto number_neurons = neurons->get_number_neurons();
 
@@ -568,6 +570,7 @@ void Simulation::finalize() const {
         Timers::wall_clock_time());
 
     neurons->print_calcium_statistics_to_essentials(essentials);
+    neurons->print_synaptic_changes_to_essentials(essentials);
 
     essentials->insert("Created-Synapses", total_synapse_creations);
     essentials->insert("Deleted-Synapses", total_synapse_deletions);

@@ -10,30 +10,28 @@
 
 #include "NeuronModels.h"
 
+#include "neurons/NeuronsExtraInfo.h"
 #include "util/Random.h"
 
 using models::PoissonModel;
 
-
-
-
 PoissonModel::PoissonModel(
-        const unsigned int h,
-        std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
-        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
-        std::unique_ptr<Stimulus>&& stimulus_calculator,
-        const double x_0,
-        const double tau_x,
-        const unsigned int refractory_period)
-        : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator) }
-        , x_0{ x_0 }
-        , tau_x{ tau_x }
-        , refractory_period{ refractory_period } {
+    const unsigned int h,
+    std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
+    std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
+    std::unique_ptr<Stimulus>&& stimulus_calculator,
+    const double x_0,
+    const double tau_x,
+    const unsigned int refractory_period)
+    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator) }
+    , x_0{ x_0 }
+    , tau_x{ tau_x }
+    , refractory_period{ refractory_period } {
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> PoissonModel::clone() const {
     return std::make_unique<PoissonModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(),
-                                          get_stimulus_calculator()->clone(), x_0, tau_x, refractory_period);
+        get_stimulus_calculator()->clone(), x_0, tau_x, refractory_period);
 }
 
 [[nodiscard]] std::vector<ModelParameter> PoissonModel::get_parameter() {
@@ -97,8 +95,9 @@ void PoissonModel::update_activity_benchmark(const NeuronID neuron_id) {
     set_x(neuron_id, x_val);
 }
 
-void PoissonModel::update_activity_benchmark(const std::span<const UpdateStatus> disable_flags) {
+void PoissonModel::update_activity_benchmark() {
     const auto number_local_neurons = get_number_neurons();
+    const auto disable_flags = get_extra_infos()->get_disable_flags();
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
@@ -111,8 +110,9 @@ void PoissonModel::update_activity_benchmark(const std::span<const UpdateStatus>
     }
 }
 
-void PoissonModel::update_activity(const std::span<const UpdateStatus> disable_flags) {
+void PoissonModel::update_activity() {
     const auto number_local_neurons = get_number_neurons();
+    const auto disable_flags = get_extra_infos()->get_disable_flags();
 
     const auto h = get_h();
     const auto scale = 1.0 / h;

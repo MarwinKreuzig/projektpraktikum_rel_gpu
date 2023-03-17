@@ -10,7 +10,7 @@
 
 #include "test_space_filling_curve.h"
 
-#include "simulation/simulation_adapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
 
 #include "structure/SpaceFillingCurve.h"
 #include "util/RelearnException.h"

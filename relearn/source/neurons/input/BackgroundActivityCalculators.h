@@ -38,9 +38,8 @@ public:
     /**
      * @brief This activity calculator does not provide any input
      * @param step The current update step
-     * @param disable_flags Unused
      */
-    void update_input([[maybe_unused]] const step_type step, [[maybe_unused]] std::span<const UpdateStatus> disable_flags) override {
+    void update_input([[maybe_unused]] const step_type step) override {
     }
 
     /**
@@ -71,9 +70,9 @@ public:
     /**
      * @brief Updates the input, providing constant or 0 input depending on the disable_flags
      * @param step The current update step
-     * @param disable_flags Indicates what neurons are disabled, if so, they do not receive input
      */
-    void update_input([[maybe_unused]] const step_type step, const std::span<const UpdateStatus> disable_flags) override {
+    void update_input([[maybe_unused]] const step_type step) override {
+        const auto& disable_flags = extra_infos->get_disable_flags();
         const auto number_neurons = get_number_neurons();
         RelearnException::check(disable_flags.size() == number_neurons,
             "ConstantBackgroundActivityCalculator::update_input: Size of disable flags doesn't match number of local neurons: {} vs {}", disable_flags.size(), number_neurons);
@@ -126,28 +125,24 @@ public:
         , mean_input(mean)
         , stddev_input(stddev) {
         RelearnException::check(stddev > 0.0, "NormalBackgroundActivityCalculator::NormalBackgroundActivityCalculator: stddev was: {}", stddev);
-
-        for (auto i = 0; i < values.size(); i++) {
-            values[i] = RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
-        }
     }
 
     virtual ~NormalBackgroundActivityCalculator() = default;
 
     /**
-     * @brief Updates the input, providing normal or 0 input depending on the disable_flags
+     * @brief Updates the input, providing normal or 0 input depending on the status of the neuron in the extra infos
      * @param step The current update step
-     * @param disable_flags Indicates what neurons are disabled, if so, they do not receive input
      */
-    void update_input([[maybe_unused]] const step_type step, const std::span<const UpdateStatus> disable_flags) override {
+    void update_input([[maybe_unused]] const step_type step) override {
+        const auto& disable_flags = extra_infos->get_disable_flags();
         const auto number_neurons = get_number_neurons();
         RelearnException::check(disable_flags.size() == number_neurons,
             "NormalBackgroundActivityCalculator::update_input: Size of disable flags doesn't match number of local neurons: {} vs {}", disable_flags.size(), number_neurons);
 
         Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
         for (number_neurons_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
-            const auto input = disable_flags[neuron_id] == UpdateStatus::Disabled ? 0.0 : values[RandomHolder::get_random_uniform_integer(RandomHolderKey::BackgroundActivity, 0U, static_cast<uint>(values.size() - 1))];
-            set_and_transform_background_activity(step, neuron_id, input);
+            const auto input = disable_flags[neuron_id] == UpdateStatus::Disabled ? 0.0 : RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
+            set_background_activity(step,neuron_id, input);
         }
         Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
     }
@@ -175,7 +170,6 @@ public:
 private:
     double mean_input{ default_background_activity_mean };
     double stddev_input{ default_background_activity_stddev };
-    std::array<double, 10000> values;
 };
 
 /**
@@ -206,12 +200,11 @@ public:
 
     /**
      * @brief Updates the input, providing constant to all neurons to speed up the calculations.
-     *      Ignores disable_flags 
      * @param step The current update step
-     * @param disable_flags Ignored
      */
-    void update_input([[maybe_unused]] const step_type step, const std::span<const UpdateStatus> disable_flags) override {
+    void update_input([[maybe_unused]] const step_type step) override {
         const auto number_neurons = get_number_neurons();
+        const auto& disable_flags = extra_infos->get_disable_flags();
         RelearnException::check(disable_flags.size() == number_neurons,
             "FastNormalBackgroundActivityCalculator::update_input: Size of disable flags doesn't match number of local neurons: {} vs {}", disable_flags.size(), number_neurons);
 

@@ -12,6 +12,7 @@
 
 #include "RelearnException.h"
 
+#include <algorithm>
 #include <cctype>
 #include <filesystem>
 #include <iomanip>
@@ -27,17 +28,12 @@ public:
     static std::vector<std::string> split_string(const std::string& string, char delim);
 
     /**
-     * @brief Checks if the string is a int number
+     * @brief Checks if the string contains only digits
      * @param s a string
      * @return true if string is a number
      */
     static bool is_number(const std::string& s) {
-        for (char const& ch : s) {
-            if (std::isdigit(ch) == 0) {
-                return false;
-            }
-        }
-        return true;
+        return std::all_of(s.begin(), s.end(), [](const char c) { return std::isdigit(c); });
     }
 
     /**
@@ -72,7 +68,7 @@ public:
      * @return The file path for the found file
      * @throws RelearnException When no file was found
      */
-    static std::filesystem::path find_file_for_rank(const std::filesystem::path& directory, const int rank, 
+    static std::filesystem::path find_file_for_rank(const std::filesystem::path& directory, const int rank,
         const std::string& prefix, const std::string& suffix, const unsigned int max_digits) {
         std::filesystem::path path_to_file{};
 

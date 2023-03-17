@@ -1,15 +1,40 @@
 set(relearn_benchmark_additional_files "" CACHE INTERNAL "")
+set(relearn_harness_additional_files "" CACHE INTERNAL "")
 set(relearn_lib_additional_files "" CACHE INTERNAL "")
 set(relearn_tests_additional_files "" CACHE INTERNAL "")
-	
-if(WIN32)
+
+if(WIN32) # Benchmark
 	list(APPEND relearn_benchmark_additional_files "main.h")
 	list(APPEND relearn_benchmark_additional_files "AdapterNeuronModel.h")
+endif()
 	
-	list(APPEND relearn_benchmark_additional_files "factory/background_factory.h")
-	list(APPEND relearn_benchmark_additional_files "factory/input_factory.h")
-	list(APPEND relearn_benchmark_additional_files "factory/neuron_model_factory.h")
+if(WIN32) # Harness
+	list(APPEND relearn_harness_additional_files "adapter/connector/ConnectorAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/helper/RankNeuronIdAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/interval/IntervalAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/kernel/KernelAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/mpi/MpiRankAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/network_graph/NetworkGraphAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/neuron_assignment/NeuronAssignmentAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/neurons/NeuronsAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/neurons/NeuronTypesAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/node_cache/NodeCacheAdapter.h")	
+	list(APPEND relearn_harness_additional_files "adapter/octree/OctreeAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/random/RandomAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/simulation/SimulationAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/stimulus/StimulusAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/synaptic_elements/SynapticElementsAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/tagged_id/TaggedIdAdapter.h")
+	
+	list(APPEND relearn_harness_additional_files "factory/background_factory.h")
+	list(APPEND relearn_harness_additional_files "factory/calcium_factory.h")
+	list(APPEND relearn_harness_additional_files "factory/extra_info_factory.h")
+	list(APPEND relearn_harness_additional_files "factory/input_factory.h")
+	list(APPEND relearn_harness_additional_files "factory/network_graph_factory.h")
+	list(APPEND relearn_harness_additional_files "factory/neuron_model_factory.h")
+endif()
 
+if(WIN32) # Lib
 	# root files
 	list(APPEND relearn_lib_additional_files "Config.h")
 	list(APPEND relearn_lib_additional_files "Types.h")
@@ -148,79 +173,41 @@ if(WIN32)
 	
 	# shuffle
 	list(APPEND relearn_lib_additional_files "util/shuffle/shuffle.h")
-	
-	#tests
-	list(APPEND relearn_tests_additional_files "RandomAdapter.h")
-	list(APPEND relearn_tests_additional_files "RelearnTest.hpp")
-	
-	list(APPEND relearn_tests_additional_files "background_activity/test_background_activity.h")
-	
-	list(APPEND relearn_tests_additional_files "barnes_hut/test_barnes_hut.h")
-	
-	list(APPEND relearn_tests_additional_files "calcium_calculator/test_calcium_calculator.h")
-	
-	list(APPEND relearn_tests_additional_files "cell/test_cell.h")
-	
-	list(APPEND relearn_tests_additional_files "connector/test_connector.h")
-	list(APPEND relearn_tests_additional_files "connector/connector_adapter.h")
-	
-	list(APPEND relearn_tests_additional_files "fast_multipole_method/test_fast_multipole_method.h")
-	
-	list(APPEND relearn_tests_additional_files "helper/rank_neuron_id_adapter.h")
+endif()
+
+if(WIN32) # Tests
+	list(APPEND relearn_tests_additional_files "RelearnTest.hpp")	
+	list(APPEND relearn_tests_additional_files "background_activity/test_background_activity.h")	
+	list(APPEND relearn_tests_additional_files "barnes_hut/test_barnes_hut.h")	
+	list(APPEND relearn_tests_additional_files "calcium_calculator/test_calcium_calculator.h")	
+	list(APPEND relearn_tests_additional_files "cell/test_cell.h")	
+	list(APPEND relearn_tests_additional_files "connector/test_connector.h")	
+	list(APPEND relearn_tests_additional_files "fast_multipole_method/test_fast_multipole_method.h")	
 	list(APPEND relearn_tests_additional_files "helper/test_distant_neuron_request.h")
 	list(APPEND relearn_tests_additional_files "helper/test_rank_neuron_id.h")
 	list(APPEND relearn_tests_additional_files "helper/test_synapse_creation_request.h")
-	list(APPEND relearn_tests_additional_files "helper/test_synapse_deletion_request.h")
-	
-	list(APPEND relearn_tests_additional_files "interval/interval_adapter.h")
-	list(APPEND relearn_tests_additional_files "interval/test_interval.h")
-	
-	list(APPEND relearn_tests_additional_files "kernel/kernel_adapter.h")
-	list(APPEND relearn_tests_additional_files "kernel/test_kernel.h")
-	
-	list(APPEND relearn_tests_additional_files "local_area_translator/test_local_area_translator.h")
-	
+	list(APPEND relearn_tests_additional_files "helper/test_synapse_deletion_request.h")	
+	list(APPEND relearn_tests_additional_files "interval/test_interval.h")	
+	list(APPEND relearn_tests_additional_files "kernel/test_kernel.h")	
+	list(APPEND relearn_tests_additional_files "local_area_translator/test_local_area_translator.h")	
+	list(APPEND relearn_tests_additional_files "memory_holder/test_memory_holder.h")	
 	list(APPEND relearn_tests_additional_files "misc/test_misc.h")
-	
-	list(APPEND relearn_tests_additional_files "mpi/mpi_rank_adapter.h")
-	list(APPEND relearn_tests_additional_files "mpi/test_mpi_rank.h")
-	
-	list(APPEND relearn_tests_additional_files "network_graph/network_graph_adapter.h")
-	list(APPEND relearn_tests_additional_files "network_graph/test_network_graph.h")
-	
-	list(APPEND relearn_tests_additional_files "neuron_assignment/neuron_assignment_adapter.h")
-	list(APPEND relearn_tests_additional_files "neuron_assignment/test_neuron_assignment.h")
-	
+	list(APPEND relearn_tests_additional_files "mpi/test_mpi_rank.h")	
+	list(APPEND relearn_tests_additional_files "network_graph/test_network_graph.h")	
+	list(APPEND relearn_tests_additional_files "neuron_assignment/test_neuron_assignment.h")	
 	list(APPEND relearn_tests_additional_files "neuron_extra_info/test_neuron_extra_info.h")
-	
-	list(APPEND relearn_tests_additional_files "neuron_io/test_neuron_io.h")
-	
-	list(APPEND relearn_tests_additional_files "neuron_models/test_neuron_models.h")
-	
-	list(APPEND relearn_tests_additional_files "neurons/neuron_types_adapter.h")
-	list(APPEND relearn_tests_additional_files "neurons/test_neurons.h")
-	
-	list(APPEND relearn_tests_additional_files "octree/octree_adapter.h")
+	list(APPEND relearn_tests_additional_files "neuron_io/test_neuron_io.h")	
+	list(APPEND relearn_tests_additional_files "neuron_models/test_neuron_models.h")	
+	list(APPEND relearn_tests_additional_files "neurons/test_neurons.h")	
 	list(APPEND relearn_tests_additional_files "octree/test_octree.h")
-
+	list(APPEND relearn_tests_additional_files "octree_node/test_octree_node.h")
 	list(APPEND relearn_tests_additional_files "parser/test_monitor_parser.h")
 	list(APPEND relearn_tests_additional_files "parser/test_step_parser.h")
-
 	list(APPEND relearn_tests_additional_files "partition/test_partition.h")
-
-	list(APPEND relearn_tests_additional_files "simulation/simulation_adapter.h")
-
 	list(APPEND relearn_tests_additional_files "space_filling_curve/test_space_filling_curve.h")
-
 	list(APPEND relearn_tests_additional_files "stimulus/test_stimulus.h")
-
-	list(APPEND relearn_tests_additional_files "synaptic_elements/synaptic_elements_adapter.h")
 	list(APPEND relearn_tests_additional_files "synaptic_elements/test_synaptic_elements.h")
-
 	list(APPEND relearn_tests_additional_files "synaptic_input/test_synaptic_input.h")
-
-	list(APPEND relearn_tests_additional_files "tagged_id/tagged_id_adapter.h")
 	list(APPEND relearn_tests_additional_files "tagged_id/test_tagged_id.h")
-
 	list(APPEND relearn_tests_additional_files "vector/test_vector.h")
 endif()

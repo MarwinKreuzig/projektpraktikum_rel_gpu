@@ -10,25 +10,27 @@
 
 #include "NeuronModels.h"
 
+#include "neurons/NeuronsExtraInfo.h"
+
 using models::FitzHughNagumoModel;
 
 FitzHughNagumoModel::FitzHughNagumoModel(
-        const unsigned int h,
-        std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
-        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
-        std::unique_ptr<Stimulus>&& stimulus_calculator,
-        const double a,
-        const double b,
-        const double phi)
-        : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator) }
-        , a{ a }
-        , b{ b }
-        , phi{ phi } {
+    const unsigned int h,
+    std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
+    std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
+    std::unique_ptr<Stimulus>&& stimulus_calculator,
+    const double a,
+    const double b,
+    const double phi)
+    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator) }
+    , a{ a }
+    , b{ b }
+    , phi{ phi } {
 }
 
 std::unique_ptr<NeuronModel> FitzHughNagumoModel::clone() const {
     return std::make_unique<FitzHughNagumoModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(),
-                                                 get_stimulus_calculator()->clone(), a, b, phi);
+        get_stimulus_calculator()->clone(), a, b, phi);
 }
 
 std::vector<ModelParameter> FitzHughNagumoModel::get_parameter() {
@@ -90,8 +92,9 @@ void FitzHughNagumoModel::update_activity_benchmark(const NeuronID neuron_id) {
     w[local_neuron_id] = w_val;
 }
 
-void FitzHughNagumoModel::update_activity_benchmark(const std::span<const UpdateStatus> disable_flags) {
+void FitzHughNagumoModel::update_activity_benchmark() {
     const auto number_local_neurons = get_number_neurons();
+    const auto disable_flags = get_extra_infos()->get_disable_flags();
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
@@ -104,8 +107,9 @@ void FitzHughNagumoModel::update_activity_benchmark(const std::span<const Update
     }
 }
 
-void FitzHughNagumoModel::update_activity(const std::span<const UpdateStatus> disable_flags) {
+void FitzHughNagumoModel::update_activity() {
     const auto number_local_neurons = get_number_neurons();
+    const auto disable_flags = get_extra_infos()->get_disable_flags();
 
     const auto h = get_h();
     const auto scale = 1.0 / h;

@@ -10,39 +10,41 @@
 
 #include "NeuronModels.h"
 
+#include "neurons/NeuronsExtraInfo.h"
+
 #include <cmath>
 
 using models::AEIFModel;
 
 AEIFModel::AEIFModel(
-        const unsigned int h,
-        std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
-        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
-        std::unique_ptr<Stimulus>&& stimulus_calculator,
-        const double C,
-        const double g_L,
-        const double E_L,
-        const double V_T,
-        const double d_T,
-        const double tau_w,
-        const double a,
-        const double b,
-        const double V_spike)
-        : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator) }
-        , C{ C }
-        , g_L{ g_L }
-        , E_L{ E_L }
-        , V_T{ V_T }
-        , d_T{ d_T }
-        , tau_w{ tau_w }
-        , a{ a }
-        , b{ b }
-        , V_spike{ V_spike } {
+    const unsigned int h,
+    std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
+    std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
+    std::unique_ptr<Stimulus>&& stimulus_calculator,
+    const double C,
+    const double g_L,
+    const double E_L,
+    const double V_T,
+    const double d_T,
+    const double tau_w,
+    const double a,
+    const double b,
+    const double V_spike)
+    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator) }
+    , C{ C }
+    , g_L{ g_L }
+    , E_L{ E_L }
+    , V_T{ V_T }
+    , d_T{ d_T }
+    , tau_w{ tau_w }
+    , a{ a }
+    , b{ b }
+    , V_spike{ V_spike } {
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> AEIFModel::clone() const {
     return std::make_unique<AEIFModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(),
-                                       get_stimulus_calculator()->clone(), C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike);
+        get_stimulus_calculator()->clone(), C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike);
 }
 
 [[nodiscard]] std::vector<ModelParameter> AEIFModel::get_parameter() {
@@ -118,8 +120,9 @@ void AEIFModel::update_activity_benchmark(const NeuronID neuron_id) {
     w[local_neuron_id] = w_val;
 }
 
-void AEIFModel::update_activity_benchmark(const std::span<const UpdateStatus> disable_flags) {
+void AEIFModel::update_activity_benchmark() {
     const auto number_local_neurons = get_number_neurons();
+    const auto disable_flags = get_extra_infos()->get_disable_flags();
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
@@ -132,8 +135,9 @@ void AEIFModel::update_activity_benchmark(const std::span<const UpdateStatus> di
     }
 }
 
-void AEIFModel::update_activity(const std::span<const UpdateStatus> disable_flags) {
+void AEIFModel::update_activity() {
     const auto number_local_neurons = get_number_neurons();
+    const auto disable_flags = get_extra_infos()->get_disable_flags();
 
     const auto h = get_h();
     const auto scale = 1.0 / h;

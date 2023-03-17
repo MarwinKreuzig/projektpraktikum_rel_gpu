@@ -23,6 +23,8 @@
 #include <type_traits>
 #include <utility>
 
+class NodeCacheAdapter;
+
 enum class NodeCacheType : char {
     Combined,
     Separate,
@@ -275,6 +277,10 @@ public:
      * @return The downloaded children (perfect copies of the actual children), does not transfer ownership
      */
     [[nodiscard]] static std::array<node_type*, Constants::number_oct> download_children(node_type* const node) {
+        if (is_already_downloaded) {
+            return node->get_children();
+        }
+
         switch (currently_used_cache) {
         case NodeCacheType::Combined:
             return NodeCacheCombined<AdditionalCellAttributes>::download_children(node);
@@ -288,5 +294,8 @@ public:
     }
 
 private:
+    friend class NodeCacheAdapter;
+
     static inline NodeCacheType currently_used_cache{ NodeCacheType::Combined };
+    static inline bool is_already_downloaded{ false }; // For tests
 };

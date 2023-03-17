@@ -12,7 +12,7 @@
 
 #include "RelearnTest.hpp"
 
-#include "helper/rank_neuron_id_adapter.h"
+#include "adapter/helper/RankNeuronIdAdapter.h"
 
 #include "neurons/helper/RankNeuronId.h"
 
@@ -22,13 +22,9 @@
 
 class MonitorParserTest : public RelearnTest {
 protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-
     std::string codify_rank_neuron_id(const RankNeuronId& rni) {
         std::stringstream ss{};
-        ss << rni.get_rank().get_rank() << ':' << rni.get_neuron_id().get_neuron_id()+1;
+        ss << rni.get_rank().get_rank() << ':' << (rni.get_neuron_id().get_neuron_id() + 1);
         return ss.str();
     }
 
@@ -36,5 +32,11 @@ protected:
         auto rank_neuron_id = RankNeuronIdAdapter::generate_random_rank_neuron_id(mt);
         auto description = codify_rank_neuron_id(rank_neuron_id);
         return { std::move(rank_neuron_id), std::move(description) };
+    }
+
+    RankNeuronId add_one_to_neuron_id(const RankNeuronId& rni) {
+        const auto& [rank, neuron_id] = rni;
+        const auto id = neuron_id.get_neuron_id();
+        return RankNeuronId(rank, NeuronID(id + 1));
     }
 };

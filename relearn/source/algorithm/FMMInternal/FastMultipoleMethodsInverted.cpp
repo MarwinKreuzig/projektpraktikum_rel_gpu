@@ -16,9 +16,8 @@
 #include "util/RelearnException.h"
 #include "util/Timers.h"
 
-CommunicationMap<SynapseCreationRequest> FastMultipoleMethodsInverted::find_target_neurons(const number_neurons_type number_neurons,
-    const std::vector<UpdateStatus>& disable_flags, [[maybe_unused]] const std::shared_ptr<NeuronsExtraInfo>& extra_infos) {
-
+CommunicationMap<SynapseCreationRequest> FastMultipoleMethodsInverted::find_target_neurons(const number_neurons_type number_neurons) {
+    const auto& disable_flags = extra_infos->get_disable_flags();
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
     const auto size_hint = std::min(number_neurons_type(number_ranks), number_neurons);

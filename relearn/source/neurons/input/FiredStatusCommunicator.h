@@ -11,8 +11,8 @@
  */
 
 #include "Types.h"
+#include "neurons/NeuronsExtraInfo.h"
 #include "neurons/enums/FiredStatus.h"
-#include "neurons/enums/UpdateStatus.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
@@ -40,14 +40,24 @@ public:
     }
 
     /**
+     * @brief Sets the extra infos. These are used to determine which neuron updates its electrical activity
+     * @param new_extra_info The new extra infos, must not be empty
+     * @exception Throws a RelearnException if new_extra_info is empty
+     */
+    void set_extra_infos(std::shared_ptr<NeuronsExtraInfo> new_extra_info) {
+        const auto is_filled = new_extra_info.operator bool();
+        RelearnException::check(is_filled, "FiredStatusCommunicator::set_extra_infos: new_extra_info is empty");
+        extra_infos = std::move(new_extra_info);
+    }
+
+    /**
      * @brief Registers the fired status of the local neurons that are not disabled.
      *      Potentially uses the out-edges of the network graph
      * @param fired_status The current fired status of the neurons
-     * @param disable_flags The current disable flags for the neurons
      * @param network_graph The network graph that is currently being used
      * @exception Can throw a RelearnException
      */
-    virtual void set_local_fired_status(std::span<const FiredStatus> fired_status, std::span<const UpdateStatus> disable_flags, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic) = 0;
+    virtual void set_local_fired_status(std::span<const FiredStatus> fired_status, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic) = 0;
 
     /**
      * @brief Exchanges the fired status with all MPI ranks
@@ -81,6 +91,9 @@ public:
     }
 
     virtual ~FiredStatusCommunicator() = default;
+
+protected:
+    std::shared_ptr<NeuronsExtraInfo> extra_infos{};
 
 private:
     size_t number_ranks{ 0 };

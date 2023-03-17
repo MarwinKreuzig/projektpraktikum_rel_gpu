@@ -10,7 +10,7 @@
 
 #include "test_misc.h"
 
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "util/Utility.h"
 
@@ -169,7 +169,7 @@ TEST_F(MiscTest, testMinMaxAccDouble) {
     values.reserve(number_values);
 
     auto min = std::numeric_limits<double>::max();
-    auto max = std::numeric_limits<double>::min();
+    auto max = -std::numeric_limits<double>::max();
     auto sum = 0.0;
 
     for (auto i = 0; i < number_values; i++) {

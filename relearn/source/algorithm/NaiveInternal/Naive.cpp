@@ -42,7 +42,7 @@ std::optional<RankNeuronId> Naive::find_target_neuron(const NeuronID& src_neuron
          * Nodes with 0 probability are removed.
          * The probabilities of all vector elements sum up to 1.
          */
-        auto* node_selected = Kernel<AdditionalCellAttributes>::pick_target(src_neuron_id, axon_position, vector, ElementType::Dendrite, dendrite_type_needed);
+        auto* node_selected = Kernel<AdditionalCellAttributes>::pick_target({ MPIWrapper::get_my_rank(), src_neuron_id }, axon_position, vector, ElementType::Dendrite, dendrite_type_needed);
         if (node_selected == nullptr) {
             return {};
         }
@@ -61,9 +61,8 @@ std::optional<RankNeuronId> Naive::find_target_neuron(const NeuronID& src_neuron
     return rank_neuron_id;
 }
 
-CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const number_neurons_type number_neurons, const std::vector<UpdateStatus>& disable_flags,
-    const std::shared_ptr<NeuronsExtraInfo>& extra_infos) {
-
+CommunicationMap<SynapseCreationRequest> Naive::find_target_neurons(const number_neurons_type number_neurons) {
+    const auto& disable_flags = extra_infos->get_disable_flags();
     const auto number_ranks = MPIWrapper::get_num_ranks();
 
     const auto size_hint = std::min(number_neurons_type(number_ranks), number_neurons);

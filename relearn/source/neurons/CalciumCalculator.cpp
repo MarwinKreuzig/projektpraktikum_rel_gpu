@@ -11,6 +11,7 @@
 #include "CalciumCalculator.h"
 
 #include "mpi/MPIWrapper.h"
+#include "neurons/NeuronsExtraInfo.h"
 #include "util/Timers.h"
 
 void CalciumCalculator::init(const number_neurons_type number_neurons) {
@@ -48,49 +49,91 @@ void CalciumCalculator::create_neurons(const number_neurons_type number_neurons)
     }
 }
 
-void CalciumCalculator::update_calcium(const step_type step, const std::span<const UpdateStatus> disable_flags, const std::span<const FiredStatus> fired_status) {
-    const auto disable_size = disable_flags.size();
+void CalciumCalculator::update_calcium(const step_type step, const std::span<const FiredStatus> fired_status) {
+    const auto info_size = extra_infos->get_size();
     const auto fired_size = fired_status.size();
     const auto calcium_size = calcium.size();
     const auto target_calcium_size = target_calcium.size();
 
-    const auto all_same_size = disable_size == fired_size && fired_size == calcium_size && calcium_size == target_calcium_size;
+    const auto all_same_size = info_size == fired_size && fired_size == calcium_size && calcium_size == target_calcium_size;
     RelearnException::check(all_same_size, "CalciumCalculator::update_calcium: The vectors had different sizes!");
 
     Timers::start(TimerRegion::UPDATE_CALCIUM);
-    update_current_calcium(disable_flags, fired_status);
+    update_current_calcium(fired_status);
     Timers::stop_and_add(TimerRegion::UPDATE_CALCIUM);
 
     Timers::start(TimerRegion::UPDATE_TARGET_CALCIUM);
-    update_target_calcium(step, disable_flags);
+    update_target_calcium(step);
     Timers::stop_and_add(TimerRegion::UPDATE_TARGET_CALCIUM);
 }
 
-void CalciumCalculator::update_current_calcium(const std::span<const UpdateStatus> disable_flags, std::span<const FiredStatus> fired_status) noexcept {
-    const auto val = (1.0 / static_cast<double>(h));
+void CalciumCalculator::update_current_calcium(std::span<const FiredStatus> fired_status) noexcept {
+    const auto scale = (1.0 / static_cast<double>(h));
+    const auto tau_C_inverse = -1.0 / tau_C;
 
-#pragma omp parallel for default(none) shared(disable_flags, fired_status, val)
-    for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
-        if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
-            continue;
+    const auto disable_flags = extra_infos->get_disable_flags();
+
+    auto minimum_id = NeuronID::uninitialized_id();
+    auto minimum_ca = std::numeric_limits<double>::max();
+
+    auto maximum_id = NeuronID::uninitialized_id();
+    auto maximum_ca = -std::numeric_limits<double>::max();
+
+#pragma omp parallel default(none) shared(disable_flags, fired_status, scale, tau_C_inverse, minimum_ca, maximum_ca, minimum_id, maximum_id)
+    {
+        auto thread_minimum_id = NeuronID::uninitialized_id();
+        auto thread_minimum_ca = std::numeric_limits<double>::max();
+
+        auto thread_maximum_id = NeuronID::uninitialized_id();
+        auto thread_maximum_ca = -std::numeric_limits<double>::max();
+
+#pragma omp for nowait
+        for (auto neuron_id = 0; neuron_id < calcium.size(); ++neuron_id) {
+            if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
+                continue;
+            }
+
+            // Update calcium depending on the firing
+            auto c = calcium[neuron_id];
+            for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
+                if (fired_status[neuron_id] == FiredStatus::Inactive) {
+                    c += scale * (c * tau_C_inverse);
+                } else {
+                    c += scale * (c * tau_C_inverse + beta);
+                }
+            }
+            calcium[neuron_id] = c;
+
+            if (thread_minimum_ca > c) {
+                thread_minimum_ca = c;
+                thread_minimum_id = NeuronID(neuron_id);
+            }
+
+            if (thread_maximum_ca < c) {
+                thread_maximum_ca = c;
+                thread_maximum_id = NeuronID(neuron_id);
+            }
         }
 
-        // Update calcium depending on the firing
-        auto c = calcium[neuron_id];
-        if (fired_status[neuron_id] == FiredStatus::Inactive) {
-            for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-                c += val * (-c / tau_C);
+#pragma omp critical
+        {
+            if (minimum_ca > thread_minimum_ca) {
+                minimum_ca = thread_minimum_ca;
+                minimum_id = thread_minimum_id;
             }
-        } else {
-            for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-                c += val * (-c / tau_C + beta);
+
+            if (maximum_ca < thread_maximum_ca) {
+                maximum_ca = thread_maximum_ca;
+                maximum_id = thread_maximum_id;
             }
         }
-        calcium[neuron_id] = c;
     }
+
+    current_minimum = minimum_id;
+    current_maximum = maximum_id;
 }
 
-void CalciumCalculator::update_target_calcium(const step_type step, const std::span<const UpdateStatus> disable_flags) noexcept {
+void CalciumCalculator::update_target_calcium(const step_type step) noexcept {
     if (decay_type == TargetCalciumDecay::None) {
         return;
     }
@@ -102,6 +145,8 @@ void CalciumCalculator::update_target_calcium(const step_type step, const std::s
     if (step % decay_step != 0) {
         return;
     }
+
+    const auto disable_flags = extra_infos->get_disable_flags();
 
     if (decay_type == TargetCalciumDecay::Absolute) {
 #pragma omp parallel for default(none) shared(disable_flags)

@@ -10,7 +10,10 @@
 
 #include "RelearnTest.hpp"
 
+#include "algorithm/Cells.h"
 #include "io/LogFiles.h"
+#include "structure/OctreeNode.h"
+#include "util/MemoryHolder.h"
 #include "util/RelearnException.h"
 
 #include <chrono>
@@ -22,35 +25,17 @@ double RelearnTest::eps = 0.001;
 bool RelearnTest::use_predetermined_seed = false;
 unsigned int RelearnTest::predetermined_seed = 2818124801;
 
-bool initialized = false;
+std::vector<OctreeNode<BarnesHutCell>> holder_bh_cells{};
+std::vector<OctreeNode<BarnesHutInvertedCell>> holder_bhi_cells{};
+std::vector<OctreeNode<FastMultipoleMethodsCell>> holder_fmm_cells{};
 
-void RelearnTest::init() {
-
-    static bool template_initialized = false;
-
-    if (template_initialized) {
-        return;
-    }
-
-    if (!initialized) {
-        initialized = true;
-
-        char* argument = (char*)"./runTests";
-        MPIWrapper::init(1, &argument);
-    }
-    template_initialized = true;
+RelearnTest::RelearnTest() {
+    MemoryHolder<BarnesHutCell>::init(holder_bh_cells);
+    MemoryHolder<BarnesHutInvertedCell>::init(holder_bhi_cells);
+    MemoryHolder<FastMultipoleMethodsCell>::init(holder_fmm_cells);
 }
 
-void RelearnTest::SetUpTestCaseTemplate() {
-    RelearnException::hide_messages = true;
-    LogFiles::disable = true;
-
-    init();
-}
-
-void RelearnTest::TearDownTestSuite() {
-    RelearnException::hide_messages = false;
-    LogFiles::disable = false;
+RelearnTest::~RelearnTest() {
 }
 
 void RelearnTest::SetUp() {
@@ -67,6 +52,9 @@ void RelearnTest::SetUp() {
         std::cerr << "Test seed: " << seed << '\n';
         mt.seed(seed);
     }
+}
+
+void RelearnTest::TearDown() {
     // Remove tmp files
     for (auto const& entry : std::filesystem::recursive_directory_iterator("./")) {
         if (std::filesystem::is_regular_file(entry) && entry.path().extension() == ".tmp") {
@@ -74,8 +62,27 @@ void RelearnTest::SetUp() {
             std::cerr << "REMOVED " << entry.path() << std::endl;
         }
     }
+
+    std::cerr << "Test finished\n";
 }
 
-void RelearnTest::TearDown() {
-    std::cerr << "Test finished\n";
+int main(int argc, char** argv) {
+    MPIWrapper::init(1, argv);
+    ::testing::InitGoogleTest(&argc, argv);
+
+    holder_bh_cells.resize(1024 * 1024);
+    holder_bhi_cells.resize(1024 * 1024);
+    holder_fmm_cells.resize(1024 * 1024);
+
+    RelearnException::hide_messages = true;
+    LogFiles::disable = true;
+
+    const auto tests_return_code = RUN_ALL_TESTS();
+
+    RelearnException::hide_messages = false;
+    LogFiles::disable = false;
+
+    MPIWrapper::finalize();
+
+    return tests_return_code;
 }

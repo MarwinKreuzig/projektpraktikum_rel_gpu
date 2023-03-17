@@ -1,11 +1,11 @@
 #include "test_neurons.h"
 
-#include "RandomAdapter.h"
-#include "mpi/mpi_adapter.h"
-#include "mpi/mpi_rank_adapter.h"
-#include "network_graph/network_graph_adapter.h"
-#include "neurons/neuron_types_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/random/RandomAdapter.h"
+#include "adapter/mpi/MpiAdapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/network_graph/NetworkGraphAdapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "algorithm/BarnesHutInternal/BarnesHutBase.h"
 #include "algorithm/BarnesHutInternal/BarnesHutCell.h"
@@ -13,6 +13,7 @@
 #include "neurons/input/BackgroundActivityCalculators.h"
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
+#include "neurons/input/Stimulus.h"
 #include "neurons/input/SynapticInputCalculator.h"
 #include "neurons/input/SynapticInputCalculators.h"
 #include "neurons/CalciumCalculator.h"
@@ -121,6 +122,9 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
                                                         models::PoissonModel::default_x_0,
                                                         models::PoissonModel::default_tau_x,
                                                         models::PoissonModel::default_refractory_period);
+
+    model->set_stimulus_calculator(std::make_shared<Stimulus>());
+
     auto calcium = std::make_unique<CalciumCalculator>();
     calcium->set_initial_calcium_calculator(
             [](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
@@ -336,7 +340,7 @@ TEST_F(NeuronsTest, testDisableMultipleNeuronsWithoutMPI) {
     const auto axons = neurons.get_axons().get_connected_elements();
     const auto den_ex = neurons.get_dendrites_exc().get_connected_elements();
     const auto den_inh = neurons.get_dendrites_inh().get_connected_elements();
-    std::vector<uint> axons_old, den_ex_old, den_inh_old;
+    std::vector<unsigned int> axons_old, den_ex_old, den_inh_old;
     std::copy(axons.begin(), axons.end(), std::back_inserter(axons_old));
     std::copy(den_ex.begin(), den_ex.end(), std::back_inserter(den_ex_old));
     std::copy(den_inh.begin(), den_inh.end(), std::back_inserter(den_inh_old));
@@ -587,7 +591,6 @@ TEST_F(NeuronsTest, testDisableNeuronsWithRanks) {
 }
 
 TEST_F(NeuronsTest, testDisableNeuronsWithRanksAndOnlyOneDisabledNeuron) {
-    RelearnException::hide_messages = false;
     const auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 30;
     const auto num_ranks = MPIRankAdapter::get_random_number_ranks(mt) + 1;
 

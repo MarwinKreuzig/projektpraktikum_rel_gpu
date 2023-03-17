@@ -471,7 +471,8 @@ int main(int argc, char** argv) {
     app.add_option("--min-calcium-inhibitory-dendrites", min_calcium_inhibitory_dendrites, "The minimum intercellular calcium for inhibitory dendrites to grow. Default is 0.0");
 
     std::string neuron_monitors_description{};
-    auto* const monitor_option = app.add_option("--neuron-monitors", neuron_monitors_description, "The description which neurons to monitor. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;... where <mpi_rank> can be -1 to indicate \"on every rank\"");
+    auto* const monitor_option = app.add_option("--neuron-monitors", neuron_monitors_description, 
+        "The description which neurons to monitor. Format is <mpi_rank>:<neuron_id>;<mpi_rank>:<neuron_id>;...<area_name>;... where <mpi_rank> can be -1 to indicate \"on every rank\"");
 
     auto* flag_monitor_all = app.add_flag("--neuron-monitors-all", "Monitors all neurons.");
     // auto* flag_area_monitor_all = app.add_flag("--area-monitors-all", "Monitors all areas.");
@@ -697,10 +698,14 @@ int main(int argc, char** argv) {
         essentials->insert("Background-Stddev", background_activity_stddev);
 
         essentials->insert("Log-path", log_path.string());
-        essentials->insert("Algorithm", string(chosen_algorithm));
-        essentials->insert("Neuron-model", string(chosen_neuron_model));
+        essentials->insert("Algorithm", stringify(chosen_algorithm));
+        essentials->insert("Neuron-model", stringify(chosen_neuron_model));
         essentials->insert("First-plasticity-step", first_plasticity_step);
         essentials->insert("Last-plasticity-step", last_plasticity_step);
+
+        essentials->insert("Calcium-Minimum-Axons", min_calcium_axons);
+        essentials->insert("Calcium-Minimum-Excitatory-Dendrites", min_calcium_excitatory_dendrites);
+        essentials->insert("Calcium-Minimum-Inhibitory-Dendrites", min_calcium_inhibitory_dendrites);
 
         if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic) {
             essentials->insert("Synapse-Input", "Logarithmic");
@@ -718,7 +723,7 @@ int main(int argc, char** argv) {
             essentials->insert("Kernel-Scale-Parameter", gamma_theta);
         } else if (chosen_kernel_type == KernelType::Gaussian) {
             essentials->insert("Kernel-Type", "Gaussian");
-            essentials->insert("TKernel-Translation-Parameter", gaussian_mu);
+            essentials->insert("Kernel-Translation-Parameter", gaussian_mu);
             essentials->insert("Kernel-Scale-Parameter", gaussian_sigma);
         } else if (chosen_kernel_type == KernelType::Linear) {
             essentials->insert("Kernel-Type", "Linear");
@@ -873,7 +878,7 @@ int main(int argc, char** argv) {
     sim.set_percentage_initial_fired_neurons(percentage_initial_fired_neurons);
 
     if (*opt_static_neurons) {
-        auto static_neurons = MonitorParser::parse_my_ids(static_neurons_str, my_rank, my_rank, subdomain->get_local_area_translator());
+        auto static_neurons = MonitorParser::parse_my_ids(static_neurons_str, my_rank, subdomain->get_local_area_translator());
         sim.set_static_neurons(static_neurons);
     }
 
@@ -915,6 +920,7 @@ int main(int argc, char** argv) {
     RelearnException::check(plasticity_update_step > 0, "update-plasticity-step must be greater than 0");
 
     sim.set_update_plasticity_interval(Interval{ first_plasticity_step, last_plasticity_step, plasticity_update_step });
+    sim.set_update_synaptic_elements_interval(Interval{ first_plasticity_step, last_plasticity_step, 1 });
     sim.set_log_calcium_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), calcium_log_step });
     sim.set_log_synaptic_input_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), synaptic_input_log_step });
     sim.set_log_network_interval(Interval{ 0, std::numeric_limits<RelearnTypes::step_type>::max(), network_log_step });
@@ -944,7 +950,7 @@ int main(int argc, char** argv) {
             sim.register_neuron_monitor(neuron_id);
         }
     } else {
-        const auto& my_neuron_ids_to_monitor = MonitorParser::parse_my_ids(neuron_monitors_description, my_rank, my_rank, sim.get_neurons()->get_local_area_translator());
+        const auto& my_neuron_ids_to_monitor = MonitorParser::parse_my_ids(neuron_monitors_description, my_rank, sim.get_neurons()->get_local_area_translator());
         for (const auto& neuron_id : my_neuron_ids_to_monitor) {
             sim.register_neuron_monitor(neuron_id);
         }

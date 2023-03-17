@@ -50,5 +50,6 @@ add_subdirectory(source)
 
 if(NOT ENABLE_SCOREP)
   add_subdirectory(benchmark)
+  add_subdirectory(harness)
   add_subdirectory(test)
 endif()

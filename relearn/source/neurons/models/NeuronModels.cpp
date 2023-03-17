@@ -14,6 +14,7 @@
 #include "mpi/MPIWrapper.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/Neurons.h"
+#include "neurons/NeuronsExtraInfo.h"
 #include "util/Random.h"
 #include "util/Timers.h"
 
@@ -51,13 +52,13 @@ void NeuronModel::create_neurons(number_neurons_type creation_count) {
     stimulus_calculator->create_neurons(creation_count);
 }
 
-void NeuronModel::update_electrical_activity(const step_type step, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::span<const UpdateStatus> disable_flags) {
-    input_calculator->update_input(step, network_graph_static, network_graph_plastic, fired, disable_flags);
-    background_calculator->update_input(step, disable_flags);
-    stimulus_calculator->update_stimulus(step, disable_flags);
+void NeuronModel::update_electrical_activity(const step_type step, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic) {
+    input_calculator->update_input(step, network_graph_static, network_graph_plastic, fired);
+    background_calculator->update_input(step);
+    stimulus_calculator->update_stimulus(step);
 
     Timers::start(TimerRegion::CALC_ACTIVITY);
-    update_activity(disable_flags);
+    update_activity();
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
 }
 

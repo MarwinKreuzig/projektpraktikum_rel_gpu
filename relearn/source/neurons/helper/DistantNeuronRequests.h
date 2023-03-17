@@ -11,13 +11,11 @@
  */
 
 #include "Types.h"
-#include "neurons/enums/ElementType.h"
 #include "neurons/enums/SignalType.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
-#include <cstdint>
 #include <utility>
 
 /**
@@ -25,22 +23,20 @@
  * the signal type which it looks for, and an identifier for the target neuron.
  * This identifier changes based on the height of the target neuron in the octree.
  * There are 3 distinct cases (with descending priority):
- * (a) The target is on the branch node level
- * (b) The target is a leaf node
+ * (a) The target is a leaf node
+ * (b) The target is on the branch node level
  * (c) The target is a virtual node
  */
 class DistantNeuronRequest {
 public:
     /**
      * A target neuron can be one of the following:
-     * (a) The target is on the branch node level
-     * (b) The target is a leaf node
-     * (c) The target is a virtual node
+     * (a) The target is a leaf node
+     * (b) The target is a virtual node
      */
     enum class TargetNeuronType : char {
-        BranchNode = 0,
-        Leaf = 1,
-        VirtualNode = 2
+        Leaf,
+        VirtualNode
     };
 
     /**
@@ -67,7 +63,7 @@ public:
         , source_position(source_position)
         , target_neuron_identifier(target_neuron_identifier)
         , target_neuron_type(target_neuron_type)
-        , signal_type(signal_type) { 
+        , signal_type(signal_type) {
         RelearnException::check(source_id.is_local(), "DistantNeuronRequest::DistantNeuronRequest: The source neuron must be initialized and non-virtual.");
     }
 
@@ -75,7 +71,7 @@ public:
      * @brief Returns the source of the request
      * @return The source
      */
-    [[nodiscard]] constexpr const NeuronID& get_source_id() const noexcept {
+    [[nodiscard]] constexpr const NeuronID get_source_id() const noexcept {
         return source_id;
     }
 
@@ -85,16 +81,6 @@ public:
      */
     [[nodiscard]] constexpr RelearnTypes::position_type get_source_position() const noexcept {
         return source_position;
-    }
-
-    /**
-     * @brief Returns the id of the target node, if it is a branch node.
-     * @exception Throws a RelearnException if the target node type is not TargetNeuronType::BranchNode
-     * @return The branch node id
-     */
-    [[nodiscard]] constexpr NeuronID::value_type get_branch_node_id() const {
-        RelearnException::check(target_neuron_type == TargetNeuronType::BranchNode, "");
-        return target_neuron_identifier;
     }
 
     /**
@@ -133,13 +119,105 @@ public:
         return signal_type;
     }
 
+    template <std::size_t Index>
+    [[nodiscard]] constexpr auto& get() & {
+        if constexpr (Index == 0) {
+            return source_id;
+        }
+        if constexpr (Index == 1) {
+            return source_position;
+        }
+        if constexpr (Index == 2) {
+            return target_neuron_identifier;
+        }
+        if constexpr (Index == 3) {
+            return target_neuron_type;
+        }
+        if constexpr (Index == 4) {
+            return signal_type;
+        }
+    }
+
+    template <std::size_t Index>
+    [[nodiscard]] constexpr auto const& get() const& {
+        if constexpr (Index == 0) {
+            return source_id;
+        }
+        if constexpr (Index == 1) {
+            return source_position;
+        }
+        if constexpr (Index == 2) {
+            return target_neuron_identifier;
+        }
+        if constexpr (Index == 3) {
+            return target_neuron_type;
+        }
+        if constexpr (Index == 4) {
+            return signal_type;
+        }
+    }
+
+    template <std::size_t Index>
+    [[nodiscard]] constexpr auto&& get() && {
+        if constexpr (Index == 0) {
+            return source_id;
+        }
+        if constexpr (Index == 1) {
+            return source_position;
+        }
+        if constexpr (Index == 2) {
+            return target_neuron_identifier;
+        }
+        if constexpr (Index == 3) {
+            return target_neuron_type;
+        }
+        if constexpr (Index == 4) {
+            return signal_type;
+        }
+    }
+
 private:
     NeuronID source_id{};
     RelearnTypes::position_type source_position{};
     NeuronID::value_type target_neuron_identifier{};
     TargetNeuronType target_neuron_type{};
     SignalType signal_type{};
+
+    static_assert(sizeof(target_neuron_identifier) >= sizeof(std::intptr_t), "DistantNeuronRequest: The size of target_neuron_identifier cannot hold a pointer");
 };
+
+namespace std {
+template <>
+struct tuple_size<typename ::DistantNeuronRequest> {
+    static constexpr size_t value = 5;
+};
+
+template <>
+struct tuple_element<0, typename ::DistantNeuronRequest> {
+    using type = NeuronID;
+};
+
+template <>
+struct tuple_element<1, typename ::DistantNeuronRequest> {
+    using type = RelearnTypes::position_type;
+};
+
+template <>
+struct tuple_element<2, typename ::DistantNeuronRequest> {
+    using type = NeuronID::value_type;
+};
+
+template <>
+struct tuple_element<3, typename ::DistantNeuronRequest> {
+    using type = ::DistantNeuronRequest::TargetNeuronType;
+};
+
+template <>
+struct tuple_element<4, typename ::DistantNeuronRequest> {
+    using type = SignalType;
+};
+
+} // namespace std
 
 /**
  * The response for a DistantNeuronRequest consists of the source of the response and a SynapseCreationResponse
@@ -158,7 +236,7 @@ public:
      * @param creation_response The response if a synapse was successfully created
      * @exception Throws a RelearnException if source_id is virtual or not initialized
      */
-    constexpr DistantNeuronResponse(const NeuronID& source_id, const SynapseCreationResponse& creation_response)
+    constexpr DistantNeuronResponse(const NeuronID source_id, const SynapseCreationResponse creation_response)
         : source_id(source_id)
         , creation_response(creation_response) {
         RelearnException::check(source_id.is_local(), "DistantNeuronRequest::DistantNeuronRequest: The source neuron must be initialized and non-virtual.");
@@ -168,7 +246,7 @@ public:
      * @brief Returns the source of the response
      * @return The source
      */
-    [[nodiscard]] constexpr const NeuronID& get_source_id() const noexcept {
+    [[nodiscard]] constexpr const NeuronID get_source_id() const noexcept {
         return source_id;
     }
 
@@ -180,7 +258,55 @@ public:
         return creation_response;
     }
 
+    template <std::size_t Index>
+    [[nodiscard]] constexpr auto& get() & {
+        if constexpr (Index == 0) {
+            return source_id;
+        }
+        if constexpr (Index == 1) {
+            return creation_response;
+        }
+    }
+
+    template <std::size_t Index>
+    [[nodiscard]] constexpr auto const& get() const& {
+        if constexpr (Index == 0) {
+            return source_id;
+        }
+        if constexpr (Index == 1) {
+            return creation_response;
+        }
+    }
+
+    template <std::size_t Index>
+    [[nodiscard]] constexpr auto&& get() && {
+        if constexpr (Index == 0) {
+            return source_id;
+        }
+        if constexpr (Index == 1) {
+            return creation_response;
+        }
+    }
+
 private:
     NeuronID source_id{};
     SynapseCreationResponse creation_response{};
 };
+
+namespace std {
+template <>
+struct tuple_size<typename ::DistantNeuronResponse> {
+    static constexpr size_t value = 2;
+};
+
+template <>
+struct tuple_element<0, typename ::DistantNeuronResponse> {
+    using type = NeuronID;
+};
+
+template <>
+struct tuple_element<1, typename ::DistantNeuronResponse> {
+    using type = SynapseCreationResponse;
+};
+
+} // namespace std

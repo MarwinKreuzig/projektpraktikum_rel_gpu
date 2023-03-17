@@ -11,6 +11,7 @@
  */
 
 #include "Types.h"
+#include "neurons/NeuronsExtraInfo.h"
 #include "neurons/enums/UpdateStatus.h"
 #include "neurons/input/TransformationFunctions.h"
 #include "neurons/models/ModelParameter.h"
@@ -80,6 +81,17 @@ public:
     [[nodiscard]] virtual std::unique_ptr<BackgroundActivityCalculator> clone() const = 0;
 
     /**
+     * @brief Sets the extra infos. These are used to determine which neuron updates its electrical activity
+     * @param new_extra_info The new extra infos, must not be empty
+     * @exception Throws a RelearnException if new_extra_info is empty
+     */
+    void set_extra_infos(std::shared_ptr<NeuronsExtraInfo> new_extra_info) {
+        const auto is_filled = new_extra_info.operator bool();
+        RelearnException::check(is_filled, "BackgroundActivityCalculator::set_extra_infos: new_extra_info is empty");
+        extra_infos = std::move(new_extra_info);
+    }
+
+    /**
      * @brief Initializes this instance to hold the given number of neurons
      * @param number_neurons The number of neurons for this instance, must be > 0
      * @exception Throws a RelearnException if number_neurons == 0
@@ -113,7 +125,7 @@ public:
      * @param disable_flags Which neurons are disabled
      * @exception Throws a RelearnException if the number of local neurons didn't match the sizes of the arguments
      */
-    virtual void update_input([[maybe_unused]] const step_type step, std::span<const UpdateStatus> disable_flags) = 0;
+    virtual void update_input([[maybe_unused]] const step_type step) = 0;
 
     /**
      * @brief Returns the calculated background activity for the given neuron. Changes after calls to update_input(...)
@@ -178,6 +190,8 @@ protected:
     }
 
     std::unique_ptr<TransformationFunction> transformation_function;
+    std::shared_ptr<NeuronsExtraInfo> extra_infos{};
+
 private:
     number_neurons_type number_local_neurons{};
 

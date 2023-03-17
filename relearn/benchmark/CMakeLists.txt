@@ -13,6 +13,8 @@ add_executable(
   relearn_benchmarks
   main.cpp
   benchmark_background.cpp
+  benchmark_calcium.cpp
+  benchmark_input_calculator.cpp
   benchmark_kernel.cpp
   benchmark_network_graph.cpp
   benchmark_neuron_model.cpp
@@ -21,7 +23,7 @@ add_executable(
 
 target_link_libraries(relearn_benchmarks PRIVATE project_options
                                                  project_libraries)
-target_link_libraries(relearn_benchmarks PRIVATE relearn_lib)
+target_link_libraries(relearn_benchmarks PRIVATE relearn_lib relearn_harness)
 target_link_libraries(relearn_benchmarks PRIVATE benchmark::benchmark)
 
 get_target_property(relearn_benchmark_sources relearn_benchmarks SOURCES)

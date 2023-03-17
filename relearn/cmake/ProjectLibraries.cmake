@@ -51,24 +51,26 @@ if(ENABLE_MPI)
   endif()
 endif()
 
-set(BOOST_ENABLE_CMAKE ON)
 if(WIN32)
-  FetchContent_Declare(
-    boostorg
-    GIT_REPOSITORY https://github.com/boostorg/boost.git
-    GIT_TAG master)
+ #  FetchContent_Declare(
+ #    boostrandom
+ #    GIT_REPOSITORY https://github.com/boostorg/random.git
+ #    GIT_TAG master)
 
-  FetchContent_GetProperties(boostorg)
-  if(NOT boostorg_POPULATED)
-    FetchContent_Populate(boostorg)
-    add_subdirectory(${boostorg_SOURCE_DIR} ${boostorg_BINARY_DIR})
-  endif()
+ #  FetchContent_GetProperties(boostrandom)
+ #  if(NOT boostrandom_POPULATED)
+ #    FetchContent_Populate(boostrandom)
+ #    add_subdirectory(${boostrandom_SOURCE_DIR} ${boostrandom_BINARY_DIR})
+ #  endif()
 
-  include_directories(${boostorg_SOURCE_DIR})
+  include_directories("external/")
   # target_link_libraries(project_libraries INTERFACE boostorg::random)
 else()
+  set(BOOST_ENABLE_CMAKE ON)
   find_package(Boost REQUIRED COMPONENTS RANDOM)
   # target_link_libraries(project_options INTERFACE Boost::random)
+
+  target_link_libraries(project_options INTERFACE Boost::random)
 endif()
 
 # declaration
@@ -100,8 +102,6 @@ get_target_property(spdlog_includes spdlog INTERFACE_INCLUDE_DIRECTORIES)
 set_target_properties(spdlog PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
                                         "${spdlog_includes}")
 target_link_libraries(project_libraries INTERFACE spdlog)
-
-target_link_libraries(project_options INTERFACE Boost::random)
 
 # set compile commands back to on
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

@@ -10,12 +10,13 @@
 
 #include "test_synaptic_elements.h"
 
-#include "RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
-#include "neurons/neuron_types_adapter.h"
-#include "synaptic_elements_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/synaptic_elements/SynapticElementsAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
+#include "neurons/NeuronsExtraInfo.h"
 #include "neurons/models/SynapticElements.h"
 #include "neurons/enums/UpdateStatus.h"
 
@@ -157,7 +158,7 @@ TEST_F(SynapticElementsTest, testGaussianGrowthCurveSameIntersections) {
 
     const auto intersection = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
     const auto growth_factor = RandomAdapter::get_random_double<double>(1e-6, 100.0, mt);
-        
+
     ASSERT_EQ(gaussian_growth_curve(intersection, intersection, intersection, growth_factor), 0.0);
 
     std::vector<double> left_values(number_values);
@@ -167,7 +168,7 @@ TEST_F(SynapticElementsTest, testGaussianGrowthCurveSameIntersections) {
         left_values[i] = RandomAdapter::get_random_double<double>(-100000.0, intersection, mt);
         right_values[i] = RandomAdapter::get_random_double<double>(intersection, 100000.0, mt);
     }
-      
+
     for (auto i = 0; i < number_values; i++) {
         const auto current_val_left = left_values[i];
         const auto current_change = gaussian_growth_curve(current_val_left, intersection, intersection, growth_factor);
@@ -183,7 +184,7 @@ TEST_F(SynapticElementsTest, testGaussianGrowthCurveSameIntersections) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsConstructor) {
+TEST_F(SynapticElementsTest, testConstructor) {
     const auto& calcium_to_grow = RandomAdapter::get_random_double<double>(SynapticElements::min_min_C_level_to_grow, SynapticElements::max_min_C_level_to_grow, mt);
     const auto& nu = RandomAdapter::get_random_double<double>(SynapticElements::min_nu, SynapticElements::max_nu, mt);
     const auto& retract_ratio = RandomAdapter::get_random_double<double>(SynapticElements::min_vacant_retract_ratio, SynapticElements::max_vacant_retract_ratio, mt);
@@ -219,7 +220,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsConstructor) {
     ASSERT_EQ(param_upper_bound.value(), vacant_elements_ub) << ss.str();
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsParameters) {
+TEST_F(SynapticElementsTest, testParameters) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& C = RandomAdapter::get_random_percentage<double>(mt);
 
@@ -280,7 +281,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsParameters) {
     ASSERT_EQ(param_upper_bound.value(), d5) << ss.str();
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsClone) {
+TEST_F(SynapticElementsTest, testClone) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& C = RandomAdapter::get_random_percentage<double>(mt);
 
@@ -336,7 +337,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsClone) {
     ASSERT_EQ(cloned_param_upper_bound.value(), d5) << ss.str();
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsInitialize) {
+TEST_F(SynapticElementsTest, testInitialize) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -389,7 +390,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialize) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsCreateNeurons) {
+TEST_F(SynapticElementsTest, testCreateNeurons) {
     const auto& number_neurons_initially = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& number_neurons_added = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
@@ -446,7 +447,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsCreateNeurons) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsConstant) {
+TEST_F(SynapticElementsTest, testInitialElementsConstant) {
     const auto& number_neurons_initially = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& number_neurons_added = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
@@ -480,7 +481,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsConstant) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsInitialElements) {
+TEST_F(SynapticElementsTest, testInitialElements) {
     const auto& number_neurons_initially = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& number_neurons_added = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
@@ -520,7 +521,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialElements) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsException) {
+TEST_F(SynapticElementsTest, testInitialElementsException) {
     const auto& number_neurons_initially = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& number_neurons_added = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
@@ -546,7 +547,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsException) {
     ASSERT_THROW(synaptic_elements.create_neurons(number_neurons_added), RelearnException) << ss.str();
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsMultipleBounds) {
+TEST_F(SynapticElementsTest, testInitialElementsMultipleBounds) {
     const auto& number_neurons_initially = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& number_neurons_added = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
@@ -611,7 +612,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsInitialElementsMultipleBounds) 
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsSignalTypes) {
+TEST_F(SynapticElementsTest, testSignalTypes) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -638,7 +639,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsSignalTypes) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsSingleUpdate) {
+TEST_F(SynapticElementsTest, testSingleUpdate) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -689,7 +690,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsSingleUpdate) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsHistogram) {
+TEST_F(SynapticElementsTest, testHistogram) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -714,7 +715,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsHistogram) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsUpdateException) {
+TEST_F(SynapticElementsTest, testUpdateException) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -745,7 +746,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateException) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
+TEST_F(SynapticElementsTest, testMultipleUpdate) {
     uniform_int_distribution<unsigned int> uid_connected(0, 10);
 
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
@@ -764,7 +765,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
     for (auto iteration = 0; iteration < 10; iteration++) {
         for (auto neuron_id : NeuronID::range(number_neurons)) {
             const auto& grown_element = SynapticElementsAdapter::get_random_synaptic_element_count(mt);
-            const auto& connected_grown_element =SynapticElementsAdapter:: get_random_synaptic_element_connected_count(static_cast<unsigned int>(grown_element), mt);
+            const auto& connected_grown_element = SynapticElementsAdapter::get_random_synaptic_element_connected_count(static_cast<unsigned int>(grown_element), mt);
             const auto& signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
             golden_counts[neuron_id.get_neuron_id()] += grown_element;
@@ -799,7 +800,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdate) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsFreeElements) {
+TEST_F(SynapticElementsTest, testFreeElements) {
     uniform_int_distribution<unsigned int> uid_connected(0, 10);
 
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
@@ -818,7 +819,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsFreeElements) {
     for (auto iteration = 0; iteration < 10; iteration++) {
         for (auto neuron_id : NeuronID::range(number_neurons)) {
             const auto& grown_element = SynapticElementsAdapter::get_random_synaptic_element_count(mt);
-            const auto& connected_grown_element =SynapticElementsAdapter:: get_random_synaptic_element_connected_count(static_cast<unsigned int>(grown_element), mt);
+            const auto& connected_grown_element = SynapticElementsAdapter::get_random_synaptic_element_connected_count(static_cast<unsigned int>(grown_element), mt);
             const auto& signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
             golden_counts[neuron_id.get_neuron_id()] += grown_element;
@@ -848,7 +849,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsFreeElements) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsDisable) {
+TEST_F(SynapticElementsTest, testDisable) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -890,7 +891,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsDisable) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsDisableException) {
+TEST_F(SynapticElementsTest, testDisableException) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -920,7 +921,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsDisableException) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsDelete) {
+TEST_F(SynapticElementsTest, testDelete) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -949,7 +950,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsDelete) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsDeleteException) {
+TEST_F(SynapticElementsTest, testDeleteException) {
     const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
@@ -984,7 +985,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsDeleteException) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElements) {
+TEST_F(SynapticElementsTest, testUpdateNumberElements) {
     const auto minimum_calcium_to_grow = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
     const auto growth_factor = RandomAdapter::get_random_double<double>(1e-6, 100.0, mt);
 
@@ -999,17 +1000,22 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElements) {
 
     std::vector<double> calcium(number_neurons, 0.0);
     std::vector<double> target_calcium(number_neurons, 0.0);
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Disabled);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
+
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+    synaptic_elements.set_extra_infos(extra_info);
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         calcium[neuron_id] = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
         target_calcium[neuron_id] = RandomAdapter::get_random_double<double>(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0, mt);
         if (RandomAdapter::get_random_bool(mt)) {
-            disable_flags[neuron_id] = UpdateStatus::Enabled;
+            disable_flags[neuron_id] = UpdateStatus::Disabled;
+            extra_info->set_disabled_neurons(std::vector<NeuronID>{ NeuronID{ neuron_id } });
         }
     }
 
-    synaptic_elements.update_number_elements_delta(calcium, target_calcium, disable_flags);
+    synaptic_elements.update_number_elements_delta(calcium, target_calcium);
 
     for (auto neuron_id : NeuronID::range(number_neurons)) {
         ASSERT_EQ(synaptic_elements.get_connected_elements(neuron_id), golden_connected_counts[neuron_id.get_neuron_id()]) << ss.str() << neuron_id;
@@ -1031,7 +1037,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElements) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdateNumberElements) {
+TEST_F(SynapticElementsTest, testMultipleUpdateNumberElements) {
     const auto minimum_calcium_to_grow = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
     const auto growth_factor = RandomAdapter::get_random_double<double>(1e-6, 100.0, mt);
 
@@ -1049,19 +1055,23 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdateNumberElements) {
     for (auto i = 0; i < 10; i++) {
         std::vector<double> calcium(number_neurons, 0.0);
         std::vector<double> target_calcium(number_neurons, 0.0);
-        std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Disabled);
+
+        auto extra_info = std::make_shared<NeuronsExtraInfo>();
+        extra_info->init(number_neurons);
+        synaptic_elements.set_extra_infos(extra_info);
 
         for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
             calcium[neuron_id] = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
             target_calcium[neuron_id] = RandomAdapter::get_random_double<double>(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0, mt);
             if (RandomAdapter::get_random_bool(mt)) {
-                disable_flags[neuron_id] = UpdateStatus::Enabled;
                 const auto current_expected_delta = gaussian_growth_curve(calcium[neuron_id], minimum_calcium_to_grow, target_calcium[neuron_id], growth_factor);
                 golden_delta_counts[neuron_id] += current_expected_delta;
+            } else {
+                extra_info->set_disabled_neurons(std::vector<NeuronID>{ NeuronID{ neuron_id } });
             }
         }
 
-        synaptic_elements.update_number_elements_delta(calcium, target_calcium, disable_flags);
+        synaptic_elements.update_number_elements_delta(calcium, target_calcium);
     }
 
     for (auto neuron_id : NeuronID::range(number_neurons)) {
@@ -1079,8 +1089,8 @@ TEST_F(SynapticElementsTest, testSynapticElementsMultipleUpdateNumberElements) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElementsException) {
-    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+TEST_F(SynapticElementsTest, testUpdateNumberElementsException) {
+    const auto& number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + 1;
     const auto& element_type = NeuronTypesAdapter::get_random_element_type(mt);
 
     std::stringstream ss{};
@@ -1089,71 +1099,77 @@ TEST_F(SynapticElementsTest, testSynapticElementsUpdateNumberElementsException) 
     auto [synaptic_elements, grown_elements, connected_elements, signal_types]
         = SynapticElementsAdapter::create_random_synaptic_elements(number_neurons, element_type, 0.0, mt);
 
-    const auto number_too_small_calcium = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-    const auto number_too_large_calcium = TaggedIdAdapter::get_random_neuron_id(number_neurons, number_neurons + 1, mt);
+    const auto number_too_small_calcium = RandomAdapter::get_random_integer<size_t>(1, number_neurons - 1, mt);
+    const auto number_too_large_calcium = RandomAdapter::get_random_integer<size_t>(number_neurons + 1, number_neurons * 2 + 1, mt);
 
-    const auto number_too_small_target_calcium = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-    const auto number_too_large_target_calcium = TaggedIdAdapter::get_random_neuron_id(number_neurons, number_neurons + 1, mt);
+    const auto number_too_small_target_calcium = RandomAdapter::get_random_integer<size_t>(1, number_neurons - 1, mt);
+    const auto number_too_large_target_calcium = RandomAdapter::get_random_integer<size_t>(number_neurons + 1, number_neurons * 2 + 1, mt);
 
-    const auto number_too_small_disable_flags = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-    const auto number_too_large_disable_flags = TaggedIdAdapter::get_random_neuron_id(number_neurons, number_neurons + 1, mt);
+    const auto number_too_small_disable_flags = RandomAdapter::get_random_integer<size_t>(1, number_neurons - 1, mt);
+    const auto number_too_large_disable_flags = RandomAdapter::get_random_integer<size_t>(number_neurons + 1, number_neurons * 2 + 1, mt);
 
-    std::vector<double> calcium_too_small(number_too_small_calcium.get_neuron_id(), 0.0);
+    std::vector<double> calcium_too_small(number_too_small_calcium, 0.0);
     std::vector<double> calcium(number_neurons, 0.0);
-    std::vector<double> calcium_too_large(number_too_large_calcium.get_neuron_id(), 0.0);
+    std::vector<double> calcium_too_large(number_too_large_calcium, 0.0);
 
-    std::vector<double> target_calcium_too_small(number_too_small_target_calcium.get_neuron_id(), 0.0);
+    std::vector<double> target_calcium_too_small(number_too_small_target_calcium, 0.0);
     std::vector<double> target_calcium(number_neurons, 0.0);
-    std::vector<double> target_calcium_too_large(number_too_large_target_calcium.get_neuron_id(), 0.0);
+    std::vector<double> target_calcium_too_large(number_too_large_target_calcium, 0.0);
 
-    std::vector<UpdateStatus> disable_flags_too_small(number_too_small_disable_flags.get_neuron_id(), UpdateStatus::Disabled);
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Disabled);
-    std::vector<UpdateStatus> disable_flags_too_large(number_too_large_disable_flags.get_neuron_id(), UpdateStatus::Disabled);
+    auto extra_info_too_small = std::make_shared<NeuronsExtraInfo>();
+    extra_info_too_small->init(number_too_small_disable_flags);
 
-    auto lambda = [&ss, &synaptic_elements](auto calcium, auto target_calcium, auto disable_flags) {
-        ASSERT_THROW(synaptic_elements.update_number_elements_delta(calcium, target_calcium, disable_flags), RelearnException) << ss.str()
-                                                                                                                               << calcium.size() << ' '
-                                                                                                                               << target_calcium.size() << ' '
-                                                                                                                               << disable_flags.size();
+    auto extra_info_correct = std::make_shared<NeuronsExtraInfo>();
+    extra_info_correct->init(number_neurons);
+
+    auto extra_info_too_large = std::make_shared<NeuronsExtraInfo>();
+    extra_info_too_large->init(number_too_large_disable_flags);
+
+    auto lambda = [&ss, &synaptic_elements](auto calcium, auto target_calcium, auto extra_info) {
+        synaptic_elements.set_extra_infos(extra_info);
+        ASSERT_THROW(synaptic_elements.update_number_elements_delta(calcium, target_calcium), RelearnException) << ss.str()
+                                                                                                                << calcium.size() << ' '
+                                                                                                                << target_calcium.size() << ' '
+                                                                                                                << extra_info->get_size();
     };
 
-    lambda(calcium_too_small, target_calcium_too_small, disable_flags_too_small);
-    lambda(calcium_too_small, target_calcium, disable_flags_too_small);
-    lambda(calcium_too_small, target_calcium_too_large, disable_flags_too_small);
+    lambda(calcium_too_small, target_calcium_too_small, extra_info_too_small);
+    lambda(calcium_too_small, target_calcium, extra_info_too_small);
+    lambda(calcium_too_small, target_calcium_too_large, extra_info_too_small);
 
-    lambda(calcium_too_small, target_calcium_too_small, disable_flags);
-    lambda(calcium_too_small, target_calcium, disable_flags);
-    lambda(calcium_too_small, target_calcium_too_large, disable_flags);
+    lambda(calcium_too_small, target_calcium_too_small, extra_info_correct);
+    lambda(calcium_too_small, target_calcium, extra_info_correct);
+    lambda(calcium_too_small, target_calcium_too_large, extra_info_correct);
 
-    lambda(calcium_too_small, target_calcium_too_small, disable_flags_too_large);
-    lambda(calcium_too_small, target_calcium, disable_flags_too_large);
-    lambda(calcium_too_small, target_calcium_too_large, disable_flags_too_large);
+    lambda(calcium_too_small, target_calcium_too_small, extra_info_too_large);
+    lambda(calcium_too_small, target_calcium, extra_info_too_large);
+    lambda(calcium_too_small, target_calcium_too_large, extra_info_too_large);
 
-    lambda(calcium, target_calcium_too_small, disable_flags_too_small);
-    lambda(calcium, target_calcium, disable_flags_too_small);
-    lambda(calcium, target_calcium_too_large, disable_flags_too_small);
+    lambda(calcium, target_calcium_too_small, extra_info_too_small);
+    lambda(calcium, target_calcium, extra_info_too_small);
+    lambda(calcium, target_calcium_too_large, extra_info_too_small);
 
-    lambda(calcium, target_calcium_too_small, disable_flags);
-    lambda(calcium, target_calcium_too_large, disable_flags);
+    lambda(calcium, target_calcium_too_small, extra_info_correct);
+    lambda(calcium, target_calcium_too_large, extra_info_correct);
 
-    lambda(calcium, target_calcium_too_small, disable_flags_too_large);
-    lambda(calcium, target_calcium, disable_flags_too_large);
-    lambda(calcium, target_calcium_too_large, disable_flags_too_large);
+    lambda(calcium, target_calcium_too_small, extra_info_too_large);
+    lambda(calcium, target_calcium, extra_info_too_large);
+    lambda(calcium, target_calcium_too_large, extra_info_too_large);
 
-    lambda(calcium_too_large, target_calcium_too_small, disable_flags_too_small);
-    lambda(calcium_too_large, target_calcium, disable_flags_too_small);
-    lambda(calcium_too_large, target_calcium_too_large, disable_flags_too_small);
+    lambda(calcium_too_large, target_calcium_too_small, extra_info_too_small);
+    lambda(calcium_too_large, target_calcium, extra_info_too_small);
+    lambda(calcium_too_large, target_calcium_too_large, extra_info_too_small);
 
-    lambda(calcium_too_large, target_calcium_too_small, disable_flags);
-    lambda(calcium_too_large, target_calcium, disable_flags);
-    lambda(calcium_too_large, target_calcium_too_large, disable_flags);
+    lambda(calcium_too_large, target_calcium_too_small, extra_info_correct);
+    lambda(calcium_too_large, target_calcium, extra_info_correct);
+    lambda(calcium_too_large, target_calcium_too_large, extra_info_correct);
 
-    lambda(calcium_too_large, target_calcium_too_small, disable_flags_too_large);
-    lambda(calcium_too_large, target_calcium, disable_flags_too_large);
-    lambda(calcium_too_large, target_calcium_too_large, disable_flags_too_large);
+    lambda(calcium_too_large, target_calcium_too_small, extra_info_too_large);
+    lambda(calcium_too_large, target_calcium, extra_info_too_large);
+    lambda(calcium_too_large, target_calcium_too_large, extra_info_too_large);
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdates) {
+TEST_F(SynapticElementsTest, testCommitUpdates) {
     const auto minimum_calcium_to_grow = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
     const auto growth_factor = RandomAdapter::get_random_double<double>(1e-6, 100.0, mt);
 
@@ -1167,6 +1183,12 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdates) {
 
     SynapticElements synaptic_elements(element_type, minimum_calcium_to_grow, growth_factor, retract_ratio);
     synaptic_elements.init(number_neurons);
+
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
+    auto extra_info_all_enabled = std::make_shared<NeuronsExtraInfo>();
+    extra_info_all_enabled->init(number_neurons);
 
     std::vector<double> golden_counts(number_neurons);
     std::vector<unsigned int> golden_connected_counts(number_neurons);
@@ -1189,18 +1211,21 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdates) {
     std::vector<double> calcium(number_neurons, 0.0);
     std::vector<double> target_calcium(number_neurons, 0.0);
     std::vector<UpdateStatus> enable_flags(number_neurons, UpdateStatus::Enabled);
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Disabled);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         calcium[neuron_id] = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
         target_calcium[neuron_id] = RandomAdapter::get_random_double<double>(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0, mt);
         if (RandomAdapter::get_random_bool(mt)) {
-            disable_flags[neuron_id] = UpdateStatus::Enabled;
+            extra_info->set_disabled_neurons(std::vector<NeuronID>{ NeuronID{ neuron_id } });
+            disable_flags[neuron_id] = UpdateStatus::Disabled;
         }
     }
 
-    synaptic_elements.update_number_elements_delta(calcium, target_calcium, enable_flags);
-    const auto& [number_deleted_elements, deleted_element_counts] = synaptic_elements.commit_updates(disable_flags);
+    synaptic_elements.set_extra_infos(extra_info_all_enabled);
+    synaptic_elements.update_number_elements_delta(calcium, target_calcium);
+    synaptic_elements.set_extra_infos(extra_info);
+    const auto& [number_deleted_elements, deleted_element_counts] = synaptic_elements.commit_updates();
 
     const auto& deltas = synaptic_elements.get_deltas();
 
@@ -1279,7 +1304,7 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdates) {
     }
 }
 
-TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdatesException) {
+TEST_F(SynapticElementsTest, testCommitUpdatesException) {
     const auto minimum_calcium_to_grow = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
     const auto growth_factor = RandomAdapter::get_random_double<double>(1e-6, 100.0, mt);
 
@@ -1292,26 +1317,37 @@ TEST_F(SynapticElementsTest, testSynapticElementsCommitUpdatesException) {
     auto [synaptic_elements, grown_elements, connected_elements, signal_types]
         = SynapticElementsAdapter::create_random_synaptic_elements(number_neurons, element_type, minimum_calcium_to_grow, mt, growth_factor);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+    synaptic_elements.set_extra_infos(extra_info);
+
     std::vector<double> calcium(number_neurons, 0.0);
     std::vector<double> target_calcium(number_neurons, 0.0);
-    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Disabled);
+    std::vector<UpdateStatus> disable_flags(number_neurons, UpdateStatus::Enabled);
 
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         calcium[neuron_id] = RandomAdapter::get_random_double<double>(-100.0, 100.0, mt);
         target_calcium[neuron_id] = RandomAdapter::get_random_double<double>(minimum_calcium_to_grow, minimum_calcium_to_grow + 200.0, mt);
         if (RandomAdapter::get_random_bool(mt)) {
-            disable_flags[neuron_id] = UpdateStatus::Enabled;
+            disable_flags[neuron_id] = UpdateStatus::Disabled;
+            extra_info->set_disabled_neurons(std::vector<NeuronID>{ NeuronID{ neuron_id } });
         }
     }
 
-    synaptic_elements.update_number_elements_delta(calcium, target_calcium, disable_flags);
+    synaptic_elements.update_number_elements_delta(calcium, target_calcium);
 
     const auto number_too_small_disable_flags = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt).get_neuron_id();
     const auto number_too_large_disable_flags = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt).get_neuron_id() + number_neurons + 1;
 
-    std::vector<UpdateStatus> disable_flags_too_small(number_too_small_disable_flags, UpdateStatus::Disabled);
-    std::vector<UpdateStatus> disable_flags_too_large(number_too_large_disable_flags, UpdateStatus::Disabled);
+    auto extra_info_too_small = std::make_shared<NeuronsExtraInfo>();
+    extra_info_too_small->init(number_too_small_disable_flags);
 
-    ASSERT_THROW(auto ret = synaptic_elements.commit_updates(disable_flags_too_small), RelearnException) << ss.str() << number_too_small_disable_flags;
-    ASSERT_THROW(auto ret = synaptic_elements.commit_updates(disable_flags_too_large), RelearnException) << ss.str() << number_too_large_disable_flags;
+    auto extra_info_too_large = std::make_shared<NeuronsExtraInfo>();
+    extra_info_too_large->init(number_too_large_disable_flags);
+
+    synaptic_elements.set_extra_infos(extra_info_too_small);
+    ASSERT_THROW(auto ret = synaptic_elements.commit_updates(), RelearnException) << ss.str() << number_too_small_disable_flags;
+
+    synaptic_elements.set_extra_infos(extra_info_too_large);
+    ASSERT_THROW(auto ret = synaptic_elements.commit_updates(), RelearnException) << ss.str() << number_too_large_disable_flags;
 }

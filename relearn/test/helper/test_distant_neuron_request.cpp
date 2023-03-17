@@ -10,9 +10,9 @@
 
 #include "test_distant_neuron_request.h"
 
-#include "neurons/neuron_types_adapter.h"
-#include "simulation/simulation_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "neurons/helper/DistantNeuronRequests.h"
 
@@ -53,19 +53,10 @@ TEST_F(DistantNeuronRequestTest, testConstructor) {
     ASSERT_EQ(target_neuron_type, golden_target_neuron_type);
     ASSERT_EQ(signal_type, golden_signal_type);
 
-    if (target_neuron_type == DistantNeuronRequest::TargetNeuronType::BranchNode) {
-        const auto branch_node_id = dnr.get_branch_node_id();
-
-        ASSERT_EQ(golden_target_id, branch_node_id);
-        ASSERT_THROW(auto val = dnr.get_leaf_node_id(), RelearnException);
-        ASSERT_THROW(auto val = dnr.get_rma_offset(), RelearnException);
-    }
-
     if (target_neuron_type == DistantNeuronRequest::TargetNeuronType::Leaf) {
         const auto leaf_neuron_id = dnr.get_leaf_node_id();
 
         ASSERT_EQ(leaf_neuron_id, golden_target_id);
-        ASSERT_THROW(auto val = dnr.get_branch_node_id(), RelearnException);
         ASSERT_THROW(auto val = dnr.get_rma_offset(), RelearnException);
     }
 
@@ -74,7 +65,6 @@ TEST_F(DistantNeuronRequestTest, testConstructor) {
 
         ASSERT_EQ(rma_offset, golden_target_id);
         ASSERT_THROW(auto val = dnr.get_leaf_node_id(), RelearnException);
-        ASSERT_THROW(auto val = dnr.get_branch_node_id(), RelearnException);
     }
 }
 

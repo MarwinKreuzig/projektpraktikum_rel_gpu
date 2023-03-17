@@ -10,35 +10,37 @@
 
 #include "NeuronModels.h"
 
+#include "neurons/NeuronsExtraInfo.h"
+
 using models::IzhikevichModel;
 
 IzhikevichModel::IzhikevichModel(
-        const unsigned int h,
-        std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
-        std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
-        std::unique_ptr<Stimulus>&& stimulus_calculator,
-        const double a,
-        const double b,
-        const double c,
-        const double d,
-        const double V_spike,
-        const double k1,
-        const double k2,
-        const double k3)
-        : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator) }
-        , a{ a }
-        , b{ b }
-        , c{ c }
-        , d{ d }
-        , V_spike{ V_spike }
-        , k1{ k1 }
-        , k2{ k2 }
-        , k3{ k3 } {
+    const unsigned int h,
+    std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
+    std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator,
+    std::unique_ptr<Stimulus>&& stimulus_calculator,
+    const double a,
+    const double b,
+    const double c,
+    const double d,
+    const double V_spike,
+    const double k1,
+    const double k2,
+    const double k3)
+    : NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator) }
+    , a{ a }
+    , b{ b }
+    , c{ c }
+    , d{ d }
+    , V_spike{ V_spike }
+    , k1{ k1 }
+    , k2{ k2 }
+    , k3{ k3 } {
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> IzhikevichModel::clone() const {
     return std::make_unique<IzhikevichModel>(get_h(), get_synaptic_input_calculator()->clone(), get_background_activity_calculator()->clone(),
-                                             get_stimulus_calculator()->clone(), a, b, c, d, V_spike, k1, k2, k3);
+        get_stimulus_calculator()->clone(), a, b, c, d, V_spike, k1, k2, k3);
 }
 
 [[nodiscard]] std::vector<ModelParameter> IzhikevichModel::get_parameter() {
@@ -109,8 +111,9 @@ void IzhikevichModel::update_activity_benchmark(const NeuronID neuron_id) {
     u[local_neuron_id] = u_val;
 }
 
-void IzhikevichModel::update_activity_benchmark(const std::span<const UpdateStatus> disable_flags) {
+void IzhikevichModel::update_activity_benchmark() {
     const auto number_local_neurons = get_number_neurons();
+    const auto disable_flags = get_extra_infos()->get_disable_flags();
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
@@ -123,8 +126,9 @@ void IzhikevichModel::update_activity_benchmark(const std::span<const UpdateStat
     }
 }
 
-void IzhikevichModel::update_activity(const std::span<const UpdateStatus> disable_flags) {
+void IzhikevichModel::update_activity() {
     const auto number_local_neurons = get_number_neurons();
+    const auto disable_flags = get_extra_infos()->get_disable_flags();
 
     const auto h = get_h();
     const auto scale = 1.0 / h;

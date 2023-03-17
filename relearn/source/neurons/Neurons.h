@@ -157,21 +157,14 @@ public:
      * @throws RelearnException When a static neuron is loaded with a plastic connection
      */
     void set_static_neurons(const std::span<const NeuronID> static_neurons) {
-        for (const auto& neuronId : static_neurons) {
-            disable_flags[neuronId.get_neuron_id()] = UpdateStatus::Static;
-        }
+        extra_info->set_static_neurons(static_neurons);
 
-        for (NeuronID neuron_id : NeuronID::range(0, number_neurons)) {
-            const auto neuron_id_id = neuron_id.get_neuron_id();
+        for (const auto neuron_id : static_neurons) {
             NetworkGraph::DistantEdges edges_out = network_graph_plastic->get_all_out_edges(neuron_id);
-            if (!edges_out.empty()) {
-                RelearnException::check(disable_flags[neuron_id_id] != UpdateStatus::Static, "Plastic connection from a static neuron is forbidden. {} (static)  -> ?", neuron_id_id);
-            }
+            RelearnException::check(edges_out.empty(), "Plastic connection from a static neuron is forbidden. {} (static)  -> ?", neuron_id);
 
             NetworkGraph::DistantEdges edges_in = network_graph_plastic->get_all_in_edges(neuron_id);
-            if (!edges_in.empty()) {
-                RelearnException::check(disable_flags[neuron_id_id] != UpdateStatus::Static, "Plastic connection from a static neuron is forbidden. ? -> {} (static)", neuron_id_id);
-            }
+            RelearnException::check(edges_in.empty(), "Plastic connection from a static neuron is forbidden. ? -> {} (static)", neuron_id);
         }
     }
 
@@ -314,7 +307,7 @@ public:
      * @exception Throws RelearnExceptions if something unexpected happens
      * @return Pair of number of local synapse deletion and requests for deletions on other ranks
      */
-    std::pair<size_t,CommunicationMap<SynapseDeletionRequest>> disable_neurons(const std::span<const NeuronID> local_neuron_ids, const int num_ranks);
+    std::pair<size_t, CommunicationMap<SynapseDeletionRequest>> disable_neurons(std::span<const NeuronID> local_neuron_ids, int num_ranks);
 
     /**
      * @brief Enables all neurons with specified ids
@@ -385,6 +378,13 @@ public:
     void print_calcium_statistics_to_essentials(const std::unique_ptr<Essentials>& essentials);
 
     /**
+     * @brief Inserts the calcium statistics in the essentials
+     *      Performs communication with MPI
+     * @param essentials The essentials
+     */
+    void print_synaptic_changes_to_essentials(const std::unique_ptr<Essentials>& essentials);
+
+    /**
      * @brief Prints the network graph to LogFiles::EventType::Network. Stores current step in file name and log
      * @param step The current simulation step
      * @param with_prefix If the file name should contain the current step as prefix
@@ -448,14 +448,13 @@ public:
      */
     static void check_signal_types(const std::shared_ptr<NetworkGraph> network_graph, std::span<const SignalType> signal_types, const MPIRank my_rank);
 
-
     /**
      * Processes the requests of other mpi ranks to delete distant synapses on this rank to disabled remote neurons
      * @param list The communication map
      * @param my_rank Current mpi rank
      * @return Number of deletions
      */
-    [[nodiscard]] size_t delete_disabled_distant_synapses(const CommunicationMap<SynapseDeletionRequest> &list, const MPIRank& my_rank);
+    [[nodiscard]] size_t delete_disabled_distant_synapses(const CommunicationMap<SynapseDeletionRequest>& list, const MPIRank& my_rank);
 
     void reset_deletion_log() {
         deletions_log.clear();
@@ -463,10 +462,10 @@ public:
     }
 
 private:
-    [[nodiscard]] StatisticalMeasures global_statistics(std::span<const double> local_values, MPIRank root, std::span<const UpdateStatus> disable_flags) const;
+    [[nodiscard]] StatisticalMeasures global_statistics(std::span<const double> local_values, MPIRank root) const;
 
     template <typename T>
-    [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::span<const T> local_values, const MPIRank root, const std::span<const UpdateStatus> disable_flags) const {
+    [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::span<const T> local_values, const MPIRank root) const {
         std::vector<double> converted_values{};
         converted_values.reserve(local_values.size());
 
@@ -474,7 +473,7 @@ private:
             converted_values.emplace_back(static_cast<double>(value));
         }
 
-        return global_statistics(converted_values, root, disable_flags);
+        return global_statistics(converted_values, root);
     }
 
     [[nodiscard]] std::pair<uint64_t, uint64_t> delete_synapses();

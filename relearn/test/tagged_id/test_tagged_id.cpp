@@ -10,7 +10,7 @@
 
 #include "test_tagged_id.h"
 
-#include "RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
 #include <cstdint>
 #include <functional>

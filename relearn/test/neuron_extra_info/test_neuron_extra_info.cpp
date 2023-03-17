@@ -10,8 +10,8 @@
 
 #include "test_neuron_extra_info.h"
 
-#include "simulation/simulation_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "neurons/NeuronsExtraInfo.h"
 

@@ -10,10 +10,10 @@
 
 #include "test_synaptic_input.h"
 
-#include "RandomAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 
-#include "network_graph/network_graph_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/network_graph/NetworkGraphAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "neurons/input/SynapticInputCalculator.h"
 #include "neurons/input/SynapticInputCalculators.h"
@@ -149,7 +149,12 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdateEmptyGraph) {
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
 
-    input_calculator->update_input(0, ng_static, ng_plastic, fired_status, update_status);
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
+    input_calculator->set_extra_infos(extra_info);
+
+    input_calculator->update_input(0, ng_static, ng_plastic, fired_status);
 
     for (const auto& value : input_calculator->get_synaptic_input()) {
         ASSERT_EQ(0.0, value);
@@ -172,6 +177,11 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdate) {
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
+    input_calculator->set_extra_infos(extra_info);
+
     for (size_t synapse_id = 0; synapse_id < num_synapses; synapse_id++) {
         const auto weight = std::abs(NetworkGraphAdapter::get_random_synapse_weight(mt));
         const auto source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
@@ -183,6 +193,7 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdate) {
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
+            extra_info->set_disabled_neurons(std::vector{ NeuronID{ neuron_id } });
         }
         if (RandomAdapter::get_random_bool(mt)) {
             fired_status[neuron_id] = FiredStatus::Fired;
@@ -191,7 +202,7 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdate) {
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
 
-    input_calculator->update_input(step, ng_static, ng_plastic, fired_status, update_status);
+    input_calculator->update_input(step, ng_static, ng_plastic, fired_status);
 
     const auto& inputs = input_calculator->get_synaptic_input();
 
@@ -243,13 +254,18 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdateEmptyGraph) {
     std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_conductance, std::make_unique<ConstantTransmissionDelayer>(0), random_scale);
     input_calculator->init(number_neurons_init);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons_init);
+
+    input_calculator->set_extra_infos(extra_info);
+
     NetworkGraph ng_plastic(number_neurons_init, MPIRank::root_rank());
     NetworkGraph ng_static(number_neurons_init, MPIRank::root_rank());
 
     std::vector<FiredStatus> fired_status(number_neurons_init, FiredStatus::Inactive);
     std::vector<UpdateStatus> update_status(number_neurons_init, UpdateStatus::Enabled);
 
-    input_calculator->update_input(0, ng_static, ng_plastic, fired_status, update_status);
+    input_calculator->update_input(0, ng_static, ng_plastic, fired_status);
 
     for (const auto& value : input_calculator->get_synaptic_input()) {
         ASSERT_EQ(0.0, value);
@@ -268,6 +284,11 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate) {
     std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_conductance,std::make_unique<ConstantTransmissionDelayer>(0), random_scale);
     input_calculator->init(number_neurons);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
+    input_calculator->set_extra_infos(extra_info);
+
     NetworkGraph ng_static(number_neurons, MPIRank::root_rank());
     NetworkGraph ng_plastic(number_neurons, MPIRank::root_rank());
 
@@ -285,6 +306,7 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate) {
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
+            extra_info->set_disabled_neurons(std::vector{ NeuronID{ neuron_id } });
         }
         if (RandomAdapter::get_random_bool(mt)) {
             fired_status[neuron_id] = FiredStatus::Fired;
@@ -293,7 +315,7 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate) {
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
 
-    input_calculator->update_input(step, ng_static, ng_plastic, fired_status, update_status);
+    input_calculator->update_input(step, ng_static, ng_plastic, fired_status);
 
     const auto& inputs = input_calculator->get_synaptic_input();
 
@@ -346,13 +368,18 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputUpdateEmptyGraph) {
     std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_conductance,std::make_unique<ConstantTransmissionDelayer>(0), random_scale);
     input_calculator->init(number_neurons_init);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons_init);
+
+    input_calculator->set_extra_infos(extra_info);
+
     NetworkGraph ng_plastic(number_neurons_init, MPIRank::root_rank());
     NetworkGraph ng_static(number_neurons_init, MPIRank::root_rank());
 
     std::vector<FiredStatus> fired_status(number_neurons_init, FiredStatus::Inactive);
     std::vector<UpdateStatus> update_status(number_neurons_init, UpdateStatus::Enabled);
 
-    input_calculator->update_input(0, ng_static, ng_plastic, fired_status, update_status);
+    input_calculator->update_input(0, ng_static, ng_plastic, fired_status);
 
     for (const auto& value : input_calculator->get_synaptic_input()) {
         ASSERT_EQ(0.0, value);
@@ -371,6 +398,11 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputUpdate) {
     std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(random_conductance, std::make_unique<ConstantTransmissionDelayer>(0),random_scale);
     input_calculator->init(number_neurons);
 
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
+
+    input_calculator->set_extra_infos(extra_info);
+
     NetworkGraph ng_static(number_neurons, MPIRank::root_rank());
     NetworkGraph ng_plastic(number_neurons, MPIRank::root_rank());
 
@@ -388,6 +420,7 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputUpdate) {
     for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
         if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
+            extra_info->set_disabled_neurons(std::vector{ NeuronID{ neuron_id } });
         }
         if (RandomAdapter::get_random_bool(mt)) {
             fired_status[neuron_id] = FiredStatus::Fired;
@@ -396,7 +429,7 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputUpdate) {
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
 
-    input_calculator->update_input(step, ng_static, ng_plastic, fired_status, update_status);
+    input_calculator->update_input(step, ng_static, ng_plastic, fired_status);
 
     const auto& inputs = input_calculator->get_synaptic_input();
 

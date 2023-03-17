@@ -12,6 +12,7 @@
 
 #include "Types.h"
 #include "mpi/MPIWrapper.h"
+#include "neurons/NeuronsExtraInfo.h"
 #include "neurons/enums/FiredStatus.h"
 #include "neurons/enums/UpdateStatus.h"
 #include "neurons/input/FiredStatusCommunicator.h"
@@ -75,6 +76,21 @@ public:
         : synapse_conductance(synapse_conductance), transmission_delayer(std::move(transmission_delayer)) { }
 
     /**
+     * @brief Sets the extra infos. These are used to determine which neuron updates its electrical activity
+     * @param new_extra_info The new extra infos, must not be empty
+     * @exception Throws a RelearnException if new_extra_info is empty
+     */
+    void set_extra_infos(std::shared_ptr<NeuronsExtraInfo> new_extra_info) {
+        const auto is_filled = new_extra_info.operator bool();
+        RelearnException::check(is_filled, "SynapticInputCalculator::set_extra_infos: new_extra_info is empty");
+        extra_infos = std::move(new_extra_info);
+
+        if (fired_status_comm.operator bool()) {
+            fired_status_comm->set_extra_infos(extra_infos);
+        }
+    }
+
+    /**
      * @brief Creates a clone of this instance (without neurons), copies all parameters
      * @return A copy of this instance
      */
@@ -100,11 +116,11 @@ public:
      * @param network_graph_static The network graph of static connections
      * @param network_graph_plastic The network graph of plastic connections
      * @param fired Which local neuron fired
-     * @param disable_flags Which neurons are disabled
      * @exception Throws a RelearnException if the number of local neurons didn't match the sizes of the arguments
      */
-    void update_input([[maybe_unused]] const step_type step, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic,
-        const std::span<const FiredStatus> fired, const std::span<const UpdateStatus> disable_flags) {
+    void update_input([[maybe_unused]] const step_type step, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::span<const FiredStatus> fired) {
+        const auto& disable_flags = extra_infos->get_disable_flags();
+
         RelearnException::check(number_local_neurons > 0, "SynapticInputCalculator::update_input: There were no local neurons.");
         RelearnException::check(fired.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of fired did not match number of local neurons: {} vs {}", fired.size(), number_local_neurons);
         RelearnException::check(disable_flags.size() == number_local_neurons, "SynapticInputCalculator::update_input: Size of disable_flags did not match number of local neurons: {} vs {}", disable_flags.size(), number_local_neurons);
@@ -113,14 +129,14 @@ public:
         std::fill(raw_inh_input.begin(), raw_inh_input.end(), 0.0);
 
         transmission_delayer->prepare_update(number_local_neurons);
-        fired_status_comm->set_local_fired_status(fired, disable_flags, network_graph_static, network_graph_plastic);
+        fired_status_comm->set_local_fired_status(fired, network_graph_static, network_graph_plastic);
         fired_status_comm->exchange_fired_status();
 
         update_transmission_delayer(network_graph_plastic, fired);
         update_transmission_delayer(network_graph_static, fired);
 
 
-        update_synaptic_input(network_graph_static, network_graph_plastic, fired, disable_flags);
+        update_synaptic_input(network_graph_static, network_graph_plastic, fired);
     }
 
     /**
@@ -193,11 +209,8 @@ protected:
      * @param network_graph_static The network graph of static connections
      * @param network_graph_plastic The network graph of plastic connections
      * @param fired If the local neurons fired
-     * @param disable_flags Which local neurons are disabled
      */
-    virtual void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic,
-        std::span<const FiredStatus> fired, std::span<const UpdateStatus> disable_flags)
-        = 0;
+    virtual void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, std::span<const FiredStatus> fired) = 0;
 
     /**
      * @brief Sets the synaptic input for the given neuron
@@ -219,6 +232,9 @@ protected:
     [[nodiscard]] double get_local_and_distant_synaptic_input(const NeuronID& neuron_id);
 
     std::unique_ptr<TransmissionDelayer> transmission_delayer;
+
+protected:
+    std::shared_ptr<NeuronsExtraInfo> extra_infos{};
 
 private:
     number_neurons_type number_local_neurons{};

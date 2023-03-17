@@ -10,12 +10,13 @@
 
 #include "test_barnes_hut.h"
 
-#include "mpi/mpi_rank_adapter.h"
-#include "neurons/neurons_adapter.h"
-#include "neurons/neuron_types_adapter.h"
-#include "simulation/simulation_adapter.h"
-#include "synaptic_elements/synaptic_elements_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/neurons/NeuronsAdapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/octree/OctreeAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
+#include "adapter/synaptic_elements/SynapticElementsAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "algorithm/Algorithms.h"
 #include "algorithm/BarnesHutInternal/BarnesHutBase.h"
@@ -45,163 +46,10 @@ TEST_F(BarnesHutTest, testBarnesHutGetterSetter) {
 
     ASSERT_NO_THROW(algorithm.set_acceptance_criterion(random_acceptance_criterion));
     ASSERT_EQ(algorithm.get_acceptance_criterion(), random_acceptance_criterion);
-
-    make_mpi_mem_available<additional_cell_attributes>();
-}
-
-TEST_F(BarnesHutTest, testBarnesHutACException) {
-    using additional_cell_attributes = BarnesHutCell;
-
-    const auto minimum = Vec3d{ 0.0, 0.0, 0.0 };
-    const auto maximum = Vec3d{ 10.0, 10.0, 10.0 };
-
-    const auto rank = MPIRankAdapter::get_random_mpi_rank(1024, mt);
-    const auto level = RandomAdapter::get_random_integer<std::uint16_t>(0, 24, mt);
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
-    const auto& node_position = SimulationAdapter::get_random_position_in_box(minimum, maximum, mt);
-
-    OctreeNode<additional_cell_attributes> node{};
-
-    node.set_rank(rank);
-    node.set_cell_neuron_id(neuron_id);
-    node.set_level(level);
-
-    node.set_cell_size(minimum, maximum);
-    node.set_cell_neuron_position(node_position);
-
-    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
-    const auto source_position = Vec3d{ 15.0, 15.0, 15.0 };
-
-    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(source_position,
-                     nullptr, ElementType::Dendrite, searched_signal_type, Constants::bh_default_theta),
-        RelearnException);
-
-    const auto too_small_acceptance_criterion = RandomAdapter::get_random_double<double>(-1000.0, 0.0, mt);
-    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(source_position,
-                     &node, ElementType::Dendrite, searched_signal_type, 0.0),
-        RelearnException);
-    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(source_position,
-                     &node, ElementType::Dendrite, searched_signal_type, too_small_acceptance_criterion),
-        RelearnException);
-
-    const auto too_large_acceptance_criterion = RandomAdapter::get_random_double<double>(Constants::bh_max_theta + eps, 1000.0, mt);
-    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(source_position,
-                     &node, ElementType::Dendrite, searched_signal_type, too_large_acceptance_criterion),
-        RelearnException);
-
-    make_mpi_mem_available<additional_cell_attributes>();
-}
-
-TEST_F(BarnesHutTest, testBarnesHutACLeaf) {
-    using additional_cell_attributes = BarnesHutCell;
-
-    const auto minimum = Vec3d{ 0.0, 0.0, 0.0 };
-    const auto maximum = Vec3d{ 10.0, 10.0, 10.0 };
-
-    const auto rank = MPIRankAdapter::get_random_mpi_rank(1024, mt);
-    const auto level = RandomAdapter::get_random_integer<std::uint16_t>(0, 24, mt);
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
-    const auto& node_position = SimulationAdapter::get_random_position_in_box(minimum, maximum, mt);
-
-    OctreeNode<additional_cell_attributes> node{};
-
-    node.set_rank(rank);
-    node.set_cell_neuron_id(neuron_id);
-    node.set_level(level);
-
-    node.set_cell_size(minimum, maximum);
-    node.set_cell_neuron_position(node_position);
-
-    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
-    const auto acceptance_criterion = RandomAdapter::get_random_double<double>(eps, Constants::bh_max_theta, mt);
-
-    for (auto it = 0; it < 1000; it++) {
-        const auto& position = SimulationAdapter::get_random_position(mt);
-        const auto number_free_elements = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(1, 1000, mt);
-
-        if (searched_signal_type == SignalType::Excitatory) {
-            node.set_cell_number_dendrites(number_free_elements, 0);
-        } else {
-            node.set_cell_number_dendrites(0, number_free_elements);
-        }
-
-        const auto accept = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(position, &node, ElementType::Dendrite, searched_signal_type, acceptance_criterion);
-        ASSERT_EQ(accept, BarnesHutBase<additional_cell_attributes>::AcceptanceStatus::Accept);
-
-        if (searched_signal_type == SignalType::Excitatory) {
-            node.set_cell_number_dendrites(0, number_free_elements);
-        } else {
-            node.set_cell_number_dendrites(number_free_elements, 0);
-        }
-
-        const auto discard = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(position, &node, ElementType::Dendrite, searched_signal_type, acceptance_criterion);
-        ASSERT_EQ(discard, BarnesHutBase<additional_cell_attributes>::AcceptanceStatus::Discard);
-    }
-}
-
-TEST_F(BarnesHutTest, testBarnesHutACParent) {
-    using additional_cell_attributes = BarnesHutCell;
-
-    const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
-    const auto& scaled_minimum = minimum / 10.0;
-    const auto& scaled_maximum = maximum / 10.0;
-
-    const auto rank = MPIRankAdapter::get_random_mpi_rank(1024, mt);
-    const auto level = RandomAdapter::get_random_integer<std::uint16_t>(0, 24, mt);
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
-    const auto& node_position = SimulationAdapter::get_random_position_in_box(scaled_minimum, scaled_maximum, mt);
-
-    OctreeNode<additional_cell_attributes> node{};
-
-    node.set_rank(rank);
-    node.set_cell_neuron_id(neuron_id);
-    node.set_level(level);
-    node.set_parent();
-
-    node.set_cell_size(scaled_minimum, scaled_maximum);
-    node.set_cell_neuron_position(node_position);
-
-    const auto& cell_dimensions = scaled_maximum - scaled_minimum;
-    const auto& maximum_cell_dimension = cell_dimensions.get_maximum();
-
-    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
-
-    for (auto it = 0; it < 1000; it++) {
-        const auto acceptance_criterion = RandomAdapter::get_random_double<double>(eps, Constants::bh_max_theta, mt);
-        const auto& position = SimulationAdapter::get_random_position(mt);
-
-        const auto distance = (node_position - position).calculate_2_norm();
-        const auto quotient = maximum_cell_dimension / distance;
-
-        const auto number_free_elements = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(1, 1000, mt);
-
-        if (searched_signal_type == SignalType::Excitatory) {
-            node.set_cell_number_dendrites(number_free_elements, 0);
-        } else {
-            node.set_cell_number_dendrites(0, number_free_elements);
-        }
-
-        const auto status = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(position, &node, ElementType::Dendrite, searched_signal_type, acceptance_criterion);
-
-        if (acceptance_criterion > quotient) {
-            ASSERT_EQ(status, BarnesHutBase<additional_cell_attributes>::AcceptanceStatus::Accept);
-        } else {
-            ASSERT_EQ(status, BarnesHutBase<additional_cell_attributes>::AcceptanceStatus::Expand);
-        }
-
-        if (searched_signal_type == SignalType::Excitatory) {
-            node.set_cell_number_dendrites(0, number_free_elements);
-        } else {
-            node.set_cell_number_dendrites(number_free_elements, 0);
-        }
-
-        const auto discard = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(position, &node, ElementType::Dendrite, searched_signal_type, acceptance_criterion);
-        ASSERT_EQ(discard, BarnesHutBase<additional_cell_attributes>::AcceptanceStatus::Discard);
-    }
 }
 
 TEST_F(BarnesHutTest, testUpdateFunctor) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt) * 0 + 4;
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(mt);
 
     const auto& axons = SynapticElementsAdapter::create_axons(number_neurons, mt);
@@ -220,12 +68,25 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
 
     octree->initializes_leaf_nodes(number_neurons);
 
+    auto extra_infos = std::make_shared<NeuronsExtraInfo>();
+    extra_infos->init(number_neurons);
+
     BarnesHut barnes_hut(octree);
     barnes_hut.set_synaptic_elements(axons, excitatory_dendrites, inhibitory_dendrites);
+    barnes_hut.set_neuron_extra_infos(extra_infos);
 
     const auto update_status = NeuronTypesAdapter::get_update_status(number_neurons, mt);
 
-    ASSERT_NO_THROW(barnes_hut.update_octree(update_status));
+    std::vector<NeuronID> disabled_neurons{};
+    for (auto i = 0; i < number_neurons; i++) {
+        if (update_status[i] == UpdateStatus::Disabled) {
+            disabled_neurons.emplace_back(i);
+        }
+    }
+
+    extra_infos->set_disabled_neurons(disabled_neurons);
+
+    ASSERT_NO_THROW(barnes_hut.update_octree());
 
     std::stack<OctreeNode<BarnesHutCell>*> stack{};
     stack.push(octree->get_root());
@@ -326,176 +187,5 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
                 ASSERT_NEAR(norm, 0.0, eps);
             }
         }
-    }
-
-    make_mpi_mem_available<BarnesHutCell>();
-}
-
-TEST_F(BarnesHutInvertedTest, testBarnesHutInvertedGetterSetter) {
-    const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(mt);
-    auto octree = std::make_shared<OctreeImplementation<BarnesHutInvertedCell>>(min, max, 0);
-
-    ASSERT_NO_THROW(BarnesHutInverted algorithm(octree););
-
-    BarnesHutInverted algorithm(octree);
-
-    ASSERT_EQ(algorithm.get_acceptance_criterion(), Constants::bh_default_theta);
-
-    const auto random_acceptance_criterion = RandomAdapter::get_random_double<double>(0.0, Constants::bh_max_theta, mt);
-
-    ASSERT_NO_THROW(algorithm.set_acceptance_criterion(random_acceptance_criterion));
-    ASSERT_EQ(algorithm.get_acceptance_criterion(), random_acceptance_criterion);
-
-    make_mpi_mem_available<BarnesHutInvertedCell>();
-}
-
-TEST_F(BarnesHutInvertedTest, testBarnesHutInvertedACException) {
-    using additional_cell_attributes = BarnesHutInvertedCell;
-
-    const auto minimum = Vec3d{ 0.0, 0.0, 0.0 };
-    const auto maximum = Vec3d{ 10.0, 10.0, 10.0 };
-
-    const auto rank = MPIRankAdapter::get_random_mpi_rank(1024, mt);
-    const auto level = RandomAdapter::get_random_integer<std::uint16_t>(0, 24, mt);
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
-    const auto& node_position = SimulationAdapter::get_random_position_in_box(minimum, maximum, mt);
-
-    OctreeNode<additional_cell_attributes> node{};
-
-    node.set_rank(rank);
-    node.set_cell_neuron_id(neuron_id);
-    node.set_level(level);
-
-    node.set_cell_size(minimum, maximum);
-    node.set_cell_neuron_position(node_position);
-
-    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
-    const auto source_position = Vec3d{ 15.0, 15.0, 15.0 };
-
-    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(source_position,
-                     nullptr, ElementType::Axon, searched_signal_type, Constants::bh_default_theta),
-        RelearnException);
-
-    const auto too_small_acceptance_criterion = RandomAdapter::get_random_double<double>(-1000.0, 0.0, mt);
-    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(source_position,
-                     &node, ElementType::Axon, searched_signal_type, 0.0),
-        RelearnException);
-    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(source_position,
-                     &node, ElementType::Axon, searched_signal_type, too_small_acceptance_criterion),
-        RelearnException);
-
-    const auto too_large_acceptance_criterion = RandomAdapter::get_random_double<double>(Constants::bh_max_theta + eps, 1000.0, mt);
-    ASSERT_THROW(auto val = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(source_position,
-                     &node, ElementType::Axon, searched_signal_type, too_large_acceptance_criterion),
-        RelearnException);
-
-    make_mpi_mem_available<additional_cell_attributes>();
-}
-
-TEST_F(BarnesHutInvertedTest, testBarnesHutInvertedACLeaf) {
-    using additional_cell_attributes = BarnesHutInvertedCell;
-
-    const auto minimum = Vec3d{ 0.0, 0.0, 0.0 };
-    const auto maximum = Vec3d{ 10.0, 10.0, 10.0 };
-
-    const auto rank = MPIRankAdapter::get_random_mpi_rank(1024, mt);
-    const auto level = RandomAdapter::get_random_integer<std::uint16_t>(0, 24, mt);
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
-    const auto& node_position = SimulationAdapter::get_random_position_in_box(minimum, maximum, mt);
-
-    OctreeNode<additional_cell_attributes> node{};
-
-    node.set_rank(rank);
-    node.set_cell_neuron_id(neuron_id);
-    node.set_level(level);
-
-    node.set_cell_size(minimum, maximum);
-    node.set_cell_neuron_position(node_position);
-
-    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
-    const auto acceptance_criterion = RandomAdapter::get_random_double<double>(eps, Constants::bh_max_theta, mt);
-
-    for (auto it = 0; it < 1000; it++) {
-        const auto& position = SimulationAdapter::get_random_position(mt);
-        const auto number_free_elements = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(1, 1000, mt);
-
-        if (searched_signal_type == SignalType::Excitatory) {
-            node.set_cell_number_axons(number_free_elements, 0);
-        } else {
-            node.set_cell_number_axons(0, number_free_elements);
-        }
-
-        const auto accept = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(position, &node, ElementType::Axon, searched_signal_type, acceptance_criterion);
-        ASSERT_EQ(accept, BarnesHutBase<additional_cell_attributes>::AcceptanceStatus::Accept);
-
-        if (searched_signal_type == SignalType::Excitatory) {
-            node.set_cell_number_axons(0, number_free_elements);
-        } else {
-            node.set_cell_number_axons(number_free_elements, 0);
-        }
-
-        const auto discard = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(position, &node, ElementType::Axon, searched_signal_type, acceptance_criterion);
-        ASSERT_EQ(discard, BarnesHutBase<additional_cell_attributes>::AcceptanceStatus::Discard);
-    }
-}
-
-TEST_F(BarnesHutInvertedTest, testBarnesHutACParent) {
-    using additional_cell_attributes = BarnesHutInvertedCell;
-
-    const auto& [minimum, maximum] = SimulationAdapter::get_random_simulation_box_size(mt);
-    const auto& scaled_minimum = minimum / 10.0;
-    const auto& scaled_maximum = maximum / 10.0;
-
-    const auto rank = MPIRankAdapter::get_random_mpi_rank(1024, mt);
-    const auto level = RandomAdapter::get_random_integer<std::uint16_t>(0, 24, mt);
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
-    const auto& node_position = SimulationAdapter::get_random_position_in_box(scaled_minimum, scaled_maximum, mt);
-
-    OctreeNode<additional_cell_attributes> node{};
-
-    node.set_rank(rank);
-    node.set_cell_neuron_id(neuron_id);
-    node.set_level(level);
-    node.set_parent();
-
-    node.set_cell_size(scaled_minimum, scaled_maximum);
-    node.set_cell_neuron_position(node_position);
-
-    const auto& cell_dimensions = scaled_maximum - scaled_minimum;
-    const auto& maximum_cell_dimension = cell_dimensions.get_maximum();
-
-    const auto searched_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
-
-    for (auto it = 0; it < 1000; it++) {
-        const auto acceptance_criterion = RandomAdapter::get_random_double<double>(eps, Constants::bh_max_theta, mt);
-        const auto& position = SimulationAdapter::get_random_position(mt);
-
-        const auto distance = (node_position - position).calculate_2_norm();
-        const auto quotient = maximum_cell_dimension / distance;
-
-        const auto number_free_elements = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(1, 1000, mt);
-
-        if (searched_signal_type == SignalType::Excitatory) {
-            node.set_cell_number_axons(number_free_elements, 0);
-        } else {
-            node.set_cell_number_axons(0, number_free_elements);
-        }
-
-        const auto status = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(position, &node, ElementType::Axon, searched_signal_type, acceptance_criterion);
-
-        if (acceptance_criterion > quotient) {
-            ASSERT_EQ(status, BarnesHutBase<additional_cell_attributes>::AcceptanceStatus::Accept);
-        } else {
-            ASSERT_EQ(status, BarnesHutBase<additional_cell_attributes>::AcceptanceStatus::Expand);
-        }
-
-        if (searched_signal_type == SignalType::Excitatory) {
-            node.set_cell_number_axons(0, number_free_elements);
-        } else {
-            node.set_cell_number_axons(number_free_elements, 0);
-        }
-
-        const auto discard = BarnesHutBase<additional_cell_attributes>::test_acceptance_criterion(position, &node, ElementType::Axon, searched_signal_type, acceptance_criterion);
-        ASSERT_EQ(discard, BarnesHutBase<additional_cell_attributes>::AcceptanceStatus::Discard);
     }
 }

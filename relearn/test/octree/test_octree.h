@@ -13,9 +13,5 @@
 #include "RelearnTest.hpp"
 
 template <typename AdditionalCellAttributes>
-class OctreeTest : public RelearnTestWithAdditionalCellAttribute {
-protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate<AdditionalCellAttributes>();
-    }
+class OctreeTest : public RelearnTest {
 };

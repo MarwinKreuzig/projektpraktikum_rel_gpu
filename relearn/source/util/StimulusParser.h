@@ -28,7 +28,6 @@
 #include <utility>
 #include <vector>
 
-#include "iostream"
 class StimulusParser {
 public:
     using step_type = RelearnTypes::step_type;
@@ -85,7 +84,7 @@ public:
                     continue;
                 }
                 const auto neuron_id = std::stoul(rank_neuron_id_vector[1]);
-                ids.insert({ NeuronID{ neuron_id-1 } });
+                ids.insert({ NeuronID{ neuron_id - 1 } });
             } else {
                 RelearnException::check(!StringUtil::is_number(current_value), "StimulusParser::parseLine:: Illegal neuron id {} in stimulus files. Must have the format <rank>:<neuron_id> or be an area name", current_value);
                 // Neuron descriptor is an area name

@@ -25,6 +25,10 @@ void SynapticInputCalculator::init(const number_neurons_type number_neurons) {
     raw_inh_input.resize(number_neurons,0.0);
 
     fired_status_comm = std::make_unique<FiredStatusCommunicationMap>(MPIWrapper::get_num_ranks(), number_neurons);
+
+    if (extra_infos.operator bool()) {
+        fired_status_comm->set_extra_infos(extra_infos);
+    }
 }
 
 void SynapticInputCalculator::create_neurons(const number_neurons_type creation_count) {

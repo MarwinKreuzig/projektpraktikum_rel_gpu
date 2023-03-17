@@ -10,9 +10,9 @@
 
 #include "test_stimulus.h"
 
-#include "neuron_assignment/neuron_assignment_adapter.h"
-#include "RandomAdapter.h"
-#include "stimulus/stimulus_adapter.h"
+#include "adapter/neuron_assignment/NeuronAssignmentAdapter.h"
+#include "adapter/random/RandomAdapter.h"
+#include "adapter/stimulus/StimulusAdapter.h"
 
 #include "io/InteractiveNeuronIO.h"
 #include "neurons/LocalAreaTranslator.h"
@@ -50,7 +50,7 @@ TEST_F(StimulusTest, testStimulusWithNeuronIds) {
         Interval interval = intervals[i];
 
         const auto intensity = RandomAdapter::get_random_double(0.001, 100.0, mt);
-        const auto& ids = TaggedIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(1UL, num_neurons, mt), mt);
+        const auto& ids = TaggedIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(RelearnTypes::number_neurons_type(1), num_neurons, mt), mt);
         std::unordered_set<std::string> rank_ids{};
         std::unordered_set<NeuronID> my_ids{};
         for (const auto& neuron_id : ids) {
@@ -162,7 +162,7 @@ TEST_F(StimulusTest, testFrequency) {
     const auto frequency = RandomAdapter::get_random_integer(2, 10, mt);
 
     const auto intensity = RandomAdapter::get_random_double(0.001, 100.0, mt);
-    const auto& ids = TaggedIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(1UL, num_neurons, mt), mt);
+    const auto& ids = TaggedIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(RelearnTypes::number_neurons_type(1), num_neurons, mt), mt);
     std::unordered_set<std::string> rank_ids{};
     for (const auto& neuron_id : ids) {
         rank_ids.insert("0:" + std::to_string(neuron_id.get_neuron_id()+1));
@@ -200,7 +200,7 @@ TEST_F(StimulusTest, testEmptyNeurons) {
         Interval interval = intervals[i];
         const auto intensity = RandomAdapter::get_random_double(0.001, 100.0, mt);
 
-        const auto& ids = (i % 2 == 0) ? TaggedIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(1UL, num_neurons, mt), mt) : std::unordered_set<NeuronID>{};
+        const auto& ids = (i % 2 == 0) ? TaggedIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(RelearnTypes::number_neurons_type(1), num_neurons, mt), mt) : std::unordered_set<NeuronID>{};
         std::unordered_set<std::string> rank_ids{};
         for (const auto& neuron_id : ids) {
             rank_ids.insert("0:" + std::to_string(neuron_id.get_neuron_id()+1));
@@ -271,7 +271,6 @@ TEST_F(StimulusTest, testInvalidNeuronId) {
 }
 
 TEST_F(StimulusTest, testInvalidAreaName) {
-    RelearnException::hide_messages = false;
     const auto local_area_translator = NeuronAssignmentAdapter::get_randomized_area_translator(mt);
     std::filesystem::path path = "stimulus.tmp";
 

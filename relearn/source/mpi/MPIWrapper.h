@@ -138,6 +138,14 @@ public:
      */
     template <typename AdditionalCellAttributes>
     static void init_buffer_octree() {
+        static bool is_initialized = false;
+        if (is_initialized) {
+            return;
+        }
+
+        is_initialized = true;
+
+        const auto octree_node_size = sizeof(OctreeNode<AdditionalCellAttributes>);
         size_t max_num_objects = init_window<AdditionalCellAttributes>(Constants::mpi_alloc_mem);
 
         // NOLINTNEXTLINE

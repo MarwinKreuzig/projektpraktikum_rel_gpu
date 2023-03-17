@@ -14,6 +14,8 @@
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
+#include <boost/functional/hash.hpp>
+
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
@@ -67,13 +69,13 @@ public:
      * @return The neuron id
      * @exception Throws a RelearnException if the id is not initialized
      */
-    [[nodiscard]] constexpr const NeuronID& get_neuron_id() const {
+    [[nodiscard]] constexpr NeuronID get_neuron_id() const {
         RelearnException::check(neuron_id.is_initialized(), "RankNeuronId::get_neuron_id: neuron_id is not initialized");
         return neuron_id;
     }
 
     /**
-     * @brief Prints the object's rank and id; inserts
+     * @brief Prints the object's rank and id; inserts \n
      * @param os The out-stream in which the object is printed
      * @return The argument os to allow chaining
      */
@@ -150,4 +152,23 @@ struct hash<RankNeuronId> {
         }
     };
 
+} // namespace std
+
+namespace std {
+template <>
+struct hash<RankNeuronId> {
+    using argument_type = RankNeuronId;
+    using result_type = std::size_t;
+
+    result_type operator()(const argument_type& rni) const {
+        const auto& [rank, neuron_id] = rni;
+
+        const auto rank_hash = std::hash<MPIRank>{}(rank);
+        const auto neuron_id_hash = std::hash<NeuronID>{}(neuron_id);
+
+        std::size_t total_hash = rank_hash;
+        boost::hash_combine(total_hash, neuron_id_hash);
+        return total_hash;
+    }
+};
 } // namespace std

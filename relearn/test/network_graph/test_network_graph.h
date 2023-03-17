@@ -18,10 +18,6 @@
 
 class NetworkGraphTest : public RelearnTest {
 protected:
-    static void SetUpTestSuite() {
-        SetUpTestCaseTemplate();
-    }
-
     template <typename T>
     void erase_empty(std::map<T, RelearnTypes::synapse_weight>& edges) {
         for (auto iterator = edges.begin(); iterator != edges.end();) {

@@ -58,7 +58,7 @@ void LogFiles::init() {
     LogFiles::add_logfile(EventType::Sums, "sums", 0);
 
     // Create log file for network on all ranks
-    LogFiles::add_logfile(EventType::Network, "network", -1);
+    // LogFiles::add_logfile(EventType::Network, "network", -1);
     LogFiles::add_logfile(EventType::InNetwork, "in_network", -1, ".txt", "network/");
     LogFiles::add_logfile(EventType::OutNetwork, "out_network", -1, ".txt", "network/");
 
@@ -93,6 +93,7 @@ void LogFiles::init() {
 
     // Create log file for all calcium values
     LogFiles::add_logfile(EventType::CalciumValues, "calcium_values", -1);
+    LogFiles::add_logfile(EventType::ExtremeCalciumValues, "extreme_calcium_values", -1);
 
     // Create log file for all synaptic inputs
     LogFiles::add_logfile(EventType::SynapticInput, "synaptic_inputs", -1);

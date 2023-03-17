@@ -164,6 +164,9 @@ public:
         return update_status;
     }
 
+    [[nodiscard]] number_neurons_type get_size() const noexcept {
+        return size;
+    }
 
 private:
     number_neurons_type size{ 0 };

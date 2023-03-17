@@ -10,10 +10,10 @@
 
 #include "test_connector.h"
 
-#include "connector_adapter.h"
-#include "mpi/mpi_rank_adapter.h"
-#include "synaptic_elements/synaptic_elements_adapter.h"
-#include "tagged_id/tagged_id_adapter.h"
+#include "adapter/connector/ConnectorAdapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/synaptic_elements/SynapticElementsAdapter.h"
+#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "algorithm/Connector.h"
 #include "mpi/CommunicationMap.h"

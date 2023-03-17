@@ -36,33 +36,38 @@ public:
      * @brief Initializes the class to hold the specified span of memory.
      * @param memory The span of memory, the elements are constructed to ensure memory correctness
      */
-    static void init(std::span<OctreeNode<AdditionalCellAttributes>> memory) noexcept {
+    static void init(const std::span<OctreeNode<AdditionalCellAttributes>> memory) noexcept {
         memory_holder = memory;
+        current_filling = 0;
+        parent_to_offset.clear();
+        parent_to_offset.reserve(memory.size());
+        offset_to_parent.clear();
+        offset_to_parent.reserve(memory.size());
         std::ranges::uninitialized_default_construct(memory_holder);
     }
 
     /**
-     * @brief Returns the pointer for the octant-th child of parent.
-     *      Is deterministic if called repeatedly without calls to make_all_available inbetween.
-     * @param parent The OctreeNode whose child the newly created node shall be
-     * @param octant The octant of the newly created child
-     * @exception Throws a RelearnException if parent == nullptr, octant >= Constants::number_oct, or if there is no more space left
-     * @return Returns a pointer to the newly created child
+     * @brief Returns the currently held memory
+     * @return The currently held memory
      */
-    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_available(OctreeNode<AdditionalCellAttributes>* parent, unsigned int octant) {
-        RelearnException::check(parent != nullptr, "MemoryHolder::get_available: parent is nullptr");
-        RelearnException::check(octant < Constants::number_oct, "MemoryHolder::get_available: octant is too large: {} vs {}", octant, Constants::number_oct);
+    [[nodiscard]] static std::span<OctreeNode<AdditionalCellAttributes>> get_current_memory() noexcept {
+        return memory_holder;
+    }
 
-        if (!parent_to_offset.contains(parent)) {
-            parent_to_offset[parent] = current_filling;
-            current_filling += Constants::number_oct;
-        }
+    /**
+     * @brief Returns the number of objects that fit into the memory portion
+     * @return The number of objects that fit into the memory portion
+     */
+    [[nodiscard]] static std::span<OctreeNode<AdditionalCellAttributes>>::size_type get_size() noexcept {
+        return memory_holder.size();
+    }
 
-        const auto offset = parent_to_offset[parent];
-        RelearnException::check(offset + Constants::number_oct <= memory_holder.size(),
-            "MemoryHolder::get_available: The offset is too large: {} + {} vs {}", offset, Constants::number_oct, memory_holder.size());
-
-        return &memory_holder[offset + octant];
+    /**
+     * @brief Returns the number of objects that are currently held
+     * @return The number of objects that are currently held
+     */
+    [[nodiscard]] static std::uint64_t get_current_filling() noexcept {
+        return current_filling;
     }
 
     /**
@@ -76,29 +81,56 @@ public:
 
         current_filling = 0;
         parent_to_offset.clear();
+        offset_to_parent.clear();
     }
 
     /**
-     * @brief Returns the number of objects that fit into the memory portion
-     * @return The number of objects that fit into the memory portion
+     * @brief Returns the pointer for the octant-th child of parent.
+     *      Is deterministic if called repeatedly without calls to make_all_available inbetween.
+     * @param parent The OctreeNode whose child the newly created node shall be
+     * @param octant The octant of the newly created child
+     * @exception Throws a RelearnException if parent == nullptr, octant >= Constants::number_oct, or if there is no more space left
+     * @return Returns a pointer to the newly created child
      */
-    [[nodiscard]] static std::span<OctreeNode<AdditionalCellAttributes>>::size_type get_size() noexcept {
-        return memory_holder.size();
+    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_available(OctreeNode<AdditionalCellAttributes>* const parent, const unsigned int octant) {
+        RelearnException::check(parent != nullptr, "MemoryHolder::get_available: parent is nullptr");
+        RelearnException::check(octant < Constants::number_oct, "MemoryHolder::get_available: octant is too large: {} vs {}", octant, Constants::number_oct);
+
+        if (!parent_to_offset.contains(parent)) {
+            parent_to_offset[parent] = current_filling;
+            offset_to_parent[current_filling] = parent;
+            current_filling += Constants::number_oct;
+        }
+
+        const auto offset = parent_to_offset[parent];
+        RelearnException::check(offset + Constants::number_oct <= memory_holder.size(),
+            "MemoryHolder::get_available: The offset is too large: {} + {} vs {}", offset, Constants::number_oct, memory_holder.size());
+
+        return &memory_holder[offset + octant];
     }
 
     /**
-     * @brief Returns the offset of the specified node's children with respect to the base pointer
+     * @brief Returns the offset of the specified node's children with respect to the base pointer in bytes
      * @param parent_node The node for whose children we want to have the offset
      * @exception Throws a RelearnException if parent_node does not have an associated children array
      * @return The offset of node wrt. the base pointer
      */
-    [[nodiscard]] static std::uint64_t get_offset(OctreeNode<AdditionalCellAttributes>* parent_node) {
+    [[nodiscard]] static std::uint64_t get_offset_from_parent(OctreeNode<AdditionalCellAttributes>* const parent_node) {
         const auto iterator = parent_to_offset.find(parent_node);
 
-        RelearnException::check(iterator != parent_to_offset.end(), "MemoryHolder::get_offset: parent_node didn't have an offset.");
+        RelearnException::check(iterator != parent_to_offset.end(), "MemoryHolder::get_offset_from_parent: parent_node {} does not have an offset.", (void*)parent_node);
 
         const auto offset = iterator->second;
         return offset * sizeof(OctreeNode<AdditionalCellAttributes>);
+    }
+
+    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_parent_from_offset(const std::uint64_t offset) {
+        const auto iterator = offset_to_parent.find(offset);
+
+        RelearnException::check(iterator != offset_to_parent.end(), "MemoryHolder::get_parent_from_offset: offset {} does not have a parent node.", offset);
+
+        const auto parent = iterator->second;
+        return parent;
     }
 
     /**
@@ -107,9 +139,9 @@ public:
      * @exception Throws a RelearnException if offset is larger or equal to the total number of objects or to the current filling
      * @return The OctreeNode with the specified offset
      */
-    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_node_from_offset(std::uint64_t offset) {
-        RelearnException::check(offset < memory_holder.size(), "MemoryHolder::get_node_from_offset(): offset ({}) is too large: ({}).", offset, memory_holder.size());
-        RelearnException::check(offset < current_filling, "MemoryHolder::get_node_from_offset(): offset ({}) is too large: ({}).", offset, current_filling);
+    [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_node_from_offset(const std::uint64_t offset) {
+        RelearnException::check(offset < memory_holder.size(), "MemoryHolder::get_node_from_offset(): offset ({}) is too large. The total size is: {}.", offset, memory_holder.size());
+        RelearnException::check(offset < current_filling, "MemoryHolder::get_node_from_offset(): offset ({}) is too large. I only contain: {} elements.", offset, current_filling);
         return &memory_holder[offset];
     }
 
@@ -119,4 +151,5 @@ private:
     static inline std::uint64_t current_filling{ 0 };
 
     static inline std::unordered_map<OctreeNode<AdditionalCellAttributes>*, std::uint64_t> parent_to_offset{};
+    static inline std::unordered_map<std::uint64_t, OctreeNode<AdditionalCellAttributes>*> offset_to_parent{};
 };
