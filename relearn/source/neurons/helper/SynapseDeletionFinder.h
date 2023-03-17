@@ -12,6 +12,7 @@
 
 #include "Types.h"
 #include "mpi/CommunicationMap.h"
+#include "neurons/NeuronsExtraInfo.h"
 #include "neurons/enums/ElementType.h"
 #include "neurons/enums/SignalType.h"
 #include "neurons/helper/RankNeuronId.h"
@@ -23,7 +24,6 @@
 #include <vector>
 
 class NetworkGraph;
-class NeuronsExtraInfo;
 class SynapticElements;
 
 /**
@@ -32,6 +32,7 @@ class SynapticElements;
 enum class SynapseDeletionFinderType : char {
     Random,
     InverseLength,
+    CoActivation,
 };
 
 /**
@@ -40,13 +41,17 @@ enum class SynapseDeletionFinderType : char {
  * @param element_type The synapse deletion finder to print
  * @return The argument out, now altered with the synapse deletion finder
  */
-inline std::ostream& operator<<(std::ostream& out, const SynapseDeletionFinderType& calculator_type) {
-    if (calculator_type == SynapseDeletionFinderType::Random) {
+inline std::ostream& operator<<(std::ostream& out, const SynapseDeletionFinderType& synapse_deletion_type) {
+    if (synapse_deletion_type == SynapseDeletionFinderType::Random) {
         return out << "Random";
     }
 
-    if (calculator_type == SynapseDeletionFinderType::InverseLength) {
+    if (synapse_deletion_type == SynapseDeletionFinderType::InverseLength) {
         return out << "InverseLength";
+    }
+
+    if (synapse_deletion_type == SynapseDeletionFinderType::CoActivation) {
+        return out << "CoActivation";
     }
 
     return out;
@@ -155,6 +160,24 @@ protected:
 class RandomSynapseDeletionFinder : public SynapseDeletionFinder {
 protected:
     [[nodiscard]] std::vector<RankNeuronId> find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete) override;
+};
+
+class CoActivationSynapseDeletionFinder : public SynapseDeletionFinder {
+protected:
+    [[nodiscard]] std::vector<RankNeuronId> find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete) override;
+
+private:
+    double calculate_co_activation(const std::bitset<NeuronsExtraInfo::fire_history_length>& pre_synaptic, const std::bitset<NeuronsExtraInfo::fire_history_length>& post_synaptic) {
+        RelearnException::check(pre_synaptic.size() == post_synaptic.size(), "SynapseDeletionFinder::calculate_co_activation: Fire histories have different sizes");
+
+        auto intersection=0U;
+        for(auto i=0;i<pre_synaptic.size();i++) {
+            if(static_cast<bool>(FiredStatus::Fired) == pre_synaptic[i] && pre_synaptic[i] == post_synaptic[i]) {
+                intersection++;
+            }
+        }
+        return static_cast<double>(intersection)/static_cast<double>(pre_synaptic.size());
+    }
 };
 
 /**

@@ -399,3 +399,48 @@ std::vector<RankNeuronId> InverseLengthSynapseDeletionFinder::find_synapses_on_n
 
     return affected_neurons;
 }
+
+
+std::vector<RankNeuronId> CoActivationSynapseDeletionFinder::find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete) {
+    // Only do something if necessary
+    if (0 == num_synapses_to_delete) {
+        return {};
+    }
+
+    auto current_synapses = register_synapses(neuron_id, element_type, signal_type);
+
+        const auto number_synapses = current_synapses.size();
+
+        RelearnException::check(num_synapses_to_delete <= number_synapses,
+            "Neurons::delete_synapses_find_synapses_on_neuron:: num_synapses_to_delete > distant_synapses.size()");
+
+        RandomHolder::shuffle(RandomHolderKey::SynapseDeletionFinder, current_synapses.begin(), current_synapses.end());
+
+        std::vector<std::pair<RankNeuronId, double>> co_activations{};
+        co_activations.reserve(number_synapses);
+        for(const auto& rank_neuron_id : current_synapses) {
+            double co_activation;
+            if(element_type == ElementType::Axon) {
+                co_activation = calculate_co_activation(extra_info->get_fire_history(neuron_id),
+                    extra_info->get_fire_history(rank_neuron_id));
+            }
+            else {
+                co_activation = calculate_co_activation(extra_info->get_fire_history(rank_neuron_id),
+                    extra_info->get_fire_history(neuron_id));
+            }
+            co_activations.emplace_back(rank_neuron_id, co_activation);
+        }
+
+
+
+    std::sort(co_activations.begin(), co_activations.end(), [](const auto& p1, const auto& p2) {return p1.second<p2.second;});
+
+    std::vector<RankNeuronId> affected_neurons{};
+    affected_neurons.reserve(num_synapses_to_delete);
+
+    for (auto i=0;i<num_synapses_to_delete;i++) {
+        affected_neurons.push_back(co_activations[i].first);
+    }
+
+    return affected_neurons;
+}

@@ -13,7 +13,6 @@
 #include "Config.h"
 #include "Types.h"
 #include "algorithm/AlgorithmEnum.h"
-#include "neurons/SynapsesDeletionFinder.h"
 #include "sim/Essentials.h"
 #include "util/Interval.h"
 #include "util/StatisticalMeasures.h"
@@ -93,8 +92,6 @@ public:
      * @param calculator The calcium calculator
      */
     void set_calcium_calculator(std::unique_ptr<CalciumCalculator>&& calculator) noexcept;
-
-    void set_synapse_deletion_finder(std::unique_ptr<SynapseDeletionFinder>&& finder) noexcept;
 
     /**
      * @brief Sets the synaptic elements model for the axons
@@ -354,7 +351,6 @@ private:
 
     std::shared_ptr<NetworkGraph> network_graph{};
 
-    std::unique_ptr<SynapseDeletionFinder> synapse_deletion_finder{};
 
     std::shared_ptr<std::vector<NeuronMonitor>> monitors{};
     std::shared_ptr<std::unordered_map<RelearnTypes::area_id, AreaMonitor>> area_monitors{};

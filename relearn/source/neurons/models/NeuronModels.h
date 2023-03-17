@@ -118,8 +118,6 @@ public:
 
     constexpr static size_t number_fire_recorders = 3;
 
-    constexpr static bool fire_history_enabled = true;
-
     /**
      * @brief Creates an object of type T wrapped inside an std::unique_ptr
      * @param ...args The arguments that shall be passed to the constructor of T
@@ -303,17 +301,6 @@ public:
         }
     }
 
-    void publish_fire_history() const {
-        if(!fire_history_enabled) {
-            return;
-        }
-        Timers::start(TimerRegion::UPDATE_FIRE_HISTORY);
-
-        MPIWrapper::set_in_window(MPIWindow::FireHistory, 0, fire_history);
-
-        Timers::stop_and_add(TimerRegion::UPDATE_FIRE_HISTORY);
-    }
-
     /**
      * @brief Sets if a neuron fired for the specified neuron. Does not perform bound-checking
      * @param neuron_id The local neuron id
@@ -323,8 +310,7 @@ public:
         const auto local_neuron_id = neuron_id.get_neuron_id();
         fired[local_neuron_id] = new_value;
 
-        fire_history[local_neuron_id] <<= 1;
-        fire_history[local_neuron_id][0] = static_cast<bool>(new_value);
+        extra_infos->set_fired(neuron_id, new_value);
 
         if (new_value == FiredStatus::Fired) {
             for (int i = 0; i < number_fire_recorders; i++) {
@@ -333,26 +319,9 @@ public:
         }
     }
 
-    static constexpr unsigned int fire_history_length = 1000;
-    void set_stimulus_calculator(std::shared_ptr<Stimulus> stimulus_calculator) {
-        this->stimulus_calculator = std::move(stimulus_calculator);
-    }
-
     static constexpr unsigned int default_h{ 10 };
     static constexpr unsigned int min_h{ 1 };
     static constexpr unsigned int max_h{ 1000 };
-
-    [[nodiscard]] const std::bitset<fire_history_length>& get_fire_history(const NeuronID& neuron_id) {
-        return fire_history[neuron_id.get_neuron_id()];
-    }
-
-    [[nodiscard]] std::bitset<fire_history_length> get_fire_history(const RankNeuronId& neuron_id) {
-        if(neuron_id.get_rank() == MPIWrapper::get_my_rank()) {
-            return get_fire_history(neuron_id.get_neuron_id());
-        }
-        const auto data = MPIWrapper::get_from_window<std::bitset<fire_history_length>>(MPIWindow::FireHistory, neuron_id.get_rank().get_rank(), neuron_id.get_neuron_id().get_neuron_id(), 1);
-        return data[0];
-    }
 
 protected:
     virtual void update_activity() = 0;
@@ -418,7 +387,6 @@ private:
     std::vector<double> x{}; // The membrane potential (in equations usually v(t))
     std::array<std::vector<unsigned int>, number_fire_recorders> fired_recorder{}; // How often the neurons have spiked
     std::vector<FiredStatus> fired{}; // If the neuron fired in the current update step
-    std::vector<std::bitset<fire_history_length>> fire_history{};
 
     std::unique_ptr<SynapticInputCalculator> input_calculator{};
     std::unique_ptr<BackgroundActivityCalculator> background_calculator{};

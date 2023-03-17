@@ -56,7 +56,6 @@ void Neurons::init(const number_neurons_type number_neurons) {
         dendrites_inh->set_signal_type(id, SignalType::Inhibitory);
     }
 
-    deletions_log.resize(number_neurons, {});
 
     calcium_calculator->set_extra_infos(extra_info);
     calcium_calculator->init(number_neurons);
@@ -69,7 +68,7 @@ void Neurons::init(const number_neurons_type number_neurons) {
     synapse_deletion_finder->set_network_graph(network_graph);
 }
 
-void Neurons::init_synaptic_elements(const LocalSynapses & local_synapses_plastic, const DistantInSynapses & in_synapses_plastic, const DistantOutSynapses & out_synapses_plastic) {
+void Neurons::init_synaptic_elements(const PlasticLocalSynapses & local_synapses_plastic,const PlasticDistantInSynapses & in_synapses_plastic,const PlasticDistantOutSynapses & out_synapses_plastic) {
     last_created_local_synapses= local_synapses_plastic;
     last_created_in_synapses = in_synapses_plastic;
     last_created_out_synapses = out_synapses_plastic;
@@ -293,7 +292,6 @@ void Neurons::create_neurons(const number_neurons_type creation_count) {
     dendrites_exc->create_neurons(creation_count);
     dendrites_inh->create_neurons(creation_count);
 
-    deletions_log.resize(new_size, {});
 
     for (const auto& neuron_id : NeuronID::range(current_size, new_size)) {
         dendrites_exc->set_signal_type(neuron_id, SignalType::Excitatory);
@@ -511,7 +509,7 @@ std::tuple<std::uint64_t, std::uint64_t, std::uint64_t> Neurons::update_connecti
     RelearnException::check(global_tree != nullptr, "Global octree is nullptr");
     RelearnException::check(algorithm != nullptr, "Algorithm is nullptr");
 
-    neuron_model->publish_fire_history();
+    extra_info->publish_fire_history();
 
     debug_check_counts();
     network_graph->debug_check();

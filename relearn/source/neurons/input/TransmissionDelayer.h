@@ -59,11 +59,11 @@ public:
      * @param num_neurons The number of local neurons on this mpi rank
      */
     void register_fired_input(const NeuronID &target_neuron, const RankNeuronId &source_neuron,
-                              RelearnTypes::synapse_weight edge_val, RelearnTypes::number_neurons_type num_neurons) {
+                              RelearnTypes::static_synapse_weight edge_val, RelearnTypes::number_neurons_type num_neurons) {
         auto delay = get_delay(target_neuron, source_neuron);
 
         while (saved_fire_states.size() < delay + 1) {
-            std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::synapse_weight>>> empty_fire_states;
+            std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>>> empty_fire_states;
             empty_fire_states.resize(num_neurons, {});
             saved_fire_states.push_back(empty_fire_states);
         }
@@ -93,7 +93,7 @@ public:
      * @param target_neuron The target neuron for which we check the delayed inputs
      * @return Delayed inputs in the current step for the target_neuron
      */
-    [[nodiscard]] const std::vector<std::pair<RankNeuronId, RelearnTypes::synapse_weight>> &
+    [[nodiscard]] const std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>> &
     get_delayed_inputs(const NeuronID &target_neuron) const {
         RelearnException::check(!saved_fire_states.empty(),
                                 "TransformationDelayer::get_delayed_input: No delayed inputs stored");
@@ -118,7 +118,7 @@ public:
             saved_fire_states.pop_front();
         }
         if(saved_fire_states.empty()) {
-            std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::synapse_weight>>> empty_fire_states;
+            std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>>> empty_fire_states;
             empty_fire_states.resize(num_neurons, {});
             saved_fire_states.push_back(empty_fire_states);
         }
@@ -136,7 +136,7 @@ protected:
     virtual RelearnTypes::step_type get_delay(const NeuronID &target_neuron, const RankNeuronId &source_neuron) = 0;
 
 private:
-    std::deque<std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::synapse_weight>>>> saved_fire_states{};
+    std::deque<std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>>>> saved_fire_states{};
 
 };
 

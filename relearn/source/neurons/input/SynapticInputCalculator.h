@@ -276,11 +276,11 @@ private:
 
     std::unique_ptr<FiredStatusCommunicator> fired_status_comm{};
 
-    void update_transmission_delayer(const NetworkGraph& network_graph, const std::span<const FiredStatus> fired) {
+    void update_transmission_delayer(const std::span<const FiredStatus> fired) {
         for(const auto& neuron_id : NeuronID::range(number_local_neurons)) {
 
             //Walk through local in-edges
-            const auto &local_in_edges = network_graph.get_local_in_edges(neuron_id);
+            const auto &[local_in_edges, _1] = network_graph->get_local_in_edges(neuron_id);
 
             const auto my_rank = MPIWrapper::get_my_rank();
             for (const auto &[src_neuron_id, edge_val]: local_in_edges) {
@@ -292,7 +292,7 @@ private:
             }
 
             // Walk through the distant in-edges of my neuron
-            const NetworkGraph::DistantEdges &distant_in_edges = network_graph.get_distant_in_edges(neuron_id);
+            const auto& [distant_in_edges, _2] = network_graph->get_distant_in_edges(neuron_id);
             for (const auto &[key, edge_val]: distant_in_edges) {
                 const auto &rank = key.get_rank();
                 const auto &initiator_neuron_id = key.get_neuron_id();

@@ -25,7 +25,6 @@
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "neurons/helper/SynapseDeletionFinder.h"
 #include "neurons/helper/SynapseDeletionRequests.h"
-#include "neurons/SynapsesDeletionFinder.h"
 #include "util/MPIRank.h"
 #include "util/RelearnException.h"
 #include "util/StatisticalMeasures.h"
@@ -297,7 +296,7 @@ public:
      * @brief Initializes the synaptic elements with respect to the network graph, i.e.,
      *      adds the synapses from the network graph as connected counts to the synaptic elements models
      */
-    void init_synaptic_elements(const LocalSynapses & local_synapses_plastic,const DistantInSynapses & in_synapses_plastic,const DistantOutSynapses & out_synapses_plastic);
+    void init_synaptic_elements(const PlasticLocalSynapses & local_synapses_plastic,const PlasticDistantInSynapses & in_synapses_plastic,const PlasticDistantOutSynapses & out_synapses_plastic);
 
     /**
      * @brief Disables all neurons with specified ids
@@ -458,11 +457,6 @@ public:
      */
     [[nodiscard]] size_t delete_disabled_distant_synapses(const CommunicationMap<SynapseDeletionRequest>& list, MPIRank my_rank);
 
-    void reset_deletion_log() {
-        deletions_log.clear();
-        deletions_log.resize(number_neurons, {});
-    }
-
 private:
     [[nodiscard]] StatisticalMeasures global_statistics(std::span<const double> local_values, MPIRank root) const;
 
@@ -482,9 +476,9 @@ private:
 
     number_neurons_type number_neurons = 0;
 
-    LocalSynapses last_created_local_synapses{};
-    DistantInSynapses last_created_in_synapses{};
-    DistantOutSynapses last_created_out_synapses{};
+    PlasticLocalSynapses last_created_local_synapses{};
+    PlasticDistantInSynapses last_created_in_synapses{};
+    PlasticDistantOutSynapses last_created_out_synapses{};
 
     std::shared_ptr<Partition> partition{};
 

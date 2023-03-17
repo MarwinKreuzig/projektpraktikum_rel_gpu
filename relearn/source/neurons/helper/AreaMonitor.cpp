@@ -62,7 +62,7 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
     Timers::start(TimerRegion::AREA_MONITORS_DELETIONS);
 
     //Deletions
-    const auto& deletions_in_step = sim->get_neurons()->deletions_log[neuron_id.get_neuron_id()];
+    const auto& deletions_in_step = sim->get_neurons()->get_extra_info()->get_deletions_log(neuron_id);
     for(const auto& [other_neuron_id, weight] : deletions_in_step) {
         const auto other_area_id = global_area_mapper->get_area_id(other_neuron_id);
         const auto& other_rank = other_neuron_id.get_rank().get_rank();
@@ -188,7 +188,7 @@ void AreaMonitor::write_data_to_file() {
 
 void AreaMonitor::request_data(const NeuronID& neuron_id) const {
     //Deletions
-    const auto& deletions = sim->get_neurons()->deletions_log[neuron_id.get_neuron_id()];
+    const auto& deletions = sim->get_neurons()->get_extra_info()->get_deletions_log(neuron_id);
     for(const auto& [other_neuron_id, _] : deletions) {
         global_area_mapper->request_area_id(other_neuron_id);
     }

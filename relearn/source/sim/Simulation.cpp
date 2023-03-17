@@ -62,10 +62,6 @@ void Simulation::set_calcium_calculator(std::unique_ptr<CalciumCalculator>&& cal
     calcium_calculator = std::move(calculator);
 }
 
-void Simulation::set_synapse_deletion_finder(std::unique_ptr<SynapseDeletionFinder>&& finder) noexcept {
-    synapse_deletion_finder = std::move(finder);
-}
-
 void Simulation::set_axons(std::shared_ptr<SynapticElements>&& se) noexcept {
     axons = std::move(se);
 }
@@ -467,8 +463,7 @@ void Simulation::simulate(const step_type number_steps) {
                 Timers::stop_and_add(TimerRegion::AREA_MONITORS_FINISH);
 
                 neurons->get_neuron_model()->reset_fired_recorder(NeuronModel::FireRecorderPeriod::AreaMonitor);
-                neurons->reset_deletion_log();
-                neurons->reset_deletion_log();
+                neurons->get_extra_info()->reset_deletion_log();
 
                 Timers::stop_and_add(TimerRegion::CAPTURE_AREA_MONITORS);
             }

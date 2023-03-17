@@ -25,7 +25,9 @@ void NeuronsExtraInfo::create_neurons(const number_neurons_type creation_count) 
     const auto new_size = current_size + creation_count;
 
     update_status.resize(new_size, UpdateStatus::Enabled);
+    deletions_log.resize(new_size, {});
     positions.resize(new_size);
+    fire_history.resize(new_size);
 
     for (number_neurons_type i = current_size; i < new_size; i++) {
         const auto x_it = RandomHolder::get_random_uniform_double(RandomHolderKey::NeuronsExtraInformation, 0.0, 1.0);

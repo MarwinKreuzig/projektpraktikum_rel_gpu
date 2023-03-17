@@ -839,24 +839,24 @@ int main(int argc, char** argv) {
             RelearnException::check(!static_cast<bool>(*opt_base_background_activity), "Setting the base background activity is not valid when choosing the null-background calculator (or not setting it at all).");
             RelearnException::check(!static_cast<bool>(*opt_mean_background_activity), "Setting the mean background activity is not valid when choosing the null-background calculator (or not setting it at all).");
             RelearnException::check(!static_cast<bool>(*opt_stddev_background_activity), "Setting the stddev background activity is not valid when choosing the null-background calculator (or not setting it at all).");
-            return std::make_unique<NullBackgroundActivityCalculator>();
+            return std::make_unique<NullBackgroundActivityCalculator>(std::move(transformation_function));
         }
 
         if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Constant) {
             RelearnException::check(!static_cast<bool>(*opt_mean_background_activity), "Setting the mean background activity is not valid when choosing the constant-background calculator.");
             RelearnException::check(!static_cast<bool>(*opt_stddev_background_activity), "Setting the stddev background activity is not valid when choosing the constant-background calculator.");
-            return std::make_unique<ConstantBackgroundActivityCalculator>(base_background_activity);
+            return std::make_unique<ConstantBackgroundActivityCalculator>(std::move(transformation_function),base_background_activity);
         }
 
         if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Normal) {
             RelearnException::check(background_activity_stddev > 0.0, "When choosing the normal-background calculator, the standard deviation must be set to > 0.0.");
-            return std::make_unique<NormalBackgroundActivityCalculator>(background_activity_mean, background_activity_stddev);
+            return std::make_unique<NormalBackgroundActivityCalculator>(std::move(transformation_function),background_activity_mean, background_activity_stddev);
         }
 
         RelearnException::check(chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::FastNormal, "Chose a background activity calculator that is not implemented");
         RelearnException::check(background_activity_stddev > 0.0, "When choosing the fast-normal-background calculator, the standard deviation must be set to > 0.0.");
 
-        return std::make_unique<FastNormalBackgroundActivityCalculator>(background_activity_mean, background_activity_stddev, 10);
+        return std::make_unique<FastNormalBackgroundActivityCalculator>(std::move(transformation_function),background_activity_mean, background_activity_stddev, 10);
     };
     auto background_activity_calculator = construct_background_activity_calculator();
 
@@ -865,30 +865,6 @@ int main(int argc, char** argv) {
             return std::make_unique<Stimulus>(file_external_stimulation, my_rank, subdomain->get_local_area_translator());
         }
 
-    std::unique_ptr<TransmissionDelayer> transmission_delayer;
-    if(chosen_transmission_delay_type == TransmissionDelayType::Constant) {
-        transmission_delayer = std::make_unique<ConstantTransmissionDelayer>(transmission_delay_constant);
-    } else if(chosen_transmission_delay_type == TransmissionDelayType::Random) {
-        if(! *opt_transmission_delay_mean || !*opt_transmission_delay_stddev) {
-            RelearnException::fail("Mean and standard deviation are required for random transmission delay");
-        }
-        transmission_delayer = std::make_unique<RandomizedTransmissionDelayer>(transmission_delay_mean, transmission_delay_stddev);
-    } else {
-        RelearnException::fail("Unknown transmission delayer type {}", chosen_transmission_delay_type);
-    }
-
-
-
-    std::unique_ptr<SynapticInputCalculator> input_calculator{};
-    if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
-        input_calculator = std::make_unique<LinearSynapticInputCalculator>(synapse_conductance, std::move(transmission_delayer));
-    } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic) {
-        input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, std::move(transmission_delayer), input_scale);
-    } else if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::HyperbolicTangent) {
-        input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(synapse_conductance, std::move(transmission_delayer), input_scale);
-    } else {
-        RelearnException::fail("Chose a synaptic input calculator that is not implemented");
-    }
         return std::make_unique<Stimulus>();
     };
     auto stimulus_calculator = construct_stimulus();
@@ -902,18 +878,30 @@ int main(int argc, char** argv) {
         return std::make_unique<FiredStatusApproximator>(MPIWrapper::get_num_ranks());
     };
 
+    std::unique_ptr<TransmissionDelayer> transmission_delayer;
+    if(chosen_transmission_delay_type == TransmissionDelayType::Constant) {
+        transmission_delayer = std::make_unique<ConstantTransmissionDelayer>(transmission_delay_constant);
+    } else if(chosen_transmission_delay_type == TransmissionDelayType::Random) {
+        if(! *opt_transmission_delay_mean || !*opt_transmission_delay_stddev) {
+            RelearnException::fail("Mean and standard deviation are required for random transmission delay");
+        }
+        transmission_delayer = std::make_unique<RandomizedTransmissionDelayer>(transmission_delay_mean, transmission_delay_stddev);
+    } else {
+        RelearnException::fail("Unknown transmission delayer type {}", chosen_transmission_delay_type);
+    }
+
     auto construct_input = [&]() -> std::unique_ptr<SynapticInputCalculator> {
         auto fired_status_communicator = construct_fired_status_communicator();
 
         if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
-            return std::make_unique<LinearSynapticInputCalculator>(synapse_conductance, std::move(fired_status_communicator));
+            return std::make_unique<LinearSynapticInputCalculator>(synapse_conductance, std::move(fired_status_communicator), std::move(transmission_delayer));
         }
         if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic) {
-            return std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, input_scale, std::move(fired_status_communicator));
+            return std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, input_scale, std::move(fired_status_communicator), std::move(transmission_delayer));
         }
 
         RelearnException::check(chosen_synapse_input_calculator_type == SynapticInputCalculatorType::HyperbolicTangent, "Chose a synaptic input calculator that is not implemented");
-        return std::make_unique<HyperbolicTangentSynapticInputCalculator>(synapse_conductance, input_scale, std::move(fired_status_communicator));
+        return std::make_unique<HyperbolicTangentSynapticInputCalculator>(synapse_conductance, input_scale, std::move(fired_status_communicator), std::move(transmission_delayer));
     };
     auto input_calculator = construct_input();
 

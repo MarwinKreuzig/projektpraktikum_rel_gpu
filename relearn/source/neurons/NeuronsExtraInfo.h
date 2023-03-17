@@ -15,6 +15,9 @@
 #include "neurons/enums/UpdateStatus.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
+#include "neurons/enums/FiredStatus.h"
+#include "mpi/MPIWrapper.h"
+#include "util/Timers.h"
 
 #include <span>
 #include <string>
@@ -29,6 +32,9 @@ class NeuronsExtraInfo {
 public:
     using position_type = RelearnTypes::position_type;
     using number_neurons_type = RelearnTypes::number_neurons_type;
+    static constexpr unsigned int fire_history_length = 1000;
+    constexpr static bool fire_history_enabled = true;
+
 
     /**
      * @brief Initializes a NeuronsExtraInfo that holds at most the given number of neurons.
@@ -42,6 +48,9 @@ public:
 
         size = number_neurons;
         update_status.resize(number_neurons, UpdateStatus::Enabled);
+        deletions_log.resize(number_neurons, {});
+        MPIWrapper::create_rma_window<std::bitset<fire_history_length>>(MPIWindow::FireHistory, size, MPIWrapper::get_num_ranks());
+        fire_history.resize(size);
     }
 
     /**
@@ -179,9 +188,51 @@ public:
      */
     [[nodiscard]] CommunicationMap<RelearnTypes::position_type> get_positions_for(const CommunicationMap<NeuronID>& local_neurons);
 
+    void reset_deletion_log() {
+        deletions_log.clear();
+        deletions_log.resize(size, {});
+    }
+
+    void set_fired(const NeuronID& neuron_id, const FiredStatus& fired) {
+        const auto local_neuron_id = neuron_id.get_neuron_id();
+        fire_history[local_neuron_id] <<= 1;
+        fire_history[local_neuron_id][0] = static_cast<bool>(fired);
+    }
+
+    [[nodiscard]] const std::bitset<fire_history_length>& get_fire_history(const NeuronID& neuron_id) const {
+        return fire_history[neuron_id.get_neuron_id()];
+    }
+
+    [[nodiscard]] std::bitset<fire_history_length> get_fire_history(const RankNeuronId& neuron_id) const {
+        if(neuron_id.get_rank() == MPIWrapper::get_my_rank()) {
+            return get_fire_history(neuron_id.get_neuron_id());
+        }
+        const auto data = MPIWrapper::get_from_window<std::bitset<fire_history_length>>(MPIWindow::FireHistory, neuron_id.get_rank().get_rank(), neuron_id.get_neuron_id().get_neuron_id(), 1);
+        return data[0];
+    }
+
+    void publish_fire_history() const {
+        if(!fire_history_enabled) {
+            return;
+        }
+        Timers::start(TimerRegion::UPDATE_FIRE_HISTORY);
+
+        MPIWrapper::set_in_window(MPIWindow::FireHistory, 0, fire_history);
+
+        Timers::stop_and_add(TimerRegion::UPDATE_FIRE_HISTORY);
+    }
+
+    const std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>>& get_deletions_log(const NeuronID& neuron_id) const {
+        return deletions_log[neuron_id.get_neuron_id()];
+    }
+
+
 private:
     number_neurons_type size{ 0 };
 
     std::vector<position_type> positions{};
     std::vector<UpdateStatus> update_status{};
+
+    std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>>> deletions_log{};
+    std::vector<std::bitset<fire_history_length>> fire_history{};
 };
