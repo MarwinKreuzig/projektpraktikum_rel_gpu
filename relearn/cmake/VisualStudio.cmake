@@ -10,6 +10,8 @@ endif()
 	
 if(WIN32) # Harness
 	list(APPEND relearn_harness_additional_files "adapter/connector/ConnectorAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/event/EventAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/fast_multipole_method/FMMAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/helper/RankNeuronIdAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/interval/IntervalAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/kernel/KernelAdapter.h")
@@ -25,6 +27,7 @@ if(WIN32) # Harness
 	list(APPEND relearn_harness_additional_files "adapter/stimulus/StimulusAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/synaptic_elements/SynapticElementsAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/tagged_id/TaggedIdAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/timers/TimersAdapter.h")
 	
 	list(APPEND relearn_harness_additional_files "factory/background_factory.h")
 	list(APPEND relearn_harness_additional_files "factory/calcium_factory.h")
@@ -78,10 +81,18 @@ if(WIN32) # Lib
 	
 	# io
 	list(APPEND relearn_lib_additional_files "io/CalciumIO.h")
+	list(APPEND relearn_lib_additional_files "io/Event.h")
 	list(APPEND relearn_lib_additional_files "io/FileValidator.h")
 	list(APPEND relearn_lib_additional_files "io/InteractiveNeuronIO.h")
 	list(APPEND relearn_lib_additional_files "io/LogFiles.h")
 	list(APPEND relearn_lib_additional_files "io/NeuronIO.h")
+	
+	# parser	
+	list(APPEND relearn_lib_additional_files "io/parser/IntervalParser.h")
+	list(APPEND relearn_lib_additional_files "io/parser/MonitorParser.h")
+	list(APPEND relearn_lib_additional_files "io/parser/NeuronIdParser.h")
+	list(APPEND relearn_lib_additional_files "io/parser/StepParser.h")
+	list(APPEND relearn_lib_additional_files "io/parser/StimulusParser.h")
 	
 	# mpi
 	list(APPEND relearn_lib_additional_files "mpi/CommunicationMap.h")
@@ -109,11 +120,13 @@ if(WIN32) # Lib
 	list(APPEND relearn_lib_additional_files "neurons/helper/RankNeuronId.h")
 	list(APPEND relearn_lib_additional_files "neurons/helper/Synapse.h")
 	list(APPEND relearn_lib_additional_files "neurons/helper/SynapseCreationRequests.h")
+	list(APPEND relearn_lib_additional_files "neurons/helper/SynapseDeletionFinder.h")
 	list(APPEND relearn_lib_additional_files "neurons/helper/SynapseDeletionRequests.h")
 	
 	# input
 	list(APPEND relearn_lib_additional_files "neurons/input/BackgroundActivityCalculator.h")
 	list(APPEND relearn_lib_additional_files "neurons/input/BackgroundActivityCalculators.h")
+	list(APPEND relearn_lib_additional_files "neurons/input/FiredStatusApproximator.h")
 	list(APPEND relearn_lib_additional_files "neurons/input/FiredStatusCommunicationMap.h")
 	list(APPEND relearn_lib_additional_files "neurons/input/FiredStatusCommunicator.h")
 	list(APPEND relearn_lib_additional_files "neurons/input/Stimulus.h")
@@ -121,6 +134,7 @@ if(WIN32) # Lib
 	list(APPEND relearn_lib_additional_files "neurons/input/SynapticInputCalculators.h")
 	
 	# models
+	list(APPEND relearn_lib_additional_files "neurons/models/GrowthrateCalculator.h")
 	list(APPEND relearn_lib_additional_files "neurons/models/ModelParameter.h")
 	list(APPEND relearn_lib_additional_files "neurons/models/NeuronModels.h")
 	list(APPEND relearn_lib_additional_files "neurons/models/SynapticElements.h")
@@ -150,21 +164,20 @@ if(WIN32) # Lib
 	list(APPEND relearn_lib_additional_files "structure/NodeCache.h")
 	list(APPEND relearn_lib_additional_files "structure/Octree.h")
 	list(APPEND relearn_lib_additional_files "structure/OctreeNode.h")
+	list(APPEND relearn_lib_additional_files "structure/OctreeNodeHelper.h")
 	list(APPEND relearn_lib_additional_files "structure/Partition.h")
 	list(APPEND relearn_lib_additional_files "structure/SpaceFillingCurve.h")
 	
 	# util
 	list(APPEND relearn_lib_additional_files "util/Interval.h")
 	list(APPEND relearn_lib_additional_files "util/MemoryHolder.h")
-	list(APPEND relearn_lib_additional_files "util/MonitorParser.h")
 	list(APPEND relearn_lib_additional_files "util/MPIRank.h")
+	list(APPEND relearn_lib_additional_files "util/ProbabilityPicker.h")
 	list(APPEND relearn_lib_additional_files "util/Random.h")
 	list(APPEND relearn_lib_additional_files "util/RelearnException.h")
 	list(APPEND relearn_lib_additional_files "util/SemiStableVector.h")
 	list(APPEND relearn_lib_additional_files "util/Stack.h")
 	list(APPEND relearn_lib_additional_files "util/StatisticalMeasures.h")
-	list(APPEND relearn_lib_additional_files "util/StepParser.h")
-	list(APPEND relearn_lib_additional_files "util/StimulusParser.h")
 	list(APPEND relearn_lib_additional_files "util/StringUtil.h")
 	list(APPEND relearn_lib_additional_files "util/TaggedID.h")
 	list(APPEND relearn_lib_additional_files "util/Timers.h")
@@ -182,6 +195,7 @@ if(WIN32) # Tests
 	list(APPEND relearn_tests_additional_files "calcium_calculator/test_calcium_calculator.h")	
 	list(APPEND relearn_tests_additional_files "cell/test_cell.h")	
 	list(APPEND relearn_tests_additional_files "connector/test_connector.h")	
+	list(APPEND relearn_tests_additional_files "event/test_event.h")	
 	list(APPEND relearn_tests_additional_files "fast_multipole_method/test_fast_multipole_method.h")	
 	list(APPEND relearn_tests_additional_files "helper/test_distant_neuron_request.h")
 	list(APPEND relearn_tests_additional_files "helper/test_rank_neuron_id.h")
@@ -201,13 +215,23 @@ if(WIN32) # Tests
 	list(APPEND relearn_tests_additional_files "neurons/test_neurons.h")	
 	list(APPEND relearn_tests_additional_files "octree/test_octree.h")
 	list(APPEND relearn_tests_additional_files "octree_node/test_octree_node.h")
+	list(APPEND relearn_tests_additional_files "parser/test_interval_parser.h")
 	list(APPEND relearn_tests_additional_files "parser/test_monitor_parser.h")
+	list(APPEND relearn_tests_additional_files "parser/test_neuronid_parser.h")
 	list(APPEND relearn_tests_additional_files "parser/test_step_parser.h")
 	list(APPEND relearn_tests_additional_files "partition/test_partition.h")
+	list(APPEND relearn_tests_additional_files "probability_picker/test_probability_picker.h")
+	list(APPEND relearn_tests_additional_files "random/test_random.h")
+	list(APPEND relearn_tests_additional_files "relearn_exception/test_relearn_exception.h")
+	list(APPEND relearn_tests_additional_files "semi_stable_vector/test_semi_stable_vector.h")
 	list(APPEND relearn_tests_additional_files "space_filling_curve/test_space_filling_curve.h")
+	list(APPEND relearn_tests_additional_files "stack/test_stack.h")
+	list(APPEND relearn_tests_additional_files "statistical_measure/test_statistical_measure.h")
 	list(APPEND relearn_tests_additional_files "stimulus/test_stimulus.h")
+	list(APPEND relearn_tests_additional_files "string_util/test_string_util.h")
 	list(APPEND relearn_tests_additional_files "synaptic_elements/test_synaptic_elements.h")
 	list(APPEND relearn_tests_additional_files "synaptic_input/test_synaptic_input.h")
 	list(APPEND relearn_tests_additional_files "tagged_id/test_tagged_id.h")
+	list(APPEND relearn_tests_additional_files "timers/test_timers.h")
 	list(APPEND relearn_tests_additional_files "vector/test_vector.h")
 endif()

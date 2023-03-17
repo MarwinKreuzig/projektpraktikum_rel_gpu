@@ -47,29 +47,29 @@ public:
      * @exception Can throw a RelearnException
      * @return A tuple with the created synapses that must be committed to the network graph
      */
-    [[nodiscard]] std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(number_neurons_type number_neurons) override {
+    [[nodiscard]] std::tuple<PlasticLocalSynapses, PlasticDistantInSynapses, PlasticDistantOutSynapses> update_connectivity(number_neurons_type number_neurons) override {
         Timers::start(TimerRegion::CREATE_SYNAPSES);
 
         Timers::start(TimerRegion::FIND_TARGET_NEURONS);
         const auto& synapse_creation_requests_outgoing = find_target_neurons(number_neurons);
         Timers::stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
 
-        Timers::start(TimerRegion::CREATE_SYNAPSES_EXCHANGE_REQUESTS);
+        Timers::start(TimerRegion::EXCHANGE_CREATION_REQUESTS);
         const auto& synapse_creation_requests_incoming = MPIWrapper::exchange_requests(synapse_creation_requests_outgoing);
-        Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_EXCHANGE_REQUESTS);
+        Timers::stop_and_add(TimerRegion::EXCHANGE_CREATION_REQUESTS);
 
-        Timers::start(TimerRegion::CREATE_SYNAPSES_PROCESS_REQUESTS);
+        Timers::start(TimerRegion::PROCESS_CREATION_REQUESTS);
         auto [responses_outgoing, synapses] = process_requests(synapse_creation_requests_incoming);
         auto& [local_synapses, distant_in_synapses] = synapses;
-        Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_PROCESS_REQUESTS);
+        Timers::stop_and_add(TimerRegion::PROCESS_CREATION_REQUESTS);
 
-        Timers::start(TimerRegion::CREATE_SYNAPSES_EXCHANGE_RESPONSES);
+        Timers::start(TimerRegion::CREATE_CREATION_RESPONSES);
         const auto& responses_incoming = MPIWrapper::exchange_requests(responses_outgoing);
-        Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_EXCHANGE_RESPONSES);
+        Timers::stop_and_add(TimerRegion::CREATE_CREATION_RESPONSES);
 
-        Timers::start(TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES);
+        Timers::start(TimerRegion::PROCESS_CREATION_RESPONSES);
         auto out_synapses = process_responses(synapse_creation_requests_outgoing, responses_incoming);
-        Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES);
+        Timers::stop_and_add(TimerRegion::PROCESS_CREATION_RESPONSES);
 
         Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES);
 
@@ -93,7 +93,7 @@ protected:
      * @exception Can throw a RelearnException
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank
      */
-    [[nodiscard]] virtual std::pair<CommunicationMap<ResponseType>, std::pair<LocalSynapses, DistantInSynapses>>
+    [[nodiscard]] virtual std::pair<CommunicationMap<ResponseType>, std::pair<PlasticLocalSynapses, PlasticDistantInSynapses>>
     process_requests(const CommunicationMap<RequestType>& creation_requests) = 0;
 
     /**
@@ -103,7 +103,7 @@ protected:
      * @exception Can throw a RelearnException
      * @return All synapses from this MPI rank to other MPI ranks
      */
-    [[nodiscard]] virtual DistantOutSynapses process_responses(const CommunicationMap<RequestType>& creation_requests, const CommunicationMap<ResponseType>& creation_responses) = 0;
+    [[nodiscard]] virtual PlasticDistantOutSynapses process_responses(const CommunicationMap<RequestType>& creation_requests, const CommunicationMap<ResponseType>& creation_responses) = 0;
 };
 
 /**
@@ -127,29 +127,29 @@ public:
      * @exception Can throw a RelearnException
      * @return A tuple with the created synapses that must be committed to the network graph
      */
-    [[nodiscard]] std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses> update_connectivity(number_neurons_type number_neurons) override {
+    [[nodiscard]] std::tuple<PlasticLocalSynapses, PlasticDistantInSynapses, PlasticDistantOutSynapses> update_connectivity(number_neurons_type number_neurons) override {
         Timers::start(TimerRegion::CREATE_SYNAPSES);
 
         Timers::start(TimerRegion::FIND_TARGET_NEURONS);
         const auto& synapse_creation_requests_outgoing = find_target_neurons(number_neurons);
         Timers::stop_and_add(TimerRegion::FIND_TARGET_NEURONS);
 
-        Timers::start(TimerRegion::CREATE_SYNAPSES_EXCHANGE_REQUESTS);
+        Timers::start(TimerRegion::EXCHANGE_CREATION_REQUESTS);
         const auto& synapse_creation_requests_incoming = MPIWrapper::exchange_requests(synapse_creation_requests_outgoing);
-        Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_EXCHANGE_REQUESTS);
+        Timers::stop_and_add(TimerRegion::EXCHANGE_CREATION_REQUESTS);
 
-        Timers::start(TimerRegion::CREATE_SYNAPSES_PROCESS_REQUESTS);
+        Timers::start(TimerRegion::PROCESS_CREATION_REQUESTS);
         auto [responses_outgoing, synapses] = process_requests(synapse_creation_requests_incoming);
         auto& [local_synapses, distant_out_synapses] = synapses;
-        Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_PROCESS_REQUESTS);
+        Timers::stop_and_add(TimerRegion::PROCESS_CREATION_REQUESTS);
 
-        Timers::start(TimerRegion::CREATE_SYNAPSES_EXCHANGE_RESPONSES);
+        Timers::start(TimerRegion::CREATE_CREATION_RESPONSES);
         const auto& responses_incoming = MPIWrapper::exchange_requests(responses_outgoing);
-        Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_EXCHANGE_RESPONSES);
+        Timers::stop_and_add(TimerRegion::CREATE_CREATION_RESPONSES);
 
-        Timers::start(TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES);
+        Timers::start(TimerRegion::PROCESS_CREATION_RESPONSES);
         auto distant_in_synapses = process_responses(synapse_creation_requests_outgoing, responses_incoming);
-        Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES_PROCESS_RESPONSES);
+        Timers::stop_and_add(TimerRegion::PROCESS_CREATION_RESPONSES);
 
         Timers::stop_and_add(TimerRegion::CREATE_SYNAPSES);
 
@@ -173,7 +173,7 @@ protected:
      * @exception Can throw a RelearnException
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all synapses from other ranks
      */
-    [[nodiscard]] virtual std::pair<CommunicationMap<ResponseType>, std::pair<LocalSynapses, DistantOutSynapses>>
+    [[nodiscard]] virtual std::pair<CommunicationMap<ResponseType>, std::pair<PlasticLocalSynapses, PlasticDistantOutSynapses>>
     process_requests(const CommunicationMap<RequestType>& creation_requests) = 0;
 
     /**
@@ -183,5 +183,5 @@ protected:
      * @exception Can throw a RelearnException
      * @return All synapses to this MPI rank from other MPI ranks
      */
-    [[nodiscard]] virtual DistantInSynapses process_responses(const CommunicationMap<RequestType>& creation_requests, const CommunicationMap<ResponseType>& creation_responses) = 0;
+    [[nodiscard]] virtual PlasticDistantInSynapses process_responses(const CommunicationMap<RequestType>& creation_requests, const CommunicationMap<ResponseType>& creation_responses) = 0;
 };

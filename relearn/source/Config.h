@@ -25,7 +25,7 @@ constexpr bool OPENMPAVAILABLE = false;
 
 class Constants {
 public:
-    constexpr static size_t number_oct = 8;
+    constexpr static unsigned int number_oct = 8;
     constexpr static size_t uninitialized = 1111222233334444;
 
     constexpr static size_t number_prealloc_space = 30;
@@ -94,7 +94,7 @@ public:
     constexpr static std::uint32_t synaptic_input_log_step = 10000; // NOLINT
 
     // By default: Flush the area monitors every <flush_area_monitor_step> ms
-    constexpr static std::uint32_t flush_area_monitor_step = 100000; // NOLINT
+    inline static std::uint32_t flush_area_monitor_step = 100000; // NOLINT
 
     // By default: Flush the neuron monitors every <flush_monitor_step> ms
     constexpr static std::uint32_t flush_monitor_step = 30000; // NOLINT

@@ -21,8 +21,6 @@
 #include <optional>
 #include <utility>
 
-class LocalAreaTranslator;
-
 /**
  * This class provides no input whatsoever.
  */

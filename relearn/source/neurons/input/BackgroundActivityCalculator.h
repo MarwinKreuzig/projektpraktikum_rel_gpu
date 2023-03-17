@@ -97,6 +97,7 @@ public:
      * @exception Throws a RelearnException if number_neurons == 0
      */
     virtual void init(const number_neurons_type number_neurons) {
+        RelearnException::check(number_local_neurons == 0, "BackgroundActivityCalculator::init: Was already initialized");
         RelearnException::check(number_neurons > 0, "BackgroundActivityCalculator::init: number_neurons was 0");
 
         number_local_neurons = number_neurons;

@@ -18,10 +18,12 @@
 #include "neurons/Neurons.h"
 #include "neurons/helper/AreaMonitor.h"
 #include "neurons/helper/NeuronMonitor.h"
+#include "neurons/helper/SynapseDeletionFinder.h"
 #include "neurons/models/NeuronModels.h"
 #include "sim/NeuronToSubdomainAssignment.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
+#include "util/Random.h"
 #include "util/RelearnException.h"
 #include "util/Timers.h"
 
@@ -76,10 +78,14 @@ void Simulation::set_dendrites_in(std::shared_ptr<SynapticElements>&& se) noexce
     dendrites_in = std::move(se);
 }
 
+void Simulation::set_synapse_deletion_finder(std::unique_ptr<SynapseDeletionFinder>&& sdf) noexcept {
+    synapse_deletion_finder = std::move(sdf);
+}
+
 void Simulation::set_enable_interrupts(std::vector<std::pair<step_type, std::vector<NeuronID>>> interrupts) {
     enable_interrupts = std::move(interrupts);
 
-    for (auto& [step, ids] : enable_interrupts) {
+    for (auto& [_, ids] : enable_interrupts) {
         std::sort(ids.begin(), ids.end());
     }
 }
@@ -87,7 +93,7 @@ void Simulation::set_enable_interrupts(std::vector<std::pair<step_type, std::vec
 void Simulation::set_disable_interrupts(std::vector<std::pair<step_type, std::vector<NeuronID>>> interrupts) {
     disable_interrupts = std::move(interrupts);
 
-    for (auto& [step, ids] : disable_interrupts) {
+    for (auto& [_, ids] : disable_interrupts) {
         std::sort(ids.begin(), ids.end());
     }
 }
@@ -127,7 +133,13 @@ void Simulation::initialize() {
     const auto my_rank = MPIWrapper::get_my_rank();
     RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank.get_rank());
 
-    neurons = std::make_shared<Neurons>(partition, std::move(neuron_models), std::move(calcium_calculator), axons, dendrites_ex, dendrites_in, std::move(synapse_deletion_finder));
+    synapse_deletion_finder->set_axons(axons);
+    synapse_deletion_finder->set_dendrites_ex(dendrites_ex);
+    synapse_deletion_finder->set_dendrites_in(dendrites_in);
+
+    network_graph = std::make_shared<NetworkGraph>(my_rank);
+
+    neurons = std::make_shared<Neurons>(partition, std::move(neuron_models), std::move(calcium_calculator), network_graph, axons, dendrites_ex, dendrites_in, std::move(synapse_deletion_finder));
     neurons->init(number_local_neurons);
     NeuronMonitor::neurons_to_monitor = neurons;
 
@@ -149,7 +161,7 @@ void Simulation::initialize() {
 
     partition->print_my_subdomains_info_rank();
 
-    LogFiles::print_message_rank(0, "Neurons created");
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Neurons created");
 
     const auto& [simulation_box_min, simulation_box_max] = partition->get_simulation_box_size();
     const auto level_of_branch_nodes = partition->get_level_of_subdomain_trees();
@@ -168,7 +180,7 @@ void Simulation::initialize() {
         RelearnException::fail("Simulation::initialize: Cannot construct the octree for an unknown algorithm.");
     }
 
-    LogFiles::print_message_rank(0, "Level of branch nodes is: {}", global_tree->get_level_of_branch_nodes());
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Level of branch nodes is: {}", global_tree->get_level_of_branch_nodes());
 
     for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
         const auto& position = neuron_positions[neuron_id.get_neuron_id()];
@@ -177,7 +189,7 @@ void Simulation::initialize() {
 
     global_tree->initializes_leaf_nodes(number_local_neurons);
 
-    LogFiles::print_message_rank(0, "Inserted a total of {} neurons", number_total_neurons);
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Inserted a total of {} neurons", number_total_neurons);
 
     if (algorithm_enum == AlgorithmEnum::BarnesHut) {
         auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutCell>>(global_tree);
@@ -202,9 +214,6 @@ void Simulation::initialize() {
         RelearnException::fail("Simulation::initialize: AlgorithmEnum {} not yet implemented!", static_cast<int>(algorithm_enum));
     }
 
-    network_graph_static = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
-    network_graph_plastic = std::make_shared<NetworkGraph>(number_local_neurons, my_rank);
-
     const auto& extra_infos = neurons->get_extra_info();
     algorithm->set_neuron_extra_infos(extra_infos);
     algorithm->set_synaptic_elements(axons, dendrites_ex, dendrites_in);
@@ -212,8 +221,6 @@ void Simulation::initialize() {
     neurons->set_local_area_translator(local_area_translator);
     neurons->set_signal_types(std::move(signal_types));
     neurons->set_positions(std::move(neuron_positions));
-
-    neurons->set_network_graph(network_graph_static, network_graph_plastic);
     neurons->set_octree(global_tree);
     neurons->set_algorithm(algorithm);
 
@@ -237,14 +244,13 @@ void Simulation::initialize() {
     const auto& [local_synapses_plastic, in_synapses_plastic, out_synapses_plastic] = synapses_plastic;
 
     Timers::start(TimerRegion::INITIALIZE_NETWORK_GRAPH);
-    network_graph_plastic->add_edges(local_synapses_plastic, in_synapses_plastic, out_synapses_plastic);
-    network_graph_static->add_edges(local_synapses_static, in_synapses_static, out_synapses_static);
+    network_graph->add_edges(local_synapses_plastic, in_synapses_plastic, out_synapses_plastic);
+    network_graph->add_edges(local_synapses_static, in_synapses_static, out_synapses_static);
     neurons->set_static_neurons(static_neurons);
     Timers::stop_and_add(TimerRegion::INITIALIZE_NETWORK_GRAPH);
 
-
-    LogFiles::print_message_rank(0, "Network graph created");
-    LogFiles::print_message_rank(0, "Synaptic elements initialized");
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Network graph created");
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Synaptic elements initialized");
 
     neurons->init_synaptic_elements(local_synapses_plastic, in_synapses_plastic, out_synapses_plastic);
 
@@ -290,7 +296,7 @@ void Simulation::initialize() {
     std::vector<FiredStatus> initial_fired(fired_neurons, FiredStatus::Fired);
     initial_fired.resize(number_local_neurons, FiredStatus::Inactive);
 
-    RandomHolder::shuffle(RandomHolderKey::Neurons, initial_fired.begin(), initial_fired.end());
+    RandomHolder::shuffle(RandomHolderKey::BackgroundActivity, initial_fired.begin(), initial_fired.end());
 
     neurons->set_fired(std::move(initial_fired));
 
@@ -312,11 +318,11 @@ void Simulation::simulate(const step_type number_steps) {
      * Simulation loop
      */
     const auto final_step_count = step + number_steps;
-    for (; step <= final_step_count; ++step) { // NOLINT(altera-id-dependent-backward-branch)
+    for (; step < final_step_count; ++step) { // NOLINT(altera-id-dependent-backward-branch)
         for (const auto& [disable_step, disable_ids] : disable_interrupts) {
             if (disable_step == step) {
                 LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Disabling {} neurons in step {}", disable_ids.size(), disable_step);
-                const auto& [num_deleted_synapses, synapse_deletion_requests_outgoing] = neurons->disable_neurons(disable_ids, MPIWrapper::get_num_ranks());
+                const auto& [num_deleted_synapses, synapse_deletion_requests_outgoing] = neurons->disable_neurons(step, disable_ids, MPIWrapper::get_num_ranks());
                 total_synapse_deletions += static_cast<int64_t>(num_deleted_synapses);
                 const auto& synapse_deletion_requests_ingoing = MPIWrapper::exchange_requests(synapse_deletion_requests_outgoing);
                 total_synapse_deletions += neurons->delete_disabled_distant_synapses(synapse_deletion_requests_ingoing, my_rank);
@@ -366,7 +372,7 @@ void Simulation::simulate(const step_type number_steps) {
         if (interval_update_plasticity.hits_step(step)) {
             Timers::start(TimerRegion::UPDATE_CONNECTIVITY);
 
-            const auto& [num_axons_deleted, num_dendrites_deleted, num_synapses_created] = neurons->update_connectivity();
+            const auto& [num_axons_deleted, num_dendrites_deleted, num_synapses_created] = neurons->update_connectivity(step);
 
             Timers::stop_and_add(TimerRegion::UPDATE_CONNECTIVITY);
 
@@ -396,8 +402,6 @@ void Simulation::simulate(const step_type number_steps) {
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_axons_deleted, num_dendrites_deleted, num_synapses_created);
 
             Timers::stop_and_add(TimerRegion::PRINT_IO);
-
-            network_graph_plastic->debug_check();
 
             if(area_monitor_enabled) {
 
@@ -468,6 +472,7 @@ void Simulation::simulate(const step_type number_steps) {
 
                 Timers::stop_and_add(TimerRegion::CAPTURE_AREA_MONITORS);
             }
+            network_graph->debug_check();
         }
 
         if (interval_histogram_log.hits_step(step)) {
@@ -537,23 +542,20 @@ void Simulation::simulate(const step_type number_steps) {
     // Stop timing simulation loop
     Timers::stop_and_add(TimerRegion::SIMULATION_LOOP);
 
-    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Final flush of neuron monitors");
-
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Final flush of neuron monitors");
     for (auto& monitor : *monitors) {
         monitor.flush_current_contents();
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Final flush of area monitors");
-
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Final flush of area monitors");
     for (auto& [area_id, area_monitor] : *area_monitors) {
         area_monitor.write_data_to_file();
     }
 
-    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Print positions");
-
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Print positions");
     neurons->print_positions_to_log_file();
-    LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Print area mapping");
 
+    LogFiles::print_message_rank(MPIRank::root_rank(), "Print area mapping");
     neurons->print_area_mapping_to_log_file();
 }
 
@@ -563,7 +565,7 @@ void Simulation::finalize() const {
     const auto net_creations = total_synapse_creations - total_synapse_deletions;
     const auto previous_net_creations = delta_synapse_creations - delta_synapse_deletions;
 
-    LogFiles::print_message_rank(0,
+    LogFiles::print_message_rank(MPIRank::root_rank(),
         "Total up to now     (creations, deletions, net): {}\t{}\t{}\nDiff. from previous (creations, deletions, net): {}\t{}\t{}\nEND: {}",
         total_synapse_creations, total_synapse_deletions, net_creations,
         delta_synapse_creations, delta_synapse_deletions, previous_net_creations,

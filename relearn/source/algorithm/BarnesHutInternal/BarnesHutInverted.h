@@ -76,7 +76,7 @@ protected:
      * @exception Can throw a RelearnException
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses from the local rank
      */
-    [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantOutSynapses>>
+    [[nodiscard]] std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<PlasticLocalSynapses, PlasticDistantOutSynapses>>
     process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) override;
 
     /**
@@ -86,7 +86,7 @@ protected:
      * @exception Can throw a RelearnException
      * @return All synapses to this MPI rank from other MPI ranks
      */
-    [[nodiscard]] DistantInSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
+    [[nodiscard]] PlasticDistantInSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
         const CommunicationMap<SynapseCreationResponse>& creation_responses) override;
 
 private:

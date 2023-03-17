@@ -38,17 +38,17 @@ TEST_F(ConnectorTest, testForwardConnectorExceptions) {
 
     std::shared_ptr<SynapticElements> empty = nullptr;
 
-    CommunicationMap<SynapseCreationRequest> incoming_requests{ number_ranks_1 };
+    CommunicationMap<SynapseCreationRequest> incoming_requests{ static_cast<size_t>(number_ranks_1) };
 
     ASSERT_THROW(auto val = ForwardConnector::process_requests(incoming_requests, empty, empty), RelearnException);
     ASSERT_THROW(auto val = ForwardConnector::process_requests(incoming_requests, excitatory_dendrites, empty), RelearnException);
     ASSERT_THROW(auto val = ForwardConnector::process_requests(incoming_requests, empty, inhibitory_dendrites), RelearnException);
     ASSERT_THROW(auto val = ForwardConnector::process_requests(incoming_requests, excitatory_dendrites, inhibitory_dendrites), RelearnException);
 
-    CommunicationMap<SynapseCreationResponse> incoming_responses{ number_ranks_1 };
+    CommunicationMap<SynapseCreationResponse> incoming_responses{ static_cast<size_t>(number_ranks_1) };
     ASSERT_THROW(auto val = ForwardConnector::process_responses(incoming_requests, incoming_responses, empty), RelearnException);
 
-    CommunicationMap<SynapseCreationResponse> wrong_incoming_responses{ final_number_ranks };
+    CommunicationMap<SynapseCreationResponse> wrong_incoming_responses{ static_cast<size_t>(final_number_ranks) };
     ASSERT_THROW(auto val = ForwardConnector::process_responses(incoming_requests, wrong_incoming_responses, empty), RelearnException);
 }
 
@@ -70,7 +70,7 @@ TEST_F(ConnectorTest, testForwardConnectorEmptyMap) {
     const auto previous_deltas_inhibitory = vectorify_span(excitatory_dendrites->get_deltas());
     const auto previous_types_inhibitory = vectorify_span(excitatory_dendrites->get_signal_types());
 
-    CommunicationMap<SynapseCreationRequest> incoming_requests{ number_ranks };
+    CommunicationMap<SynapseCreationRequest> incoming_requests{ static_cast<size_t>(number_ranks) };
 
     auto [responses, synapses] = ForwardConnector::process_requests(incoming_requests, excitatory_dendrites, inhibitory_dendrites);
     auto [local_synapses, distant_in_synapses] = synapses;
@@ -112,7 +112,7 @@ TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
     const auto& excitatory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Excitatory, mt);
     const auto& inhibitory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Inhibitory, mt);
 
-    CommunicationMap<SynapseCreationRequest> incoming_requests{ number_ranks };
+    CommunicationMap<SynapseCreationRequest> incoming_requests{ static_cast<size_t>(number_ranks) };
 
     auto number_excitatory_requests = 0;
     auto number_inhibitory_requests = 0;
@@ -258,8 +258,8 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
     std::vector<unsigned int> accepted_excitatory_requests(number_neurons, 0);
     std::vector<unsigned int> accepted_inhibitory_requests(number_neurons, 0);
 
-    LocalSynapses expected_local_synapses{};
-    DistantInSynapses expected_distant_in_synapses{};
+    PlasticLocalSynapses expected_local_synapses{};
+    PlasticDistantInSynapses expected_distant_in_synapses{};
 
     const auto my_rank = MPIWrapper::get_my_rank();
 

@@ -14,6 +14,7 @@
 #include "Types.h"
 #include "mpi/MPIWrapper.h"
 #include "structure/OctreeNode.h"
+#include "structure/OctreeNodeHelper.h"
 #include "structure/SpaceFillingCurve.h"
 #include "util/RelearnException.h"
 #include "util/Stack.h"

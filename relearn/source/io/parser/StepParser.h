@@ -12,12 +12,12 @@
 
 #include "Types.h"
 #include "io/LogFiles.h"
+#include "io/parser/IntervalParser.h"
 #include "util/Interval.h"
 
 #include <algorithm>
-#include <cstdint>
 #include <functional>
-#include <string>
+#include <string_view>
 #include <vector>
 
 /**
@@ -32,8 +32,8 @@ public:
      * @param description The description of the intervals
      * @return The function indicating if the event shall occur
      */
-    [[nodiscard]] static std::function<bool(RelearnTypes::step_type)> generate_step_check_function(const std::string& description) {
-        auto intervals = Interval::parse_description_as_intervals(description);
+    [[nodiscard]] static std::function<bool(RelearnTypes::step_type)> generate_step_check_function(const std::string_view description) {
+        auto intervals = IntervalParser::parse_description_as_intervals(description);
         auto function = generate_step_check_function(std::move(intervals));
         return function;
     }
@@ -47,11 +47,11 @@ public:
     [[nodiscard]] static std::function<bool(RelearnTypes::step_type)> generate_step_check_function(std::vector<Interval> intervals) noexcept {
         const auto intervals_intersect = Interval::check_intervals_for_intersection(intervals);
         if (intervals_intersect) {
-            LogFiles::print_message_rank(0, "The intervals for the step parser intersected, discarding all.");
+            LogFiles::print_message_rank(MPIRank::root_rank(), "The intervals for the step parser intersected, discarding all.");
             return {};
         }
 
-        auto comparison = [](const Interval& first, const Interval& second) -> bool {
+        auto comparison = [](const Interval& first, const Interval& second) noexcept -> bool {
             return first.begin < second.begin;
         };
 

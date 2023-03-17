@@ -306,8 +306,8 @@ public:
     [[nodiscard]] std::vector<std::pair<box_size_type, box_size_type>> get_all_local_subdomain_boundaries() const {
         std::vector<std::pair<box_size_type, box_size_type>> subdomain_boundaries{};
         subdomain_boundaries.reserve(local_subdomains.size());
-        for (auto local_subdomain_index = 0; local_subdomain_index < local_subdomains.size(); local_subdomain_index++) {
-            subdomain_boundaries.emplace_back(std::make_pair(local_subdomains[local_subdomain_index].minimum_position, local_subdomains[local_subdomain_index].maximum_position));
+        for (const auto& local_subdomain : local_subdomains) {
+            subdomain_boundaries.emplace_back(local_subdomain.minimum_position, local_subdomain.maximum_position);
         }
         return subdomain_boundaries;
     }

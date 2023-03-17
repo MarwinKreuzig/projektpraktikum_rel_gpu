@@ -64,6 +64,8 @@ target_sources(
 		  
 		  connector/test_connector.cpp
 		  
+		  event/test_event.cpp
+		  
 		  fast_multipole_method/test_fast_multipole_method.cpp
 		  
 		  helper/test_distant_neuron_request.cpp
@@ -103,20 +105,38 @@ target_sources(
 		  
 		  octree_node/test_octree_node.cpp
 
+		  parser/test_interval_parser.cpp
 		  parser/test_monitor_parser.cpp
+		  parser/test_neuronid_parser.cpp
 		  parser/test_step_parser.cpp
 
 		  partition/test_partition.cpp
+		  
+		  probability_picker/test_probability_picker.cpp
+		  
+		  random/test_random.cpp
+		  
+		  relearn_exception/test_relearn_exception.cpp
+		  
+		  semi_stable_vector/test_semi_stable_vector.cpp
 
 		  space_filling_curve/test_space_filling_curve.cpp
 
+		  stack/test_stack.cpp
+		  
+		  statistical_measure/test_statistical_measure.cpp
+
 		  stimulus/test_stimulus.cpp
+		  
+		  string_util/test_string_util.cpp
 
 		  synaptic_elements/test_synaptic_elements.cpp
 
 		  synaptic_input/test_synaptic_input.cpp
 
 		  tagged_id/test_tagged_id.cpp
+		  
+		  timers/test_timers.cpp
 
 		  vector/test_vector.cpp
 

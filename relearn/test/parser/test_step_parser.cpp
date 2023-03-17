@@ -10,7 +10,7 @@
 
 #include "test_step_parser.h"
 
-#include "util/StepParser.h"
+#include "io/parser/StepParser.h"
 
 #include <sstream>
 

@@ -168,11 +168,13 @@ public:
         return neuron_id_to_area_id;
     }
 
-    void create_neurons(size_t created_neurons) {
+    void create_neurons(RelearnTypes::number_neurons_type created_neurons) {
+        RelearnException::check(!neuron_id_to_area_id.empty(), "LocalAreaTranslator::create_neurons: Was not initialized");
+        RelearnException::check(created_neurons > 0, "LocalAreaTranslator::create_neurons: Cannot create 0 neurons");
         neuron_id_to_area_id.insert(neuron_id_to_area_id.end(), created_neurons, 0UL);
     }
 
 private:
-    const std::vector<RelearnTypes::area_name> area_id_to_area_name;
+    std::vector<RelearnTypes::area_name> area_id_to_area_name;
     std::vector<RelearnTypes::area_id> neuron_id_to_area_id;
 };

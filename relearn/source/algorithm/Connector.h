@@ -37,7 +37,7 @@ public:
      * @exception Throws a RelearnException if (a) One of the pointers is empty, (b) They have different sizes, (c) One target has an id larger than the number of elements in the pointers
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses to the local rank
      */
-    [[nodiscard]] static std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
+    [[nodiscard]] static std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<PlasticLocalSynapses, PlasticDistantInSynapses>>
     process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests,
         const std::shared_ptr<SynapticElements>& excitatory_dendrites, const std::shared_ptr<SynapticElements>& inhibitory_dendrites) {
 
@@ -67,10 +67,10 @@ public:
 
         const auto total_number_requests = creation_requests.get_total_number_requests();
 
-        LocalSynapses local_synapses{};
+        PlasticLocalSynapses local_synapses{};
         local_synapses.reserve(total_number_requests);
 
-        DistantInSynapses distant_synapses{};
+        PlasticDistantInSynapses distant_synapses{};
         distant_synapses.reserve(total_number_requests);
 
         std::vector<std::pair<MPIRank, unsigned int>> indices{};
@@ -133,7 +133,7 @@ public:
      *      (c) One of the source ids that are accepted are too large, (d) An accepted request targets an axon with not enough vacant elements
      * @return All synapses from this MPI rank to other MPI ranks
      */
-    [[nodiscard]] static DistantOutSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
+    [[nodiscard]] static PlasticDistantOutSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
         const CommunicationMap<SynapseCreationResponse>& creation_responses, const std::shared_ptr<SynapticElements>& axons) {
 
         const auto axons_empty = axons.operator bool();
@@ -152,7 +152,7 @@ public:
 
         const auto total_number_responses = creation_requests.get_total_number_requests();
 
-        DistantOutSynapses synapses{};
+        PlasticDistantOutSynapses synapses{};
         synapses.reserve(total_number_responses);
 
         // Process the responses of all mpi ranks
@@ -206,7 +206,7 @@ public:
      * @exception Throws a RelearnException if (a) One of the pointers is empty, (b) They have different sizes, (c) One target has an id larger than the number of elements in the pointers
      * @return A pair of (1) The responses to each request and (2) another pair of (a) all local synapses and (b) all distant synapses from the local rank
      */
-    [[nodiscard]] static std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantOutSynapses>>
+    [[nodiscard]] static std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<PlasticLocalSynapses, PlasticDistantOutSynapses>>
     process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests, const std::shared_ptr<SynapticElements>& axons) {
 
         const auto axons_empty = axons.operator bool();
@@ -226,10 +226,10 @@ public:
 
         const auto total_number_requests = creation_requests.get_total_number_requests();
 
-        LocalSynapses local_synapses{};
+        PlasticLocalSynapses local_synapses{};
         local_synapses.reserve(total_number_requests);
 
-        DistantOutSynapses distant_synapses{};
+        PlasticDistantOutSynapses distant_synapses{};
         distant_synapses.reserve(total_number_requests);
 
         std::vector<std::pair<MPIRank, unsigned int>> indices{};
@@ -288,7 +288,7 @@ public:
      * @exception Throws a RelearnException if (a) The axons are empty, (b) One of the source ids that are accepted are too large
      * @return All synapses to this MPI rank from other MPI ranks
      */
-    [[nodiscard]] static DistantInSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests, const CommunicationMap<SynapseCreationResponse>& creation_responses,
+    [[nodiscard]] static PlasticDistantInSynapses process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests, const CommunicationMap<SynapseCreationResponse>& creation_responses,
         const std::shared_ptr<SynapticElements>& excitatory_dendrites, const std::shared_ptr<SynapticElements>& inhibitory_dendrites) {
 
         const auto excitatory_empty = excitatory_dendrites.operator bool();
@@ -306,7 +306,7 @@ public:
 
         const auto total_number_responses = creation_requests.get_total_number_requests();
 
-        DistantInSynapses synapses{};
+        PlasticDistantInSynapses synapses{};
         synapses.reserve(total_number_responses);
 
         // Process the responses of all mpi ranks

@@ -29,7 +29,7 @@
 #include <cstring>
 
 void MPINoWrapper::init(int argc, char** argv) {
-    LogFiles::print_message_rank(0, "I'm using the MPINoWrapper");
+    LogFiles::print_message_rank(MPIRank::root_rank(), "I'm using the MPINoWrapper");
 }
 
 void MPINoWrapper::barrier() {
@@ -59,7 +59,7 @@ void MPINoWrapper::all_gather(const void* own_data, void* buffer, int size) {
     std::memcpy(buffer, own_data, size);
 }
 
-size_t MPINoWrapper::get_num_ranks() {
+int MPINoWrapper::get_num_ranks() {
     return 1;
 }
 

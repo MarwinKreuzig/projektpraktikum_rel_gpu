@@ -21,13 +21,13 @@ class MPIRankAdapter {
 public:
     constexpr static int upper_bound_num_ranks = 32;
 
-    static size_t get_random_number_ranks(std::mt19937& mt) {
-        return RandomAdapter::get_random_integer<size_t>(size_t(1), upper_bound_num_ranks, mt);
+    static int get_random_number_ranks(std::mt19937& mt) {
+        return RandomAdapter::get_random_integer<int>(1, upper_bound_num_ranks, mt);
     }
 
-    static size_t get_adjusted_random_number_ranks(std::mt19937& mt) {
+    static int get_adjusted_random_number_ranks(std::mt19937& mt) {
         const auto random_rank = get_random_number_ranks(mt);
-        return round_to_next_exponent(random_rank, size_t(2));
+        return static_cast<int>(round_to_next_exponent(random_rank, 2));
     }
 
     static MPIRank get_random_mpi_rank(std::mt19937& mt) {

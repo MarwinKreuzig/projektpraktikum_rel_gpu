@@ -13,12 +13,13 @@
 #include "Config.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/NetworkGraph.h"
-#include "neurons/Neurons.h"
-#include "neurons/NeuronsExtraInfo.h"
 #include "util/Random.h"
 #include "util/Timers.h"
 
 void NeuronModel::init(number_neurons_type number_neurons) {
+    RelearnException::check(number_local_neurons == 0, "NeuronModel::init: Was already initialized");
+    RelearnException::check(number_neurons > 0, "NeuronModel::init: Must initialize with more than 0 neurons");
+
     number_local_neurons = number_neurons;
 
     x.resize(number_neurons, 0.0);
@@ -35,6 +36,9 @@ void NeuronModel::init(number_neurons_type number_neurons) {
 }
 
 void NeuronModel::create_neurons(number_neurons_type creation_count) {
+    RelearnException::check(number_local_neurons > 0, "NeuronModel::create_neurons: Was not initialized");
+    RelearnException::check(creation_count > 0, "NeuronModel::create_neurons: Must create more than 0 neurons");
+
     const auto current_size = number_local_neurons;
     const auto new_size = current_size + creation_count;
     number_local_neurons = new_size;
@@ -52,14 +56,18 @@ void NeuronModel::create_neurons(number_neurons_type creation_count) {
     stimulus_calculator->create_neurons(creation_count);
 }
 
-void NeuronModel::update_electrical_activity(const step_type step, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic) {
-    input_calculator->update_input(step, network_graph_static, network_graph_plastic, fired);
+void NeuronModel::update_electrical_activity(const step_type step) {
+    input_calculator->update_input(step, fired);
     background_calculator->update_input(step);
     stimulus_calculator->update_stimulus(step);
 
     Timers::start(TimerRegion::CALC_ACTIVITY);
     update_activity();
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
+}
+
+void NeuronModel::notify_of_plasticity_change(const step_type step) {
+    input_calculator->notify_of_plasticity_change(step);
 }
 
 std::vector<std::unique_ptr<NeuronModel>> NeuronModel::get_models() {

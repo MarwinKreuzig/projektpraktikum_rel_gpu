@@ -11,6 +11,7 @@
  */
 
 #include "Types.h"
+#include "mpi/CommunicationMap.h"
 #include "neurons/enums/UpdateStatus.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
@@ -22,8 +23,7 @@
 /**
  * An object of type NeuronsExtraInfo additional information of neurons.
  * For a single neuron, these additional information are: its x-, y-, and z- position and the name of the area the neuron is in.
- * It furthermore stores a map from the MPI rank to the (global) starting neuron id.
- * This is useful whenever one wants to print all neurons across multiple MPI ranks, while omitting the MPI rank itself.
+ * It further stores which neurons update their electrical activity and their plasticity.
  */
 class NeuronsExtraInfo {
 public:
@@ -75,7 +75,7 @@ public:
     void set_disabled_neurons(const std::span<const NeuronID> disabled_neurons) {
         for (const auto& neuron_id : disabled_neurons) {
             const auto local_neuron_id = neuron_id.get_neuron_id();
-            RelearnException::check(local_neuron_id < size, "NeuronsExtraInformation::set_disabled_neurons: NeuronID {} is too large: {}", neuron_id);
+            RelearnException::check(local_neuron_id < size, "NeuronsExtraInformation::set_disabled_neurons: NeuronID {} is too large: {}", neuron_id, size);
 
             RelearnException::check(update_status[local_neuron_id] != UpdateStatus::Static, "NeuronsExtraInformation::set_disabled_neurons: Cannot disable a static neuron");
             RelearnException::check(update_status[local_neuron_id] != UpdateStatus::Disabled, "NeuronsExtraInformation::set_disabled_neurons: Cannot disable an already disabled neuron");
@@ -164,9 +164,20 @@ public:
         return update_status;
     }
 
+    /**
+     * @brief Returns the number of stored neurons
+     * @return The number of neurons
+     */
     [[nodiscard]] number_neurons_type get_size() const noexcept {
         return size;
     }
+
+    /**
+     * @brief Translates a collection of local neuron ids to their positions
+     * @param local_neurons The local neuron ids
+     * @return The position of the local neurons, has the same size as the argument
+     */
+    [[nodiscard]] CommunicationMap<RelearnTypes::position_type> get_positions_for(const CommunicationMap<NeuronID>& local_neurons);
 
 private:
     number_neurons_type size{ 0 };

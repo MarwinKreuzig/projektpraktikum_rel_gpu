@@ -13,5 +13,5 @@
 #include "RelearnTest.hpp"
 
 template <typename AdditionalCellAttributes>
-class OctreeNodeTest : public RelearnTest {
+class OctreeNodeTest : public RelearnMemoryTest {
 };

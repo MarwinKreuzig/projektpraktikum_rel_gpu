@@ -58,7 +58,7 @@ public:
      * @brief Returns the number of objects that fit into the memory portion
      * @return The number of objects that fit into the memory portion
      */
-    [[nodiscard]] static std::span<OctreeNode<AdditionalCellAttributes>>::size_type get_size() noexcept {
+    [[nodiscard]] static typename std::span<OctreeNode<AdditionalCellAttributes>>::size_type get_size() noexcept {
         return memory_holder.size();
     }
 
@@ -124,7 +124,14 @@ public:
         return offset * sizeof(OctreeNode<AdditionalCellAttributes>);
     }
 
+    /**
+     * @brief Returns the parent node for a node specified by the offset
+     * @param offset The offset, must be a multple of Constants::number_oct
+     * @exception Throws a RelearnException if the offset is not saved for a parent or if offset % Constants::number_oct != 0
+     * @return A pointer to the parent of the node stored at the offset
+     */
     [[nodiscard]] static OctreeNode<AdditionalCellAttributes>* get_parent_from_offset(const std::uint64_t offset) {
+        RelearnException::check(offset % Constants::number_oct == 0, "MemoryHolder::get_parent_from_offset: offset {} is not a multiple of {}.", offset, Constants::number_oct);
         const auto iterator = offset_to_parent.find(offset);
 
         RelearnException::check(iterator != offset_to_parent.end(), "MemoryHolder::get_parent_from_offset: offset {} does not have a parent node.", offset);

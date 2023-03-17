@@ -238,7 +238,7 @@ public:
      * @brief Constructs a NeuronMonitor that monitors the specified neuron
      * @param neuron_id The local neuron id for the object to monitor
      */
-    explicit NeuronMonitor(const NeuronID& neuron_id) noexcept
+    explicit NeuronMonitor(const NeuronID neuron_id) noexcept
         : target_neuron_id(neuron_id) {
     }
 
@@ -254,7 +254,7 @@ public:
      * @brief Returns the local neuron id which is monitored
      * @return The neuron id
      */
-    [[nodiscard]] const NeuronID& get_target_id() const noexcept {
+    [[nodiscard]] const NeuronID get_target_id() const noexcept {
         return target_neuron_id;
     }
 

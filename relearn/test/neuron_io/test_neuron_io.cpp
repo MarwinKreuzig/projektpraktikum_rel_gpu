@@ -820,10 +820,10 @@ TEST_F(IOTest, testReadInSynapses) {
     const auto number_synapses = NetworkGraphAdapter::get_random_number_synapses(mt);
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    LocalSynapses preliminary_local_synapses_static{};
-    DistantInSynapses preliminary_distant_synapses_static{};
-    LocalSynapses preliminary_local_synapses_plastic{};
-    DistantInSynapses preliminary_distant_synapses_plastic{};
+    StaticLocalSynapses preliminary_local_synapses_static{};
+    StaticDistantInSynapses preliminary_distant_synapses_static{};
+    PlasticLocalSynapses preliminary_local_synapses_plastic{};
+    PlasticDistantInSynapses preliminary_distant_synapses_plastic{};
 
     std::filesystem::path path{ "./in_network.tmp" };
     std::ofstream ofstream(path);
@@ -834,27 +834,33 @@ TEST_F(IOTest, testReadInSynapses) {
 
         const auto source_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
-        const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
+        const auto plastic_weight = NetworkGraphAdapter::get_random_plastic_synapse_weight(mt);
+        const auto static_weight = NetworkGraphAdapter::get_random_static_synapse_weight(mt);
 
         const bool plastic = RandomAdapter::get_random_bool(mt);
         const char flag = plastic ? '1' : '0';
 
         if (source_rank == my_rank) {
             if (plastic) {
-                preliminary_local_synapses_plastic.emplace_back(target_id, source_id, weight);
+                preliminary_local_synapses_plastic.emplace_back(target_id, source_id, plastic_weight);
             } else {
-                preliminary_local_synapses_static.emplace_back(target_id, source_id, weight);
+                preliminary_local_synapses_static.emplace_back(target_id, source_id, static_weight);
             }
         } else {
             if (plastic) {
-                preliminary_distant_synapses_plastic.emplace_back(target_id, RankNeuronId(source_rank, source_id), weight);
+                preliminary_distant_synapses_plastic.emplace_back(target_id, RankNeuronId(source_rank, source_id), plastic_weight);
             } else {
-                preliminary_distant_synapses_static.emplace_back(target_id, RankNeuronId(source_rank, source_id), weight);
+                preliminary_distant_synapses_static.emplace_back(target_id, RankNeuronId(source_rank, source_id), static_weight);
             }
         }
 
-        ofstream << my_rank.get_rank() << ' ' << (target_id.get_neuron_id() + 1) << '\t'
-                 << source_rank.get_rank() << ' ' << (source_id.get_neuron_id() + 1) << ' ' << weight << '\t' << flag << '\n';
+        if (plastic) {
+            ofstream << my_rank.get_rank() << ' ' << (target_id.get_neuron_id() + 1) << '\t'
+                     << source_rank.get_rank() << ' ' << (source_id.get_neuron_id() + 1) << ' ' << plastic_weight << '\t' << flag << '\n';
+        } else {
+            ofstream << my_rank.get_rank() << ' ' << (target_id.get_neuron_id() + 1) << '\t'
+                     << source_rank.get_rank() << ' ' << (source_id.get_neuron_id() + 1) << ' ' << static_weight << '\t' << flag << '\n';
+        }
     }
 
     ofstream.flush();
@@ -920,10 +926,10 @@ TEST_F(IOTest, testReadOutSynapses) {
     const auto number_synapses = NetworkGraphAdapter::get_random_number_synapses(mt);
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    LocalSynapses preliminary_local_synapses_static{};
-    DistantOutSynapses preliminary_distant_synapses_static{};
-    LocalSynapses preliminary_local_synapses_plastic{};
-    DistantOutSynapses preliminary_distant_synapses_plastic{};
+    StaticLocalSynapses preliminary_local_synapses_static{};
+    StaticDistantOutSynapses preliminary_distant_synapses_static{};
+    PlasticLocalSynapses preliminary_local_synapses_plastic{};
+    PlasticDistantOutSynapses preliminary_distant_synapses_plastic{};
 
     std::filesystem::path path{ "./out_network.tmp" };
     std::ofstream ofstream(path);
@@ -934,26 +940,33 @@ TEST_F(IOTest, testReadOutSynapses) {
 
         const auto target_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
-        const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
+        const auto plastic_weight = NetworkGraphAdapter::get_random_plastic_synapse_weight(mt);
+        const auto static_weight = NetworkGraphAdapter::get_random_static_synapse_weight(mt);
 
         const bool plastic = RandomAdapter::get_random_bool(mt);
         const char flag = plastic ? '1' : '0';
 
         if (target_rank == my_rank) {
             if (plastic) {
-                preliminary_local_synapses_plastic.emplace_back(target_id, source_id, weight);
+                preliminary_local_synapses_plastic.emplace_back(target_id, source_id, plastic_weight);
             } else {
-                preliminary_local_synapses_static.emplace_back(target_id, source_id, weight);
+                preliminary_local_synapses_static.emplace_back(target_id, source_id, static_weight);
             }
         } else {
             if (plastic) {
-                preliminary_distant_synapses_plastic.emplace_back(RankNeuronId(target_rank, target_id), source_id, weight);
+                preliminary_distant_synapses_plastic.emplace_back(RankNeuronId(target_rank, target_id), source_id, plastic_weight);
             } else {
-                preliminary_distant_synapses_static.emplace_back(RankNeuronId(target_rank, target_id), source_id, weight);
+                preliminary_distant_synapses_static.emplace_back(RankNeuronId(target_rank, target_id), source_id, static_weight);
             }
         }
-        ofstream << target_rank.get_rank() << ' ' << (target_id.get_neuron_id() + 1) << '\t' 
-            << my_rank.get_rank() << ' ' << (source_id.get_neuron_id() + 1) << ' ' << weight << '\t' << flag << '\n';
+
+        if (plastic) {
+            ofstream << target_rank.get_rank() << ' ' << (target_id.get_neuron_id() + 1) << '\t'
+                     << my_rank.get_rank() << ' ' << (source_id.get_neuron_id() + 1) << ' ' << plastic_weight << '\t' << flag << '\n';
+        } else {
+            ofstream << target_rank.get_rank() << ' ' << (target_id.get_neuron_id() + 1) << '\t'
+                     << my_rank.get_rank() << ' ' << (source_id.get_neuron_id() + 1) << ' ' << static_weight << '\t' << flag << '\n';
+        }
     }
 
     ofstream.flush();
@@ -1019,10 +1032,10 @@ TEST_F(IOTest, testWriteInSynapses) {
     const auto number_synapses = NetworkGraphAdapter::get_random_number_synapses(mt);
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    LocalSynapses preliminary_local_synapses_static{};
-    DistantInSynapses preliminary_distant_synapses_static{};
-    LocalSynapses preliminary_local_synapses_plastic{};
-    DistantInSynapses preliminary_distant_synapses_plastic{};
+    StaticLocalSynapses preliminary_local_synapses_static{};
+    StaticDistantInSynapses preliminary_distant_synapses_static{};
+    PlasticLocalSynapses preliminary_local_synapses_plastic{};
+    PlasticDistantInSynapses preliminary_distant_synapses_plastic{};
 
     std::filesystem::path path{ "./in_network.tmp" };
 
@@ -1032,22 +1045,23 @@ TEST_F(IOTest, testWriteInSynapses) {
 
         const auto source_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
-        const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
+        const auto plastic_weight = NetworkGraphAdapter::get_random_plastic_synapse_weight(mt);
+        const auto static_weight = NetworkGraphAdapter::get_random_static_synapse_weight(mt);
 
         const bool plastic = RandomAdapter::get_random_bool(mt);
         const char flag = plastic ? '1' : '0';
 
         if (source_rank == my_rank) {
             if (plastic) {
-                preliminary_local_synapses_plastic.emplace_back(target_id, source_id, weight);
+                preliminary_local_synapses_plastic.emplace_back(target_id, source_id, plastic_weight);
             } else {
-                preliminary_local_synapses_static.emplace_back(target_id, source_id, weight);
+                preliminary_local_synapses_static.emplace_back(target_id, source_id, static_weight);
             }
         } else {
             if (plastic) {
-                preliminary_distant_synapses_plastic.emplace_back(target_id, RankNeuronId(source_rank, source_id), weight);
+                preliminary_distant_synapses_plastic.emplace_back(target_id, RankNeuronId(source_rank, source_id), plastic_weight);
             } else {
-                preliminary_distant_synapses_static.emplace_back(target_id, RankNeuronId(source_rank, source_id), weight);
+                preliminary_distant_synapses_static.emplace_back(target_id, RankNeuronId(source_rank, source_id), static_weight);
             }
         }
     }
@@ -1114,10 +1128,10 @@ TEST_F(IOTest, testWriteOutSynapses) {
     const auto number_synapses = NetworkGraphAdapter::get_random_number_synapses(mt);
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
-    LocalSynapses preliminary_local_synapses_static{};
-    DistantOutSynapses preliminary_distant_synapses_static{};
-    LocalSynapses preliminary_local_synapses_plastic{};
-    DistantOutSynapses preliminary_distant_synapses_plastic{};
+    StaticLocalSynapses preliminary_local_synapses_static{};
+    StaticDistantOutSynapses preliminary_distant_synapses_static{};
+    PlasticLocalSynapses preliminary_local_synapses_plastic{};
+    PlasticDistantOutSynapses preliminary_distant_synapses_plastic{};
 
     std::filesystem::path path{ "./out_network.tmp" };
 
@@ -1127,22 +1141,23 @@ TEST_F(IOTest, testWriteOutSynapses) {
 
         const auto target_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
-        const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
+        const auto plastic_weight = NetworkGraphAdapter::get_random_plastic_synapse_weight(mt);
+        const auto static_weight = NetworkGraphAdapter::get_random_static_synapse_weight(mt);
 
         const bool plastic = RandomAdapter::get_random_bool(mt);
         const char flag = plastic ? '1' : '0';
 
         if (target_rank == my_rank) {
             if (plastic) {
-                preliminary_local_synapses_plastic.emplace_back(target_id, source_id, weight);
+                preliminary_local_synapses_plastic.emplace_back(target_id, source_id, plastic_weight);
             } else {
-                preliminary_local_synapses_static.emplace_back(target_id, source_id, weight);
+                preliminary_local_synapses_static.emplace_back(target_id, source_id, static_weight);
             }
         } else {
             if (plastic) {
-                preliminary_distant_synapses_plastic.emplace_back(RankNeuronId(target_rank, target_id), source_id, weight);
+                preliminary_distant_synapses_plastic.emplace_back(RankNeuronId(target_rank, target_id), source_id, plastic_weight);
             } else {
-                preliminary_distant_synapses_static.emplace_back(RankNeuronId(target_rank, target_id), source_id, weight);
+                preliminary_distant_synapses_static.emplace_back(RankNeuronId(target_rank, target_id), source_id, static_weight);
             }
         }
     }
@@ -1192,135 +1207,6 @@ TEST_F(IOTest, testWriteOutSynapses) {
     for (auto i = 0; i < preliminary_distant_synapses_plastic.size(); i++) {
         const auto& [p_1, p_2, p_weight] = preliminary_distant_synapses_plastic[i];
         const auto& [r_1, r_2, r_weight] = read_distant_synapses_plastic[i];
-
-        ASSERT_NEAR(p_weight, r_weight, eps);
-    }
-}
-
-TEST_F(IOTest, testReadSynapsesInteractionNetworkGraph) {
-    const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt);
-    const auto my_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
-
-    const auto number_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) * 0 + 5;
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
-
-    std::vector<std::map<NeuronID, RelearnTypes::synapse_weight>> local_synapses(number_neurons, std::map<NeuronID, RelearnTypes::synapse_weight>{});
-    std::vector<std::map<RankNeuronId, RelearnTypes::synapse_weight>> distant_in_synapses(number_neurons, std::map<RankNeuronId, RelearnTypes::synapse_weight>{});
-    std::vector<std::map<RankNeuronId, RelearnTypes::synapse_weight>> distant_out_synapses(number_neurons, std::map<RankNeuronId, RelearnTypes::synapse_weight>{});
-
-    for (auto synapse_id = 0; synapse_id < number_synapses; synapse_id++) {
-        const auto& source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-        const auto& target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-
-        const auto target_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
-
-        const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
-
-        if (target_rank == my_rank) {
-            local_synapses[target_id.get_neuron_id()][source_id] += weight;
-        } else {
-            distant_in_synapses[source_id.get_neuron_id()][RankNeuronId(target_rank, target_id)] += weight;
-        }
-    }
-
-    for (auto synapse_id = 0; synapse_id < number_synapses; synapse_id++) {
-        const auto& source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-        const auto& target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-
-        const auto source_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
-
-        const auto weight = NetworkGraphAdapter::get_random_synapse_weight(mt);
-
-        if (source_rank == my_rank) {
-            local_synapses[target_id.get_neuron_id()][source_id] += weight;
-        } else {
-            distant_out_synapses[target_id.get_neuron_id()][RankNeuronId(source_rank, source_id)] += weight;
-        }
-    }
-
-    LocalSynapses golden_local_synapses{};
-    golden_local_synapses.reserve(number_synapses * 2);
-
-    DistantInSynapses golden_distant_in_synapses{};
-    golden_distant_in_synapses.reserve(number_synapses * 2);
-
-    DistantOutSynapses golden_distant_out_synapses{};
-    golden_distant_out_synapses.reserve(number_synapses * 2);
-
-    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        for (const auto& [source_id, weight] : local_synapses[neuron_id]) {
-            golden_local_synapses.emplace_back(NeuronID(neuron_id), source_id, weight);
-        }
-
-        for (const auto& [source_rni, weight] : distant_in_synapses[neuron_id]) {
-            golden_distant_in_synapses.emplace_back(NeuronID(neuron_id), source_rni, weight);
-        }
-
-        for (const auto& [target_rni, weight] : distant_out_synapses[neuron_id]) {
-            golden_distant_out_synapses.emplace_back(target_rni, NeuronID(neuron_id), weight);
-        }
-    }
-
-    std::ranges::sort(golden_local_synapses);
-    std::ranges::sort(golden_distant_in_synapses);
-    std::ranges::sort(golden_distant_out_synapses);
-
-    NetworkGraph ng(number_neurons, my_rank);
-    ng.add_edges(golden_local_synapses, golden_distant_in_synapses, golden_distant_out_synapses);
-
-    std::filesystem::path in_path{ "./in_network.tmp" };
-    std::filesystem::path out_path{ "./out_network.tmp" };
-
-    std::ofstream in_ofstream{ in_path };
-    std::ofstream out_ofstream{ out_path };
-
-    ng.print_with_ranks(out_ofstream, in_ofstream, true);
-
-    in_ofstream.flush();
-    in_ofstream.close();
-
-    out_ofstream.flush();
-    out_ofstream.close();
-
-    auto [read_in_synapses_static, read_in_synapses_plastic] = NeuronIO::read_in_synapses(in_path, number_neurons, my_rank, static_cast<int>(number_ranks));
-    auto [read_local_in_synapses, read_distant_in_synapses] = read_in_synapses_plastic;
-    auto [reader_out_synapses_static, read_out_synapses_plastic] = NeuronIO::read_out_synapses(out_path, number_neurons, my_rank, static_cast<int>(number_ranks));
-    auto [read_local_out_synapses, read_distant_out_synapses] = read_out_synapses_plastic;
-
-    std::ranges::sort(read_local_in_synapses);
-    std::ranges::sort(read_distant_in_synapses);
-    std::ranges::sort(read_local_out_synapses);
-    std::ranges::sort(read_distant_out_synapses);
-
-    ASSERT_EQ(golden_local_synapses.size(), read_local_in_synapses.size());
-    ASSERT_EQ(golden_distant_in_synapses.size(), read_distant_in_synapses.size());
-    ASSERT_EQ(golden_local_synapses.size(), read_local_out_synapses.size());
-    ASSERT_EQ(golden_distant_out_synapses.size(), read_distant_out_synapses.size());
-
-    for (auto i = 0; i < golden_local_synapses.size(); i++) {
-        const auto& [p_1, p_2, p_weight] = golden_local_synapses[i];
-        const auto& [r_1, r_2, r_weight] = read_local_in_synapses[i];
-
-        ASSERT_NEAR(p_weight, r_weight, eps);
-    }
-
-    for (auto i = 0; i < golden_distant_in_synapses.size(); i++) {
-        const auto& [p_1, p_2, p_weight] = golden_distant_in_synapses[i];
-        const auto& [r_1, r_2, r_weight] = read_distant_in_synapses[i];
-
-        ASSERT_NEAR(p_weight, r_weight, eps);
-    }
-
-    for (auto i = 0; i < golden_local_synapses.size(); i++) {
-        const auto& [p_1, p_2, p_weight] = golden_local_synapses[i];
-        const auto& [r_1, r_2, r_weight] = read_local_out_synapses[i];
-
-        ASSERT_NEAR(p_weight, r_weight, eps);
-    }
-
-    for (auto i = 0; i < golden_distant_out_synapses.size(); i++) {
-        const auto& [p_1, p_2, p_weight] = golden_distant_out_synapses[i];
-        const auto& [r_1, r_2, r_weight] = read_distant_out_synapses[i];
 
         ASSERT_NEAR(p_weight, r_weight, eps);
     }

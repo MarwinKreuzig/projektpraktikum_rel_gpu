@@ -206,18 +206,6 @@ public:
     }
 
     /**
-     * @brief Get the index of the branch node. The neuron id must be virtual.
-     *      This method is functionally equivalent to get_rma_offset, it offers a different name for readability
-     * @exception RelearnException if the id is not initialized or is not virtual
-     * @return constexpr value_type The index of the branch node
-     */
-    [[nodiscard]] constexpr value_type get_branch_node_index() const {
-        RelearnException::check(is_initialized(), "TaggedID::get_branch_node_index: Is not initialized {:s}", *this);
-        RelearnException::check(is_virtual(), "TaggedID::get_branch_node_index: Is not virtual {:s}", *this);
-        return id_;
-    }
-
-    /**
      * @brief Check if the id is initialized
      *
      * @return true iff the id is initialized

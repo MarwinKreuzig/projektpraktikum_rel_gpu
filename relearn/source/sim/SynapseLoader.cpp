@@ -21,8 +21,7 @@
 #include <sstream>
 #include <string>
 
-std::pair<std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>, std::tuple<LocalSynapses, DistantInSynapses, DistantOutSynapses>>
-SynapseLoader::load_synapses(const std::unique_ptr<Essentials>& essentials) {
+SynapseLoader::synapses_pair_type SynapseLoader::load_synapses(const std::unique_ptr<Essentials>& essentials) {
     Timers::start(TimerRegion::LOAD_SYNAPSES);
 
     const auto& synapses_pair = internal_load_synapses();
@@ -31,17 +30,17 @@ SynapseLoader::load_synapses(const std::unique_ptr<Essentials>& essentials) {
 
     Timers::stop_and_add(TimerRegion::LOAD_SYNAPSES);
 
-    RelearnTypes::synapse_weight total_local_weight = 0;
+    RelearnTypes::plastic_synapse_weight total_local_weight = 0;
     for (const auto& [_1, _2, weight] : local_synapses) {
         total_local_weight += weight;
     }
 
-    RelearnTypes::synapse_weight total_in_weight = 0;
+    RelearnTypes::plastic_synapse_weight total_in_weight = 0;
     for (const auto& [_1, _2, weight] : in_synapses) {
         total_in_weight += weight;
     }
 
-    RelearnTypes::synapse_weight total_out_weight = 0;
+    RelearnTypes::plastic_synapse_weight total_out_weight = 0;
     for (const auto& [_1, _2, weight] : out_synapses) {
         total_out_weight += weight;
     }

@@ -14,9 +14,9 @@
 #include "adapter/random/RandomAdapter.h"
 #include "adapter/stimulus/StimulusAdapter.h"
 
+#include "io/parser/StimulusParser.h"
 #include "io/InteractiveNeuronIO.h"
 #include "neurons/LocalAreaTranslator.h"
-#include "util/StimulusParser.h"
 
 #include <unordered_set>
 
@@ -37,10 +37,10 @@ TEST_F(StimulusTest, testStimulusWithNeuronIds) {
     const auto local_area_translator = NeuronAssignmentAdapter::get_randomized_area_translator(mt);
     const auto num_neurons = local_area_translator->get_number_neurons_in_total();
     std::filesystem::path path = "stimulus.tmp";
-    const auto num_rank = RandomAdapter::get_random_integer(2U, 10U, mt);
+    const auto num_rank = RandomAdapter::get_random_integer(2, 10, mt);
     const auto num_stimuli = RandomAdapter::get_random_integer(1, 10, mt) * num_rank;
     const auto num_steps = RandomAdapter::get_random_integer(1000U, 100000U, mt);
-    const auto my_rank = MPIRank(RandomAdapter::get_random_integer(0U, num_rank - 1, mt));
+    const auto my_rank = MPIRank(RandomAdapter::get_random_integer(0, num_rank - 1, mt));
 
     std::vector<std::tuple<RelearnTypes::step_type, RelearnTypes::step_type, RelearnTypes::step_type, double, std::unordered_set<std::string>>> stimuli;
     std::vector<std::tuple<RelearnTypes::step_type, RelearnTypes::step_type, RelearnTypes::step_type, double, std::unordered_set<NeuronID>>> my_stimuli;
@@ -54,7 +54,7 @@ TEST_F(StimulusTest, testStimulusWithNeuronIds) {
         std::unordered_set<std::string> rank_ids{};
         std::unordered_set<NeuronID> my_ids{};
         for (const auto& neuron_id : ids) {
-            const auto rank = MPIRank(RandomAdapter::get_random_integer(0U, num_rank - 1, mt));
+            const auto rank = MPIRank(RandomAdapter::get_random_integer(0, num_rank - 1, mt));
             rank_ids.insert(std::to_string(rank.get_rank()) + ":" + std::to_string(neuron_id.get_neuron_id()+1));
             if (rank == my_rank) {
                 my_ids.insert(neuron_id);
@@ -69,8 +69,8 @@ TEST_F(StimulusTest, testStimulusWithNeuronIds) {
     RelearnTypes::stimuli_function_type stimulus_function = InteractiveNeuronIO::load_stimulus_interrupts(path, my_rank, local_area_translator);
     for (auto step = 0U; step < num_steps; step++) {
         const auto& read_stimuli = stimulus_function(step);
-        auto read_stimulated_neurons = 0;
-        auto stimulated_neurons = 0;
+        auto read_stimulated_neurons = size_t(0);
+        auto stimulated_neurons = size_t(0);
         for (const auto& [neuron_ids, intensity] : read_stimuli) {
             read_stimulated_neurons += neuron_ids.size();
             bool found_my_stimuli = false;
@@ -97,10 +97,10 @@ TEST_F(StimulusTest, testStimulusWithAreas) {
     const auto num_neurons = local_area_translator->get_number_neurons_in_total();
     const auto& area_names = local_area_translator->get_all_area_names();
     std::filesystem::path path = "stimulus.tmp";
-    const auto num_rank = RandomAdapter::get_random_integer(2U, 10U, mt);
+    const auto num_rank = RandomAdapter::get_random_integer(2, 10, mt);
     const auto num_stimuli = RandomAdapter::get_random_integer(1, 10, mt) * num_rank;
     const auto num_steps = RandomAdapter::get_random_integer(1000U, 100000U, mt);
-    const auto my_rank = MPIRank(RandomAdapter::get_random_integer(0U, num_rank - 1, mt));
+    const auto my_rank = MPIRank(RandomAdapter::get_random_integer(0, num_rank - 1, mt));
 
     std::vector<std::tuple<RelearnTypes::step_type, RelearnTypes::step_type, RelearnTypes::step_type, double, std::unordered_set<std::string>>> stimuli;
     std::vector<std::tuple<RelearnTypes::step_type, RelearnTypes::step_type, RelearnTypes::step_type, double, std::unordered_set<NeuronID>>> my_stimuli;
@@ -126,8 +126,8 @@ TEST_F(StimulusTest, testStimulusWithAreas) {
     RelearnTypes::stimuli_function_type stimulus_function = InteractiveNeuronIO::load_stimulus_interrupts(path, my_rank, local_area_translator);
     for (auto step = 0U; step < num_steps; step++) {
         const auto& read_stimuli = stimulus_function(step);
-        auto read_stimulated_neurons = 0;
-        auto stimulated_neurons = 0;
+        auto read_stimulated_neurons = size_t(0);
+        auto stimulated_neurons = size_t(0);
         for (const auto& [neuron_ids, intensity] : read_stimuli) {
             read_stimulated_neurons += neuron_ids.size();
             bool found_my_stimuli = false;
@@ -214,8 +214,8 @@ TEST_F(StimulusTest, testEmptyNeurons) {
     RelearnTypes::stimuli_function_type stimulus_function = InteractiveNeuronIO::load_stimulus_interrupts(path, MPIRank(0), local_area_translator);
     for (auto step = 0U; step < num_steps; step++) {
         const auto& read_stimuli = stimulus_function(step);
-        auto read_stimulated_neurons = 0;
-        auto stimulated_neurons = 0;
+        auto read_stimulated_neurons = size_t(0);
+        auto stimulated_neurons = size_t(0);
         for (const auto& [neuron_ids, intensity] : read_stimuli) {
             read_stimulated_neurons += neuron_ids.size();
             bool found_my_stimuli = false;
@@ -240,7 +240,7 @@ TEST_F(StimulusTest, testEmptyNeurons) {
 TEST_F(StimulusTest, testNoFile) {
     const auto local_area_translator = NeuronAssignmentAdapter::get_randomized_area_translator(mt);
     std::filesystem::path path = "stimulus.tmp";
-    ASSERT_THROW(InteractiveNeuronIO::load_stimulus_interrupts(path, MPIRank(0), local_area_translator), RelearnException);
+    ASSERT_THROW(auto val = InteractiveNeuronIO::load_stimulus_interrupts(path, MPIRank(0), local_area_translator), RelearnException);
 }
 
 TEST_F(StimulusTest, testEmptyFile) {
@@ -267,7 +267,7 @@ TEST_F(StimulusTest, testInvalidNeuronId) {
 
     write_stimuli_to_file(path, { std::make_tuple(interval.begin, interval.end, 1U, intensity, rank_ids) });
 
-    ASSERT_THROW(InteractiveNeuronIO::load_stimulus_interrupts(path, MPIRank(0), local_area_translator), RelearnException);
+    ASSERT_THROW(auto val = InteractiveNeuronIO::load_stimulus_interrupts(path, MPIRank(0), local_area_translator), RelearnException);
 }
 
 TEST_F(StimulusTest, testInvalidAreaName) {

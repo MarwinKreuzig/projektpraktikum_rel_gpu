@@ -88,7 +88,7 @@ public:
         std::span<OctreeNode<AdditionalCellAttributes>> span{ base_ptr.data(), max_num_objects };
         MemoryHolder<AdditionalCellAttributes>::init(span);
 
-        LogFiles::print_message_rank(0, "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
+        LogFiles::print_message_rank(MPIRank::root_rank(), "MPI RMA MemAllocator: max_num_objects: {}  sizeof(OctreeNode): {}", max_num_objects, sizeof(OctreeNode<AdditionalCellAttributes>));
     }
 
     static void barrier();
@@ -165,7 +165,7 @@ public:
         RelearnException::fail("MPINoWrapper::download_octree_node: Cannot perform the offset version without MPI.");
     }
 
-    [[nodiscard]] static size_t get_num_ranks();
+    [[nodiscard]] static int get_num_ranks();
 
     [[nodiscard]] static MPIRank get_my_rank();
 
@@ -173,7 +173,7 @@ public:
 
     template <typename T>
     static std::vector<std::vector<T>> exchange_values(const std::vector<std::vector<T>>& values) {
-        RelearnException::check(values.size() == 1 && values[0].size() == 0, "MPINoWrapper::exchange_values: There were values!");
+        RelearnException::check(values.size() == 1 && values[0].empty(), "MPINoWrapper::exchange_values: There were values!");
         std::vector<std::vector<T>> return_value(1, std::vector<T>(0));
         return return_value;
     }
@@ -184,6 +184,10 @@ public:
 
     static void unlock_window(MPIWindow::Window window, MPIRank rank);
 
+
+    static void start_measuring_communication() noexcept {};
+
+    static void stop_measureing_communication() noexcept {};
 
     static uint64_t get_number_bytes_sent() noexcept {
         return 0;

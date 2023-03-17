@@ -15,13 +15,13 @@
 
 #include <cmath>
 
-void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::span<const FiredStatus> fired) {
+void LinearSynapticInputCalculator::update_synaptic_input(const std::span<const FiredStatus> fired) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
     const auto& disable_flags = extra_infos->get_disable_flags();
     const auto number_local_neurons = get_number_neurons();
 
-#pragma omp parallel for shared(network_graph_static, network_graph_plastic, disable_flags, number_local_neurons, fired) default(none)
+#pragma omp parallel for shared(disable_flags, number_local_neurons, fired) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
@@ -37,13 +37,13 @@ void LinearSynapticInputCalculator::update_synaptic_input(const NetworkGraph& ne
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
 }
 
-void LogarithmicSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::span<const FiredStatus> fired) {
+void LogarithmicSynapticInputCalculator::update_synaptic_input(const std::span<const FiredStatus> fired) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
     const auto& disable_flags = extra_infos->get_disable_flags();
     const auto number_local_neurons = get_number_neurons();
 
-#pragma omp parallel for shared(network_graph_static, network_graph_plastic, disable_flags, number_local_neurons, fired) default(none)
+#pragma omp parallel for shared(disable_flags, number_local_neurons, fired) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
@@ -63,13 +63,13 @@ void LogarithmicSynapticInputCalculator::update_synaptic_input(const NetworkGrap
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
 }
 
-void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::span<const FiredStatus> fired) {
+void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const std::span<const FiredStatus> fired) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
 
     const auto& disable_flags = extra_infos->get_disable_flags();
     const auto number_local_neurons = get_number_neurons();
 
-#pragma omp parallel for shared(network_graph_static, network_graph_plastic, disable_flags, number_local_neurons, fired) default(none)
+#pragma omp parallel for shared(disable_flags, number_local_neurons, fired) default(none)
     for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;

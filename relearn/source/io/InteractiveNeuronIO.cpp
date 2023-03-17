@@ -10,8 +10,8 @@
 
 #include "InteractiveNeuronIO.h"
 
+#include "io/parser/StimulusParser.h"
 #include "util/RelearnException.h"
-#include "util/StimulusParser.h"
 
 #include "spdlog/spdlog.h"
 
@@ -24,7 +24,7 @@
 #include <utility>
 #include <vector>
 
-std::vector<std::pair<InteractiveNeuronIO::step_type, std::vector<NeuronID>>> InteractiveNeuronIO::load_enable_interrupts(const std::filesystem::path& path_to_file, const MPIRank& my_rank) {
+std::vector<std::pair<InteractiveNeuronIO::step_type, std::vector<NeuronID>>> InteractiveNeuronIO::load_enable_interrupts(const std::filesystem::path& path_to_file, const MPIRank my_rank) {
     std::ifstream file{ path_to_file };
 
     const bool file_is_good = file.good();
@@ -77,7 +77,7 @@ std::vector<std::pair<InteractiveNeuronIO::step_type, std::vector<NeuronID>>> In
     return return_value;
 }
 
-std::vector<std::pair<InteractiveNeuronIO::step_type, std::vector<NeuronID>>> InteractiveNeuronIO::load_disable_interrupts(const std::filesystem::path& path_to_file, const MPIRank& my_rank) {
+std::vector<std::pair<InteractiveNeuronIO::step_type, std::vector<NeuronID>>> InteractiveNeuronIO::load_disable_interrupts(const std::filesystem::path& path_to_file, const MPIRank my_rank) {
     std::ifstream file{ path_to_file };
 
     const bool file_is_good = file.good();

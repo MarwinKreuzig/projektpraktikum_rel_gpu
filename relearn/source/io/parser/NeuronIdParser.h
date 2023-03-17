@@ -10,9 +10,9 @@
  *
  */
 
+#include "io/LogFiles.h"
 #include "neurons/helper/RankNeuronId.h"
-#include "neurons/LocalAreaTranslator.h"
-#include "util/StringUtil.h"
+#include "util/MPIRank.h"
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
@@ -28,7 +28,7 @@
  * This class provides an interface to parse the neuron ids that shall be monitored from a std::string.
  * It also provides the functionality to sort them and remove duplicates.
  */
-class MonitorParser {
+class NeuronIdParser {
 public:
     /**
      * @brief Parses a RankNeuronId from a description. Format must be:
@@ -68,12 +68,12 @@ public:
 
         if (mpi_rank_ok && neuron_id_ok) {
             // Check here so we can use the previous error codes correctly
-            RelearnException::check(neuron_id > 0, "MonitorParser::parse_description: A parsed NeuronID is 0, but the input is 1-based: {}", description);
+            RelearnException::check(neuron_id > 0, "NeuronIdParser::parse_description: A parsed NeuronID is 0, but the input is 1-based: {}", description);
 
             return RankNeuronId{ MPIRank(parsed_mpi_rank), NeuronID(neuron_id - 1) };
         }
 
-        LogFiles::print_message_rank(0, "Failed to parse string to match the pattern <mpi_rank>:<neuron_id> : {}", description);
+        LogFiles::print_message_rank(MPIRank::root_rank(), "Failed to parse string to match the pattern <mpi_rank>:<neuron_id> : {}", description);
         return {};
     }
 
@@ -87,8 +87,8 @@ public:
      * @exception Throws a RelearnException if my_rank is not initialized or a <neuron_id> is 0
      * @return A vector with all successfully parsed RankNeuronIds
      */
-    [[nodiscard]] static std::vector<RankNeuronId> parse_multiple_description(const std::string& description, const MPIRank my_rank) {
-        RelearnException::check(my_rank.is_initialized(), "MonitorParser::parse_multiple_description: my_rank is not initialized.", my_rank);
+    [[nodiscard]] static std::vector<RankNeuronId> parse_multiple_description(const std::string_view description, const MPIRank my_rank) {
+        RelearnException::check(my_rank.is_initialized(), "NeuronIdParser::parse_multiple_description: my_rank is not initialized.", my_rank);
 
         std::vector<RankNeuronId> parsed_ids{};
         // The first description is at least 3 chars long, the following at least 4
@@ -102,8 +102,8 @@ public:
                 semicolon_position = description.size();
             }
 
-            std::string_view substring{ description.data() + current_position, description.data() + semicolon_position };
-            const auto& opt_rank_neuron_id = parse_description(substring, my_rank);
+            const auto substring = description.substr(current_position, semicolon_position - current_position);
+            const auto opt_rank_neuron_id = parse_description(substring, my_rank);
 
             if (opt_rank_neuron_id.has_value()) {
                 parsed_ids.emplace_back(opt_rank_neuron_id.value());
@@ -120,52 +120,21 @@ public:
     }
 
     /**
-     * @brief Parses a descriptor string for the neuron monitors. If it contains an area name (a string without ':' and not only containing digits),
-     *      uses this to get the associated neuron ids from the local_area_translator (discards those that are not present)
-     * @param description The string that will be parsed
-     * @param local_area_translator Translates between the local area id on the current mpi rank and its area name
-     * @return List of area ids found in the string
-     */
-    [[nodiscard]] static std::vector<RelearnTypes::area_id> parse_area_names(const std::string& description,
-        const std::shared_ptr<LocalAreaTranslator>& local_area_translator) {
-        const auto& vector = StringUtil::split_string(description, ';');
-        std::vector<RelearnTypes::area_name> parsed_area_names{};
-        for (auto& desc : vector) {
-            if (desc.find(':') != std::string::npos || StringUtil::is_number(desc)) {
-                // Description has the format of a neuron id. Skip it
-                continue;
-            }
-            parsed_area_names.emplace_back(std::move(desc));
-        }
-
-        std::vector<RelearnTypes::area_id> area_ids{};
-        area_ids.reserve(parsed_area_names.size());
-
-        const auto& known_area_names = local_area_translator->get_all_area_names();
-        for (const auto& parsed_area_name : parsed_area_names) {
-            if (const auto it = std::find(known_area_names.begin(), known_area_names.end(), parsed_area_name); it != known_area_names.end()) {
-                area_ids.emplace_back(std::distance(known_area_names.begin(), it));
-            }
-        }
-
-        return area_ids;
-    }
-
-    /**
      * @brief Extracts all NeuronIDs from the RankNeuronIds that belong to the given rank.
      *      The ids in the RankNeuronIds are in input format, i.e., "+1"; this method will subtract one when converting them to NeuronID.
      * @param rank_neuron_ids The rank neuron ids
      * @param my_rank The current MPI rank, must be initialized
-     * @exception Throws a RelearnException if my_rank is not initialized
+     * @exception Throws a RelearnException if my_rank is not initialized or if a NeuronID in rank_neuron_ids is 0
      * @return A vector with all successfully parsed RankNeuronIds
      */
     [[nodiscard]] static std::vector<NeuronID> extract_my_ids(const std::vector<RankNeuronId>& rank_neuron_ids, const MPIRank my_rank) {
-        RelearnException::check(my_rank.is_initialized(), "MonitorParser::extract_my_ids: my_rank is not initialized.", my_rank);
+        RelearnException::check(my_rank.is_initialized(), "NeuronIdParser::extract_my_ids: my_rank is not initialized.", my_rank);
 
         std::vector<NeuronID> my_parsed_ids{};
         my_parsed_ids.reserve(rank_neuron_ids.size());
 
         for (const auto& [rank, neuron_id] : rank_neuron_ids) {
+            RelearnException::check(neuron_id.get_neuron_id() > 0, "NeuronIdParser::extract_my_ids: A NeuronID was 0, but should be in \"+1\" format.");
             if (rank == my_rank) {
                 my_parsed_ids.emplace_back(neuron_id.get_neuron_id() - 1);
             }
@@ -199,29 +168,5 @@ public:
 
         return neuron_ids;
     }
-
-    /**
-     * @brief Extracts all to be monitored NeuronIDs that belong to the current rank. Format is:
-     *      <mpi_rank>:<neuron_id> with ; separating the RankNeuronIds
-     *      with a non-negative MPI rank. However, if -1 is parsed as the MPI rank, my_rank is used instead.
-     *      Alternatively, it can also contain
-     *      <area_name>
-     *      which then translates to all NeuronIDs within the areas
-     * @param description The description of the RankNeuronIds
-     * @param my_rank The current MPI rank, must be initialized
-     * @param local_area_translator Translates the area names to the associated NeuronIDs
-     * @exception Throws a RelearnException if my_rank is not initialized
-     * @return A vector with all NeuronIDs that shall be monitored at the current rank, sorted and unique
-     */
-    [[nodiscard]] static std::vector<NeuronID> parse_my_ids(const std::string& description, const MPIRank my_rank,
-        const std::shared_ptr<LocalAreaTranslator>& local_area_translator) {
-        const auto& rank_neuron_ids = parse_multiple_description(description, my_rank);
-        auto neuron_ids = extract_my_ids(rank_neuron_ids, my_rank);
-
-        const auto& area_ids = parse_area_names(description, local_area_translator);
-        const auto& neurons_in_areas = local_area_translator->get_neuron_ids_in_areas(area_ids);
-
-        neuron_ids.insert(neuron_ids.end(), neurons_in_areas.begin(), neurons_in_areas.end());
-        return remove_duplicates_and_sort(std::move(neuron_ids));
-    }
 };
+

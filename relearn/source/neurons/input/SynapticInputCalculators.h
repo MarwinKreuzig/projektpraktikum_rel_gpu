@@ -12,8 +12,6 @@
 
 #include "neurons/input/SynapticInputCalculator.h"
 
-class NetworkGraph;
-
 /**
  * This class returns the input from the synapses directly
  */
@@ -23,20 +21,22 @@ public:
      * @brief Constructs a new instance of type LinearSynapticInputCalculator with 0 neurons and the passed values for all parameters.
      *      Does not check the parameters against the min and max values defined below in order to allow other values besides in the GUI
      * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
+     * @param communicator The communicator for the fired status of distant neurons, not nullptr
+     * @exception Throws a RelearnException if communicator is empty
      */
-    LinearSynapticInputCalculator(const double synapse_conductance, std::unique_ptr<TransmissionDelayer>&& transmission_delayer)
-        : SynapticInputCalculator(synapse_conductance, std::move(transmission_delayer)) { }
+    LinearSynapticInputCalculator(const double synapse_conductance, std::unique_ptr<FiredStatusCommunicator>&& communicator,std::unique_ptr<TransmissionDelayer>&& transmission_delayer)
+        : SynapticInputCalculator(synapse_conductance, std::move(communicator)),std::move(transmission_delayer)) { }
 
     /**
      * @brief Creates a clone of this instance (without neurons), copies all parameters
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<SynapticInputCalculator> clone() const final {
-        return std::make_unique<LinearSynapticInputCalculator>(get_synapse_conductance(), get_transmission_delayer()->clone());
+        return std::make_unique<LinearSynapticInputCalculator>(get_synapse_conductance(),get_fired_status_communicator()->clone(), get_transmission_delayer()->clone());
     }
 
 protected:
-    void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, std::span<const FiredStatus> fired) override;
+    void update_synaptic_input(std::span<const FiredStatus> fired) override;
 };
 
 /**
@@ -49,17 +49,19 @@ public:
      *      Does not check the parameters against the min and max values defined below in order to allow other values besides in the GUI
      * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
      * @param scaling_factor The factor that scales the logarithmic input
+     * @param communicator The communicator for the fired status of distant neurons, not nullptr
+     * @exception Throws a RelearnException if communicator is empty
      */
-    LogarithmicSynapticInputCalculator(const double synapse_conductance, std::unique_ptr<TransmissionDelayer>&& transmission_delayer, const double scaling_factor)
-        : SynapticInputCalculator(synapse_conductance, std::move(transmission_delayer))
-        , scale_factor(scaling_factor) { }
+    LogarithmicSynapticInputCalculator(const double synapse_conductance,std::unique_ptr<FiredStatusCommunicator>&& communicator, std::unique_ptr<TransmissionDelayer>&& transmission_delayer, const double scaling_factor)
+        : SynapticInputCalculator(synapse_conductance, std::move(communicator), std::move(transmission_delayer))
+    {}
 
     /**
      * @brief Creates a clone of this instance (without neurons), copies all parameters
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<SynapticInputCalculator> clone() const final {
-        return std::make_unique<LogarithmicSynapticInputCalculator>(get_synapse_conductance(), get_transmission_delayer()->clone(), get_scale_factor());
+        return std::make_unique<LogarithmicSynapticInputCalculator>(get_synapse_conductance(), get_fired_status_communicator()->clone(), get_transmission_delayer()->clone(), get_scale_factor());
     }
 
     /**
@@ -86,7 +88,7 @@ public:
     static constexpr double max_scaling{ 100.0 };
 
 protected:
-    void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, std::span<const FiredStatus> fired) override;
+    void update_synaptic_input(std::span<const FiredStatus> fired) override;
 
 private:
     double scale_factor{ default_scaling };
@@ -99,17 +101,19 @@ public:
      *      Does not check the parameters agains the min and max values defined below in order to allow other values besides in the GUI
      * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
      * @param scaling_factor The factor that scales the hyperbolic tanget input
+     * @param communicator The communicator for the fired status of distant neurons, not nullptr
+     * @exception Throws a RelearnException if communicator is empty
      */
-    HyperbolicTangentSynapticInputCalculator(const double synapse_conductance, std::unique_ptr<TransmissionDelayer>&& transmission_delayer, const double scaling_factor)
-        : SynapticInputCalculator(synapse_conductance, std::move(transmission_delayer))
-        , scale_factor(scaling_factor) { }
+    HyperbolicTangentSynapticInputCalculator(const double synapse_conductance, std::unique_ptr<FiredStatusCommunicator>&& communicator, std::unique_ptr<TransmissionDelayer>&& transmission_delayer, const double scaling_factor)
+        : SynapticInputCalculator(synapse_conductance, std::move(communicator),std::move(transmission_delayer))
+
 
     /**
      * @brief Creates a clone of this instance (without neurons), copies all parameters
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<SynapticInputCalculator> clone() const final {
-        return std::make_unique<HyperbolicTangentSynapticInputCalculator>(get_synapse_conductance(),get_transmission_delayer()->clone(), get_scale_factor());
+        return std::make_unique<HyperbolicTangentSynapticInputCalculator>(get_synapse_conductance(),get_fired_status_communicator()->clone(),get_transmission_delayer()->clone(), get_scale_factor());
     }
 
     /**
@@ -136,7 +140,7 @@ public:
     static constexpr double max_scaling{ 100.0 };
 
 protected:
-    void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, std::span<const FiredStatus> fired) override;
+    void update_synaptic_input(std::span<const FiredStatus> fired) override;
 
 private:
     double scale_factor{ default_scaling };

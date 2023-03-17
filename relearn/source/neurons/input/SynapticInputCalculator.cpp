@@ -17,6 +17,7 @@
 #include <algorithm>
 
 void SynapticInputCalculator::init(const number_neurons_type number_neurons) {
+    RelearnException::check(number_local_neurons == 0, "SynapticInputCalculator::init: Was already initialized");
     RelearnException::check(number_neurons > 0, "SynapticInputCalculator::init: number_neurons was 0");
 
     number_local_neurons = number_neurons;
@@ -24,11 +25,7 @@ void SynapticInputCalculator::init(const number_neurons_type number_neurons) {
     raw_ex_input.resize(number_neurons, 0.0);
     raw_inh_input.resize(number_neurons,0.0);
 
-    fired_status_comm = std::make_unique<FiredStatusCommunicationMap>(MPIWrapper::get_num_ranks(), number_neurons);
-
-    if (extra_infos.operator bool()) {
-        fired_status_comm->set_extra_infos(extra_infos);
-    }
+    fired_status_comm->init(number_neurons);
 }
 
 void SynapticInputCalculator::create_neurons(const number_neurons_type creation_count) {
@@ -43,9 +40,7 @@ void SynapticInputCalculator::create_neurons(const number_neurons_type creation_
     raw_ex_input.resize(new_size, 0.0);
     raw_inh_input.resize(new_size, 0.0);
 
-    fired_status_comm = std::make_unique<FiredStatusCommunicationMap>(MPIWrapper::get_num_ranks(), new_size);
-
-    transmission_delayer->create_neurons(new_size);
+    fired_status_comm->create_neurons(creation_count);
 }
 
 void SynapticInputCalculator::set_synaptic_input(const double value) noexcept {

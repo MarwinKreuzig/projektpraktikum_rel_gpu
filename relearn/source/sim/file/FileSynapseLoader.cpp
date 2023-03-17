@@ -13,7 +13,7 @@
 #include "io/NeuronIO.h"
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
-#include "util/StringUtil.h"
+#include "util/Utility.h"
 
 #include <filesystem>
 
@@ -31,8 +31,8 @@ FileSynapseLoader::synapses_pair_type FileSynapseLoader::internal_load_synapses(
 
     const auto& actual_path = optional_path_to_file.value();
 
-    const std::filesystem::path path_to_in_file = StringUtil::find_file_for_rank(actual_path, MPIRank::root_rank().get_rank(), "rank_", "_in_network.txt", 5);
-    const std::filesystem::path path_to_out_file = StringUtil::find_file_for_rank(actual_path, MPIRank::root_rank().get_rank(), "rank_", "_out_network.txt", 5);
+    const std::filesystem::path path_to_in_file = Util::find_file_for_rank(actual_path, MPIRank::root_rank().get_rank(), "rank_", "_in_network.txt", 5);
+    const std::filesystem::path path_to_out_file = Util::find_file_for_rank(actual_path, MPIRank::root_rank().get_rank(), "rank_", "_out_network.txt", 5);
 
     const auto number_local_neurons = partition->get_number_local_neurons();
 

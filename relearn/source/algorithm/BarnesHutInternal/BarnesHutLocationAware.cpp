@@ -72,7 +72,7 @@ CommunicationMap<DistantNeuronRequest> BarnesHutLocationAware::find_target_neuro
     return neuron_requests_outgoing;
 }
 
-std::pair<CommunicationMap<DistantNeuronResponse>, std::pair<LocalSynapses, DistantInSynapses>>
+std::pair<CommunicationMap<DistantNeuronResponse>, std::pair<PlasticLocalSynapses, PlasticDistantInSynapses>>
 BarnesHutLocationAware::process_requests(const CommunicationMap<DistantNeuronRequest>& neuron_requests) {
     const auto number_ranks = neuron_requests.get_number_ranks();
 
@@ -144,7 +144,7 @@ BarnesHutLocationAware::process_requests(const CommunicationMap<DistantNeuronReq
     return std::make_pair(neuron_responses, synapses);
 }
 
-DistantOutSynapses BarnesHutLocationAware::process_responses(const CommunicationMap<DistantNeuronRequest>& neuron_requests,
+PlasticDistantOutSynapses BarnesHutLocationAware::process_responses(const CommunicationMap<DistantNeuronRequest>& neuron_requests,
     const CommunicationMap<DistantNeuronResponse>& neuron_responses) {
 
     RelearnException::check(neuron_requests.size() == neuron_responses.size(), "BarnesHutLocationAware::process_responses: Requests and Responses had different sizes");

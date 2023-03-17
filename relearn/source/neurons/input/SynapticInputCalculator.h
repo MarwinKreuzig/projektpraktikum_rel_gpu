@@ -22,12 +22,17 @@
 #include "util/RelearnException.h"
 #include "util/TaggedID.h"
 
+#include "fmt/ostream.h"
+
 #include <memory>
 #include <vector>
 
 class NetworkGraph;
 class NeuronMonitor;
 
+/**
+ * This enums lists all types of synaptic input calculators
+ */
 enum class SynapticInputCalculatorType : char {
     Linear,
     Logarithmic,
@@ -56,6 +61,9 @@ inline std::ostream& operator<<(std::ostream& out, const SynapticInputCalculator
     return out;
 }
 
+template <>
+struct fmt::formatter<SynapticInputCalculatorType> : ostream_formatter { };
+
 /**
  * This class provides an interface to calculate the background activity and synaptic input
  * that neurons receive. Performs communication with MPI to synchronize with different ranks.
@@ -71,9 +79,13 @@ public:
      * @brief Constructs a new instance of type SynapticInputCalculator with 0 neurons and the passed values for all parameters.
      *      Does not check the parameters against the min and max values defined below in order to allow other values besides in the GUI
      * @param synapse_conductance The factor by which the input of a neighboring spiking neuron is weighted
+     * @param communicator The communicator for the fired status of distant neurons, not nullptr
+     * @exception Throws a RelearnException if communicator is empty
      */
-    SynapticInputCalculator(const double synapse_conductance,std::unique_ptr<TransmissionDelayer>&& transmission_delayer)
-        : synapse_conductance(synapse_conductance), transmission_delayer(std::move(transmission_delayer)) { }
+    SynapticInputCalculator(const double synapse_conductance,std::unique_ptr<FiredStatusCommunicator>&& communicator,std::unique_ptr<TransmissionDelayer>&& transmission_delayer)
+        : synapse_conductance(synapse_conductance), transmission_delayer(std::move(transmission_delayer)) , fired_status_comm(std::move(communicator)) {
+        RelearnException::check(fired_status_comm.operator bool(), "SynapticInputCalculator::SynapticInputCalculator: communicator was empty.");
+    }
 
     /**
      * @brief Sets the extra infos. These are used to determine which neuron updates its electrical activity
@@ -83,11 +95,22 @@ public:
     void set_extra_infos(std::shared_ptr<NeuronsExtraInfo> new_extra_info) {
         const auto is_filled = new_extra_info.operator bool();
         RelearnException::check(is_filled, "SynapticInputCalculator::set_extra_infos: new_extra_info is empty");
-        extra_infos = std::move(new_extra_info);
 
-        if (fired_status_comm.operator bool()) {
-            fired_status_comm->set_extra_infos(extra_infos);
-        }
+        extra_infos = new_extra_info;
+        fired_status_comm->set_extra_infos(std::move(new_extra_info));
+    }
+
+    /**
+     * @brief Sets the network graph. It is used to determine which neurons to notify in case of a firing one.
+     * @param new_network_graph The new network graph, must not be empty
+     * @exception Throws a RelearnException if new_network_graph is empty
+     */
+    void set_network_graph(std::shared_ptr<NetworkGraph> new_network_graph) {
+        const auto is_filled = new_network_graph.operator bool();
+        RelearnException::check(is_filled, "SynapticInputCalculator::set_network_graph: new_network_graph is empty");
+
+        network_graph = new_network_graph;
+        fired_status_comm->set_network_graph(std::move(new_network_graph));
     }
 
     /**
@@ -113,12 +136,10 @@ public:
     /**
      * @brief Updates the synaptic input and the background activity based on the current network graph, whether the local neurons spikes, and which neuron to update
      * @param step The current update step
-     * @param network_graph_static The network graph of static connections
-     * @param network_graph_plastic The network graph of plastic connections
      * @param fired Which local neuron fired
      * @exception Throws a RelearnException if the number of local neurons didn't match the sizes of the arguments
      */
-    void update_input([[maybe_unused]] const step_type step, const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, const std::span<const FiredStatus> fired) {
+    void update_input(const step_type step, const std::span<const FiredStatus> fired) {
         const auto& disable_flags = extra_infos->get_disable_flags();
 
         RelearnException::check(number_local_neurons > 0, "SynapticInputCalculator::update_input: There were no local neurons.");
@@ -129,14 +150,22 @@ public:
         std::fill(raw_inh_input.begin(), raw_inh_input.end(), 0.0);
 
         transmission_delayer->prepare_update(number_local_neurons);
-        fired_status_comm->set_local_fired_status(fired, network_graph_static, network_graph_plastic);
-        fired_status_comm->exchange_fired_status();
+        fired_status_comm->set_local_fired_status(step, fired);
+        fired_status_comm->exchange_fired_status(step);
 
-        update_transmission_delayer(network_graph_plastic, fired);
-        update_transmission_delayer(network_graph_static, fired);
+        update_transmission_delayer(fired);
+        update_transmission_delayer(fired);
 
+        update_synaptic_input(fired);
+    }
 
-        update_synaptic_input(network_graph_static, network_graph_plastic, fired);
+    /**
+     * @brief Notifies this class and the input calculators that the plasticity has changed.
+     *      Some might cache values, which than can be recalculated
+     * @param step The current simulation step
+     */
+    void notify_of_plasticity_change(const step_type step) {
+        fired_status_comm->notify_of_plasticity_change(step);
     }
 
     /**
@@ -206,11 +235,9 @@ public:
 protected:
     /**
      * @brief This hook needs to update this->synaptic_input for every neuron. Can make use of this->fired_status_comm
-     * @param network_graph_static The network graph of static connections
-     * @param network_graph_plastic The network graph of plastic connections
      * @param fired If the local neurons fired
      */
-    virtual void update_synaptic_input(const NetworkGraph& network_graph_static, const NetworkGraph& network_graph_plastic, std::span<const FiredStatus> fired) = 0;
+    virtual void update_synaptic_input(std::span<const FiredStatus> fired) = 0;
 
     /**
      * @brief Sets the synaptic input for the given neuron
@@ -235,6 +262,7 @@ protected:
 
 protected:
     std::shared_ptr<NeuronsExtraInfo> extra_infos{};
+    std::shared_ptr<NetworkGraph> network_graph{};
 
 private:
     number_neurons_type number_local_neurons{};

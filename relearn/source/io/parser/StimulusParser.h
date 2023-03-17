@@ -12,6 +12,8 @@
 
 #include "Config.h"
 #include "Types.h"
+#include "io/parser/IntervalParser.h"
+#include "io/LogFiles.h"
 #include "neurons/LocalAreaTranslator.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "util/Interval.h"
@@ -58,7 +60,7 @@ public:
             return {};
         }
 
-        const auto& parsed_interval = Interval::parse_interval(interval_description);
+        const auto& parsed_interval = IntervalParser::parse_interval(interval_description);
         if (!parsed_interval.has_value()) {
             return {};
         }

@@ -192,6 +192,98 @@ void CellTest::test_cell_dendrites_position() {
     ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
     ASSERT_TRUE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
     ASSERT_EQ(pos_in_3, cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).value());
+
+    const auto& pos_ex_4 = SimulationAdapter::get_random_position_in_box(min, max, mt);
+    cell.set_dendrites_position_for(SignalType::Excitatory, pos_ex_4);
+
+    ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
+    ASSERT_EQ(pos_ex_4, cell.get_excitatory_dendrites_position().value());
+
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_4, cell.get_dendrites_position_for(SignalType::Excitatory).value());
+
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_4, cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).value());
+
+    ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
+    ASSERT_EQ(pos_in_3, cell.get_inhibitory_dendrites_position().value());
+
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_3, cell.get_dendrites_position_for(SignalType::Inhibitory).value());
+
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_3, cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).value());
+
+    const auto& pos_in_4 = SimulationAdapter::get_random_position_in_box(min, max, mt);
+    cell.set_dendrites_position_for(SignalType::Inhibitory, pos_in_4);
+
+    ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
+    ASSERT_EQ(pos_ex_4, cell.get_excitatory_dendrites_position().value());
+
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_4, cell.get_dendrites_position_for(SignalType::Excitatory).value());
+
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_4, cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).value());
+
+    ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
+    ASSERT_EQ(pos_in_4, cell.get_inhibitory_dendrites_position().value());
+
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_4, cell.get_dendrites_position_for(SignalType::Inhibitory).value());
+
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_4, cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).value());
+
+    const auto& pos_ex_5 = SimulationAdapter::get_random_position_in_box(min, max, mt);
+    cell.set_position_for(ElementType::Dendrite, SignalType::Excitatory, pos_ex_5);
+
+    ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
+    ASSERT_EQ(pos_ex_5, cell.get_excitatory_dendrites_position().value());
+
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_5, cell.get_dendrites_position_for(SignalType::Excitatory).value());
+
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_5, cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).value());
+
+    ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
+    ASSERT_EQ(pos_in_4, cell.get_inhibitory_dendrites_position().value());
+
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_4, cell.get_dendrites_position_for(SignalType::Inhibitory).value());
+
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_4, cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).value());
+
+    const auto& pos_in_5 = SimulationAdapter::get_random_position_in_box(min, max, mt);
+    cell.set_position_for(ElementType::Dendrite, SignalType::Inhibitory, pos_in_5);
+
+    ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
+    ASSERT_EQ(pos_ex_5, cell.get_excitatory_dendrites_position().value());
+
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_5, cell.get_dendrites_position_for(SignalType::Excitatory).value());
+
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_5, cell.get_position_for(ElementType::Dendrite, SignalType::Excitatory).value());
+
+    ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
+    ASSERT_EQ(pos_in_5, cell.get_inhibitory_dendrites_position().value());
+
+    ASSERT_TRUE(cell.get_dendrites_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_5, cell.get_dendrites_position_for(SignalType::Inhibitory).value());
+
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_5, cell.get_position_for(ElementType::Dendrite, SignalType::Inhibitory).value());
 }
 
 template <typename AdditionalCellAttributes>
@@ -216,6 +308,14 @@ void CellTest::test_cell_dendrites_position_exception() {
     ASSERT_THROW(cell.set_dendrites_position(pos_ex_1_invalid_y_max), RelearnException);
     ASSERT_THROW(cell.set_dendrites_position(pos_ex_1_invalid_z_max), RelearnException);
 
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Excitatory, pos_ex_1_invalid_x_max), RelearnException);
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Excitatory, pos_ex_1_invalid_y_max), RelearnException);
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Excitatory, pos_ex_1_invalid_z_max), RelearnException);
+
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Excitatory, pos_ex_1_invalid_x_max), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Excitatory, pos_ex_1_invalid_y_max), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Excitatory, pos_ex_1_invalid_z_max), RelearnException);
+
     ASSERT_THROW(cell.set_neuron_position(pos_ex_1_invalid_x_max), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_ex_1_invalid_y_max), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_ex_1_invalid_z_max), RelearnException);
@@ -231,6 +331,14 @@ void CellTest::test_cell_dendrites_position_exception() {
     ASSERT_THROW(cell.set_dendrites_position(pos_ex_1_invalid_x_min), RelearnException);
     ASSERT_THROW(cell.set_dendrites_position(pos_ex_1_invalid_y_min), RelearnException);
     ASSERT_THROW(cell.set_dendrites_position(pos_ex_1_invalid_z_min), RelearnException);
+
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Excitatory, pos_ex_1_invalid_x_min), RelearnException);
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Excitatory, pos_ex_1_invalid_y_min), RelearnException);
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Excitatory, pos_ex_1_invalid_z_min), RelearnException);
+
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Excitatory, pos_ex_1_invalid_x_min), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Excitatory, pos_ex_1_invalid_y_min), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Excitatory, pos_ex_1_invalid_z_min), RelearnException);
 
     ASSERT_THROW(cell.set_neuron_position(pos_ex_1_invalid_x_min), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_ex_1_invalid_y_min), RelearnException);
@@ -261,6 +369,14 @@ void CellTest::test_cell_dendrites_position_exception() {
     ASSERT_THROW(cell.set_neuron_position(pos_ex_2_invalid_y_max), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_ex_2_invalid_z_max), RelearnException);
 
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Excitatory, pos_ex_2_invalid_x_max), RelearnException);
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Excitatory, pos_ex_2_invalid_y_max), RelearnException);
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Excitatory, pos_ex_2_invalid_z_max), RelearnException);
+
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Excitatory, pos_ex_2_invalid_x_max), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Excitatory, pos_ex_2_invalid_y_max), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Excitatory, pos_ex_2_invalid_z_max), RelearnException);
+
     const auto& pos_ex_2_invalid_x_min = min - Vec3d{ 1, 0, 0 };
     const auto& pos_ex_2_invalid_y_min = min - Vec3d{ 0, 1, 0 };
     const auto& pos_ex_2_invalid_z_min = min - Vec3d{ 0, 0, 1 };
@@ -276,6 +392,14 @@ void CellTest::test_cell_dendrites_position_exception() {
     ASSERT_THROW(cell.set_neuron_position(pos_ex_2_invalid_x_min), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_ex_2_invalid_y_min), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_ex_2_invalid_z_min), RelearnException);
+
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Excitatory, pos_ex_2_invalid_x_min), RelearnException);
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Excitatory, pos_ex_2_invalid_y_min), RelearnException);
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Excitatory, pos_ex_2_invalid_z_min), RelearnException);
+
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Excitatory, pos_ex_2_invalid_x_min), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Excitatory, pos_ex_2_invalid_y_min), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Excitatory, pos_ex_2_invalid_z_min), RelearnException);
 
     ASSERT_TRUE(cell.get_excitatory_dendrites_position().has_value());
     ASSERT_EQ(pos_ex_2, cell.get_excitatory_dendrites_position().value());
@@ -302,6 +426,14 @@ void CellTest::test_cell_dendrites_position_exception() {
     ASSERT_THROW(cell.set_neuron_position(pos_in_1_invalid_y_max), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_in_1_invalid_z_max), RelearnException);
 
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Inhibitory, pos_in_1_invalid_x_max), RelearnException);
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Inhibitory, pos_in_1_invalid_y_max), RelearnException);
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Inhibitory, pos_in_1_invalid_z_max), RelearnException);
+
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Inhibitory, pos_in_1_invalid_x_max), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Inhibitory, pos_in_1_invalid_y_max), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Inhibitory, pos_in_1_invalid_z_max), RelearnException);
+
     const auto& pos_in_1_invalid_x_min = min - Vec3d{ 1, 0, 0 };
     const auto& pos_in_1_invalid_y_min = min - Vec3d{ 0, 1, 0 };
     const auto& pos_in_1_invalid_z_min = min - Vec3d{ 0, 0, 1 };
@@ -317,6 +449,14 @@ void CellTest::test_cell_dendrites_position_exception() {
     ASSERT_THROW(cell.set_neuron_position(pos_in_1_invalid_x_min), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_in_1_invalid_y_min), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_in_1_invalid_z_min), RelearnException);
+
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Inhibitory, pos_in_1_invalid_x_min), RelearnException);
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Inhibitory, pos_in_1_invalid_y_min), RelearnException);
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Inhibitory, pos_in_1_invalid_z_min), RelearnException);
+
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Inhibitory, pos_in_1_invalid_x_min), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Inhibitory, pos_in_1_invalid_y_min), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Inhibitory, pos_in_1_invalid_z_min), RelearnException);
 
     ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
     ASSERT_EQ(pos_in_1, cell.get_inhibitory_dendrites_position().value());
@@ -343,6 +483,14 @@ void CellTest::test_cell_dendrites_position_exception() {
     ASSERT_THROW(cell.set_neuron_position(pos_in_2_invalid_y_max), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_in_2_invalid_z_max), RelearnException);
 
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Inhibitory, pos_in_2_invalid_x_max), RelearnException);
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Inhibitory, pos_in_2_invalid_y_max), RelearnException);
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Inhibitory, pos_in_2_invalid_z_max), RelearnException);
+
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Inhibitory, pos_in_2_invalid_x_max), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Inhibitory, pos_in_2_invalid_y_max), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Inhibitory, pos_in_2_invalid_z_max), RelearnException);
+
     const auto& pos_in_2_invalid_x_min = min - Vec3d{ 1, 0, 0 };
     const auto& pos_in_2_invalid_y_min = min - Vec3d{ 0, 1, 0 };
     const auto& pos_in_2_invalid_z_min = min - Vec3d{ 0, 0, 1 };
@@ -358,6 +506,14 @@ void CellTest::test_cell_dendrites_position_exception() {
     ASSERT_THROW(cell.set_neuron_position(pos_in_2_invalid_x_min), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_in_2_invalid_y_min), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_in_2_invalid_z_min), RelearnException);
+
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Inhibitory, pos_in_2_invalid_x_min), RelearnException);
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Inhibitory, pos_in_2_invalid_y_min), RelearnException);
+    ASSERT_THROW(cell.set_dendrites_position_for(SignalType::Inhibitory, pos_in_2_invalid_z_min), RelearnException);
+
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Inhibitory, pos_in_2_invalid_x_min), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Inhibitory, pos_in_2_invalid_y_min), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Dendrite, SignalType::Inhibitory, pos_in_2_invalid_z_min), RelearnException);
 
     ASSERT_TRUE(cell.get_inhibitory_dendrites_position().has_value());
     ASSERT_EQ(pos_in_2, cell.get_inhibitory_dendrites_position().value());
@@ -395,6 +551,32 @@ void CellTest::test_cell_set_number_dendrites() {
     ASSERT_EQ(num_dends_in_2, cell.get_number_inhibitory_dendrites());
     ASSERT_EQ(num_dends_in_2, cell.get_number_dendrites_for(SignalType::Inhibitory));
     ASSERT_EQ(num_dends_in_2, cell.get_number_elements_for(ElementType::Dendrite, SignalType::Inhibitory));
+
+    const auto num_dends_ex_3 = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto num_dends_in_3 = TaggedIdAdapter::get_random_number_neurons(mt);
+
+    cell.set_number_dendrites_for(SignalType::Excitatory, static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_dends_ex_3));
+    cell.set_number_dendrites_for(SignalType::Inhibitory, static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_dends_in_3));
+
+    ASSERT_EQ(num_dends_ex_3, cell.get_number_excitatory_dendrites());
+    ASSERT_EQ(num_dends_ex_3, cell.get_number_dendrites_for(SignalType::Excitatory));
+    ASSERT_EQ(num_dends_ex_3, cell.get_number_elements_for(ElementType::Dendrite, SignalType::Excitatory));
+    ASSERT_EQ(num_dends_in_3, cell.get_number_inhibitory_dendrites());
+    ASSERT_EQ(num_dends_in_3, cell.get_number_dendrites_for(SignalType::Inhibitory));
+    ASSERT_EQ(num_dends_in_3, cell.get_number_elements_for(ElementType::Dendrite, SignalType::Inhibitory));
+
+    const auto num_dends_ex_4 = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto num_dends_in_4 = TaggedIdAdapter::get_random_number_neurons(mt);
+
+    cell.set_number_elements_for(ElementType::Dendrite, SignalType::Excitatory, static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_dends_ex_4));
+    cell.set_number_elements_for(ElementType::Dendrite, SignalType::Inhibitory, static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_dends_in_4));
+
+    ASSERT_EQ(num_dends_ex_4, cell.get_number_excitatory_dendrites());
+    ASSERT_EQ(num_dends_ex_4, cell.get_number_dendrites_for(SignalType::Excitatory));
+    ASSERT_EQ(num_dends_ex_4, cell.get_number_elements_for(ElementType::Dendrite, SignalType::Excitatory));
+    ASSERT_EQ(num_dends_in_4, cell.get_number_inhibitory_dendrites());
+    ASSERT_EQ(num_dends_in_4, cell.get_number_dendrites_for(SignalType::Inhibitory));
+    ASSERT_EQ(num_dends_in_4, cell.get_number_elements_for(ElementType::Dendrite, SignalType::Inhibitory));
 }
 
 template <typename AdditionalCellAttributes>
@@ -596,6 +778,98 @@ void CellTest::test_cell_axons_position() {
     ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
     ASSERT_TRUE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
     ASSERT_EQ(pos_in_3, cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).value());
+
+    const auto& pos_ex_4 = SimulationAdapter::get_random_position_in_box(min, max, mt);
+    cell.set_axons_position_for(SignalType::Excitatory, pos_ex_4);
+
+    ASSERT_TRUE(cell.get_excitatory_axons_position().has_value());
+    ASSERT_EQ(pos_ex_4, cell.get_excitatory_axons_position().value());
+
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_4, cell.get_axons_position_for(SignalType::Excitatory).value());
+
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Excitatory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Axon, SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_4, cell.get_position_for(ElementType::Axon, SignalType::Excitatory).value());
+
+    ASSERT_TRUE(cell.get_inhibitory_axons_position().has_value());
+    ASSERT_EQ(pos_in_3, cell.get_inhibitory_axons_position().value());
+
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_3, cell.get_axons_position_for(SignalType::Inhibitory).value());
+
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_3, cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).value());
+
+    const auto& pos_in_4 = SimulationAdapter::get_random_position_in_box(min, max, mt);
+    cell.set_axons_position_for(SignalType::Inhibitory, pos_in_4);
+
+    ASSERT_TRUE(cell.get_excitatory_axons_position().has_value());
+    ASSERT_EQ(pos_ex_4, cell.get_excitatory_axons_position().value());
+
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_4, cell.get_axons_position_for(SignalType::Excitatory).value());
+
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Excitatory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Axon, SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_4, cell.get_position_for(ElementType::Axon, SignalType::Excitatory).value());
+
+    ASSERT_TRUE(cell.get_inhibitory_axons_position().has_value());
+    ASSERT_EQ(pos_in_4, cell.get_inhibitory_axons_position().value());
+
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_4, cell.get_axons_position_for(SignalType::Inhibitory).value());
+
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_4, cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).value());
+
+    const auto& pos_ex_5 = SimulationAdapter::get_random_position_in_box(min, max, mt);
+    cell.set_position_for(ElementType::Axon, SignalType::Excitatory, pos_ex_5);
+
+    ASSERT_TRUE(cell.get_excitatory_axons_position().has_value());
+    ASSERT_EQ(pos_ex_5, cell.get_excitatory_axons_position().value());
+
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_5, cell.get_axons_position_for(SignalType::Excitatory).value());
+
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Excitatory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Axon, SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_5, cell.get_position_for(ElementType::Axon, SignalType::Excitatory).value());
+
+    ASSERT_TRUE(cell.get_inhibitory_axons_position().has_value());
+    ASSERT_EQ(pos_in_4, cell.get_inhibitory_axons_position().value());
+
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_4, cell.get_axons_position_for(SignalType::Inhibitory).value());
+
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_4, cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).value());
+
+    const auto& pos_in_5 = SimulationAdapter::get_random_position_in_box(min, max, mt);
+    cell.set_position_for(ElementType::Axon, SignalType::Inhibitory, pos_in_5);
+
+    ASSERT_TRUE(cell.get_excitatory_axons_position().has_value());
+    ASSERT_EQ(pos_ex_5, cell.get_excitatory_axons_position().value());
+
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_5, cell.get_axons_position_for(SignalType::Excitatory).value());
+
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Excitatory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Axon, SignalType::Excitatory).has_value());
+    ASSERT_EQ(pos_ex_5, cell.get_position_for(ElementType::Axon, SignalType::Excitatory).value());
+
+    ASSERT_TRUE(cell.get_inhibitory_axons_position().has_value());
+    ASSERT_EQ(pos_in_5, cell.get_inhibitory_axons_position().value());
+
+    ASSERT_TRUE(cell.get_axons_position_for(SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_5, cell.get_axons_position_for(SignalType::Inhibitory).value());
+
+    ASSERT_NO_THROW(auto val = cell.get_position_for(ElementType::Axon, SignalType::Inhibitory));
+    ASSERT_TRUE(cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).has_value());
+    ASSERT_EQ(pos_in_5, cell.get_position_for(ElementType::Axon, SignalType::Inhibitory).value());
 }
 
 template <typename AdditionalCellAttributes>
@@ -624,6 +898,14 @@ void CellTest::test_cell_axons_position_exception() {
     ASSERT_THROW(cell.set_neuron_position(pos_ex_1_invalid_y_max), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_ex_1_invalid_z_max), RelearnException);
 
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Excitatory, pos_ex_1_invalid_x_max), RelearnException);
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Excitatory, pos_ex_1_invalid_y_max), RelearnException);
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Excitatory, pos_ex_1_invalid_z_max), RelearnException);
+
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Excitatory, pos_ex_1_invalid_x_max), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Excitatory, pos_ex_1_invalid_y_max), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Excitatory, pos_ex_1_invalid_z_max), RelearnException);
+
     const auto& pos_ex_1_invalid_x_min = min - Vec3d{ 1, 0, 0 };
     const auto& pos_ex_1_invalid_y_min = min - Vec3d{ 0, 1, 0 };
     const auto& pos_ex_1_invalid_z_min = min - Vec3d{ 0, 0, 1 };
@@ -639,6 +921,14 @@ void CellTest::test_cell_axons_position_exception() {
     ASSERT_THROW(cell.set_neuron_position(pos_ex_1_invalid_x_min), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_ex_1_invalid_y_min), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_ex_1_invalid_z_min), RelearnException);
+
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Excitatory, pos_ex_1_invalid_x_min), RelearnException);
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Excitatory, pos_ex_1_invalid_y_min), RelearnException);
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Excitatory, pos_ex_1_invalid_z_min), RelearnException);
+
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Excitatory, pos_ex_1_invalid_x_min), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Excitatory, pos_ex_1_invalid_y_min), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Excitatory, pos_ex_1_invalid_z_min), RelearnException);
 
     ASSERT_TRUE(cell.get_excitatory_axons_position().has_value());
     ASSERT_EQ(pos_ex_1, cell.get_excitatory_axons_position().value());
@@ -665,6 +955,14 @@ void CellTest::test_cell_axons_position_exception() {
     ASSERT_THROW(cell.set_neuron_position(pos_ex_2_invalid_y_max), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_ex_2_invalid_z_max), RelearnException);
 
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Excitatory, pos_ex_2_invalid_x_max), RelearnException);
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Excitatory, pos_ex_2_invalid_y_max), RelearnException);
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Excitatory, pos_ex_2_invalid_z_max), RelearnException);
+
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Excitatory, pos_ex_2_invalid_x_max), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Excitatory, pos_ex_2_invalid_y_max), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Excitatory, pos_ex_2_invalid_z_max), RelearnException);
+
     const auto& pos_ex_2_invalid_x_min = min - Vec3d{ 1, 0, 0 };
     const auto& pos_ex_2_invalid_y_min = min - Vec3d{ 0, 1, 0 };
     const auto& pos_ex_2_invalid_z_min = min - Vec3d{ 0, 0, 1 };
@@ -680,6 +978,14 @@ void CellTest::test_cell_axons_position_exception() {
     ASSERT_THROW(cell.set_neuron_position(pos_ex_2_invalid_x_min), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_ex_2_invalid_y_min), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_ex_2_invalid_z_min), RelearnException);
+
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Excitatory, pos_ex_2_invalid_x_min), RelearnException);
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Excitatory, pos_ex_2_invalid_y_min), RelearnException);
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Excitatory, pos_ex_2_invalid_z_min), RelearnException);
+
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Excitatory, pos_ex_2_invalid_x_min), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Excitatory, pos_ex_2_invalid_y_min), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Excitatory, pos_ex_2_invalid_z_min), RelearnException);
 
     ASSERT_TRUE(cell.get_excitatory_axons_position().has_value());
     ASSERT_EQ(pos_ex_2, cell.get_excitatory_axons_position().value());
@@ -706,6 +1012,14 @@ void CellTest::test_cell_axons_position_exception() {
     ASSERT_THROW(cell.set_neuron_position(pos_in_1_invalid_y_max), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_in_1_invalid_z_max), RelearnException);
 
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Inhibitory, pos_in_1_invalid_x_max), RelearnException);
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Inhibitory, pos_in_1_invalid_y_max), RelearnException);
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Inhibitory, pos_in_1_invalid_z_max), RelearnException);
+
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Inhibitory, pos_in_1_invalid_x_max), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Inhibitory, pos_in_1_invalid_y_max), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Inhibitory, pos_in_1_invalid_z_max), RelearnException);
+
     const auto& pos_in_1_invalid_x_min = min - Vec3d{ 1, 0, 0 };
     const auto& pos_in_1_invalid_y_min = min - Vec3d{ 0, 1, 0 };
     const auto& pos_in_1_invalid_z_min = min - Vec3d{ 0, 0, 1 };
@@ -721,6 +1035,14 @@ void CellTest::test_cell_axons_position_exception() {
     ASSERT_THROW(cell.set_neuron_position(pos_in_1_invalid_x_min), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_in_1_invalid_y_min), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_in_1_invalid_z_min), RelearnException);
+
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Inhibitory, pos_in_1_invalid_x_min), RelearnException);
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Inhibitory, pos_in_1_invalid_y_min), RelearnException);
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Inhibitory, pos_in_1_invalid_z_min), RelearnException);
+
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Inhibitory, pos_in_1_invalid_x_min), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Inhibitory, pos_in_1_invalid_y_min), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Inhibitory, pos_in_1_invalid_z_min), RelearnException);
 
     ASSERT_TRUE(cell.get_inhibitory_axons_position().has_value());
     ASSERT_EQ(pos_in_1, cell.get_inhibitory_axons_position().value());
@@ -747,6 +1069,14 @@ void CellTest::test_cell_axons_position_exception() {
     ASSERT_THROW(cell.set_neuron_position(pos_in_2_invalid_y_max), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_in_2_invalid_z_max), RelearnException);
 
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Inhibitory, pos_in_2_invalid_x_max), RelearnException);
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Inhibitory, pos_in_2_invalid_y_max), RelearnException);
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Inhibitory, pos_in_2_invalid_z_max), RelearnException);
+
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Inhibitory, pos_in_2_invalid_x_max), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Inhibitory, pos_in_2_invalid_y_max), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Inhibitory, pos_in_2_invalid_z_max), RelearnException);
+
     const auto& pos_in_2_invalid_x_min = min - Vec3d{ 1, 0, 0 };
     const auto& pos_in_2_invalid_y_min = min - Vec3d{ 0, 1, 0 };
     const auto& pos_in_2_invalid_z_min = min - Vec3d{ 0, 0, 1 };
@@ -762,6 +1092,14 @@ void CellTest::test_cell_axons_position_exception() {
     ASSERT_THROW(cell.set_neuron_position(pos_in_2_invalid_x_min), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_in_2_invalid_y_min), RelearnException);
     ASSERT_THROW(cell.set_neuron_position(pos_in_2_invalid_z_min), RelearnException);
+
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Inhibitory, pos_in_2_invalid_x_min), RelearnException);
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Inhibitory, pos_in_2_invalid_y_min), RelearnException);
+    ASSERT_THROW(cell.set_axons_position_for(SignalType::Inhibitory, pos_in_2_invalid_z_min), RelearnException);
+
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Inhibitory, pos_in_2_invalid_x_min), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Inhibitory, pos_in_2_invalid_y_min), RelearnException);
+    ASSERT_THROW(cell.set_position_for(ElementType::Axon, SignalType::Inhibitory, pos_in_2_invalid_z_min), RelearnException);
 
     ASSERT_TRUE(cell.get_inhibitory_axons_position().has_value());
     ASSERT_EQ(pos_in_2, cell.get_inhibitory_axons_position().value());
@@ -799,6 +1137,32 @@ void CellTest::test_cell_set_number_axons() {
     ASSERT_EQ(num_axs_in_2, cell.get_number_inhibitory_axons());
     ASSERT_EQ(num_axs_in_2, cell.get_number_axons_for(SignalType::Inhibitory));
     ASSERT_EQ(num_axs_in_2, cell.get_number_elements_for(ElementType::Axon, SignalType::Inhibitory));
+
+    const auto num_axs_ex_3 = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto num_axs_in_3 = TaggedIdAdapter::get_random_number_neurons(mt);
+
+    cell.set_number_axons_for(SignalType::Excitatory, static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_axs_ex_3));
+    cell.set_number_axons_for(SignalType::Inhibitory, static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_axs_in_3));
+
+    ASSERT_EQ(num_axs_ex_3, cell.get_number_excitatory_axons());
+    ASSERT_EQ(num_axs_ex_3, cell.get_number_axons_for(SignalType::Excitatory));
+    ASSERT_EQ(num_axs_ex_3, cell.get_number_elements_for(ElementType::Axon, SignalType::Excitatory));
+    ASSERT_EQ(num_axs_in_3, cell.get_number_inhibitory_axons());
+    ASSERT_EQ(num_axs_in_3, cell.get_number_axons_for(SignalType::Inhibitory));
+    ASSERT_EQ(num_axs_in_3, cell.get_number_elements_for(ElementType::Axon, SignalType::Inhibitory));
+
+    const auto num_axs_ex_4 = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto num_axs_in_4 = TaggedIdAdapter::get_random_number_neurons(mt);
+
+    cell.set_number_elements_for(ElementType::Axon, SignalType::Excitatory, static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_axs_ex_4));
+    cell.set_number_elements_for(ElementType::Axon, SignalType::Inhibitory, static_cast<typename Cell<AdditionalCellAttributes>::counter_type>(num_axs_in_4));
+
+    ASSERT_EQ(num_axs_ex_4, cell.get_number_excitatory_axons());
+    ASSERT_EQ(num_axs_ex_4, cell.get_number_axons_for(SignalType::Excitatory));
+    ASSERT_EQ(num_axs_ex_4, cell.get_number_elements_for(ElementType::Axon, SignalType::Excitatory));
+    ASSERT_EQ(num_axs_in_4, cell.get_number_inhibitory_axons());
+    ASSERT_EQ(num_axs_in_4, cell.get_number_axons_for(SignalType::Inhibitory));
+    ASSERT_EQ(num_axs_in_4, cell.get_number_elements_for(ElementType::Axon, SignalType::Inhibitory));
 }
 
 template <typename AdditionalCellAttributes>

@@ -12,6 +12,7 @@
 
 #include "algorithm/BarnesHutInternal/BarnesHutBase.h"
 #include "algorithm/Connector.h"
+#include "io/Event.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "structure/NodeCache.h"
 #include "structure/OctreeNode.h"
@@ -58,6 +59,8 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const nu
 #pragma omp critical(BHrequests)
             synapse_creation_requests_outgoing.append(target_rank, creation_request);
         }
+
+        Event::create_and_print_counter_event("BH", {}, { { "ID:", std::to_string(neuron_id) }, { "Cache:", std::to_string(NodeCache<BarnesHutCell>::get_cache_size()) }, { "Memory:", std::to_string(NodeCache<BarnesHutCell>::get_memory_size()) } }, true);
     }
 
     // Make cache empty for next connectivity update
@@ -68,12 +71,12 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const nu
     return synapse_creation_requests_outgoing;
 }
 
-std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<LocalSynapses, DistantInSynapses>>
+std::pair<CommunicationMap<SynapseCreationResponse>, std::pair<PlasticLocalSynapses, PlasticDistantInSynapses>>
 BarnesHut::process_requests(const CommunicationMap<SynapseCreationRequest>& creation_requests) {
     return ForwardConnector::process_requests(creation_requests, excitatory_dendrites, inhibitory_dendrites);
 }
 
-DistantOutSynapses BarnesHut::process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
+PlasticDistantOutSynapses BarnesHut::process_responses(const CommunicationMap<SynapseCreationRequest>& creation_requests,
     const CommunicationMap<SynapseCreationResponse>& creation_responses) {
     return ForwardConnector::process_responses(creation_requests, creation_responses, axons);
 }

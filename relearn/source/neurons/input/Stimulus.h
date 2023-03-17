@@ -46,10 +46,15 @@ public:
     }
 
     void init(const RelearnTypes::number_neurons_type number_neurons) {
+        RelearnException::check(stimulus.empty(), "Stimulus::init: Was already initialized");
+        RelearnException::check(number_neurons > 0, "Stimulus::init: Cannot initialize with 0 neurons");
         stimulus.resize(number_neurons, 0.0);
     }
 
     void create_neurons(const RelearnTypes::number_neurons_type creation_count) {
+        RelearnException::check(stimulus.size() > 0, "Stimulus::create_neurons: Was not initialized");
+        RelearnException::check(creation_count > 0, "Stimulus::create_neurons: Cannot create 0 neurons");
+
         const auto current_size = stimulus.size();
         const auto new_size = current_size + creation_count;
 

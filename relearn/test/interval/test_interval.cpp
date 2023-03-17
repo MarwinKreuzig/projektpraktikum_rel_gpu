@@ -13,9 +13,11 @@
 #include "adapter/interval/IntervalAdapter.h"
 #include "adapter/random/RandomAdapter.h"
 
+#include "io/parser/IntervalParser.h"
+
 #include <sstream>
 
-TEST_F(IntervalTest, testIntervalConstruction) {
+TEST_F(IntervalTest, testConstruction) {
     using int_type = Interval::step_type;
 
     constexpr auto min = std::numeric_limits<int_type>::min();
@@ -32,7 +34,72 @@ TEST_F(IntervalTest, testIntervalConstruction) {
     ASSERT_EQ(i.frequency, frequency);
 }
 
-TEST_F(IntervalTest, testIntervalIntersection) {
+TEST_F(IntervalTest, testHitsStep) {
+    using int_type = Interval::step_type;
+
+    constexpr auto min = 0;
+    constexpr auto max = 100000;
+
+    const auto first = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto second = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+
+    const auto begin = first < second ? first : second;
+    const auto end = first < second ? second : first;
+    const auto frequency = RandomAdapter::get_random_integer<int_type>(1, 200, mt);
+
+    Interval i{ begin, end, frequency };
+
+    for (int_type step = begin; step != end; step++) {
+        const auto diff = step - begin;
+        if (diff % frequency == 0) {
+            ASSERT_TRUE(i.hits_step(step)) << begin << '-' << end << ':' << frequency << '\t' << step;
+        } else {
+            ASSERT_FALSE(i.hits_step(step)) << begin << '-' << end << ':' << frequency << '\t' << step;
+        }
+    }
+}
+
+TEST_F(IntervalTest, testEquality) {
+    using int_type = Interval::step_type;
+
+    constexpr auto min = std::numeric_limits<int_type>::min();
+    constexpr auto max = std::numeric_limits<int_type>::max();
+
+    const auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto frequency = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+
+    Interval i{ begin, end, frequency };
+
+    ASSERT_EQ(i, i);
+    ASSERT_EQ(i, Interval(begin, end, frequency));
+    ASSERT_EQ(Interval(begin, end, frequency), i);
+
+    ASSERT_NE(i, Interval(begin + 1, end, frequency));
+    ASSERT_NE(Interval(begin + 1, end, frequency), i);
+
+    ASSERT_NE(i, Interval(begin, end + 1, frequency));
+    ASSERT_NE(Interval(begin, end + 1, frequency), i);
+
+    ASSERT_NE(i, Interval(begin, end, frequency + 1));
+    ASSERT_NE(Interval(begin, end, frequency + 1), i);
+
+    const auto other_begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto other_end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+    const auto other_frequency = RandomAdapter::get_random_integer<int_type>(min, max, mt);
+
+    Interval other_i{ other_begin, other_end, other_frequency };
+
+    if (begin == other_begin && end == other_end && frequency == other_frequency) {
+        ASSERT_EQ(i, other_i);
+        ASSERT_EQ(other_i, i);
+    } else {
+        ASSERT_NE(i, other_i);
+        ASSERT_NE(other_i, i);
+    }
+}
+
+TEST_F(IntervalTest, testIntersection) {
     Interval i1{ 10, 20, 1 };
     Interval i2{ 30, 40, 1 };
 
@@ -58,7 +125,7 @@ TEST_F(IntervalTest, testIntervalIntersection) {
     ASSERT_TRUE(i8.check_for_intersection(i7));
 }
 
-TEST_F(IntervalTest, testIntervalIntersecions) {
+TEST_F(IntervalTest, testIntersecions) {
     std::vector<Interval> intervals{};
 
     intervals.emplace_back(IntervalAdapter::generate_random_interval(mt));
@@ -80,227 +147,4 @@ TEST_F(IntervalTest, testIntervalIntersecions) {
     const auto all_intersect = Interval::check_intervals_for_intersection(intervals);
 
     ASSERT_EQ(golden_intersect, all_intersect);
-}
-
-TEST_F(IntervalTest, testParseInterval) {
-    const auto& [golden_interval, description] = IntervalAdapter::generate_random_interval_description(mt);
-
-    const auto& opt_interval = Interval::parse_interval(description);
-
-    ASSERT_TRUE(opt_interval.has_value());
-
-    const auto& interval = opt_interval.value();
-
-    ASSERT_EQ(golden_interval.begin, interval.begin);
-    ASSERT_EQ(golden_interval.end, interval.end);
-    ASSERT_EQ(golden_interval.frequency, interval.frequency);
-}
-
-TEST_F(IntervalTest, testParseIntervalFail1) {
-    const auto& opt_interval = Interval::parse_interval({});
-
-    ASSERT_FALSE(opt_interval.has_value());
-}
-
-TEST_F(IntervalTest, testParseIntervalFail2) {
-    using int_type = Interval::step_type;
-
-    constexpr auto min = std::numeric_limits<int_type>::min();
-    constexpr auto max = std::numeric_limits<int_type>::max();
-
-    const auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
-    const auto end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
-
-    std::stringstream ss{};
-    ss << std::min(begin, end) << '-' << std::max(begin, end);
-
-    const auto& description = ss.str();
-
-    const auto& opt_interval = Interval::parse_interval(description);
-
-    ASSERT_FALSE(opt_interval.has_value());
-}
-
-TEST_F(IntervalTest, testParseIntervalFail3) {
-    using int_type = Interval::step_type;
-
-    constexpr auto min = std::numeric_limits<int_type>::min();
-    constexpr auto max = std::numeric_limits<int_type>::max();
-
-    const auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
-    const auto frequency = RandomAdapter::get_random_integer<int_type>(min, max, mt);
-
-    std::stringstream ss{};
-    ss << begin << ':' << frequency;
-
-    const auto& description = ss.str();
-
-    const auto& opt_interval = Interval::parse_interval(description);
-
-    ASSERT_FALSE(opt_interval.has_value());
-}
-
-TEST_F(IntervalTest, testParseIntervalFail4) {
-    using int_type = Interval::step_type;
-
-    constexpr auto min = std::numeric_limits<int_type>::min();
-    constexpr auto max = std::numeric_limits<int_type>::max();
-
-    const auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
-    const auto end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
-    const auto frequency = RandomAdapter::get_random_integer<int_type>(min, max, mt);
-
-    std::stringstream ss{};
-    ss << '-' << std::min(begin, end) << '-' << std::max(begin, end) << ':' << frequency;
-
-    const auto& description = ss.str();
-
-    const auto& opt_interval = Interval::parse_interval(description);
-
-    ASSERT_FALSE(opt_interval.has_value());
-}
-
-TEST_F(IntervalTest, testParseIntervalFail5) {
-    using int_type = Interval::step_type;
-
-    constexpr auto min = std::numeric_limits<int_type>::min();
-    constexpr auto max = std::numeric_limits<int_type>::max();
-
-    const auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
-    const auto end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
-    const auto frequency = RandomAdapter::get_random_integer<int_type>(min, max, mt);
-
-    std::stringstream ss{};
-    ss << '-' << std::min(begin, end) << '-' << std::max(begin, end) << ':' << frequency << ':';
-
-    const auto& description = ss.str();
-
-    const auto& opt_interval = Interval::parse_interval(description);
-
-    ASSERT_FALSE(opt_interval.has_value());
-}
-
-TEST_F(IntervalTest, testParseIntervalFail6) {
-    using int_type = Interval::step_type;
-
-    constexpr auto min = std::numeric_limits<int_type>::min();
-    constexpr auto max = std::numeric_limits<int_type>::max();
-
-    const auto begin = RandomAdapter::get_random_integer<int_type>(min, max, mt);
-    const auto end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
-    const auto frequency = RandomAdapter::get_random_integer<int_type>(min, max, mt);
-
-    std::stringstream ss{};
-    ss << std::max(begin, end) << '-' << std::min(begin, end) << ':' << frequency;
-
-    const auto& description = ss.str();
-
-    const auto& opt_interval = Interval::parse_interval(description);
-
-    ASSERT_FALSE(opt_interval.has_value());
-}
-
-TEST_F(IntervalTest, testParseIntervals1) {
-    std::vector<Interval> golden_intervals{};
-    std::stringstream ss{};
-
-    for (auto i = 0; i < 10; i++) {
-        const auto& [interval, description] = IntervalAdapter::generate_random_interval_description(mt);
-        golden_intervals.emplace_back(interval);
-        ss << description;
-
-        if (i != 9) {
-            ss << ';';
-        }
-    }
-
-    const auto& intervals = Interval::parse_description_as_intervals(ss.str());
-
-    for (auto i = 0; i < 10; i++) {
-        ASSERT_EQ(golden_intervals[i], intervals[i]);
-    }
-}
-
-TEST_F(IntervalTest, testParseInterval2) {
-    std::vector<Interval> golden_intervals{};
-    std::stringstream ss{};
-
-    for (auto i = 0; i < 10; i++) {
-        const auto& [interval, description] = IntervalAdapter::generate_random_interval_description(mt);
-        golden_intervals.emplace_back(interval);
-        ss << description;
-
-        ss << ';';
-    }
-
-    const auto& intervals = Interval::parse_description_as_intervals(ss.str());
-
-    ASSERT_EQ(intervals.size(), 10);
-}
-
-TEST_F(IntervalTest, testParseIntervalsFail1) {
-    const auto& intervals = Interval::parse_description_as_intervals({});
-    ASSERT_TRUE(intervals.empty());
-}
-
-TEST_F(IntervalTest, testParseIntervalsFail2) {
-    const auto& intervals = Interval::parse_description_as_intervals("sgahkllkrduf,'�.;f�lsa�df::SAfd--dfasdjf45");
-    ASSERT_TRUE(intervals.empty());
-}
-
-TEST_F(IntervalTest, testParseIntervalsFail3) {
-    std::vector<Interval> golden_intervals{};
-    std::stringstream ss{};
-
-    for (auto i = 0; i < 10; i++) {
-        const auto& [interval, description] = IntervalAdapter::generate_random_interval_description(mt);
-        golden_intervals.emplace_back(interval);
-        ss << description;
-
-        if (i != 9) {
-            ss << ',';
-        }
-    }
-
-    const auto& intervals = Interval::parse_description_as_intervals(ss.str());
-
-    ASSERT_TRUE(intervals.empty());
-}
-
-TEST_F(IntervalTest, testParseIntervalsFail4) {
-    std::vector<Interval> golden_intervals{};
-    std::stringstream ss{};
-
-    for (auto i = 0; i < 10; i++) {
-        const auto& [interval, description] = IntervalAdapter::generate_random_interval_description(mt);
-        golden_intervals.emplace_back(interval);
-        ss << description;
-
-        if (i != 9) {
-            ss << ':';
-        }
-    }
-
-    const auto& intervals = Interval::parse_description_as_intervals(ss.str());
-
-    ASSERT_TRUE(intervals.empty());
-}
-
-TEST_F(IntervalTest, testParseIntervalsFail5) {
-    std::vector<Interval> golden_intervals{};
-    std::stringstream ss{};
-
-    for (auto i = 0; i < 10; i++) {
-        const auto& [interval, description] = IntervalAdapter::generate_random_interval_description(mt);
-        golden_intervals.emplace_back(interval);
-        ss << description;
-
-        ss << ';';
-    }
-
-    ss << "136546543135";
-
-    const auto& intervals = Interval::parse_description_as_intervals(ss.str());
-
-    ASSERT_EQ(intervals.size(), 10);
 }

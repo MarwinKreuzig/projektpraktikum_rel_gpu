@@ -12,11 +12,14 @@
 
 #include "neurons/enums/UpdateStatus.h"
 #include "util/RelearnException.h"
+#include "util/StringUtil.h"
 
+#include <filesystem>
 #include <functional>
 #include <span>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 
 namespace Util {
 
@@ -114,35 +117,28 @@ static constexpr T factorial(T value) noexcept {
 }
 
 /**
- * Check if a container (e.g. vector) contains an element
- * @tparam Container  Container class (e.g. std::vector)
- * @param container The actual container
- * @param element The element
- * @return True if element inside of container. Otherwise false
+ * @brief Looks for a given file in a directory. Path: directory / prefix rank suffix. Tries different formats for the rank.
+ * @param directory The directory where it looks for the file
+ * @param rank The mpi rank
+ * @param prefix Filename part before the mpi rank
+ * @param suffix Filename after the mpi rank
+ * @param max_digits Max width of the string which represents the rank
+ * @return The file path for the found file
+ * @throws RelearnException When no file was found
  */
-template <class Container>
-static bool contains(const Container& container, const typename Container::value_type& element) {
-    return std::find(container.begin(), container.end(), element) != container.end();
-}
+static std::filesystem::path find_file_for_rank(const std::filesystem::path& directory, const int rank,
+    const std::string& prefix, const std::string& suffix, const unsigned int max_digits) {
+    std::filesystem::path path_to_file{};
 
-/**
- * Maps each element of a vector to a new objects and checks if one of this transformed objects equals to the searched element
- * @tparam T Type of the elements in the vector
- * @tparam U Type of the transformed elements
- * @param container The vector
- * @param element The transformed element, we are looking for
- * @param function Function which transforms the elements of the vector
- * @return True if the transformed list contains the element. Otherwise false
- */
-template <typename T, typename U>
-static bool transform_contains(const std::vector<T>& container, const U& element, std::function<U(T)> function) {
-    for (const auto& el : container) {
-        const U transformed = function(el);
-        if (transformed == element) {
-            return true;
+    for (auto nr_digits = 1U; nr_digits < max_digits; nr_digits++) {
+        const auto my_position_filename = prefix + StringUtil::format_int_with_leading_zeros(rank, nr_digits) + suffix;
+        path_to_file = directory / my_position_filename;
+        if (std::filesystem::exists(path_to_file)) {
+            return path_to_file;
         }
     }
-    return false;
+
+    RelearnException::fail("Util::find_file_for_rank: No file found for {}{}{}", prefix, rank, suffix);
 }
 
 } // namespace Util

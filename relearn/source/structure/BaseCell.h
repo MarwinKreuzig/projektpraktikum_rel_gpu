@@ -17,7 +17,6 @@
 
 #include <optional>
 #include <ostream>
-#include <type_traits>
 
 #ifdef WIN32
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)

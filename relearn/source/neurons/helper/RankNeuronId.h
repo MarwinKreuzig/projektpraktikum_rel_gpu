@@ -41,7 +41,7 @@ public:
      * @param rank The MPI rank
      * @param neuron_id The neuron id
      */
-    constexpr RankNeuronId(const MPIRank& rank, const NeuronID& neuron_id) noexcept
+    constexpr RankNeuronId(const MPIRank rank, const NeuronID neuron_id) noexcept
         : rank(rank)
         , neuron_id(neuron_id) {
     }

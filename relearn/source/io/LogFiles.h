@@ -10,6 +10,8 @@
  *
  */
 
+#include "util/MPIRank.h"
+
 #include "spdlog/fmt/bundled/core.h"
 #include "spdlog/spdlog.h"
 
@@ -20,6 +22,8 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+
+class Event;
 
 /**
  * This class provides a static interface that allows for writing log messages to predefined files.
@@ -39,7 +43,6 @@ public:
         NeuronsOverview,
         NeuronsOverviewCSV,
         Sums,
-        Network,
         InNetwork,
         OutNetwork,
         Positions,
@@ -54,16 +57,18 @@ public:
         ExtremeCalciumValues,
         SynapticInput,
         AreaMapping,
+        Events,
     };
 
     /**
      * @brief Sets the folder path in which the log files will be generated. Automatically appends '/' if necessary.
-     *      Set before calling init()
      *      Default is: "../output/"
      * @param path_to_containing_folder The path to the folder in which the files should be generated
+     * @exception Throws a RelearnException if called after init() 
      */
     static void set_output_path(const std::filesystem::path& path_to_containing_folder) {
-        output_path = path_to_containing_folder;
+        RelearnException::check(!initialized, "LogFiles::set_output_path: LogFiles are already initialized");
+        output_path = path_to_containing_folder;        
     }
 
     /**
@@ -76,11 +81,12 @@ public:
 
     /**
      * @brief Sets the general prefix for every log file.
-     *      Set before calling init()
      *      Default is: "rank_"
      * @param prefix The prefix for every file
+     * @exception Throws a RelearnException if called after init() 
      */
     static void set_general_prefix(const std::string& prefix) {
+        RelearnException::check(!initialized, "LogFiles::set_general_prefix: LogFiles are already initialized");
         general_prefix = prefix;
     }
 
@@ -92,27 +98,31 @@ public:
     static void init();
 
     /**
-     * @brief Saves the specified file, closes it, and opens a new file as sink with the specified file name
+     * @brief Saves the specified file, closes it, and opens a new file as sink with the specified file name.
+     *      Does nothing if the file is not present
      * @param type The event type whose file should be replaced
      * @param new_file_name The new file name
-     * @exception Throws a RelearnException if the specified event type didn't have a file associated with it
      */
     static void save_and_open_new(EventType type, const std::string& new_file_name, const std::string& directory_prefix = "");
 
     /**
-     * @brief Clears all log files to create new files in future runs
+     * @brief Clears all log files to create new files in future runs. Also clears the initialized status.
      */
     static void clear_log_files() {
         log_files.clear();
         log_disable.clear();
+        initialized = false;
     }
 
     /**
      * @brief Sets the status of the event type, i.e., if the log for that type is disabled
      * @param type The event type
      * @param status True iff the log shall be disabled
+     * @exception Throws a RelearnException if called after init() 
      */
-    static void set_log_status(const EventType type, const bool disabled) noexcept {
+    static void set_log_status(const EventType type, const bool disabled) {
+        RelearnException::check(!initialized, "LogFiles::set_log_status: LogFiles are already initialized");
+        
         log_disable[type] = disabled;
     }
 
@@ -123,6 +133,16 @@ public:
      */
     static bool get_log_status(const EventType type) noexcept {
         return log_disable[type];
+    }
+
+    /**
+     * @brief Flushes the associated file if it exists
+     * @param type The event type which should be flushed
+     */
+    static void flush_file(const EventType type) {
+        if (auto iterator = log_files.find(type); iterator != log_files.end()) {
+            iterator->second->flush();
+        }
     }
 
     /**
@@ -161,16 +181,23 @@ public:
      * @param args Variably many additional arguments that are inserted for the place-holders
      */
     template <typename FormatString, typename... Args>
-    static void print_message_rank(const int rank, FormatString&& format, Args&&... args) { // NOLINT(readability-avoid-const-params-in-decls)
-        if (do_i_print(rank)) {
+    static void print_message_rank(const MPIRank rank, FormatString&& format, Args&&... args) { // NOLINT(readability-avoid-const-params-in-decls)
+        if (do_i_print(LogFiles::EventType::Cout, rank)) {
             write_to_file(LogFiles::EventType::Cout, true, "[INFO:Rank {}] {}", get_my_rank_str(), fmt::format(fmt::runtime(std::forward<FormatString>(format)), std::forward<Args>(args)...));
         }
     }
+
+    /**
+     * @brief Adds an event to the trace
+     * @param event The event to print
+     */
+    static void add_event_to_trace(const Event& event);
 
 private:
     using Logger = std::shared_ptr<spdlog::logger>;
     static inline std::map<EventType, Logger> log_files{};
     static inline std::map<EventType, bool> log_disable{};
+    static inline bool initialized{};
 
     // NOLINTNEXTLINE
     static inline std::filesystem::path output_path{ "../output/" };
@@ -179,9 +206,9 @@ private:
 
     static std::string get_specific_file_prefix();
 
-    static void add_logfile(EventType type, const std::string& file_name, int rank, const std::string& file_ending = ".txt", const std::string& directory_prefix = "");
+    static void add_logfile(EventType type, const std::string& file_name, MPIRank rank, const std::string& file_ending = ".txt", const std::string& directory_prefix = "");
 
-    [[nodiscard]] static bool do_i_print(int rank);
+    [[nodiscard]] static bool do_i_print(EventType type, MPIRank rank);
 
     [[nodiscard]] static std::string get_my_rank_str();
 
