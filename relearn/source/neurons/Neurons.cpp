@@ -273,7 +273,6 @@ void Neurons::create_neurons(const number_neurons_type creation_count) {
 
     deletions_log.resize(new_size, {});
 
-    for (const auto &neuron_id: NeuronID::range(current_size, new_size)) {
     for (const auto& neuron_id : NeuronID::range(current_size, new_size)) {
         dendrites_exc->set_signal_type(neuron_id, SignalType::Excitatory);
         dendrites_inh->set_signal_type(neuron_id, SignalType::Inhibitory);

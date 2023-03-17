@@ -70,7 +70,7 @@ public:
             // Check here so we can use the previous error codes correctly
             RelearnException::check(neuron_id > 0, "MonitorParser::parse_description: A parsed NeuronID is 0, but the input is 1-based: {}", description);
 
-            return RankNeuronId{ MPIRank(parsed_mpi_rank), NeuronID(neuron_id) -1 };
+            return RankNeuronId{ MPIRank(parsed_mpi_rank), NeuronID(neuron_id - 1) };
         }
 
         LogFiles::print_message_rank(0, "Failed to parse string to match the pattern <mpi_rank>:<neuron_id> : {}", description);

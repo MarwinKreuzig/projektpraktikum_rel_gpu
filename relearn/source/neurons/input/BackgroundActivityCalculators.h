@@ -142,7 +142,7 @@ public:
         Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
         for (number_neurons_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
             const auto input = disable_flags[neuron_id] == UpdateStatus::Disabled ? 0.0 : RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
-            set_background_activity(step,neuron_id, input);
+            set_and_transform_background_activity(step,neuron_id, input);
         }
         Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
     }

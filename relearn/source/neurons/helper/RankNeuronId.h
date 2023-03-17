@@ -140,23 +140,6 @@ struct tuple_element<1, ::RankNeuronId> {
 
 template <>
 struct hash<RankNeuronId> {
-        using argument_type = RankNeuronId;
-        using result_type = std::size_t;
-
-        result_type operator()(const argument_type& rni) const {
-            std::size_t seed = 0;
-            auto pair = std::make_pair(rni.get_rank().get_rank(), rni.get_neuron_id().get_neuron_id());
-            boost::hash_combine(seed, rni.get_rank().get_rank());
-            boost::hash_combine(seed, rni.get_neuron_id().get_neuron_id());
-            return seed;
-        }
-    };
-
-} // namespace std
-
-namespace std {
-template <>
-struct hash<RankNeuronId> {
     using argument_type = RankNeuronId;
     using result_type = std::size_t;
 
