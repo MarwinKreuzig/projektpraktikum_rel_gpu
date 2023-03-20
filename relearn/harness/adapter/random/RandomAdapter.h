@@ -50,6 +50,10 @@ public:
         std::vector<size_t> derangement(size);
         std::iota(derangement.begin(), derangement.end(), 0);
 
+        if(size <= 1) {
+            return derangement;
+        }
+
         auto check = [](const std::vector<size_t>& vec) -> bool {
             for (auto i = 0; i < vec.size(); i++) {
                 if (i == vec[i]) {
