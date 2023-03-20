@@ -19,7 +19,6 @@
 #include "io/parser/NeuronIdParser.h"
 
 TEST_F(NeuronIdParserTest, testParseDescriptionFixed) {
-    RelearnException::hide_messages = false;
     auto checker = [](std::string_view description, MPIRank rank, NeuronID::value_type neuron_id) {
         auto opt_rni = NeuronIdParser::parse_description(description, rank);
         ASSERT_TRUE(opt_rni.has_value());
