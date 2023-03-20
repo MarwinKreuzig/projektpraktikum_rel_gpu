@@ -144,7 +144,7 @@ TEST_F(SynapticInputTest, testLinearSynapticInputUpdateEmptyGraph) {
     const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
-    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance, std::move(fired_status_communicator));
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance, std::move(fired_status_communicator), std::make_unique<ConstantTransmissionDelayer>(0));
     input_calculator->init(number_neurons);
 
     auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
@@ -243,7 +243,7 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputConstruct) {
     const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
-    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance, std::move(fired_status_communicator), std::make_unique<ConstantTransmissionDelayer>(0));
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_conductance, random_scale, std::move(fired_status_communicator), std::make_unique<ConstantTransmissionDelayer>(0));
     ASSERT_EQ(input_calculator->get_synapse_conductance(), random_conductance);
 
     const auto new_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance, SynapticInputCalculator::max_conductance, mt);
@@ -261,7 +261,7 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdateEmptyGraph) {
     const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
-    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance, std::move(fired_status_communicator), std::make_unique<ConstantTransmissionDelayer>(0));
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_conductance, random_scale, std::move(fired_status_communicator), std::make_unique<ConstantTransmissionDelayer>(0));
     input_calculator->init(number_neurons_init);
 
     auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
@@ -274,7 +274,6 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdateEmptyGraph) {
     input_calculator->set_network_graph(network_graph);
 
     std::vector<FiredStatus> fired_status(number_neurons_init, FiredStatus::Inactive);
-    std::vector<UpdateStatus> update_status(number_neurons_init, UpdateStatus::Enabled);
 
     input_calculator->update_input(0, fired_status);
 
@@ -293,7 +292,7 @@ TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate) {
     const auto num_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
 
     auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
-    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance, std::move(fired_status_communicator), std::make_unique<ConstantTransmissionDelayer>(0));
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(random_conductance, random_scale, std::move(fired_status_communicator), std::make_unique<ConstantTransmissionDelayer>(0));
     input_calculator->init(number_neurons);
 
     auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
@@ -362,7 +361,7 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputConstruct) {
 
     const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
     auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
-    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance, std::move(fired_status_communicator), std::make_unique<ConstantTransmissionDelayer>(0));
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(random_conductance, random_scale,std::move(fired_status_communicator), std::make_unique<ConstantTransmissionDelayer>(0));
     ASSERT_EQ(input_calculator->get_synapse_conductance(), random_conductance);
 
     const auto new_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance, SynapticInputCalculator::max_conductance, mt);
@@ -380,7 +379,7 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputUpdateEmptyGraph) {
     const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
 
     auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
-    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance, std::move(fired_status_communicator), std::make_unique<ConstantTransmissionDelayer>(0));
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(random_conductance, random_scale,std::move(fired_status_communicator), std::make_unique<ConstantTransmissionDelayer>(0));
     input_calculator->init(number_neurons_init);
 
     auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
@@ -412,7 +411,7 @@ TEST_F(SynapticInputTest, testHyptanSynapticInputUpdate) {
     const auto num_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
 
     auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
-    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(random_conductance, std::move(fired_status_communicator), std::make_unique<ConstantTransmissionDelayer>(0));
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(random_conductance, random_scale,std::move(fired_status_communicator), std::make_unique<ConstantTransmissionDelayer>(0));
     input_calculator->init(number_neurons);
 
     auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());

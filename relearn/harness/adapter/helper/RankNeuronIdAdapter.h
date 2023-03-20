@@ -42,6 +42,12 @@ public:
         return RankNeuronId(rank, NeuronID(id + 1));
     }
 
+    static RankNeuronId substract_one_from_neuron_id(const RankNeuronId& rni) {
+        const auto& [rank, neuron_id] = rni;
+        const auto id = neuron_id.get_neuron_id();
+        return RankNeuronId(rank, NeuronID(id - 1));
+    }
+
     static std::pair<RankNeuronId, std::string> generate_random_rank_neuron_id_description(std::mt19937& mt) {
         auto rank_neuron_id = RankNeuronIdAdapter::generate_random_rank_neuron_id(mt);
         auto description = codify_rank_neuron_id(rank_neuron_id);

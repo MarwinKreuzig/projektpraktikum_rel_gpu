@@ -228,6 +228,7 @@ int main(int argc, char** argv) {
     std::map<std::string, SynapseDeletionFinderType> cli_parse_synapse_deleter{
         { "random", SynapseDeletionFinderType::Random },
         { "inverse", SynapseDeletionFinderType::InverseLength},
+        { "coactivation", SynapseDeletionFinderType::CoActivation},
     };
 
     KernelType chosen_kernel_type = KernelType::Gaussian;
@@ -980,7 +981,6 @@ int main(int argc, char** argv) {
     sim.set_axons(std::move(axons_model));
     sim.set_dendrites_ex(std::move(excitatory_dendrites_model));
     sim.set_dendrites_in(std::move(inhibitory_dendrites_model));
-    sim.set_synapse_deletion_finder(std::move(synapse_deletion_finder));
 
     sim.set_percentage_initial_fired_neurons(percentage_initial_fired_neurons);
 

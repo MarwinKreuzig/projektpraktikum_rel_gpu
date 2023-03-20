@@ -121,7 +121,6 @@ public:
 
     /**
      * @brief Extracts all NeuronIDs from the RankNeuronIds that belong to the given rank.
-     *      The ids in the RankNeuronIds are in input format, i.e., "+1"; this method will subtract one when converting them to NeuronID.
      * @param rank_neuron_ids The rank neuron ids
      * @param my_rank The current MPI rank, must be initialized
      * @exception Throws a RelearnException if my_rank is not initialized or if a NeuronID in rank_neuron_ids is 0
@@ -134,9 +133,8 @@ public:
         my_parsed_ids.reserve(rank_neuron_ids.size());
 
         for (const auto& [rank, neuron_id] : rank_neuron_ids) {
-            RelearnException::check(neuron_id.get_neuron_id() > 0, "NeuronIdParser::extract_my_ids: A NeuronID was 0, but should be in \"+1\" format.");
             if (rank == my_rank) {
-                my_parsed_ids.emplace_back(neuron_id.get_neuron_id() - 1);
+                my_parsed_ids.emplace_back(neuron_id.get_neuron_id());
             }
         }
 

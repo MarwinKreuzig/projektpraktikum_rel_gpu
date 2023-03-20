@@ -154,7 +154,6 @@ public:
         fired_status_comm->exchange_fired_status(step);
 
         update_transmission_delayer(fired);
-        update_transmission_delayer(fired);
 
         update_synaptic_input(fired);
     }

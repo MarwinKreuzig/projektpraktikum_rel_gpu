@@ -53,7 +53,7 @@ public:
      * @exception Throws a RelearnException if communicator is empty
      */
     LogarithmicSynapticInputCalculator(const double synapse_conductance,const double scaling_factor, std::unique_ptr<FiredStatusCommunicator>&& communicator, std::unique_ptr<TransmissionDelayer>&& transmission_delayer)
-        : SynapticInputCalculator(synapse_conductance, std::move(communicator), std::move(transmission_delayer))
+        : SynapticInputCalculator(synapse_conductance, std::move(communicator), std::move(transmission_delayer)), scale_factor(scaling_factor)
     {}
 
     /**
@@ -105,7 +105,7 @@ public:
      * @exception Throws a RelearnException if communicator is empty
      */
     HyperbolicTangentSynapticInputCalculator(const double synapse_conductance,const double scaling_factor, std::unique_ptr<FiredStatusCommunicator>&& communicator, std::unique_ptr<TransmissionDelayer>&& transmission_delayer)
-        : SynapticInputCalculator(synapse_conductance, std::move(communicator),std::move(transmission_delayer))
+        : SynapticInputCalculator(synapse_conductance, std::move(communicator),std::move(transmission_delayer)), scale_factor(scaling_factor)
     {}
 
 

@@ -19,6 +19,7 @@
 #include "io/parser/NeuronIdParser.h"
 
 TEST_F(NeuronIdParserTest, testParseDescriptionFixed) {
+    RelearnException::hide_messages = false;
     auto checker = [](std::string_view description, MPIRank rank, NeuronID::value_type neuron_id) {
         auto opt_rni = NeuronIdParser::parse_description(description, rank);
         ASSERT_TRUE(opt_rni.has_value());
@@ -28,10 +29,10 @@ TEST_F(NeuronIdParserTest, testParseDescriptionFixed) {
         ASSERT_EQ(rni, parsed_rni);
     };
 
-    checker("0:1", MPIRank(0), 1);
-    checker("2:1", MPIRank(2), 1);
-    checker("155:377", MPIRank(155), 377);
-    checker("-1:17", MPIRank(5), 17);
+    checker("0:1", MPIRank(0), 0);
+    checker("2:1", MPIRank(2), 0);
+    checker("155:377", MPIRank(155), 376);
+    checker("-1:17", MPIRank(5), 16);
 }
 
 TEST_F(NeuronIdParserTest, testUninitRank) {
@@ -80,7 +81,7 @@ TEST_F(NeuronIdParserTest, testParseDescriptionRandom) {
         ASSERT_TRUE(opt_rni.has_value());
 
         const auto& parsed_rni = opt_rni.value();
-        ASSERT_EQ(RankNeuronIdAdapter::add_one_to_neuron_id(rni), parsed_rni);
+        ASSERT_EQ(rni, parsed_rni);
     }
 }
 
@@ -93,7 +94,7 @@ TEST_F(NeuronIdParserTest, testParseDescriptions) {
     std::stringstream ss{};
 
     const auto& [first_rni, first_description] = RankNeuronIdAdapter::generate_random_rank_neuron_id_description(mt);
-    rank_neuron_ids.emplace_back(RankNeuronIdAdapter::add_one_to_neuron_id(first_rni));
+    rank_neuron_ids.emplace_back(first_rni);
 
     ss << first_description;
 
@@ -101,7 +102,7 @@ TEST_F(NeuronIdParserTest, testParseDescriptions) {
         const auto& [new_rni, new_description] = RankNeuronIdAdapter::generate_random_rank_neuron_id_description(mt);
         ss << ';' << new_description;
 
-        rank_neuron_ids.emplace_back(RankNeuronIdAdapter::add_one_to_neuron_id(new_rni));
+        rank_neuron_ids.emplace_back(new_rni);
     }
 
     const auto& parsed_rnis = NeuronIdParser::parse_multiple_description(ss.str(), MPIRank(3));
@@ -120,10 +121,10 @@ TEST_F(NeuronIdParserTest, testParseDescriptionsFixed) {
         { MPIRank(0), NeuronID(1) },
     };
 
-    constexpr auto description_1 = "2:100;5:6;0:122;2:100;1674:1;89512:6;0:1;0:1";
-    constexpr auto description_2 = "2:100;-1:6;0:122;2:100;1674:1;89512:6;0:1;0:1";
-    constexpr auto description_3 = "2:100;5:6;-1:122;2:100;1674:1;89512:6;-1:1;0:1";
-    constexpr auto description_4 = "2:100;5:6;-1:122;-8:800;2:100;6:;1674:1;-999:5;89512:6;-1:1;0:1";
+    constexpr auto description_1 = "2:101;5:7;0:123;2:101;1674:2;89512:7;0:2;0:2";
+    constexpr auto description_2 = "2:101;-1:7;0:123;2:101;1674:2;89512:7;0:2;0:2";
+    constexpr auto description_3 = "2:101;5:7;-1:123;2:101;1674:2;89512:7;-1:2;0:2";
+    constexpr auto description_4 = "2:101;5:7;-1:123;-8:801;2:101;6:;1674:2;-999:6;89512:7;-1:2;0:2";
 
     const auto& parsed_rnis_1 = NeuronIdParser::parse_multiple_description(description_1, MPIRank(3));
     ASSERT_EQ(rank_neuron_ids, parsed_rnis_1);
@@ -148,7 +149,7 @@ TEST_F(NeuronIdParserTest, testExtractNeuronIDs) {
 
     for (auto i = 0; i < number_neurons; i++) {
         const auto& [new_rni, _] = RankNeuronIdAdapter::generate_random_rank_neuron_id_description(mt);
-        rank_neuron_ids.emplace_back(RankNeuronIdAdapter::add_one_to_neuron_id(new_rni));
+        rank_neuron_ids.emplace_back(new_rni);
     }
 
     const auto position_1 = RandomAdapter::get_random_integer<size_t>(0, number_neurons, mt);
@@ -161,7 +162,7 @@ TEST_F(NeuronIdParserTest, testExtractNeuronIDs) {
     std::copy_if(rank_neuron_ids.begin(), rank_neuron_ids.end(), std::back_inserter(filtered), [my_rank](const RankNeuronId& rni) { const auto& [rank, id] = rni; return rank == my_rank; });
 
     std::vector<NeuronID> golden_ids{};
-    std::transform(filtered.begin(), filtered.end(), std::back_inserter(golden_ids), [](const RankNeuronId& rni) { const auto& [rank, id] = rni; return NeuronID(id.get_neuron_id() - 1); });
+    std::transform(filtered.begin(), filtered.end(), std::back_inserter(golden_ids), [](const RankNeuronId& rni) { const auto& [rank, id] = rni; return NeuronID(id.get_neuron_id()); });
 
     const auto& extracted_ids = NeuronIdParser::extract_my_ids(rank_neuron_ids, my_rank);
 

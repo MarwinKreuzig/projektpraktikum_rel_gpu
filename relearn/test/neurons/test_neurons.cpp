@@ -115,8 +115,8 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
 
     auto partition = std::make_shared<Partition>(1, MPIRank::root_rank());
     auto model = std::make_unique<models::PoissonModel>(models::PoissonModel::default_h,
-        std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_conductance, std::make_unique<FiredStatusCommunicationMap>(1)),
-        std::make_unique<NullBackgroundActivityCalculator>(),
+        std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_conductance, std::make_unique<FiredStatusCommunicationMap>(1), std::make_unique<ConstantTransmissionDelayer>(0)),
+        std::make_unique<NullBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>()),
         std::make_unique<Stimulus>(),
         models::PoissonModel::default_x_0,
         models::PoissonModel::default_tau_x,
@@ -207,7 +207,7 @@ TEST_F(NeuronsTest, testDisableNeuronsWithoutMPI) {
     neurons->init(num_neurons);
     NetworkGraphAdapter::create_dense_plastic_network(network_graph, neurons->get_axons().get_signal_types(),
         num_neurons, 8, 1, MPIRank(0), mt);
-    neurons->init_synaptic_elements();
+    neurons->init_synaptic_elements({},{}, {});
 
     const auto disable_id = TaggedIdAdapter::get_random_neuron_id(num_neurons, mt);
     const auto disabled_neurons = std::vector<NeuronID>{ disable_id };
