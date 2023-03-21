@@ -49,7 +49,6 @@ public:
         size = number_neurons;
         update_status.resize(number_neurons, UpdateStatus::Enabled);
         deletions_log.resize(number_neurons, {});
-        MPIWrapper::create_rma_window<std::bitset<fire_history_length>>(MPIWindow::FireHistory, size, MPIWrapper::get_num_ranks());
         fire_history.resize(size);
     }
 

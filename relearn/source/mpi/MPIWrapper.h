@@ -509,6 +509,9 @@ public:
     */
     template<typename T>
     static void create_rma_window(MPIWindow::Window window_type, std::uint64_t number_elements, size_t number_ranks) {
+
+        RelearnException::check(!MPIWindow::mpi_windows[window_type]->initialized, "MPIWrapper::create_rma_window: Window {} is already created", window_type);
+
         void* ptr = nullptr;
 
         const auto size = number_elements * sizeof(T);

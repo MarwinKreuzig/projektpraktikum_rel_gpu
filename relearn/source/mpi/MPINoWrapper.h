@@ -136,6 +136,8 @@ public:
 
     template<typename T>
     static void create_rma_window(MPIWindow::Window window_type,std::uint64_t num_elements, size_t number_ranks) {
+        RelearnException::check(!MPIWindow::mpi_windows[window_type].has_value(), "MPIWrapper::create_rma_window: Window {} is already created", window_type);
+
         std::vector<T> vector{};
         vector.resize(num_elements);
         MPIWindow::mpi_windows[window_type] = std::move(vector);

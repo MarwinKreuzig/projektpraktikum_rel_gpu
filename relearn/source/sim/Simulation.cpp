@@ -296,6 +296,8 @@ void Simulation::initialize() {
 
     neurons->set_fired(std::move(initial_fired));
 
+    MPIWrapper::create_rma_window<std::bitset<NeuronsExtraInfo::fire_history_length>>(MPIWindow::FireHistory, number_local_neurons, MPIWrapper::get_num_ranks());
+
     neurons->debug_check_counts();
     neurons->print_neurons_overview_to_log_file_on_rank_0(0);
     neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, 0, 0, 0);
