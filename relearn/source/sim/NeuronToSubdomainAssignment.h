@@ -233,9 +233,10 @@ protected:
         local_area_translator = std::make_shared<LocalAreaTranslator>(area_id_to_area_name, neuron_id_to_area_id);
     }
 
-private:
+protected:
     std::vector<LoadedNeuron> loaded_neurons{};
 
+private:
     std::vector<RelearnTypes::area_name> area_id_to_area_name{};
 
     double requested_ratio_excitatory_neurons{ 0.0 };

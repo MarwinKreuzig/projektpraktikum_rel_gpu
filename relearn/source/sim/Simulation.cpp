@@ -126,6 +126,13 @@ void Simulation::initialize() {
     partition->set_total_number_neurons(number_total_neurons);
     const auto number_local_neurons = partition->get_number_local_neurons();
 
+//    auto check = [](RelearnTypes::number_neurons_type value) -> bool {
+//        const auto min = MPIWrapper::reduce(value, MPIWrapper::ReduceFunction::Min, MPIRank::root_rank());
+//        const auto max = MPIWrapper::reduce(value, MPIWrapper::ReduceFunction::Max, MPIRank::root_rank());
+//        return min == max;
+//    };
+    //RelearnException::check(check(number_local_neurons), "Simulation::initialize: Different number of local neurons on ranks. Mine: {}", number_local_neurons);
+
     const auto my_rank = MPIWrapper::get_my_rank();
     RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank.get_rank());
 

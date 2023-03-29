@@ -22,14 +22,13 @@
 #include <string>
 
 MultipleSubdomainsFromFile::MultipleSubdomainsFromFile(const std::filesystem::path& path_to_neurons,
-    std::optional<std::filesystem::path> path_to_synapses, std::shared_ptr<Partition> partition)
+    std::optional<std::filesystem::path> path_to_synapses, const std::shared_ptr<Partition>& partition)
     : NeuronToSubdomainAssignment(partition) {
     RelearnException::check(partition->get_number_mpi_ranks() > 1, "MultipleSubdomainsFromFile::MultipleSubdomainsFromFile: There was only one MPI rank.");
-    std::filesystem::path path_to_file = Util::find_file_for_rank(path_to_neurons, partition->get_my_mpi_rank().get_rank(), "rank_", "_positions.txt", 5U);
-
-    synapse_loader = std::make_shared<MultipleFilesSynapseLoader>(std::move(partition), std::move(path_to_synapses));
+    const std::filesystem::path path_to_file = Util::find_file_for_rank(path_to_neurons, partition->get_my_mpi_rank().get_rank(), "rank_", "_positions.txt", 5U);
 
     read_neurons_from_file(path_to_file);
+    synapse_loader = std::make_shared<MultipleFilesSynapseLoader>(partition, std::move(path_to_synapses));
 }
 
 void MultipleSubdomainsFromFile::print_essentials(const std::unique_ptr<Essentials>& essentials) {
@@ -78,28 +77,6 @@ void MultipleSubdomainsFromFile::read_neurons_from_file(const std::filesystem::p
 
     partition->set_simulation_box_size(minimum, maximum);
 
-    auto subdomain_id_first = partition->get_local_subdomain_id_start();
-    auto subdomain_id_last = partition->get_local_subdomain_id_end();
-    const auto sim_size = additional_position_information.sim_size;
-    for(auto i = subdomain_id_first; i <= subdomain_id_last; i++) {
-        auto subdomain_bb = partition->get_subdomain_boundaries(i);
-        RelearnException::check(subdomain_bb == additional_position_information.subdomain_sizes[i], "MultipleSubdomainsFromFile::read_neurons_from_file: Wrong subdomain boundaries for subdomain {} on rank {}", i, MPIWrapper::get_my_rank());
-        RelearnException::check(subdomain_bb.get_minimum().check_in_box(sim_size.get_minimum(), sim_size.get_maximum())
-                && subdomain_bb.get_maximum().check_in_box(sim_size.get_minimum(), sim_size.get_maximum()), "MultipleSubdomainsFromFile::read_neurons_from_file: Subdomain outside of simulation box");
-    }
-
-    for(const auto& node: nodes) {
-        bool contains = false;
-        for(auto i = subdomain_id_first; i <= subdomain_id_last; i++) {
-            auto subdomain_bb = additional_position_information.subdomain_sizes[i];
-            if(node.pos.check_in_box(subdomain_bb.get_minimum(), subdomain_bb.get_maximum())) {
-                contains = true;
-                break;
-            }
-        }
-        RelearnException::check(contains, "MultipleSubdomainsFromFile::read_neurons_from_file: Neuron {} outside of subdomains", node.id );
-    }
-
     set_total_number_placed_neurons(total_number_neurons);
     set_requested_number_neurons(total_number_neurons);
     set_number_placed_neurons(total_number_neurons);
@@ -113,4 +90,32 @@ void MultipleSubdomainsFromFile::read_neurons_from_file(const std::filesystem::p
 
     set_loaded_nodes(std::move(nodes));
     create_local_area_translator(total_number_neurons);
+
+    this->additional_position_information = additional_position_information;
+}
+void MultipleSubdomainsFromFile::fill_all_subdomains()  {
+    RelearnException::check(additional_position_information.subdomain_sizes.size() == partition->get_number_local_subdomains(), "MultipleSubdomainsFromFile::read_neurons_from_file:Number of subdomains {} in positions file is not equal to the actual number {}",additional_position_information.subdomain_sizes.size(),partition->get_number_local_subdomains());
+
+    auto subdomain_id_first = partition->get_local_subdomain_id_start();
+    auto subdomain_id_last = partition->get_local_subdomain_id_end();
+    auto num_subdomains = partition->get_number_local_subdomains();
+    const auto sim_size = additional_position_information.sim_size;
+    for(auto i = 0; i < num_subdomains; i++) {
+        auto subdomain_bb = partition->get_subdomain_boundaries(i);
+        RelearnException::check(subdomain_bb == additional_position_information.subdomain_sizes[i], "MultipleSubdomainsFromFile::read_neurons_from_file: Wrong subdomain boundaries for subdomain {} on rank {}", i, MPIWrapper::get_my_rank());
+        RelearnException::check(subdomain_bb.get_minimum().check_in_box(sim_size.get_minimum(), sim_size.get_maximum())
+                && subdomain_bb.get_maximum().check_in_box(sim_size.get_minimum(), sim_size.get_maximum()), "MultipleSubdomainsFromFile::read_neurons_from_file: Subdomain outside of simulation box");
+    }
+
+    for(const auto& node: loaded_neurons) {
+        bool contains = false;
+        for(auto i = 0; i < num_subdomains; i++) {
+            auto subdomain_bb = additional_position_information.subdomain_sizes[i];
+            if(node.pos.check_in_box(subdomain_bb.get_minimum(), subdomain_bb.get_maximum())) {
+                contains = true;
+                break;
+            }
+        }
+        RelearnException::check(contains, "MultipleSubdomainsFromFile::read_neurons_from_file: Neuron {} outside of subdomains", node.id );
+    }
 }

@@ -12,6 +12,7 @@
 
 #include "Config.h"
 #include "sim/NeuronToSubdomainAssignment.h"
+#include "AdditionalPositionInformation.h"
 
 #include <filesystem>
 #include <memory>
@@ -34,7 +35,7 @@ public:
      * @exception Throws a RelearnException if some errors occurred while processing the file,
      *      if there is only 1 MPI rank, or not every MPI rank has a designated file.
      */
-    MultipleSubdomainsFromFile(const std::filesystem::path& path_to_neurons, std::optional<std::filesystem::path> path_to_synapses, std::shared_ptr<Partition> partition);
+    MultipleSubdomainsFromFile(const std::filesystem::path& path_to_neurons, std::optional<std::filesystem::path> path_to_synapses, const std::shared_ptr<Partition>& partition);
 
     MultipleSubdomainsFromFile(const MultipleSubdomainsFromFile& other) = delete;
     MultipleSubdomainsFromFile(MultipleSubdomainsFromFile&& other) = delete;
@@ -51,10 +52,10 @@ public:
     void print_essentials(const std::unique_ptr<Essentials>& essentials) override;
 
 protected:
-    void fill_all_subdomains() override {
-        // This method is empty as the loading actually happens in the constructor
-    }
+    void fill_all_subdomains() override;
 
 private:
     void read_neurons_from_file(const std::filesystem::path& path_to_neurons);
+
+    AdditionalPositionInformation additional_position_information;
 };
