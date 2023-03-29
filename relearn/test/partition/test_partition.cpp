@@ -253,7 +253,7 @@ TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
 
         partition.calculate_and_set_subdomain_boundaries();
 
-        std::vector<std::pair<RelearnTypes::box_size_type, RelearnTypes::box_size_type>> local_subdomain_boundaries{};
+        std::vector<RelearnTypes::bounding_box_type> local_subdomain_boundaries{};
 
         for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
             const auto& [min, max] = partition.get_subdomain_boundaries(my_subdomain);

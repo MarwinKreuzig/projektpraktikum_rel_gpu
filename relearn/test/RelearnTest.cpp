@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
     holder_bhi_cells.resize(1024 * 1024);
     holder_fmm_cells.resize(1024 * 1024);
 
-    RelearnException::hide_messages = true;
+    RelearnException::hide_messages = false;
     LogFiles::disable = true;
 
     MemoryHolder<BarnesHutCell>::init(holder_bh_cells);

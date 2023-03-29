@@ -36,7 +36,7 @@ void SubdomainFromFile::print_essentials(const std::unique_ptr<Essentials>& esse
 }
 
 void SubdomainFromFile::read_neurons_from_file(const std::filesystem::path& path_to_neurons) {
-    auto [loaded_neurons, area_id_vs_area_name, additional_infos] = NeuronIO::read_neurons(path_to_neurons);
+    auto [loaded_neurons, area_id_vs_area_name, additional_infos, _] = NeuronIO::read_neurons(path_to_neurons);
     RelearnException::check(!loaded_neurons.empty(), "SubdomainFromFile::read_neurons_from_file Could not load any neurons from file");
     this->set_area_id_to_area_name(area_id_vs_area_name);
     const auto& [min_position, max_position, loaded_ex_neurons, loaded_in_neurons] = additional_infos;

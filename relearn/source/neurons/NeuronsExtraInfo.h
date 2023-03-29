@@ -99,7 +99,7 @@ public:
     void set_static_neurons(const std::span<const NeuronID> static_neurons) {
         for (const auto& neuron_id : static_neurons) {
             const auto local_neuron_id = neuron_id.get_neuron_id();
-            RelearnException::check(local_neuron_id < size, "NeuronsExtraInformation::set_static_neurons: NeuronID {} is too large: {}", neuron_id);
+            RelearnException::check(local_neuron_id < size, "NeuronsExtraInformation::set_static_neurons: NeuronID {} is too large", neuron_id);
 
             update_status[local_neuron_id] = UpdateStatus::Static;
         }

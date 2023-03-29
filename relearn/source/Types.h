@@ -15,6 +15,7 @@
 #include "util/MPIRank.h"
 #include "util/TaggedID.h"
 #include "util/Vec3.h"
+#include "util/BoundingBox.h"
 
 #include <cstdint>
 #include <functional>
@@ -66,6 +67,7 @@ namespace RelearnTypes {
 // In the future, these might become different types
 using box_size_type = Vec3d;
 using position_type = Vec3d;
+using bounding_box_type = BoundingBox<box_size_type>;
 
 using plastic_synapse_weight = int;
 using static_synapse_weight = double;

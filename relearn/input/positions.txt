@@ -1,16 +1,13 @@
-# num_vertices: 51842
-# num_edges: 426124
-# min_x: -71.6522
-# min_y: -122.577
-# min_z: -30.2009
-# Offset added
-# min_x: 0
-# min_y: 0
-# min_z: 0
-# min vertex degree: 6
-# max vertex degree: 1246
-# Vertices: 51842
-# Add offset (x y z) to get original positions: (-71.652210 -122.577140 -30.200880)
+# 51842 of 51842
+# Minimum x: 0
+# Minimum y: 0
+# Minimum z: 0
+# Maximum x: 141.0981
+# Maximum y: 176.00237
+# Maximum z: 130.5685
+# <local id> <pos x> <pos y> <pos z> <area> <type>
+# Number of local subdomains: 1
+# Local subdomain 0 boundaries (0, 0, 0) - (141.0981, 176.00237, 130.5685)
 # ID, Position (x y z),	Area ,type 
 1	19.370560 54.467470 63.900310 	lh.bankssts  ex
 2	17.849990 54.501960 64.244110 	lh.bankssts  ex

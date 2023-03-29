@@ -462,7 +462,7 @@ TEST_F(IOTest, testNeuronIORead) {
 
     ASSERT_NO_THROW(NeuronIO::write_neurons(preliminary_neurons, path, std::make_shared<LocalAreaTranslator>(area_names, area_ids)));
 
-    const auto& [read_neurons, area_id_to_area_name, additional_infos]
+    const auto& [read_neurons, area_id_to_area_name, additional_infos, _]
         = NeuronIO::read_neurons(path);
 
     ASSERT_EQ(read_neurons.size(), preliminary_neurons.size());
@@ -1210,4 +1210,42 @@ TEST_F(IOTest, testWriteOutSynapses) {
 
         ASSERT_NEAR(p_weight, r_weight, eps);
     }
+}
+
+TEST_F(IOTest, additionalPositionInformationTest) {
+    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto total_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + number_neurons;
+    const auto num_subdomains = RandomAdapter::get_random_integer(1, 10, mt);
+
+    std::vector<NeuronID> correct_ids;
+    std::vector<RelearnTypes::position_type> correct_position;
+    std::vector<RelearnTypes::area_id> correct_area_ids;
+    std::vector<RelearnTypes::area_name> correct_area_names;
+    std::vector<SignalType> correct_signal_types;
+
+    auto sim_box = SimulationAdapter::round_bounding_box(SimulationAdapter::get_random_simulation_box_size(mt));
+    std::vector<RelearnTypes::bounding_box_type> subdomain_boxes{};
+    for(auto i=0;i<num_subdomains;i++) {
+        subdomain_boxes.push_back(SimulationAdapter::round_bounding_box(SimulationAdapter::get_random_simulation_box_size(mt)));
+    }
+
+    for (auto i = 0; i < number_neurons; i++) {
+        correct_ids.push_back(NeuronID {i});
+        correct_position.emplace_back(SimulationAdapter::get_random_position_in_box(sim_box, mt));
+        correct_area_names.emplace_back("area_" + std::to_string(i));
+        correct_area_ids.emplace_back(i);
+        correct_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+    }
+
+    auto path = get_relearn_path() / "neurons.tmp";
+
+    NeuronIO::write_neurons_componentwise(correct_ids, correct_position, std::make_shared<LocalAreaTranslator>(correct_area_names, correct_area_ids), correct_signal_types, path, total_neurons, sim_box, subdomain_boxes);
+
+    auto comments = NeuronIO::read_comments(path);
+    auto infos = NeuronIO::parse_additional_position_information(comments);
+
+    ASSERT_EQ(infos.total_neurons, total_neurons);
+    ASSERT_EQ(infos.local_neurons, number_neurons);
+    ASSERT_EQ(sim_box, infos.sim_size);
+    ASSERT_EQ(subdomain_boxes, infos.subdomain_sizes);
 }

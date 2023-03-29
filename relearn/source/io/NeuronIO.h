@@ -11,6 +11,7 @@
  */
 
 #include "Types.h"
+#include "sim/file/AdditionalPositionInformation.h"
 #include "sim/LoadedNeuron.h"
 #include "structure/Partition.h"
 #include "util/MPIRank.h"
@@ -51,6 +52,8 @@ public:
      */
     [[nodiscard]] static std::vector<std::string> read_comments(const std::filesystem::path& file_path);
 
+    [[nodiscard]] static AdditionalPositionInformation parse_additional_position_information(const std::vector<std::string> & comments);
+
     /**
      * @brief Reads all neurons from the file and returns those.
      *      The file must be ascendingly sorted wrt. to the neuron ids (starting at 1). All positions must be non-negative
@@ -58,7 +61,7 @@ public:
      * @exception Throws a RelearnException if a position has a negative component or the ids are not sorted properly
      * @return Returns a tuple with (1) all loaded neurons and (2) a vector which assigns an area id to its area name and (3) additional information
      */
-    [[nodiscard]] static std::tuple<std::vector<LoadedNeuron>, std::vector<RelearnTypes::area_name>, LoadedNeuronsInfo> read_neurons(const std::filesystem::path& file_path);
+    [[nodiscard]] static std::tuple<std::vector<LoadedNeuron>, std::vector<RelearnTypes::area_name>, LoadedNeuronsInfo, AdditionalPositionInformation> read_neurons(const std::filesystem::path& file_path);
 
     /**
      * @brief Reads all neurons from the file and returns those in their components.
@@ -130,7 +133,24 @@ public:
      */
     static void write_neurons_componentwise(std::span<const NeuronID> ids, std::span<const position_type> positions,
         const std::shared_ptr<LocalAreaTranslator>& local_area_translator, std::span<const SignalType> signal_types, std::stringstream& ss,
-        size_t total_number_neurons, const std::tuple<Vec3<double>, Vec3<double>>& simulation_box, const std::vector<std::pair<Partition::box_size_type, Partition::box_size_type>>& local_subdomain_boundaries);
+        size_t total_number_neurons, RelearnTypes::bounding_box_type simulation_box, std::vector<RelearnTypes::bounding_box_type> local_subdomain_boundaries);
+
+    /**
+     * @brief Writes all neurons to the file. The IDs must start at 0 and be ascending. All vectors must have the same length.
+     *      Does not check for correct IDs or non-negative positions.
+     * @param ids The IDs
+     * @param positions The positions
+     * @param local_area_translator Maps local area id to area map
+     * @param signal_types The signal types
+     * @param ss Stringstream to which is written
+     * @param total_number_neurons Number of all neurons in the simulation
+     * @param simulation_box Bounding box of the entire simulation
+     * @param local_subdomain_boundaries List of bounding boxes (as pair of bounding box min and bounding box max) of the local subdomains
+     * @exception Throws a RelearnException if the vectors don't all have the same length, or opening the file failed
+     */
+    static void write_neurons_componentwise(std::span<const NeuronID> ids, std::span<const position_type> positions,
+        const std::shared_ptr<LocalAreaTranslator>& local_area_translator, std::span<const SignalType> signal_types, const std::filesystem::path& path,
+        size_t total_number_neurons, RelearnTypes::bounding_box_type simulation_box, std::vector<RelearnTypes::bounding_box_type> local_subdomain_boundaries);
 
     /**
      * @brief Writes all neurons to the file. The IDs must start at 0 and be ascending. All vectors must have the same length.

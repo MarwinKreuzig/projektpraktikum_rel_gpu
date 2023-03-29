@@ -475,6 +475,10 @@ public:
         return x < other.x || (x == other.x && y < other.y) || (x == other.x && y == other.y && z < other.z);
     }
 
+    /*[[nodiscard]] constexpr bool operator<=(const Vec3<T>& other) const noexcept {
+        return x <= other.x && y <= other.y && z <= other.z;
+    }*/
+
     /**
      * @brief Checks if *this is in [lower, upper] component-wise, required lower <= upper component-wise, and returns a flag indicating the result
      * @param lower The lower bound for each component
@@ -482,7 +486,6 @@ public:
      * @exception Throws a RelearnException if lower <= upper is violated
      * @return True iff *this is in [lower, upper]
      */
-     static constexpr double epsilon = 0.0001;
     [[nodiscard]] constexpr bool check_in_box(const Vec3<T>& lower, const Vec3<T>& upper) const {
         RelearnException::check(lower.x <= upper.x, "Vec3::check_in_box: lower.x ({}) is larger than upper.x ({})", lower.x, upper.x);
         RelearnException::check(lower.y <= upper.y, "Vec3::check_in_box: lower.y ({}) is larger than upper.y ({})", lower.y, upper.y);
@@ -491,6 +494,7 @@ public:
         const auto is_in_x_range = lower.x <= x && x <= upper.x;
         const auto is_in_y_range = lower.y <= y && y <= upper.y;
         const auto is_in_z_range = lower.z <= z && z <= upper.z;
+        const auto epsilon = Constants::eps;
 
         const auto is_equal_x_lower = std::fabs(x - lower.x) <= epsilon;
         const auto is_equal_x_upper = std::fabs(x - upper.x) <= epsilon;
