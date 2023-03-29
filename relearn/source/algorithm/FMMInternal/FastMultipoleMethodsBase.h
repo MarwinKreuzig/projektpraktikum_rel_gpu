@@ -647,7 +647,7 @@ public:
      * @param stack Reference to the stack on which the pairs must be pushed back.
      * @param source_children Reference on the children of the source node.
      */
-    [[nodiscard]] static void make_stack_entries_for_leaf(OctreeNode<AdditionalCellAttributes>* target_node, const SignalType signal_type_needed, const ElementType element_type,
+    static void make_stack_entries_for_leaf(OctreeNode<AdditionalCellAttributes>* target_node, const SignalType signal_type_needed, const ElementType element_type,
         Stack<stack_entry>& stack, const std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct>& source_children) {
         RelearnException::check(target_node != nullptr, "FastMultipoleMethodsBase::make_stack_entries_for_leaf: target_node is nullptr");
         RelearnException::check(target_node->is_leaf(), "FastMultipoleMethodsBase::make_stack_entries_for_leaf: target_node wasn't a leaf");
@@ -756,7 +756,7 @@ public:
      *      When Constants::unpacking == 0 the stack is not changed.
      * @param stack Stack on which node pairs are located and on which is worked on.
      */
-    [[nodiscard]] static void unpack_node_pair(Stack<stack_entry>& stack) {
+    static void unpack_node_pair(Stack<stack_entry>& stack) {
         if (Constants::unpacking == 0) {
             return;
         }
@@ -804,7 +804,7 @@ public:
      * @param request SynapseCreationRequest which should be extended. This must be created before the method is called.
      * @exception Can throw a RelearnException.
      */
-    [[nodiscard]] static void make_creation_request_for(OctreeNode<AdditionalCellAttributes>* root, const std::vector<OctreeNode<AdditionalCellAttributes>*>& local_roots,
+    static void make_creation_request_for(OctreeNode<AdditionalCellAttributes>* root, const std::vector<OctreeNode<AdditionalCellAttributes>*>& local_roots,
         const std::uint16_t branch_level, const ElementType element_type, const SignalType signal_type_needed, CommunicationMap<SynapseCreationRequest>& request) {
         RelearnException::check(root != nullptr, "FastMultipoleMethodsBase::make_creation_request_for: root is nullptr");
 
@@ -874,7 +874,7 @@ public:
         }
     }
 
-    [[nodiscard]] static void print_calculation(std::ostream& out_stream, OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target,
+    static void print_calculation(std::ostream& out_stream, OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target,
         const ElementType element_type, const SignalType needed) {
 
         const auto other_element_type = get_other_element_type(element_type);
