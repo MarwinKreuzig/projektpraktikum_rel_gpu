@@ -494,8 +494,11 @@ int main(int argc, char** argv) {
     double nu_axon{ SynapticElements::default_nu };
     app.add_option("--growth-rate-axon", nu_axon, "The growth rate for the axons. Default is 1e-5");
 
-    double nu_dend{ SynapticElements::default_nu };
-    app.add_option("--growth-rate-dendrite", nu_dend, "The growth rate for the dendrites. Default is 1e-5");
+    double nu_dend_inh{ SynapticElements::default_nu };
+    app.add_option("--growth-rate-dendrite-inh", nu_dend_inh, "The growth rate for the inhibitory dendrites. Default is 1e-5");
+
+    double nu_dend_ex{ SynapticElements::default_nu };
+    app.add_option("--growth-rate-dendrite-exc", nu_dend_ex, "The growth rate for the excitatory dendrites. Default is 1e-5");
 
     double min_calcium_axons{ SynapticElements::default_eta_Axons };
     app.add_option("--min-calcium-axons", min_calcium_axons, "The minimum intercellular calcium for axons to grow. Default is 0.4");
@@ -619,8 +622,10 @@ int main(int argc, char** argv) {
 
     RelearnException::check(nu_axon >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
     RelearnException::check(nu_axon <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
-    RelearnException::check(nu_dend >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
-    RelearnException::check(nu_dend <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
+    RelearnException::check(nu_dend_inh >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
+    RelearnException::check(nu_dend_inh <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
+    RelearnException::check(nu_dend_ex >= SynapticElements::min_nu, "Growth rate is smaller than {}", SynapticElements::min_nu);
+    RelearnException::check(nu_dend_ex <= SynapticElements::max_nu, "Growth rate is larger than {}", SynapticElements::max_nu);
 
     RelearnException::check(Config::flush_area_monitor_step > 0, "The step for flushing the neuron monitors must be > 0.");
 
@@ -693,7 +698,8 @@ int main(int argc, char** argv) {
         essentials->insert("Beta", beta);
         essentials->insert("Calcium-Decay", calcium_decay);
         essentials->insert("Nu-Axons", nu_axon);
-        essentials->insert("Nu-Dendrites", nu_dend);
+        essentials->insert("Nu-Dendrites inh", nu_dend_inh);
+        essentials->insert("Nu-Dendrites ex", nu_dend_ex);
         essentials->insert("Retract-Ratio", retract_ratio);
         essentials->insert("Synapse-Conductance", synapse_conductance);
         essentials->insert("Background-Base", base_background_activity);
@@ -959,10 +965,10 @@ int main(int argc, char** argv) {
         nu_axon, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     auto excitatory_dendrites_model = std::make_shared<SynapticElements>(ElementType::Dendrite, min_calcium_excitatory_dendrites,
-        nu_dend, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
+        nu_dend_ex, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     auto inhibitory_dendrites_model = std::make_shared<SynapticElements>(ElementType::Dendrite, min_calcium_inhibitory_dendrites,
-        nu_dend, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
+        nu_dend_inh, retract_ratio, synaptic_elements_init_lb, synaptic_elements_init_ub);
 
     auto construct_synapse_deletion_finder = [&]() -> std::unique_ptr<SynapseDeletionFinder> {
         if (chosen_synapse_deleter == SynapseDeletionFinderType::Random) {

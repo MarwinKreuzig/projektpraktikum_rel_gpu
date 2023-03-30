@@ -140,6 +140,10 @@ public:
      * @exception Throws a RelearnException if (a) neuron_id is too large, (b) the counts for the neuron are negative afterwards
      */
     void update_grown_elements(const NeuronID neuron_id, const double delta) {
+        if(nu <= 0.0) {
+            return;
+        }
+
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < grown_elements.size(), "SynapticElements::update_grown_elements: neuron_id is too large: {}", neuron_id);
@@ -154,6 +158,10 @@ public:
      * @exception Throws a RelearnException if (a) neuron_id is too large, (b) the counts for the neuron are negative afterwards
      */
     void update_connected_elements(const NeuronID neuron_id, const int delta) {
+        if(nu <= 0.0) {
+            return;
+        }
+
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < connected_elements.size(), "SynapticElements::update_connected_elements: neuron_id is too large: {}", neuron_id);
@@ -181,6 +189,10 @@ public:
      *      (c) disabled_neuron_ids[i] is larger than the number of stored neurons
      */
     void update_after_deletion(const std::span<const unsigned int> changes, const std::span<const NeuronID> disabled_neuron_ids) {
+        if(nu <= 0.0) {
+            return;
+        }
+
         RelearnException::check(changes.size() == size, "SynapticElements::update_after_deletion: The number of changes does not match the number of elements");
 
         for (auto neuron_id = 0; neuron_id < size; neuron_id++) {
