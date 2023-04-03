@@ -102,7 +102,7 @@ void MultipleSubdomainsFromFile::fill_all_subdomains()  {
     const auto sim_size = additional_position_information.sim_size;
     for(auto i = 0; i < num_subdomains; i++) {
         auto subdomain_bb = partition->get_subdomain_boundaries(i);
-        RelearnException::check(subdomain_bb == additional_position_information.subdomain_sizes[i], "MultipleSubdomainsFromFile::read_neurons_from_file: Wrong subdomain boundaries for subdomain {} on rank {}", i, MPIWrapper::get_my_rank());
+        RelearnException::check(subdomain_bb == additional_position_information.subdomain_sizes[i], "MultipleSubdomainsFromFile::read_neurons_from_file: Wrong subdomain boundaries for subdomain {} on rank {}. Expected: {}, found: {}", i, MPIWrapper::get_my_rank(), subdomain_bb, additional_position_information.subdomain_sizes[i]);
         RelearnException::check(subdomain_bb.get_minimum().check_in_box(sim_size.get_minimum(), sim_size.get_maximum())
                 && subdomain_bb.get_maximum().check_in_box(sim_size.get_minimum(), sim_size.get_maximum()), "MultipleSubdomainsFromFile::read_neurons_from_file: Subdomain outside of simulation box");
     }
