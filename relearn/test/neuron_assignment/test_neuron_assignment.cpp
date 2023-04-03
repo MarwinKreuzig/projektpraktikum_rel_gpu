@@ -21,7 +21,6 @@
 #include "sim/random/SubdomainFromNeuronDensity.h"
 #include "sim/random/SubdomainFromNeuronPerRank.h"
 #include "sim/file/MultipleSubdomainsFromFile.h"
-#include "sim/file/SubdomainFromFile.h"
 #include "sim/NeuronToSubdomainAssignment.h"
 #include "structure/Partition.h"
 
@@ -520,6 +519,7 @@ TEST_F(NeuronAssignmentTest, testPerRankNeuronAttributesSemanticMultipleSubdomai
 }
 
 TEST_F(NeuronAssignmentTest, testFileLoadSingleSubdomain) {
+    RelearnException::hide_messages = false;
     std::vector<Vec3d> positions{};
     std::vector<RelearnTypes::area_id> area_ids{};
     std::vector<RelearnTypes::area_name> area_names{};
@@ -530,7 +530,7 @@ TEST_F(NeuronAssignmentTest, testFileLoadSingleSubdomain) {
     const auto number_neurons = positions.size();
 
     const auto part = std::make_shared<Partition>(1, MPIRank::root_rank());
-    SubdomainFromFile sff{ "neurons.tmp", {}, part };
+    MultipleSubdomainsFromFile sff{ "neurons.tmp", {}, part };
 
     sff.initialize();
 
@@ -577,7 +577,7 @@ TEST_F(NeuronAssignmentTest, testFileLoadNetworkSingleSubdomain) {
     write_synapses_to_file(synapses, ".");
 
     const auto part = std::make_shared<Partition>(1, MPIRank::root_rank());
-    SubdomainFromFile sff{ "neurons.tmp", ".", part };
+    MultipleSubdomainsFromFile sff{ "neurons.tmp", ".", part };
 
     sff.initialize();
 
@@ -610,7 +610,7 @@ TEST_F(NeuronAssignmentTest, testFileGivenInputONCE) {
     auto path_to_synapses = get_relearn_path() / "input/";
 
     const auto part = std::make_shared<Partition>(1, MPIRank::root_rank());
-    SubdomainFromFile sff{ path_to_neurons, path_to_synapses, part };
+    MultipleSubdomainsFromFile sff{ path_to_neurons, path_to_synapses, part };
 
     sff.initialize();
 

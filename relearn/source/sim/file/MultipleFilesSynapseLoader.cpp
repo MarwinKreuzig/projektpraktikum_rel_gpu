@@ -22,7 +22,7 @@
 MultipleFilesSynapseLoader::MultipleFilesSynapseLoader(std::shared_ptr<Partition> partition, std::optional<std::filesystem::path> path_to_synapses)
     : SynapseLoader(std::move(partition))
     , optional_path_to_file(std::move(path_to_synapses)) {
-    RelearnException::check(this->partition->get_number_mpi_ranks() > 1, "MultipleFilesSynapseLoader::MultipleFilesSynapseLoader: Can only use this class with >1 MPI ranks.");
+    //RelearnException::check(this->partition->get_number_mpi_ranks() > 1, "MultipleFilesSynapseLoader::MultipleFilesSynapseLoader: Can only use this class with >1 MPI ranks.");
     if (optional_path_to_file.has_value()) {
         const auto& actual_path = optional_path_to_file.value();
         RelearnException::check(std::filesystem::is_directory(actual_path), "MultipleFilesSynapseLoader::MultipleFilesSynapseLoader: Path {} is no directory.", actual_path);

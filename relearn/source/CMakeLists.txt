@@ -39,10 +39,8 @@ target_sources(
           neurons/NeuronsExtraInfo.cpp
 
           # sim
-          sim/file/FileSynapseLoader.cpp
           sim/file/MultipleFilesSynapseLoader.cpp
           sim/file/MultipleSubdomainsFromFile.cpp
-          sim/file/SubdomainFromFile.cpp
           sim/random/BoxBasedRandomSubdomainAssignment.cpp
           sim/random/RandomSynapseLoader.cpp
           sim/random/SubdomainFromNeuronDensity.cpp

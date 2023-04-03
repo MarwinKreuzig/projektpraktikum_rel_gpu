@@ -36,7 +36,6 @@
 #include "sim/Essentials.h"
 #include "sim/Simulation.h"
 #include "sim/file/MultipleSubdomainsFromFile.h"
-#include "sim/file/SubdomainFromFile.h"
 #include "sim/random/SubdomainFromNeuronDensity.h"
 #include "sim/random/SubdomainFromNeuronPerRank.h"
 #include "structure/BaseCell.h"
@@ -821,10 +820,6 @@ int main(int argc, char** argv) {
         std::optional<std::filesystem::path> path_to_network{};
         if (static_cast<bool>(*opt_file_network)) {
             path_to_network = file_network;
-        }
-
-        if (MPIWrapper::get_num_ranks() == 1) {
-            return std::make_unique<SubdomainFromFile>(file_positions, std::move(path_to_network), partition);
         }
 
         return std::make_unique<MultipleSubdomainsFromFile>(file_positions, std::move(path_to_network), partition);
