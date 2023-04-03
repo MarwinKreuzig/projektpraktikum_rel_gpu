@@ -118,4 +118,10 @@ void MultipleSubdomainsFromFile::fill_all_subdomains()  {
         }
         RelearnException::check(contains, "MultipleSubdomainsFromFile::read_neurons_from_file: Neuron {} outside of subdomains", node.id );
     }
+
+    std::vector<Vec3d> positions{};
+    positions.reserve(loaded_neurons.size());
+    std::transform(loaded_neurons.begin(), loaded_neurons.end(),std::back_inserter(positions), [](const LoadedNeuron& node) { return node.pos;});
+    const std::set<Vec3d> positions_set(positions.begin(), positions.end());
+    RelearnException::check(positions.size() == positions_set.size(), "MultipleSubdomainsFromFile::read_neurons_from_file: Same position occurs multiple times");
 }
