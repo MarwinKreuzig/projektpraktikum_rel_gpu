@@ -137,14 +137,7 @@ public:
      * @return The all position of neurons in the local subdomains
      */
     [[nodiscard]] std::vector<position_type> get_neuron_positions_in_subdomains() const {
-        std::vector<position_type> positions{};
-        positions.reserve(loaded_neurons.size());
-
-        for (const auto& loaded_neuron : loaded_neurons) {
-            positions.push_back(loaded_neuron.pos);
-        }
-
-        return positions;
+        return loaded_neurons | ranges::views::transform(&LoadedNeuron::pos) | ranges::to_vector;
     }
 
     /**
@@ -152,14 +145,7 @@ public:
      * @return The all position of neurons in the local subdomains
      */
     [[nodiscard]] std::vector<SignalType> get_neuron_types_in_subdomains() const {
-        std::vector<SignalType> types{};
-        types.reserve(loaded_neurons.size());
-
-        for (const auto& loaded_neuron : loaded_neurons) {
-            types.push_back(loaded_neuron.signal_type);
-        }
-
-        return types;
+        return loaded_neurons | ranges::views::transform(&LoadedNeuron::signal_type) | ranges::to_vector;
     }
 
     /**

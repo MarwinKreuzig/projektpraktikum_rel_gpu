@@ -26,7 +26,7 @@ if(WIN32) # Harness
 	list(APPEND relearn_harness_additional_files "adapter/simulation/SimulationAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/stimulus/StimulusAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/synaptic_elements/SynapticElementsAdapter.h")
-	list(APPEND relearn_harness_additional_files "adapter/tagged_id/TaggedIdAdapter.h")
+	list(APPEND relearn_harness_additional_files "adapter/tagged_id/NeuronIdAdapter.h")
 	list(APPEND relearn_harness_additional_files "adapter/timers/TimersAdapter.h")
 	
 	list(APPEND relearn_harness_additional_files "factory/background_factory.h")
@@ -231,7 +231,7 @@ if(WIN32) # Tests
 	list(APPEND relearn_tests_additional_files "string_util/test_string_util.h")
 	list(APPEND relearn_tests_additional_files "synaptic_elements/test_synaptic_elements.h")
 	list(APPEND relearn_tests_additional_files "synaptic_input/test_synaptic_input.h")
-	list(APPEND relearn_tests_additional_files "tagged_id/test_tagged_id.h")
+	list(APPEND relearn_tests_additional_files "neuron_id/test_neuron_id.h")
 	list(APPEND relearn_tests_additional_files "timers/test_timers.h")
 	list(APPEND relearn_tests_additional_files "vector/test_vector.h")
 endif()

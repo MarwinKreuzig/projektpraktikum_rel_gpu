@@ -11,8 +11,7 @@
  */
 
 #include "RelearnException.h"
-
-#include <fmt/ostream.h>
+#include "util/ranges/Functional.hpp"
 
 #include <compare>
 #include <concepts>
@@ -21,8 +20,9 @@
 #include <type_traits>
 #include <vector>
 
-template <typename U>
-class TaggedIDTest;
+#include <fmt/ostream.h>
+#include <range/v3/view/iota.hpp>
+#include <range/v3/view/transform.hpp>
 
 namespace detail {
 template <std::integral T>
@@ -38,29 +38,15 @@ template <std::integral T>
 }
 
 template <std::integral T, std::size_t num_bits>
-struct TaggedIDNumericalLimitsSigned {
-    using value_type = T;
-    static constexpr value_type min = -get_max_size<value_type>(num_bits - 1) - 1;
-    static constexpr value_type max = get_max_size<value_type>(num_bits - 1);
-};
-
-template <std::integral T, std::size_t num_bits>
 struct TaggedIDNumericalLimitsUnsigned {
     using value_type = T;
     static constexpr value_type min = 0;
     static constexpr value_type max = get_max_size<value_type>(num_bits);
 };
-
-template <std::integral T, std::size_t num_bits>
-struct TaggedIDNumericalLimits : public std::conditional_t<
-                                     std::is_signed_v<T>,
-                                     TaggedIDNumericalLimitsSigned<T, num_bits>,
-                                     TaggedIDNumericalLimitsUnsigned<T, num_bits>> {
-};
 } // namespace detail
 
 /**
- * @brief ID class to represent a tagged id value.
+ * @brief ID class to represent a neuron id with flags as a bitfield.
  *
  * Flag members include is_virtual and is_initialized.
  * The limits type can be used to query the range of id values the tagged id can represent.
@@ -68,100 +54,117 @@ struct TaggedIDNumericalLimits : public std::conditional_t<
  * The flag is_virtual is false by default and can only be specified in the constructor.
  * The is_initialized flag is true when the id was explicitly initialized with an id value,
  * or the id object gets an id assigned.
- *
- * @tparam T value type of the underlying id
  */
-template <std::integral T = std::uint64_t>
-class TaggedID {
-    template <typename U>
-    friend class TaggedIDTest;
-
+class NeuronID {
 public:
-    using value_type = T;
+    using value_type = std::uint64_t;
     static constexpr auto num_flags = 2;
     static constexpr auto id_bit_count = sizeof(value_type) * 8 - num_flags;
-    using limits = detail::TaggedIDNumericalLimits<value_type, id_bit_count>;
+    using limits = detail::TaggedIDNumericalLimitsUnsigned<value_type, id_bit_count>;
 
     /**
      * @brief Get an uninitialized id
      *
-     * @return constexpr TaggedID uninitialized id
+     * @return constexpr NeuronID uninitialized id
      */
-    [[nodiscard]] static constexpr TaggedID uninitialized_id() noexcept { return TaggedID{}; }
+    [[nodiscard]] static constexpr NeuronID uninitialized_id() noexcept {
+        return NeuronID{};
+    }
 
     /**
      * @brief Get a virtual id (is initialized, but virtual)
-     * @return constexpr TaggedID virtual id
+     * @return constexpr NeuronID virtual id
      */
-    [[nodiscard]] static constexpr TaggedID virtual_id() noexcept { return TaggedID{ true, 0 }; }
+    [[nodiscard]] static constexpr NeuronID virtual_id() noexcept {
+        return NeuronID{ true, 0 };
+    }
 
     /**
      * @brief Get a virtual id (is initialized, but virtual)
      * @param hijacked_value The offset in the RMA window/index of the branch node
-     * @return constexpr TaggedID virtual id
+     * @return constexpr NeuronID virtual id
      */
-    [[nodiscard]] static constexpr TaggedID virtual_id(std::integral auto hijacked_value) noexcept { return TaggedID{ true, hijacked_value }; }
-
-    /**
-     * @brief Create a vector of local TaggedIDs within the range [0, size)
-     *
-     * @param size size of the vector
-     * @return constexpr auto vector of TaggedIDs
-     */
-    [[nodiscard]] static constexpr auto range(size_t size) {
-        return range(0, size);
+    [[nodiscard]] static constexpr NeuronID virtual_id(std::integral auto hijacked_value) noexcept {
+        return NeuronID{ true, hijacked_value };
     }
 
     /**
-     * @brief Create a vector of TaggedIDs within the range [begin, end)
+     * @brief Create a vector of NeuronIDs within the range [begin, end)
      *
      * @param begin begin of the vector
      * @param end end of the vector
-     * @return constexpr auto vector of TaggedIDs
+     * @return vector of NeuronIDs
      */
-    [[nodiscard]] static constexpr auto range(size_t begin, size_t end) {
-        std::vector<TaggedID<T>> ids{};
-        ids.reserve(end - begin);
-        for (auto i = begin; i < end; i++) {
-            ids.emplace_back(i);
-        }
-
-        return ids;
+    [[nodiscard]] static auto range(const value_type begin, const value_type end) {
+        return ranges::views::iota(begin, end) | ranges::views::transform(construct<NeuronID>);
     }
 
     /**
-     * @brief Construct a new TaggedID object where the flag is_initialized is false
+     * @brief Create a vector of local NeuronIDs within the range [0, size)
      *
+     * @param size size of the vector
+     * @return vector of NeuronIDs
      */
-    TaggedID() = default;
+    [[nodiscard]] static auto range(const value_type size) {
+        return range(0U, size);
+    }
 
     /**
-     * @brief Construct a new initialized TaggedID object with the given id
+     * @brief Create a vector of NeuronIDs within the range [begin, end) but as ids of type value_type
+     *
+     * @param begin begin of the vector
+     * @param end end of the vector
+     * @return vector of NeuronIDs of type value_type
+     */
+    [[nodiscard]] static auto range_id(const value_type begin, const value_type end) {
+        return ranges::views::iota(begin, end);
+    }
+
+    /**
+     * @brief Create a vector of local NeuronIDs within the range [0, size) but as ids of type value_type
+     *
+     * @param size size of the vector
+     * @return vector of NeuronIDs of type value_type
+     */
+    [[nodiscard]] static auto range_id(const value_type size) {
+        return range_id(0U, size);
+    }
+
+    /**
+     * @brief Construct a new NeuronID object where the flag is_initialized is false
+     *
+     */
+    NeuronID() = default;
+
+    /**
+     * @brief Construct a new initialized NeuronID object with the given id
      *
      * @param id the id value
      */
-    constexpr explicit TaggedID(std::integral auto id) noexcept
+    constexpr explicit NeuronID(const std::integral auto id) noexcept
         : is_initialized_{ true }
-        , id_{ static_cast<value_type>(id) } { }
+        , id_{ static_cast<value_type>(id) } {
+    }
 
     /**
-     * @brief Construct a new initialized TaggedID object with the given flags and id
+     * @brief Construct a new initialized NeuronID object with the given flags and id
      *
      * @param is_virtual flag if the id should be marked virtual
      * @param id the id value
      */
-    constexpr TaggedID(bool is_virtual, std::integral auto id) noexcept
+    constexpr explicit NeuronID(const bool is_virtual, const std::integral auto id) noexcept
         : is_initialized_{ true }
         , is_virtual_{ is_virtual }
-        , id_{ static_cast<value_type>(id) } { }
+        , id_{ static_cast<value_type>(id)} {
+    }
 
-    constexpr TaggedID(const TaggedID&) noexcept = default;
-    constexpr TaggedID& operator=(const TaggedID&) noexcept = default;
+    constexpr NeuronID(const NeuronID&) noexcept = default;
+    constexpr NeuronID& operator=(const NeuronID&) noexcept = default;
 
-    constexpr TaggedID(TaggedID&&) noexcept = default;
-    constexpr TaggedID& operator=(TaggedID&&) noexcept = default;
+    constexpr NeuronID(NeuronID&&) noexcept = default;
+    constexpr NeuronID& operator=(NeuronID&&) noexcept = default;
 
-    constexpr ~TaggedID() = default;
+    constexpr ~NeuronID() = default;
 
     /**
      * @brief Get the id
@@ -189,8 +192,8 @@ public:
      * @return constexpr value_type id
      */
     [[nodiscard]] constexpr value_type get_neuron_id() const {
-        RelearnException::check(is_initialized(), "TaggedID::get_neuron_id: Is not initialized {:s}", *this);
-        RelearnException::check(!is_virtual(), "TaggedID::get_neuron_id: Is virtual {:s}", *this);
+        RelearnException::check(is_initialized(), "NeuronID::get_neuron_id: Is not initialized {:s}", *this);
+        RelearnException::check(!is_virtual(), "NeuronID::get_neuron_id: Is virtual {:s}", *this);
         return id_;
     }
 
@@ -200,8 +203,8 @@ public:
      * @return constexpr value_type The virtual id
      */
     [[nodiscard]] constexpr value_type get_rma_offset() const {
-        RelearnException::check(is_initialized(), "TaggedID::get_rma_offset: Is not initialized {:s}", *this);
-        RelearnException::check(is_virtual(), "TaggedID::get_rma_offset: Is not virtual {:s}", *this);
+        RelearnException::check(is_initialized(), "NeuronID::get_rma_offset: Is not initialized {:s}", *this);
+        RelearnException::check(is_virtual(), "NeuronID::get_rma_offset: Is not virtual {:s}", *this);
         return id_;
     }
 
@@ -210,29 +213,35 @@ public:
      *
      * @return true iff the id is initialized
      */
-    [[nodiscard]] constexpr bool is_initialized() const noexcept { return is_initialized_; }
+    [[nodiscard]] constexpr bool is_initialized() const noexcept {
+        return is_initialized_;
+    }
 
     /**
      * @brief Check if the id is virtual
      *
      * @return true iff the id is virtual
      */
-    [[nodiscard]] constexpr bool is_virtual() const noexcept { return is_virtual_; }
+    [[nodiscard]] constexpr bool is_virtual() const noexcept {
+        return is_virtual_;
+    }
 
     /**
      * @brief Check if the id is local
      *
      * @return true iff the id is local
      */
-    [[nodiscard]] constexpr bool is_local() const noexcept { return is_initialized_ && !is_virtual_; }
+    [[nodiscard]] constexpr bool is_local() const noexcept {
+        return is_initialized_ && !is_virtual_;
+    }
 
     /**
-     * @brief Compare two TaggedIDs
+     * @brief Compare two NeuronIDs
      *
      * Compares the members in order of declaration
      * @return std::strong_ordering ordering
      */
-    [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const TaggedID& first, const TaggedID& second) noexcept = default; // NOLINT(hicpp-use-nullptr,modernize-use-nullptr)
+    [[nodiscard]] friend constexpr std::strong_ordering operator<=>(const NeuronID&, const NeuronID&) noexcept = default;
 
 private:
     // the ordering of members is important for the defaulted <=> comparison
@@ -243,28 +252,26 @@ private:
 };
 
 /**
- * @brief Formatter for TaggedID
+ * @brief Formatter for NeuronID
  *
- * TaggedID is represented as follows:
+ * NeuronID is represented as follows:
  * is_initialized is_virtual : id
  * printing the flags is optional
  *
  * Formatting options are:
  * - i (default): id only   -> 123456
- * - s: small               -> 000:123456
- * - m: medium              -> i0g0v0:123456
+ * - s: small               -> 00:123456
+ * - m: medium              -> i0v0:123456
  * - l: large               -> initialized: bool, virtual: bool:123456
  *
  * The id can be formatted with the appropriate
  * formatting for its type.
- * Requirement: TaggedID formatting has to be specified
+ * Requirement: NeuronID formatting has to be specified
  * before the formatting of the id.
  * Example: "{:s>20}"
- *
- * @tparam T value type of the TaggedID
  */
-template <typename T>
-class fmt::formatter<TaggedID<T>> : public fmt::formatter<typename TaggedID<T>::value_type> {
+template <>
+class fmt::formatter<NeuronID> : public fmt::formatter<typename NeuronID::value_type> {
 public:
     [[nodiscard]] constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
         const auto* it = ctx.begin();
@@ -273,12 +280,15 @@ public:
             presentation = *it++; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             ctx.advance_to(it);
         }
+        if (it != end && *it != '}') {
+            throw format_error("unrecognized format for NeuronID");
+        }
 
-        return fmt::formatter<typename TaggedID<T>::value_type>::parse(ctx);
+        return fmt::formatter<typename NeuronID::value_type>::parse(ctx);
     }
 
     template <typename FormatContext>
-    [[nodiscard]] auto format(const TaggedID<T>& id, FormatContext& ctx) -> decltype(ctx.out()) {
+    [[nodiscard]] auto format(const NeuronID& id, FormatContext& ctx) const -> decltype(ctx.out()) {
         switch (presentation) {
         case 'i':
             break;
@@ -301,10 +311,11 @@ public:
                 id.is_initialized(), id.is_virtual());
             break;
         default:
-            throw format_error("unrecognized format for TaggedID<T>");
+            // unreachable
+            throw format_error("unrecognized format for NeuronID");
         }
 
-        using type = typename TaggedID<T>::value_type;
+        using type = typename NeuronID::value_type;
 
         type id_ = 0;
 
@@ -325,22 +336,18 @@ private:
     char presentation = 'i';
 };
 
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const TaggedID<T>& id) {
-    os << fmt::format("{}", id);
-    return os;
+inline std::ostream& operator<<(std::ostream& os, const NeuronID& id) {
+    return os << fmt::format("{}", id);
 }
 
-using NeuronID = TaggedID<std::uint64_t>;
-
 namespace std {
-template <typename value_type>
-struct hash<TaggedID<value_type>> {
-    using argument_type = TaggedID<value_type>;
+template <>
+struct hash<NeuronID> {
+    using argument_type = NeuronID;
     using result_type = std::size_t;
 
     result_type operator()(const argument_type& neuron_id) const {
-        // The size of the stored value inside TaggedID<value_type> has two bits less than value_type
+        // The size of the stored value inside NeuronID has two bits less than value_type
 
         constexpr auto max = std::numeric_limits<result_type>::max();
         if (!neuron_id.is_initialized()) {
@@ -357,8 +364,7 @@ struct hash<TaggedID<value_type>> {
         }
 
         // The highest bit is cleared, but some are set
-        const auto id = neuron_id.get_neuron_id();
-        return result_type(id);
+        return neuron_id.get_neuron_id();
     }
 };
 } // namespace std

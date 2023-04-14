@@ -11,10 +11,14 @@
  */
 
 #include "neurons/NetworkGraph.h"
+#include "util/ranges/Functional.hpp"
 
 #include <memory>
 #include <random>
 #include <vector>
+
+#include <range/v3/view/transform.hpp>
+#include <range/v3/range/conversion.hpp>
 
 class NetworkGraphFactory {
 public:
@@ -103,14 +107,12 @@ public:
 
     template <typename SynapseType>
     static std::vector<SynapseType> invert_synapses(const std::vector<SynapseType>& synapses) {
-        std::vector<SynapseType> inverted_synapses{};
-        inverted_synapses.reserve(synapses.size());
-
-        for (const auto& [target, source, weight] : synapses) {
-            inverted_synapses.emplace_back(target, source, -weight);
-        }
-
-        return inverted_synapses;
+        static constexpr auto to_weight = element<2>;
+        return synapses | ranges::views::transform([](SynapseType synapse) {
+                 to_weight(synapse) = -to_weight(synapse);
+                 return synapse;
+               }) |
+               ranges::to_vector;
     }
 
     template <typename SynapseType>

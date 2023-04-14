@@ -17,7 +17,7 @@
 #include "neurons/enums/FiredStatus.h"
 #include "neurons/enums/UpdateStatus.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include <algorithm>
 #include <memory>

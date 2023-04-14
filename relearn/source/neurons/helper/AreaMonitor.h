@@ -11,9 +11,8 @@
  */
 
 #include "Types.h"
-#include "neurons/LocalAreaTranslator.h"
 #include "neurons/enums/SignalType.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 #include "GlobalAreaMapper.h"
 
 #include <boost/functional/hash.hpp>

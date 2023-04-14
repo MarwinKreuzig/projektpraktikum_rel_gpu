@@ -15,11 +15,16 @@
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
 #include "util/Timers.h"
+#include "util/ranges/Functional.hpp"
 
 #include <fstream>
 #include <set>
 #include <sstream>
 #include <string>
+
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/range/concepts.hpp>
+#include <range/v3/range/traits.hpp>
 
 SynapseLoader::synapses_pair_type SynapseLoader::load_synapses(const std::unique_ptr<Essentials>& essentials) {
     Timers::start(TimerRegion::LOAD_SYNAPSES);
@@ -30,20 +35,13 @@ SynapseLoader::synapses_pair_type SynapseLoader::load_synapses(const std::unique
 
     Timers::stop_and_add(TimerRegion::LOAD_SYNAPSES);
 
-    RelearnTypes::plastic_synapse_weight total_local_weight = 0;
-    for (const auto& [_1, _2, weight] : local_synapses) {
-        total_local_weight += weight;
-    }
+    const auto sum_weights = []<typename SynapsesType>(const SynapsesType& synapses) {
+        return ranges::accumulate(synapses | ranges::views::transform(&ranges::range_value_t<SynapsesType>::get_weight), RelearnTypes::plastic_synapse_weight{ 0U });
+    };
 
-    RelearnTypes::plastic_synapse_weight total_in_weight = 0;
-    for (const auto& [_1, _2, weight] : in_synapses) {
-        total_in_weight += weight;
-    }
-
-    RelearnTypes::plastic_synapse_weight total_out_weight = 0;
-    for (const auto& [_1, _2, weight] : out_synapses) {
-        total_out_weight += weight;
-    }
+    const auto total_local_weight = sum_weights(local_synapses);
+    const auto total_in_weight = sum_weights(in_synapses);
+    const auto total_out_weight = sum_weights(out_synapses);
 
     essentials->insert("Loaded-Local-Synapses", local_synapses.size());
     essentials->insert("Loaded-Local-Synapses-Weight", total_local_weight);

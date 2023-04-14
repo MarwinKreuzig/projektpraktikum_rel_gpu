@@ -15,15 +15,24 @@
 #include "neurons/enums/SignalType.h"
 #include "util/MPIRank.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
+#include "util/ranges/Functional.hpp"
 
 #include <filesystem>
+#include <functional>
 #include <ostream>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/concat.hpp>
+#include <range/v3/view/filter.hpp>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/transform.hpp>
 
 /**
  * An object of type NetworkGraph stores the synaptic connections between neurons that are relevant for the current MPI rank.
@@ -210,20 +219,16 @@ class NetworkGraph {
             const auto& locals = neuron_local_out_neighborhood[local_neuron_id];
             const auto& distants = neuron_distant_out_neighborhood[local_neuron_id];
 
-            const auto number_partners = locals.size() + distants.size();
+            const auto to_rank_neuron_id =
+                [this](const auto partner_id) -> RankNeuronId {
+              return {my_rank, partner_id};
+            };
 
-            std::unordered_set<RankNeuronId> partners{};
-            partners.reserve(number_partners * 2);
-
-            for (const auto& [partner_id, _] : locals) {
-                partners.emplace(my_rank, partner_id);
-            }
-
-            for (const auto& [partner_id, _] : distants) {
-                partners.emplace(partner_id);
-            }
-
-            return partners;
+            return ranges::views::concat(
+                       locals | ranges::views::keys |
+                           ranges::views::transform(to_rank_neuron_id),
+                       distants | ranges::views::keys) |
+                   ranges::to<std::unordered_set>;
         }
 
         /**
@@ -236,21 +241,11 @@ class NetworkGraph {
             const auto& all_distant_edges = get_distant_in_edges(neuron_id);
             const auto& all_local_edges = get_local_in_edges(neuron_id);
 
-            auto total_num_ports = synapse_weight(0);
-
-            for (const auto& [_, connection_strength] : all_distant_edges) {
-                if (connection_strength > 0) {
-                    total_num_ports += connection_strength;
-                }
-            }
-
-            for (const auto& [_, connection_strength] : all_local_edges) {
-                if (connection_strength > 0) {
-                    total_num_ports += connection_strength;
-                }
-            }
-
-            return total_num_ports;
+            return ranges::accumulate(
+                ranges::views::concat(all_distant_edges | ranges::views::values,
+                                      all_local_edges | ranges::views::values) |
+                    ranges::views::filter(greater(0)),
+                synapse_weight{0});
         }
 
         /**
@@ -263,21 +258,11 @@ class NetworkGraph {
             const auto& all_distant_edges = get_distant_in_edges(neuron_id);
             const auto& all_local_edges = get_local_in_edges(neuron_id);
 
-            auto total_num_ports = synapse_weight(0);
-
-            for (const auto& [_, connection_strength] : all_distant_edges) {
-                if (connection_strength < 0) {
-                    total_num_ports += -connection_strength;
-                }
-            }
-
-            for (const auto& [_, connection_strength] : all_local_edges) {
-                if (connection_strength < 0) {
-                    total_num_ports += -connection_strength;
-                }
-            }
-
-            return total_num_ports;
+            return ranges::accumulate(
+                ranges::views::concat(all_distant_edges | ranges::views::values,
+                                      all_local_edges | ranges::views::values) |
+                    ranges::views::filter(less(0)),
+                synapse_weight{0}, std::minus{});
         }
 
         /**
@@ -290,17 +275,11 @@ class NetworkGraph {
             const auto& all_distant_edges = get_distant_out_edges(neuron_id);
             const auto& all_local_edges = get_local_out_edges(neuron_id);
 
-            auto total_num_ports = synapse_weight(0);
-
-            for (const auto& [_, connection_strength] : all_distant_edges) {
-                total_num_ports += std::abs(connection_strength);
-            }
-
-            for (const auto& [_, connection_strength] : all_local_edges) {
-                total_num_ports += std::abs(connection_strength);
-            }
-
-            return total_num_ports;
+            return ranges::accumulate(
+                ranges::views::concat(all_distant_edges | ranges::views::values,
+                                      all_local_edges | ranges::views::values) |
+                    ranges::views::transform(as_abs),
+                synapse_weight{0});
         }
 
         /**
@@ -331,9 +310,7 @@ class NetworkGraph {
                 }
             };
 
-            for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
-                const auto& distant_out_edges = get_distant_out_edges(neuron_id);
-
+            for (const auto& distant_out_edges : NeuronID::range(number_local_neurons) | ranges::views::transform([this](const auto& neuron_id){ return get_distant_out_edges(neuron_id); })) {
                 for (const auto& [target_id, edge_val] : distant_out_edges) {
                     const auto& [target_rank, target_neuron_id] = target_id;
 
@@ -346,8 +323,7 @@ class NetworkGraph {
                 }
             }
 
-            for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
-                const auto& distant_in_edges = get_distant_in_edges(neuron_id);
+            for (const auto& distant_in_edges : NeuronID::range(number_local_neurons) | ranges::views::transform([this](const auto& neuron_id){ return get_distant_in_edges(neuron_id); })) {
 
                 for (const auto& [source_id, edge_val] : distant_in_edges) {
                     const auto& [source_rank, source_neuron_id] = source_id;

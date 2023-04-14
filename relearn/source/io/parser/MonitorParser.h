@@ -16,11 +16,19 @@
 #include "neurons/LocalAreaTranslator.h"
 #include "util/StringUtil.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
+#include "util/ranges/Functional.hpp"
 
+#include <range/v3/view/cache1.hpp>
 #include <string>
 #include <string_view>
 #include <vector>
+
+#include <range/v3/action/insert.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/cache1.hpp>
+#include <range/v3/view/filter.hpp>
+#include <range/v3/view/transform.hpp>
 
 /**
  * This class provides an interface to parse neuron ids with descriptions that can contain area names.
@@ -37,26 +45,25 @@ public:
     [[nodiscard]] static std::vector<RelearnTypes::area_id> parse_area_names(const std::string_view description,
         const std::shared_ptr<LocalAreaTranslator>& local_area_translator) {
         const auto& vector = StringUtil::split_string(std::string(description), ';');
-        std::vector<RelearnTypes::area_name> parsed_area_names{};
-        for (auto& desc : vector) {
-            if (desc.find(':') != std::string::npos || StringUtil::is_number(desc)) {
-                // Description has the format of a neuron id. Skip it
-                continue;
-            }
-            parsed_area_names.emplace_back(std::move(desc));
-        }
-
-        std::vector<RelearnTypes::area_id> area_ids{};
-        area_ids.reserve(parsed_area_names.size());
-
         const auto& known_area_names = local_area_translator->get_all_area_names();
-        for (const auto& parsed_area_name : parsed_area_names) {
-            if (const auto it = std::find(known_area_names.begin(), known_area_names.end(), parsed_area_name); it != known_area_names.end()) {
-                area_ids.emplace_back(std::distance(known_area_names.begin(), it));
-            }
-        }
 
-        return area_ids;
+        return vector | ranges::views::filter([](const auto &desc) {
+                 return !(desc.find(':') != std::string::npos ||
+                          StringUtil::is_number(desc));
+               }) |
+               ranges::views::transform(
+                   [&known_area_names](const auto &parsed_area_name) {
+                     return ranges::find(known_area_names, parsed_area_name);
+                   }) |
+               ranges::views::cache1 |
+               ranges::views::filter(not_equal_to(known_area_names.end())) |
+               ranges::views::transform(
+                   [&known_area_names](const auto &parsed_area_name_iter)
+                       -> RelearnTypes::area_id {
+                     return ranges::distance(known_area_names.begin(),
+                                             parsed_area_name_iter);
+                   }) |
+               ranges::to_vector;
     }
 
     /**
@@ -80,7 +87,7 @@ public:
         const auto& area_ids = parse_area_names(description, local_area_translator);
         const auto& neurons_in_areas = local_area_translator->get_neuron_ids_in_areas(area_ids);
 
-        neuron_ids.insert(neuron_ids.end(), neurons_in_areas.begin(), neurons_in_areas.end());
+        ranges::insert(neuron_ids, neuron_ids.end(), neurons_in_areas);
         return NeuronIdParser::remove_duplicates_and_sort(std::move(neuron_ids));
     }
 };

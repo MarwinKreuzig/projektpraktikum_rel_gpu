@@ -12,19 +12,32 @@
 
 #include "adapter/mpi/MpiRankAdapter.h"
 #include "adapter/network_graph/NetworkGraphAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "Types.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/network_graph/NetworkGraphAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
 
 #include "mpi/MPIWrapper.h"
 #include "neurons/NetworkGraph.h"
+#include "util/NeuronID.h"
+#include "util/ranges/Functional.hpp"
 
 #include <cstddef>
 #include <map>
 #include <numeric>
 #include <random>
+#include <range/v3/functional/compose.hpp>
+#include <range/v3/range/traits.hpp>
 #include <sstream>
 #include <tuple>
 #include <utility>
 #include <vector>
+
+#include <gtest/gtest.h>
+#include <range/v3/algorithm/contains.hpp>
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/view/map.hpp>
 
 void NetworkGraphTest::assert_local_plastic_empty(const NetworkGraph& network_graph) {
     const auto number_neurons = network_graph.get_number_neurons();
@@ -219,7 +232,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphConstructorException) {
 
 TEST_F(NetworkGraphTest, testNetworkGraphInit) {
     const auto rank = MPIRankAdapter::get_random_mpi_rank(mt);
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     NetworkGraph ng(rank);
     ng.init(number_neurons);
@@ -233,7 +246,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphInit) {
 
 TEST_F(NetworkGraphTest, testNetworkGraphInitException) {
     const auto rank = MPIRankAdapter::get_random_mpi_rank(mt);
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     NetworkGraph ng(rank);
 
@@ -259,8 +272,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphInitException) {
 
 TEST_F(NetworkGraphTest, testNetworkGraphCreateNeurons) {
     const auto rank = MPIRankAdapter::get_random_mpi_rank(mt);
-    const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto number_neurons_create = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
 
     const auto number_neurons = number_neurons_init + number_neurons_create;
 
@@ -277,8 +290,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreateNeurons) {
 
 TEST_F(NetworkGraphTest, testNetworkGraphCreateNeuronsException) {
     const auto rank = MPIRankAdapter::get_random_mpi_rank(mt);
-    const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto number_neurons_create = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
 
     const auto number_neurons = number_neurons_init + number_neurons_create;
 
@@ -338,7 +351,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreateNeuronsException) {
 TEST_F(NetworkGraphTest, testNetworkGraphLocalEdges) {
     const auto my_rank = MPIWrapper::get_my_rank();
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto num_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
 
     NetworkGraph ng(MPIRank::root_rank());
@@ -349,8 +362,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphLocalEdges) {
 
     for (size_t synapse_id = 0; synapse_id < num_synapses; synapse_id++) {
         const auto weight = NetworkGraphAdapter::get_random_plastic_synapse_weight(mt);
-        const auto source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-        const auto target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto target_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
         ng.add_synapse(PlasticLocalSynapse(target_id, source_id, weight));
         incoming_edges[target_id.get_neuron_id()][source_id.get_neuron_id()] += weight;
@@ -368,26 +381,24 @@ TEST_F(NetworkGraphTest, testNetworkGraphLocalEdges) {
         const auto [inh_in_edges_count, _2] = ng.get_number_inhibitory_in_edges(neuron_id);
         const auto [out_edges_count, _3] = ng.get_number_out_edges(neuron_id);
 
-        const auto golden_excitatory_in_edges_count = std::accumulate(golden_in_edges.cbegin(), golden_in_edges.cend(),
-            RelearnTypes::plastic_synapse_weight{ 0 }, [](const RelearnTypes::plastic_synapse_weight previous, const std::pair<size_t, RelearnTypes::plastic_synapse_weight>& p) {
-                if (p.second < 0) {
-                    return previous;
-                }
-                return previous + p.second;
-            });
+        const auto golden_excitatory_in_edges_count = ranges::accumulate(
+            golden_in_edges
+                | ranges::views::values
+                | ranges::views::filter(greater_equal(0)),
+            ranges::range_value_t<decltype(golden_in_edges)>::second_type{ 0 });
 
-        const auto golden_inhibitory_in_edges_count = std::accumulate(golden_in_edges.cbegin(), golden_in_edges.cend(),
-            RelearnTypes::plastic_synapse_weight{ 0 }, [](const RelearnTypes::plastic_synapse_weight previous, const std::pair<size_t, RelearnTypes::plastic_synapse_weight>& p) {
-                if (p.second > 0) {
-                    return previous;
-                }
-                return previous + std::abs(p.second);
-            });
+        const auto golden_inhibitory_in_edges_count = ranges::accumulate(
+            golden_in_edges
+                | ranges::views::values
+                | ranges::views::filter(less_equal(0))
+                | ranges::views::transform(as_abs),
+            ranges::range_value_t<decltype(golden_in_edges)>::second_type{ 0 });
 
-        const auto golden_out_edges_count = std::accumulate(golden_out_edges.cbegin(), golden_out_edges.cend(),
-            RelearnTypes::plastic_synapse_weight{ 0 }, [](const RelearnTypes::plastic_synapse_weight previous, const std::pair<size_t, RelearnTypes::plastic_synapse_weight>& p) {
-                return previous + std::abs(p.second);
-            });
+        const auto golden_out_edges_count = ranges::accumulate(
+            golden_out_edges
+                | ranges::views::values
+                | ranges::views::transform(as_abs),
+            ranges::range_value_t<decltype(golden_out_edges)>::second_type{ 0 });
 
         ASSERT_EQ(exc_in_edges_count, golden_excitatory_in_edges_count);
         ASSERT_EQ(inh_in_edges_count, golden_inhibitory_in_edges_count);
@@ -451,7 +462,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphLocalEdges) {
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto number_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
 
     NetworkGraph ng(MPIRank::root_rank());
@@ -462,8 +473,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
 
     for (size_t edge_id = 0; edge_id < number_synapses; edge_id++) {
         const auto other_rank = MPIRankAdapter::get_random_mpi_rank(32, MPIRank::root_rank(), mt);
-        const auto my_neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-        const auto other_neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto my_neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto other_neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
         const RelearnTypes::plastic_synapse_weight weight = NetworkGraphAdapter::get_random_plastic_synapse_weight(mt);
         const auto is_in_synapse = weight < 0;
@@ -517,19 +528,17 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges) {
         ASSERT_EQ(out_edges_count_ng, out_edges_count_meta);
 
         for (const auto& [key, weight_meta] : in_edges[neuron_id.get_neuron_id()]) {
-            const auto found_it = std::find(in_edges_ng.begin(), in_edges_ng.end(), std::make_pair(key, weight_meta));
-            ASSERT_TRUE(found_it != in_edges_ng.end());
+            ASSERT_TRUE(ranges::contains(in_edges_ng, std::make_pair(key, weight_meta)));
         }
 
         for (const auto& [key, weight_meta] : out_edges[neuron_id.get_neuron_id()]) {
-            const auto found_it = std::find(out_edges_ng.begin(), out_edges_ng.end(), std::make_pair(key, weight_meta));
-            ASSERT_TRUE(found_it != out_edges_ng.end());
+            ASSERT_TRUE(ranges::contains(out_edges_ng, std::make_pair(key, weight_meta)));
         }
     }
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphEdges2) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto number_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
 
     NetworkGraph ng_golden(MPIRank::root_rank());
@@ -544,8 +553,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges2) {
 
     for (size_t edge_id = 0; edge_id < number_synapses; edge_id++) {
         const auto other_rank = MPIRankAdapter::get_random_mpi_rank(32, MPIRank::root_rank(), mt);
-        const auto my_neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-        const auto other_neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto my_neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto other_neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
         const auto weight = NetworkGraphAdapter::get_random_plastic_synapse_weight(mt);
         const auto is_in_synapse = weight < 0;
@@ -564,8 +573,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges2) {
 
     for (size_t synapse_id = 0; synapse_id < number_synapses; synapse_id++) {
         const auto weight = NetworkGraphAdapter::get_random_plastic_synapse_weight(mt);
-        const auto source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-        const auto target_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto target_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
         ng_golden.add_synapse(PlasticLocalSynapse(target_id, source_id, weight));
         local_synapses.emplace_back(target_id, source_id, weight);
@@ -612,7 +621,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdges2) {
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphEdgesSplit) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto num_edges = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
 
     NetworkGraph ng(MPIRank::root_rank());
@@ -620,8 +629,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesSplit) {
 
     for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
         const auto other_rank = MPIRankAdapter::get_random_mpi_rank(32, MPIRank::root_rank(), mt);
-        const auto neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-        const auto other_neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto other_neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
         const auto weight = NetworkGraphAdapter::get_random_plastic_synapse_weight(mt);
         const auto is_in_synapse = weight < 0;
@@ -676,19 +685,17 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesSplit) {
         ASSERT_EQ(out_edges_ng.size(), out_edges_ng_ex.size());
 
         for (const auto& [edge_key, edge_val] : in_edges_ng) {
-            const auto found_it = std::find(in_edges_ng_ex.begin(), in_edges_ng_ex.end(), std::make_pair(edge_key, edge_val));
-            ASSERT_TRUE(found_it != in_edges_ng_ex.end());
+            ASSERT_TRUE(ranges::contains(in_edges_ng_ex, std::make_pair(edge_key, edge_val)));
         }
 
         for (const auto& [edge_key, edge_val] : out_edges_ng) {
-            const auto found_it = std::find(out_edges_ng_ex.begin(), out_edges_ng_ex.end(), std::make_pair(edge_key, edge_val));
-            ASSERT_TRUE(found_it != out_edges_ng_ex.end());
+            ASSERT_TRUE(ranges::contains(out_edges_ng_ex, std::make_pair(edge_key, edge_val)));
         }
     }
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto num_edges = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
 
     NetworkGraph ng(MPIRank::root_rank());
@@ -698,8 +705,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
 
     for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
         const auto other_rank = MPIRankAdapter::get_random_mpi_rank(32, MPIRank::root_rank(), mt);
-        const auto neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-        const auto other_neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto other_neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
         const auto weight = NetworkGraphAdapter::get_random_plastic_synapse_weight(mt);
         const auto is_in_synapse = weight < 0;
@@ -722,7 +729,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
         }
     }
 
-    std::shuffle(synapses.begin(), synapses.end(), mt);
+    shuffle(synapses, mt);
 
     for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
         const auto& current_synapse = synapses[edge_id];
@@ -765,7 +772,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphEdgesRemoval) {
 }
 
 TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto num_edges = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
 
     NetworkGraph ng(MPIRank::root_rank());
@@ -776,8 +783,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
 
     for (size_t edge_id = 0; edge_id < num_edges; edge_id++) {
         const auto other_rank = MPIRankAdapter::get_random_mpi_rank(32, MPIRank::root_rank(), mt);
-        const auto neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-        const auto other_neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto other_neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
         const auto weight = NetworkGraphAdapter::get_random_plastic_synapse_weight(mt);
         const auto is_in_synapse = weight < 0;
@@ -794,7 +801,7 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
         }
     }
 
-    const auto num_new_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto num_new_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto num_new_edges = NetworkGraphAdapter::get_random_number_synapses(mt);
 
     const auto total_number_neurons = number_neurons + num_new_neurons;
@@ -804,8 +811,8 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
 
     for (size_t edge_id = num_edges; edge_id < total_num_edges; edge_id++) {
         const auto other_rank = MPIRankAdapter::get_random_mpi_rank(32, MPIRank::root_rank(), mt);
-        const auto neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-        const auto other_neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto other_neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
         const auto weight = NetworkGraphAdapter::get_random_plastic_synapse_weight(mt);
         const auto is_in_synapse = weight < 0;
@@ -851,13 +858,11 @@ TEST_F(NetworkGraphTest, testNetworkGraphCreate) {
         ASSERT_EQ(out_edges_count_ng, out_edges_count_meta);
 
         for (const auto& [key, weight_meta] : in_edges[{ MPIRank::root_rank(), neuron_id }]) {
-            const auto found_it = std::find(in_edges_ng.begin(), in_edges_ng.end(), std::make_pair(key, weight_meta));
-            ASSERT_TRUE(found_it != in_edges_ng.end());
+            ASSERT_TRUE(ranges::contains(in_edges_ng, std::make_pair(key, weight_meta)));
         }
 
         for (const auto& [key, weight_meta] : out_edges[{ MPIRank::root_rank(), neuron_id }]) {
-            const auto found_it = std::find(out_edges_ng.begin(), out_edges_ng.end(), std::make_pair(key, weight_meta));
-            ASSERT_TRUE(found_it != out_edges_ng.end());
+            ASSERT_TRUE(ranges::contains(out_edges_ng, std::make_pair(key, weight_meta)));
         }
     }
 }

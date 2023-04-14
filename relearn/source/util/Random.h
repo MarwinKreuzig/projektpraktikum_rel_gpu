@@ -19,6 +19,10 @@
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
+#include <range/v3/algorithm/generate.hpp>
+#include <range/v3/iterator/concepts.hpp>
+#include <range/v3/range_fwd.hpp>
+#include <range/v3/view/subrange.hpp>
 
 #include <array>
 #include <random>
@@ -157,18 +161,34 @@ public:
      * @param end the iterator that marks the exclusive end
      * @param lower_inclusive The lower inclusive bound for the random doubles
      * @param upper_exclusive The upper exclusive bound for the random doubles
-     * @tparam IteratorType The iterator type that is used to iterate the elements. Should be 'nice'.
+     * @tparam IteratorType The iterator type that is used to iterate the elements.
      * @exception Throws a RelearnException if lower_inclusive >= upper_exclusive.
      */
     template <typename IteratorType>
+      requires ranges::output_iterator<IteratorType, double>
     static void fill(const RandomHolderKey key, const IteratorType begin, const IteratorType end, const double lower_inclusive, const double upper_exclusive) {
         RelearnException::check(lower_inclusive < upper_exclusive, "RandomHolder::fill: Random number from invalid interval [{}, {}) for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
         uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
         auto& generator = get_generator(key);
 
-        for (auto it = begin; it != end; ++it) {
-            *it = urd(generator);
-        }
+        ranges::generate(ranges::subrange{ begin, end }, [&generator, &urd]() { return urd(generator); });
+    }
+
+    /**
+     * @brief Fills all values in range with uniformly distributed doubles from [lower_inclusive, upper_exclusive).
+     *      Uses the RNG that is associated with the key. There should be a natural number n st. begin + n = end.
+     * @param key The type whose RNG shall be used
+     * @param range The range to fill
+     * @param lower_inclusive The lower inclusive bound for the random doubles
+     * @param upper_exclusive The upper exclusive bound for the random doubles
+     * @tparam RangeType The range type that is used
+     * @exception Throws a RelearnException if lower_inclusive >= upper_exclusive.
+     */
+    template <typename RangeType>
+      requires ranges::output_range<RangeType, double>
+    static void fill(const RandomHolderKey key, RangeType &&range, const double lower_inclusive, const double upper_exclusive)
+    {
+        fill(key, ranges::begin(range), ranges::end(range), lower_inclusive, upper_exclusive);
     }
 
     /**
@@ -177,12 +197,33 @@ public:
      * @param key The type which's RNG shall be used
      * @param begin The iterator that marks the inclusive begin
      * @param end the iterator that marks the exclusive end
-     * @tparam IteratorType The iterator type that is used to iterate the elements. Should be 'nice'.
+     * @tparam IteratorType The iterator type that is used to iterate the elements.
      */
     template <typename IteratorType>
     static void shuffle(const RandomHolderKey key, const IteratorType begin, const IteratorType end) {
         auto& generator = get_generator(key);
-        detail::shuffle(begin, end, generator);
+        ::shuffle(begin, end, generator);
+    }
+
+    /**
+     * @brief Shuffles all values in [begin, end) such that all permutations have equal probability.
+     *      Uses the RNG that is associated with the key. There should be a natural number n st. begin + n = end.
+     * @param key The type which's RNG shall be used
+     * @param range The range to shuffle
+     * @tparam Range The range type
+     */
+    template <typename Range>
+    static void shuffle(const RandomHolderKey key, Range& range) {
+        ::shuffle(range, get_generator(key));
+    }
+
+    /**
+     * @brief Returns an action closure to shuffle elements
+     * @param key The type which's RNG shall be used
+     * @return A shuffle action closure
+     */
+    [[nodiscard]] static auto shuffleAction(const RandomHolderKey key) {
+        return actions::shuffle(get_generator(key));
     }
 
     /**

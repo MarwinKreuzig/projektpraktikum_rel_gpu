@@ -12,8 +12,26 @@
 
 #include "io/parser/StimulusParser.h"
 #include "util/RelearnException.h"
+#include "util/NeuronID.h"
+#include "util/RelearnException.h"
+#include "parser/StimulusParser.h"
+#include "util/ranges/views/IO.hpp"
+#include "util/ranges/views/Optional.hpp"
 
-#include "spdlog/spdlog.h"
+#include <range/v3/functional/indirect.hpp>
+#include <range/v3/functional/not_fn.hpp>
+#include <range/v3/view/cache1.hpp>
+#include <range/v3/algorithm/for_each.hpp>
+#include <range/v3/view/concat.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/istream.hpp>
+#include <range/v3/view/for_each.hpp>
+#include <range/v3/view/filter.hpp>
+#include <range/v3/range/operations.hpp>
+#include <range/v3/view/getlines.hpp>
+#include <spdlog/spdlog.h>
+#include <fmt/std.h>
+#include <fmt/ranges.h>
 
 #include <functional>
 #include <fstream>
@@ -34,12 +52,7 @@ std::vector<std::pair<InteractiveNeuronIO::step_type, std::vector<NeuronID>>> In
 
     std::vector<std::pair<step_type, std::vector<NeuronID>>> return_value{};
 
-    for (std::string line{}; std::getline(file, line);) {
-        // Skip line with comments
-        if (line.empty() || '#' == line[0]) {
-            continue;
-        }
-
+    for (const auto& line : ranges::getlines(file) | views::filter_not_comment_not_empty_line) {
         std::stringstream sstream(line);
 
         step_type step{};
@@ -87,12 +100,7 @@ std::vector<std::pair<InteractiveNeuronIO::step_type, std::vector<NeuronID>>> In
 
     std::vector<std::pair<step_type, std::vector<NeuronID>>> return_value{};
 
-    for (std::string line{}; std::getline(file, line);) {
-        // Skip line with comments
-        if (line.empty() || '#' == line[0]) {
-            continue;
-        }
-
+    for (const auto& line : ranges::getlines(file) | views::filter_not_comment_not_empty_line) {
         std::stringstream sstream(line);
 
         step_type step{};
@@ -140,14 +148,7 @@ InteractiveNeuronIO::load_creation_interrupts(const std::filesystem::path& path_
     RelearnException::check(file_is_good && !file_is_not_good,
         "InteractiveNeuronIO::load_creation_interrupts: Opening the file was not successful");
 
-    std::vector<std::pair<step_type, number_neurons_type>> return_value{};
-
-    for (std::string line{}; std::getline(file, line);) {
-        // Skip line with comments
-        if (line.empty() || '#' == line[0]) {
-            continue;
-        }
-
+    const auto parse_line = [](const auto& line) {
         std::stringstream sstream(line);
 
         step_type step{};
@@ -156,22 +157,36 @@ InteractiveNeuronIO::load_creation_interrupts(const std::filesystem::path& path_
 
         bool success = (sstream >> step) && (sstream >> delim) && (sstream >> count);
 
+        return std::tuple{ success, step, delim, count };
+    };
+
+    const auto is_creation_delimiter = [](const auto& line) {
+        const auto delim = std::get<3>(line);
+        if (delim == 'c') {
+            return true;
+        }
+        if (delim != 'e' && delim != 'd') {
+            spdlog::warn("Wrong deliminator: {}", line);
+        }
+        return false;
+    };
+
+    const auto is_parsing_successfull = [](const auto& line) {
+        auto success = std::get<0>(line);
         if (!success) {
-            std::cerr << "Skipping line: \"" << line << "\"\n";
-            continue;
+            spdlog::warn("Skipping line: {}", line);
         }
+        return success;
+    };
 
-        if (delim != 'c') {
-            if (delim != 'e' && delim != 'd') {
-                std::cerr << "Wrong deliminator: \"" << line << "\"\n";
-            }
-            continue;
-        }
-
-        return_value.emplace_back(step, count);
-    }
-
-    return return_value;
+    return ranges::getlines(file)
+        | views::filter_not_comment_not_empty_line
+        | ranges::views::transform(parse_line)
+        | ranges::views::cache1
+        | ranges::views::filter(is_parsing_successfull)
+        | ranges::views::filter(is_creation_delimiter)
+        | ranges::views::transform([](const auto& values) { return std::pair{ std::get<1>(values), std::get<3>(values) }; })
+        | ranges::to_vector;
 }
 
 RelearnTypes::stimuli_function_type InteractiveNeuronIO::load_stimulus_interrupts(
@@ -188,40 +203,48 @@ RelearnTypes::stimuli_function_type InteractiveNeuronIO::load_stimulus_interrupt
     RelearnException::check(file_is_good && !file_is_not_good,
         "InteractiveNeuronIO::load_stimulus_interrupts: Opening the file was not successful");
 
-    std::vector<StimulusParser::Stimulus> stimuli{};
+    using Stimulus = StimulusParser::Stimulus;
 
     const auto num_neurons = local_area_translator->get_number_neurons_in_total();
 
-    for (std::string line{}; std::getline(file, line);) {
-        // Skip line with comments
-        if (line.empty() || '#' == line[0]) {
-            continue;
-        }
+    const auto parse_line = [&my_rank](const auto& line) { return StimulusParser::parse_line(line, my_rank.get_rank()); };
 
-        auto stimulus = StimulusParser::parse_line(line, my_rank.get_rank());
+    const auto check_neuron_ids = ranges::views::transform([num_neurons](Stimulus stimulus) {
+        ranges::for_each(stimulus.matching_ids, [num_neurons](const auto& neuron_id) {
+            RelearnException::check(neuron_id.get_neuron_id() < num_neurons, "InteractiveNeuronIO::load_stimulus_interrupts: Invalid neuron id {}", neuron_id);
+        });
+        return stimulus;
+    });
 
-        if (stimulus.has_value()) {
-            auto stimulus_value = stimulus.value();
-            for (const auto& neuron_id : stimulus_value.matching_ids) {
-                RelearnException::check(neuron_id.get_neuron_id() < num_neurons,
-                    "InteractiveNeuronIO::load_stimulus_interrupts: Invalid neuron id {}",
-                    neuron_id);
-            }
-            std::unordered_set<NeuronID> ids{};
-            ids.insert(stimulus_value.matching_ids.begin(), stimulus_value.matching_ids.end());
-            for (const auto& area : stimulus.value().matching_area_names) {
-                if (local_area_translator->knows_area_name(area)) {
-                    const auto& area_id = local_area_translator->get_area_id_for_area_name(area);
-                    auto ids_in_area = local_area_translator->get_neuron_ids_in_area(area_id);
-                    ids.insert(ids_in_area.begin(), ids_in_area.end());
-                }
-            }
-            if (!ids.empty()) {
-                stimuli.emplace_back(
-                    StimulusParser::Stimulus{ stimulus_value.interval, stimulus_value.stimulus_intensity, ids, {} });
-            }
-        }
-    }
+    const auto consolidate_stimulus = [&local_area_translator](Stimulus stimulus) {
+        const auto translator_knows_name = [&local_area_translator](const auto& area) {
+            return local_area_translator->knows_area_name(area);
+        };
+
+        const auto get_ids_in_area = [&local_area_translator](const auto& area) {
+            const auto& area_id = local_area_translator->get_area_id_for_area_name(area);
+            return local_area_translator->get_neuron_ids_in_area(area_id);
+        };
+
+        auto ids = ranges::views::concat(
+                       stimulus.matching_ids,
+                       stimulus.matching_area_names
+                           | ranges::views::filter(translator_knows_name)
+                           | ranges::views::for_each(get_ids_in_area))
+            | ranges::to<std::unordered_set>;
+
+        return Stimulus{ stimulus.interval, stimulus.stimulus_intensity, std::move(ids), {} };
+    };
+
+    auto stimuli = ranges::getlines(file)
+        | views::filter_not_comment_not_empty_line
+        | ranges::views::transform(parse_line)
+        | views::optional_values
+        | check_neuron_ids
+        | ranges::views::transform(consolidate_stimulus)
+        | ranges::views::cache1
+        | ranges::views::filter(ranges::not_fn(ranges::empty), &Stimulus::matching_ids)
+        | ranges::to_vector;
 
     return StimulusParser::generate_stimulus_function(std::move(stimuli));
 }

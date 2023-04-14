@@ -11,14 +11,15 @@
 #include "test_rank_neuron_id.h"
 
 #include "adapter/mpi/MpiRankAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
 
 #include "neurons/helper/RankNeuronId.h"
 
 TEST_F(RankNeuronIdTest, testNeuronRankIdValid) {
     for (auto i = 0; i < 1000; i++) {
         const auto rank = MPIRankAdapter::get_random_mpi_rank(mt);
-        const auto id = TaggedIdAdapter::get_random_neuron_id(mt);
+        const auto id = NeuronIdAdapter::get_random_neuron_id(mt);
 
         const RankNeuronId rni{ rank, NeuronID{ id } };
 
@@ -41,10 +42,10 @@ TEST_F(RankNeuronIdTest, testNeuronRankIdInvalidId) {
 TEST_F(RankNeuronIdTest, testNeuronRankIdEquality) {
     for (auto i = 0; i < 1000; i++) {
         const auto rank_1 = MPIRankAdapter::get_random_mpi_rank(mt);
-        const auto id_1 = TaggedIdAdapter::get_random_neuron_id(mt);
+        const auto id_1 = NeuronIdAdapter::get_random_neuron_id(mt);
 
         const auto rank_2 = MPIRankAdapter::get_random_mpi_rank(mt);
-        const auto id_2 = TaggedIdAdapter::get_random_neuron_id(mt);
+        const auto id_2 = NeuronIdAdapter::get_random_neuron_id(mt);
 
         const RankNeuronId rni_1(rank_1, NeuronID{ id_1 });
         const RankNeuronId rni_2(rank_2, NeuronID{ id_2 });

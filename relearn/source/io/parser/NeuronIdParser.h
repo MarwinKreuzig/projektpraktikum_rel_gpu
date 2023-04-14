@@ -11,10 +11,12 @@
  */
 
 #include "io/LogFiles.h"
+#include "Types.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "util/MPIRank.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
+#include "util/ranges/Functional.hpp"
 
 #include <algorithm>
 #include <charconv>
@@ -23,6 +25,15 @@
 #include <string_view>
 #include <unordered_set>
 #include <vector>
+
+#include <range/v3/action/sort.hpp>
+#include <range/v3/action/transform.hpp>
+#include <range/v3/action/unique.hpp>
+#include <range/v3/algorithm/find.hpp>
+#include <range/v3/iterator/operations.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/cache1.hpp>
+#include <range/v3/view/filter.hpp>
 
 /**
  * This class provides an interface to parse the neuron ids that shall be monitored from a std::string.
@@ -129,16 +140,16 @@ public:
     [[nodiscard]] static std::vector<NeuronID> extract_my_ids(const std::vector<RankNeuronId>& rank_neuron_ids, const MPIRank my_rank) {
         RelearnException::check(my_rank.is_initialized(), "NeuronIdParser::extract_my_ids: my_rank is not initialized.", my_rank);
 
-        std::vector<NeuronID> my_parsed_ids{};
-        my_parsed_ids.reserve(rank_neuron_ids.size());
+        const auto check_positive_neuron_id = [](const auto & neuron_id){
+            RelearnException::check(neuron_id.get_neuron_id().get_neuron_id() > 0, "NeuronIdParser::extract_my_ids: A NeuronID was 0, but should be in \"+1\" format.");
+            return neuron_id;
+        };
 
-        for (const auto& [rank, neuron_id] : rank_neuron_ids) {
-            if (rank == my_rank) {
-                my_parsed_ids.emplace_back(neuron_id.get_neuron_id());
-            }
-        }
-
-        return my_parsed_ids;
+        return rank_neuron_ids
+            | ranges::views::transform(check_positive_neuron_id)
+            | ranges::views::filter(equal_to(my_rank), &RankNeuronId::get_rank)
+            | ranges::views::transform([](const auto &neuron_id)  { return NeuronID{neuron_id.get_neuron_id().get_neuron_id()}; })
+            | ranges::to_vector;
     }
 
     /**
@@ -149,22 +160,13 @@ public:
      * @return The unique and sorted NeuronIDs
      */
     [[nodiscard]] static std::vector<NeuronID> remove_duplicates_and_sort(std::vector<NeuronID> neuron_ids) {
-        std::unordered_set<NeuronID> duplicate_checker{};
-        duplicate_checker.reserve(neuron_ids.size());
-
-        for (const auto& neuron_id : neuron_ids) {
-            duplicate_checker.emplace(neuron_id);
-        }
-
-        neuron_ids.assign(duplicate_checker.begin(), duplicate_checker.end());
-
-        auto comparison = [](const NeuronID& first, const NeuronID& second) -> bool {
-            return first.get_neuron_id() < second.get_neuron_id();
-        };
-
-        std::ranges::sort(neuron_ids, comparison);
-
-        return neuron_ids;
+        return std::move(neuron_ids)
+            | ranges::actions::transform([](NeuronID neuron_id) {
+                  RelearnException::check(neuron_id.is_initialized(), "neuron_id is uninitialized");
+                  RelearnException::check(!neuron_id.is_virtual(), "neuron_id is virtual");
+                  return neuron_id;
+              })
+            | ranges::actions::sort
+            | ranges::actions::unique;
     }
 };
-

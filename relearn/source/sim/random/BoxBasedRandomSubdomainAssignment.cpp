@@ -10,12 +10,17 @@
 
 #include "BoxBasedRandomSubdomainAssignment.h"
 
+#include "sim/LoadedNeuron.h"
 #include "structure/Partition.h"
 #include "util/Random.h"
 
 #include <cmath>
 #include <cstdint>
 #include <limits>
+
+#include <range/v3/view/concat.hpp>
+#include <range/v3/view/repeat_n.hpp>
+#include <range/v3/view/transform.hpp>
 
 std::pair<std::vector<LoadedNeuron>, BoxBasedRandomSubdomainAssignment::number_neurons_type>
 BoxBasedRandomSubdomainAssignment::place_neurons_in_box(const box_size_type& offset, const box_size_type& length_of_box, const number_neurons_type number_neurons, NeuronID::value_type first_id) {
@@ -70,17 +75,17 @@ BoxBasedRandomSubdomainAssignment::place_neurons_in_box(const box_size_type& off
         }
     }
 
-    RandomHolder::shuffle(RandomHolderKey::Subdomain, positions.begin(), positions.end());
+    RandomHolder::shuffle(RandomHolderKey::Subdomain, positions);
 
-    std::vector<SignalType> signal_types(expected_number_ex, SignalType::Excitatory);
-    signal_types.insert(signal_types.cend(), expected_number_in, SignalType::Inhibitory);
+    const auto signal_types = ranges::views::concat(
+                                  ranges::views::repeat_n(SignalType::Excitatory, expected_number_ex),
+                                  ranges::views::repeat_n(SignalType::Inhibitory, expected_number_in))
+        | ranges::to_vector
+        | RandomHolder::shuffleAction(RandomHolderKey::Subdomain);
 
-    RandomHolder::shuffle(RandomHolderKey::Subdomain, signal_types.begin(), signal_types.end());
-
-    std::vector<LoadedNeuron> nodes{};
-    nodes.reserve(number_neurons);
-
-    for (NeuronID::value_type i = 0; i < number_neurons; i++) {
+    const auto create_loaded_neuron =
+        // NOT regular_invocable
+        [&positions, &max_short, &um_per_neuron_, &offset, &signal_types, &first_id](const auto i) -> LoadedNeuron {
         const size_t pos_bitmask = positions[i];
         const size_t x_it = (pos_bitmask >> 32U) & max_short;
         const size_t y_it = (pos_bitmask >> 16U) & max_short;
@@ -96,8 +101,14 @@ BoxBasedRandomSubdomainAssignment::place_neurons_in_box(const box_size_type& off
         const box_size_type pos = pos_rnd + offset;
         const auto signal_type = signal_types[i];
 
-        nodes.emplace_back(pos, NeuronID{ false, i + first_id }, signal_type, 0);
+        return { pos, NeuronID{ false, i + first_id }, signal_type, 0 };
+    };
+
+    std::vector<LoadedNeuron> nodes{};
+    nodes.reserve(number_neurons);
+    for (const auto& neuron_id : NeuronID::range_id(number_neurons)) {
+        nodes.push_back(create_loaded_neuron(neuron_id));
     }
 
-    return { nodes, expected_number_ex };
+    return { std::move(nodes), expected_number_ex };
 }

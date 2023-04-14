@@ -28,7 +28,9 @@ if(${COVERAGE_REPORT_AVAILABLE})
             coverage-report)
 endif()
 
-# # googletest
+# # googletest# benchmark# dont clutter the compile_commands file with libraries
+set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
+
 FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest
@@ -39,6 +41,13 @@ set(gtest_force_shared_crt
     ON
     CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+get_target_property(gtest_main_includes gtest_main
+                    INTERFACE_INCLUDE_DIRECTORIES)
+set_target_properties(gtest_main PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                                            "${gtest_main_includes}")
 
 file(
   WRITE ${CMAKE_BINARY_DIR}/test_get_relearn_path.cpp
@@ -101,6 +110,10 @@ target_sources(
 
 		  neurons/test_neurons.cpp
 
+		  neurons/test_neurons.cpp
+
+		  neuron_id/test_neuron_id.cpp
+
 		  octree/test_octree.cpp
 		  
 		  octree_node/test_octree_node.cpp
@@ -134,8 +147,6 @@ target_sources(
 
 		  synaptic_input/test_synaptic_input.cpp
 
-		  tagged_id/test_tagged_id.cpp
-		  
 		  timers/test_timers.cpp
 
 		  vector/test_vector.cpp

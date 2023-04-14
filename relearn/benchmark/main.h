@@ -10,7 +10,7 @@
  *
  */
 
-#include "benchmark/benchmark.h"
+#include <benchmark/benchmark.h>
 
 constexpr bool excessive_testing = false;
 

@@ -17,6 +17,10 @@
 #include "util/MemoryHolder.h"
 #include "util/RelearnException.h"
 #include "util/Vec3.h"
+#include "util/shuffle/shuffle.h"
+
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/iota.hpp>
 
 using test_types = ::testing::Types<BarnesHutCell, BarnesHutInvertedCell, FastMultipoleMethodsCell, NaiveCell>;
 TYPED_TEST_SUITE(MemoryHolderTest, test_types);
@@ -160,10 +164,7 @@ TYPED_TEST(MemoryHolderTest, testGetAvailableDisorganized) {
 
     OctreeNode<AdditionalCellAttributes> root{};
 
-    std::vector<unsigned int> indices(Constants::number_oct);
-    std::iota(indices.begin(), indices.end(), 0);
-
-    RandomAdapter::shuffle(indices.begin(), indices.end(), this->mt);
+    const std::vector<unsigned int> indices = ranges::views::iota(0U, Constants::number_oct) | ranges::to_vector | actions::shuffle(this->mt);
 
     for (auto i = 0U; i < Constants::number_oct; i++) {
         auto child_index = indices[i];
@@ -181,10 +182,7 @@ TYPED_TEST(MemoryHolderTest, testGetAvailableDisorganized) {
 
         auto* child = root.get_child(child_index);
 
-        std::vector<unsigned int> indices_child(Constants::number_oct);
-        std::iota(indices_child.begin(), indices_child.end(), 0);
-
-        RandomAdapter::shuffle(indices_child.begin(), indices_child.end(), this->mt);
+        const std::vector<unsigned int> indices_child = ranges::views::iota(0U, Constants::number_oct) | ranges::to_vector | actions::shuffle(this->mt);
 
         for (auto j = 0U; j < Constants::number_oct; j++) {
             auto child_child_index = indices_child[j];
@@ -342,10 +340,7 @@ TYPED_TEST(MemoryHolderTest, testGetOffsetDisorganized) {
 
     OctreeNode<AdditionalCellAttributes> root{};
 
-    std::vector<unsigned int> indices(Constants::number_oct);
-    std::iota(indices.begin(), indices.end(), 0);
-
-    RandomAdapter::shuffle(indices.begin(), indices.end(), this->mt);
+    const std::vector<unsigned int> indices = ranges::views::iota(0U, Constants::number_oct) | ranges::to_vector | actions::shuffle(this->mt);
 
     for (auto i = 0U; i < Constants::number_oct; i++) {
         auto child_index = indices[i];
@@ -358,10 +353,7 @@ TYPED_TEST(MemoryHolderTest, testGetOffsetDisorganized) {
 
         auto* child = root.get_child(child_index);
 
-        std::vector<unsigned int> indices_child(Constants::number_oct);
-        std::iota(indices_child.begin(), indices_child.end(), 0);
-
-        RandomAdapter::shuffle(indices_child.begin(), indices_child.end(), this->mt);
+    const std::vector<unsigned int> indices_child = ranges::views::iota(0U, Constants::number_oct) | ranges::to_vector | actions::shuffle(this->mt);
 
         for (auto j = 0U; j < Constants::number_oct; j++) {
             auto child_child_index = indices_child[j];

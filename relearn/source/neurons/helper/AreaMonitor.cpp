@@ -11,22 +11,31 @@
 #include "AreaMonitor.h"
 
 #include "mpi/MPIWrapper.h"
-#include "neurons/helper/RankNeuronId.h"
 #include "neurons/LocalAreaTranslator.h"
-#include "neurons/Neurons.h"
 #include "neurons/NetworkGraph.h"
+#include "neurons/Neurons.h"
+#include "neurons/helper/RankNeuronId.h"
 #include "sim/Simulation.h"
+#include "util/ranges/Functional.hpp"
 
 #include <fstream>
 #include <set>
 #include <tuple>
 #include <utility>
 
-AreaMonitor::AreaMonitor(Simulation *simulation, std::shared_ptr<GlobalAreaMapper> global_area_mapper, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name,
-                         int my_rank, std::filesystem::path &path)
-        : sim(simulation), area_id(area_id), area_name(std::move(area_name)), my_rank(my_rank), path(std::move(path)), global_area_mapper(std::move(global_area_mapper)) {
-    write_header();
-}
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/for_each.hpp>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/transform.hpp>
+
+AreaMonitor::AreaMonitor(Simulation* simulation, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name,
+    int my_rank, std::filesystem::path& path)
+    : sim(simulation)
+    , area_id(area_id)
+    , area_name(std::move(area_name))
+    , my_rank(my_rank)
+    , path(std::move(path)) {
+
 
  void AreaMonitor::monitor_connectivity() {
      Timers::start(TimerRegion::AREA_MONITORS_LOCAL_EDGES);
@@ -130,18 +139,17 @@ void AreaMonitor::write_data_to_file() {
     //Timers::start();
     std::ofstream out(path, std::ios_base::app);
 
-    std::set<std::pair<int, RelearnTypes::area_id>> unique_area_ids;
-    for (const auto &single_record: data) {
-        auto connection_data = std::get<0>(single_record);
-        auto deletion_data = std::get<1>(single_record);
+    auto unique_area_ids = data
+        | ranges::views::for_each(element<0>)
+        | ranges::views::keys
+        | ranges::to<std::set>;
 
-        for (const auto &[rank_area_id, _]: connection_data) {
-            unique_area_ids.insert(rank_area_id);
-        }
-        for (const auto &[rank_area_id, _]: deletion_data) {
-            unique_area_ids.insert(rank_area_id);
-        }
-    }
+    const auto unique_area_ids2 = data
+        | ranges::views::for_each(element<1>)
+        | ranges::views::keys
+        | ranges::to<std::set>;
+
+    unique_area_ids += unique_area_ids2;
 
     std::vector<std::pair<int, RelearnTypes::area_id>> unique_area_ids_list;
     std::copy(unique_area_ids.begin(), unique_area_ids.end(), std::back_inserter(unique_area_ids_list));

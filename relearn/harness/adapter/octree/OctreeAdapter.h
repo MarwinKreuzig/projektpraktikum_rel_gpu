@@ -18,7 +18,7 @@
 #include "structure/Cell.h"
 #include "structure/Octree.h"
 #include "structure/OctreeNode.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 #include "util/Vec3.h"
 
 #include "gtest/gtest.h"
@@ -30,11 +30,13 @@
 #include <unordered_map>
 #include <vector>
 
+#include <range/v3/algorithm/for_each.hpp>
+
 class OctreeAdapter {
 public:
     template <typename AdditionalCellAttributes>
-    static std::vector<std::tuple<Vec3d, size_t>> extract_virtual_neurons(const OctreeNode<AdditionalCellAttributes>* root) {
-        std::vector<std::tuple<Vec3d, size_t>> return_value{};
+    static std::vector<std::pair<Vec3d, size_t>> extract_virtual_neurons(const OctreeNode<AdditionalCellAttributes>* root) {
+        std::vector<std::pair<Vec3d, size_t>> return_value{};
 
         std::stack<std::pair<const OctreeNode<AdditionalCellAttributes>*, size_t>> octree_nodes{};
         octree_nodes.emplace(root, 0);
@@ -90,8 +92,8 @@ public:
     }
 
     template <typename AdditionalCellAttributes>
-    static std::vector<std::tuple<Vec3d, NeuronID>> extract_neurons(const OctreeNode<AdditionalCellAttributes>* root) {
-        std::vector<std::tuple<Vec3d, NeuronID>> return_value{};
+    static std::vector<std::pair<Vec3d, NeuronID>> extract_neurons(const OctreeNode<AdditionalCellAttributes>* root) {
+        std::vector<std::pair<Vec3d, NeuronID>> return_value{};
 
         std::stack<const OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
         octree_nodes.push(root);
@@ -126,7 +128,7 @@ public:
     }
 
     template <typename AdditionalCellAttributes>
-    static std::vector<std::tuple<Vec3d, NeuronID>> extract_neurons_tree(const OctreeImplementation<AdditionalCellAttributes>& octree) {
+    static std::vector<std::pair<Vec3d, NeuronID>> extract_neurons_tree(const OctreeImplementation<AdditionalCellAttributes>& octree) {
         const auto root = octree.get_root();
         if (root == nullptr) {
             return {};
@@ -386,8 +388,7 @@ public:
             current_rank++;
         }
 
-        auto mark_children
-            = [](OctreeNode<AdditionalCellAttributes>* node) {
+        auto mark_children = [](OctreeNode<AdditionalCellAttributes>* node) {
             auto rank = node->get_mpi_rank();
 
             std::stack<OctreeNode<AdditionalCellAttributes>*> stack{};
@@ -404,9 +405,10 @@ public:
                         stack.push(child);
                     }
                 }
-            } };
+            }
+        };
 
-        std::for_each(branch_nodes.begin(), branch_nodes.end(), mark_children);
+        ranges::for_each(branch_nodes, mark_children);
     }
 
     template <typename AdditionalCellAttributes>

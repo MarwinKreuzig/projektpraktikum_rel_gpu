@@ -11,13 +11,14 @@
  */
 
 #include "adapter/mpi/MpiRankAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
 #include "adapter/random/RandomAdapter.h"
-
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/random/RandomAdapter.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "neurons/enums/SignalType.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include <random>
 #include <tuple>
@@ -37,11 +38,10 @@ public:
 
             const auto id = target_id.get_neuron_id();
 
-            for (auto r = 0; r < number_requests; r++) {
+            for (const auto r : ranges::views::indices(number_requests)) {
                 const auto source_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
-                const auto source_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, mt);
-                const auto fixed_source_id = (source_id.get_neuron_id() == target_id.get_neuron_id() && current_rank == source_rank.get_rank()) ? 
-                    NeuronID{ (source_id.get_neuron_id() + 1) % number_neurons } : source_id;
+                const auto source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+                const auto fixed_source_id = (source_id.get_neuron_id() == target_id.get_neuron_id() && current_rank == source_rank.get_rank()) ? NeuronID{ (source_id.get_neuron_id() + 1) % number_neurons } : source_id;
 
                 const auto signal_type = RandomAdapter::get_random_bool(mt) ? SignalType::Excitatory : SignalType::Inhibitory;
 

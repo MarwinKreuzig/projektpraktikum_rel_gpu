@@ -19,6 +19,8 @@
 #include <numeric>
 #include <vector>
 
+#include <range/v3/algorithm/lower_bound.hpp>
+
 TEST_F(ProbabilityPickerTest, testPickTargetDoubleException) {
     ASSERT_THROW(auto val = ProbabilityPicker::pick_target(std::vector<double>{}, 0.0), RelearnException);
     ASSERT_THROW(auto val = ProbabilityPicker::pick_target(std::vector<double>{}, 1.0), RelearnException);
@@ -59,13 +61,13 @@ TEST_F(ProbabilityPickerTest, testPickTargetDouble) {
         }
     }
 
-    const auto sum = std::reduce(probabilities.begin(), probabilities.end(), 0.0, std::plus<double>{});
+    const auto sum = ranges::accumulate(probabilities, 0.0);
 
     for (auto i = 0; i < number_probability; i++) {
         const auto probability = RandomAdapter::get_random_double(std::nextafter(0.0, 1.0), sum, mt);
         const auto index = ProbabilityPicker::pick_target(probabilities, probability);
 
-        const auto it = std::lower_bound(prefix_sum.begin(), prefix_sum.end(), probability);
+        const auto it = ranges::lower_bound(prefix_sum, probability);
         const auto dist = std::distance(prefix_sum.begin(), it) - 1;
 
         ASSERT_EQ(index, dist);
@@ -118,13 +120,13 @@ TEST_F(ProbabilityPickerTest, testPickTargetDoubleWithZerosInbetween) {
         }
     }
 
-    const auto sum = std::reduce(probabilities.begin(), probabilities.end(), 0.0, std::plus<double>{});
+    const auto sum = ranges::accumulate(probabilities, 0.0);
 
     for (auto i = 0; i < number_probability; i++) {
         const auto probability = RandomAdapter::get_random_double(std::nextafter(0.0, 1.0), sum, mt);
         const auto index = ProbabilityPicker::pick_target(probabilities, probability);
 
-        const auto it = std::lower_bound(prefix_sum.begin(), prefix_sum.end(), probability);
+        const auto it = ranges::lower_bound(prefix_sum, probability);
         const auto dist = std::distance(prefix_sum.begin(), it) - 1;
 
         ASSERT_EQ(index, dist);
@@ -171,13 +173,13 @@ TEST_F(ProbabilityPickerTest, testPickTargetDoubleWithZerosAtEnd) {
         prefix_sum[i] = prefix_sum[i - 1] + probabilities[i - 1];
     }
 
-    const auto sum = std::reduce(probabilities.begin(), probabilities.end(), 0.0, std::plus<double>{});
+    const auto sum = ranges::accumulate(probabilities, 0.0);
 
     for (auto i = 0; i < number_probability; i++) {
         const auto probability = RandomAdapter::get_random_double(std::nextafter(0.0, 1.0), sum, mt);
         const auto index = ProbabilityPicker::pick_target(probabilities, probability);
 
-        const auto it = std::lower_bound(prefix_sum.begin(), prefix_sum.end(), probability);
+        const auto it = ranges::lower_bound(prefix_sum, probability);
         const auto dist = std::distance(prefix_sum.begin(), it) - 1;
 
         ASSERT_EQ(index, dist);

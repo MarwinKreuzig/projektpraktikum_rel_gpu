@@ -12,10 +12,9 @@
 
 #include "sim/NeuronToSubdomainAssignment.h"
 
-#include "Config.h"
 #include "Types.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 #include "util/Vec3.h"
 
 #include <functional>

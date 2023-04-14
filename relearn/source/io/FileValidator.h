@@ -10,7 +10,11 @@
  *
  */
 
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
+#include "util/ranges/Functional.hpp"
+#include "util/ranges/views/IO.hpp"
+
+#include <range/v3/view/getlines.hpp>
 
 #include <algorithm>
 #include <filesystem>
@@ -36,12 +40,7 @@ public:
 
         std::set<NeuronID::value_type> ids_in_file{};
 
-        for (std::string line{}; std::getline(file_synapses, line);) {
-            // Skip line with comments
-            if (line.empty() || '#' == line[0]) {
-                continue;
-            }
-
+        for (const auto& line : ranges::getlines(file_synapses) | views::filter_not_comment_not_empty_line) {
             NeuronID::value_type source_id = 0;
             NeuronID::value_type target_id = 0;
             synapse_weight weight = 0;
@@ -61,7 +60,7 @@ public:
             ids_in_file.insert(target_id);
         }
 
-        return std::ranges::all_of(ids_in_file, [&neuron_ids](NeuronID::value_type val) {
+        return std::ranges::all_of(ids_in_file, [&neuron_ids](const NeuronID::value_type val) {
             return std::ranges::binary_search(neuron_ids, val);
         });
     }

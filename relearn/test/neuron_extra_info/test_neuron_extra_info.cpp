@@ -12,7 +12,8 @@
 
 #include "adapter/mpi/MpiRankAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
 
 #include "neurons/NeuronsExtraInfo.h"
 
@@ -25,8 +26,8 @@ void NeuronsExtraInfoTest::assert_empty(const NeuronsExtraInfo& nei, size_t numb
 
     ASSERT_EQ(0, positions_size) << positions_size;
 
-    for (auto i = 0; i < number_neurons_out_of_scope; i++) {
-        const auto neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, 1, mt);
+    for (const auto i : NeuronID::range_id(number_neurons_out_of_scope)) {
+        const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, 1, mt);
 
         ASSERT_THROW(const auto& tmp = nei.get_position(neuron_id), RelearnException) << "assert empty position" << neuron_id;
     }
@@ -50,8 +51,9 @@ void NeuronsExtraInfoTest::assert_contains(const NeuronsExtraInfo& nei, size_t n
         ASSERT_EQ(expected_positions[neuron_id.get_neuron_id()], nei.get_position(neuron_id)) << neuron_id;
     }
 
-    for (auto i = 0; i < number_neurons_out_of_scope; i++) {
-        const auto neuron_id = TaggedIdAdapter::get_random_neuron_id(number_neurons, number_neurons, mt);
+    for (const auto i : ranges::views::indices(number_neurons_out_of_scope)) {
+        const auto neuron_id = NeuronIdAdapter::get_random_neuron_id(
+            number_neurons, number_neurons, mt);
 
         ASSERT_THROW(const auto& tmp = nei.get_position(neuron_id), RelearnException) << neuron_id;
     }
@@ -60,28 +62,28 @@ void NeuronsExtraInfoTest::assert_contains(const NeuronsExtraInfo& nei, size_t n
 TEST_F(NeuronsExtraInfoTest, testConstructor) {
     NeuronsExtraInfo nei{};
 
-    assert_empty(nei, TaggedIdAdapter::upper_bound_num_neurons);
+    assert_empty(nei, NeuronIdAdapter::upper_bound_num_neurons);
 
     ASSERT_THROW(nei.set_positions(std::vector<NeuronsExtraInfo::position_type>{}), RelearnException);
 
-    assert_empty(nei, TaggedIdAdapter::upper_bound_num_neurons);
+    assert_empty(nei, NeuronIdAdapter::upper_bound_num_neurons);
 
-    const auto new_size = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto new_size = NeuronIdAdapter::get_random_number_neurons(mt);
 
     ASSERT_THROW(nei.set_positions(std::vector<NeuronsExtraInfo::position_type>(new_size)), RelearnException);
 
-    assert_empty(nei, TaggedIdAdapter::upper_bound_num_neurons);
+    assert_empty(nei, NeuronIdAdapter::upper_bound_num_neurons);
 }
 
 TEST_F(NeuronsExtraInfoTest, testInit) {
     NeuronsExtraInfo nei{};
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     nei.init(number_neurons);
     assert_empty(nei, number_neurons);
 
-    auto num_neurons_wrong = TaggedIdAdapter::get_random_number_neurons(mt);
+    auto num_neurons_wrong = NeuronIdAdapter::get_random_number_neurons(mt);
     if (num_neurons_wrong == number_neurons) {
         num_neurons_wrong++;
     }
@@ -94,7 +96,7 @@ TEST_F(NeuronsExtraInfoTest, testInit) {
 
     std::vector<Vec3d> positions_right(number_neurons);
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         positions_right[neuron_id] = SimulationAdapter::get_random_position(mt);
     }
 
@@ -104,7 +106,7 @@ TEST_F(NeuronsExtraInfoTest, testInit) {
 
     std::vector<Vec3d> positions_right_2(number_neurons);
 
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         positions_right_2[neuron_id] = SimulationAdapter::get_random_position(mt);
     }
 
@@ -116,9 +118,9 @@ TEST_F(NeuronsExtraInfoTest, testInit) {
 TEST_F(NeuronsExtraInfoTest, testCreate) {
     NeuronsExtraInfo nei{};
 
-    const auto num_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto num_neurons_create_1 = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto num_neurons_create_2 = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto num_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto num_neurons_create_1 = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto num_neurons_create_2 = NeuronIdAdapter::get_random_number_neurons(mt);
 
     const auto num_neurons_total_1 = num_neurons_init + num_neurons_create_1;
     const auto num_neurons_total_2 = num_neurons_total_1 + num_neurons_create_2;
@@ -131,7 +133,7 @@ TEST_F(NeuronsExtraInfoTest, testCreate) {
 
     std::vector<Vec3d> positions_right(num_neurons_init);
 
-    for (auto neuron_id = 0; neuron_id < num_neurons_init; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(num_neurons_init)) {
         positions_right[neuron_id] = SimulationAdapter::get_random_position(mt);
     }
 
@@ -143,7 +145,7 @@ TEST_F(NeuronsExtraInfoTest, testCreate) {
 
     std::vector<Vec3d> positions_right_2(num_neurons_total_1);
 
-    for (auto neuron_id = 0; neuron_id < num_neurons_total_1; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(num_neurons_total_1)) {
         positions_right_2[neuron_id] = SimulationAdapter::get_random_position(mt);
     }
 
@@ -157,7 +159,7 @@ TEST_F(NeuronsExtraInfoTest, testCreate) {
 
     std::vector<Vec3d> positions_right_3(num_neurons_total_2);
 
-    for (auto neuron_id = 0; neuron_id < num_neurons_total_2; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(num_neurons_total_2)) {
         positions_right_3[neuron_id] = SimulationAdapter::get_random_position(mt);
     }
 
@@ -167,7 +169,7 @@ TEST_F(NeuronsExtraInfoTest, testCreate) {
 }
 
 TEST_F(NeuronsExtraInfoTest, testSetStatus) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     NeuronsExtraInfo nei{};
     nei.init(number_neurons);
@@ -214,7 +216,7 @@ TEST_F(NeuronsExtraInfoTest, testSetStatus) {
 }
 
 TEST_F(NeuronsExtraInfoTest, testSetStatusShuffle) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     NeuronsExtraInfo nei{};
     nei.init(number_neurons);
@@ -234,9 +236,9 @@ TEST_F(NeuronsExtraInfoTest, testSetStatusShuffle) {
         }
     }
 
-    RandomAdapter::shuffle(enabled_neurons.begin(), enabled_neurons.end(), mt);
-    RandomAdapter::shuffle(disabled_neurons.begin(), disabled_neurons.end(), mt);
-    RandomAdapter::shuffle(static_neurons.begin(), static_neurons.end(), mt);
+    RandomAdapter::shuffle(enabled_neurons, mt);
+    RandomAdapter::shuffle(disabled_neurons, mt);
+    RandomAdapter::shuffle(static_neurons, mt);
 
     ASSERT_THROW(nei.set_enabled_neurons(enabled_neurons), RelearnException);
     ASSERT_NO_THROW(nei.set_disabled_neurons(disabled_neurons));
@@ -269,7 +271,7 @@ TEST_F(NeuronsExtraInfoTest, testSetStatusShuffle) {
 }
 
 TEST_F(NeuronsExtraInfoTest, testSetStatusOutOfBounds) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     NeuronsExtraInfo nei{};
     nei.init(number_neurons);
@@ -326,7 +328,7 @@ TEST_F(NeuronsExtraInfoTest, testSetStatusRepeated) {
 }
 
 TEST_F(NeuronsExtraInfoTest, testGetPositionsFor) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     NeuronsExtraInfo nei{};
     nei.init(number_neurons);
@@ -340,12 +342,12 @@ TEST_F(NeuronsExtraInfoTest, testGetPositionsFor) {
 
     const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt);
 
-    CommunicationMap<NeuronID> cm(number_ranks, TaggedIdAdapter::upper_bound_num_neurons);
+    CommunicationMap<NeuronID> cm(number_ranks, NeuronIdAdapter::upper_bound_num_neurons);
 
     for (const auto rank : MPIRank::range(number_ranks)) {
-        const auto number_neurons_for_rank = TaggedIdAdapter::get_random_number_neurons(mt);
+        const auto number_neurons_for_rank = NeuronIdAdapter::get_random_number_neurons(mt);
         for (auto it = 0; it < number_neurons_for_rank; it++) {
-            cm.emplace_back(rank, TaggedIdAdapter::get_random_neuron_id(number_neurons, mt));
+            cm.emplace_back(rank, NeuronIdAdapter::get_random_neuron_id(number_neurons, mt));
         }
     }
 
@@ -368,7 +370,7 @@ TEST_F(NeuronsExtraInfoTest, testGetPositionsFor) {
 }
 
 TEST_F(NeuronsExtraInfoTest, testGetPositionsForException) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     NeuronsExtraInfo nei{};
     nei.init(number_neurons);
@@ -382,12 +384,12 @@ TEST_F(NeuronsExtraInfoTest, testGetPositionsForException) {
 
     const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt);
 
-    CommunicationMap<NeuronID> cm(number_ranks, TaggedIdAdapter::upper_bound_num_neurons);
+    CommunicationMap<NeuronID> cm(number_ranks, NeuronIdAdapter::upper_bound_num_neurons);
 
     for (const auto rank : MPIRank::range(number_ranks)) {
-        const auto number_neurons_for_rank = TaggedIdAdapter::get_random_number_neurons(mt);
+        const auto number_neurons_for_rank = NeuronIdAdapter::get_random_number_neurons(mt);
         for (auto it = 0; it < number_neurons_for_rank; it++) {
-            cm.emplace_back(rank, TaggedIdAdapter::get_random_neuron_id(number_neurons, mt));
+            cm.emplace_back(rank, NeuronIdAdapter::get_random_neuron_id(number_neurons, mt));
         }
     }
 

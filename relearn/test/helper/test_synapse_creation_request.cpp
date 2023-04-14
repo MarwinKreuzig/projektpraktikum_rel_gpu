@@ -11,7 +11,8 @@
 #include "test_synapse_creation_request.h"
 
 #include "adapter/neurons/NeuronTypesAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
 
 #include "neurons/helper/SynapseCreationRequests.h"
 
@@ -29,8 +30,8 @@ TEST_F(SynapseCreationTest, testDefaultConstructor) {
 }
 
 TEST_F(SynapseCreationTest, testConstructor) {
-    const auto& golden_target_neuron_id = TaggedIdAdapter::get_random_neuron_id(mt);
-    const auto& golden_source_neuron_id = TaggedIdAdapter::get_random_neuron_id(mt);
+    const auto& golden_target_neuron_id = NeuronIdAdapter::get_random_neuron_id(mt);
+    const auto& golden_source_neuron_id = NeuronIdAdapter::get_random_neuron_id(mt);
     const auto& golden_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
     SynapseCreationRequest scr{ golden_target_neuron_id, golden_source_neuron_id, golden_signal_type };
@@ -48,7 +49,7 @@ TEST_F(SynapseCreationTest, testConstructor) {
 TEST_F(SynapseCreationTest, testConstructorException) {
     const auto& golden_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
-    const auto& dummy_neuron_id = TaggedIdAdapter::get_random_neuron_id(mt);
+    const auto& dummy_neuron_id = NeuronIdAdapter::get_random_neuron_id(mt);
 
     ASSERT_THROW(SynapseCreationRequest scr(NeuronID::virtual_id(), dummy_neuron_id, golden_signal_type), RelearnException);
     ASSERT_THROW(SynapseCreationRequest scr(NeuronID::uninitialized_id(), dummy_neuron_id, golden_signal_type), RelearnException);
@@ -64,8 +65,8 @@ TEST_F(SynapseCreationTest, testConstructorException) {
 }
 
 TEST_F(SynapseCreationTest, testStructuredBinding) {
-    const auto& golden_target_neuron_id = TaggedIdAdapter::get_random_neuron_id(mt);
-    const auto& golden_source_neuron_id = TaggedIdAdapter::get_random_neuron_id(mt);
+    const auto& golden_target_neuron_id = NeuronIdAdapter::get_random_neuron_id(mt);
+    const auto& golden_source_neuron_id = NeuronIdAdapter::get_random_neuron_id(mt);
     const auto& golden_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
     SynapseCreationRequest scr{ golden_target_neuron_id, golden_source_neuron_id, golden_signal_type };

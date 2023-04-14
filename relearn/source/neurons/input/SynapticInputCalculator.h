@@ -20,7 +20,7 @@
 #include "neurons/models/ModelParameter.h"
 #include "neurons/NetworkGraph.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include "fmt/ostream.h"
 

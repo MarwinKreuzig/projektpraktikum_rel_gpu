@@ -17,18 +17,20 @@
 
 #include <vector>
 
+#include <range/v3/algorithm/copy.hpp>
+
 class StimulusAdapter {
 public:
     static std::vector<Interval> get_random_non_overlapping_intervals(RelearnTypes::step_type num_intervals, RelearnTypes::step_type num_steps, std::mt19937& mt) {
         std::vector<Interval> intervals{};
         const auto interval_max_size = num_steps / num_intervals / 10;
 
-        for (size_t i = 0; i < num_intervals; i++) {
+        for (const auto _ : ranges::views::indices(num_intervals)) {
             std::vector<Interval> test_interval{};
             Interval interval;
             do {
                 test_interval.clear();
-                std::copy(intervals.begin(), intervals.end(), std::back_inserter(test_interval));
+                ranges::copy(intervals, std::back_inserter(test_interval));
                 const auto begin = RandomAdapter::get_random_integer(0U, num_steps - interval_max_size, mt);
                 const auto end = RandomAdapter::get_random_integer(begin, begin + interval_max_size, mt);
                 interval = { begin, end, 1U };

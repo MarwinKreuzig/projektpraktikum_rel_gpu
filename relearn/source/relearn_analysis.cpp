@@ -18,6 +18,7 @@
 #include <iomanip>
 #include <iostream>
 #include <iterator>
+#include <range/v3/algorithm/sort.hpp>
 #include <sstream>
 #include <vector>
 
@@ -68,10 +69,7 @@ void compute_all_distances_fixed_number_bins(std::filesystem::path neuron_file, 
             const auto boundary_it = std::ranges::upper_bound(upper_borders, distance);
             const auto iterator_distance = std::distance(upper_borders.begin(), boundary_it);
 
-            auto counts_it = counts.begin();
-            std::advance(counts_it, iterator_distance);
-
-            (*counts_it)++;
+            ++counts[iterator_distance];
         }
 
         fmt::print("{}:{} of {}\n", my_rank, (i - start_id), (end_id - start_id));
@@ -108,7 +106,7 @@ void compute_all_distances(std::filesystem::path neuron_file) {
         }
     }
 
-    std::sort(pairwise_distances.begin(), pairwise_distances.end());
+    ranges::sort(pairwise_distances);
 
     pairwise_distances.erase(pairwise_distances.end() - number_neurons, pairwise_distances.end());
 
@@ -145,10 +143,7 @@ void compute_all_distances(std::filesystem::path neuron_file) {
         const auto boundary_it = std::ranges::upper_bound(upper_borders, distance);
         const auto iterator_distance = std::distance(upper_borders.begin(), boundary_it);
 
-        auto counts_it = counts.begin();
-        std::advance(counts_it, iterator_distance);
-
-        (*counts_it)++;
+        ++counts[iterator_distance];
     }
 
     auto print = [&](std::ostream& out) {

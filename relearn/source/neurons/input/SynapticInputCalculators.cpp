@@ -11,6 +11,7 @@
 #include "SynapticInputCalculators.h"
 
 #include "neurons/NetworkGraph.h"
+#include "util/NeuronID.h"
 #include "util/Timers.h"
 
 #include <cmath>
@@ -22,12 +23,12 @@ void LinearSynapticInputCalculator::update_synaptic_input(const std::span<const 
     const auto number_local_neurons = get_number_neurons();
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons, fired) default(none)
-    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
+    for (NeuronID::value_type neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
 
-        NeuronID id{ neuron_id };
+        const NeuronID id{ neuron_id };
 
         const auto total_input = get_local_and_distant_synaptic_input(id);
 
@@ -44,12 +45,12 @@ void LogarithmicSynapticInputCalculator::update_synaptic_input(const std::span<c
     const auto number_local_neurons = get_number_neurons();
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons, fired) default(none)
-    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
+    for (NeuronID::value_type neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
 
-        NeuronID id{ neuron_id };
+        const NeuronID id{ neuron_id };
 
         const auto total_input = get_local_and_distant_synaptic_input(id);
 
@@ -70,7 +71,7 @@ void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const std::
     const auto number_local_neurons = get_number_neurons();
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons, fired) default(none)
-    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
+    for (NeuronID::value_type neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }

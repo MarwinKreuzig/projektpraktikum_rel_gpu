@@ -12,18 +12,25 @@
 
 #include "adapter/kernel/KernelAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/kernel/KernelAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
 
+#include "algorithm/Cells.h"
 #include "algorithm/Kernel/Gaussian.h"
 #include "algorithm/Kernel/Kernel.h"
-#include "algorithm/Cells.h"
 #include "util/Random.h"
-
-#include "gtest/gtest.h"
 
 #include <array>
 #include <iostream>
 #include <tuple>
+
+#include <gtest/gtest.h>
+#include <range/v3/action/sort.hpp>
+#include <range/v3/algorithm/sort.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/generate_n.hpp>
+#include <range/v3/view/sliding.hpp>
 
 TEST_F(ProbabilityKernelTest, testGaussianGetterSetter) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
@@ -123,23 +130,22 @@ TEST_F(ProbabilityKernelTest, testGaussianVariableSigma) {
     const auto& source_position = SimulationAdapter::get_random_position(mt);
     const auto& target_position = SimulationAdapter::get_random_position(mt);
 
-    std::vector<double> sigmas{};
-    for (auto i = 0; i < 100; i++) {
-        sigmas.emplace_back(KernelAdapter::get_random_gaussian_sigma(mt));
-    }
+    const auto sigmas = ranges::views::generate_n([this]() { return KernelAdapter::get_random_gaussian_sigma(mt); }, 100)
+        | ranges::to_vector
+        | ranges::actions::sort;
 
-    std::sort(sigmas.begin(), sigmas.end());
+    const auto get_attractiveness = [&source_position, &target_position, &number_elements]() {
+        return GaussianDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, number_elements);
+    };
 
-    std::vector<double> attractivenesses{};
-    for (auto i = 0; i < 100; i++) {
-        GaussianDistributionKernel::set_sigma(sigmas[i]);
-        attractivenesses.emplace_back(GaussianDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, number_elements));
-    }
+    const auto attractiveness_pairs = sigmas
+        | ranges::views::transform([&get_attractiveness](const auto sigma) {
+              GaussianDistributionKernel::set_sigma(sigma);
+              return get_attractiveness();
+          })
+        | ranges::views::sliding(2);
 
-    for (auto i = 1; i < 100; i++) {
-        const auto attractiveness_a = attractivenesses[i - 1];
-        const auto attractiveness_b = attractivenesses[i];
-
+    for (const auto [attractiveness_a, attractiveness_b] : attractiveness_pairs) {
         ASSERT_LE(attractiveness_a, attractiveness_b);
     }
 }
@@ -155,16 +161,15 @@ TEST_F(ProbabilityKernelTest, testGaussianVariablePosition) {
 
     const auto number_elements = RandomAdapter::get_random_integer<unsigned int>(0, 10000, mt);
 
-    std::vector<Vec3d> positions{};
-    for (auto i = 0; i < 100; i++) {
-        positions.emplace_back(SimulationAdapter::get_random_position(mt));
-    }
-
-    std::sort(positions.begin(), positions.end(), [&](const Vec3d& pos_a, const Vec3d& pos_b) {
-        const auto& dist_a = (pos_a - source_position).calculate_squared_2_norm();
-        const auto& dist_b = (pos_b - source_position).calculate_squared_2_norm();
+    const auto smaller_distance_to_source_position = [&source_position](const Vec3d& pos_a, const Vec3d& pos_b) {
+        const auto dist_a = (pos_a - source_position).calculate_squared_2_norm();
+        const auto dist_b = (pos_b - source_position).calculate_squared_2_norm();
         return dist_a < dist_b;
-    });
+    };
+
+    const auto positions = ranges::views::generate_n([this]() { return SimulationAdapter::get_random_position(mt); }, 100)
+        | ranges::to_vector
+        | ranges::actions::sort(smaller_distance_to_source_position);
 
     std::vector<double> attractivenesses{};
     for (auto i = 0; i < 100; i++) {
@@ -272,8 +277,8 @@ TEST_F(KernelTest, testGaussianKernelIntegration) {
     GaussianDistributionKernel::set_mu(GaussianDistributionKernel::default_mu);
     GaussianDistributionKernel::set_sigma(GaussianDistributionKernel::default_sigma);
 
-    const auto& neuron_id_1 = TaggedIdAdapter::get_random_neuron_id(1000, mt);
-    const auto& neuron_id_2 = TaggedIdAdapter::get_random_neuron_id(1000, 1000, mt);
+    const auto& neuron_id_1 = NeuronIdAdapter::get_random_neuron_id(1000, mt);
+    const auto& neuron_id_2 = NeuronIdAdapter::get_random_neuron_id(1000, 1000, mt);
 
     const auto& source_position = SimulationAdapter::get_random_position(mt);
 

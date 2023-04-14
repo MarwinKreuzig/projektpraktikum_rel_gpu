@@ -10,11 +10,12 @@
 
 #include "NeuronModels.h"
 
-#include "Config.h"
-#include "mpi/MPIWrapper.h"
 #include "neurons/NetworkGraph.h"
 #include "util/Random.h"
+#include "util/NeuronID.h"
 #include "util/Timers.h"
+
+#include <range/v3/action/insert.hpp>
 
 void NeuronModel::init(number_neurons_type number_neurons) {
     RelearnException::check(number_local_neurons == 0, "NeuronModel::init: Was already initialized");
@@ -24,8 +25,8 @@ void NeuronModel::init(number_neurons_type number_neurons) {
 
     x.resize(number_neurons, 0.0);
     fired.resize(number_neurons, FiredStatus::Inactive);
-    for (auto i = 0; i < number_fire_recorders; i++) {
-        fired_recorder[i].resize(number_local_neurons, 0U);
+    for (auto& recorder : fired_recorder) {
+        recorder.resize(number_local_neurons, 0U);
     }
 
     input_calculator->init(number_neurons);
@@ -43,8 +44,8 @@ void NeuronModel::create_neurons(number_neurons_type creation_count) {
 
     x.resize(new_size, 0.0);
     fired.resize(new_size, FiredStatus::Inactive);
-    for (auto i = 0; i < number_fire_recorders; i++) {
-        fired_recorder[i].resize(new_size, 0U);
+    for (auto& recorder : fired_recorder) {
+        recorder.resize(new_size, 0U);
     }
 
 
@@ -80,7 +81,7 @@ std::vector<ModelParameter> NeuronModel::get_parameter() {
     auto parameters = input_calculator->get_parameter();
     auto other_parameters = background_calculator->get_parameter();
 
-    parameters.insert(parameters.end(), other_parameters.begin(), other_parameters.end());
+    ranges::insert(parameters, parameters.end(), other_parameters);
     parameters.emplace_back(Parameter<unsigned int>{ "Number integration steps", h, NeuronModel::min_h, NeuronModel::max_h });
 
     return parameters;

@@ -12,13 +12,19 @@
 
 #include "adapter/mpi/MpiRankAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
 
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
 
 #include <cstddef>
 #include <numeric>
+
+#include <range/v3/algorithm/sort.hpp>
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/view/indices.hpp>
 
 bool is_power_of_two(size_t number) {
     auto counter = 0;
@@ -91,24 +97,24 @@ TEST_F(PartitionTest, testPartitionNumberNeurons) {
     std::vector<std::vector<size_t>> number_local_neurons(num_ranks);
     size_t number_total_neurons = 0;
 
-    for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
+    for (const auto my_rank : ranges::views::indices(num_ranks)) {
         number_local_neurons[my_rank] = std::vector<size_t>(my_subdomains);
 
-        for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
-            const auto num_local_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+        for (const auto my_subdomain : ranges::views::indices(my_subdomains)) {
+            const auto num_local_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
             number_local_neurons[my_rank][my_subdomain] = num_local_neurons;
             number_total_neurons += num_local_neurons;
         }
     }
 
-    for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
+    for (const auto my_rank : ranges::views::indices(num_ranks)) {
         const auto& local_neurons = number_local_neurons[my_rank];
 
         std::vector<NeuronID> local_ids_start(my_subdomains, NeuronID{ 0 });
         std::vector<NeuronID> local_ids_ends(my_subdomains, NeuronID{ 0 });
 
-        for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
+        for (const auto my_subdomain : ranges::views::indices(my_subdomains)) {
             if (my_subdomain > 0) {
                 const auto local_start = local_ids_ends[static_cast<size_t>(my_subdomain) - 1].get_neuron_id() + 1;
                 local_ids_start[my_subdomain] = NeuronID(false, local_start);
@@ -124,7 +130,7 @@ TEST_F(PartitionTest, testPartitionNumberNeurons) {
         partition.set_total_number_neurons(number_total_neurons);
         ASSERT_EQ(partition.get_total_number_neurons(), number_total_neurons);
 
-        const auto num_local_neurons = std::reduce(local_neurons.begin(), local_neurons.end(), size_t{ 0 });
+        const auto num_local_neurons = ranges::accumulate(local_neurons, size_t{ 0 });
         partition.set_number_local_neurons(num_local_neurons);
 
         ASSERT_EQ(partition.get_number_local_neurons(), num_local_neurons);
@@ -147,10 +153,10 @@ TEST_F(PartitionTest, testPartitionSubdomainIndices) {
 
     std::vector<bool> found_indices(num_subdomains, false);
 
-    for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
+    for (const auto my_rank : ranges::views::indices(num_ranks)) {
         Partition partition(num_ranks, MPIRank(my_rank));
 
-        for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
+        for (const auto my_subdomain : ranges::views::indices(my_subdomains)) {
             const auto index_1 = partition.get_1d_index_of_subdomain(my_subdomain);
             const auto index_3 = partition.get_3d_index_of_subdomain(my_subdomain);
 
@@ -166,7 +172,7 @@ TEST_F(PartitionTest, testPartitionSubdomainIndices) {
             found_indices[index_1] = true;
         }
 
-        for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
+        for (const auto my_subdomain : ranges::views::indices(my_subdomains)) {
             ASSERT_THROW(auto val = partition.get_1d_index_of_subdomain(my_subdomain + num_subdomains), RelearnException);
             ASSERT_THROW(auto val = partition.get_3d_index_of_subdomain(my_subdomain + num_subdomains), RelearnException);
         }
@@ -193,7 +199,7 @@ TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
     const auto& simulation_box_dimensions = simulation_box_maximum - simulation_box_minimum;
     const auto& subdomain_box_dimensions = simulation_box_dimensions / num_subdomains_per_dim;
 
-    for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
+    for (const auto my_rank : ranges::views::indices(num_ranks)) {
         Partition partition(num_ranks, MPIRank(my_rank));
 
         ASSERT_THROW(partition.set_simulation_box_size(simulation_box_maximum, simulation_box_minimum), RelearnException);
@@ -223,7 +229,7 @@ TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
         ASSERT_EQ(simulation_box_maximum, retrieved_max);
     }
 
-    for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
+    for (const auto my_rank : ranges::views::indices(num_ranks)) {
         Partition partition(num_ranks, MPIRank(my_rank));
         partition.set_simulation_box_size(simulation_box_minimum, simulation_box_maximum);
 
@@ -255,7 +261,7 @@ TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
 
         std::vector<RelearnTypes::bounding_box_type> local_subdomain_boundaries{};
 
-        for (auto my_subdomain = 0; my_subdomain < my_subdomains; my_subdomain++) {
+        for (const auto my_subdomain : ranges::views::indices(my_subdomains)) {
             const auto& [min, max] = partition.get_subdomain_boundaries(my_subdomain);
             const auto index_1 = partition.get_1d_index_of_subdomain(my_subdomain);
 
@@ -269,12 +275,12 @@ TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
 
         auto partition_local_subdomain_boundaries = partition.get_all_local_subdomain_boundaries();
 
-        std::sort(local_subdomain_boundaries.begin(), local_subdomain_boundaries.end());
-        std::sort(partition_local_subdomain_boundaries.begin(), partition_local_subdomain_boundaries.end());
+        ranges::sort(local_subdomain_boundaries);
+        ranges::sort(partition_local_subdomain_boundaries);
 
         ASSERT_EQ(local_subdomain_boundaries, partition_local_subdomain_boundaries);
 
-        for (auto my_subdomain = 0; my_subdomain < num_ranks; my_subdomain++) {
+        for (const auto my_subdomain : ranges::views::indices(num_ranks)) {
             ASSERT_THROW(auto val = partition.get_subdomain_boundaries(my_subdomain + num_subdomains), RelearnException) << my_subdomain << num_ranks;
         }
     }
@@ -299,17 +305,17 @@ TEST_F(PartitionTest, testPartitionPositionToMpi) {
     const auto& simulation_box_dimensions = simulation_box_maximum - simulation_box_minimum;
     const auto& subdomain_box_dimensions = simulation_box_dimensions / num_subdomains_per_dim;
 
-    for (auto my_rank = 0; my_rank < num_ranks; my_rank++) {
+    for (const auto my_rank : ranges::views::indices(num_ranks)) {
         Partition partition(num_ranks, MPIRank(my_rank));
 
-        for (auto j = 0; j < iterations; j++) {
+        for (const auto j : ranges::views::indices(iterations)) {
             const auto& position = SimulationAdapter::get_random_position_in_box(simulation_box_minimum, simulation_box_maximum, mt);
             ASSERT_THROW(auto val = partition.get_mpi_rank_from_position(position), RelearnException);
         }
 
         partition.set_simulation_box_size(simulation_box_minimum, simulation_box_maximum);
 
-        for (auto j = 0; j < iterations; j++) {
+        for (const auto j : ranges::views::indices(iterations)) {
             const auto& position = SimulationAdapter::get_random_position_in_box(simulation_box_minimum, simulation_box_maximum, mt);
             const auto proposed_rank = partition.get_mpi_rank_from_position(position);
 

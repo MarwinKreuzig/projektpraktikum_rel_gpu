@@ -13,7 +13,7 @@
 #include "Types.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "util/MPIRank.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include <cstdint>
 #include <filesystem>

@@ -21,7 +21,7 @@ target_sources(
           mpi/MPIWrapper.cpp
 
           # neurons
-		  neurons/helper/AreaMonitor.cpp
+          neurons/helper/AreaMonitor.cpp
           neurons/helper/NeuronMonitor.cpp
           neurons/helper/SynapseDeletionFinder.cpp
           neurons/input/FiredStatusApproximator.cpp
@@ -53,22 +53,30 @@ target_sources(
           structure/Partition.cpp
 
           # util
-		  util/StringUtil.cpp
-		  util/RelearnException.cpp
+          util/StringUtil.cpp
+          util/RelearnException.cpp
           util/Timers.cpp
-
-		  # for visual studio
-		  ${relearn_lib_additional_files})
+          # for visual studio
+          ${relearn_lib_additional_files})
 
 target_include_directories(relearn_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(relearn_lib PROPERTIES ENABLE_EXPORTS 1)
 target_link_libraries(relearn_lib PUBLIC project_options project_libraries)
+
+# benchmark# dont clutter the compile_commands file with libraries
+set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
 
 FetchContent_Declare(
   cli11
   GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
   GIT_TAG 815553211b644b2a64b5dc671c602233c49c065f)
 FetchContent_MakeAvailable(cli11)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+get_target_property(cli11_includes CLI11 INTERFACE_INCLUDE_DIRECTORIES)
+set_target_properties(CLI11 PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                                       "${cli11_includes}")
 
 # relearn executable
 add_executable(relearn)

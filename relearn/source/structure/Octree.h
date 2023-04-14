@@ -29,6 +29,12 @@
 #include <utility>
 #include <vector>
 
+#include <range/v3/functional/indirect.hpp>
+#include <range/v3/functional/not_fn.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/indirect.hpp>
+#include <range/v3/view/filter.hpp>
+
 class Partition;
 
 /**
@@ -177,17 +183,9 @@ public:
      * @return All local branch nodes
      */
     [[nodiscard]] std::vector<const OctreeNode<AdditionalCellAttributes>*> get_local_branch_nodes() const {
-        std::vector<const OctreeNode<AdditionalCellAttributes>*> result{};
-        result.reserve(4);
-
-        for (const auto* node : branch_nodes) {
-            if (!node->is_local()) {
-                continue;
-            }
-            result.emplace_back(node);
-        }
-
-        return result;
+        return branch_nodes
+            | ranges::views::filter(ranges::indirect(&OctreeNode<AdditionalCellAttributes>::is_local))
+            | ranges::to_vector;
     }
 
     /**
@@ -195,17 +193,9 @@ public:
      * @return All local branch nodes
      */
     [[nodiscard]] std::vector<OctreeNode<AdditionalCellAttributes>*> get_local_branch_nodes() {
-        std::vector<OctreeNode<AdditionalCellAttributes>*> result{};
-        result.reserve(4);
-
-        for (auto* node : branch_nodes) {
-            if (!node->is_local()) {
-                continue;
-            }
-            result.emplace_back(node);
-        }
-
-        return result;
+        return branch_nodes
+            | ranges::views::filter(ranges::indirect(&OctreeNode<AdditionalCellAttributes>::is_local))
+            | ranges::to_vector;
     }
 
     /**
@@ -388,13 +378,13 @@ protected:
      */
     void update_local_trees() {
         Timers::start(TimerRegion::UPDATE_LOCAL_TREES);
-        for (auto* local_tree : branch_nodes) {
-            if (!local_tree->is_local()) {
-                continue;
-            }
 
+        const auto update_tree = [this](auto* local_tree) {
             update_tree_parallel(local_tree);
-        }
+        };
+
+        ranges::for_each(branch_nodes | ranges::views::filter(ranges::indirect(&OctreeNode<AdditionalCellAttributes>::is_local)), update_tree);
+
         Timers::stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
     }
 
@@ -406,10 +396,7 @@ protected:
         const auto number_branch_nodes = branch_nodes.size();
 
         // Copy local trees' root nodes to correct positions in receive buffer
-        std::vector<OctreeNode<AdditionalCellAttributes>> exchange_branch_nodes(number_branch_nodes);
-        for (size_t i = 0; i < number_branch_nodes; i++) {
-            exchange_branch_nodes[i] = *branch_nodes[i];
-        }
+        auto exchange_branch_nodes = branch_nodes | ranges::views::indirect | ranges::to_vector;
 
         // All-gather in-place branch nodes from every rank
         const auto number_local_branch_nodes = number_branch_nodes / MPIWrapper::get_num_ranks();

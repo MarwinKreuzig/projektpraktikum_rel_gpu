@@ -15,18 +15,26 @@
 #include "adapter/kernel/KernelAdapter.h"
 #include "adapter/neurons/NeuronTypesAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/kernel/KernelAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
 
-#include "algorithm/Kernel/Kernel.h"
 #include "algorithm/Cells.h"
+#include "algorithm/Kernel/Kernel.h"
 #include "util/Random.h"
 
 #include <array>
 #include <iostream>
 #include <tuple>
 
+#include <gtest/gtest.h>
+#include <range/v3/algorithm/contains.hpp>
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/view/indices.hpp>
+
 TEST_F(KernelTest, testCalculateAttractivenessSameNode) {
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(1000, mt);
+    const auto& neuron_id = NeuronIdAdapter::get_random_neuron_id(1000, mt);
 
     const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
 
@@ -44,8 +52,8 @@ TEST_F(KernelTest, testCalculateAttractivenessSameNode) {
 }
 
 TEST_F(KernelTest, testCalculateAttractivenessException) {
-    const auto& neuron_id_1 = TaggedIdAdapter::get_random_neuron_id(1000, mt);
-    const auto& neuron_id_2 = TaggedIdAdapter::get_random_neuron_id(1000, 1000, mt);
+    const auto& neuron_id_1 = NeuronIdAdapter::get_random_neuron_id(1000, mt);
+    const auto& neuron_id_2 = NeuronIdAdapter::get_random_neuron_id(1000, 1000, mt);
 
     const auto& source_position = SimulationAdapter::get_random_position(mt);
 
@@ -76,7 +84,7 @@ TEST_F(KernelTest, testCalculateAttractivenessException) {
 }
 
 TEST_F(KernelTest, testCreateProbabilityIntervalEmptyVector) {
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(1000, mt);
+    const auto& neuron_id = NeuronIdAdapter::get_random_neuron_id(1000, mt);
 
     const auto& position = SimulationAdapter::get_random_position(mt);
 
@@ -93,19 +101,19 @@ TEST_F(KernelTest, testCreateProbabilityIntervalEmptyVector) {
 }
 
 TEST_F(KernelTest, testCreateProbabilityIntervalAutapseVector) {
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(1000, mt);
+    const auto& neuron_id = NeuronIdAdapter::get_random_neuron_id(1000, mt);
 
     const auto& position = SimulationAdapter::get_random_position(mt);
 
     const auto element_type = NeuronTypesAdapter::get_random_element_type(mt);
     const auto signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
-    const auto number_nodes = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_nodes = NeuronIdAdapter::get_random_number_neurons(mt);
 
     std::vector<OctreeNode<FastMultipoleMethodsCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodsCell>{} };
     std::vector<OctreeNode<FastMultipoleMethodsCell>*> node_pointers{ number_nodes, nullptr };
 
-    for (auto i = 0; i < number_nodes; i++) {
+    for (const auto i : ranges::views::indices(number_nodes)) {
         nodes[i].set_cell_neuron_id(neuron_id);
         nodes[i].set_rank(MPIRank::root_rank());
         nodes[i].set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
@@ -141,20 +149,20 @@ TEST_F(KernelTest, testCreateProbabilityIntervalAutapseVector) {
 }
 
 TEST_F(KernelTest, testCreateProbabilityIntervalVectorException) {
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(1000, mt);
+    const auto& neuron_id = NeuronIdAdapter::get_random_neuron_id(1000, mt);
 
     const auto& position = SimulationAdapter::get_random_position(mt);
 
     const auto element_type = NeuronTypesAdapter::get_random_element_type(mt);
     const auto signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
-    const auto number_nodes = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_nodes = NeuronIdAdapter::get_random_number_neurons(mt);
 
     std::vector<OctreeNode<FastMultipoleMethodsCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodsCell>{} };
     std::vector<OctreeNode<FastMultipoleMethodsCell>*> node_pointers{ number_nodes, nullptr };
 
-    for (auto i = 0; i < number_nodes; i++) {
-        nodes[i].set_cell_neuron_id(TaggedIdAdapter::get_random_neuron_id(1000, 1000, mt));
+    for (const auto i : ranges::views::indices(number_nodes)) {
+        nodes[i].set_cell_neuron_id(NeuronIdAdapter::get_random_neuron_id(1000, 1000, mt));
         nodes[i].set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
 
         const auto& target_excitatory_axon_position = SimulationAdapter::get_random_position(mt);
@@ -189,20 +197,20 @@ TEST_F(KernelTest, testCreateProbabilityIntervalVectorException) {
 }
 
 TEST_F(KernelTest, testCreateProbabilityIntervalRandomVector) {
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(1000, mt);
+    const auto& neuron_id = NeuronIdAdapter::get_random_neuron_id(1000, mt);
 
     const auto& position = SimulationAdapter::get_random_position(mt);
 
     const auto element_type = NeuronTypesAdapter::get_random_element_type(mt);
     const auto signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
-    const auto number_nodes = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_nodes = NeuronIdAdapter::get_random_number_neurons(mt);
 
     std::vector<OctreeNode<FastMultipoleMethodsCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodsCell>{} };
     std::vector<OctreeNode<FastMultipoleMethodsCell>*> node_pointers{ number_nodes, nullptr };
 
-    for (auto i = 0; i < number_nodes; i++) {
-        nodes[i].set_cell_neuron_id(TaggedIdAdapter::get_random_neuron_id(1000, 1000, mt));
+    for (const auto i : ranges::views::indices(number_nodes)) {
+        nodes[i].set_cell_neuron_id(NeuronIdAdapter::get_random_neuron_id(1000, 1000, mt));
         nodes[i].set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
         nodes[i].set_rank(MPIRank(0));
 
@@ -231,7 +239,7 @@ TEST_F(KernelTest, testCreateProbabilityIntervalRandomVector) {
 
     auto total_attractiveness = 0.0;
     std::vector<double> attractivenesses{};
-    for (auto i = 0; i < number_nodes; i++) {
+    for (const auto i : ranges::views::indices(number_nodes)) {
         const auto attr = Kernel<FastMultipoleMethodsCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id }, position, &nodes[i], element_type, signal_type);
 
         attractivenesses.emplace_back(attr);
@@ -245,27 +253,27 @@ TEST_F(KernelTest, testCreateProbabilityIntervalRandomVector) {
         ASSERT_NEAR(sum, total_attractiveness, eps);
         ASSERT_EQ(attractivenesses.size(), attrs.size());
 
-        for (auto i = 0; i < attrs.size(); i++) {
+        for (const auto i : ranges::views::indices(attrs.size())) {
             ASSERT_NEAR(attrs[i], attractivenesses[i], eps);
         }
     }
 }
 
 TEST_F(KernelTest, testCreateProbabilityIntervalEdgeCase) {
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(1000, mt);
+    const auto& neuron_id = NeuronIdAdapter::get_random_neuron_id(1000, mt);
 
     const auto& position = SimulationAdapter::get_random_position(mt) + 1000000000;
 
     const auto element_type = NeuronTypesAdapter::get_random_element_type(mt);
     const auto signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
-    const auto number_nodes = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_nodes = NeuronIdAdapter::get_random_number_neurons(mt);
 
     std::vector<OctreeNode<FastMultipoleMethodsCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodsCell>{} };
     std::vector<OctreeNode<FastMultipoleMethodsCell>*> node_pointers{ number_nodes, nullptr };
 
-    for (auto i = 0; i < number_nodes; i++) {
-        nodes[i].set_cell_neuron_id(TaggedIdAdapter::get_random_neuron_id(1000, 1000, mt));
+    for (const auto i : ranges::views::indices(number_nodes)) {
+        nodes[i].set_cell_neuron_id(NeuronIdAdapter::get_random_neuron_id(1000, 1000, mt));
         nodes[i].set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
         nodes[i].set_rank(MPIRank(0));
 
@@ -294,7 +302,7 @@ TEST_F(KernelTest, testCreateProbabilityIntervalEdgeCase) {
 
     auto total_attractiveness = 0.0;
     std::vector<double> attractivenesses{};
-    for (auto i = 0; i < number_nodes; i++) {
+    for (const auto i : ranges::views::indices(number_nodes)) {
         const auto attr = Kernel<FastMultipoleMethodsCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id }, position, &nodes[i], element_type, signal_type);
 
         attractivenesses.emplace_back(attr);
@@ -311,7 +319,7 @@ TEST_F(KernelTest, testCreateProbabilityIntervalEdgeCase) {
 
     attractivenesses.resize(0);
 
-    for (auto i = 0; i < number_nodes; i++) {
+    for (const auto i : ranges::views::indices(number_nodes)) {
         const auto number_values = nodes[i].get_cell().get_number_elements_for(element_type, signal_type);
         if (number_values == 0) {
             attractivenesses.emplace_back(0);
@@ -334,7 +342,7 @@ TEST_F(KernelTest, testCreateProbabilityIntervalEdgeCase) {
 }
 
 TEST_F(KernelTest, testPickTargetEmpty2) {
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(1000, mt);
+    const auto& neuron_id = NeuronIdAdapter::get_random_neuron_id(1000, mt);
 
     const auto& position = SimulationAdapter::get_random_position(mt);
 
@@ -349,8 +357,8 @@ TEST_F(KernelTest, testPickTargetEmpty2) {
 }
 
 TEST_F(KernelTest, testPickTargetException) {
-    const auto number_nodes = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(1000, mt);
+    const auto number_nodes = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto& neuron_id = NeuronIdAdapter::get_random_neuron_id(1000, mt);
 
     const auto& position = SimulationAdapter::get_random_position(mt);
 
@@ -360,8 +368,8 @@ TEST_F(KernelTest, testPickTargetException) {
     std::vector<OctreeNode<FastMultipoleMethodsCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodsCell>{} };
     std::vector<OctreeNode<FastMultipoleMethodsCell>*> node_pointers{ number_nodes, nullptr };
 
-    for (auto i = 0; i < number_nodes; i++) {
-        nodes[i].set_cell_neuron_id(TaggedIdAdapter::get_random_neuron_id(1000, 1000, mt));
+    for (const auto i : ranges::views::indices(number_nodes)) {
+        nodes[i].set_cell_neuron_id(NeuronIdAdapter::get_random_neuron_id(1000, 1000, mt));
         nodes[i].set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
 
         const auto& target_excitatory_axon_position = SimulationAdapter::get_random_position(mt);
@@ -395,8 +403,8 @@ TEST_F(KernelTest, testPickTargetException) {
 }
 
 TEST_F(KernelTest, testPickTargetRandom2) {
-    const auto number_nodes = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto& neuron_id = TaggedIdAdapter::get_random_neuron_id(1000, mt);
+    const auto number_nodes = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto& neuron_id = NeuronIdAdapter::get_random_neuron_id(1000, mt);
 
     const auto& position = SimulationAdapter::get_random_position(mt);
 
@@ -406,8 +414,8 @@ TEST_F(KernelTest, testPickTargetRandom2) {
     std::vector<OctreeNode<FastMultipoleMethodsCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodsCell>{} };
     std::vector<OctreeNode<FastMultipoleMethodsCell>*> node_pointers{ number_nodes, nullptr };
 
-    for (auto i = 0; i < number_nodes; i++) {
-        nodes[i].set_cell_neuron_id(TaggedIdAdapter::get_random_neuron_id(1000, 1000, mt));
+    for (const auto i : ranges::views::indices(number_nodes)) {
+        nodes[i].set_cell_neuron_id(NeuronIdAdapter::get_random_neuron_id(1000, 1000, mt));
         nodes[i].set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
 
         const auto& target_excitatory_axon_position = SimulationAdapter::get_random_position(mt);
@@ -433,7 +441,7 @@ TEST_F(KernelTest, testPickTargetRandom2) {
 
     const auto& debug_kernel_string = KernelAdapter::set_random_kernel<FastMultipoleMethodsCell>(mt);
 
-    for (auto i = 0; i < number_nodes; i++) {
+    for (const auto i : ranges::views::indices(number_nodes)) {
         auto* result = Kernel<FastMultipoleMethodsCell>::
             pick_target({ MPIRank::root_rank(), neuron_id }, position, node_pointers, element_type, signal_type);
 
@@ -446,7 +454,6 @@ TEST_F(KernelTest, testPickTargetRandom2) {
             continue;
         }
 
-        auto pos = std::find(node_pointers.begin(), node_pointers.end(), result);
-        ASSERT_NE(pos, node_pointers.end());
+        ASSERT_TRUE(ranges::contains(node_pointers, result));
     }
 }

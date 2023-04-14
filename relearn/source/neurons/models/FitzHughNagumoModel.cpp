@@ -11,6 +11,7 @@
 #include "NeuronModels.h"
 
 #include "neurons/NeuronsExtraInfo.h"
+#include "util/NeuronID.h"
 
 using models::FitzHughNagumoModel;
 
@@ -97,7 +98,7 @@ void FitzHughNagumoModel::update_activity_benchmark() {
     const auto disable_flags = get_extra_infos()->get_disable_flags();
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons) default(none)
-    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
@@ -115,7 +116,7 @@ void FitzHughNagumoModel::update_activity() {
     const auto scale = 1.0 / h;
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons, h, scale) default(none)
-    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
+    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
@@ -152,10 +153,9 @@ void FitzHughNagumoModel::update_activity() {
 }
 
 void FitzHughNagumoModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {
-    for (auto neuron_id = start_id; neuron_id < end_id; ++neuron_id) {
-        const auto id = NeuronID{ neuron_id };
-        w[neuron_id] = FitzHughNagumoModel::init_w;
-        set_x(id, FitzHughNagumoModel::init_x);
+    for (const auto neuron_id : NeuronID::range(start_id, end_id)) {
+        w[neuron_id.get_neuron_id()] = FitzHughNagumoModel::init_w;
+        set_x(neuron_id, FitzHughNagumoModel::init_x);
     }
 }
 

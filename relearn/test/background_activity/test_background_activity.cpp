@@ -10,13 +10,20 @@
 
 #include "test_background_activity.h"
 
-#include "adapter/tagged_id/TaggedIdAdapter.h"
-
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "neurons/enums/UpdateStatus.h"
 #include "neurons/input/BackgroundActivityCalculator.h"
 #include "neurons/input/BackgroundActivityCalculators.h"
+#include "util/NeuronID.h"
+#include "util/ranges/Functional.hpp"
 
 #include <algorithm>
 #include <memory>
+
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/view/filter.hpp>
+#include <range/v3/view/iota.hpp>
+#include <range/v3/view/transform.hpp>
 
 void test_background_equality(const std::unique_ptr<BackgroundActivityCalculator>& background_calculator) {
     const auto number_neurons = background_calculator->get_number_neurons();
@@ -24,20 +31,17 @@ void test_background_equality(const std::unique_ptr<BackgroundActivityCalculator
 
     ASSERT_EQ(inputs.size(), number_neurons);
 
-    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        const NeuronID id{ neuron_id };
-
-        const auto input = background_calculator->get_background_activity(id);
-        ASSERT_EQ(inputs[neuron_id], input);
+    for (const auto& neuron_id : NeuronID::range(number_neurons)) {
+        const auto input = background_calculator->get_background_activity(neuron_id);
+        ASSERT_EQ(inputs[neuron_id.get_neuron_id()], input);
     }
 }
 
 void test_background_exceptions(const std::unique_ptr<BackgroundActivityCalculator>& background_calculator) {
     const auto number_neurons = background_calculator->get_number_neurons();
 
-    for (size_t it = 0; it < number_neurons + 100; it++) {
-        const NeuronID id{ it + number_neurons };
-        ASSERT_THROW(const auto input = background_calculator->get_background_activity(id), RelearnException);
+    for (const auto& neuron_id : NeuronID::range_id(number_neurons) | ranges::views::transform(plus(number_neurons))) {
+        ASSERT_THROW(const auto input = background_calculator->get_background_activity(NeuronID{ neuron_id }), RelearnException);
     }
 }
 
@@ -63,10 +67,8 @@ void test_init_create(const std::unique_ptr<BackgroundActivityCalculator>& backg
     test_background_exceptions(background_calculator);
 
     if (check_input) {
-        for (size_t neuron_id = 0; neuron_id < number_init_neurons; neuron_id++) {
-            const NeuronID id{ neuron_id };
-
-            const auto input = background_calculator->get_background_activity(id);
+        for (const auto& neuron_id : NeuronID::range(number_init_neurons)) {
+            const auto input = background_calculator->get_background_activity(neuron_id);
             ASSERT_EQ(input, 0.0);
         }
     }
@@ -85,10 +87,8 @@ void test_init_create(const std::unique_ptr<BackgroundActivityCalculator>& backg
     test_background_exceptions(background_calculator);
 
     if (check_input) {
-        for (size_t neuron_id = 0; neuron_id < number_init_neurons + number_create_neurons; neuron_id++) {
-            const NeuronID id{ neuron_id };
-
-            const auto input = background_calculator->get_background_activity(id);
+        for (const auto& neuron_id : NeuronID::range(number_init_neurons + number_create_neurons)) {
+            const auto input = background_calculator->get_background_activity(neuron_id);
             ASSERT_EQ(input, 0.0);
         }
     }
@@ -103,8 +103,8 @@ void test_init_create(const std::unique_ptr<BackgroundActivityCalculator>& backg
 TEST_F(BackgroundActivityTest, testNullBackgroundActivityConstruct) {
     std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NullBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>());
 
-    const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto number_neurons_create = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
 
     test_init_create(background_calculator, number_neurons_init, number_neurons_create);
 }
@@ -114,8 +114,8 @@ TEST_F(BackgroundActivityTest, testConstantBackgroundActivityConstruct) {
 
     std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<ConstantBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),constant_background);
 
-    const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto number_neurons_create = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
 
     test_init_create(background_calculator, number_neurons_init, number_neurons_create);
 
@@ -136,8 +136,8 @@ TEST_F(BackgroundActivityTest, testNormalBackgroundActivityConstruct) {
 
     std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NormalBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),mean_background, stddev_background);
 
-    const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto number_neurons_create = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
 
     test_init_create(background_calculator, number_neurons_init, number_neurons_create);
 
@@ -165,8 +165,8 @@ TEST_F(BackgroundActivityTest, testFastNormalBackgroundActivityConstruct) {
 
     std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<FastNormalBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),mean_background, stddev_background, 5);
 
-    const auto number_neurons_init = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto number_neurons_create = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
 
     test_init_create(background_calculator, number_neurons_init, number_neurons_create, false);
 
@@ -191,7 +191,7 @@ TEST_F(BackgroundActivityTest, testFastNormalBackgroundActivityConstruct) {
 TEST_F(BackgroundActivityTest, testNullBackgroundActivityUpdate) {
     std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NullBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>());
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     background_calculator->init(number_neurons);
 
     auto extra_info = std::make_shared<NeuronsExtraInfo>();
@@ -200,7 +200,7 @@ TEST_F(BackgroundActivityTest, testNullBackgroundActivityUpdate) {
     background_calculator->set_extra_infos(extra_info);
 
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
             extra_info->set_disabled_neurons(std::vector{ NeuronID{ neuron_id } });
@@ -213,7 +213,7 @@ TEST_F(BackgroundActivityTest, testNullBackgroundActivityUpdate) {
     test_background_equality(background_calculator);
 
     const auto& background_input = background_calculator->get_background_activity();
-    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         ASSERT_EQ(background_input[neuron_id], 0.0);
     }
 }
@@ -222,7 +222,7 @@ TEST_F(BackgroundActivityTest, testConstantBackgroundActivityUpdate) {
     const auto constant_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_base_background_activity, BackgroundActivityCalculator::max_base_background_activity, mt);
     std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<ConstantBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),constant_background);
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     background_calculator->init(number_neurons);
 
     auto extra_info = std::make_shared<NeuronsExtraInfo>();
@@ -231,7 +231,7 @@ TEST_F(BackgroundActivityTest, testConstantBackgroundActivityUpdate) {
     background_calculator->set_extra_infos(extra_info);
 
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
             extra_info->set_disabled_neurons(std::vector{ NeuronID{ neuron_id } });
@@ -244,7 +244,7 @@ TEST_F(BackgroundActivityTest, testConstantBackgroundActivityUpdate) {
     test_background_equality(background_calculator);
 
     const auto& background_input = background_calculator->get_background_activity();
-    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         if (update_status[neuron_id] == UpdateStatus::Disabled) {
             ASSERT_EQ(background_input[neuron_id], 0.0);
         } else {
@@ -259,7 +259,7 @@ TEST_F(BackgroundActivityTest, testNormalBackgroundActivityUpdate) {
 
     std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NormalBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),mean_background, stddev_background);
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     background_calculator->init(number_neurons);
 
     auto extra_info = std::make_shared<NeuronsExtraInfo>();
@@ -268,7 +268,7 @@ TEST_F(BackgroundActivityTest, testNormalBackgroundActivityUpdate) {
     background_calculator->set_extra_infos(extra_info);
 
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
             extra_info->set_disabled_neurons(std::vector{ NeuronID{ neuron_id } });
@@ -285,7 +285,7 @@ TEST_F(BackgroundActivityTest, testNormalBackgroundActivityUpdate) {
 
     auto number_enabled_neurons = 0;
     const auto& background_input = background_calculator->get_background_activity();
-    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         if (update_status[neuron_id] == UpdateStatus::Disabled) {
             ASSERT_EQ(background_input[neuron_id], 0.0);
         } else {
@@ -294,7 +294,7 @@ TEST_F(BackgroundActivityTest, testNormalBackgroundActivityUpdate) {
         }
     }
 
-    const auto summed_background = std::reduce(background_values.begin(), background_values.end());
+    const auto summed_background = ranges::accumulate(background_values, 0.0);
 
     if (std::abs(summed_background) >= eps * number_enabled_neurons) {
         std::cerr << "The total variance was: " << std::abs(summed_background) << '\n';
@@ -309,7 +309,7 @@ TEST_F(BackgroundActivityTest, testFastNormalBackgroundActivityUpdate) {
 
     std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<FastNormalBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),mean_background, stddev_background, 5);
 
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     background_calculator->init(number_neurons);
 
     auto extra_info = std::make_shared<NeuronsExtraInfo>();
@@ -318,7 +318,7 @@ TEST_F(BackgroundActivityTest, testFastNormalBackgroundActivityUpdate) {
     background_calculator->set_extra_infos(extra_info);
 
     std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
-    for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         if (RandomAdapter::get_random_bool(mt)) {
             update_status[neuron_id] = UpdateStatus::Disabled;
             extra_info->set_disabled_neurons(std::vector{ NeuronID{ neuron_id } });
@@ -330,19 +330,16 @@ TEST_F(BackgroundActivityTest, testFastNormalBackgroundActivityUpdate) {
 
     test_background_equality(background_calculator);
 
-    std::vector<double> background_values{};
-    background_values.reserve(number_neurons);
-
-    auto number_enabled_neurons = 0;
     const auto& background_input = background_calculator->get_background_activity();
-    for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        if (update_status[neuron_id] != UpdateStatus::Disabled) {
-            background_values.emplace_back(background_input[neuron_id] - mean_background);
-            number_enabled_neurons++;
-        }
-    }
 
-    const auto summed_background = std::reduce(background_values.begin(), background_values.end());
+    const auto background_values = NeuronID::range_id(number_neurons)
+        | ranges::views::filter(not_equal_to(UpdateStatus::Disabled), lookup(update_status))
+        | ranges::views::transform([&background_input, mean_background](const auto neuron_id) { return background_input[neuron_id] - mean_background; })
+        | ranges::to_vector;
+
+    const auto number_enabled_neurons = ranges::size(background_values);
+    const auto summed_background
+        = ranges::accumulate(background_values, 0.0);
 
     if (std::abs(summed_background) >= eps * number_enabled_neurons) {
         std::cerr << "The total variance was: " << std::abs(summed_background) << '\n';

@@ -15,7 +15,7 @@
 #include "neurons/enums/SignalType.h"
 #include "neurons/models/ModelParameter.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include <cmath>
 #include <map>
@@ -23,6 +23,8 @@
 #include <span>
 #include <utility>
 #include <vector>
+
+#include <range/v3/view/transform.hpp>
 
 class NeuronMonitor;
 class NeuronsExtraInfo;
@@ -203,9 +205,7 @@ public:
             connected_elements[neuron_id] -= change;
         }
 
-        for (const auto neuron_id : disabled_neuron_ids) {
-            const auto local_neuron_id = neuron_id.get_neuron_id();
-
+        for (const auto local_neuron_id : disabled_neuron_ids | ranges::views::transform(&NeuronID::get_neuron_id)) {
             RelearnException::check(local_neuron_id < size, "SynapticElements::update_after_deletion: Cannot disable a neuron with a too large id");
             connected_elements[local_neuron_id] = 0;
             grown_elements[local_neuron_id] = 0.0;

@@ -11,10 +11,16 @@
 #include "SynapticInputCalculator.h"
 
 #include "mpi/MPIWrapper.h"
+#include "neurons/enums/FiredStatus.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/input/FiredStatusCommunicationMap.h"
+#include "util/NeuronID.h"
+#include "util/ranges/Functional.hpp"
 
 #include <algorithm>
+
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/view/filter.hpp>
 
 void SynapticInputCalculator::init(const number_neurons_type number_neurons) {
     RelearnException::check(number_local_neurons == 0, "SynapticInputCalculator::init: Was already initialized");

@@ -11,7 +11,8 @@
 #include "test_synapse_deletion_request.h"
 
 #include "adapter/neurons/NeuronTypesAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/neurons/NeuronTypesAdapter.h"
 
 #include "neurons/helper/SynapseDeletionRequests.h"
 
@@ -31,8 +32,8 @@ TEST_F(SynapseDeletionTest, testDefaultConstructor) {
 }
 
 TEST_F(SynapseDeletionTest, testConstructor) {
-    const auto& golden_affected_neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
-    const auto& golden_initiator_neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
+    const auto& golden_affected_neuron_id = NeuronIdAdapter::get_random_neuron_id(10000, mt);
+    const auto& golden_initiator_neuron_id = NeuronIdAdapter::get_random_neuron_id(10000, mt);
     const auto& golden_initiator_element_type = NeuronTypesAdapter::get_random_element_type(mt);
     const auto& golden_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
@@ -54,7 +55,7 @@ TEST_F(SynapseDeletionTest, testConstructorException) {
     const auto& golden_initiator_element_type = NeuronTypesAdapter::get_random_element_type(mt);
     const auto& golden_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
-    const auto& dummy_neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
+    const auto& dummy_neuron_id = NeuronIdAdapter::get_random_neuron_id(10000, mt);
 
     ASSERT_THROW(SynapseDeletionRequest sdr(NeuronID::virtual_id(), dummy_neuron_id, golden_initiator_element_type, golden_signal_type), RelearnException);
     ASSERT_THROW(SynapseDeletionRequest sdr(NeuronID::uninitialized_id(), dummy_neuron_id, golden_initiator_element_type, golden_signal_type), RelearnException);
@@ -70,8 +71,8 @@ TEST_F(SynapseDeletionTest, testConstructorException) {
 }
 
 TEST_F(SynapseDeletionTest, testStructuredBinding) {
-    const auto& golden_affected_neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
-    const auto& golden_initiator_neuron_id = TaggedIdAdapter::get_random_neuron_id(10000, mt);
+    const auto& golden_affected_neuron_id = NeuronIdAdapter::get_random_neuron_id(10000, mt);
+    const auto& golden_initiator_neuron_id = NeuronIdAdapter::get_random_neuron_id(10000, mt);
     const auto& golden_initiator_element_type = NeuronTypesAdapter::get_random_element_type(mt);
     const auto& golden_signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 

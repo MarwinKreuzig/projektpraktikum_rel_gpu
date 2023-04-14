@@ -51,11 +51,7 @@ public:
             return {};
         }
 
-        auto comparison = [](const Interval& first, const Interval& second) noexcept -> bool {
-            return first.begin < second.begin;
-        };
-
-        std::ranges::sort(intervals, comparison);
+        std::ranges::sort(intervals, std::less{}, &Interval::begin);
 
         auto step_check_function = [intervals = std::move(intervals)](RelearnTypes::step_type step) noexcept -> bool {
             return std::ranges::any_of(intervals, [step](const Interval& interval) { return interval.hits_step(step); });

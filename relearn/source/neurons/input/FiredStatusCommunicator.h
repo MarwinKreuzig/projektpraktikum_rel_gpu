@@ -14,7 +14,7 @@
 #include "neurons/NeuronsExtraInfo.h"
 #include "neurons/enums/FiredStatus.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 
 #include "fmt/ostream.h"
 

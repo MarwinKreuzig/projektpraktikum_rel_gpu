@@ -18,6 +18,8 @@
 #include "io/InteractiveNeuronIO.h"
 #include "neurons/LocalAreaTranslator.h"
 
+#include <range/v3/range/conversion.hpp>
+
 #include <unordered_set>
 
 static void write_stimuli_to_file(std::filesystem::path path, std::vector<std::tuple<RelearnTypes::step_type, RelearnTypes::step_type, RelearnTypes::step_type, double, std::unordered_set<std::string>>> stimuli) {
@@ -46,11 +48,11 @@ TEST_F(StimulusTest, testStimulusWithNeuronIds) {
     std::vector<std::tuple<RelearnTypes::step_type, RelearnTypes::step_type, RelearnTypes::step_type, double, std::unordered_set<NeuronID>>> my_stimuli;
     std::vector<Interval> intervals = StimulusAdapter::get_random_non_overlapping_intervals(num_stimuli, num_steps, mt);
 
-    for (auto i = 0; i < num_stimuli; i++) {
+    for (const auto i : ranges::views::indices(num_stimuli)) {
         Interval interval = intervals[i];
 
         const auto intensity = RandomAdapter::get_random_double(0.001, 100.0, mt);
-        const auto& ids = TaggedIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(RelearnTypes::number_neurons_type(1), num_neurons, mt), mt);
+        const auto& ids = NeuronIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(RelearnTypes::number_neurons_type(1), num_neurons, mt), mt);
         std::unordered_set<std::string> rank_ids{};
         std::unordered_set<NeuronID> my_ids{};
         for (const auto& neuron_id : ids) {
@@ -106,7 +108,7 @@ TEST_F(StimulusTest, testStimulusWithAreas) {
     std::vector<std::tuple<RelearnTypes::step_type, RelearnTypes::step_type, RelearnTypes::step_type, double, std::unordered_set<NeuronID>>> my_stimuli;
     std::vector<Interval> intervals = StimulusAdapter::get_random_non_overlapping_intervals(num_stimuli, num_steps, mt);
 
-    for (auto i = 0; i < num_stimuli; i++) {
+    for (const auto i : ranges::views::indices(num_stimuli)) {
         Interval interval = intervals[i];
 
         const auto intensity = RandomAdapter::get_random_double(0.001, 100.0, mt);
@@ -117,7 +119,7 @@ TEST_F(StimulusTest, testStimulusWithAreas) {
                 my_ids.insert(neuron_id);
             }
         }
-        stimuli.emplace_back(std::make_tuple(interval.begin, interval.end, 1U, intensity, std::unordered_set(chosen_area_names.begin(), chosen_area_names.end())));
+        stimuli.emplace_back(std::make_tuple(interval.begin, interval.end, 1U, intensity, chosen_area_names | ranges::to<std::unordered_set>));
         my_stimuli.emplace_back(std::make_tuple(interval.begin, interval.end, 1U, intensity, my_ids));
     }
 
@@ -162,7 +164,7 @@ TEST_F(StimulusTest, testFrequency) {
     const auto frequency = RandomAdapter::get_random_integer(2, 10, mt);
 
     const auto intensity = RandomAdapter::get_random_double(0.001, 100.0, mt);
-    const auto& ids = TaggedIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(RelearnTypes::number_neurons_type(1), num_neurons, mt), mt);
+    const auto& ids = NeuronIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(RelearnTypes::number_neurons_type(1), num_neurons, mt), mt);
     std::unordered_set<std::string> rank_ids{};
     for (const auto& neuron_id : ids) {
         rank_ids.insert("0:" + std::to_string(neuron_id.get_neuron_id()+1));
@@ -196,11 +198,11 @@ TEST_F(StimulusTest, testEmptyNeurons) {
     std::vector<std::tuple<RelearnTypes::step_type, RelearnTypes::step_type, RelearnTypes::step_type, double, std::unordered_set<NeuronID>>> my_stimuli;
     std::vector<Interval> intervals = StimulusAdapter::get_random_non_overlapping_intervals(num_stimuli, num_steps, mt);
 
-    for (auto i = 0; i < num_stimuli; i++) {
+    for (const auto i : ranges::views::indices(num_stimuli)) {
         Interval interval = intervals[i];
         const auto intensity = RandomAdapter::get_random_double(0.001, 100.0, mt);
 
-        const auto& ids = (i % 2 == 0) ? TaggedIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(RelearnTypes::number_neurons_type(1), num_neurons, mt), mt) : std::unordered_set<NeuronID>{};
+        const auto& ids = (i % 2 == 0) ? NeuronIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(RelearnTypes::number_neurons_type(1), num_neurons, mt), mt) : std::unordered_set<NeuronID>{};
         std::unordered_set<std::string> rank_ids{};
         for (const auto& neuron_id : ids) {
             rank_ids.insert("0:" + std::to_string(neuron_id.get_neuron_id()+1));
@@ -240,7 +242,7 @@ TEST_F(StimulusTest, testEmptyNeurons) {
 TEST_F(StimulusTest, testNoFile) {
     const auto local_area_translator = NeuronAssignmentAdapter::get_randomized_area_translator(mt);
     std::filesystem::path path = "stimulus.tmp";
-    ASSERT_THROW(auto val = InteractiveNeuronIO::load_stimulus_interrupts(path, MPIRank(0), local_area_translator), RelearnException);
+    ASSERT_THROW(std::ignore = InteractiveNeuronIO::load_stimulus_interrupts(path, MPIRank(0), local_area_translator), RelearnException);
 }
 
 TEST_F(StimulusTest, testEmptyFile) {
@@ -267,7 +269,7 @@ TEST_F(StimulusTest, testInvalidNeuronId) {
 
     write_stimuli_to_file(path, { std::make_tuple(interval.begin, interval.end, 1U, intensity, rank_ids) });
 
-    ASSERT_THROW(auto val = InteractiveNeuronIO::load_stimulus_interrupts(path, MPIRank(0), local_area_translator), RelearnException);
+    ASSERT_THROW(std::ignore = InteractiveNeuronIO::load_stimulus_interrupts(path, MPIRank(0), local_area_translator), RelearnException);
 }
 
 TEST_F(StimulusTest, testInvalidAreaName) {

@@ -15,10 +15,13 @@
 #include "io/InteractiveNeuronIO.h"
 #include "util/Random.h"
 #include "util/Timers.h"
+#include "util/ranges/Functional.hpp"
 
 #include <filesystem>
 #include <functional>
 #include <optional>
+#include <range/v3/algorithm/generate.hpp>
+#include <range/v3/view/transform.hpp>
 #include <utility>
 
 /**
@@ -227,11 +230,7 @@ public:
         BackgroundActivityCalculator::init(number_neurons);
 
         pre_drawn_values.resize(number_neurons * multiplier);
-
-        for (auto neuron_id = size_t(0); neuron_id < number_neurons * multiplier; neuron_id++) {
-            const auto input = RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
-            pre_drawn_values[neuron_id] = input;
-        }
+        ranges::generate(pre_drawn_values, [this]() { return RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input); });
     }
 
     /**
@@ -246,11 +245,7 @@ public:
 
         const auto now_number_neurons = get_number_neurons();
         pre_drawn_values.resize(now_number_neurons * multiplier);
-
-        for (auto neuron_id = previous_number_neurons * multiplier; neuron_id < now_number_neurons * multiplier; neuron_id++) {
-            const auto input = RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
-            pre_drawn_values[neuron_id] = input;
-        }
+        ranges::generate(pre_drawn_values, [this]() { return RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input); });
     }
 
     /**

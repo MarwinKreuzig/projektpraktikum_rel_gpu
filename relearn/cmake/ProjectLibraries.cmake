@@ -63,7 +63,7 @@ if(WIN32)
  #    add_subdirectory(${boostrandom_SOURCE_DIR} ${boostrandom_BINARY_DIR})
  #  endif()
 
-  include_directories("external/")
+  target_include_directories(project_options INTERFACE SYSTEM external)
   # target_link_libraries(project_libraries INTERFACE boostorg::random)
 else()
   set(BOOST_ENABLE_CMAKE ON)
@@ -77,15 +77,21 @@ endif()
 
 # fmt
 FetchContent_Declare(
-        fmt
-        GIT_REPOSITORY https://github.com/fmtlib/fmt
-        GIT_TAG 9.1.0)
+  fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt
+  GIT_TAG 9.1.0)
 
 # spdlog
 FetchContent_Declare(
-        spdlog
-        GIT_REPOSITORY https://github.com/gabime/spdlog
-        GIT_TAG v1.11.0)
+  spdlog
+  GIT_REPOSITORY https://github.com/gabime/spdlog
+  GIT_TAG v1.11.0)
+
+# range-v3
+FetchContent_Declare(
+  range-v3
+  GIT_REPOSITORY https://github.com/ericniebler/range-v3
+  GIT_TAG 0.12.0)
 
 # make available
 
@@ -102,6 +108,15 @@ get_target_property(spdlog_includes spdlog INTERFACE_INCLUDE_DIRECTORIES)
 set_target_properties(spdlog PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
                                         "${spdlog_includes}")
 target_link_libraries(project_libraries INTERFACE spdlog)
+
+# range-v3
+FetchContent_MakeAvailable(range-v3)
+get_target_property(range-v3_includes range-v3 INTERFACE_INCLUDE_DIRECTORIES)
+set_target_properties(range-v3 PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
+                                          "${range-v3_includes}")
+target_link_libraries(project_libraries INTERFACE range-v3)
+
+target_link_libraries(project_options INTERFACE Boost::random)
 
 # set compile commands back to on
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

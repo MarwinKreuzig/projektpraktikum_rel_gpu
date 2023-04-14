@@ -28,12 +28,17 @@
 #include "util/MPIRank.h"
 #include "util/RelearnException.h"
 #include "util/StatisticalMeasures.h"
+#include "util/ranges/Functional.hpp"
 
 #include <memory>
 #include <span>
 #include <string>
 #include <tuple>
 #include <vector>
+
+#include <range/v3/functional/arithmetic.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/transform.hpp>
 
 class AreaMonitor;
 class Essentials;
@@ -462,14 +467,10 @@ private:
 
     template <typename T>
     [[nodiscard]] StatisticalMeasures global_statistics_integral(const std::span<const T> local_values, const MPIRank root) const {
-        std::vector<double> converted_values{};
-        converted_values.reserve(local_values.size());
-
-        for (const auto value : local_values) {
-            converted_values.emplace_back(static_cast<double>(value));
-        }
-
-        return global_statistics(converted_values, root);
+        auto values = local_values
+            | ranges::views::transform(ranges::convert_to<double>{})
+            | ranges::to_vector;
+        return global_statistics(std::move(values), root);
     }
 
     [[nodiscard]] std::uint64_t create_synapses();

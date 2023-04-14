@@ -12,10 +12,14 @@
 
 #include "util/Random.h"
 #include "util/RelearnException.h"
+#include "util/ranges/Functional.hpp"
 
 #include <cmath>
 #include <numeric>
 #include <span>
+
+#include <range/v3/algorithm/all_of.hpp>
+#include <range/v3/numeric/accumulate.hpp>
 
 /**
  * This class provides the possibility to pick an element from a vector based on their probabilities.
@@ -24,7 +28,7 @@
 class ProbabilityPicker {
 public:
     /**
-     * @brief Given some probabilities and a random number, returns the index in the span such that the sum of 
+     * @brief Given some probabilities and a random number, returns the index in the span such that the sum of
      *      the probabilities before the element is smaller than the random number and the same sum plus the picked
      *      element is larger or equal to the random number.
      *      If the random number is larger than the sum of probabilities, returns the last index with probability > 0.0.
@@ -36,7 +40,7 @@ public:
     [[nodiscard]] static std::size_t pick_target(const std::span<const double> probabilities, const double random_number) {
         RelearnException::check(!probabilities.empty(), "ProbabilityPicker::pick_target: There were no probabilities to pick from");
         RelearnException::check(random_number >= 0.0, "ProbabilityPicker::pick_target: random_number was smaller than 0.0");
-        RelearnException::check(std::all_of(probabilities.begin(), probabilities.end(), [](const double num) { return num >= 0.0; }), "ProbabilityPicker::pick_target: Some probability was negative");
+        RelearnException::check(ranges::all_of(probabilities, greater_equal(0.0)), "ProbabilityPicker::pick_target: Some probability was negative");
 
         if (!(0.0 < random_number)) {
             // This exists for denormalized numbers
@@ -70,7 +74,7 @@ public:
     [[nodiscard]] static std::size_t pick_target(const std::span<const double> probabilities, const RandomHolderKey key) {
         RelearnException::check(!probabilities.empty(), "ProbabilityPicker::pick_target: There were no probabilities to pick from");
 
-        const auto total_probability = std::reduce(probabilities.begin(), probabilities.end(), 0.0, std::plus<double>{});
+        const auto total_probability = ranges::accumulate(probabilities, 0.0);
         RelearnException::check(total_probability > 0.0, "ProbabilityPicker::pick_target: total_probability was smaller than or equal to 0.0");
 
         const auto next = std::nextafter(total_probability, total_probability + Constants::eps);

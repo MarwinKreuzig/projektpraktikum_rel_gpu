@@ -10,16 +10,23 @@
 
 #include "test_monitor_parser.h"
 
-#include "adapter/random/RandomAdapter.h"
 #include "adapter/helper/RankNeuronIdAdapter.h"
-
+#include "adapter/random/RandomAdapter.h"
 #include "adapter/mpi/MpiRankAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
 
 #include "io/parser/MonitorParser.h"
 #include "neurons/LocalAreaTranslator.h"
+#include "neurons/helper/RankNeuronId.h"
+#include "util/NeuronID.h"
+#include "util/ranges/Functional.hpp"
+#include "util/shuffle/shuffle.h"
 
 #include <memory>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/for_each.hpp>
+#include <range/v3/view/generate.hpp>
+#include <range/v3/view/map.hpp>
 #include <sstream>
 #include <vector>
 
@@ -27,24 +34,28 @@ TEST_F(MonitorParserTest, testParseIds) {
     const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt);
     const auto my_rank = MPIRankAdapter::get_random_mpi_rank(number_ranks, mt);
 
-    std::vector<RankNeuronId> rank_neuron_ids{};
-    rank_neuron_ids.reserve(number_ranks * TaggedIdAdapter::upper_bound_num_neurons);
-
     size_t my_number_neurons = 0;
 
-    for (const auto rank : MPIRank::range(number_ranks)) {
-        const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto random_number_neurons = [this]() { return NeuronIdAdapter::get_random_number_neurons(mt); };
+
+    const auto create_rank_neuron_ids = [this, my_rank, &my_number_neurons](const auto& rank_num_neurons_pair) {
+        const auto& rank = std::get<0>(rank_num_neurons_pair);
+        const auto& number_neurons = std::get<1>(rank_num_neurons_pair);
 
         if (rank == my_rank) {
             my_number_neurons = number_neurons;
         }
 
-        for (auto neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-            rank_neuron_ids.emplace_back(rank, NeuronID(neuron_id));
-        }
-    }
+        return NeuronID::range(number_neurons)
+            | ranges::views::transform([rank](const NeuronID& neuron_id) -> RankNeuronId { return { rank, neuron_id }; });
+    };
 
-    std::shuffle(rank_neuron_ids.begin(), rank_neuron_ids.end(), mt);
+    const auto rank_neuron_ids = ranges::views::zip(
+                               MPIRank::range(number_ranks),
+                               ranges::views::generate(random_number_neurons))
+        | ranges::views::for_each(create_rank_neuron_ids)
+        | ranges::to_vector
+        | actions::shuffle(mt);
 
     std::stringstream ss{};
     ss << "0:1";
@@ -70,7 +81,7 @@ TEST_F(MonitorParserTest, testParseIds) {
 
     ASSERT_EQ(parsed_ids.size(), my_number_neurons);
 
-    for (auto i = 0; i < my_number_neurons; i++) {
-        ASSERT_EQ(parsed_ids[i], NeuronID(i));
+    for (const auto neuron_id : NeuronID::range_id(my_number_neurons)) {
+        ASSERT_EQ(parsed_ids[neuron_id], NeuronID(neuron_id));
     }
 }

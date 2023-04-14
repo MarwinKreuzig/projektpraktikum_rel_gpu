@@ -17,8 +17,8 @@
 #include "neurons/enums/SignalType.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseDeletionRequests.h"
+#include "util/NeuronID.h"
 #include "util/RelearnException.h"
-#include "util/TaggedID.h"
 
 #include <memory>
 #include <vector>

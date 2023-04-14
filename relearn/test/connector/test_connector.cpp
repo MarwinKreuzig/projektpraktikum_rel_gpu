@@ -13,18 +13,26 @@
 #include "adapter/connector/ConnectorAdapter.h"
 #include "adapter/mpi/MpiRankAdapter.h"
 #include "adapter/synaptic_elements/SynapticElementsAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
+#include "adapter/connector/ConnectorAdapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/synaptic_elements/SynapticElementsAdapter.h"
 
 #include "algorithm/Connector.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/models/SynapticElements.h"
+#include "util/NeuronID.h"
 
 #include <map>
 #include <vector>
 
+#include <range/v3/algorithm/sort.hpp>
+#include <range/v3/view/indices.hpp>
+#include <range/v3/view/transform.hpp>
+
 TEST_F(ConnectorTest, testForwardConnectorExceptions) {
-    const auto number_neurons_1 = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto number_neurons_2 = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_1 = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_2 = NeuronIdAdapter::get_random_number_neurons(mt);
 
     const auto final_number_neurons = number_neurons_1 == number_neurons_2 ? number_neurons_2 + 1 : number_neurons_2;
 
@@ -53,7 +61,7 @@ TEST_F(ConnectorTest, testForwardConnectorExceptions) {
 }
 
 TEST_F(ConnectorTest, testForwardConnectorEmptyMap) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt) + 1;
 
     const auto& excitatory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Excitatory, mt);
@@ -92,21 +100,21 @@ TEST_F(ConnectorTest, testForwardConnectorEmptyMap) {
     const auto& now_deltas_inhibitory = excitatory_dendrites->get_deltas();
     const auto& now_types_inhibitory = excitatory_dendrites->get_signal_types();
 
-    for (auto i = 0; i < number_neurons; i++) {
-        ASSERT_EQ(previous_connected_excitatory[i], now_connected_excitatory[i]);
-        ASSERT_EQ(previous_grown_excitatory[i], now_grown_excitatory[i]);
-        ASSERT_EQ(previous_deltas_excitatory[i], now_deltas_excitatory[i]);
-        ASSERT_EQ(previous_types_excitatory[i], now_types_excitatory[i]);
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+        ASSERT_EQ(previous_connected_excitatory[neuron_id], now_connected_excitatory[neuron_id]);
+        ASSERT_EQ(previous_grown_excitatory[neuron_id], now_grown_excitatory[neuron_id]);
+        ASSERT_EQ(previous_deltas_excitatory[neuron_id], now_deltas_excitatory[neuron_id]);
+        ASSERT_EQ(previous_types_excitatory[neuron_id], now_types_excitatory[neuron_id]);
 
-        ASSERT_EQ(previous_connected_inhibitory[i], now_connected_inhibitory[i]);
-        ASSERT_EQ(previous_grown_inhibitory[i], now_grown_inhibitory[i]);
-        ASSERT_EQ(previous_deltas_inhibitory[i], now_deltas_inhibitory[i]);
-        ASSERT_EQ(previous_types_inhibitory[i], now_types_inhibitory[i]);
+        ASSERT_EQ(previous_connected_inhibitory[neuron_id], now_connected_inhibitory[neuron_id]);
+        ASSERT_EQ(previous_grown_inhibitory[neuron_id], now_grown_inhibitory[neuron_id]);
+        ASSERT_EQ(previous_deltas_inhibitory[neuron_id], now_deltas_inhibitory[neuron_id]);
+        ASSERT_EQ(previous_types_inhibitory[neuron_id], now_types_inhibitory[neuron_id]);
     }
 }
 
 TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt) + 1;
 
     const auto& excitatory_dendrites = SynapticElementsAdapter::create_dendrites(number_neurons, SignalType::Excitatory, mt);
@@ -124,8 +132,8 @@ TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
         const auto number_vacant_excitatory = excitatory_dendrites->get_free_elements(id);
         number_excitatory_requests += number_vacant_excitatory;
 
-        for (auto i = 0U; i < number_vacant_excitatory; i++) {
-            SynapseCreationRequest scr(id, NeuronID{ i }, SignalType::Excitatory);
+        for (const auto neuron_id : NeuronID::range(number_vacant_excitatory)) {
+            SynapseCreationRequest scr(id, neuron_id, SignalType::Excitatory);
             incoming_requests.append(MPIRank(1), scr);
 
             excitatory_requests[id].emplace_back(scr);
@@ -134,8 +142,8 @@ TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
         const auto number_vacant_inhibitory = inhibitory_dendrites->get_free_elements(id);
         number_inhibitory_requests += number_vacant_inhibitory;
 
-        for (auto i = 0U; i < number_vacant_inhibitory; i++) {
-            SynapseCreationRequest scr(id, NeuronID{ i }, SignalType::Inhibitory);
+        for (const auto neuron_id : NeuronID::range(number_vacant_inhibitory)) {
+            SynapseCreationRequest scr(id, neuron_id, SignalType::Inhibitory);
             incoming_requests.append(MPIRank(1), scr);
 
             inhibitory_requests[id].emplace_back(scr);
@@ -185,7 +193,7 @@ TEST_F(ConnectorTest, testForwardConnectorMatchingRequests) {
 }
 
 TEST_F(ConnectorTest, testForwardConnectorIncoming) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto number_ranks = MPIRankAdapter::get_random_number_ranks(mt) + 1;
 
     const auto& axons = SynapticElementsAdapter::create_axons(number_neurons, mt);
@@ -228,30 +236,30 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
     std::vector<unsigned int> newly_connected_inhibitory_dendrites(number_neurons, 0);
 
     // The grown elements did not change. There are now not less connected then before, and not more than grown
-    for (auto i = 0; i < number_neurons; i++) {
-        ASSERT_EQ(previous_grown_excitatory_counts[i], now_grown_excitatory_counts[i]) << i;
-        ASSERT_EQ(previous_grown_inhibitory_counts[i], now_grown_inhibitory_counts[i]) << i;
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+        ASSERT_EQ(previous_grown_excitatory_counts[neuron_id], now_grown_excitatory_counts[neuron_id]) << neuron_id;
+        ASSERT_EQ(previous_grown_inhibitory_counts[neuron_id], now_grown_inhibitory_counts[neuron_id]) << neuron_id;
 
-        ASSERT_GE(now_connected_excitatory_counts[i], previous_connected_excitatory_counts[i]) << i;
-        ASSERT_GE(now_connected_inhibitory_counts[i], previous_connected_inhibitory_counts[i]) << i;
+        ASSERT_GE(now_connected_excitatory_counts[neuron_id], previous_connected_excitatory_counts[neuron_id]) << neuron_id;
+        ASSERT_GE(now_connected_inhibitory_counts[neuron_id], previous_connected_inhibitory_counts[neuron_id]) << neuron_id;
 
-        ASSERT_LE(now_connected_excitatory_counts[i], static_cast<unsigned int>(now_grown_excitatory_counts[i])) << i;
-        ASSERT_LE(now_connected_inhibitory_counts[i], static_cast<unsigned int>(now_grown_inhibitory_counts[i])) << i;
+        ASSERT_LE(now_connected_excitatory_counts[neuron_id], static_cast<unsigned int>(now_grown_excitatory_counts[neuron_id])) << neuron_id;
+        ASSERT_LE(now_connected_inhibitory_counts[neuron_id], static_cast<unsigned int>(now_grown_inhibitory_counts[neuron_id])) << neuron_id;
 
-        newly_connected_excitatory_dendrites[i] = now_connected_excitatory_counts[i] - previous_connected_excitatory_counts[i];
-        newly_connected_inhibitory_dendrites[i] = now_connected_inhibitory_counts[i] - previous_connected_inhibitory_counts[i];
+        newly_connected_excitatory_dendrites[neuron_id] = now_connected_excitatory_counts[neuron_id] - previous_connected_excitatory_counts[neuron_id];
+        newly_connected_inhibitory_dendrites[neuron_id] = now_connected_inhibitory_counts[neuron_id] - previous_connected_inhibitory_counts[neuron_id];
     }
 
     // If there are still vacant elements, then all requests are connected
-    for (auto i = 0; i < number_neurons; i++) {
-        const auto vacant_excitatory_elements = excitatory_dendrites->get_free_elements(NeuronID{ i });
+    for (const auto neuron_id : NeuronID::range(number_neurons)) {
+        const auto vacant_excitatory_elements = excitatory_dendrites->get_free_elements( neuron_id );
         if (vacant_excitatory_elements > 0) {
-            ASSERT_EQ(newly_connected_excitatory_dendrites[i], number_excitatory_requests[i]) << i;
+            ASSERT_EQ(newly_connected_excitatory_dendrites[neuron_id.get_neuron_id()], number_excitatory_requests[neuron_id.get_neuron_id()]) << neuron_id;
         }
 
-        const auto vacant_inhibitory_elements = inhibitory_dendrites->get_free_elements(NeuronID{ i });
-        if (vacant_inhibitory_elements > 0) {
-            ASSERT_EQ(newly_connected_inhibitory_dendrites[i], number_inhibitory_requests[i]) << i;
+        if (const auto vacant_inhibitory_elements = inhibitory_dendrites->get_free_elements(neuron_id);
+            vacant_inhibitory_elements > 0) {
+            ASSERT_EQ(newly_connected_inhibitory_dendrites[neuron_id.get_neuron_id()], number_inhibitory_requests[neuron_id.get_neuron_id()]) << neuron_id;
         }
     }
 
@@ -301,33 +309,33 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
     ASSERT_EQ(local_synapses.size(), expected_local_synapses.size());
     ASSERT_EQ(distant_in_synapses.size(), expected_distant_in_synapses.size());
 
-    std::sort(local_synapses.begin(), local_synapses.end());
-    std::sort(distant_in_synapses.begin(), distant_in_synapses.end());
-    std::sort(expected_local_synapses.begin(), expected_local_synapses.end());
-    std::sort(expected_distant_in_synapses.begin(), expected_distant_in_synapses.end());
+    ranges::sort(local_synapses);
+    ranges::sort(distant_in_synapses);
+    ranges::sort(expected_local_synapses);
+    ranges::sort(expected_distant_in_synapses);
 
     // All and only the accepted local synapses are returned
-    for (auto i = 0; i < local_synapses.size(); i++) {
-        const auto& [target_1, source_1, weight_1] = local_synapses[i];
-        const auto& [target_2, source_2, weight_2] = expected_local_synapses[i];
+    for (const auto neuron_id : ranges::views::indices(local_synapses.size())) {
+        const auto& [target_1, source_1, weight_1] = local_synapses[neuron_id];
+        const auto& [target_2, source_2, weight_2] = expected_local_synapses[neuron_id];
 
-        ASSERT_EQ(target_1, target_2) << i;
-        ASSERT_EQ(source_1, source_2) << i;
-        ASSERT_EQ(weight_1, weight_2) << i;
+        ASSERT_EQ(target_1, target_2) << neuron_id;
+        ASSERT_EQ(source_1, source_2) << neuron_id;
+        ASSERT_EQ(weight_1, weight_2) << neuron_id;
     }
 
     // All and only the accepted distant in synapses are returned
-    for (auto i = 0; i < distant_in_synapses.size(); i++) {
-        const auto& [target_1, source_1, weight_1] = distant_in_synapses[i];
-        const auto& [target_2, source_2, weight_2] = expected_distant_in_synapses[i];
+    for (const auto neuron_id : ranges::views::indices(distant_in_synapses.size())) {
+        const auto& [target_1, source_1, weight_1] = distant_in_synapses[neuron_id];
+        const auto& [target_2, source_2, weight_2] = expected_distant_in_synapses[neuron_id];
 
-        ASSERT_EQ(target_1, target_2) << i;
-        ASSERT_EQ(source_1, source_2) << i;
-        ASSERT_EQ(weight_1, weight_2) << i;
+        ASSERT_EQ(target_1, target_2) << neuron_id;
+        ASSERT_EQ(source_1, source_2) << neuron_id;
+        ASSERT_EQ(weight_1, weight_2) << neuron_id;
     }
 
-    for (auto i = 0; i < number_neurons; i++) {
-        ASSERT_EQ(accepted_excitatory_requests[i], newly_connected_excitatory_dendrites[i]) << i;
-        ASSERT_EQ(accepted_inhibitory_requests[i], newly_connected_inhibitory_dendrites[i]) << i;
+    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+        ASSERT_EQ(accepted_excitatory_requests[neuron_id], newly_connected_excitatory_dendrites[neuron_id]) << neuron_id;
+        ASSERT_EQ(accepted_inhibitory_requests[neuron_id], newly_connected_inhibitory_dendrites[neuron_id]) << neuron_id;
     }
 }

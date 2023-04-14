@@ -17,8 +17,12 @@
 #include "neurons/enums/FiredStatus.h"
 #include "neurons/enums/SignalType.h"
 #include "neurons/helper/DistantNeuronRequests.h"
+#include "util/shuffle/shuffle.h"
 
 #include <random>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/concat.hpp>
+#include <range/v3/view/repeat_n.hpp>
 #include <vector>
 
 class NeuronTypesAdapter {
@@ -47,12 +51,10 @@ public:
     }
 
     static std::vector<FiredStatus> get_fired_status(size_t number_neurons, size_t number_inactive, std::mt19937& mt) {
-        std::vector<FiredStatus> status(number_inactive, FiredStatus::Inactive);
-        status.resize(number_neurons, FiredStatus::Fired);
-
-        RandomAdapter::shuffle(status.begin(), status.end(), mt);
-
-        return status;
+        return ranges::views::concat(
+                   ranges::views::repeat_n(FiredStatus::Inactive, number_inactive),
+                   ranges::views::repeat_n(FiredStatus::Fired, number_neurons - number_inactive))
+            | ranges::to_vector | actions::shuffle(mt);
     }
 
     static std::vector<UpdateStatus> get_update_status(size_t number_neurons, std::mt19937& mt) {
@@ -61,12 +63,10 @@ public:
     }
 
     static std::vector<UpdateStatus> get_update_status(size_t number_neurons, size_t number_disabled, std::mt19937& mt) {
-        std::vector<UpdateStatus> status(number_disabled, UpdateStatus::Disabled);
-        status.resize(number_neurons, UpdateStatus::Enabled);
-
-        RandomAdapter::shuffle(status.begin(), status.end(), mt);
-
-        return status;
+        return ranges::views::concat(
+                   ranges::views::repeat_n(UpdateStatus::Disabled, number_disabled),
+                   ranges::views::repeat_n(UpdateStatus::Enabled, number_neurons - number_disabled))
+            | ranges::to_vector | actions::shuffle(mt);
     }
 
     static void disable_neurons(size_t number_neurons, std::shared_ptr<NeuronsExtraInfo> extra_infos, std::mt19937& mt) {
@@ -75,9 +75,7 @@ public:
     }
 
     static void disable_neurons(size_t number_neurons, size_t number_disabled, std::shared_ptr<NeuronsExtraInfo> extra_infos, std::mt19937& mt) {
-        std::vector<NeuronID> neuron_ids = NeuronID::range(number_neurons);
-        RandomAdapter::shuffle(neuron_ids.begin(), neuron_ids.end(), mt);
-
-        extra_infos->set_disabled_neurons(std::span<NeuronID>{ neuron_ids.data(), number_disabled });
+        const auto neuron_ids = NeuronID::range(number_neurons) | ranges::to_vector | actions::shuffle(mt);
+        extra_infos->set_disabled_neurons(std::span<const NeuronID>{ neuron_ids.data(), number_disabled });
     }
 };

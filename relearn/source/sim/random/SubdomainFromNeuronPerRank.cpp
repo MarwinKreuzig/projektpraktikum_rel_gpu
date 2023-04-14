@@ -18,6 +18,8 @@
 
 #include <vector>
 
+#include <range/v3/action/insert.hpp>
+
 SubdomainFromNeuronPerRank::SubdomainFromNeuronPerRank(const SubdomainFromNeuronPerRank::number_neurons_type number_neurons_per_rank, const double fraction_excitatory_neurons, const double um_per_neuron, std::shared_ptr<Partition> partition)
     : BoxBasedRandomSubdomainAssignment(partition, fraction_excitatory_neurons, um_per_neuron)
     , number_neurons_per_rank(number_neurons_per_rank) {
@@ -85,7 +87,7 @@ void SubdomainFromNeuronPerRank::fill_all_subdomains() {
         currently_placed_neurons += number_neurons_per_subdomain;
         currently_placed_excitatory_neurons += placed_excitatory_neurons;
 
-        loaded_neurons.insert(loaded_neurons.end(), nodes.begin(), nodes.end());
+        ranges::insert(loaded_neurons, loaded_neurons.end(), nodes);
     }
 
     set_loaded_nodes(std::move(loaded_neurons));

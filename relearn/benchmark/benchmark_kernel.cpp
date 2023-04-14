@@ -18,6 +18,8 @@
 
 #include <utility>
 
+#include <range/v3/numeric/accumulate.hpp>
+
 static void BM_Gaussian_Kernel(benchmark::State& state) {
     const auto number_pairs = state.range(0);
 
@@ -43,7 +45,7 @@ static void BM_Gaussian_Kernel(benchmark::State& state) {
 
         state.PauseTiming();
 
-        const auto sum = std::reduce(attractivenesses.begin(), attractivenesses.end(), 0.0);
+        const auto sum = ranges::accumulate(attractivenesses, 0.0);
         benchmark::DoNotOptimize(sum);
 
         state.ResumeTiming();
@@ -76,7 +78,7 @@ static void BM_Gamma_Kernel(benchmark::State& state) {
 
         state.PauseTiming();
 
-        const auto sum = std::reduce(attractivenesses.begin(), attractivenesses.end(), 0.0);
+        const auto sum = ranges::accumulate(attractivenesses, 0.0);
         benchmark::DoNotOptimize(sum);
 
         state.ResumeTiming();
@@ -109,7 +111,7 @@ static void BM_Linear_Kernel(benchmark::State& state) {
 
         state.PauseTiming();
 
-        const auto sum = std::reduce(attractivenesses.begin(), attractivenesses.end(), 0.0);
+        const auto sum = ranges::accumulate(attractivenesses, 0.0);
         benchmark::DoNotOptimize(sum);
 
         state.ResumeTiming();
@@ -142,7 +144,7 @@ static void BM_Weibull_Kernel(benchmark::State& state) {
 
         state.PauseTiming();
 
-        const auto sum = std::reduce(attractivenesses.begin(), attractivenesses.end(), 0.0);
+        const auto sum = ranges::accumulate(attractivenesses, 0.0);
         benchmark::DoNotOptimize(sum);
 
         state.ResumeTiming();

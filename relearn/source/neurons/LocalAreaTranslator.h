@@ -11,11 +11,20 @@
  */
 
 #include "Types.h"
+#include "util/NeuronID.h"
+#include "util/ranges/Functional.hpp"
 
 #include <set>
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+#include <range/v3/algorithm/contains.hpp>
+#include <range/v3/algorithm/count.hpp>
+#include <range/v3/algorithm/find.hpp>
+#include <range/v3/iterator/operations.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/filter.hpp>
 
 /**
  * Over all mpi ranks, neurons can be assigned to the same area. This area is identified by a name (string). Each mpi rank assigns this area an individual id.
@@ -44,7 +53,7 @@ public:
         }
 
         const auto num_area_names = this->area_id_to_area_name.size();
-        std::set<RelearnTypes::area_name> set(this->area_id_to_area_name.begin(), this->area_id_to_area_name.end());
+        const auto set = this->area_id_to_area_name | ranges::to<std::set>;
         RelearnException::check(num_area_names == set.size(), "LocalAreaTranslator::Area name must be unique on single mpi rank");
     }
 
@@ -83,9 +92,9 @@ public:
      * @return Id of the area
      */
     [[nodiscard]] RelearnTypes::area_id get_area_id_for_area_name(const RelearnTypes::area_name& area_name) const {
-        auto it = std::find(area_id_to_area_name.begin(), area_id_to_area_name.end(), area_name);
+        const auto it = ranges::find(area_id_to_area_name, area_name);
         RelearnException::check(it != area_id_to_area_name.end(), "LocalAreaTranslator::get_area_id_for_area_name: Area name {} is unknown", area_name);
-        return std::distance(area_id_to_area_name.begin(), it);
+        return static_cast<RelearnTypes::area_id>(ranges::distance(area_id_to_area_name.begin(), it));
     }
 
     /**
@@ -94,8 +103,7 @@ public:
      * @return True, if area name exists on this mpi rank
      */
     [[nodiscard]] bool knows_area_name(const RelearnTypes::area_name& area_name) const noexcept {
-        auto it = std::find(area_id_to_area_name.begin(), area_id_to_area_name.end(), area_name);
-        return it != area_id_to_area_name.end();
+        return ranges::contains(area_id_to_area_name, area_name);
     }
 
     /**
@@ -127,8 +135,7 @@ public:
      * @return Number of neurons currently stored under the given area name
      */
     [[nodiscard]] RelearnTypes::number_neurons_type get_number_neurons_in_area(const RelearnTypes::area_id& area_id) const {
-        const auto counted = std::count(neuron_id_to_area_id.begin(), neuron_id_to_area_id.end(), area_id);
-        return static_cast<RelearnTypes::number_neurons_type>(counted);
+        return static_cast<RelearnTypes::number_neurons_type>(ranges::count(neuron_id_to_area_id, area_id));
     }
 
     /**
@@ -139,13 +146,10 @@ public:
      */
     [[nodiscard]] std::unordered_set<NeuronID> get_neuron_ids_in_area(RelearnTypes::area_id my_area_id) const {
         RelearnException::check(my_area_id < area_id_to_area_name.size(), "LocalAreaTranslator::get_neuron_ids_in_area: Area id {} is too large", my_area_id);
-        std::unordered_set<NeuronID> neurons_in_area{};
-        for (const auto& neuron_id : NeuronID::range(0, neuron_id_to_area_id.size())) {
-            if (my_area_id == neuron_id_to_area_id[neuron_id.get_neuron_id()]) {
-                neurons_in_area.insert(neuron_id);
-            }
-        }
-        return neurons_in_area;
+
+        return NeuronID::range(neuron_id_to_area_id.size())
+            | ranges::views::filter(equal_to(my_area_id), lookup(neuron_id_to_area_id, &NeuronID::get_neuron_id))
+            | ranges::to<std::unordered_set>;
     }
 
     /**
@@ -155,13 +159,13 @@ public:
      * @return Vector of neuron ids within the specified area in my_area_ids
      */
     [[nodiscard]] std::vector<NeuronID> get_neuron_ids_in_areas(const std::vector<RelearnTypes::area_id>& my_area_ids) const {
-        std::vector<NeuronID> neurons_in_area{};
-        for (const auto& neuron_id : NeuronID::range(0, neuron_id_to_area_id.size())) {
-            if (std::find(my_area_ids.begin(), my_area_ids.end(), neuron_id_to_area_id[neuron_id.get_neuron_id()]) != my_area_ids.end()) {
-                neurons_in_area.emplace_back(neuron_id);
-            }
-        }
-        return neurons_in_area;
+        const auto is_id_in_my_ranks_areas = [my_area_ids, this](const NeuronID neuron_id) {
+            return ranges::contains(my_area_ids, neuron_id_to_area_id[neuron_id.get_neuron_id()]);
+        };
+
+        return NeuronID::range(neuron_id_to_area_id.size())
+            | ranges::views::filter(is_id_in_my_ranks_areas)
+            | ranges::to_vector;
     }
 
     [[nodiscard]] const std::vector<RelearnTypes::area_id>& get_neuron_ids_to_area_ids() const noexcept {

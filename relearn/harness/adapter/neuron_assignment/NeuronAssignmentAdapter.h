@@ -10,23 +10,28 @@
  *
  */
 
+#include "adapter/neuron_id/NeuronIdAdapter.h"
 #include "adapter/random/RandomAdapter.h"
-#include "adapter/tagged_id/TaggedIdAdapter.h"
 
 #include "Types.h"
 #include "neurons/enums/SignalType.h"
 #include "sim/random/SubdomainFromNeuronDensity.h"
 #include "structure/Partition.h"
+#include "util/ranges/Functional.hpp"
 
 #include <random>
 #include <vector>
 
+#include <range/v3/algorithm/contains.hpp>
+#include <range/v3/view/generate_n.hpp>
+#include <range/v3/view/iota.hpp>
+
 class NeuronAssignmentAdapter {
 public:
-    static void generate_random_neurons(std::vector<RelearnTypes::position_type>& positions, std::vector<RelearnTypes::area_id>& neuron_id_to_area_ids, 
+    static void generate_random_neurons(std::vector<RelearnTypes::position_type>& positions, std::vector<RelearnTypes::area_id>& neuron_id_to_area_ids,
         std::vector<RelearnTypes::area_name>& area_id_to_area_name, std::vector<SignalType>& types, std::mt19937& mt) {
 
-        const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+        const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
         const auto fraction_excitatory_neurons = RandomAdapter::get_random_percentage<double>(mt);
         const auto um_per_neuron = RandomAdapter::get_random_percentage<double>(mt) * 100.0;
 
@@ -45,15 +50,12 @@ public:
     }
 
     static std::vector<RelearnTypes::area_id> get_random_area_ids(size_t number_areas, size_t number_neurons, std::mt19937& mt) {
-        std::vector<RelearnTypes::area_id> area_ids{};
-        area_ids.reserve(number_neurons);
-
-        for (size_t i = 0; i < number_neurons; i++) {
-            const auto area_id = RandomAdapter::get_random_integer<RelearnTypes::area_id>(0, RelearnTypes::area_id(number_areas - 1), mt);
-            area_ids.emplace_back(area_id);
-        }
-
-        return area_ids;
+        return ranges::views::generate_n(
+                   [number_areas, &mt]() {
+                       return RandomAdapter::get_random_integer<RelearnTypes::area_id>(0, RelearnTypes::area_id(number_areas - 1), mt);
+                   },
+                   number_neurons)
+            | ranges::to_vector;
     }
 
     static std::vector<RelearnTypes::area_name> get_random_area_names(size_t max_areas, std::mt19937& mt) {
@@ -69,7 +71,7 @@ public:
             RelearnTypes::area_name name{};
             do {
                 name = std::to_string(RandomAdapter::get_random_percentage<double>(mt));
-            } while (name.empty() || std::find(area_names.begin(), area_names.end(), name) != area_names.end());
+            } while (name.empty() || ranges::contains(area_names, name));
 
             area_names.emplace_back(std::move(name));
         }
@@ -79,16 +81,13 @@ public:
 
     static std::vector<RelearnTypes::area_name> get_neuron_id_vs_area_name(const std::vector<RelearnTypes::area_id>& neuron_id_vs_area_id,
         const std::vector<RelearnTypes::area_name>& area_id_vs_area_name) {
-        std::vector<RelearnTypes::area_name> neuron_id_vs_area_name{};
-
-        for (auto i : neuron_id_vs_area_id) {
-            neuron_id_vs_area_name.emplace_back(area_id_vs_area_name[i]);
-        }
-        return neuron_id_vs_area_name;
+        return neuron_id_vs_area_id
+            | ranges::views::transform(lookup(area_id_vs_area_name))
+            | ranges::to_vector;
     }
 
     static std::shared_ptr<LocalAreaTranslator> get_randomized_area_translator(std::mt19937& mt) {
-        const auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+        const auto num_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
         const auto num_areas = std::max(size_t{ 1 }, num_neurons / 10);
         auto area_id_to_area_name = NeuronAssignmentAdapter::get_random_area_names(num_areas, mt);
         auto neuron_id_to_area_id = NeuronAssignmentAdapter::get_random_area_ids(area_id_to_area_name.size(), num_neurons, mt);
@@ -100,7 +99,7 @@ public:
         RelearnTypes::area_name area_name = "";
         do {
             area_name = std::to_string(RandomAdapter::get_random_percentage<double>(mt));
-        } while (std::find(area_id_to_area_name.begin(), area_id_to_area_name.end(), area_name) != area_id_to_area_name.end());
+        } while (ranges::contains(area_id_to_area_name, area_name));
         return area_name;
     }
 };

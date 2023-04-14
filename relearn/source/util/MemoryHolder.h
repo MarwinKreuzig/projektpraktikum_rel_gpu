@@ -17,6 +17,8 @@
 #include <span>
 #include <unordered_map>
 
+#include <range/v3/algorithm/for_each.hpp>
+
 template <typename T>
 class OctreeNode;
 
@@ -74,10 +76,7 @@ public:
      * @brief Destroys all objects that were handed out via get_available. All pointers are invalidated.
      */
     static void make_all_available() noexcept {
-        using size_type = typename std::span<OctreeNode<AdditionalCellAttributes>>::size_type;
-        for (size_type i = 0; i < memory_holder.size(); i++) {
-            memory_holder[i].reset();
-        }
+        ranges::for_each(memory_holder, &OctreeNode<AdditionalCellAttributes>::reset);
 
         current_filling = 0;
         parent_to_offset.clear();

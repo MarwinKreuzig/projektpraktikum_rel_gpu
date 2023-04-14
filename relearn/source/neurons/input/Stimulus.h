@@ -15,12 +15,16 @@
 #include "neurons/NeuronsExtraInfo.h"
 #include "neurons/LocalAreaTranslator.h"
 #include "util/MPIRank.h"
-#include "util/TaggedID.h"
+#include "util/NeuronID.h"
 #include "util/Timers.h"
+#include "util/ranges/Functional.hpp"
 
 #include <filesystem>
 #include <memory>
 #include <vector>
+
+#include <range/v3/algorithm/fill.hpp>
+#include <range/v3/view/transform.hpp>
 
 class Stimulus {
 public:
@@ -66,15 +70,14 @@ public:
             return;
         }
 
-        const auto disable_flags = extra_infos->get_disable_flags();
-
         Timers::start(TimerRegion::CALC_STIMULUS);
-        std::fill(stimulus.begin(), stimulus.end(), 0.0);
+        ranges::fill(stimulus, 0.0);
         const auto& stimuli = stimulus_function(step);
+
         for (const auto& [neuron_ids, intensity] : stimuli) {
-            for (const auto& neuron_id : neuron_ids) {
-                stimulus[neuron_id.get_neuron_id()] = intensity;
-            }
+            ranges::fill(
+                neuron_ids | ranges::views::transform(lookup(stimulus, &NeuronID::get_neuron_id)),
+                intensity);
         }
         Timers::stop_and_add(TimerRegion::CALC_STIMULUS);
     }
