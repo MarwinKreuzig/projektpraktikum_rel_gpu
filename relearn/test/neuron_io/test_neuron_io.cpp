@@ -1218,8 +1218,8 @@ TEST_F(IOTest, testWriteOutSynapses) {
 }
 
 TEST_F(IOTest, additionalPositionInformationTest) {
-    const auto number_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
-    const auto total_neurons = TaggedIdAdapter::get_random_number_neurons(mt) + number_neurons;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto total_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + number_neurons;
     const auto num_subdomains = RandomAdapter::get_random_integer(1, 10, mt);
 
     std::vector<NeuronID> correct_ids;

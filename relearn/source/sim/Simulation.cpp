@@ -423,20 +423,6 @@ void Simulation::simulate(const step_type number_steps) {
 
                 ranges::for_each(*area_monitors | ranges::views::values, &AreaMonitor::request_data);
 
-                for (NeuronID neuron_id :
-                    NeuronID::range(neurons->get_number_neurons()) |
-                        ranges::views::filter(equal_to(UpdateStatus::Enabled),
-                            lookup(neurons->get_disable_flags(),
-                                &NeuronID::get_neuron_id))) {
-                    const auto &area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(
-                            neuron_id.get_neuron_id());
-                    if (!area_monitors->contains(area_id)) {
-                        continue;
-                    }
-                    auto &area_monitor = area_monitors->at(area_id);
-                    area_monitor.request_data(neuron_id);
-                }
-
                 Timers::stop_and_add(TimerRegion::AREA_MONITORS_REQUEST);
                 Timers::start(TimerRegion::AREA_MONITORS_EXCHANGE);
 
@@ -444,20 +430,6 @@ void Simulation::simulate(const step_type number_steps) {
 
                 Timers::stop_and_add(TimerRegion::AREA_MONITORS_EXCHANGE);
                 Timers::start(TimerRegion::AREA_MONITORS_RECORD_DATA);
-
-                for (NeuronID neuron_id :
-                    NeuronID::range(neurons->get_number_neurons()) |
-                        ranges::views::filter(equal_to(UpdateStatus::Enabled),
-                            lookup(neurons->get_disable_flags(),
-                                &NeuronID::get_neuron_id))) {
-                    const auto &area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(
-                            neuron_id.get_neuron_id());
-                    if (!area_monitors->contains(area_id)) {
-                        continue;
-                    }
-                    auto &area_monitor = area_monitors->at(area_id);
-                    area_monitor.record_data(NeuronID(neuron_id));
-                }
 
                 ranges::for_each(*area_monitors | ranges::views::values, &AreaMonitor::monitor_connectivity);
 

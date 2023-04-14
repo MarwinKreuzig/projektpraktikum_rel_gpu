@@ -173,7 +173,7 @@ std::tuple<std::vector<LoadedNeuron>, std::vector<RelearnTypes::area_name>, Load
 
     std::vector<std::string> comments{};
 
-    for (const auto& line : ranges::getlines(file) | views::filter_not_comment_not_empty_line) {
+    for (const auto& line : ranges::getlines(file)) {
 
         // Skip line with comments
         if (line.empty()) {

@@ -19,6 +19,7 @@
 #include "structure/Partition.h"
 #include "util/RelearnException.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <numeric>
 
@@ -275,8 +276,12 @@ TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
 
         auto partition_local_subdomain_boundaries = partition.get_all_local_subdomain_boundaries();
 
-        ranges::sort(local_subdomain_boundaries);
-        ranges::sort(partition_local_subdomain_boundaries);
+        struct {
+            bool operator()(RelearnTypes::bounding_box_type& a,RelearnTypes::bounding_box_type& b) const { return a < b; }
+        } customLess;
+
+        ranges::sort(local_subdomain_boundaries, customLess);
+        ranges::sort(partition_local_subdomain_boundaries, customLess);
 
         ASSERT_EQ(local_subdomain_boundaries, partition_local_subdomain_boundaries);
 

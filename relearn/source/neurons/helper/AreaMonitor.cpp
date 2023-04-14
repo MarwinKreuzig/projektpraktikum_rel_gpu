@@ -28,13 +28,16 @@
 #include <range/v3/view/map.hpp>
 #include <range/v3/view/transform.hpp>
 
-AreaMonitor::AreaMonitor(Simulation* simulation, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name,
+AreaMonitor::AreaMonitor(Simulation* simulation, std::shared_ptr<GlobalAreaMapper> global_area_mapper, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name,
     int my_rank, std::filesystem::path& path)
     : sim(simulation)
     , area_id(area_id)
     , area_name(std::move(area_name))
+    , global_area_mapper(global_area_mapper)
     , my_rank(my_rank)
     , path(std::move(path)) {
+    write_header();
+}
 
 
  void AreaMonitor::monitor_connectivity() {
@@ -149,7 +152,7 @@ void AreaMonitor::write_data_to_file() {
         | ranges::views::keys
         | ranges::to<std::set>;
 
-    unique_area_ids += unique_area_ids2;
+    unique_area_ids.insert(unique_area_ids2.begin(), unique_area_ids2.end());
 
     std::vector<std::pair<int, RelearnTypes::area_id>> unique_area_ids_list;
     std::copy(unique_area_ids.begin(), unique_area_ids.end(), std::back_inserter(unique_area_ids_list));
@@ -192,14 +195,6 @@ void AreaMonitor::write_data_to_file() {
     out.close();
     data.clear();
     //Timers::stop_and_add();
-}
-
-void AreaMonitor::request_data(const NeuronID& neuron_id) const {
-    //Deletions
-    const auto& deletions = sim->get_neurons()->get_extra_info()->get_deletions_log(neuron_id);
-    for(const auto& [other_neuron_id, _] : deletions) {
-        global_area_mapper->request_area_id(other_neuron_id);
-    }
 }
 
 void AreaMonitor::request_data() const {

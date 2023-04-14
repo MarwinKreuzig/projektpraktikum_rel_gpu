@@ -24,7 +24,9 @@
 #include "sim/NeuronToSubdomainAssignment.h"
 #include "sim/file/MultipleSubdomainsFromFile.h"
 #include "sim/NeuronToSubdomainAssignment.h"
+#include "sim/random/SubdomainFromNeuronPerRank.h"
 #include "structure/Partition.h"
+
 
 #include <algorithm>
 #include <fstream>

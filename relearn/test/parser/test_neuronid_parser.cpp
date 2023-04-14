@@ -167,7 +167,7 @@ TEST_F(NeuronIdParserTest, testExtractNeuronIDs) {
         ranges::views::filter(equal_to(my_rank), &RankNeuronId::get_rank) |
         ranges::views::transform([](const RankNeuronId &rni) {
           const auto &[rank, id] = rni;
-          return NeuronID(id.get_neuron_id() - 1);
+          return NeuronID(id.get_neuron_id());
         }) |
         ranges::to_vector;
 

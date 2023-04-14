@@ -12,7 +12,7 @@
 
 #include "../harness/adapter/neurons/NeuronTypesAdapter.h"
 #include "../harness/adapter/network_graph/NetworkGraphAdapter.h"
-#include "../harness/adapter/tagged_id/TaggedIdAdapter.h"
+#include "../harness/adapter/neuron_id/NeuronIdAdapter.h"
 
 #include "neurons/input/TransmissionDelayer.h"
 
@@ -23,7 +23,7 @@ static void sort_by_neuron_id(std::vector<std::pair<RankNeuronId, RelearnTypes::
 
 TEST_F(TransmissionDelayTest, testNoDelay) {
     const MPIRank my_rank = MPIRank{0};
-    const auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto num_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
     const auto num_connections_per_vertex = RandomAdapter::get_random_integer(0,10, mt);
     const auto& network_graph = NetworkGraphAdapter::create_network_graph(num_neurons, my_rank, num_connections_per_vertex, mt);
@@ -65,7 +65,7 @@ TEST_F(TransmissionDelayTest, testNoDelay) {
 
 TEST_F(TransmissionDelayTest, testConstantDelay) {
     const MPIRank my_rank = MPIRank{0};
-    const auto num_neurons = TaggedIdAdapter::get_random_number_neurons(mt);
+    const auto num_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto delay = RandomAdapter::get_random_integer(10,50, mt);
     const auto num_steps = delay * 5;
 

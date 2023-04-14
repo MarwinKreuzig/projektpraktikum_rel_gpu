@@ -54,7 +54,6 @@ public:
      */
     AreaMonitor(Simulation* simulation, std::shared_ptr<GlobalAreaMapper> global_area_mapper, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name, int my_rank, std::filesystem::path& path);
 
-    void request_data(const NeuronID& neuron_id)  const ;
     void request_data()  const ;
 
     /**
