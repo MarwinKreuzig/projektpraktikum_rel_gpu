@@ -44,6 +44,12 @@ public:
         next_request[rni.get_rank().get_rank()].emplace_back(rni.get_neuron_id().get_neuron_id());
     }
 
+    void check_cache() {
+        if(known_mappings.size() > max_size_map) {
+            known_mappings.clear();
+        }
+    }
+
     /**
      * Returns the area id for a neuron. Must have been requested before the last communication
      * @param rni The neuron whose area id we want to know
@@ -94,9 +100,6 @@ private:
     }
 
     void parse_answer(const std::vector<std::vector<RelearnTypes::area_id>>& answer) {
-        if(known_mappings.size() > max_size_map) {
-            known_mappings.clear();
-        }
 
         for(auto rank = 0; rank < answer.size();rank++) {
             for(auto i = 0; i< answer[rank].size();i++) {
