@@ -73,7 +73,7 @@ private:
     int num_ranks;
     MPIRank my_rank;
 
-    static constexpr auto max_size_map = 100000;
+    static constexpr auto max_size_map = 10000;
 
     void send_requests() {
         const auto& received_requested_data = MPIWrapper::exchange_values<NeuronID>(next_request);

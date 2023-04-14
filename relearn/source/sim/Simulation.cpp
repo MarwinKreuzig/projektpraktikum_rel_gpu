@@ -292,6 +292,17 @@ void Simulation::initialize() {
             area_monitor.monitor_connectivity();
         }
 
+        for (NeuronID neuron_id :
+            NeuronID::range(neurons->get_number_neurons())) {
+            if(neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
+                continue;
+            }
+            const auto& area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(neuron_id.get_neuron_id());
+
+            auto& area_monitor = area_monitors->at(area_id);
+            area_monitor.record_data(neuron_id);
+        }
+
         Timers::stop_and_add(TimerRegion::AREA_MONITORS_RECORD_DATA);
         Timers::start(TimerRegion::AREA_MONITORS_FINISH);
 
