@@ -45,9 +45,7 @@ public:
     }
 
     void check_cache() {
-        if(known_mappings.size() > max_size_map) {
-            known_mappings.clear();
-        }
+        known_mappings.clear();
     }
 
     /**

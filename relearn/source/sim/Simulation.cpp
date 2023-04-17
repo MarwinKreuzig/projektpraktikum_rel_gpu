@@ -276,6 +276,7 @@ void Simulation::initialize() {
         Timers::stop_and_add(TimerRegion::AREA_MONITORS_PREPARE);
         Timers::start(TimerRegion::AREA_MONITORS_REQUEST);
 
+
         for (auto &[_, area_monitor]: *area_monitors) {
             area_monitor.request_data();
         }
@@ -420,6 +421,8 @@ void Simulation::simulate(const step_type number_steps) {
 
                 Timers::stop_and_add(TimerRegion::AREA_MONITORS_PREPARE);
                 Timers::start(TimerRegion::AREA_MONITORS_REQUEST);
+
+                global_area_mapper->check_cache();
 
                 ranges::for_each(*area_monitors | ranges::views::values, &AreaMonitor::request_data);
 

@@ -199,7 +199,6 @@ void AreaMonitor::write_data_to_file() {
 
 void AreaMonitor::request_data() const {
     Timers::start(TimerRegion::AREA_MONITORS_DISTANT_EDGES);
-    global_area_mapper->check_cache();
     for(const auto& synapse : sim->get_neurons()->last_created_in_synapses) {
         if(sim->get_neurons()->get_local_area_translator()->get_area_id_for_neuron_id(synapse.get_target().get_neuron_id()) != area_id) {
             continue;
