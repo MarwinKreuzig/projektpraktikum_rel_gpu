@@ -31,8 +31,10 @@ class NullBackgroundActivityCalculator : public BackgroundActivityCalculator {
 public:
     /**
      * @brief Constructs a new object of type NullBackgroundActivityCalculator
+     * @param first_step The first step in which background activity is applied
+     * @param last_step The last step in which background activity is applied
      */
-    NullBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function) : BackgroundActivityCalculator(std::move(transformation_function)) {}
+    NullBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function, RelearnTypes::step_type first_step, RelearnTypes::step_type last_step) : BackgroundActivityCalculator(std::move(transformation_function), first_step, last_step) {}
 
     virtual ~NullBackgroundActivityCalculator() = default;
 
@@ -48,7 +50,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
-        return std::make_unique<NullBackgroundActivityCalculator>(transformation_function->clone());
+        return std::make_unique<NullBackgroundActivityCalculator>(transformation_function->clone(),get_first_step(), get_last_step());
     }
 };
 
@@ -59,10 +61,12 @@ class ConstantBackgroundActivityCalculator : public BackgroundActivityCalculator
 public:
     /**
      * @brief Constructs a new object with the given constant input
+     * @brief first_step The first step in which background activity is applied
+    * @brief last_step The last step in which background activity is applied
      * @brief input The base input
      */
-    ConstantBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function,const double input) noexcept
-        : BackgroundActivityCalculator(std::move(transformation_function))
+    ConstantBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function,RelearnTypes::step_type first_step, RelearnTypes::step_type last_step,const double input) noexcept
+        : BackgroundActivityCalculator(std::move(transformation_function), first_step, last_step)
         , base_input(input) {
     }
 
@@ -91,7 +95,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
-        return std::make_unique<ConstantBackgroundActivityCalculator>(transformation_function->clone(), base_input);
+        return std::make_unique<ConstantBackgroundActivityCalculator>(transformation_function->clone(),get_first_step(), get_last_step(), base_input);
     }
 
     /**
@@ -117,12 +121,14 @@ public:
     /**
      * @brief Constructs a new object with the given normal input, i.e.,
      *      from N(mean, stddev)
-     * @brief mean The mean input
-     * @brief stddev The standard deviation, must be > 0.0
+     * @param first_step The first step in which background activity is applied
+     * @param last_step The last step in which background activity is applied
+     * @param mean The mean input
+     * @param stddev The standard deviation, must be > 0.0
      * @exception Throws a RelearnException if stddev <= 0.0
      */
-    NormalBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function,const double mean, const double stddev)
-        : BackgroundActivityCalculator(std::move(transformation_function))
+    NormalBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function,RelearnTypes::step_type first_step, RelearnTypes::step_type last_step,const double mean, const double stddev)
+        : BackgroundActivityCalculator(std::move(transformation_function),first_step, last_step)
         , mean_input(mean)
         , stddev_input(stddev) {
         RelearnException::check(stddev > 0.0, "NormalBackgroundActivityCalculator::NormalBackgroundActivityCalculator: stddev was: {}", stddev);
@@ -153,7 +159,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
-        return std::make_unique<NormalBackgroundActivityCalculator>(transformation_function->clone(),mean_input, stddev_input);
+        return std::make_unique<NormalBackgroundActivityCalculator>(transformation_function->clone(),get_first_step(), get_last_step(),mean_input, stddev_input);
     }
 
     /**
@@ -183,13 +189,15 @@ public:
     /**
      * @brief Constructs a new object with the given normal input, i.e., from N(mean, stddev).
      *      It draws number_neurons*multiplier inputs initially and than just returns pointers.
-     * @brief mean The mean input
-     * @brief stddev The standard deviation, must be > 0.0
+     * @param mean The mean input
+     * @param stddev The standard deviation, must be > 0.0
+     * @param first_step The first step in which background activity is applied
+     * @param last_step The last step in which background activity is applied
      * @param multiplier The factor how many more values should be drawn
      * @exception Throws a RelearnException if stddev <= 0.0
      */
-    FastNormalBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function,const double mean, const double stddev, const size_t multiplier)
-        : BackgroundActivityCalculator(std::move(transformation_function))
+    FastNormalBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function,RelearnTypes::step_type first_step, RelearnTypes::step_type last_step,const double mean, const double stddev, const size_t multiplier)
+        : BackgroundActivityCalculator(std::move(transformation_function), first_step, last_step)
         , mean_input(mean)
         , stddev_input(stddev)
         , multiplier(multiplier) {
@@ -279,7 +287,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
-        return std::make_unique<FastNormalBackgroundActivityCalculator>(transformation_function->clone(), mean_input, stddev_input, multiplier);
+        return std::make_unique<FastNormalBackgroundActivityCalculator>(transformation_function->clone(), get_first_step(), get_last_step(), mean_input, stddev_input, multiplier);
     }
 
     /**

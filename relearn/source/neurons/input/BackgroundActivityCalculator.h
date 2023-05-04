@@ -67,10 +67,12 @@ public:
     using step_type = RelearnTypes::step_type;
 
     /**
-     * @brief Constructs a new instance of type SynapticInputCalculator with 0 neurons.
+     * @brief Constructs a new instance of type BackgroundActivityCalculator with 0 neurons.
+     * @param first_step The first step in which background activity is applied
+     * @param last_step The last step in which background activity is applied
      */
-    explicit BackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function)
-    : transformation_function(std::move(transformation_function)) {}
+    explicit BackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function, RelearnTypes::step_type first_step, RelearnTypes::step_type last_step)
+    : transformation_function(std::move(transformation_function)), first_step{first_step}, last_step{last_step}  {}
 
     virtual ~BackgroundActivityCalculator() = default;
 
@@ -158,6 +160,22 @@ public:
     }
 
     /**
+     * @brief Returns the first step in which background activity is applied
+     * @return The first step in which background activity is applied
+     */
+    [[nodiscard]] RelearnTypes::step_type get_first_step() const noexcept {
+        return first_step;
+    }
+
+    /**
+     * @brief Returns the last step in which background activity is applied
+     * @return The last step in which background activity is applied
+     */
+    [[nodiscard]] RelearnTypes::step_type get_last_step() const noexcept {
+        return last_step;
+    }
+
+    /**
      * @brief Returns the parameters of this instance, i.e., the attributes which change the behavior when calculating the input
      * @return The parameters
      */
@@ -177,6 +195,9 @@ public:
     static constexpr double max_background_activity_mean{ 10000.0 };
     static constexpr double max_background_activity_stddev{ 10000.0 };
 
+    static constexpr RelearnTypes::step_type default_first_step { 0 };
+    static constexpr RelearnTypes::step_type default_last_step{ std::numeric_limits<RelearnTypes::step_type>::max() };
+
 protected:
     /**
      * @brief Sets the background activity for the given neuron and applies the transformation function
@@ -187,7 +208,12 @@ protected:
      */
     void set_and_transform_background_activity(const RelearnTypes::step_type  step,const number_neurons_type neuron_id, const double value) {
         RelearnException::check(neuron_id < number_local_neurons, "SynapticInputCalculator::set_and_transform_background_activity: neuron_id was too large: {} vs {}", neuron_id, number_local_neurons);
-        background_activity[neuron_id] = transformation_function->transform(step, value);
+        if(step >= first_step && step <= last_step ) {
+            background_activity[neuron_id] = transformation_function->transform(step, value);
+        }
+        else {
+            background_activity[neuron_id] = 0.0;
+        }
     }
 
     std::unique_ptr<TransformationFunction> transformation_function;
@@ -198,4 +224,6 @@ private:
 
     std::vector<double> background_activity{};
 
+    RelearnTypes::step_type first_step{};
+    RelearnTypes::step_type last_step{};
 };
