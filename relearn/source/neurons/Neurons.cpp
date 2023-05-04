@@ -322,12 +322,14 @@ void Neurons::update_electrical_activity(const step_type step) {
     const auto& fired = neuron_model->get_fired();
     calcium_calculator->update_calcium(step, fired);
 
+    Timers::start(TimerRegion::CALC_CALCIUM_EXTREME_VALUES);
     const auto& calcium_values = calcium_calculator->get_calcium();
     const auto& current_min_id = calcium_calculator->get_current_minimum().get_neuron_id();
     const auto& current_max_id = calcium_calculator->get_current_maximum().get_neuron_id();
 
     LogFiles::write_to_file(LogFiles::EventType::ExtremeCalciumValues, false, "{};{:.6f};{};{:.6f}",
         current_min_id, calcium_values[current_min_id], current_max_id, calcium_values[current_max_id]);
+    Timers::stop_and_add(TimerRegion::CALC_CALCIUM_EXTREME_VALUES);
 }
 
 void Neurons::update_number_synaptic_elements_delta() {

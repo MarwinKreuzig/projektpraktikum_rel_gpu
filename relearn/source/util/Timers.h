@@ -29,12 +29,16 @@ enum class TimerRegion : unsigned int {
 
     SIMULATION_LOOP,
     UPDATE_ELECTRICAL_ACTIVITY,
+    NEURON_MODEL_UPDATE_ELECTRICAL_ACTIVITY,
     PREPARE_SENDING_SPIKES,
     EXCHANGE_NEURON_IDS,
     CALC_SYNAPTIC_BACKGROUND,
     CALC_SYNAPTIC_INPUT,
+    CALC_PREPARE_TRANSMISSION,
+    CALC_UPDATE_TRANSMISSION,
     CALC_STIMULUS,
     CALC_ACTIVITY,
+    CALC_CALCIUM_EXTREME_VALUES,
 
     UPDATE_CALCIUM,
     UPDATE_TARGET_CALCIUM,
@@ -89,7 +93,7 @@ enum class TimerRegion : unsigned int {
 /**
  * This number is used as a shortcut to count the number of values valid for TimerRegion
  */
-constexpr size_t NUMBER_TIMERS = 48;
+constexpr size_t NUMBER_TIMERS = 52;
 
 /**
  * This class is used to collect all sorts of different timers (see TimerRegion).

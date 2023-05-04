@@ -140,6 +140,7 @@ public:
      * @exception Throws a RelearnException if the number of local neurons didn't match the sizes of the arguments
      */
     void update_input(const step_type step, const std::span<const FiredStatus> fired) {
+
         const auto& disable_flags = extra_infos->get_disable_flags();
 
         RelearnException::check(number_local_neurons > 0, "SynapticInputCalculator::update_input: There were no local neurons.");
@@ -276,6 +277,7 @@ private:
     std::unique_ptr<FiredStatusCommunicator> fired_status_comm{};
 
     void update_transmission_delayer(const std::span<const FiredStatus> fired) {
+        Timers::start(TimerRegion::CALC_UPDATE_TRANSMISSION);
         for(const auto& neuron_id : NeuronID::range(number_local_neurons)) {
 
             //Walk through local in-edges
@@ -303,6 +305,7 @@ private:
                 }
             }
         }
+        Timers::stop_and_add(TimerRegion::CALC_UPDATE_TRANSMISSION);
     }
 
 };
