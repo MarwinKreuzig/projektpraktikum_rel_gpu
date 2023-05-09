@@ -213,6 +213,10 @@ public:
         fire_history[local_neuron_id][0] = static_cast<bool>(fired);
     }
 
+    void mark_deletion(const NeuronID& neuron_id, const RankNeuronId& source_neuron, const RelearnTypes::plastic_synapse_weight weight) {
+        deletions_log[neuron_id.get_neuron_id()].push_back(std::make_pair(source_neuron, weight));
+    }
+
     [[nodiscard]] const std::bitset<fire_history_length>& get_fire_history(const NeuronID& neuron_id) const {
         return fire_history[neuron_id.get_neuron_id()];
     }

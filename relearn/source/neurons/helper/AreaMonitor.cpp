@@ -50,7 +50,7 @@ AreaMonitor::AreaMonitor(Simulation* simulation, std::shared_ptr<GlobalAreaMappe
                  synapse.get_source().get_neuron_id());
 
          const auto signal_type = synapse.get_weight() > 0 ? SignalType::Excitatory : SignalType::Inhibitory;
-         add_ingoing_connection({my_rank,other_area_id, synapse.get_target(), signal_type});
+         add_ingoing_connection({my_rank,other_area_id, synapse.get_target(), signal_type}, synapse.get_weight());
      }
 
      Timers::stop_and_add(TimerRegion::AREA_MONITORS_LOCAL_EDGES);
@@ -65,7 +65,7 @@ AreaMonitor::AreaMonitor(Simulation* simulation, std::shared_ptr<GlobalAreaMappe
          const auto other_area_id = global_area_mapper->get_area_id(rank_neuron_id);
 
          const auto signal_type = synapse.get_weight() > 0 ? SignalType::Excitatory : SignalType::Inhibitory;
-         add_ingoing_connection({other_rank,other_area_id, synapse.get_target(), signal_type});
+         add_ingoing_connection({other_rank,other_area_id, synapse.get_target(), signal_type}, synapse.get_weight());
      }
      Timers::stop_and_add(TimerRegion::AREA_MONITORS_DISTANT_EDGES);
  }
@@ -82,7 +82,7 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
         auto pair = std::make_pair(other_rank, other_area_id);
         deletions[pair]++;
         const auto signal_type = weight > 0 ? SignalType::Excitatory : SignalType::Inhibitory;
-        remove_ingoing_connection(AreaConnection(other_rank, other_area_id, neuron_id, signal_type));
+        remove_ingoing_connection(AreaConnection(other_rank, other_area_id, neuron_id, signal_type), weight);
     }
 
     Timers::stop_and_add(TimerRegion::AREA_MONITORS_DELETIONS);
@@ -210,22 +210,22 @@ void AreaMonitor::request_data() const {
     Timers::stop_and_add(TimerRegion::AREA_MONITORS_DISTANT_EDGES);
 }
 
-void AreaMonitor::add_ingoing_connection(const AreaMonitor::AreaConnection &connection) {
+void AreaMonitor::add_ingoing_connection(const AreaMonitor::AreaConnection &connection, const RelearnTypes::plastic_synapse_weight weight) {
     auto pair = std::make_pair(connection.from_rank, connection.from_area);
     auto &conn = connections[pair];
     if (connection.signal_type == SignalType::Excitatory) {
-        conn.den_ex += 1;
+        conn.den_ex += std::abs(weight);
     } else {
-        conn.den_inh += 1;
+        conn.den_inh += std::abs(weight);
     }
 }
 
-void AreaMonitor::remove_ingoing_connection(const AreaMonitor::AreaConnection &connection) {
+void AreaMonitor::remove_ingoing_connection(const AreaMonitor::AreaConnection &connection, const RelearnTypes::plastic_synapse_weight weight) {
     auto pair = std::make_pair(connection.from_rank, connection.from_area);
     auto &conn = connections[pair];
     if (connection.signal_type == SignalType::Excitatory) {
-        conn.den_ex -= 1;
+        conn.den_ex -= std::abs(weight);
     } else {
-        conn.den_inh -= 1;
+        conn.den_inh -= std::abs(weight);
     }
 }

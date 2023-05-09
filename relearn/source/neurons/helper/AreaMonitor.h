@@ -60,9 +60,9 @@ public:
      * Add an ingoing connection to the area. This method shall be called by other area monitors with ingoing connections to this area
      * @param connection Connection whose source is this area
      */
-    void add_ingoing_connection(const AreaConnection& connection);
+    void add_ingoing_connection(const AreaConnection& connection, const RelearnTypes::plastic_synapse_weight weight);
 
-    void remove_ingoing_connection(const AreaMonitor::AreaConnection &connection);
+    void remove_ingoing_connection(const AreaMonitor::AreaConnection &connection, const RelearnTypes::plastic_synapse_weight weight);
 
     /**
      * Prepares the monitor for a new logging step. Call this method before each logging step.

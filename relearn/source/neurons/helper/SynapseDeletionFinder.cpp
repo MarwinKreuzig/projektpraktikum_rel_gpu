@@ -125,8 +125,10 @@ std::uint64_t SynapseDeletionFinder::commit_deletions(const CommunicationMap<Syn
             if (my_rank == other_rank) {
                 if (ElementType::Dendrite == element_type) {
                     network_graph->add_synapse(PlasticLocalSynapse(other_neuron_id, my_neuron_id, weight));
+                    extra_info->mark_deletion(my_neuron_id, RankNeuronId(other_rank, other_neuron_id), -weight);
                 } else {
                     network_graph->add_synapse(PlasticLocalSynapse(my_neuron_id, other_neuron_id, weight));
+                    extra_info->mark_deletion(my_neuron_id, RankNeuronId(other_rank, other_neuron_id), -weight);
                 }
             } else {
                 if (ElementType::Dendrite == element_type) {
@@ -135,6 +137,8 @@ std::uint64_t SynapseDeletionFinder::commit_deletions(const CommunicationMap<Syn
                 } else {
                     network_graph->add_synapse(
                         PlasticDistantInSynapse(my_neuron_id, RankNeuronId(other_rank, other_neuron_id), weight));
+
+                    extra_info->mark_deletion(my_neuron_id, RankNeuronId(other_rank, other_neuron_id), -weight);
                 }
             }
 
