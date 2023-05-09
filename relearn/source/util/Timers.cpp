@@ -92,9 +92,9 @@ void Timers::print(const std::unique_ptr<Essentials>& essentials) {
         const auto max_time = timers_global[3 * timer_index + 2];
 
         sstring << message
-                << std::setw(Constants::print_width) << min_time << " | "
-                << std::setw(Constants::print_width) << avg_time << " | "
-                << std::setw(Constants::print_width) << max_time << '\n';
+                << std::setw(Constants::print_width) << std::fixed << std::setprecision(Constants::print_precision) << min_time << " | "
+                << std::setw(Constants::print_width) << std::fixed << std::setprecision(Constants::print_precision) << avg_time << " | "
+                << std::setw(Constants::print_width) << std::fixed << std::setprecision(Constants::print_precision) << max_time << '\n';
     };
 
     // Divide second entry of (min, sum, max), i.e., sum, by the number of ranks
