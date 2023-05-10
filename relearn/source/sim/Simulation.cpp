@@ -30,6 +30,7 @@
 #include "util/Timers.h"
 #include "util/ranges/Functional.hpp"
 
+#include <bitset>
 #include <iomanip>
 #include <map>
 #include <sstream>

@@ -19,6 +19,7 @@
 #include "mpi/MPIWrapper.h"
 #include "util/Timers.h"
 
+#include <bitset>
 #include <span>
 #include <string>
 #include <vector>

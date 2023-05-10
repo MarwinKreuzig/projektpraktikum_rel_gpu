@@ -20,6 +20,7 @@
 #include "util/NeuronID.h"
 #include "util/RelearnException.h"
 
+#include <bitset>
 #include <memory>
 #include <vector>
 
