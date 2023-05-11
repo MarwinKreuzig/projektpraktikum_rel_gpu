@@ -30,7 +30,7 @@ void LinearSynapticInputCalculator::update_synaptic_input(const std::span<const 
 
         const NeuronID id{ neuron_id };
 
-        const auto total_input = get_local_and_distant_synaptic_input(id);
+        const auto total_input = get_local_and_distant_synaptic_input(fired, id);
 
         set_synaptic_input(neuron_id, total_input);
     }
@@ -52,7 +52,7 @@ void LogarithmicSynapticInputCalculator::update_synaptic_input(const std::span<c
 
         const NeuronID id{ neuron_id };
 
-        const auto total_input = get_local_and_distant_synaptic_input(id);
+        const auto total_input = get_local_and_distant_synaptic_input(fired, id);
 
         // Avoid negative numbers
         const auto shifted_input = total_input + 1;
@@ -78,7 +78,7 @@ void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const std::
 
         NeuronID id{ neuron_id };
 
-        const auto total_input = get_local_and_distant_synaptic_input(id);
+        const auto total_input = get_local_and_distant_synaptic_input(fired,id);
 
         const auto hyp_tan_input = std::tanh(total_input);
         const auto scaled_input = hyp_tan_input * scale_factor;

@@ -19,7 +19,8 @@
 
 enum TransmissionDelayType {
     Constant,
-    Random
+    Random,
+    None
 };
 /**
  * @brief Pretty-prints the transmission delayer type to the chosen stream
@@ -48,9 +49,17 @@ class TransmissionDelayer {
 public:
     virtual ~TransmissionDelayer() = default;
 
-    TransmissionDelayer() {
+    TransmissionDelayer(RelearnTypes::step_type max_delay)
+        : max_delay(max_delay) {
     }
 
+    using fired_pair_type = std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>;
+    using fired_neurons_type = std::vector<fired_pair_type>;
+
+    void init(RelearnTypes::number_neurons_type num_neurons) {
+        data = std::vector<std::vector<std::pair<size_t, std::vector<fired_pair_type>>>>(max_delay + 1, std::vector<std::pair<size_t, std::vector<fired_pair_type>>>(num_neurons, std::make_pair<size_t, std::vector<fired_pair_type>>(0, std::vector<fired_pair_type>{ max_num_fired_neurons })));
+        initialized = true;
+    }
 
     /**
      * Registers that a source neuron fired in the current step and its transmission target
@@ -59,16 +68,21 @@ public:
      * @param edge_val The weight of the synapse
      * @param num_neurons The number of local neurons on this mpi rank
      */
-    void register_fired_input(const NeuronID &target_neuron, const RankNeuronId &source_neuron,
-                              RelearnTypes::static_synapse_weight edge_val, RelearnTypes::number_neurons_type num_neurons) {
+    void register_fired_input(const NeuronID& target_neuron, const RankNeuronId& source_neuron,
+        RelearnTypes::static_synapse_weight edge_val, RelearnTypes::number_neurons_type num_neurons) {
+        RelearnException::check(initialized, "TransmissionDelayer::register_fired_input: Not initialized");
         auto delay = get_delay(target_neuron, source_neuron);
 
-        while (saved_fire_states.size() < delay + 1) {
-            std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>>> empty_fire_states;
-            empty_fire_states.resize(num_neurons, {});
-            saved_fire_states.push_back(empty_fire_states);
+        auto& ref_pair = data[(cur_index + delay) % data.size()][target_neuron.get_neuron_id()];
+        auto& ref = ref_pair.second;
+
+        auto i = ref_pair.first;
+        if (i < max_num_fired_neurons) {
+            ref[i] = std::make_pair(source_neuron, edge_val);
+        } else {
+            ref.emplace_back(source_neuron, edge_val);
         }
-        saved_fire_states[delay][target_neuron.get_neuron_id()].emplace_back(source_neuron, edge_val);
+        ref_pair.first = i + 1;
     }
 
     /**
@@ -76,8 +90,9 @@ public:
      * @param new_size The new number of local neurons
      */
     void create_neurons(RelearnTypes::number_neurons_type new_size) {
-        for(auto& fire_states : saved_fire_states) {
-            fire_states.resize(new_size, {});
+        RelearnException::check(initialized, "TransmissionDelayer::register_fired_input: Not initialized");
+        for (auto& fire_states : data) {
+            fire_states.resize(new_size, std::make_pair<size_t, std::vector<fired_pair_type>>(0, std::vector<fired_pair_type>{ max_num_fired_neurons }));
         }
     }
 
@@ -86,7 +101,7 @@ public:
      * @return true, if there are delayed inputs
      */
     [[nodiscard]] bool has_delayed_inputs() const {
-        return !saved_fire_states.empty();
+        return true;
     }
 
     /**
@@ -94,13 +109,21 @@ public:
      * @param target_neuron The target neuron for which we check the delayed inputs
      * @return Delayed inputs in the current step for the target_neuron
      */
-    [[nodiscard]] const std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>> &
-    get_delayed_inputs(const NeuronID &target_neuron) const {
-        RelearnException::check(!saved_fire_states.empty(),
-                                "TransformationDelayer::get_delayed_input: No delayed inputs stored");
-        const auto &fired_inputs = saved_fire_states.front();
+    [[nodiscard]] const fired_neurons_type get_delayed_inputs(const NeuronID& target_neuron) const {
+        const auto& [last_valid, vec] = get_delayed_inputs_efficient(target_neuron);
+        return { vec.begin(), vec.begin() + last_valid };
+    }
+
+    /**
+     * Returns the delayed inputs scheduled for the current step and a single target neuron
+     * @param target_neuron The target neuron for which we check the delayed inputs
+     * @return Delayed inputs in the current step for the target_neuron
+     */
+    [[nodiscard]] const std::pair<size_t, fired_neurons_type>& get_delayed_inputs_efficient(const NeuronID& target_neuron) const {
+        RelearnException::check(initialized, "TransmissionDelayer::register_fired_input: Not initialized");
+        const auto& fired_inputs = data[cur_index];
         RelearnException::check(target_neuron.get_neuron_id() < fired_inputs.size(),
-                                "TransformationDelayer::get_delayed_input: Neuron id is too large");
+            "TransformationDelayer::get_delayed_input: Neuron id is too large");
 
         return fired_inputs[target_neuron.get_neuron_id()];
     }
@@ -115,32 +138,32 @@ public:
      * Prepares the transmission delayer for a new simulation step. Call this method before register_fired_input and get_delayed_inputs for a new step
      */
     void prepare_update(RelearnTypes::number_neurons_type num_neurons) {
+        RelearnException::check(initialized, "TransmissionDelayer::register_fired_input: Not initialized");
         Timers::start(TimerRegion::CALC_PREPARE_TRANSMISSION);
-        if (!saved_fire_states.empty()) {
-            saved_fire_states.pop_front();
-        }
-        if(saved_fire_states.empty()) {
-            std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>>> empty_fire_states;
-            empty_fire_states.resize(num_neurons, {});
-            saved_fire_states.push_back(empty_fire_states);
-        }
+        std::fill(data[cur_index].begin(), data[cur_index].end(), std::make_pair<size_t, std::vector<fired_pair_type>>(0, std::vector<fired_pair_type>{ max_num_fired_neurons }));
+        cur_index = (cur_index + 1) % data.size();
         Timers::stop_and_add(TimerRegion::CALC_PREPARE_TRANSMISSION);
     }
 
-
 protected:
-
     /**
      * Returns the delay for a neuron pair in the current step
      * @param target_neuron The neuron that receive the firing
      * @param source_neuron The neuron that fires
      * @return Delay between both neurons
      */
-    virtual RelearnTypes::step_type get_delay(const NeuronID &target_neuron, const RankNeuronId &source_neuron) = 0;
+    virtual RelearnTypes::step_type get_delay(const NeuronID& target_neuron, const RankNeuronId& source_neuron) = 0;
 
 private:
-    std::deque<std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>>>> saved_fire_states{};
+    size_t max_delay{ 0 };
 
+    size_t cur_index{ 0 };
+
+    std::vector<std::vector<std::pair<size_t, std::vector<fired_pair_type>>>> data;
+
+    constexpr static size_t max_num_fired_neurons = 50;
+
+    bool initialized{ false };
 };
 
 /**
@@ -148,17 +171,17 @@ private:
  */
 class ConstantTransmissionDelayer : public TransmissionDelayer {
 public:
-
     /**
      * Constructor
      * @param delay_steps Number of steps that the fire is delayed
      */
-    ConstantTransmissionDelayer(RelearnTypes::step_type delay_steps) : TransmissionDelayer(), delay_steps(delay_steps) {
+    ConstantTransmissionDelayer(RelearnTypes::step_type delay_steps)
+        : TransmissionDelayer(delay_steps)
+        , delay_steps(delay_steps) {
         RelearnException::check(delay_steps >= 0, "TransmissionDelayer::TransmissionDelayer: delay_steps must be >= 0");
     }
 
-
-    RelearnTypes::step_type get_delay(const NeuronID &target_neuron, const RankNeuronId &source_neuron) override {
+    RelearnTypes::step_type get_delay(const NeuronID& target_neuron, const RankNeuronId& source_neuron) override {
         return delay_steps;
     };
 
@@ -170,24 +193,25 @@ private:
     RelearnTypes::step_type delay_steps;
 };
 
-
 /**
  * Transmission delayer delays for a fixed number of steps
  */
 class RandomizedTransmissionDelayer : public TransmissionDelayer {
 public:
-
     /**
      * Constructor
      * @param delay_steps Number of steps that the fire is delayed
      */
-    RandomizedTransmissionDelayer(double mean, double stddev) : TransmissionDelayer(), mean(mean), stddev(stddev) {
+    RandomizedTransmissionDelayer(double mean, double stddev)
+        : TransmissionDelayer(10)
+        , mean(mean)
+        , stddev(stddev) {
         RelearnException::check(stddev > 0, "TransmissionDelayer::TransmissionDelayer: standard deviation must be >= 0");
     }
 
-    RelearnTypes::step_type get_delay(const NeuronID &target_neuron, const RankNeuronId &source_neuron) override {
+    RelearnTypes::step_type get_delay(const NeuronID& target_neuron, const RankNeuronId& source_neuron) override {
         const auto d = RandomHolder::get_random_normal_double(RandomHolderKey::TransmissionDelay, mean, stddev);
-        if(d<0) {
+        if (d < 0) {
             return 0.0;
         }
         return static_cast<RelearnTypes::step_type>(d);

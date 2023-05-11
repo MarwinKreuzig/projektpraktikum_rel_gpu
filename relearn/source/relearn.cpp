@@ -226,8 +226,8 @@ int main(int argc, char** argv) {
     SynapseDeletionFinderType chosen_synapse_deleter = SynapseDeletionFinderType::Random;
     std::map<std::string, SynapseDeletionFinderType> cli_parse_synapse_deleter{
         { "random", SynapseDeletionFinderType::Random },
-        { "inverse", SynapseDeletionFinderType::InverseLength},
-        { "coactivation", SynapseDeletionFinderType::CoActivation},
+        { "inverse", SynapseDeletionFinderType::InverseLength },
+        { "coactivation", SynapseDeletionFinderType::CoActivation },
     };
 
     KernelType chosen_kernel_type = KernelType::Gaussian;
@@ -274,14 +274,15 @@ int main(int argc, char** argv) {
 
     TransformationFunctionType chosen_background_transformation = TransformationFunctionType::Identity;
     std::map<std::string, TransformationFunctionType> cli_parse_transformation_type{
-            { "identity", TransformationFunctionType::Identity },
-            { "linear", TransformationFunctionType::Linear }
+        { "identity", TransformationFunctionType::Identity },
+        { "linear", TransformationFunctionType::Linear }
     };
 
-    TransmissionDelayType chosen_transmission_delay_type = TransmissionDelayType::Constant;
+    TransmissionDelayType chosen_transmission_delay_type = TransmissionDelayType::None;
     std::map<std::string, TransmissionDelayType> cli_parse_transmission_delay_type{
-            { "constant", TransmissionDelayType::Constant },
-            { "random", TransmissionDelayType::Random }
+        { "constant", TransmissionDelayType::Constant },
+        { "random", TransmissionDelayType::Random },
+        { "none", TransmissionDelayType::None }
     };
 
     RelearnTypes::step_type simulation_steps{};
@@ -411,11 +412,11 @@ int main(int argc, char** argv) {
     auto* const opt_base_background_activity = app.add_option("--base-background-activity", base_background_activity,
         "The base background activity by which all neurons are excited");
 
-    RelearnTypes::step_type first_step_with_background_activity{BackgroundActivityCalculator::default_first_step};
+    RelearnTypes::step_type first_step_with_background_activity{ BackgroundActivityCalculator::default_first_step };
     app.add_option("--first-background-activity-step", first_step_with_background_activity,
         "The first step in which background activity is applied");
 
-    RelearnTypes::step_type last_step_with_background_activity{BackgroundActivityCalculator::default_first_step};
+    RelearnTypes::step_type last_step_with_background_activity{ BackgroundActivityCalculator::default_first_step };
     app.add_option("--last-background-activity-step", last_step_with_background_activity,
         "The last step in which background activity is applied");
 
@@ -425,24 +426,22 @@ int main(int argc, char** argv) {
 
     double background_activity_stddev{ BackgroundActivityCalculator::default_background_activity_stddev };
     auto* const opt_stddev_background_activity = app.add_option("--background-activity-stddev", background_activity_stddev,
-                                                                "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as N(mean, stddev)");
+        "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as N(mean, stddev)");
 
     auto* const opt_background_transformation_type = app.add_option("--background-transformation", chosen_background_transformation, "The type of the background activity transformation. Default: Identity");
     opt_background_transformation_type->transform(CLI::CheckedTransformer(cli_parse_transformation_type, CLI::ignore_case));
 
     double background_transformation_factor{ LinearTransformation::default_factor };
     auto* const opt_stddev_background_transformation_factor = app.add_option("--background-transformation-factor", background_transformation_factor,
-                                                                             "The linear factor for the background activity transformation");
+        "The linear factor for the background activity transformation");
 
     double background_transformation_cut_off{ LinearTransformation::default_factor_cutoff };
     auto* const opt_stddev_background_transformation_cut_off = app.add_option("--background-transformation-cutoff", background_transformation_cut_off,
-                                                                             "The min/max of the linear factor for the background activity transformation");
-
+        "The min/max of the linear factor for the background activity transformation");
 
     double background_transformation_factor_start{ LinearTransformation::default_factor_start };
     auto* const opt_stddev_background_transformation_factor_start = app.add_option("--background-transformation-factor-start", background_transformation_factor_start,
-                                                                             "The start of the linear function for the background actvity transformation");
-
+        "The start of the linear function for the background actvity transformation");
 
     double synapse_conductance{ SynapticInputCalculator::default_conductance };
     app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transferred to its neighbors when a neuron spikes. Default is 0.03");
@@ -835,10 +834,9 @@ int main(int argc, char** argv) {
     auto subdomain = construct_subdomain();
 
     std::unique_ptr<TransformationFunction> transformation_function;
-    if(chosen_background_transformation == TransformationFunctionType::Identity) {
+    if (chosen_background_transformation == TransformationFunctionType::Identity) {
         transformation_function = std::make_unique<IdentityTransformation>();
-    }
-    else if(chosen_background_transformation == TransformationFunctionType::Linear) {
+    } else if (chosen_background_transformation == TransformationFunctionType::Linear) {
         transformation_function = std::make_unique<LinearTransformation>(background_transformation_factor, background_transformation_factor_start, background_transformation_cut_off);
     } else {
         RelearnException::fail("Unknown background activity transformation {}", chosen_background_transformation);
@@ -855,18 +853,18 @@ int main(int argc, char** argv) {
         if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Constant) {
             RelearnException::check(!static_cast<bool>(*opt_mean_background_activity), "Setting the mean background activity is not valid when choosing the constant-background calculator.");
             RelearnException::check(!static_cast<bool>(*opt_stddev_background_activity), "Setting the stddev background activity is not valid when choosing the constant-background calculator.");
-            return std::make_unique<ConstantBackgroundActivityCalculator>(std::move(transformation_function),first_step_with_background_activity, last_step_with_background_activity,base_background_activity);
+            return std::make_unique<ConstantBackgroundActivityCalculator>(std::move(transformation_function), first_step_with_background_activity, last_step_with_background_activity, base_background_activity);
         }
 
         if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Normal) {
             RelearnException::check(background_activity_stddev > 0.0, "When choosing the normal-background calculator, the standard deviation must be set to > 0.0.");
-            return std::make_unique<NormalBackgroundActivityCalculator>(std::move(transformation_function),first_step_with_background_activity, last_step_with_background_activity,background_activity_mean, background_activity_stddev);
+            return std::make_unique<NormalBackgroundActivityCalculator>(std::move(transformation_function), first_step_with_background_activity, last_step_with_background_activity, background_activity_mean, background_activity_stddev);
         }
 
         RelearnException::check(chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::FastNormal, "Chose a background activity calculator that is not implemented");
         RelearnException::check(background_activity_stddev > 0.0, "When choosing the fast-normal-background calculator, the standard deviation must be set to > 0.0.");
 
-        return std::make_unique<FastNormalBackgroundActivityCalculator>(std::move(transformation_function),first_step_with_background_activity, last_step_with_background_activity,background_activity_mean, background_activity_stddev, 10);
+        return std::make_unique<FastNormalBackgroundActivityCalculator>(std::move(transformation_function), first_step_with_background_activity, last_step_with_background_activity, background_activity_mean, background_activity_stddev, 10);
     };
     auto background_activity_calculator = construct_background_activity_calculator();
 
@@ -888,11 +886,13 @@ int main(int argc, char** argv) {
         return std::make_unique<FiredStatusApproximator>(MPIWrapper::get_num_ranks());
     };
 
-    std::unique_ptr<TransmissionDelayer> transmission_delayer;
-    if(chosen_transmission_delay_type == TransmissionDelayType::Constant) {
+    std::unique_ptr<TransmissionDelayer> transmission_delayer{ nullptr };
+    if (chosen_transmission_delay_type == TransmissionDelayType::None) {
+        transmission_delayer = nullptr;
+    } else if (chosen_transmission_delay_type == TransmissionDelayType::Constant) {
         transmission_delayer = std::make_unique<ConstantTransmissionDelayer>(transmission_delay_constant);
-    } else if(chosen_transmission_delay_type == TransmissionDelayType::Random) {
-        if(! *opt_transmission_delay_mean || !*opt_transmission_delay_stddev) {
+    } else if (chosen_transmission_delay_type == TransmissionDelayType::Random) {
+        if (!*opt_transmission_delay_mean || !*opt_transmission_delay_stddev) {
             RelearnException::fail("Mean and standard deviation are required for random transmission delay");
         }
         transmission_delayer = std::make_unique<RandomizedTransmissionDelayer>(transmission_delay_mean, transmission_delay_stddev);

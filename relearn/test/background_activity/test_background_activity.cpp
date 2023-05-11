@@ -101,7 +101,7 @@ void test_init_create(const std::unique_ptr<BackgroundActivityCalculator>& backg
 }
 
 TEST_F(BackgroundActivityTest, testNullBackgroundActivityConstruct) {
-    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NullBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>());
+    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NullBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(), 0, std::numeric_limits<RelearnTypes::step_type>::max());
 
     const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
@@ -112,7 +112,7 @@ TEST_F(BackgroundActivityTest, testNullBackgroundActivityConstruct) {
 TEST_F(BackgroundActivityTest, testConstantBackgroundActivityConstruct) {
     const auto constant_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_base_background_activity, BackgroundActivityCalculator::max_base_background_activity, mt);
 
-    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<ConstantBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),constant_background);
+    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<ConstantBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),0, std::numeric_limits<RelearnTypes::step_type>::max(),constant_background);
 
     const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
@@ -134,7 +134,7 @@ TEST_F(BackgroundActivityTest, testNormalBackgroundActivityConstruct) {
     const auto mean_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_background_activity_mean, BackgroundActivityCalculator::max_background_activity_mean, mt);
     const auto stddev_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_background_activity_stddev, BackgroundActivityCalculator::max_background_activity_stddev, mt);
 
-    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NormalBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),mean_background, stddev_background);
+    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NormalBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),0, std::numeric_limits<RelearnTypes::step_type>::max(),mean_background, stddev_background);
 
     const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
@@ -163,7 +163,7 @@ TEST_F(BackgroundActivityTest, testFastNormalBackgroundActivityConstruct) {
     const auto mean_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_background_activity_mean, BackgroundActivityCalculator::max_background_activity_mean, mt);
     const auto stddev_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_background_activity_stddev, BackgroundActivityCalculator::max_background_activity_stddev, mt);
 
-    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<FastNormalBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),mean_background, stddev_background, 5);
+    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<FastNormalBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),0, std::numeric_limits<RelearnTypes::step_type>::max(),mean_background, stddev_background, 5);
 
     const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
@@ -189,7 +189,7 @@ TEST_F(BackgroundActivityTest, testFastNormalBackgroundActivityConstruct) {
 }
 
 TEST_F(BackgroundActivityTest, testNullBackgroundActivityUpdate) {
-    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NullBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>());
+    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NullBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),0, std::numeric_limits<RelearnTypes::step_type>::max());
 
     const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     background_calculator->init(number_neurons);
@@ -220,7 +220,7 @@ TEST_F(BackgroundActivityTest, testNullBackgroundActivityUpdate) {
 
 TEST_F(BackgroundActivityTest, testConstantBackgroundActivityUpdate) {
     const auto constant_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_base_background_activity, BackgroundActivityCalculator::max_base_background_activity, mt);
-    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<ConstantBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),constant_background);
+    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<ConstantBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),0, std::numeric_limits<RelearnTypes::step_type>::max(),constant_background);
 
     const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     background_calculator->init(number_neurons);
@@ -257,7 +257,7 @@ TEST_F(BackgroundActivityTest, testNormalBackgroundActivityUpdate) {
     const auto mean_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_background_activity_mean, BackgroundActivityCalculator::max_background_activity_mean, mt);
     const auto stddev_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_background_activity_stddev, BackgroundActivityCalculator::max_background_activity_stddev, mt);
 
-    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NormalBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),mean_background, stddev_background);
+    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NormalBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),0, std::numeric_limits<RelearnTypes::step_type>::max(),mean_background, stddev_background);
 
     const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     background_calculator->init(number_neurons);
@@ -307,7 +307,7 @@ TEST_F(BackgroundActivityTest, testFastNormalBackgroundActivityUpdate) {
     const auto mean_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_background_activity_mean, BackgroundActivityCalculator::max_background_activity_mean, mt);
     const auto stddev_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_background_activity_stddev, BackgroundActivityCalculator::max_background_activity_stddev, mt);
 
-    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<FastNormalBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),mean_background, stddev_background, 5);
+    std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<FastNormalBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(),0, std::numeric_limits<RelearnTypes::step_type>::max(),mean_background, stddev_background, 5);
 
     const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     background_calculator->init(number_neurons);

@@ -123,7 +123,7 @@ TEST_F(NeuronsTest, testStaticConnectionsChecker) {
     auto partition = std::make_shared<Partition>(1, MPIRank::root_rank());
     auto model = std::make_unique<models::PoissonModel>(models::PoissonModel::default_h,
         std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_conductance, std::make_unique<FiredStatusCommunicationMap>(1), std::make_unique<ConstantTransmissionDelayer>(0)),
-        std::make_unique<NullBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>()),
+        std::make_unique<NullBackgroundActivityCalculator>(std::make_unique<IdentityTransformation>(), 0, std::numeric_limits<RelearnTypes::step_type>::max()),
         std::make_unique<Stimulus>(),
         models::PoissonModel::default_x_0,
         models::PoissonModel::default_tau_x,
@@ -213,7 +213,7 @@ TEST_F(NeuronsTest, testDisableNeuronsWithoutMPI) {
     neurons->init(num_neurons);
     NetworkGraphAdapter::create_dense_plastic_network(network_graph, neurons->get_axons().get_signal_types(),
         num_neurons, 8, 1, MPIRank(0), mt);
-    neurons->init_synaptic_elements({},{}, {});
+    neurons->init_synaptic_elements({}, {}, {});
 
     const auto disable_id = NeuronIdAdapter::get_random_neuron_id(num_neurons, mt);
     const auto disabled_neurons = std::vector<NeuronID>{ disable_id };
@@ -268,7 +268,7 @@ TEST_F(NeuronsTest, testDisableNeuronsWithoutMPI) {
     ASSERT_EQ(neurons->get_dendrites_exc().get_connected_elements(disable_id), 0);
     ASSERT_EQ(neurons->get_dendrites_inh().get_connected_elements(disable_id), 0);
 
-    const std::vector<std::vector<SignalType>> signal_types{ neurons->get_axons().get_signal_types() | ranges::to_vector};
+    const std::vector<std::vector<SignalType>> signal_types{ neurons->get_axons().get_signal_types() | ranges::to_vector };
     NetworkGraphAdapter::check_validity_of_network_graphs({ network_graph }, signal_types, num_neurons);
 }
 
@@ -324,7 +324,7 @@ TEST_F(NeuronsTest, testDisableMultipleNeuronsWithoutMPI) {
         }
     }
 
-    neurons->init_synaptic_elements({},{},{});
+    neurons->init_synaptic_elements({}, {}, {});
 
     const auto axons = neurons->get_axons().get_connected_elements();
     const auto den_ex = neurons->get_dendrites_exc().get_connected_elements();
@@ -360,7 +360,7 @@ TEST_F(NeuronsTest, testDisableMultipleNeuronsWithoutMPI) {
             den_inh_old[neuron_id.get_neuron_id()] - to_delete_den_inh[neuron_id.get_neuron_id()]);
     }
 
-    const std::vector<std::vector<SignalType>> signal_types{ neurons->get_axons().get_signal_types() | ranges::to_vector};
+    const std::vector<std::vector<SignalType>> signal_types{ neurons->get_axons().get_signal_types() | ranges::to_vector };
     NetworkGraphAdapter::check_validity_of_network_graphs({ network_graph_plastic }, signal_types, num_neurons);
 }
 
@@ -415,7 +415,7 @@ TEST_F(NeuronsTest, testDisableNeuronsWithRanks) {
     }
     NetworkGraphAdapter::harmonize_network_graphs_from_different_ranks(network_graphs, num_neurons);
 
-    std::vector<std::vector<SignalType>> signal_types = rank_to_neurons | ranges::views::transform([](const auto &neurons_of_rank){ return neurons_of_rank->get_axons().get_signal_types() | ranges::to_vector; }) | ranges::to_vector;
+    std::vector<std::vector<SignalType>> signal_types = rank_to_neurons | ranges::views::transform([](const auto& neurons_of_rank) { return neurons_of_rank->get_axons().get_signal_types() | ranges::to_vector; }) | ranges::to_vector;
 
     std::vector<std::vector<unsigned int>> expected_axons{};
     std::vector<std::vector<unsigned int>> expected_den_ex{};
@@ -424,8 +424,8 @@ TEST_F(NeuronsTest, testDisableNeuronsWithRanks) {
     expected_den_ex.resize(num_ranks);
     expected_den_inh.resize(num_ranks);
     for (auto rank = 0; rank < num_ranks; rank++) {
-        auto &neurons = rank_to_neurons[rank];
-        neurons->init_synaptic_elements({},{},{});
+        auto& neurons = rank_to_neurons[rank];
+        neurons->init_synaptic_elements({}, {}, {});
 
         const auto axons = neurons->get_axons().get_connected_elements();
         const auto den_ex = neurons->get_dendrites_exc().get_connected_elements();
@@ -577,7 +577,7 @@ TEST_F(NeuronsTest, testDisableNeuronsWithRanksAndOnlyOneDisabledNeuron) {
 
     NetworkGraphAdapter::harmonize_network_graphs_from_different_ranks(network_graphs, num_neurons);
 
-    std::vector<std::vector<SignalType>> signal_types = rank_to_neurons | ranges::views::transform([](const auto &neurons_of_rank){ return neurons_of_rank->get_axons().get_signal_types() | ranges::to_vector; }) | ranges::to_vector;
+    std::vector<std::vector<SignalType>> signal_types = rank_to_neurons | ranges::views::transform([](const auto& neurons_of_rank) { return neurons_of_rank->get_axons().get_signal_types() | ranges::to_vector; }) | ranges::to_vector;
 
     std::vector<std::vector<unsigned int>> expected_axons;
     std::vector<std::vector<unsigned int>> expected_den_ex;
@@ -586,8 +586,8 @@ TEST_F(NeuronsTest, testDisableNeuronsWithRanksAndOnlyOneDisabledNeuron) {
     expected_den_ex.resize(num_ranks);
     expected_den_inh.resize(num_ranks);
     for (auto rank = 0; rank < num_ranks; rank++) {
-        auto &neurons = rank_to_neurons[rank];
-        neurons->init_synaptic_elements({},{},{});
+        auto& neurons = rank_to_neurons[rank];
+        neurons->init_synaptic_elements({}, {}, {});
 
         const auto axons = neurons->get_axons().get_connected_elements();
         const auto den_ex = neurons->get_dendrites_exc().get_connected_elements();

@@ -523,7 +523,6 @@ TEST_F(NeuronAssignmentTest, testPerRankNeuronAttributesSemanticMultipleSubdomai
 }
 
 TEST_F(NeuronAssignmentTest, testFileLoadSingleSubdomain) {
-    RelearnException::hide_messages = false;
     std::vector<Vec3d> positions{};
     std::vector<RelearnTypes::area_id> area_ids{};
     std::vector<RelearnTypes::area_name> area_names{};

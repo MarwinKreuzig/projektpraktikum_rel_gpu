@@ -29,6 +29,7 @@ TEST_F(TransmissionDelayTest, testNoDelay) {
     const auto& network_graph = NetworkGraphAdapter::create_network_graph(num_neurons, my_rank, num_connections_per_vertex, mt);
 
     ConstantTransmissionDelayer delayer(0);
+    delayer.init(num_neurons);
 
     const auto& fired_status = NeuronTypesAdapter::get_fired_status(num_neurons, mt);
 
@@ -73,6 +74,7 @@ TEST_F(TransmissionDelayTest, testConstantDelay) {
     const auto& network_graph = NetworkGraphAdapter::create_network_graph(num_neurons, my_rank, num_connections_per_vertex, mt);
 
     ConstantTransmissionDelayer delayer(delay);
+    delayer.init(num_neurons);
 
     std::vector<std::vector<FiredStatus>> fired_status_vector;
 
