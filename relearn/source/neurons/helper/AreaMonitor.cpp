@@ -97,7 +97,9 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
     den_ex_conn += sim->get_neurons()->get_dendrites_exc().get_connected_elements(neuron_id);
     den_inh_conn += sim->get_neurons()->get_dendrites_inh().get_connected_elements(neuron_id);
 
-    calcium += sim->get_neurons()->get_calcium(neuron_id);
+    syn_input += sim->get_neurons()->neuron_model->get_synaptic_input(neuron_id);
+
+        calcium += sim->get_neurons()->get_calcium(neuron_id);
     fired_fraction +=
             static_cast<double>(sim->get_neurons()->get_neuron_model()->fired_recorder[NeuronModel::FireRecorderPeriod::AreaMonitor][neuron_id.get_neuron_id()]) /
             static_cast<double>(Config::plasticity_update_step);
@@ -114,6 +116,7 @@ void AreaMonitor::prepare_recording() {
     den_ex_conn = 0;
     den_inh_conn = 0;
     den_inh_grown = 0;
+    syn_input = 0;
     calcium = 0;
     fired_fraction = 0;
     num_enabled_neurons = 0;
@@ -122,7 +125,7 @@ void AreaMonitor::prepare_recording() {
 
 void AreaMonitor::finish_recording() {
     data.emplace_back(connections, deletions, axons_grown, static_cast<double>(axons_conn), den_ex_grown,
-                      static_cast<double>(den_ex_conn), den_inh_grown, static_cast<double>(den_inh_conn), calcium,
+                      static_cast<double>(den_ex_conn), den_inh_grown, static_cast<double>(den_inh_conn), syn_input, calcium,
                       fired_fraction, num_enabled_neurons);
 }
 
@@ -164,7 +167,7 @@ void AreaMonitor::write_data_to_file() {
             << rank << ":" << area_id << "in;"
             << rank << ":" << area_id << "del;";
     }
-    out << "Axons grown;Axons conn;Den ex grown;Den ex conn;Den inh grown;Den inh conn;Calcium;Fire rate;Enabled neurons;";
+    out << "Axons grown;Axons conn;Den ex grown;Den ex conn;Den inh grown;Den inh conn;Syn input;Calcium;Fire rate;Enabled neurons;";
     out << "\n";
 
     // Data
@@ -188,6 +191,7 @@ void AreaMonitor::write_data_to_file() {
         out << std::to_string(std::get<8>(single_record)) << ";";
         out << std::to_string(std::get<9>(single_record)) << ";";
         out << std::to_string(std::get<10>(single_record)) << ";";
+        out << std::to_string(std::get<11>(single_record)) << ";";
 
         out << "\n";
         step += Config::plasticity_update_step;

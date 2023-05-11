@@ -132,6 +132,7 @@ private:
     int axons_conn = 0;
     int den_ex_conn = 0;
     int den_inh_conn = 0;
+    double syn_input = 0;
     double calcium = 0;
     double fired_fraction = 0.0;
     size_t num_enabled_neurons = 0;
@@ -149,7 +150,7 @@ private:
     /**
      * Complete data of all earlier logging steps
      */
-    std::vector<std::tuple<EnsembleConnections, EnsembleDeletions, double, double, double, double, double, double, double, double, size_t>> data;
+    std::vector<std::tuple<EnsembleConnections, EnsembleDeletions, double, double, double, double, double, double, double, double, double, size_t>> data;
 
     std::shared_ptr<GlobalAreaMapper> global_area_mapper{};
     void write_header();
