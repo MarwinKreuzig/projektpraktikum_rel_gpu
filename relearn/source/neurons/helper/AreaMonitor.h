@@ -126,16 +126,19 @@ private:
 
     RelearnTypes::area_id area_id;
 
-    double axons_grown = 0;
-    double den_ex_grown = 0;
-    double den_inh_grown = 0;
-    int axons_conn = 0;
-    int den_ex_conn = 0;
-    int den_inh_conn = 0;
-    double syn_input = 0;
-    double calcium = 0;
-    double fired_fraction = 0.0;
-    size_t num_enabled_neurons = 0;
+    struct InternalStatistics {
+        double axons_grown = 0;
+        double den_ex_grown = 0;
+        double den_inh_grown = 0;
+        int axons_conn = 0;
+        int den_ex_conn = 0;
+        int den_inh_conn = 0;
+        double syn_input = 0;
+        double calcium = 0;
+        double fired_fraction = 0.0;
+        RelearnTypes::number_neurons_type num_enabled_neurons = 0;
+    };
+
     using EnsembleConnections = std::unordered_map<std::pair<int, RelearnTypes::area_id>, ConnectionCount,
         boost::hash<std::pair<int, RelearnTypes::area_id>>>;
     using EnsembleDeletions = std::unordered_map<std::pair<int, RelearnTypes::area_id>, long,
@@ -146,11 +149,12 @@ private:
      */
     EnsembleConnections connections;
     EnsembleDeletions deletions;
+    InternalStatistics internal_statistics{};
 
     /**
      * Complete data of all earlier logging steps
      */
-    std::vector<std::tuple<EnsembleConnections, EnsembleDeletions, double, double, double, double, double, double, double, double, double, size_t>> data;
+    std::vector<std::tuple<EnsembleConnections, EnsembleDeletions, InternalStatistics>> data;
 
     std::shared_ptr<GlobalAreaMapper> global_area_mapper{};
     void write_header();

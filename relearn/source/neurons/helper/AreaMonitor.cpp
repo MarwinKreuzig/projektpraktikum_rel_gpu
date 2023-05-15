@@ -88,42 +88,31 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
     Timers::start(TimerRegion::AREA_MONITORS_STATISTICS);
 
     // Store statistics
-    axons_grown += sim->get_neurons()->get_axons().get_grown_elements(neuron_id);
-    den_ex_grown += sim->get_neurons()->get_dendrites_exc().get_grown_elements(neuron_id);
-    den_inh_grown += sim->get_neurons()->get_dendrites_inh().get_grown_elements(neuron_id);
+    internal_statistics.axons_grown += sim->get_neurons()->get_axons().get_grown_elements(neuron_id);
+    internal_statistics.den_ex_grown += sim->get_neurons()->get_dendrites_exc().get_grown_elements(neuron_id);
+    internal_statistics.den_inh_grown += sim->get_neurons()->get_dendrites_inh().get_grown_elements(neuron_id);
 
-    axons_conn += sim->get_neurons()->get_axons().get_connected_elements(neuron_id);
-    den_ex_conn += sim->get_neurons()->get_dendrites_exc().get_connected_elements(neuron_id);
-    den_inh_conn += sim->get_neurons()->get_dendrites_inh().get_connected_elements(neuron_id);
+    internal_statistics.axons_conn += sim->get_neurons()->get_axons().get_connected_elements(neuron_id);
+    internal_statistics.den_ex_conn += sim->get_neurons()->get_dendrites_exc().get_connected_elements(neuron_id);
+    internal_statistics.den_inh_conn += sim->get_neurons()->get_dendrites_inh().get_connected_elements(neuron_id);
 
-    syn_input += sim->get_neurons()->neuron_model->get_synaptic_input(neuron_id);
+    internal_statistics.syn_input += sim->get_neurons()->neuron_model->get_synaptic_input(neuron_id);
 
-    calcium += sim->get_neurons()->get_calcium(neuron_id);
-    fired_fraction += static_cast<double>(sim->get_neurons()->get_neuron_model()->fired_recorder[NeuronModel::FireRecorderPeriod::AreaMonitor][neuron_id.get_neuron_id()]) / static_cast<double>(Config::plasticity_update_step);
-    num_enabled_neurons++;
+    internal_statistics.calcium += sim->get_neurons()->get_calcium(neuron_id);
+    internal_statistics.fired_fraction += static_cast<double>(sim->get_neurons()->get_neuron_model()->fired_recorder[NeuronModel::FireRecorderPeriod::AreaMonitor][neuron_id.get_neuron_id()]) / static_cast<double>(Config::plasticity_update_step);
+    internal_statistics.num_enabled_neurons++;
 
     Timers::stop_and_add(TimerRegion::AREA_MONITORS_STATISTICS);
 }
 
 void AreaMonitor::prepare_recording() {
     deletions = EnsembleDeletions{};
-    axons_conn = 0;
-    axons_grown = 0;
-    den_ex_grown = 0;
-    den_ex_conn = 0;
-    den_inh_conn = 0;
-    den_inh_grown = 0;
-    syn_input = 0;
-    calcium = 0;
-    fired_fraction = 0;
-    num_enabled_neurons = 0;
+    internal_statistics = InternalStatistics{};
     const auto num_areas = sim->get_neurons()->get_local_area_translator()->get_number_of_areas();
 }
 
 void AreaMonitor::finish_recording() {
-    data.emplace_back(connections, deletions, axons_grown, static_cast<double>(axons_conn), den_ex_grown,
-        static_cast<double>(den_ex_conn), den_inh_grown, static_cast<double>(den_inh_conn), syn_input, calcium,
-        fired_fraction, num_enabled_neurons);
+    data.emplace_back(connections, deletions, internal_statistics);
 }
 
 void AreaMonitor::write_header() {
@@ -139,7 +128,6 @@ void AreaMonitor::write_header() {
 }
 
 void AreaMonitor::write_data_to_file() {
-    // Timers::start();
     std::ofstream out(path, std::ios_base::app);
 
     auto unique_area_ids = data
@@ -172,6 +160,7 @@ void AreaMonitor::write_data_to_file() {
         out << step << ";";
         auto connection_data = std::get<0>(single_record);
         auto deletion_data = std::get<1>(single_record);
+        auto internal_statistics_data = std::get<2>(single_record);
         for (const auto& rank_area_id : unique_area_ids_list) {
             const auto& connections = connection_data[rank_area_id];
             out << std::to_string(connections.den_ex) << ";";
@@ -179,23 +168,22 @@ void AreaMonitor::write_data_to_file() {
             const auto& deletions_in_step = deletion_data[rank_area_id];
             out << std::to_string(deletions_in_step) << ";";
         }
-        out << std::to_string(std::get<2>(single_record)) << ";";
-        out << std::to_string(std::get<3>(single_record)) << ";";
-        out << std::to_string(std::get<4>(single_record)) << ";";
-        out << std::to_string(std::get<5>(single_record)) << ";";
-        out << std::to_string(std::get<6>(single_record)) << ";";
-        out << std::to_string(std::get<7>(single_record)) << ";";
-        out << std::to_string(std::get<8>(single_record)) << ";";
-        out << std::to_string(std::get<9>(single_record)) << ";";
-        out << std::to_string(std::get<10>(single_record)) << ";";
-        out << std::to_string(std::get<11>(single_record)) << ";";
+        out << internal_statistics_data.axons_grown << ";";
+        out << internal_statistics_data.axons_conn << ";";
+        out << internal_statistics_data.den_ex_grown << ";";
+        out << internal_statistics_data.den_ex_conn << ";";
+        out << internal_statistics_data.den_inh_grown << ";";
+        out << internal_statistics_data.den_inh_conn << ";";
+        out << internal_statistics_data.syn_input << ";";
+        out << internal_statistics_data.calcium << ";";
+        out << internal_statistics_data.fired_fraction << ";";
+        out << internal_statistics_data.num_enabled_neurons << ";";
 
         out << "\n";
         step += Config::plasticity_update_step;
     }
     out.close();
     data.clear();
-    // Timers::stop_and_add();
 }
 
 void AreaMonitor::request_data() const {
