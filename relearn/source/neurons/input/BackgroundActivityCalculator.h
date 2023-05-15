@@ -219,11 +219,11 @@ protected:
     std::unique_ptr<TransformationFunction> transformation_function;
     std::shared_ptr<NeuronsExtraInfo> extra_infos{};
 
+    RelearnTypes::step_type first_step{};
+    RelearnTypes::step_type last_step{};
+
 private:
     number_neurons_type number_local_neurons{};
 
     std::vector<double> background_activity{};
-
-    RelearnTypes::step_type first_step{};
-    RelearnTypes::step_type last_step{};
 };

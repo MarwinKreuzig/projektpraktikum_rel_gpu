@@ -267,7 +267,10 @@ public:
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < number_neurons, "FastNormalBackgroundActivityCalculator::get_background_activity: id is too large: {}", neuron_id);
-        return transformation_function->transform(cur_step,pre_drawn_values[offset + local_neuron_id]);
+        if(cur_step >= first_step && cur_step <= last_step ) {
+            return transformation_function->transform(cur_step, pre_drawn_values[offset + local_neuron_id]);
+        }
+        return 0.0;
     }
 
     /**
@@ -277,9 +280,12 @@ public:
     std::span<const double> get_background_activity() const noexcept override {
         const auto number_neurons = get_number_neurons();
 
-        const auto pointer = pre_drawn_values.data();
-        //TODO Ignores Transformation function
-        return std::span<const double>{ pointer + offset, number_neurons };
+        if(cur_step >= first_step && cur_step <= last_step ) {
+            const auto pointer = pre_drawn_values.data();
+            // TODO Ignores Transformation function
+            return std::span<const double>{ pointer + offset, number_neurons };
+        }
+        return {std::vector<double>(number_neurons, 0.0)};
     }
 
     /**

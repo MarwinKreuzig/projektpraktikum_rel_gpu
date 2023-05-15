@@ -416,7 +416,7 @@ int main(int argc, char** argv) {
     app.add_option("--first-background-activity-step", first_step_with_background_activity,
         "The first step in which background activity is applied");
 
-    RelearnTypes::step_type last_step_with_background_activity{ BackgroundActivityCalculator::default_first_step };
+    RelearnTypes::step_type last_step_with_background_activity{ BackgroundActivityCalculator::default_last_step };
     app.add_option("--last-background-activity-step", last_step_with_background_activity,
         "The last step in which background activity is applied");
 
@@ -864,7 +864,8 @@ int main(int argc, char** argv) {
         RelearnException::check(chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::FastNormal, "Chose a background activity calculator that is not implemented");
         RelearnException::check(background_activity_stddev > 0.0, "When choosing the fast-normal-background calculator, the standard deviation must be set to > 0.0.");
 
-        return std::make_unique<FastNormalBackgroundActivityCalculator>(std::move(transformation_function), first_step_with_background_activity, last_step_with_background_activity, background_activity_mean, background_activity_stddev, 10);
+        //TODO Choose multiplier
+        return std::make_unique<FastNormalBackgroundActivityCalculator>(std::move(transformation_function), first_step_with_background_activity, last_step_with_background_activity, background_activity_mean, background_activity_stddev, 1000);
     };
     auto background_activity_calculator = construct_background_activity_calculator();
 
