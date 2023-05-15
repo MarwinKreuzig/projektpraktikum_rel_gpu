@@ -96,6 +96,7 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
     internal_statistics.den_ex_conn += sim->get_neurons()->get_dendrites_exc().get_connected_elements(neuron_id);
     internal_statistics.den_inh_conn += sim->get_neurons()->get_dendrites_inh().get_connected_elements(neuron_id);
 
+    internal_statistics.background += sim->get_neurons()->neuron_model->get_background_activity(neuron_id);
     internal_statistics.syn_input += sim->get_neurons()->neuron_model->get_synaptic_input(neuron_id);
 
     internal_statistics.calcium += sim->get_neurons()->get_calcium(neuron_id);
@@ -152,7 +153,7 @@ void AreaMonitor::write_data_to_file() {
             << rank << ":" << area_id << "in;"
             << rank << ":" << area_id << "del;";
     }
-    out << "Axons grown;Axons conn;Den ex grown;Den ex conn;Den inh grown;Den inh conn;Syn input;Calcium;Fire rate;Enabled neurons;";
+    out << "Axons grown;Axons conn;Den ex grown;Den ex conn;Den inh grown;Den inh conn;Background;Syn input;Calcium;Fire rate;Enabled neurons;";
     out << "\n";
 
     // Data
@@ -174,6 +175,7 @@ void AreaMonitor::write_data_to_file() {
         out << internal_statistics_data.den_ex_conn << ";";
         out << internal_statistics_data.den_inh_grown << ";";
         out << internal_statistics_data.den_inh_conn << ";";
+        out << internal_statistics_data.background << ";";
         out << internal_statistics_data.syn_input << ";";
         out << internal_statistics_data.calcium << ";";
         out << internal_statistics_data.fired_fraction << ";";
