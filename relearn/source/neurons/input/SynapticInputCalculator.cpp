@@ -67,10 +67,10 @@ double SynapticInputCalculator::get_local_and_distant_synaptic_input(const std::
         // Walk through local in-edges
         const auto& [local_in_edges, _1] = network_graph->get_local_in_edges(neuron_id);
 
-        const auto my_rank = MPIWrapper::get_my_rank();
         for (const auto& [src_neuron_id, edge_val] : local_in_edges) {
             const auto spike = fired[src_neuron_id.get_neuron_id()];
             if (spike == FiredStatus::Fired) {
+                local_input += synapse_conductance * edge_val;
                 if (edge_val > 0.0) {
                     raw_ex_input[neuron_id.get_neuron_id()] += edge_val;
                 } else {
@@ -87,6 +87,7 @@ double SynapticInputCalculator::get_local_and_distant_synaptic_input(const std::
 
             const auto contains_id = fired_status_comm->contains(rank, initiator_neuron_id);
             if (contains_id) {
+                local_input += synapse_conductance * edge_val;
                 if (edge_val > 0.0) {
                     raw_ex_input[neuron_id.get_neuron_id()] += edge_val;
                 } else {
