@@ -76,8 +76,8 @@ std::vector<std::pair<InteractiveNeuronIO::step_type, std::vector<NeuronID>>> In
 
         for (std::string rank_neuron_string; sstream >> rank_neuron_string;) {
             const auto rank_neuron_vector = StringUtil::split_string(rank_neuron_string, ':');
-            const auto rank = MPIRank{ std::stoi(rank_neuron_vector[0])};
-            const auto neuron_id = NeuronID(std::stoi(rank_neuron_vector[1])-1);
+            const auto rank = MPIRank{ std::stoi(rank_neuron_vector[0]) };
+            const auto neuron_id = NeuronID(std::stoi(rank_neuron_vector[1]) - 1);
 
             if (rank == my_rank) {
                 indices.emplace_back(neuron_id);

@@ -130,7 +130,7 @@ static std::filesystem::path find_file_for_rank(const std::filesystem::path& dir
     const std::string& prefix, const std::string& suffix, const unsigned int max_digits) {
     std::filesystem::path path_to_file{};
 
-    if(std::filesystem::is_regular_file(directory)) {
+    if (std::filesystem::is_regular_file(directory)) {
         RelearnException::check(rank == 0, "Utility::find_file_for_rank: Single positions file is only allowed for a single mpi rank");
         return directory;
     }

@@ -66,7 +66,6 @@ void Neurons::init(const number_neurons_type number_neurons) {
         dendrites_inh->set_signal_type(id, SignalType::Inhibitory);
     }
 
-
     calcium_calculator->set_extra_infos(extra_info);
     calcium_calculator->init(number_neurons);
 
@@ -78,14 +77,14 @@ void Neurons::init(const number_neurons_type number_neurons) {
     synapse_deletion_finder->set_network_graph(network_graph);
 }
 
-void Neurons::init_synaptic_elements(const PlasticLocalSynapses & local_synapses_plastic,const PlasticDistantInSynapses & in_synapses_plastic,const PlasticDistantOutSynapses & out_synapses_plastic) {
-    last_created_local_synapses= local_synapses_plastic;
+void Neurons::init_synaptic_elements(const PlasticLocalSynapses& local_synapses_plastic, const PlasticDistantInSynapses& in_synapses_plastic, const PlasticDistantOutSynapses& out_synapses_plastic) {
+    last_created_local_synapses = local_synapses_plastic;
     last_created_in_synapses = in_synapses_plastic;
     last_created_out_synapses = out_synapses_plastic;
 
-    const auto &axons_counts = axons->get_grown_elements();
-    const auto &dendrites_inh_counts = dendrites_inh->get_grown_elements();
-    const auto &dendrites_exc_counts = dendrites_exc->get_grown_elements();
+    const auto& axons_counts = axons->get_grown_elements();
+    const auto& dendrites_inh_counts = dendrites_inh->get_grown_elements();
+    const auto& dendrites_exc_counts = dendrites_exc->get_grown_elements();
 
     for (const auto& id : NeuronID::range(number_neurons)) {
         const auto [axon_connections, _1] = network_graph->get_number_out_edges(id);
@@ -302,7 +301,6 @@ void Neurons::create_neurons(const number_neurons_type creation_count) {
     dendrites_exc->create_neurons(creation_count);
     dendrites_inh->create_neurons(creation_count);
 
-
     for (const auto& neuron_id : NeuronID::range(current_size, new_size)) {
         dendrites_exc->set_signal_type(neuron_id, SignalType::Excitatory);
         dendrites_inh->set_signal_type(neuron_id, SignalType::Inhibitory);
@@ -381,7 +379,7 @@ std::uint64_t Neurons::create_synapses() {
 
     Event::create_and_print_duration_begin_event("Neurons::update_octree", { EventCategory::mpi, EventCategory::calculation }, {}, true);
     // Lock local RMA memory for local stores and make them visible afterwards
-    MPIWrapper::lock_window(MPIWindow::Window::Octree,my_rank, MPI_Locktype::Exclusive);
+    MPIWrapper::lock_window(MPIWindow::Window::Octree, my_rank, MPI_Locktype::Exclusive);
     algorithm->update_octree();
     Event::create_and_print_duration_end_event(true);
     MPIWrapper::unlock_window(MPIWindow::Window::Octree, my_rank);

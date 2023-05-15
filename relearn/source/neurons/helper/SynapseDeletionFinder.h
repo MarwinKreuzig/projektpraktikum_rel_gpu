@@ -171,13 +171,13 @@ private:
     double calculate_co_activation(const std::bitset<NeuronsExtraInfo::fire_history_length>& pre_synaptic, const std::bitset<NeuronsExtraInfo::fire_history_length>& post_synaptic) {
         RelearnException::check(pre_synaptic.size() == post_synaptic.size(), "SynapseDeletionFinder::calculate_co_activation: Fire histories have different sizes");
 
-        auto intersection=0U;
-        for(auto i=0;i<pre_synaptic.size();i++) {
-            if(static_cast<bool>(FiredStatus::Fired) == pre_synaptic[i] && pre_synaptic[i] == post_synaptic[i]) {
+        auto intersection = 0U;
+        for (auto i = 0; i < pre_synaptic.size(); i++) {
+            if (static_cast<bool>(FiredStatus::Fired) == pre_synaptic[i] && pre_synaptic[i] == post_synaptic[i]) {
                 intersection++;
             }
         }
-        return static_cast<double>(intersection)/static_cast<double>(pre_synaptic.size());
+        return static_cast<double>(intersection) / static_cast<double>(pre_synaptic.size());
     }
 };
 

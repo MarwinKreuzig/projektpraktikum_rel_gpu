@@ -84,7 +84,6 @@ public:
         auto& data = MPIWindow::mpi_windows[MPIWindow::Window::Octree];
         auto& base_ptr = std::any_cast<std::vector<OctreeNode<AdditionalCellAttributes>>&>(data);
 
-
         std::span<OctreeNode<AdditionalCellAttributes>> span{ base_ptr.data(), max_num_objects };
         MemoryHolder<AdditionalCellAttributes>::init(span);
 
@@ -134,8 +133,8 @@ public:
         }
     }
 
-    template<typename T>
-    static void create_rma_window(MPIWindow::Window window_type,std::uint64_t num_elements, size_t number_ranks) {
+    template <typename T>
+    static void create_rma_window(MPIWindow::Window window_type, std::uint64_t num_elements, size_t number_ranks) {
         RelearnException::check(!MPIWindow::mpi_windows[window_type].has_value(), "MPIWrapper::create_rma_window: Window {} is already created", window_type);
 
         std::vector<T> vector{};
@@ -143,23 +142,23 @@ public:
         MPIWindow::mpi_windows[window_type] = std::move(vector);
     }
 
-    template<typename T>
+    template <typename T>
     static std::vector<T> get_from_window(MPIWindow::Window window_type, int target_rank, uint64_t index, size_t number_elements) {
 
         const auto& begin_it = std::any_cast<std::vector<T>&>(MPIWindow::mpi_windows[window_type]).begin();
 
-        return std::vector<T>(begin_it+index, begin_it+index+number_elements);
+        return std::vector<T>(begin_it + index, begin_it + index + number_elements);
     }
 
-    template<typename T>
+    template <typename T>
     static void set_in_window(MPIWindow::Window window_type, uint64_t index, const T& element) {
         std::any_cast<std::vector<T>&>(MPIWindow::mpi_windows[window_type])[index] = element;
     }
 
-    template<typename T>
+    template <typename T>
     static void set_in_window(MPIWindow::Window window_type, uint64_t index, const std::vector<T>& element) {
         const auto& begin_it = std::any_cast<std::vector<T>&>(MPIWindow::mpi_windows[window_type]).begin();
-        std::copy(element.begin(), element.end(), begin_it+index);
+        std::copy(element.begin(), element.end(), begin_it + index);
     }
 
     template <typename AdditionalCellAttributes>
@@ -180,12 +179,9 @@ public:
         return return_value;
     }
 
-
     static void lock_window(MPIWindow::Window window, MPIRank rank, MPI_Locktype lock_type);
 
-
     static void unlock_window(MPIWindow::Window window, MPIRank rank);
-
 
     static void start_measuring_communication() noexcept {};
 

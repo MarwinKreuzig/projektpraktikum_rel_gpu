@@ -155,7 +155,7 @@ public:
     constexpr explicit NeuronID(const bool is_virtual, const std::integral auto id) noexcept
         : is_initialized_{ true }
         , is_virtual_{ is_virtual }
-        , id_{ static_cast<value_type>(id)} {
+        , id_{ static_cast<value_type>(id) } {
     }
 
     constexpr NeuronID(const NeuronID&) noexcept = default;

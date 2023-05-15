@@ -165,7 +165,7 @@ public:
      * @exception Throws a RelearnException if lower_inclusive >= upper_exclusive.
      */
     template <typename IteratorType>
-      requires ranges::output_iterator<IteratorType, double>
+        requires ranges::output_iterator<IteratorType, double>
     static void fill(const RandomHolderKey key, const IteratorType begin, const IteratorType end, const double lower_inclusive, const double upper_exclusive) {
         RelearnException::check(lower_inclusive < upper_exclusive, "RandomHolder::fill: Random number from invalid interval [{}, {}) for key {}", lower_inclusive, upper_exclusive, static_cast<int>(key));
         uniform_real_distribution<double> urd(lower_inclusive, upper_exclusive);
@@ -185,9 +185,8 @@ public:
      * @exception Throws a RelearnException if lower_inclusive >= upper_exclusive.
      */
     template <typename RangeType>
-      requires ranges::output_range<RangeType, double>
-    static void fill(const RandomHolderKey key, RangeType &&range, const double lower_inclusive, const double upper_exclusive)
-    {
+        requires ranges::output_range<RangeType, double>
+    static void fill(const RandomHolderKey key, RangeType&& range, const double lower_inclusive, const double upper_exclusive) {
         fill(key, ranges::begin(range), ranges::end(range), lower_inclusive, upper_exclusive);
     }
 

@@ -69,7 +69,7 @@ void LogFiles::init() {
 
         if (!std::filesystem::exists(output_path / "cout")) {
             std::filesystem::create_directory(output_path / "cout");
-        } 
+        }
     }
 
     // Wait until directory is created before any rank proceeds

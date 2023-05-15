@@ -90,7 +90,7 @@ namespace actions {
 namespace detail {
     struct ShuffleFn {
         template <typename UniformRandomNumberGenerator>
-        requires ranges::uniform_random_bit_generator<std::remove_cvref_t<UniformRandomNumberGenerator>>
+            requires ranges::uniform_random_bit_generator<std::remove_cvref_t<UniformRandomNumberGenerator>>
         [[nodiscard]] constexpr auto operator()(UniformRandomNumberGenerator& gen) const {
             return ranges::make_action_closure(
                 ranges::bind_back(
@@ -99,7 +99,7 @@ namespace detail {
         }
 
         template <typename UniformRandomNumberGenerator>
-        requires ranges::uniform_random_bit_generator<std::remove_cvref_t<UniformRandomNumberGenerator>>
+            requires ranges::uniform_random_bit_generator<std::remove_cvref_t<UniformRandomNumberGenerator>>
         [[nodiscard]] constexpr auto operator()(UniformRandomNumberGenerator&& gen) const {
             return ranges::make_action_closure(ranges::bind_back(ShuffleFn{}, std::forward<UniformRandomNumberGenerator>(gen)));
         }

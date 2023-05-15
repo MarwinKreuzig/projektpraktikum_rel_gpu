@@ -39,7 +39,6 @@ public:
     static constexpr unsigned int fire_history_length = 1000;
     constexpr static bool fire_history_enabled = true;
 
-
     /**
      * @brief Initializes a NeuronsExtraInfo that holds at most the given number of neurons.
      *      Must only be called once. Sets up all neurons so that they update, but does not initialize the positions.
@@ -92,12 +91,12 @@ public:
             const auto local_neuron_id = neuron_id.get_neuron_id();
             RelearnException::check(local_neuron_id < size, "NeuronsExtraInformation::set_disabled_neurons: NeuronID {} is too large: {}", neuron_id, size);
 
-            auto &status = update_status[local_neuron_id];
+            auto& status = update_status[local_neuron_id];
 
             RelearnException::check(status != UpdateStatus::Static,
-                                    "NeuronsExtraInformation::set_disabled_neurons: Cannot disable a static neuron");
+                "NeuronsExtraInformation::set_disabled_neurons: Cannot disable a static neuron");
             RelearnException::check(status != UpdateStatus::Disabled,
-                                    "NeuronsExtraInformation::set_disabled_neurons: Cannot disable a disabled neuron");
+                "NeuronsExtraInformation::set_disabled_neurons: Cannot disable a disabled neuron");
 
             return status;
         };
@@ -223,7 +222,7 @@ public:
     }
 
     [[nodiscard]] std::bitset<fire_history_length> get_fire_history(const RankNeuronId& neuron_id) const {
-        if(neuron_id.get_rank() == MPIWrapper::get_my_rank()) {
+        if (neuron_id.get_rank() == MPIWrapper::get_my_rank()) {
             return get_fire_history(neuron_id.get_neuron_id());
         }
         const auto data = MPIWrapper::get_from_window<std::bitset<fire_history_length>>(MPIWindow::FireHistory, neuron_id.get_rank().get_rank(), neuron_id.get_neuron_id().get_neuron_id(), 1);
@@ -231,7 +230,7 @@ public:
     }
 
     void publish_fire_history() const {
-        if(!fire_history_enabled) {
+        if (!fire_history_enabled) {
             return;
         }
         Timers::start(TimerRegion::UPDATE_FIRE_HISTORY);
@@ -244,7 +243,6 @@ public:
     const std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>>& get_deletions_log(const NeuronID& neuron_id) const {
         return deletions_log[neuron_id.get_neuron_id()];
     }
-
 
 private:
     number_neurons_type size{ 0 };

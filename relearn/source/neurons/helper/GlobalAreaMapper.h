@@ -21,7 +21,6 @@
  */
 class GlobalAreaMapper {
 public:
-
     /**
      * Constructor
      * @param local_area_translator The local area translator
@@ -29,7 +28,9 @@ public:
      * @param my_rank Current mp9i rank
      */
     GlobalAreaMapper(const std::shared_ptr<LocalAreaTranslator>& local_area_translator, int num_ranks, MPIRank my_rank)
-    : local_area_translator(local_area_translator), num_ranks(num_ranks), my_rank(my_rank) {
+        : local_area_translator(local_area_translator)
+        , num_ranks(num_ranks)
+        , my_rank(my_rank) {
         next_request.resize(num_ranks, {});
     }
 
@@ -38,7 +39,7 @@ public:
      * @param rni The neuron whose area id we want to know
      */
     void request_area_id(const RankNeuronId& rni) {
-        if(my_rank == rni.get_rank() || known_mappings.contains(rni)) {
+        if (my_rank == rni.get_rank() || known_mappings.contains(rni)) {
             return;
         }
         next_request[rni.get_rank().get_rank()].emplace_back(rni.get_neuron_id().get_neuron_id());
@@ -54,7 +55,7 @@ public:
      * @return Area id
      */
     RelearnTypes::area_id get_area_id(const RankNeuronId& rni) {
-        if(rni.get_rank() == my_rank) {
+        if (rni.get_rank() == my_rank) {
             return local_area_translator->get_area_id_for_neuron_id(rni.get_neuron_id().get_neuron_id());
         }
         return known_mappings[rni];
@@ -87,8 +88,8 @@ private:
     void answer_requests(const std::vector<std::vector<NeuronID>>& received_data) {
         std::vector<std::vector<RelearnTypes::area_id>> answer_data{};
         answer_data.resize(received_data.size(), {});
-        for(auto requesting_rank = 0; requesting_rank < received_data.size(); requesting_rank++) {
-            for(const auto& neuron_id : received_data[requesting_rank]) {
+        for (auto requesting_rank = 0; requesting_rank < received_data.size(); requesting_rank++) {
+            for (const auto& neuron_id : received_data[requesting_rank]) {
                 const auto& area_id = local_area_translator->get_area_id_for_neuron_id(neuron_id.get_neuron_id());
                 answer_data[requesting_rank].emplace_back(area_id);
             }
@@ -99,11 +100,11 @@ private:
 
     void parse_answer(const std::vector<std::vector<RelearnTypes::area_id>>& answer) {
 
-        for(auto rank = 0; rank < answer.size();rank++) {
-            for(auto i = 0; i< answer[rank].size();i++) {
+        for (auto rank = 0; rank < answer.size(); rank++) {
+            for (auto i = 0; i < answer[rank].size(); i++) {
                 auto area_id = answer[rank][i];
                 auto neuron_id = next_request[rank][i];
-                const RankNeuronId rank_neuron_id{MPIRank{rank}, NeuronID {neuron_id}};
+                const RankNeuronId rank_neuron_id{ MPIRank{ rank }, NeuronID{ neuron_id } };
                 known_mappings.insert(std::make_pair(rank_neuron_id, area_id));
             }
         }

@@ -221,14 +221,13 @@ class NetworkGraph {
 
             const auto to_rank_neuron_id =
                 [this](const auto partner_id) -> RankNeuronId {
-              return {my_rank, partner_id};
+                return { my_rank, partner_id };
             };
 
             return ranges::views::concat(
-                       locals | ranges::views::keys |
-                           ranges::views::transform(to_rank_neuron_id),
-                       distants | ranges::views::keys) |
-                   ranges::to<std::unordered_set>;
+                       locals | ranges::views::keys | ranges::views::transform(to_rank_neuron_id),
+                       distants | ranges::views::keys)
+                | ranges::to<std::unordered_set>;
         }
 
         /**
@@ -243,9 +242,9 @@ class NetworkGraph {
 
             return ranges::accumulate(
                 ranges::views::concat(all_distant_edges | ranges::views::values,
-                                      all_local_edges | ranges::views::values) |
-                    ranges::views::filter(greater(0)),
-                synapse_weight{0});
+                    all_local_edges | ranges::views::values)
+                    | ranges::views::filter(greater(0)),
+                synapse_weight{ 0 });
         }
 
         /**
@@ -260,9 +259,9 @@ class NetworkGraph {
 
             return ranges::accumulate(
                 ranges::views::concat(all_distant_edges | ranges::views::values,
-                                      all_local_edges | ranges::views::values) |
-                    ranges::views::filter(less(0)),
-                synapse_weight{0}, std::minus{});
+                    all_local_edges | ranges::views::values)
+                    | ranges::views::filter(less(0)),
+                synapse_weight{ 0 }, std::minus{});
         }
 
         /**
@@ -277,9 +276,9 @@ class NetworkGraph {
 
             return ranges::accumulate(
                 ranges::views::concat(all_distant_edges | ranges::views::values,
-                                      all_local_edges | ranges::views::values) |
-                    ranges::views::transform(as_abs),
-                synapse_weight{0});
+                    all_local_edges | ranges::views::values)
+                    | ranges::views::transform(as_abs),
+                synapse_weight{ 0 });
         }
 
         /**
@@ -310,7 +309,7 @@ class NetworkGraph {
                 }
             };
 
-            for (const auto& distant_out_edges : NeuronID::range(number_local_neurons) | ranges::views::transform([this](const auto& neuron_id){ return get_distant_out_edges(neuron_id); })) {
+            for (const auto& distant_out_edges : NeuronID::range(number_local_neurons) | ranges::views::transform([this](const auto& neuron_id) { return get_distant_out_edges(neuron_id); })) {
                 for (const auto& [target_id, edge_val] : distant_out_edges) {
                     const auto& [target_rank, target_neuron_id] = target_id;
 
@@ -323,7 +322,7 @@ class NetworkGraph {
                 }
             }
 
-            for (const auto& distant_in_edges : NeuronID::range(number_local_neurons) | ranges::views::transform([this](const auto& neuron_id){ return get_distant_in_edges(neuron_id); })) {
+            for (const auto& distant_in_edges : NeuronID::range(number_local_neurons) | ranges::views::transform([this](const auto& neuron_id) { return get_distant_in_edges(neuron_id); })) {
 
                 for (const auto& [source_id, edge_val] : distant_in_edges) {
                     const auto& [source_rank, source_neuron_id] = source_id;

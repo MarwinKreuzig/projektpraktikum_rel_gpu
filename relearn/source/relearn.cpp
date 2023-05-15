@@ -864,7 +864,7 @@ int main(int argc, char** argv) {
         RelearnException::check(chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::FastNormal, "Chose a background activity calculator that is not implemented");
         RelearnException::check(background_activity_stddev > 0.0, "When choosing the fast-normal-background calculator, the standard deviation must be set to > 0.0.");
 
-        //TODO Choose multiplier
+        // TODO Choose multiplier
         return std::make_unique<FastNormalBackgroundActivityCalculator>(std::move(transformation_function), first_step_with_background_activity, last_step_with_background_activity, background_activity_mean, background_activity_stddev, 1000);
     };
     auto background_activity_calculator = construct_background_activity_calculator();

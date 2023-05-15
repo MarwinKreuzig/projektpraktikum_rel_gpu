@@ -34,7 +34,8 @@ public:
      * @param first_step The first step in which background activity is applied
      * @param last_step The last step in which background activity is applied
      */
-    NullBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function, RelearnTypes::step_type first_step, RelearnTypes::step_type last_step) : BackgroundActivityCalculator(std::move(transformation_function), first_step, last_step) {}
+    NullBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function, RelearnTypes::step_type first_step, RelearnTypes::step_type last_step)
+        : BackgroundActivityCalculator(std::move(transformation_function), first_step, last_step) { }
 
     virtual ~NullBackgroundActivityCalculator() = default;
 
@@ -50,7 +51,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
-        return std::make_unique<NullBackgroundActivityCalculator>(transformation_function->clone(),get_first_step(), get_last_step());
+        return std::make_unique<NullBackgroundActivityCalculator>(transformation_function->clone(), get_first_step(), get_last_step());
     }
 };
 
@@ -62,10 +63,10 @@ public:
     /**
      * @brief Constructs a new object with the given constant input
      * @brief first_step The first step in which background activity is applied
-    * @brief last_step The last step in which background activity is applied
+     * @brief last_step The last step in which background activity is applied
      * @brief input The base input
      */
-    ConstantBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function,RelearnTypes::step_type first_step, RelearnTypes::step_type last_step,const double input) noexcept
+    ConstantBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function, RelearnTypes::step_type first_step, RelearnTypes::step_type last_step, const double input) noexcept
         : BackgroundActivityCalculator(std::move(transformation_function), first_step, last_step)
         , base_input(input) {
     }
@@ -95,7 +96,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
-        return std::make_unique<ConstantBackgroundActivityCalculator>(transformation_function->clone(),get_first_step(), get_last_step(), base_input);
+        return std::make_unique<ConstantBackgroundActivityCalculator>(transformation_function->clone(), get_first_step(), get_last_step(), base_input);
     }
 
     /**
@@ -127,8 +128,8 @@ public:
      * @param stddev The standard deviation, must be > 0.0
      * @exception Throws a RelearnException if stddev <= 0.0
      */
-    NormalBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function,RelearnTypes::step_type first_step, RelearnTypes::step_type last_step,const double mean, const double stddev)
-        : BackgroundActivityCalculator(std::move(transformation_function),first_step, last_step)
+    NormalBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function, RelearnTypes::step_type first_step, RelearnTypes::step_type last_step, const double mean, const double stddev)
+        : BackgroundActivityCalculator(std::move(transformation_function), first_step, last_step)
         , mean_input(mean)
         , stddev_input(stddev) {
         RelearnException::check(stddev > 0.0, "NormalBackgroundActivityCalculator::NormalBackgroundActivityCalculator: stddev was: {}", stddev);
@@ -149,7 +150,7 @@ public:
         Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
         for (number_neurons_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
             const auto input = disable_flags[neuron_id] == UpdateStatus::Disabled ? 0.0 : RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
-            set_and_transform_background_activity(step,neuron_id, input);
+            set_and_transform_background_activity(step, neuron_id, input);
         }
         Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
     }
@@ -159,7 +160,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
-        return std::make_unique<NormalBackgroundActivityCalculator>(transformation_function->clone(),get_first_step(), get_last_step(),mean_input, stddev_input);
+        return std::make_unique<NormalBackgroundActivityCalculator>(transformation_function->clone(), get_first_step(), get_last_step(), mean_input, stddev_input);
     }
 
     /**
@@ -196,7 +197,7 @@ public:
      * @param multiplier The factor how many more values should be drawn
      * @exception Throws a RelearnException if stddev <= 0.0
      */
-    FastNormalBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function,RelearnTypes::step_type first_step, RelearnTypes::step_type last_step,const double mean, const double stddev, const size_t multiplier)
+    FastNormalBackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function, RelearnTypes::step_type first_step, RelearnTypes::step_type last_step, const double mean, const double stddev, const size_t multiplier)
         : BackgroundActivityCalculator(std::move(transformation_function), first_step, last_step)
         , mean_input(mean)
         , stddev_input(stddev)
@@ -267,7 +268,7 @@ public:
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < number_neurons, "FastNormalBackgroundActivityCalculator::get_background_activity: id is too large: {}", neuron_id);
-        if(cur_step >= first_step && cur_step <= last_step ) {
+        if (cur_step >= first_step && cur_step <= last_step) {
             return transformation_function->transform(cur_step, pre_drawn_values[offset + local_neuron_id]);
         }
         return 0.0;
@@ -280,12 +281,12 @@ public:
     std::span<const double> get_background_activity() const noexcept override {
         const auto number_neurons = get_number_neurons();
 
-        if(cur_step >= first_step && cur_step <= last_step ) {
+        if (cur_step >= first_step && cur_step <= last_step) {
             const auto pointer = pre_drawn_values.data();
             // TODO Ignores Transformation function
             return std::span<const double>{ pointer + offset, number_neurons };
         }
-        return {std::vector<double>(number_neurons, 0.0)};
+        return { std::vector<double>(number_neurons, 0.0) };
     }
 
     /**

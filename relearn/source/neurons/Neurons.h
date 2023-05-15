@@ -301,7 +301,7 @@ public:
      * @brief Initializes the synaptic elements with respect to the network graph, i.e.,
      *      adds the synapses from the network graph as connected counts to the synaptic elements models
      */
-    void init_synaptic_elements(const PlasticLocalSynapses & local_synapses_plastic,const PlasticDistantInSynapses & in_synapses_plastic,const PlasticDistantOutSynapses & out_synapses_plastic);
+    void init_synaptic_elements(const PlasticLocalSynapses& local_synapses_plastic, const PlasticDistantInSynapses& in_synapses_plastic, const PlasticDistantOutSynapses& out_synapses_plastic);
 
     /**
      * @brief Disables all neurons with specified ids

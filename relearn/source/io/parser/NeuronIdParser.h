@@ -140,10 +140,9 @@ public:
     [[nodiscard]] static std::vector<NeuronID> extract_my_ids(const std::vector<RankNeuronId>& rank_neuron_ids, const MPIRank my_rank) {
         RelearnException::check(my_rank.is_initialized(), "NeuronIdParser::extract_my_ids: my_rank is not initialized.", my_rank);
 
-
         return rank_neuron_ids
             | ranges::views::filter(equal_to(my_rank), &RankNeuronId::get_rank)
-            | ranges::views::transform([](const auto &neuron_id)  { return NeuronID{neuron_id.get_neuron_id().get_neuron_id()}; })
+            | ranges::views::transform([](const auto& neuron_id) { return NeuronID{ neuron_id.get_neuron_id().get_neuron_id() }; })
             | ranges::to_vector;
     }
 

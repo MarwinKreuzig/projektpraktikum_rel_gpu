@@ -54,7 +54,7 @@ public:
      */
     AreaMonitor(Simulation* simulation, std::shared_ptr<GlobalAreaMapper> global_area_mapper, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name, int my_rank, std::filesystem::path& path);
 
-    void request_data()  const ;
+    void request_data() const;
 
     /**
      * Add an ingoing connection to the area. This method shall be called by other area monitors with ingoing connections to this area
@@ -62,7 +62,7 @@ public:
      */
     void add_ingoing_connection(const AreaConnection& connection, const RelearnTypes::plastic_synapse_weight weight);
 
-    void remove_ingoing_connection(const AreaMonitor::AreaConnection &connection, const RelearnTypes::plastic_synapse_weight weight);
+    void remove_ingoing_connection(const AreaMonitor::AreaConnection& connection, const RelearnTypes::plastic_synapse_weight weight);
 
     /**
      * Prepares the monitor for a new logging step. Call this method before each logging step.
@@ -137,9 +137,9 @@ private:
     double fired_fraction = 0.0;
     size_t num_enabled_neurons = 0;
     using EnsembleConnections = std::unordered_map<std::pair<int, RelearnTypes::area_id>, ConnectionCount,
-            boost::hash<std::pair<int, RelearnTypes::area_id>>>;
+        boost::hash<std::pair<int, RelearnTypes::area_id>>>;
     using EnsembleDeletions = std::unordered_map<std::pair<int, RelearnTypes::area_id>, long,
-            boost::hash<std::pair<int, RelearnTypes::area_id>>>;
+        boost::hash<std::pair<int, RelearnTypes::area_id>>>;
 
     /**
      * For current logging step: Maps for each ensemble the number of connections

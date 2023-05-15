@@ -134,12 +134,12 @@ void Simulation::initialize() {
     partition->set_total_number_neurons(number_total_neurons);
     const auto number_local_neurons = partition->get_number_local_neurons();
 
-//    auto check = [](RelearnTypes::number_neurons_type value) -> bool {
-//        const auto min = MPIWrapper::reduce(value, MPIWrapper::ReduceFunction::Min, MPIRank::root_rank());
-//        const auto max = MPIWrapper::reduce(value, MPIWrapper::ReduceFunction::Max, MPIRank::root_rank());
-//        return min == max;
-//    };
-    //RelearnException::check(check(number_local_neurons), "Simulation::initialize: Different number of local neurons on ranks. Mine: {}", number_local_neurons);
+    //    auto check = [](RelearnTypes::number_neurons_type value) -> bool {
+    //        const auto min = MPIWrapper::reduce(value, MPIWrapper::ReduceFunction::Min, MPIRank::root_rank());
+    //        const auto max = MPIWrapper::reduce(value, MPIWrapper::ReduceFunction::Max, MPIRank::root_rank());
+    //        return min == max;
+    //    };
+    // RelearnException::check(check(number_local_neurons), "Simulation::initialize: Different number of local neurons on ranks. Mine: {}", number_local_neurons);
 
     const auto my_rank = MPIWrapper::get_my_rank();
     RelearnException::check(number_local_neurons > 0, "I have 0 neurons at rank {}", my_rank.get_rank());
@@ -164,7 +164,6 @@ void Simulation::initialize() {
     auto signal_types = neuron_to_subdomain_assignment->get_neuron_types_in_subdomains();
 
     global_area_mapper = std::make_shared<GlobalAreaMapper>(local_area_translator, MPIWrapper::get_num_ranks(), my_rank);
-
 
     RelearnException::check(neuron_positions.size() == number_local_neurons, "Simulation::initialize: neuron_positions had the wrong size");
     RelearnException::check(local_area_translator->get_number_neurons_in_total() == number_local_neurons, "Simulation::initialize: neuron_id_vs_area_id had the wrong size {} != {}", local_area_translator->get_number_neurons_in_total(), number_local_neurons);
@@ -244,7 +243,7 @@ void Simulation::initialize() {
             }
             auto path = dir / (MPIWrapper::get_my_rank_str() + "_area_" + std::to_string(area_id) + ".csv");
             area_monitors->insert(
-                    std::make_pair(area_id, AreaMonitor(this, global_area_mapper, area_id, area_name, my_rank.get_rank(), path)));
+                std::make_pair(area_id, AreaMonitor(this, global_area_mapper, area_id, area_name, my_rank.get_rank(), path)));
         }
     }
 
@@ -265,20 +264,19 @@ void Simulation::initialize() {
 
     neurons->init_synaptic_elements(local_synapses_plastic, in_synapses_plastic, out_synapses_plastic);
 
-    if(area_monitor_enabled) {
-        //Update area monitor
+    if (area_monitor_enabled) {
+        // Update area monitor
         Timers::start(TimerRegion::CAPTURE_AREA_MONITORS);
 
         Timers::start(TimerRegion::AREA_MONITORS_PREPARE);
-        for (auto &[_, area_monitor]: *area_monitors) {
+        for (auto& [_, area_monitor] : *area_monitors) {
             area_monitor.prepare_recording();
         }
 
         Timers::stop_and_add(TimerRegion::AREA_MONITORS_PREPARE);
         Timers::start(TimerRegion::AREA_MONITORS_REQUEST);
 
-
-        for (auto &[_, area_monitor]: *area_monitors) {
+        for (auto& [_, area_monitor] : *area_monitors) {
             area_monitor.request_data();
         }
 
@@ -290,14 +288,14 @@ void Simulation::initialize() {
         Timers::stop_and_add(TimerRegion::AREA_MONITORS_EXCHANGE);
         Timers::start(TimerRegion::AREA_MONITORS_RECORD_DATA);
 
-        for (auto &[_, area_monitor]: *area_monitors) {
+        for (auto& [_, area_monitor] : *area_monitors) {
             area_monitor.monitor_connectivity();
         }
 
         Timers::stop_and_add(TimerRegion::AREA_MONITORS_RECORD_DATA);
         Timers::start(TimerRegion::AREA_MONITORS_FINISH);
 
-        for (auto &[_, area_monitor]: *area_monitors) {
+        for (auto& [_, area_monitor] : *area_monitors) {
             area_monitor.finish_recording();
         }
         Timers::stop_and_add(TimerRegion::AREA_MONITORS_FINISH);
@@ -413,8 +411,8 @@ void Simulation::simulate(const step_type number_steps) {
 
             Timers::stop_and_add(TimerRegion::PRINT_IO);
 
-            if(area_monitor_enabled) {
-                //Update area monitor
+            if (area_monitor_enabled) {
+                // Update area monitor
                 Timers::start(TimerRegion::CAPTURE_AREA_MONITORS);
 
                 Timers::start(TimerRegion::AREA_MONITORS_PREPARE);
@@ -439,7 +437,7 @@ void Simulation::simulate(const step_type number_steps) {
 
                 for (NeuronID neuron_id :
                     NeuronID::range(neurons->get_number_neurons())) {
-                    if(neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
+                    if (neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
                         continue;
                     }
                     const auto& area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(neuron_id.get_neuron_id());

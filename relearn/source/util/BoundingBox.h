@@ -24,7 +24,6 @@
 #include <type_traits>
 #include <utility>
 
-
 /**
  * @brief A Vec3 holds three different values of type T and allows computations via operators.
  * @tparam T The type that shall be stored inside this class. Is required to fulfill std::is_arithmetic_v<T>
@@ -43,8 +42,8 @@ public:
      * @param _z The value for z
      */
     constexpr BoundingBox(const T& minimum, const T& maximum) noexcept
-        : minimum(minimum),
-        maximum(maximum) {
+        : minimum(minimum)
+        , maximum(maximum) {
     }
 
     constexpr BoundingBox(const BoundingBox<T>& other) = default;
@@ -118,10 +117,10 @@ public:
     }*/
 
     [[nodiscard]] constexpr bool operator<(const BoundingBox<T>& other) const noexcept {
-        if(minimum < other.minimum) {
+        if (minimum < other.minimum) {
             return true;
         }
-        if(minimum == other.minimum && maximum < other.maximum) {
+        if (minimum == other.minimum && maximum < other.maximum) {
             return true;
         }
         return false;
@@ -130,7 +129,6 @@ public:
 private:
     T minimum;
     T maximum;
-
 };
 
 template <typename T>

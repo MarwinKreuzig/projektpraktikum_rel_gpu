@@ -72,7 +72,9 @@ public:
      * @param last_step The last step in which background activity is applied
      */
     explicit BackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function, RelearnTypes::step_type first_step, RelearnTypes::step_type last_step)
-    : transformation_function(std::move(transformation_function)), first_step{first_step}, last_step{last_step}  {}
+        : transformation_function(std::move(transformation_function))
+        , first_step{ first_step }
+        , last_step{ last_step } { }
 
     virtual ~BackgroundActivityCalculator() = default;
 
@@ -195,7 +197,7 @@ public:
     static constexpr double max_background_activity_mean{ 10000.0 };
     static constexpr double max_background_activity_stddev{ 10000.0 };
 
-    static constexpr RelearnTypes::step_type default_first_step { 0 };
+    static constexpr RelearnTypes::step_type default_first_step{ 0 };
     static constexpr RelearnTypes::step_type default_last_step{ std::numeric_limits<RelearnTypes::step_type>::max() };
 
 protected:
@@ -206,12 +208,11 @@ protected:
      * @param value The new background activity
      * @exception Throws a RelearnException if the neuron_id is to large
      */
-    void set_and_transform_background_activity(const RelearnTypes::step_type  step,const number_neurons_type neuron_id, const double value) {
+    void set_and_transform_background_activity(const RelearnTypes::step_type step, const number_neurons_type neuron_id, const double value) {
         RelearnException::check(neuron_id < number_local_neurons, "SynapticInputCalculator::set_and_transform_background_activity: neuron_id was too large: {} vs {}", neuron_id, number_local_neurons);
-        if(step >= first_step && step <= last_step ) {
+        if (step >= first_step && step <= last_step) {
             background_activity[neuron_id] = transformation_function->transform(step, value);
-        }
-        else {
+        } else {
             background_activity[neuron_id] = 0.0;
         }
     }

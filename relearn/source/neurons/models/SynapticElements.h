@@ -142,7 +142,7 @@ public:
      * @exception Throws a RelearnException if (a) neuron_id is too large, (b) the counts for the neuron are negative afterwards
      */
     void update_grown_elements(const NeuronID neuron_id, const double delta) {
-        if(nu <= 0.0) {
+        if (nu <= 0.0) {
             return;
         }
 
@@ -160,7 +160,7 @@ public:
      * @exception Throws a RelearnException if (a) neuron_id is too large, (b) the counts for the neuron are negative afterwards
      */
     void update_connected_elements(const NeuronID neuron_id, const int delta) {
-        if(nu <= 0.0) {
+        if (nu <= 0.0) {
             return;
         }
 
@@ -191,7 +191,7 @@ public:
      *      (c) disabled_neuron_ids[i] is larger than the number of stored neurons
      */
     void update_after_deletion(const std::span<const unsigned int> changes, const std::span<const NeuronID> disabled_neuron_ids) {
-        if(nu <= 0.0) {
+        if (nu <= 0.0) {
             return;
         }
 

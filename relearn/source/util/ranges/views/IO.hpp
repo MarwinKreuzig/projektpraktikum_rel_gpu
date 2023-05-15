@@ -17,7 +17,5 @@
 #include <range/v3/view/filter.hpp>
 
 namespace views {
-inline constexpr auto filter_not_comment_not_empty_line =
-    ranges::views::filter(ranges::not_fn(ranges::empty)) |
-    ranges::views::filter(not_equal_to('#'), ranges::front);
+inline constexpr auto filter_not_comment_not_empty_line = ranges::views::filter(ranges::not_fn(ranges::empty)) | ranges::views::filter(not_equal_to('#'), ranges::front);
 } // namespace views

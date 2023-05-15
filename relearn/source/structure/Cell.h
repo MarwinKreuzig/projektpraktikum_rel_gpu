@@ -572,7 +572,7 @@ public:
      */
     constexpr void set_number_elements_for(const ElementType element_type, const SignalType signal_type, const counter_type num_elements) {
         additional_cell_attributes.set_number_elements_for(element_type, signal_type, num_elements);
-     }
+    }
 
     /**
      * @brief Sets the position of the free dendrites for the associated type in this cell

@@ -39,43 +39,42 @@ AreaMonitor::AreaMonitor(Simulation* simulation, std::shared_ptr<GlobalAreaMappe
     write_header();
 }
 
+void AreaMonitor::monitor_connectivity() {
+    Timers::start(TimerRegion::AREA_MONITORS_LOCAL_EDGES);
+    for (const auto& synapse : sim->get_neurons()->last_created_local_synapses) {
+        if (sim->get_neurons()->get_local_area_translator()->get_area_id_for_neuron_id(synapse.get_target().get_neuron_id()) != area_id) {
+            continue;
+        }
+        const auto other_area_id = sim->get_neurons()->get_local_area_translator()->get_area_id_for_neuron_id(
+            synapse.get_source().get_neuron_id());
 
- void AreaMonitor::monitor_connectivity() {
-     Timers::start(TimerRegion::AREA_MONITORS_LOCAL_EDGES);
-     for(const auto& synapse : sim->get_neurons()->last_created_local_synapses) {
-         if(sim->get_neurons()->get_local_area_translator()->get_area_id_for_neuron_id(synapse.get_target().get_neuron_id()) != area_id) {
-             continue;
-         }
-         const auto other_area_id = sim->get_neurons()->get_local_area_translator()->get_area_id_for_neuron_id(
-                 synapse.get_source().get_neuron_id());
+        const auto signal_type = synapse.get_weight() > 0 ? SignalType::Excitatory : SignalType::Inhibitory;
+        add_ingoing_connection({ my_rank, other_area_id, synapse.get_target(), signal_type }, synapse.get_weight());
+    }
 
-         const auto signal_type = synapse.get_weight() > 0 ? SignalType::Excitatory : SignalType::Inhibitory;
-         add_ingoing_connection({my_rank,other_area_id, synapse.get_target(), signal_type}, synapse.get_weight());
-     }
+    Timers::stop_and_add(TimerRegion::AREA_MONITORS_LOCAL_EDGES);
+    Timers::start(TimerRegion::AREA_MONITORS_DISTANT_EDGES);
+    for (const auto& synapse : sim->get_neurons()->last_created_in_synapses) {
+        if (sim->get_neurons()->get_local_area_translator()->get_area_id_for_neuron_id(synapse.get_target().get_neuron_id()) != area_id) {
+            continue;
+        }
+        // Other area is on different mpi rank. Save connection for communication over mpi
+        const auto& rank_neuron_id = synapse.get_source();
+        const auto& other_rank = rank_neuron_id.get_rank().get_rank();
+        const auto other_area_id = global_area_mapper->get_area_id(rank_neuron_id);
 
-     Timers::stop_and_add(TimerRegion::AREA_MONITORS_LOCAL_EDGES);
-     Timers::start(TimerRegion::AREA_MONITORS_DISTANT_EDGES);
-     for(const auto& synapse : sim->get_neurons()->last_created_in_synapses) {
-         if(sim->get_neurons()->get_local_area_translator()->get_area_id_for_neuron_id(synapse.get_target().get_neuron_id()) != area_id) {
-             continue;
-         }
-         // Other area is on different mpi rank. Save connection for communication over mpi
-         const auto& rank_neuron_id = synapse.get_source();
-         const auto& other_rank = rank_neuron_id.get_rank().get_rank();
-         const auto other_area_id = global_area_mapper->get_area_id(rank_neuron_id);
-
-         const auto signal_type = synapse.get_weight() > 0 ? SignalType::Excitatory : SignalType::Inhibitory;
-         add_ingoing_connection({other_rank,other_area_id, synapse.get_target(), signal_type}, synapse.get_weight());
-     }
-     Timers::stop_and_add(TimerRegion::AREA_MONITORS_DISTANT_EDGES);
- }
+        const auto signal_type = synapse.get_weight() > 0 ? SignalType::Excitatory : SignalType::Inhibitory;
+        add_ingoing_connection({ other_rank, other_area_id, synapse.get_target(), signal_type }, synapse.get_weight());
+    }
+    Timers::stop_and_add(TimerRegion::AREA_MONITORS_DISTANT_EDGES);
+}
 
 void AreaMonitor::record_data(NeuronID neuron_id) {
     Timers::start(TimerRegion::AREA_MONITORS_DELETIONS);
 
-    //Deletions
+    // Deletions
     const auto& deletions_in_step = sim->get_neurons()->get_extra_info()->get_deletions_log(neuron_id);
-    for(const auto& [other_neuron_id, weight] : deletions_in_step) {
+    for (const auto& [other_neuron_id, weight] : deletions_in_step) {
         const auto other_area_id = global_area_mapper->get_area_id(other_neuron_id);
         const auto& other_rank = other_neuron_id.get_rank().get_rank();
 
@@ -99,10 +98,8 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
 
     syn_input += sim->get_neurons()->neuron_model->get_synaptic_input(neuron_id);
 
-        calcium += sim->get_neurons()->get_calcium(neuron_id);
-    fired_fraction +=
-            static_cast<double>(sim->get_neurons()->get_neuron_model()->fired_recorder[NeuronModel::FireRecorderPeriod::AreaMonitor][neuron_id.get_neuron_id()]) /
-            static_cast<double>(Config::plasticity_update_step);
+    calcium += sim->get_neurons()->get_calcium(neuron_id);
+    fired_fraction += static_cast<double>(sim->get_neurons()->get_neuron_model()->fired_recorder[NeuronModel::FireRecorderPeriod::AreaMonitor][neuron_id.get_neuron_id()]) / static_cast<double>(Config::plasticity_update_step);
     num_enabled_neurons++;
 
     Timers::stop_and_add(TimerRegion::AREA_MONITORS_STATISTICS);
@@ -125,8 +122,8 @@ void AreaMonitor::prepare_recording() {
 
 void AreaMonitor::finish_recording() {
     data.emplace_back(connections, deletions, axons_grown, static_cast<double>(axons_conn), den_ex_grown,
-                      static_cast<double>(den_ex_conn), den_inh_grown, static_cast<double>(den_inh_conn), syn_input, calcium,
-                      fired_fraction, num_enabled_neurons);
+        static_cast<double>(den_ex_conn), den_inh_grown, static_cast<double>(den_inh_conn), syn_input, calcium,
+        fired_fraction, num_enabled_neurons);
 }
 
 void AreaMonitor::write_header() {
@@ -142,7 +139,7 @@ void AreaMonitor::write_header() {
 }
 
 void AreaMonitor::write_data_to_file() {
-    //Timers::start();
+    // Timers::start();
     std::ofstream out(path, std::ios_base::app);
 
     auto unique_area_ids = data
@@ -162,7 +159,7 @@ void AreaMonitor::write_data_to_file() {
     std::sort(unique_area_ids_list.begin(), unique_area_ids_list.end());
     // Header
     out << "# Step;";
-    for (const auto &[rank, area_id]: unique_area_ids_list) {
+    for (const auto& [rank, area_id] : unique_area_ids_list) {
         out << rank << ":" << area_id << "ex;"
             << rank << ":" << area_id << "in;"
             << rank << ":" << area_id << "del;";
@@ -171,15 +168,15 @@ void AreaMonitor::write_data_to_file() {
     out << "\n";
 
     // Data
-    for (const auto &single_record: data) {
+    for (const auto& single_record : data) {
         out << step << ";";
         auto connection_data = std::get<0>(single_record);
         auto deletion_data = std::get<1>(single_record);
-        for (const auto &rank_area_id: unique_area_ids_list) {
-            const auto &connections = connection_data[rank_area_id];
+        for (const auto& rank_area_id : unique_area_ids_list) {
+            const auto& connections = connection_data[rank_area_id];
             out << std::to_string(connections.den_ex) << ";";
             out << std::to_string(connections.den_inh) << ";";
-            const auto &deletions_in_step = deletion_data[rank_area_id];
+            const auto& deletions_in_step = deletion_data[rank_area_id];
             out << std::to_string(deletions_in_step) << ";";
         }
         out << std::to_string(std::get<2>(single_record)) << ";";
@@ -198,13 +195,13 @@ void AreaMonitor::write_data_to_file() {
     }
     out.close();
     data.clear();
-    //Timers::stop_and_add();
+    // Timers::stop_and_add();
 }
 
 void AreaMonitor::request_data() const {
     Timers::start(TimerRegion::AREA_MONITORS_DISTANT_EDGES);
-    for(const auto& synapse : sim->get_neurons()->last_created_in_synapses) {
-        if(sim->get_neurons()->get_local_area_translator()->get_area_id_for_neuron_id(synapse.get_target().get_neuron_id()) != area_id) {
+    for (const auto& synapse : sim->get_neurons()->last_created_in_synapses) {
+        if (sim->get_neurons()->get_local_area_translator()->get_area_id_for_neuron_id(synapse.get_target().get_neuron_id()) != area_id) {
             continue;
         }
         // Other area is on different mpi rank. Save connection for communication over mpi
@@ -214,9 +211,9 @@ void AreaMonitor::request_data() const {
     Timers::stop_and_add(TimerRegion::AREA_MONITORS_DISTANT_EDGES);
 }
 
-void AreaMonitor::add_ingoing_connection(const AreaMonitor::AreaConnection &connection, const RelearnTypes::plastic_synapse_weight weight) {
+void AreaMonitor::add_ingoing_connection(const AreaMonitor::AreaConnection& connection, const RelearnTypes::plastic_synapse_weight weight) {
     auto pair = std::make_pair(connection.from_rank, connection.from_area);
-    auto &conn = connections[pair];
+    auto& conn = connections[pair];
     if (connection.signal_type == SignalType::Excitatory) {
         conn.den_ex += std::abs(weight);
     } else {
@@ -224,9 +221,9 @@ void AreaMonitor::add_ingoing_connection(const AreaMonitor::AreaConnection &conn
     }
 }
 
-void AreaMonitor::remove_ingoing_connection(const AreaMonitor::AreaConnection &connection, const RelearnTypes::plastic_synapse_weight weight) {
+void AreaMonitor::remove_ingoing_connection(const AreaMonitor::AreaConnection& connection, const RelearnTypes::plastic_synapse_weight weight) {
     auto pair = std::make_pair(connection.from_rank, connection.from_area);
-    auto &conn = connections[pair];
+    auto& conn = connections[pair];
     if (connection.signal_type == SignalType::Excitatory) {
         conn.den_ex -= std::abs(weight);
     } else {

@@ -351,7 +351,6 @@ private:
 
     std::shared_ptr<NetworkGraph> network_graph{};
 
-
     std::shared_ptr<std::vector<NeuronMonitor>> monitors{};
     std::shared_ptr<std::unordered_map<RelearnTypes::area_id, AreaMonitor>> area_monitors{};
     std::shared_ptr<GlobalAreaMapper> global_area_mapper{};

@@ -37,7 +37,6 @@
  * Solving the problem is future work. Until it is solved the total number of neurons is limited to 2^31-1.
  */
 
-
 static std::unique_ptr<MPI_Op> minsummax{ nullptr };
 
 static std::map<MPIWrapper::AsyncToken, MPI_Request> translation_map{};
@@ -95,7 +94,6 @@ void MPIWrapper::init_globals() {
     num_ranks = static_cast<size_t>(num_ranks_int);
     my_rank = MPIRank(my_rank_int);
 }
-
 
 void MPIWrapper::barrier() {
     const int error_code = MPI_Barrier(MPI_COMM_WORLD);
@@ -193,7 +191,7 @@ MPIWrapper::AsyncToken MPIWrapper::async_s(const void* buffer, const int count, 
 
     const int error_code = MPI_Isend(buffer, count, MPI_CHAR, rank, 0, MPI_COMM_WORLD, &translated_token);
     RelearnException::check(error_code == 0, "MPIWrapper::async_s: Error code received: {}", error_code);
-    
+
     add_to_sent(count);
 
     return token;
@@ -347,17 +345,17 @@ void MPIWrapper::finalize() {
     barrier();
     free_custom_function();
 
-    for(auto i=0U;i<MPIWindow::num_windows;i++) {
+    for (auto i = 0U; i < MPIWindow::num_windows; i++) {
         auto& window = MPIWindow::mpi_windows[i];
-        if (window != nullptr && window->initialized ) {
+        if (window != nullptr && window->initialized) {
 
             const int error_code_1 = MPI_Win_free(&window->window);
             RelearnException::check(error_code_1 == 0, "MPIWrapper::finalize: Error code received: {}", error_code_1);
             const int error_code_2 = MPI_Free_mem(window->my_base_pointer);
             RelearnException::check(error_code_2 == 0, "MPIWrapper::finalize: Error code received: {}", error_code_2);
 
-        window->my_base_pointer = nullptr;
-        MPIWindow::mpi_windows[i].release();
+            window->my_base_pointer = nullptr;
+            MPIWindow::mpi_windows[i].release();
         }
     }
 

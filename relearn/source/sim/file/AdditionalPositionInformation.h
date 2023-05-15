@@ -17,8 +17,6 @@
 #include <cstdint>
 #include <string>
 
-
-
 /**
  * This struct summarizes neurons loaded from a file. It is made up of:
  * The minimum and maximum of (x, y, z)-positions of the neurons,

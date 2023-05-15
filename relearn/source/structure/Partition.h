@@ -299,7 +299,7 @@ public:
     [[nodiscard]] RelearnTypes::bounding_box_type get_subdomain_boundaries(const size_t local_subdomain_index) const {
         RelearnException::check(local_subdomain_index < local_subdomains.size(),
             "Partition::get_subdomain_boundaries: index ({}) was too large for the number of local subdomains ({})", local_subdomain_index, local_subdomains.size());
-        return {local_subdomains[local_subdomain_index].minimum_position, local_subdomains[local_subdomain_index].maximum_position};
+        return { local_subdomains[local_subdomain_index].minimum_position, local_subdomains[local_subdomain_index].maximum_position };
     }
 
     /**
@@ -322,7 +322,7 @@ public:
         RelearnException::check(simulation_box_minimum.get_y() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before"); // NOLINT(bugprone-integer-division)
         RelearnException::check(simulation_box_minimum.get_z() < Constants::uninitialized / 2, "Partition::get_simulation_box_size: set_simulation_box_size was not called before"); // NOLINT(bugprone-integer-division)
 
-        return {simulation_box_minimum, simulation_box_maximum};
+        return { simulation_box_minimum, simulation_box_maximum };
     }
 
     /**

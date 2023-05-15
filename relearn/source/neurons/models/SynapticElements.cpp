@@ -113,10 +113,10 @@ std::pair<unsigned int, std::vector<unsigned int>> SynapticElements::commit_upda
 }
 
 void SynapticElements::update_number_elements_delta(const std::span<const double> calcium, const std::span<const double> target_calcium) {
-    if(nu <= 0.0) {
+    if (nu <= 0.0) {
         return;
     }
-    
+
     const auto& disable_flags = extra_infos->get_disable_flags();
 
     RelearnException::check(calcium.size() == size, "SynapticElements::update_number_elements_delta: calcium was not of the right size");

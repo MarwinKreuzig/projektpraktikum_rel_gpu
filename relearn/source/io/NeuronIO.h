@@ -33,13 +33,13 @@ class NeuronIO {
 public:
     using number_neurons_type = RelearnTypes::number_neurons_type;
     using position_type = RelearnTypes::position_type;
-    
+
     using PlasticInSynapses = std::tuple<PlasticLocalSynapses, PlasticDistantInSynapses>;
     using PlasticOutSynapses = std::tuple<PlasticLocalSynapses, PlasticDistantOutSynapses>;
-    
+
     using StaticInSynapses = std::tuple<StaticLocalSynapses, StaticDistantInSynapses>;
     using StaticOutSynapses = std::tuple<StaticLocalSynapses, StaticDistantOutSynapses>;
-    
+
     using InSynapses = std::tuple<StaticInSynapses, PlasticInSynapses>;
     using OutSynapses = std::tuple<StaticOutSynapses, PlasticOutSynapses>;
 
@@ -52,7 +52,7 @@ public:
      */
     [[nodiscard]] static std::vector<std::string> read_comments(const std::filesystem::path& file_path);
 
-    [[nodiscard]] static AdditionalPositionInformation parse_additional_position_information(const std::vector<std::string> & comments);
+    [[nodiscard]] static AdditionalPositionInformation parse_additional_position_information(const std::vector<std::string>& comments);
 
     /**
      * @brief Reads all neurons from the file and returns those.
@@ -217,7 +217,7 @@ public:
      * @param step The current step of the simulation
      * @param ss StringStream to which the output is written
      */
-    static void write_in_synapses(const std::vector<std::vector<std::pair<NeuronID, RelearnTypes::static_synapse_weight>>>& local_in_edges_static, 
+    static void write_in_synapses(const std::vector<std::vector<std::pair<NeuronID, RelearnTypes::static_synapse_weight>>>& local_in_edges_static,
         const std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>>>& distant_in_edges_static,
         const std::vector<std::vector<std::pair<NeuronID, RelearnTypes::plastic_synapse_weight>>>& local_in_edges_plastic,
         const std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>>>& distant_in_edges_plastic,

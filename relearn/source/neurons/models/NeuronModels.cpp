@@ -48,7 +48,6 @@ void NeuronModel::create_neurons(number_neurons_type creation_count) {
         recorder.resize(new_size, 0U);
     }
 
-
     input_calculator->create_neurons(creation_count);
     background_calculator->create_neurons(creation_count);
     stimulus_calculator->create_neurons(creation_count);

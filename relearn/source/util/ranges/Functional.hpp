@@ -25,24 +25,24 @@ namespace detail {
 using std::get;
 template <typename T>
 concept has_adl_get = requires(T value) {
-  get<0>(value);
+    get<0>(value);
 };
 template <typename T>
 concept has_member_get = requires(T value) {
-  value.template get<0>();
+    value.template get<0>();
 };
 } // namespace detail
 
 template <std::size_t I>
 inline constexpr auto element = []<typename T>
-  requires detail::has_adl_get<T> || detail::has_member_get<T>(T && tuple)
+    requires detail::has_adl_get<T> || detail::has_member_get<T>(T && tuple)
 -> decltype(auto) {
-  if constexpr (detail::has_adl_get<T>) {
-    using std::get;
-    return get<I>(std::forward<T>(tuple));
-  } else if constexpr (detail::has_member_get<T>) {
-    return std::forward<T>(tuple).template get<I>();
-  }
+    if constexpr (detail::has_adl_get<T>) {
+        using std::get;
+        return get<I>(std::forward<T>(tuple));
+    } else if constexpr (detail::has_member_get<T>) {
+        return std::forward<T>(tuple).template get<I>();
+    }
 };
 
 constexpr auto not_nullptr = [](const auto* const ptr) { return ptr != nullptr; };
@@ -172,10 +172,7 @@ inline constexpr auto construct = []<typename ValueType>(ValueType && val)
 template <typename Comparator = std::equal_to<>>
 inline constexpr auto pairwise_comparison =
     [comp = Comparator{}]<typename PairLikeType>
-  requires(std::tuple_size_v<PairLikeType> == 2) &&
-          std::relation<Comparator, std::tuple_element_t<0, PairLikeType>,
-                        std::tuple_element_t<1, PairLikeType>>(
-              const PairLikeType &pair)
+    requires(std::tuple_size_v<PairLikeType> == 2) && std::relation<Comparator, std::tuple_element_t<0, PairLikeType>, std::tuple_element_t<1, PairLikeType>>(const PairLikeType& pair)
 {
     return comp(element<0>(pair), element<1>(pair));
 };
@@ -183,8 +180,7 @@ inline constexpr auto pairwise_comparison =
 inline constexpr auto lookup =
     []<ranges::random_access_range T, typename Projection = std::identity>(
         T && lookup_range_ref, Projection proj = {})
-  requires std::is_trivially_copy_constructible_v<Projection> &&
-           (std::is_lvalue_reference_v<T> || ranges::borrowed_range<T>)
+    requires std::is_trivially_copy_constructible_v<Projection> && (std::is_lvalue_reference_v<T> || ranges::borrowed_range<T>)
 {
     if constexpr (std::is_const_v<T>) {
         return [&lookup_range_ref, proj]<typename IndexType>

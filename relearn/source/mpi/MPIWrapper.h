@@ -70,7 +70,6 @@ void min_sum_max(const void* invec, void* inoutvec, const int* len, void* dtype)
  * The first call must be MPIWrapper::init(...) and the last one MPIWrapper::finalize(), not calling any of those inbetween.
  */
 
-
 /**
  * Represents one rma window for mpi
  */
@@ -82,10 +81,10 @@ struct RMAWindow {
 
     bool initialized = false;
 
-    RMAWindow() =delete;
+    RMAWindow() = delete;
 
-    RMAWindow(void* ptr) : my_base_pointer(ptr) {
-
+    RMAWindow(void* ptr)
+        : my_base_pointer(ptr) {
     }
 
     RMAWindow(const RMAWindow& other) = delete;
@@ -321,7 +320,7 @@ public:
 
         std::vector<AsyncToken> async_tokens{};
 
-        for (const auto rank : MPIRank::range(number_ranks) | ranges::views::filter([&incoming_requests](const auto& rank){ return incoming_requests.contains(rank); })) {
+        for (const auto rank : MPIRank::range(number_ranks) | ranges::views::filter([&incoming_requests](const auto& rank) { return incoming_requests.contains(rank); })) {
             auto* buffer = incoming_requests.get_data(rank);
             const auto size = incoming_requests.size(rank);
 
@@ -329,7 +328,7 @@ public:
             async_tokens.emplace_back(token);
         }
 
-        for (const auto rank : MPIRank::range(number_ranks) | ranges::views::filter([&outgoing_requests](const auto& rank){ return outgoing_requests.contains(rank); })) {
+        for (const auto rank : MPIRank::range(number_ranks) | ranges::views::filter([&outgoing_requests](const auto& rank) { return outgoing_requests.contains(rank); })) {
             const auto* buffer = outgoing_requests.get_data(rank);
             const auto size = outgoing_requests.size(rank);
 
@@ -431,15 +430,15 @@ public:
      * @param number_elements Number of elements that shall be copied
      * @return Copied vector from the rma window
      */
-    template<typename T>
+    template <typename T>
     static std::vector<T> get_from_window(MPIWindow::Window window_type, int target_rank, uint64_t index, size_t number_elements) {
         const auto size = sizeof(T);
         const auto displacement = index * size;
         std::vector<T> buffer;
         buffer.resize(number_elements);
-        lock_window(window_type, MPIRank{target_rank}, MPI_Locktype::Shared);
+        lock_window(window_type, MPIRank{ target_rank }, MPI_Locktype::Shared);
         get(window_type, buffer.data(), size, target_rank, displacement, number_elements);
-        unlock_window(window_type, MPIRank{target_rank});
+        unlock_window(window_type, MPIRank{ target_rank });
         return buffer;
     }
 
@@ -490,12 +489,12 @@ public:
     static void finalize();
 
     /**
-    * Creates and initializes a new rma window
-    * @param window The rma window that shall be created
-    * @param size Size of the window
-    * @param number_ranks Number of ranks
-    */
-    template<typename T>
+     * Creates and initializes a new rma window
+     * @param window The rma window that shall be created
+     * @param size Size of the window
+     * @param number_ranks Number of ranks
+     */
+    template <typename T>
     static void create_rma_window(MPIWindow::Window window_type, std::uint64_t number_elements, size_t number_ranks) {
         RelearnException::check(MPIWindow::mpi_windows[window_type] == nullptr, "MPIWrapper::create_rma_window: Window {} is already created", window_type);
 
@@ -507,7 +506,7 @@ public:
             RelearnException::fail("Allocating the shared memory returned the error: {}", error_code);
         }
 
-        auto window =std::make_unique<RMAWindow>(ptr);
+        auto window = std::make_unique<RMAWindow>(ptr);
 
         window->size = size;
 
@@ -523,7 +522,6 @@ public:
 
         window->base_pointers = base_pointers;
 
-
         window->initialized = true;
         MPIWindow::mpi_windows[window_type] = std::move(window);
     }
@@ -534,10 +532,10 @@ public:
      * @param Start index in the window
      * @param element The element to copy in the rma window
      */
-    template<typename T>
+    template <typename T>
     static void set_in_window(MPIWindow::Window window_type, uint64_t index, const T& element) {
         auto* base_ptr = static_cast<T*>(MPIWindow::mpi_windows[window_type]->my_base_pointer);
-        auto* ptr = base_ptr+index;
+        auto* ptr = base_ptr + index;
         lock_window(window_type, my_rank, MPI_Locktype::Exclusive);
         *ptr = element;
         unlock_window(window_type, my_rank);
@@ -549,11 +547,11 @@ public:
      * @param Start index in the window
      * @param vector The vector to copy in the rma window
      */
-    template<typename T>
+    template <typename T>
     static void set_in_window(MPIWindow::Window window_type, uint64_t index, const std::vector<T>& vector) {
         const auto size = sizeof(T);
         auto* base_ptr = static_cast<T*>(MPIWindow::mpi_windows[window_type]->my_base_pointer);
-        auto* ptr = base_ptr+index;
+        auto* ptr = base_ptr + index;
         lock_window(window_type, my_rank, MPI_Locktype::Exclusive);
         std::copy(vector.begin(), vector.end(), ptr);
         unlock_window(window_type, my_rank);

@@ -78,7 +78,7 @@ void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const std::
 
         NeuronID id{ neuron_id };
 
-        const auto total_input = get_local_and_distant_synaptic_input(fired,id);
+        const auto total_input = get_local_and_distant_synaptic_input(fired, id);
 
         const auto hyp_tan_input = std::tanh(total_input);
         const auto scaled_input = hyp_tan_input * scale_factor;

@@ -132,8 +132,8 @@ AdditionalPositionInformation NeuronIO::parse_additional_position_information(co
         auto i3 = subdomain_string.find('(', i2 + 1);
         auto i4 = subdomain_string.find(')', i3 + 1);
 
-        auto min_subdomain = parse_coordinates(subdomain_string.substr(i1 + 1, i2-i1));
-        auto max_subdomain = parse_coordinates(subdomain_string.substr(i3 + 1, i4-i3));
+        auto min_subdomain = parse_coordinates(subdomain_string.substr(i1 + 1, i2 - i1));
+        auto max_subdomain = parse_coordinates(subdomain_string.substr(i3 + 1, i4 - i3));
 
         RelearnException::check(min_subdomain.get_x() < max_subdomain.get_x(), "NeuronIO::parse_additional_position_information: Min subdomain larger than max subdomain");
         RelearnException::check(min_subdomain.get_y() < max_subdomain.get_y(), "NeuronIO::parse_additional_position_information: Min subdomain larger than max subdomain");
@@ -144,7 +144,7 @@ AdditionalPositionInformation NeuronIO::parse_additional_position_information(co
 
     const auto neurons_str = search_contains(" of ");
     auto i1 = neurons_str.find(" of ");
-    auto local_neurons = std::stoi(neurons_str.substr(2, i1-2));
+    auto local_neurons = std::stoi(neurons_str.substr(2, i1 - 2));
     auto total_neurons = std::stoi(neurons_str.substr(i1 + 4));
 
     return { sim_box, subdomains, static_cast<number_neurons_type>(total_neurons), static_cast<number_neurons_type>(local_neurons) };
@@ -451,7 +451,7 @@ void NeuronIO::write_neurons_componentwise(const std::span<const NeuronID> ids, 
     const auto size_positions = positions.size();
     const auto size_signal_types = signal_types.size();
 
-    if(simulation_box.get_minimum().get_x() == simulation_box.get_maximum().get_x()) {
+    if (simulation_box.get_minimum().get_x() == simulation_box.get_maximum().get_x()) {
         auto min_x = std::numeric_limits<double>::max();
         auto min_y = std::numeric_limits<double>::max();
         auto min_z = std::numeric_limits<double>::max();
@@ -459,7 +459,7 @@ void NeuronIO::write_neurons_componentwise(const std::span<const NeuronID> ids, 
         auto max_y = std::numeric_limits<double>::min();
         auto max_z = std::numeric_limits<double>::min();
 
-        for (const auto& [x,y,z]: positions) {
+        for (const auto& [x, y, z] : positions) {
             if (x < min_x) {
                 min_x = x;
             }
@@ -482,7 +482,7 @@ void NeuronIO::write_neurons_componentwise(const std::span<const NeuronID> ids, 
         simulation_box = RelearnTypes::bounding_box_type{ { min_x, min_y, min_z }, { max_x, max_y, max_z } };
     }
 
-    if(local_subdomain_boundaries.empty()) {
+    if (local_subdomain_boundaries.empty()) {
         local_subdomain_boundaries.push_back(simulation_box);
     }
 
@@ -497,26 +497,24 @@ void NeuronIO::write_neurons_componentwise(const std::span<const NeuronID> ids, 
 
     ss << std::setprecision(std::numeric_limits<double>::digits10);
     const auto& [simulation_box_min, simulation_box_max] = simulation_box;
-        const auto& [min_x, min_y, min_z] = simulation_box_min;
-        const auto& [max_x, max_y, max_z] = simulation_box_max;
+    const auto& [min_x, min_y, min_z] = simulation_box_min;
+    const auto& [max_x, max_y, max_z] = simulation_box_max;
 
-        ss << "# Minimum x: " << min_x << '\n';
-        ss << "# Minimum y: " << min_y << '\n';
-        ss << "# Minimum z: " << min_z << '\n';
-        ss << "# Maximum x: " << max_x << '\n';
-        ss << "# Maximum y: " << max_y << '\n';
-        ss << "# Maximum z: " << max_z << '\n';
-        ss << "# <local id> <pos x> <pos y> <pos z> <area> <type>\n";
+    ss << "# Minimum x: " << min_x << '\n';
+    ss << "# Minimum y: " << min_y << '\n';
+    ss << "# Minimum z: " << min_z << '\n';
+    ss << "# Maximum x: " << max_x << '\n';
+    ss << "# Maximum y: " << max_y << '\n';
+    ss << "# Maximum z: " << max_z << '\n';
+    ss << "# <local id> <pos x> <pos y> <pos z> <area> <type>\n";
 
+    const auto number_local_subdomains = local_subdomain_boundaries.size();
+    ss << "# Number of local subdomains: " << number_local_subdomains << "\n";
 
-        const auto number_local_subdomains = local_subdomain_boundaries.size();
-        ss << "# Number of local subdomains: " << number_local_subdomains << "\n";
-
-        for (auto local_subdomain_index = 0; local_subdomain_index < number_local_subdomains; local_subdomain_index++) {
-            const auto& [subdomain_bounding_box_min, subdomain_bounding_box_max] = local_subdomain_boundaries[local_subdomain_index];
-            ss << "# Local subdomain " << local_subdomain_index << " boundaries (" << subdomain_bounding_box_min.get_x() << ", " << subdomain_bounding_box_min.get_y() << ", " << subdomain_bounding_box_min.get_z() << ") - (";
-            ss << subdomain_bounding_box_max.get_x() << ", " << subdomain_bounding_box_max.get_y() << ", " << subdomain_bounding_box_max.get_z() << ")\n";
-
+    for (auto local_subdomain_index = 0; local_subdomain_index < number_local_subdomains; local_subdomain_index++) {
+        const auto& [subdomain_bounding_box_min, subdomain_bounding_box_max] = local_subdomain_boundaries[local_subdomain_index];
+        ss << "# Local subdomain " << local_subdomain_index << " boundaries (" << subdomain_bounding_box_min.get_x() << ", " << subdomain_bounding_box_min.get_y() << ", " << subdomain_bounding_box_min.get_z() << ") - (";
+        ss << subdomain_bounding_box_max.get_x() << ", " << subdomain_bounding_box_max.get_y() << ", " << subdomain_bounding_box_max.get_z() << ")\n";
     }
 
     for (const auto& neuron_id : ids) {
@@ -557,7 +555,6 @@ void NeuronIO::write_neurons_componentwise(std::span<const NeuronID> ids, std::s
 
     of << ss.str();
     of.close();
-
 }
 
 std::optional<std::vector<NeuronID>> NeuronIO::read_neuron_ids(const std::filesystem::path& file_path) {

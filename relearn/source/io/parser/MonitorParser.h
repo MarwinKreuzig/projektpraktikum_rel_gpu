@@ -47,23 +47,16 @@ public:
         const auto& vector = StringUtil::split_string(std::string(description), ';');
         const auto& known_area_names = local_area_translator->get_all_area_names();
 
-        return vector | ranges::views::filter([](const auto &desc) {
-                 return !(desc.find(':') != std::string::npos ||
-                          StringUtil::is_number(desc));
-               }) |
-               ranges::views::transform(
-                   [&known_area_names](const auto &parsed_area_name) {
-                     return ranges::find(known_area_names, parsed_area_name);
-                   }) |
-               ranges::views::cache1 |
-               ranges::views::filter(not_equal_to(known_area_names.end())) |
-               ranges::views::transform(
-                   [&known_area_names](const auto &parsed_area_name_iter)
-                       -> RelearnTypes::area_id {
-                     return ranges::distance(known_area_names.begin(),
-                                             parsed_area_name_iter);
-                   }) |
-               ranges::to_vector;
+        return vector | ranges::views::filter([](const auto& desc) {
+            return !(desc.find(':') != std::string::npos || StringUtil::is_number(desc));
+        }) | ranges::views::transform([&known_area_names](const auto& parsed_area_name) {
+            return ranges::find(known_area_names, parsed_area_name);
+        }) | ranges::views::cache1
+            | ranges::views::filter(not_equal_to(known_area_names.end())) | ranges::views::transform([&known_area_names](const auto& parsed_area_name_iter) -> RelearnTypes::area_id {
+                  return ranges::distance(known_area_names.begin(),
+                      parsed_area_name_iter);
+              })
+            | ranges::to_vector;
     }
 
     /**

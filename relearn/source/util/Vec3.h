@@ -503,7 +503,7 @@ public:
         const auto is_equal_z_lower = std::fabs(z - lower.z) <= epsilon;
         const auto is_equal_z_upper = std::fabs(z - upper.z) <= epsilon;
 
-        const auto is_in_box = (is_in_x_range || is_equal_x_lower || is_equal_x_upper ) && ( is_in_y_range || is_equal_y_lower || is_equal_y_upper) && (is_in_z_range || is_equal_z_lower || is_equal_z_upper);
+        const auto is_in_box = (is_in_x_range || is_equal_x_lower || is_equal_x_upper) && (is_in_y_range || is_equal_y_lower || is_equal_y_upper) && (is_in_z_range || is_equal_z_lower || is_equal_z_upper);
 
         return is_in_box;
     }
