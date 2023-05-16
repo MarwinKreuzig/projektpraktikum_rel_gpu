@@ -160,7 +160,6 @@ public:
         ptr->init(number_neurons);
         return ptr;
     }
-
     template <ranges::range LocalEdgeRangeType, ranges::range DistantEdgeRangeType>
         requires std::same_as<typename ranges::range_value_t<LocalEdgeRangeType>::second_type, typename ranges::range_value_t<DistantEdgeRangeType>::second_type>
     [[nodiscard]] static std::vector<std::pair<RankNeuronId, typename ranges::range_value_t<LocalEdgeRangeType>::second_type>> get_all_edges(const LocalEdgeRangeType& all_local_edges, const DistantEdgeRangeType& all_distant_edges, const MPIRank my_rank, const SignalType signal_type) {
@@ -183,6 +182,7 @@ public:
                            ranges::views::filter(less(0), detail::to_edge_weight)) |
                    ranges::to_vector;
         }
+        RelearnException::fail("NetworkGraphAdapter::create_empty_network_graph: Unknown SignalType {}", signal_type);
     }
 
     template <ranges::range LocalEdgeRangeType, ranges::range DistantEdgeRangeType>
