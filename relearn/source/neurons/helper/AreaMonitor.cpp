@@ -98,8 +98,8 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
 
     internal_statistics.background += sim->get_neurons()->neuron_model->get_background_activity(neuron_id);
     internal_statistics.syn_input_total += sim->get_neurons()->neuron_model->get_synaptic_input(neuron_id);
-    internal_statistics.syn_input_ex_raw = sim->get_neurons()->neuron_model->input_calculator->raw_ex_input[neuron_id.get_neuron_id()];
-    internal_statistics.syn_input_inh_raw = sim->get_neurons()->neuron_model->input_calculator->raw_inh_input[neuron_id.get_neuron_id()];
+    internal_statistics.syn_input_ex_raw += sim->get_neurons()->neuron_model->input_calculator->raw_ex_input[neuron_id.get_neuron_id()];
+    internal_statistics.syn_input_inh_raw += sim->get_neurons()->neuron_model->input_calculator->raw_inh_input[neuron_id.get_neuron_id()];
 
     internal_statistics.calcium += sim->get_neurons()->get_calcium(neuron_id);
     internal_statistics.fired_fraction += static_cast<double>(sim->get_neurons()->get_neuron_model()->fired_recorder[NeuronModel::FireRecorderPeriod::AreaMonitor][neuron_id.get_neuron_id()]) / static_cast<double>(Config::plasticity_update_step);
