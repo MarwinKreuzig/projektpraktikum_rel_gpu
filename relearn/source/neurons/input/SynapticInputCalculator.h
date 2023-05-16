@@ -69,6 +69,7 @@ struct fmt::formatter<SynapticInputCalculatorType> : ostream_formatter { };
  * that neurons receive. Performs communication with MPI to synchronize with different ranks.
  */
 class SynapticInputCalculator {
+    friend class AreaMonitor;
     friend class NeuronMonitor;
 
 public:

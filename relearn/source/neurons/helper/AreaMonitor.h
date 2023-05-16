@@ -134,7 +134,9 @@ private:
         int den_ex_conn = 0;
         int den_inh_conn = 0;
         double background = 0;
-        double syn_input = 0;
+        double syn_input_total = 0;
+        double syn_input_ex_raw = 0;
+        double syn_input_inh_raw = 0;
         double calcium = 0;
         double fired_fraction = 0.0;
         RelearnTypes::number_neurons_type num_enabled_neurons = 0;

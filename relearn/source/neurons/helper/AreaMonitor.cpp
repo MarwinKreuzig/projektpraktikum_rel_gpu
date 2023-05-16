@@ -97,7 +97,9 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
     internal_statistics.den_inh_conn += sim->get_neurons()->get_dendrites_inh().get_connected_elements(neuron_id);
 
     internal_statistics.background += sim->get_neurons()->neuron_model->get_background_activity(neuron_id);
-    internal_statistics.syn_input += sim->get_neurons()->neuron_model->get_synaptic_input(neuron_id);
+    internal_statistics.syn_input_total += sim->get_neurons()->neuron_model->get_synaptic_input(neuron_id);
+    internal_statistics.syn_input_ex_raw = sim->get_neurons()->neuron_model->input_calculator->raw_ex_input[neuron_id.get_neuron_id()];
+    internal_statistics.syn_input_inh_raw = sim->get_neurons()->neuron_model->input_calculator->raw_inh_input[neuron_id.get_neuron_id()];
 
     internal_statistics.calcium += sim->get_neurons()->get_calcium(neuron_id);
     internal_statistics.fired_fraction += static_cast<double>(sim->get_neurons()->get_neuron_model()->fired_recorder[NeuronModel::FireRecorderPeriod::AreaMonitor][neuron_id.get_neuron_id()]) / static_cast<double>(Config::plasticity_update_step);
@@ -153,7 +155,7 @@ void AreaMonitor::write_data_to_file() {
             << rank << ":" << area_id << "in;"
             << rank << ":" << area_id << "del;";
     }
-    out << "Axons grown;Axons conn;Den ex grown;Den ex conn;Den inh grown;Den inh conn;Background;Syn input;Calcium;Fire rate;Enabled neurons;";
+    out << "Axons grown;Axons conn;Den ex grown;Den ex conn;Den inh grown;Den inh conn;Background;Syn input total;Syn input ex;Syn input inh;Calcium;Fire rate;Enabled neurons;";
     out << "\n";
 
     // Data
@@ -176,7 +178,9 @@ void AreaMonitor::write_data_to_file() {
         out << internal_statistics_data.den_inh_grown << ";";
         out << internal_statistics_data.den_inh_conn << ";";
         out << internal_statistics_data.background << ";";
-        out << internal_statistics_data.syn_input << ";";
+        out << internal_statistics_data.syn_input_total << ";";
+        out << internal_statistics_data.syn_input_ex_raw << ";";
+        out << internal_statistics_data.syn_input_inh_raw << ";";
         out << internal_statistics_data.calcium << ";";
         out << internal_statistics_data.fired_fraction << ";";
         out << internal_statistics_data.num_enabled_neurons << ";";
