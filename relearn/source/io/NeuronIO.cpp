@@ -194,7 +194,9 @@ std::tuple<std::vector<LoadedNeuron>, std::vector<RelearnTypes::area_name>, Load
         const auto success = (sstream >> id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> area_name) && (sstream >> signal_type);
 
         if (!success) {
-            spdlog::info("Skipping line: {}", line);
+            if (!line.starts_with('#')) {
+                spdlog::info("Skipping line: {}", line);
+            }
             continue;
         }
 
@@ -273,7 +275,9 @@ NeuronIO::read_neurons_componentwise(const std::filesystem::path& file_path) {
         const auto success = (sstream >> id) && (sstream >> pos_x) && (sstream >> pos_y) && (sstream >> pos_z) && (sstream >> area_name) && (sstream >> signal_type);
 
         if (!success) {
-            spdlog::info("Skipping line: {}", line);
+            if (!line.starts_with('#')) {
+                spdlog::info("Skipping line: {}", line);
+            }
             continue;
         }
 
@@ -631,7 +635,9 @@ NeuronIO::InSynapses NeuronIO::read_in_synapses(const std::filesystem::path& fil
         const bool success = (sstream >> read_target_rank) && (sstream >> read_target_id) && (sstream >> read_source_rank) && (sstream >> read_source_id) && (sstream >> weight) && (sstream >> plastic);
 
         if (!success) {
-            spdlog::info("Skipping line: {}", line);
+            if (!line.starts_with('#')) {
+                spdlog::info("Skipping line: {}", line);
+            }
             continue;
         }
 
@@ -698,7 +704,9 @@ NeuronIO::OutSynapses NeuronIO::read_out_synapses(const std::filesystem::path& f
         const bool success = (sstream >> read_target_rank) && (sstream >> read_target_id) && (sstream >> read_source_rank) && (sstream >> read_source_id) && (sstream >> weight) && (sstream >> plastic);
 
         if (!success) {
-            spdlog::info("Skipping line: {}", line);
+            if (!line.starts_with('#')) {
+                spdlog::info("Skipping line: {}", line);
+            }
             continue;
         }
 
