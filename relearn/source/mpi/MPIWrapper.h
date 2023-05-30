@@ -534,7 +534,7 @@ public:
         const int error_code_2 = MPI_Win_create(window->my_base_pointer, size, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &window->window);
         RelearnException::check(error_code_2 == MPI_SUCCESS, "MPI_RMA_MemAllocator::init: Error code received: {}", error_code_2);
 
-        auto base_ptr = reinterpret_cast<int64_t>(&window->my_base_pointer);
+        auto base_ptr = reinterpret_cast<int64_t>(window->my_base_pointer);
         std::vector<int64_t> base_pointers{};
         base_pointers.resize(number_ranks);
 
