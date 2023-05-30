@@ -387,13 +387,18 @@ std::uint64_t Neurons::create_synapses() {
     // Makes sure that all ranks finished their local access epoch
     // before a remote origin opens an access epoch
     MPIWrapper::barrier();
+    MPIWrapper::sync_window(MPIWindow::Octree);
 
     MPIWrapper::start_measuring_communication();
     // Delegate the creation of new synapses to the algorithm
     Event::create_and_print_duration_begin_event("Neurons::update_connectivity", { EventCategory::mpi, EventCategory::calculation }, {}, true);
+    MPIWrapper::lock_window_all(MPIWindow::Octree);
     const auto& [local_synapses, distant_in_synapses, distant_out_synapses]
         = algorithm->update_connectivity(number_neurons);
     Event::create_and_print_duration_end_event(true);
+
+    MPIWrapper::unlock_window_all(MPIWindow::Octree);
+    MPIWrapper::sync_window(MPIWindow::Octree);
 
     MPIWrapper::stop_measureing_communication();
 
