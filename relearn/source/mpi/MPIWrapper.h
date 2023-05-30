@@ -422,6 +422,27 @@ public:
     static void unlock_window(MPIWindow::Window window, MPIRank rank);
 
     /**
+     * @brief Locks the memory window on all other MPI rank with shared protections
+     * @param window RMA window that shall be locked
+     * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
+     */
+    static void lock_window_all(MPIWindow::Window window);
+
+    /**
+     * @brief Unlocks the memory window on all other MPI rank with shared protections
+     * @param window RMA window that shall be unlocked
+     * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
+     */
+    static void unlock_window_all(MPIWindow::Window window);
+
+    /**
+     * @brief Syncs the memory window
+     * @param window RMA window that shall be synced
+     * @exception Throws a RelearnException if an MPI error occurs or if rank < 0
+     */
+    static void sync_window(MPIWindow::Window window_type);
+
+    /**
      * Downloads data from the rma window
      * @tparam T Type of the data
      * @param window_type Window type

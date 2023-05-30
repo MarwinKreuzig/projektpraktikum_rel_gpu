@@ -79,6 +79,15 @@ void MPINoWrapper::unlock_window(MPIWindow::Window window, MPIRank rank) {
     RelearnException::check(rank.is_initialized(), "rank was: %d", rank);
 }
 
+void MPINoWrapper::lock_window_all(MPIWindow::Window window) {
+}
+
+void MPINoWrapper::unlock_window_all(MPIWindow::Window window) {
+}
+
+void MPINoWrapper::sync_window(MPIWindow::Window window) {
+}
+
 void MPINoWrapper::finalize() {
 }
 

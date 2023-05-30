@@ -267,7 +267,7 @@ void MPIWrapper::get(MPIWindow::Window window_type, void* origin, const size_t s
     const auto error_code = MPI_Get(origin, download_size_int, MPI_CHAR, target_rank, displacement_mpi, download_size_int, MPI_CHAR, window->window);
     RelearnException::check(error_code == 0, "MPIWrapper::get: Error code received: {}", error_code);
 
-    add_to_remotely_accessed(size);
+    add_to_remotely_accessed(download_size);
 }
 
 int MPIWrapper::get_num_ranks() {
@@ -339,6 +339,24 @@ void MPIWrapper::unlock_window(MPIWindow::Window window_type, const MPIRank rank
     const auto& window = MPIWindow::mpi_windows[window_type]; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
     const int error_code = MPI_Win_unlock(rank.get_rank(), window->window);
     RelearnException::check(error_code == 0, "MPIWrapper::unlock_window: Error code received: {}", error_code);
+}
+
+void MPIWrapper::lock_window_all(MPIWindow::Window window_type) {
+    const auto& window = MPIWindow::mpi_windows[window_type]; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
+    const int error_code = MPI_Win_lock_all(MPI_MODE_NOCHECK, window->window);
+    RelearnException::check(error_code == MPI_SUCCESS, "MPIWrapper::unlock_window: Error code received: {}", error_code);
+}
+
+void MPIWrapper::unlock_window_all(MPIWindow::Window window_type) {
+    const auto& window = MPIWindow::mpi_windows[window_type]; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
+    const int error_code = MPI_Win_unlock_all(window->window);
+    RelearnException::check(error_code == MPI_SUCCESS, "MPIWrapper::unlock_window: Error code received: {}", error_code);
+}
+
+void MPIWrapper::sync_window(MPIWindow::Window window_type) {
+    const auto& window = MPIWindow::mpi_windows[window_type]; // NOLINT(readability-qualified-auto, llvm-qualified-auto)
+    const int error_code = MPI_Win_sync(window->window);
+    RelearnException::check(error_code == MPI_SUCCESS, "MPIWrapper::unlock_window: Error code received: {}", error_code);
 }
 
 void MPIWrapper::finalize() {

@@ -183,6 +183,12 @@ public:
 
     static void unlock_window(MPIWindow::Window window, MPIRank rank);
 
+    static void lock_window_all(MPIWindow::Window window);
+
+    static void unlock_window_all(MPIWindow::Window window);
+
+    static void sync_window(MPIWindow::Window window_type);
+
     static void start_measuring_communication() noexcept {};
 
     static void stop_measureing_communication() noexcept {};
