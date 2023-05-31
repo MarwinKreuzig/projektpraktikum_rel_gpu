@@ -108,7 +108,7 @@ public:
                     break;
                 }
             }
-            RelearnException::check(first_valid_child_index >= 0, "NodeCache::download_children: No children found for node: {} {}", (void*)node, node);
+            RelearnException::check(first_valid_child_index >= 0, "NodeCache::download_children: No children found for node: {}", (void*)node);
 
             // Start access epoch to remote rank
             MPIWrapper::download_octree_node(where_to_insert, target_rank, offset, Constants::number_oct);
