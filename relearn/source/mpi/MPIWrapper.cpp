@@ -265,12 +265,13 @@ void MPIWrapper::get(MPIWindow::Window window_type, void* origin, const size_t s
     const auto download_size_int = static_cast<int>(download_size);
 
     MPI_Request request{};
-
     const auto error_code = MPI_Rget(origin, download_size_int, MPI_CHAR, target_rank, displacement_mpi, download_size_int, MPI_CHAR, window->window, &request);
     RelearnException::check(error_code == 0, "MPIWrapper::get: Error code received: {}", error_code);
 
-    const auto error_code_wait = MPI_Wait(&request, MPI_STATUS_IGNORE);
+    MPI_Status mpi_status{};
+    const auto error_code_wait = MPI_Wait(&request, &mpi_status);
     RelearnException::check(error_code_wait == MPI_SUCCESS, "MPIWrapper::get: Wait error code received: {}", error_code_wait);
+    RelearnException::check(mpi_status.MPI_ERROR == MPI_SUCCESS, "MPIWrapper::get: Wait error code received: {}", mpi_status.MPI_ERROR);
 
     add_to_remotely_accessed(download_size);
 }

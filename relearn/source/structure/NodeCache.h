@@ -101,8 +101,29 @@ public:
 
             auto offset = node->get_cell_neuron_id().get_rma_offset();
 
+            int first_valid_child_index = -1;
+            for (auto child_index = 0; child_index < Constants::number_oct; child_index++) {
+                if (node->get_child(child_index) != nullptr) {
+                    first_valid_child_index = child_index;
+                    break;
+                }
+            }
+            RelearnException::check(first_valid_child_index >= 0, "NodeCache::download_children: No children found for node: {} {}", (void*)node, node);
+
             // Start access epoch to remote rank
             MPIWrapper::download_octree_node(where_to_insert, target_rank, offset, Constants::number_oct);
+
+            // Retry download if something went wrong
+            int retries = Constants::number_rma_download_retries;
+            while (!ref[first_valid_child_index].get_mpi_rank().is_initialized()) {
+                retries--;
+                if (retries > 0) {
+                    LogFiles::print_message_rank(MPIWrapper::get_my_rank(), "Download of mpi node children from {} {} to {} {} is corrupted. Retries left: {}", target_rank, offset, MPIWrapper::get_my_rank(), (void*)where_to_insert, retries);
+                    MPIWrapper::download_octree_node(where_to_insert, target_rank, offset, Constants::number_oct);
+                } else {
+                    RelearnException::fail("Download of mpi node children from {} {} to {} {} is corrupted. No retries left.", target_rank, offset, MPIWrapper::get_my_rank(), (void*)where_to_insert);
+                }
+            }
 
             for (auto child_index = 0; child_index < Constants::number_oct; child_index++) {
                 if (node->get_child(child_index) == nullptr) {

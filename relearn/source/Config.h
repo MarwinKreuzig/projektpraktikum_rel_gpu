@@ -50,6 +50,8 @@ public:
 
     constexpr static double bh_default_theta{ 0.3 };
     constexpr static double bh_max_theta{ 0.5 };
+
+    constexpr static int number_rma_download_retries = 10;
 };
 
 class Config {
