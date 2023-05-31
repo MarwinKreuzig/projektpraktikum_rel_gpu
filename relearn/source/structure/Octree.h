@@ -122,6 +122,23 @@ public:
      */
     virtual void initializes_leaf_nodes(RelearnTypes::number_neurons_type num_neurons) = 0;
 
+    /**
+     * Print a visualization of this tree to a file
+     * @param file_path The file where the visualization will be stored
+     */
+    void print_to_file(const std::filesystem::path& file_path) const {
+        std::ofstream out_stream{ file_path };
+        RelearnException::check(out_stream.good() && !out_stream.bad(), "Octree::print_to_file: Unable to open stream for {}", file_path.string());
+        std::stringstream ss;
+        print(ss);
+        out_stream << ss.rdbuf();
+        out_stream.flush();
+        out_stream.close();
+    }
+
+protected:
+    virtual void print(std::stringstream& ss) const = 0;
+
 private:
     box_size_type simulation_box_minimum{ 0 };
     box_size_type simulation_box_maximum{ 0 };
@@ -299,6 +316,16 @@ public:
     }
 
 protected:
+    /**
+     * Print a visualization of this tree to a stringstream
+     * @param ss stringstream
+     */
+    void print(std::stringstream& ss) const override {
+        ss << root.to_string() << "\n";
+        root.printSubtree(ss, "");
+        ss << "\n";
+    }
+
     /**
      * @brief Constructs the upper portion of the tree, i.e., all nodes at depths [0, level_of_branch_nodes].
      */

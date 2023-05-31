@@ -316,6 +316,88 @@ public:
     }
 
     /**
+     * Prints this node and all of its children to the given stream with the given prefix
+     * @param ss StringStream
+     * @param prefix Prefix
+     */
+    void printSubtree(std::stringstream& ss, const std::string& prefix) const {
+        if (!is_local()) {
+            return;
+        }
+        size_t num_children = 0;
+        for (auto* c : children) {
+            if (c != nullptr) {
+                num_children++;
+            }
+        }
+
+        if (num_children == 0) {
+            return;
+        }
+        ss << prefix;
+        ss << (num_children > 1 ? "├── " : "");
+
+        size_t added_children = 0;
+        for (auto* c : children) {
+            if (c == nullptr) {
+                continue;
+            }
+            std::string str;
+            std::string new_prefix;
+            if (!c->is_local()) {
+                str = std::string("REMOTE (") + std::to_string(c->get_mpi_rank().get_rank()) + ", " + std::to_string(c->get_cell_neuron_id().get_rma_offset()) + ")";
+            } else {
+                str = c->to_string();
+            }
+            if (added_children < num_children - 1) {
+                if (added_children > 0) { // added fix
+                    ss << prefix << "├── "; // added fix
+                } // added fix
+                bool childs_child_empty = true;
+                for (auto* cc : c->children) {
+                    if (cc != nullptr) {
+                        childs_child_empty = false;
+                        break;
+                    }
+                }
+                const bool printStrand = num_children > 1 && !childs_child_empty;
+                new_prefix = prefix + (printStrand ? "│\t" : "\t");
+            } else {
+                ss << (num_children > 1 ? prefix : "") << "└── ";
+                new_prefix = prefix + "\t";
+            }
+            ss << str << "\n";
+            c->printSubtree(ss, new_prefix);
+            added_children++;
+        }
+    }
+
+    /**
+     * Human readable string with essential information about this node
+     * @return Human readable string
+     */
+    [[nodiscard]] std::string to_string() const {
+        std::ostringstream ss;
+        ss << this;
+        ss << "(" << get_mpi_rank().get_rank() << ", " << cell.get_neuron_id() << " " << is_leaf() << ")";
+        return ss.str();
+    }
+
+    /**
+     * Human readable string with essential information about this node and its children
+     * @return Human readable string
+     */
+    [[nodiscard]] std::string to_string_with_children() const {
+        std::ostringstream ss;
+        ss << get_mpi_rank() << ", " << get_cell_neuron_id() << " leaf " << is_leaf() << " parent " << is_parent() << " local " << is_local() << " Children [";
+        for (const auto* child : get_children()) {
+            ss << child << ", ";
+        }
+        ss << "]";
+        return ss.str();
+    }
+
+    /**
      * @brief Prints the octree node to the output stream
      * @param output_stream The output stream
      * @param octree_node The octree node to print

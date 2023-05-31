@@ -151,6 +151,26 @@ public:
         return &memory_holder[offset];
     }
 
+    /**
+     * Dump content of the memory holder to a file
+     * @param file_path The file path where the content will be dumped
+     */
+    static void dump_to_file(const std::filesystem::path& file_path) {
+        std::ofstream out_stream{ file_path };
+        RelearnException::check(out_stream.good() && !out_stream.bad(), "Octree::print_to_file: Unable to open stream for {}", file_path.string());
+        std::stringstream ss;
+        for (auto offset = 0; offset < memory_holder.size(); offset++) {
+            if (!memory_holder[offset].get_mpi_rank().is_initialized()) {
+                continue;
+            }
+            const void* address = &memory_holder[offset];
+            out_stream << address << " " << offset << " " << offset * sizeof(OctreeNode<AdditionalCellAttributes>) << " " << memory_holder[offset].to_string() << "\n";
+        }
+        out_stream << ss.rdbuf();
+        out_stream.flush();
+        out_stream.close();
+    }
+
 private:
     // NOLINTNEXTLINE
     static inline std::span<OctreeNode<AdditionalCellAttributes>> memory_holder{};
