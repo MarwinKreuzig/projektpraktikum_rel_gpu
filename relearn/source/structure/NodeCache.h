@@ -115,7 +115,7 @@ public:
 
             // Retry download if something went wrong
             int retries = Constants::number_rma_download_retries;
-            while (!ref[first_valid_child_index].get_mpi_rank().is_initialized()) {
+            while (!ref[first_valid_child_index].get_mpi_rank().is_initialized() || ref[first_valid_child_index].get_mpi_rank() != target_rank) {
                 retries--;
                 if (retries > 0) {
                     LogFiles::print_message_rank(MPIWrapper::get_my_rank(), "Download of mpi node children from {} {} to {} {} is corrupted. Retries left: {}", target_rank, offset, MPIWrapper::get_my_rank(), (void*)where_to_insert, retries);
