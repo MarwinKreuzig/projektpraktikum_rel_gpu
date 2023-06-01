@@ -284,13 +284,26 @@ private:
     void update_transmission_delayer(const std::span<const FiredStatus> fired) {
         RelearnException::check(transmission_delayer != nullptr, "SynapticInputCalculator::update_transmission_delayer: TransmissionDelayer is null");
         Timers::start(TimerRegion::CALC_UPDATE_TRANSMISSION);
+
+        // auto register_local_in_edges = [this, fired](const NeuronID& neuron_id, const std::vector<std::pair<NeuronID, RelearnTypes::static_synapse_weight>>& local_in_edges) {
+        // };
+
+        //        auto register_distant_in_edges = [this](const NeuronID& neuron_id, const std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>>& distant_in_edges) {
+        //        };
+
         for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
-
             // Walk through local in-edges
-            const auto& [local_in_edges, _1] = network_graph->get_local_in_edges(neuron_id);
-
+            const auto& [local_in_edges_plastic, local_in_edges_static] = network_graph->get_local_in_edges(neuron_id);
             const auto my_rank = MPIWrapper::get_my_rank();
-            for (const auto& [src_neuron_id, edge_val] : local_in_edges) {
+            for (const auto& [src_neuron_id, edge_val] : local_in_edges_static) {
+                const auto spike = fired[src_neuron_id.get_neuron_id()];
+                if (spike == FiredStatus::Fired) {
+                    transmission_delayer->register_fired_input(neuron_id, RankNeuronId(my_rank, src_neuron_id),
+                        edge_val, number_local_neurons);
+                }
+            }
+
+            for (const auto& [src_neuron_id, edge_val] : local_in_edges_plastic) {
                 const auto spike = fired[src_neuron_id.get_neuron_id()];
                 if (spike == FiredStatus::Fired) {
                     transmission_delayer->register_fired_input(neuron_id, RankNeuronId(my_rank, src_neuron_id),
@@ -299,8 +312,18 @@ private:
             }
 
             // Walk through the distant in-edges of my neuron
-            const auto& [distant_in_edges, _2] = network_graph->get_distant_in_edges(neuron_id);
-            for (const auto& [key, edge_val] : distant_in_edges) {
+            const auto& [distant_in_edges_plastic, distant_in_edges_static] = network_graph->get_distant_in_edges(neuron_id);
+            for (const auto& [key, edge_val] : distant_in_edges_plastic) {
+                const auto& rank = key.get_rank();
+                const auto& initiator_neuron_id = key.get_neuron_id();
+
+                const auto contains_id = fired_status_comm->contains(rank, initiator_neuron_id);
+                if (contains_id) {
+                    transmission_delayer->register_fired_input(neuron_id, RankNeuronId(rank, initiator_neuron_id),
+                        edge_val, number_local_neurons);
+                }
+            }
+            for (const auto& [key, edge_val] : distant_in_edges_static) {
                 const auto& rank = key.get_rank();
                 const auto& initiator_neuron_id = key.get_neuron_id();
 
