@@ -1,5 +1,5 @@
-before_script:
-  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+variables:
+  DOCKER_AUTH_CONFIG: "{\"auths\": {\"registry.git.rwth-aachen.de\": {\"auth\": \"${GIT_TOKEN}\"}}}"
 
 build-mpi:
   rules:
