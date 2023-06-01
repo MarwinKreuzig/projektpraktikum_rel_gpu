@@ -135,6 +135,12 @@ static std::filesystem::path find_file_for_rank(const std::filesystem::path& dir
         return directory;
     }
 
+    const auto num_files_in_directory = std::distance(std::filesystem::directory_iterator(directory), std::filesystem::directory_iterator{});
+    if (num_files_in_directory == 1) {
+        RelearnException::check(rank == 0, "Utility::find_file_for_rank: Single file is only allowed for a single mpi rank");
+        return directory / std::filesystem::directory_iterator(directory)->path().filename();
+    }
+
     for (auto nr_digits = 1U; nr_digits < max_digits; nr_digits++) {
         const auto my_position_filename = prefix + StringUtil::format_int_with_leading_zeros(rank, nr_digits) + suffix;
         path_to_file = directory / my_position_filename;
