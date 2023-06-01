@@ -14,6 +14,8 @@ build-mpi:
     paths:
       - relearn/build-docker
 
+
+
 build-clang-tidy:
   rules:
   - if: $CLANG_TIDY == "TRUE"
@@ -28,7 +30,7 @@ build-clang-tidy:
 test-mpi-once:
   rules:
   - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: test
   before_script:
     - cd relearn/build-docker
@@ -44,7 +46,7 @@ test-mpi-once:
 test-mpi-multiple:
   rules:
   - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: test
   before_script:
     - cd relearn/build-docker
@@ -59,7 +61,7 @@ test-mpi-multiple:
 build-nompi:
   rules:
   - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: build
   before_script:
     - cd relearn && mkdir build-docker-nompi && cd build-docker-nompi  
@@ -73,7 +75,7 @@ build-nompi:
 test-nompi-once:
   rules:
   - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: test
   before_script:
     - cd relearn/build-docker-nompi
@@ -89,7 +91,7 @@ test-nompi-once:
 test-nompi-multiple:
   rules:
   - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: test
   before_script:
     - cd relearn/build-docker-nompi
@@ -104,7 +106,7 @@ test-nompi-multiple:
 deploy-single:
   rules:
   - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: deploy
   script:
     - relearn/build-docker/bin/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/ --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16
@@ -117,7 +119,7 @@ deploy-single:
 deploy-create:    
   rules:
   - if: $TEST_DEPLOY == "TRUE"
-  image: relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: deploy
   script:
     - relearn/build-docker/bin/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/ --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --creation-interrupts relearn/input/tests/create-100-interrupt.txt
@@ -130,7 +132,7 @@ deploy-create:
 deploy-disable:    
   rules:
   - if: $TEST_DEPLOY == "TRUE"
-  image: relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: deploy
   script:
     - relearn/build-docker/bin/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/ --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --disable-interrupts relearn/input/tests/disable-100-interrupt.txt
@@ -143,7 +145,7 @@ deploy-disable:
 deploy-single-nompi:    
   rules:
   - if: $TEST_DEPLOY == "TRUE"
-  image: relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: deploy
   script:
     - relearn/build-docker-nompi/bin/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/ --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16
@@ -156,7 +158,7 @@ deploy-single-nompi:
 deploy-create-nompi:    
   rules:
   - if: $TEST_DEPLOY == "TRUE"
-  image: relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: deploy
   script:
     - relearn/build-docker-nompi/bin/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/ --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --creation-interrupts relearn/input/tests/create-100-interrupt.txt
@@ -169,7 +171,7 @@ deploy-create-nompi:
 deploy-disable-nompi:   
   rules:
   - if: $TEST_DEPLOY == "TRUE"
-  image: relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: deploy
   script:
     - relearn/build-docker-nompi/bin/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/ --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --disable-interrupts relearn/input/tests/disable-100-interrupt.txt
@@ -182,7 +184,7 @@ deploy-disable-nompi:
 deploy-mpi-1:    
   rules:
   - if: $TEST_DEPLOY == "TRUE"
-  image: relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: deploy
   script:
     - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 relearn/build-docker/bin/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/ --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16
@@ -195,7 +197,7 @@ deploy-mpi-1:
 deploy-mpi-2:    
   rules:
   - if: $TEST_DEPLOY == "TRUE"
-  image: relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: deploy
   script:
     - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 2 relearn/build-docker/bin/relearn --algorithm barnes-hut --steps 1000 --num-neurons-per-rank 500 --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 8
@@ -208,7 +210,7 @@ deploy-mpi-2:
 deploy-mpi-4:    
   rules:
   - if: $TEST_DEPLOY == "TRUE"
-  image: relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: deploy
   script:
     - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 4 relearn/build-docker/bin/relearn --algorithm barnes-hut --steps 1000 --num-neurons-per-rank 500 --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 4
@@ -221,7 +223,7 @@ deploy-mpi-4:
 deploy-mpi-8:  
   rules:
   - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: deploy
   script:
     - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 8 relearn/build-docker/bin/relearn --algorithm barnes-hut --steps 1000 --num-neurons-per-rank 500 --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 2
@@ -234,7 +236,7 @@ deploy-mpi-8:
 benchmark-hhlr:
   rules:
   - if: $TEST_HHLR == "TRUE"
-  image: relearn-ci-redirect
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: deploy 
   script:
     - sshpass -p $HHLR_PW ssh -o StrictHostKeyChecking=no da03robo@lcluster18.hrz.tu-darmstadt.de "./gitlab-script.sh"
