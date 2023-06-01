@@ -1,5 +1,5 @@
 variables:
-  DOCKER_AUTH_CONFIG: "{\"auths\": {\"registry.git.rwth-aachen.de\": {\"auth\": \"${GIT_TOKEN}\"}}}"
+  DOCKER_AUTH_CONFIG: "echo {\"auths\": {\"registry.git.rwth-aachen.de\": {\"auth\": \"${GIT_TOKEN}\"}}}"
 
 build-mpi:
   rules:
