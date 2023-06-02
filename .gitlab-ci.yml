@@ -1,5 +1,22 @@
 variables:
   DOCKER_AUTH_CONFIG: "echo {\"auths\": {\"registry.git.rwth-aachen.de\": {\"auth\": \"${GIT_TOKEN}\"}}}"
+  DOCKER_TLS_CERTDIR: "/certs"
+  DOCKER_HOST: tcp://docker:2376/
+  
+
+services:
+  - docker:24.0.2-dind
+
+build-docker:
+  stage: build
+  image: docker:24.0.2-dind
+  before_script:
+    - docker info
+  script:
+    - cd cicd/
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    - docker build -t registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11 .
+    - docker push registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
 
 build-mpi:
   rules:
