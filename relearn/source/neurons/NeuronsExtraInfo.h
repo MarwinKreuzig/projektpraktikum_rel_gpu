@@ -77,6 +77,7 @@ public:
 
             return update_status[local_neuron_id];
         };
+        RelearnException::check(!enabled_neurons.empty(), "NeuronsExtraInformation::set_enabled_neurons: enabled_neurons is empty");
 
         ranges::fill(enabled_neurons | ranges::views::transform(get_update_status), UpdateStatus::Enabled);
     }
