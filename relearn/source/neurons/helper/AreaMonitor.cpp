@@ -29,17 +29,21 @@
 #include <range/v3/view/transform.hpp>
 
 AreaMonitor::AreaMonitor(Simulation* simulation, std::shared_ptr<GlobalAreaMapper> global_area_mapper, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name,
-    int my_rank, std::filesystem::path& path)
+    int my_rank, std::filesystem::path& path, bool monitor_connectivity)
     : sim(simulation)
     , area_id(area_id)
     , area_name(std::move(area_name))
     , global_area_mapper(global_area_mapper)
     , my_rank(my_rank)
-    , path(std::move(path)) {
+    , path(std::move(path))
+    , flag_monitor_connectivity(monitor_connectivity) {
     write_header();
 }
 
 void AreaMonitor::monitor_connectivity() {
+    if (!flag_monitor_connectivity) {
+        return;
+    }
     Timers::start(TimerRegion::AREA_MONITORS_LOCAL_EDGES);
     for (const auto& synapse : sim->get_neurons()->last_created_local_synapses) {
         if (sim->get_neurons()->get_local_area_translator()->get_area_id_for_neuron_id(synapse.get_target().get_neuron_id()) != area_id) {
@@ -73,15 +77,17 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
     Timers::start(TimerRegion::AREA_MONITORS_DELETIONS);
 
     // Deletions
-    const auto& deletions_in_step = sim->get_neurons()->get_extra_info()->get_deletions_log(neuron_id);
-    for (const auto& [other_neuron_id, weight] : deletions_in_step) {
-        const auto other_area_id = global_area_mapper->get_area_id(other_neuron_id);
-        const auto& other_rank = other_neuron_id.get_rank().get_rank();
+    if (flag_monitor_connectivity) {
+        const auto& deletions_in_step = sim->get_neurons()->get_extra_info()->get_deletions_log(neuron_id);
+        for (const auto& [other_neuron_id, weight] : deletions_in_step) {
+            const auto other_area_id = global_area_mapper->get_area_id(other_neuron_id);
+            const auto& other_rank = other_neuron_id.get_rank().get_rank();
 
-        auto pair = std::make_pair(other_rank, other_area_id);
-        deletions[pair]++;
-        const auto signal_type = weight > 0 ? SignalType::Excitatory : SignalType::Inhibitory;
-        remove_ingoing_connection(AreaConnection(other_rank, other_area_id, neuron_id, signal_type), weight);
+            auto pair = std::make_pair(other_rank, other_area_id);
+            deletions[pair]++;
+            const auto signal_type = weight > 0 ? SignalType::Excitatory : SignalType::Inhibitory;
+            remove_ingoing_connection(AreaConnection(other_rank, other_area_id, neuron_id, signal_type), weight);
+        }
     }
 
     Timers::stop_and_add(TimerRegion::AREA_MONITORS_DELETIONS);
@@ -111,7 +117,6 @@ void AreaMonitor::record_data(NeuronID neuron_id) {
 void AreaMonitor::prepare_recording() {
     deletions = EnsembleDeletions{};
     internal_statistics = InternalStatistics{};
-    const auto num_areas = sim->get_neurons()->get_local_area_translator()->get_number_of_areas();
 }
 
 void AreaMonitor::finish_recording() {
@@ -193,6 +198,9 @@ void AreaMonitor::write_data_to_file() {
 }
 
 void AreaMonitor::request_data() const {
+    if (!flag_monitor_connectivity) {
+        return;
+    }
     Timers::start(TimerRegion::AREA_MONITORS_DISTANT_EDGES);
     for (const auto& synapse : sim->get_neurons()->last_created_in_synapses) {
         if (sim->get_neurons()->get_local_area_translator()->get_area_id_for_neuron_id(synapse.get_target().get_neuron_id()) != area_id) {

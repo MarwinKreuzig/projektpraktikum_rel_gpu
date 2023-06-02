@@ -243,7 +243,7 @@ void Simulation::initialize() {
             }
             auto path = dir / (MPIWrapper::get_my_rank_str() + "_area_" + std::to_string(area_id) + ".csv");
             area_monitors->insert(
-                std::make_pair(area_id, AreaMonitor(this, global_area_mapper, area_id, area_name, my_rank.get_rank(), path)));
+                std::make_pair(area_id, AreaMonitor(this, global_area_mapper, area_id, area_name, my_rank.get_rank(), path, area_monitor_connectivity)));
         }
     }
 

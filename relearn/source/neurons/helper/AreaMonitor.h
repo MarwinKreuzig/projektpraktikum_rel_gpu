@@ -52,7 +52,7 @@ public:
      * @param area_name Name of the area that will be monitored
      * @param my_rank The mpi rank of this process
      */
-    AreaMonitor(Simulation* simulation, std::shared_ptr<GlobalAreaMapper> global_area_mapper, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name, int my_rank, std::filesystem::path& path);
+    AreaMonitor(Simulation* simulation, std::shared_ptr<GlobalAreaMapper> global_area_mapper, RelearnTypes::area_id area_id, RelearnTypes::area_name area_name, int my_rank, std::filesystem::path& path, bool monitor_connectivity);
 
     void request_data() const;
 
@@ -117,6 +117,8 @@ private:
     Simulation* sim;
 
     int my_rank;
+
+    bool flag_monitor_connectivity{ true };
 
     size_t step = 0;
 

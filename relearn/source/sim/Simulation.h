@@ -70,8 +70,10 @@ public:
      * @brief Enables the area monitor for all areas. Must be called before initialize()
      * @param enable If the area monitor shall be enabled
      */
-    void enable_area_monitor(bool enable) {
+    void enable_area_monitor(bool enable, bool monitor_connectivity) {
+        RelearnException::check(enable || !monitor_connectivity, "Simulation::enable_area_monitor: You cant monitor the connectivity without the area monitor enabled");
         area_monitor_enabled = enable;
+        area_monitor_connectivity = monitor_connectivity;
     }
 
     /**
@@ -380,6 +382,7 @@ private:
     double percentage_initially_fired{ 0.0 };
 
     bool area_monitor_enabled{ false };
+    bool area_monitor_connectivity{ true };
 
     double accept_criterion{ 0.0 };
 
