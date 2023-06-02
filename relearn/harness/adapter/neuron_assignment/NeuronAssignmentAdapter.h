@@ -63,6 +63,10 @@ public:
         return get_random_area_names_specific(number_areas, mt);
     }
 
+    static RelearnTypes::area_name get_random_area_name(std::mt19937& mt) {
+        return RandomAdapter::get_random_string(10, mt);
+    }
+
     static std::vector<RelearnTypes::area_name> get_random_area_names_specific(size_t number_areas, std::mt19937& mt) {
         std::vector<RelearnTypes::area_name> area_names{};
         area_names.reserve(number_areas);
@@ -70,7 +74,7 @@ public:
         for (size_t area_id = 0; area_id < number_areas; area_id++) {
             RelearnTypes::area_name name{};
             do {
-                name = std::to_string(RandomAdapter::get_random_percentage<double>(mt));
+                name = get_random_area_name(mt);
             } while (name.empty() || ranges::contains(area_names, name));
 
             area_names.emplace_back(std::move(name));
@@ -98,7 +102,7 @@ public:
     static std::string get_invalid_area_name(const std::vector<RelearnTypes::area_name>& area_id_to_area_name, std::mt19937& mt) {
         RelearnTypes::area_name area_name = "";
         do {
-            area_name = std::to_string(RandomAdapter::get_random_percentage<double>(mt));
+            area_name = get_random_area_name(mt);
         } while (ranges::contains(area_id_to_area_name, area_name));
         return area_name;
     }

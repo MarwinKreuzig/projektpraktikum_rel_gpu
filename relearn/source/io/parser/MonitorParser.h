@@ -20,6 +20,8 @@
 #include "util/ranges/Functional.hpp"
 
 #include <range/v3/view/cache1.hpp>
+#include <regex>
+#include <set>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -28,6 +30,7 @@
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/cache1.hpp>
 #include <range/v3/view/filter.hpp>
+#include <range/v3/view/join.hpp>
 #include <range/v3/view/transform.hpp>
 
 /**
@@ -49,10 +52,22 @@ public:
 
         return vector | ranges::views::filter([](const auto& desc) {
             return !(desc.find(':') != std::string::npos || StringUtil::is_number(desc));
-        }) | ranges::views::transform([&known_area_names](const auto& parsed_area_name) {
-            return ranges::find(known_area_names, parsed_area_name);
+        }) | ranges::views::transform([&known_area_names](const auto& parsed_area_name) -> std::set<std::string> {
+            std::set<RelearnTypes::area_name> matching_area_names{};
+            for (const auto& known_area_name : known_area_names) {
+                std::smatch match;
+                const bool is_match = std::regex_match(known_area_name, match, std::regex(parsed_area_name));
+                if (is_match) {
+                    matching_area_names.insert(known_area_name);
+                }
+            }
+            return matching_area_names;
         }) | ranges::views::cache1
-            | ranges::views::filter(not_equal_to(known_area_names.end())) | ranges::views::transform([&known_area_names](const auto& parsed_area_name_iter) -> RelearnTypes::area_id {
+            | ranges::views::join
+            | ranges::views::transform([&known_area_names](const auto& parsed_area_name) {
+                  return std::find(known_area_names.begin(), known_area_names.end(), parsed_area_name);
+              })
+            | ranges::views::transform([&known_area_names](const auto& parsed_area_name_iter) -> RelearnTypes::area_id {
                   return ranges::distance(known_area_names.begin(),
                       parsed_area_name_iter);
               })

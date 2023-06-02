@@ -49,6 +49,19 @@ public:
         return get_random_double<T>(0.0, std::nextafter(1.0, 1.1), mt);
     }
 
+    static std::string get_random_string(size_t length, std::mt19937& mt) {
+        auto randchar = [&mt]() -> char {
+            const char charset[] = "0123456789"
+                                   "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                   "abcdefghijklmnopqrstuvwxyz";
+            const size_t max_index = (sizeof(charset) - 1);
+            return charset[get_random_integer(size_t{ 0 }, max_index, mt)];
+        };
+        std::string str(length, 0);
+        std::generate_n(str.begin(), length, randchar);
+        return str;
+    }
+
     static bool get_random_bool(std::mt19937& mt) {
         const auto val = get_random_integer(0, 1, mt);
         return val == 0;
@@ -66,7 +79,7 @@ public:
             return ranges::any_of(vec | ranges::views::enumerate, index_equals_value);
         };
 
-        if(size <= 1) {
+        if (size <= 1) {
             return derangement;
         }
 
