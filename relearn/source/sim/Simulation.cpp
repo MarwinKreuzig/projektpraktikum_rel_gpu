@@ -317,6 +317,7 @@ void Simulation::initialize() {
     neurons->debug_check_counts();
     neurons->print_neurons_overview_to_log_file_on_rank_0(0);
     neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(0, 0, 0, 0);
+    neurons->print_area_mapping_to_log_file();
 }
 
 void Simulation::simulate(const step_type number_steps) {
@@ -532,9 +533,6 @@ void Simulation::simulate(const step_type number_steps) {
 
     LogFiles::print_message_rank(MPIRank::root_rank(), "Print positions");
     neurons->print_positions_to_log_file();
-
-    LogFiles::print_message_rank(MPIRank::root_rank(), "Print area mapping");
-    neurons->print_area_mapping_to_log_file();
 }
 
 void Simulation::finalize() const {
