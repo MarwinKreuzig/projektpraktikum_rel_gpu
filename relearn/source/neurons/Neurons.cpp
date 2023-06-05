@@ -913,12 +913,14 @@ void Neurons::print_positions_to_log_file() {
     NeuronIO::write_neurons_componentwise(NeuronID::range(number_neurons) | ranges::to_vector, extra_info->get_positions(), local_area_translator,
         axons->get_signal_types(), ss, partition->get_total_number_neurons(), partition->get_simulation_box_size(), partition->get_all_local_subdomain_boundaries());
     LogFiles::write_to_file(LogFiles::EventType::Positions, false, ss.str());
+    LogFiles::flush_file(LogFiles::EventType::Positions);
 }
 
 void Neurons::print_area_mapping_to_log_file() {
     std::stringstream ss;
     NeuronIO::write_area_names(ss, local_area_translator);
     LogFiles::write_to_file(LogFiles::EventType::AreaMapping, false, ss.str());
+    LogFiles::flush_file(LogFiles::EventType::AreaMapping);
 }
 
 void Neurons::print() {
