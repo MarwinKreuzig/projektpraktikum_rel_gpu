@@ -438,7 +438,7 @@ void Simulation::simulate(const step_type number_steps) {
 
                 for (NeuronID neuron_id :
                     NeuronID::range(neurons->get_number_neurons())) {
-                    if (neurons->get_disable_flags()[neuron_id.get_neuron_id()] != UpdateStatus::Enabled) {
+                    if (neurons->get_disable_flags()[neuron_id.get_neuron_id()] == UpdateStatus::Disabled) {
                         continue;
                     }
                     const auto& area_id = neurons->get_local_area_translator()->get_area_id_for_neuron_id(neuron_id.get_neuron_id());
