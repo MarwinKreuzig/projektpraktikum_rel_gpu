@@ -16,15 +16,18 @@
 
 #include <filesystem>
 #include <functional>
+#include <memory>
 #include <span>
 #include <tuple>
 #include <type_traits>
 #include <vector>
 
+class NeuronsExtraInfo;
+
 namespace Util {
 
 /**
- * @brief Calculates the minimum, maximum, and sum over all values in the span, for which the disable flags are not enabled
+ * @brief Calculates the minimum, maximum, and sum over all values in the span, for which the disable flags are not disabled
  * @tparam T Must be a arithmetic (floating point or integral)
  * @param values The values that should be reduced
  * @param disable_flags The flags that indicate which values to skip
@@ -32,45 +35,7 @@ namespace Util {
  * @return Returns a tuple with (1) minimum and (2) maximum value from values, (3) the sum of all enabled values and (4) the number of enabled values
  */
 template <typename T>
-std::tuple<T, T, T, size_t> min_max_acc(const std::span<const T>& values, const std::span<const UpdateStatus> disable_flags) {
-    static_assert(std::is_arithmetic<T>::value);
-
-    RelearnException::check(!values.empty(), "Util::min_max_acc: values are empty");
-    RelearnException::check(values.size() == disable_flags.size(), "Util::min_max_acc: values and disable_flags had different sizes");
-
-    size_t first_index = 0;
-
-    while (first_index < values.size() && disable_flags[first_index] != UpdateStatus::Enabled) {
-        first_index++;
-    }
-
-    RelearnException::check(first_index != values.size(), "Util::min_max_acc: all were disabled");
-
-    T min = values[first_index];
-    T max = values[first_index];
-    T acc = values[first_index];
-
-    size_t num_values = 1;
-
-    for (auto i = first_index + 1; i < values.size(); i++) {
-        if (disable_flags[i] != UpdateStatus::Enabled) {
-            continue;
-        }
-
-        const T& current_value = values[i];
-
-        if (current_value < min) {
-            min = current_value;
-        } else if (current_value > max) {
-            max = current_value;
-        }
-
-        acc += current_value;
-        num_values++;
-    }
-
-    return std::make_tuple(min, max, acc, num_values);
-}
+std::tuple<T, T, T, size_t> min_max_acc(const std::span<const T>& values, const std::shared_ptr<const NeuronsExtraInfo> extra_infos);
 
 /**
  * @brief Counts the number of digits necessary to print the value

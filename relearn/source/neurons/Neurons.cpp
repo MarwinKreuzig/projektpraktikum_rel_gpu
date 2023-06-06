@@ -341,7 +341,7 @@ void Neurons::update_number_synaptic_elements_delta() {
 
 StatisticalMeasures Neurons::global_statistics(const std::span<const double> local_values, const MPIRank root) const {
     const auto disable_flags = extra_info->get_disable_flags();
-    const auto [d_my_min, d_my_max, d_my_acc, d_num_values] = Util::min_max_acc(local_values, disable_flags);
+    const auto [d_my_min, d_my_max, d_my_acc, d_num_values] = Util::min_max_acc(local_values, extra_info);
     const double my_avg = d_my_acc / static_cast<double>(d_num_values);
 
     const double d_min = MPIWrapper::reduce(d_my_min, MPIWrapper::ReduceFunction::Min, root);

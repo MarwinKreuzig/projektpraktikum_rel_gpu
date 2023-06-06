@@ -56,6 +56,7 @@ target_sources(
         util/StringUtil.cpp
         util/RelearnException.cpp
         util/Timers.cpp
+        util/Utility.cpp
         # for visual studio
         ${relearn_lib_additional_files})
 
