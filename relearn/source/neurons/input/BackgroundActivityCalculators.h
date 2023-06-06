@@ -85,7 +85,7 @@ public:
 
         Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
         for (number_neurons_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
-            const auto input = disable_flags[neuron_id] == UpdateStatus::Disabled ? 0.0 : base_input;
+            const auto input = !extra_infos->does_update_plasticity(NeuronID{ neuron_id }) ? 0.0 : base_input;
             set_and_transform_background_activity(step, neuron_id, input);
         }
         Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
@@ -149,7 +149,7 @@ public:
 
         Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
         for (number_neurons_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
-            const auto input = disable_flags[neuron_id] == UpdateStatus::Disabled ? 0.0 : RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
+            const auto input = !extra_infos->does_update_plasticity(NeuronID{ neuron_id }) ? 0.0 : RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
             set_and_transform_background_activity(step, neuron_id, input);
         }
         Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
@@ -268,7 +268,7 @@ public:
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < number_neurons, "FastNormalBackgroundActivityCalculator::get_background_activity: id is too large: {}", neuron_id);
-        if (cur_step >= first_step && cur_step <= last_step) {
+        if (extra_infos->does_update_plasticity(NeuronID{ neuron_id }) && cur_step >= first_step && cur_step <= last_step) {
             return transformation_function->transform(cur_step, pre_drawn_values[offset + local_neuron_id]);
         }
         return 0.0;
