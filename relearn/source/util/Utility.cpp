@@ -20,7 +20,7 @@ std::tuple<T, T, T, size_t> Util::min_max_acc(const std::span<const T>& values, 
 
     size_t first_index = 0;
 
-    while (first_index < values.size() && !extra_infos->does_update_electrical_actvity(NeuronID{ first_index })) {
+    while (first_index < values.size() && !(extra_infos->does_update_electrical_actvity(NeuronID{ first_index }) && extra_infos->does_update_plasticity(NeuronID{ first_index }))) {
         first_index++;
     }
 
@@ -33,7 +33,7 @@ std::tuple<T, T, T, size_t> Util::min_max_acc(const std::span<const T>& values, 
     size_t num_values = 1;
 
     for (auto i = first_index + 1; i < values.size(); i++) {
-        if (!extra_infos->does_update_electrical_actvity(NeuronID{ i })) {
+        if (!(extra_infos->does_update_electrical_actvity(NeuronID{ i }) && extra_infos->does_update_plasticity(NeuronID{ i }))) {
             continue;
         }
 
@@ -53,3 +53,6 @@ std::tuple<T, T, T, size_t> Util::min_max_acc(const std::span<const T>& values, 
 }
 
 template std::tuple<double, double, double, size_t> Util::min_max_acc(const std::span<const double>& values, const std::shared_ptr<const NeuronsExtraInfo> extra_infos);
+template std::tuple<float, float, float, size_t> Util::min_max_acc(const std::span<const float>& values, const std::shared_ptr<const NeuronsExtraInfo> extra_infos);
+template std::tuple<size_t, size_t, size_t, size_t> Util::min_max_acc(const std::span<const size_t>& values, const std::shared_ptr<const NeuronsExtraInfo> extra_infos);
+template std::tuple<int, int, int, size_t> Util::min_max_acc(const std::span<const int>& values, const std::shared_ptr<const NeuronsExtraInfo> extra_infos);
