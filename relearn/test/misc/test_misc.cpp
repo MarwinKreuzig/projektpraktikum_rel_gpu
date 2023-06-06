@@ -12,6 +12,7 @@
 
 #include "adapter/neuron_id/NeuronIdAdapter.h"
 
+#include "neurons/NeuronsExtraInfo.h"
 #include "util/Utility.h"
 #include "util/shuffle/shuffle.h"
 
@@ -130,30 +131,28 @@ TEST_F(MiscTest, testMinMaxAccEmpty) {
 }
 
 TEST_F(MiscTest, testMinMaxAccSizeMismatch) {
-    std::vector<UpdateStatus> update_status(3, UpdateStatus::Enabled);
+    const auto num_neurons = 3;
+    const auto extra_infos = std::make_shared<NeuronsExtraInfo>();
+    extra_infos->init(num_neurons);
 
-    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const double>{ { 4.0, 1.2 } }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const float>{ { 0.8f } }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const int>{ { 5, -4, 8, -6, 9 } }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const size_t>{ { 10, 422, 5223, 554315 } }, update_status), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const double>{ { 4.0, 1.2 } }, extra_infos), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const float>{ { 0.8f } }, extra_infos), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const int>{ { 5, -4, 8, -6, 9 } }, extra_infos), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const size_t>{ { 10, 422, 5223, 554315 } }, extra_infos), RelearnException);
 }
 
 TEST_F(MiscTest, testMinMaxAccSizeAllDisabled) {
-    std::vector<UpdateStatus> update_status(3, UpdateStatus::Disabled);
+    const auto num_neurons = 3;
+    const auto extra_infos = std::make_shared<NeuronsExtraInfo>();
+    extra_infos->init(num_neurons);
 
-    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const double>{ { 4.0, 1.2, 5.2 } }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const float>{ { 0.8f, -1.6f, 65423.8f } }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const int>{ { 5, -4, 8 } }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const size_t>{ { 10, 422, 5223 } }, update_status), RelearnException);
-}
+    const auto disabled_neurons = NeuronID::range(num_neurons) | ranges::to_vector;
+    extra_infos->set_disabled_neurons(disabled_neurons);
 
-TEST_F(MiscTest, testMinMaxAccSizeAllStatic) {
-    std::vector<UpdateStatus> update_status(3, UpdateStatus::Static);
-
-    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const double>{ { 4.0, 1.2, 5.2 } }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const float>{ { 0.8f, -1.6f, 65423.8f } }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const int>{ { 5, -4, 8 } }, update_status), RelearnException);
-    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const size_t>{ { 10, 422, 5223 } }, update_status), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const double>{ { 4.0, 1.2, 5.2 } }, extra_infos), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const float>{ { 0.8f, -1.6f, 65423.8f } }, extra_infos), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const int>{ { 5, -4, 8 } }, extra_infos), RelearnException);
+    ASSERT_THROW(auto val = Util::min_max_acc(std::span<const size_t>{ { 10, 422, 5223 } }, extra_infos), RelearnException);
 }
 
 TEST_F(MiscTest, testMinMaxAccDouble) {
@@ -163,14 +162,29 @@ TEST_F(MiscTest, testMinMaxAccDouble) {
 
     const auto number_values = number_enabled + number_disabled + number_static;
 
-    const auto update_status =
-        ranges::views::concat(
-            ranges::views::repeat_n(UpdateStatus::Enabled, number_enabled),
-            ranges::views::repeat_n(UpdateStatus::Disabled, number_disabled),
-            ranges::views::repeat_n(UpdateStatus::Static,
-                                    number_values -
-                                        (number_disabled + number_enabled)))
-            | ranges::to_vector | actions::shuffle(mt);
+    const auto update_status = ranges::views::concat(
+                                   ranges::views::repeat_n(UpdateStatus::Enabled, number_enabled),
+                                   ranges::views::repeat_n(UpdateStatus::Disabled, number_disabled),
+                                   ranges::views::repeat_n(UpdateStatus::Static,
+                                       number_values - (number_disabled + number_enabled)))
+        | ranges::to_vector | actions::shuffle(mt);
+
+    const auto extra_infos = std::make_shared<NeuronsExtraInfo>();
+    extra_infos->init(number_values);
+
+    std::vector<NeuronID> disabled_neurons{};
+    std::vector<NeuronID> static_neurons{};
+    for (const auto& neuron_id : NeuronID::range(number_values)) {
+        const auto& us = update_status[neuron_id.get_neuron_id()];
+        if (us == UpdateStatus::Static) {
+            static_neurons.push_back(neuron_id);
+        } else if (us == UpdateStatus::Disabled) {
+            disabled_neurons.push_back(neuron_id);
+        }
+    }
+
+    extra_infos->set_disabled_neurons(disabled_neurons);
+    extra_infos->set_static_neurons(static_neurons);
 
     std::vector<double> values{};
     values.reserve(number_values);
@@ -191,7 +205,7 @@ TEST_F(MiscTest, testMinMaxAccDouble) {
         values.emplace_back(random_value);
     }
 
-    const auto [minimum, maximum, accumulated, num] = Util::min_max_acc(std::span<const double>{ values }, update_status);
+    const auto [minimum, maximum, accumulated, num] = Util::min_max_acc(std::span<const double>{ values }, extra_infos);
 
     ASSERT_EQ(minimum, min);
     ASSERT_EQ(maximum, max);
@@ -234,7 +248,24 @@ TEST_F(MiscTest, testMinMaxAccSizet) {
         values.emplace_back(random_value);
     }
 
-    const auto [minimum, maximum, accumulated, num] = Util::min_max_acc(std::span<const size_t>{ values }, update_status);
+    const auto extra_infos = std::make_shared<NeuronsExtraInfo>();
+    extra_infos->init(number_values);
+
+    std::vector<NeuronID> disabled_neurons{};
+    std::vector<NeuronID> static_neurons{};
+    for (const auto& neuron_id : NeuronID::range(number_values)) {
+        const auto& us = update_status[neuron_id.get_neuron_id()];
+        if (us == UpdateStatus::Static) {
+            static_neurons.push_back(neuron_id);
+        } else if (us == UpdateStatus::Disabled) {
+            disabled_neurons.push_back(neuron_id);
+        }
+    }
+
+    extra_infos->set_disabled_neurons(disabled_neurons);
+    extra_infos->set_static_neurons(static_neurons);
+
+    const auto [minimum, maximum, accumulated, num] = Util::min_max_acc(std::span<const size_t>{ values }, extra_infos);
 
     ASSERT_EQ(minimum, min);
     ASSERT_EQ(maximum, max);

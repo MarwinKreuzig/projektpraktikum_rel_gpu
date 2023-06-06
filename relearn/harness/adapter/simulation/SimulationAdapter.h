@@ -62,6 +62,14 @@ public:
         return { x, y, z };
     }
 
+    static std::vector<Vec3d> get_random_positions(std::mt19937& mt, RelearnTypes::number_neurons_type num_neurons) {
+        std::vector<Vec3d> pos;
+        for (auto i = 0; i < num_neurons; i++) {
+            pos.push_back(get_random_position(mt));
+        }
+        return pos;
+    }
+
     static Vec3d get_minimum_position() {
         return { -position_boundary, -position_boundary, -position_boundary };
     }
