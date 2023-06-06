@@ -150,6 +150,16 @@ AdditionalPositionInformation NeuronIO::parse_additional_position_information(co
     return { sim_box, subdomains, static_cast<number_neurons_type>(total_neurons), static_cast<number_neurons_type>(local_neurons) };
 }
 
+bool NeuronIO::is_valid_area_name(const RelearnTypes::area_name& area_name) {
+    auto is_valid_char = [](const char c) {
+        return std::isalpha(c) || std::isdigit(c) || c == '_';
+    };
+
+    return std::find_if(area_name.begin(), area_name.end(),
+               [is_valid_char](char c) { return !is_valid_char(c); })
+        == area_name.end();
+}
+
 std::tuple<std::vector<LoadedNeuron>, std::vector<RelearnTypes::area_name>, LoadedNeuronsInfo, AdditionalPositionInformation> NeuronIO::read_neurons(const std::filesystem::path& file_path) {
     RelearnException::check(std::filesystem::is_regular_file(file_path), "NeuronIO::read_neurons: Path is not a file");
     std::ifstream file(file_path);
@@ -219,6 +229,8 @@ std::tuple<std::vector<LoadedNeuron>, std::vector<RelearnTypes::area_name>, Load
         RelearnTypes::area_id area_id{ 0 };
         if (area_id_it == area_names.end()) {
             // Area name not known
+            // Check if it is valid
+            RelearnException::check(NeuronIO::is_valid_area_name(area_name), "NeuronIO::read_neurons: Area name {} is invalid", area_name);
             area_names.emplace_back(std::move(area_name));
             area_id = area_names.size() - 1;
         } else {

@@ -43,6 +43,8 @@ public:
     using InSynapses = std::tuple<StaticInSynapses, PlasticInSynapses>;
     using OutSynapses = std::tuple<StaticOutSynapses, PlasticOutSynapses>;
 
+    [[nodiscard]] static bool is_valid_area_name(const RelearnTypes::area_name& area_name);
+
     /**
      * @brief Reads all comments from the beginning of the file and returns those.
      *      Comments start with '#'. It stops at the file end or the fist non-comment line
