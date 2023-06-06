@@ -278,15 +278,8 @@ public:
      * @brief Returns the calculated background activity for all. Changes after calls to update_input(...)
      * @return The background activity for all neurons
      */
-    std::span<const double> get_background_activity() const noexcept override {
-        const auto number_neurons = get_number_neurons();
-
-        if (cur_step >= first_step && cur_step <= last_step) {
-            const auto pointer = pre_drawn_values.data();
-            // TODO Ignores Transformation function
-            return std::span<const double>{ pointer + offset, number_neurons };
-        }
-        return { std::vector<double>(number_neurons, 0.0) };
+    [[nodiscard]] std::span<const double> get_background_activity() const noexcept override {
+        RelearnException::fail("FastNormalBackgroundActivityCalculator::get_background_activity: Not supported method with this calculator");
     }
 
     /**
