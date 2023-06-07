@@ -411,6 +411,9 @@ void Simulation::simulate(const step_type number_steps) {
             neurons->print_sums_of_synapses_and_elements_to_log_file_on_rank_0(step, num_axons_deleted, num_dendrites_deleted, num_synapses_created);
 
             Timers::stop_and_add(TimerRegion::PRINT_IO);
+        }
+
+        if (interval_neuron_monitor.hits_step(step)) {
 
             if (area_monitor_enabled) {
                 // Update area monitor
