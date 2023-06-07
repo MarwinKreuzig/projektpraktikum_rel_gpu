@@ -54,7 +54,7 @@ public:
             const char charset[] = "0123456789"
                                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                    "abcdefghijklmnopqrstuvwxyz";
-            const size_t max_index = (sizeof(charset) - 1);
+            const size_t max_index = (sizeof(charset) - 2);
             return charset[get_random_integer(size_t{ 0 }, max_index, mt)];
         };
         std::string str(length, 0);
