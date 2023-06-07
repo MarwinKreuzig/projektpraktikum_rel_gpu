@@ -414,7 +414,6 @@ void Simulation::simulate(const step_type number_steps) {
         }
 
         if (interval_neuron_monitor.hits_step(step)) {
-
             if (area_monitor_enabled) {
                 // Update area monitor
                 Timers::start(TimerRegion::CAPTURE_AREA_MONITORS);

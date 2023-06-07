@@ -120,8 +120,6 @@ private:
 
     bool flag_monitor_connectivity{ true };
 
-    size_t step = 0;
-
     std::filesystem::path path;
 
     RelearnTypes::area_name area_name;

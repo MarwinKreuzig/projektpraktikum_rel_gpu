@@ -163,6 +163,7 @@ void AreaMonitor::write_data_to_file() {
     out << "Axons grown;Axons conn;Den ex grown;Den ex conn;Den inh grown;Den inh conn;Background;Syn input total;Syn input ex;Syn input inh;Calcium;Fire rate;Enabled neurons;";
     out << "\n";
 
+    RelearnTypes::step_type step = 0;
     // Data
     for (const auto& single_record : data) {
         out << step << ";";
@@ -191,7 +192,7 @@ void AreaMonitor::write_data_to_file() {
         out << internal_statistics_data.num_enabled_neurons << ";";
 
         out << "\n";
-        step += Config::plasticity_update_step;
+        step += Config::neuron_monitor_log_step;
     }
     out.close();
     data.clear();
