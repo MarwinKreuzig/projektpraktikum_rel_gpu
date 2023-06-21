@@ -48,6 +48,31 @@ public:
         return result;
     }
 
+    static std::vector<std::string> split_string(const std::string_view& string_view, char delim) {
+        std::vector<std::string> result{};
+        result.reserve(string_view.size());
+
+        std::string::size_type current_position = 0;
+
+        while (true) {
+            auto semicolon_position = string_view.find(';', current_position);
+            if (semicolon_position == std::string_view::npos) {
+                semicolon_position = string_view.size();
+            }
+
+            const auto substring = string_view.substr(current_position, semicolon_position - current_position);
+            result.emplace_back(substring);
+
+            if (semicolon_position == string_view.size()) {
+                break;
+            }
+
+            current_position = semicolon_position + 1;
+        }
+
+        return result;
+    }
+
     /**
      * @brief Checks if the string contains only digits
      * @param s a string

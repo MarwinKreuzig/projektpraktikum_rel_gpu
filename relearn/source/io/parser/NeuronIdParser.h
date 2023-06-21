@@ -131,6 +131,31 @@ public:
     }
 
     /**
+     * @brief Parses multiple RankNeuronIds from a description. Format is:
+     *      <mpi_rank>:<neuron_id> with ; separating the RankNeuronIds
+     *      with a non-negative MPI rank. However, if -1 is parsed as the MPI rank, my_rank is used instead.
+     *      <neuron_id> is in input format, i.e., "+1".
+     * @param description The description of the RankNeuronIds
+     * @param my_rank The default MPI rank, must be initialized
+     * @exception Throws a RelearnException if my_rank is not initialized or a <neuron_id> is 0
+     * @return A vector with all successfully parsed RankNeuronIds
+     */
+    [[nodiscard]] static std::vector<RankNeuronId> parse_multiple_description(const std::vector<std::string> descriptions, const MPIRank my_rank) {
+        RelearnException::check(my_rank.is_initialized(), "NeuronIdParser::parse_multiple_description: my_rank is not initialized.", my_rank);
+
+        std::vector<RankNeuronId> parsed_ids{};
+        parsed_ids.reserve(descriptions.size());
+        for (const auto& description : descriptions) {
+            const auto opt_rank_neuron_id = parse_description(description, my_rank);
+
+            if (opt_rank_neuron_id.has_value()) {
+                parsed_ids.emplace_back(opt_rank_neuron_id.value());
+            }
+        }
+        return parsed_ids;
+    }
+
+    /**
      * @brief Extracts all NeuronIDs from the RankNeuronIds that belong to the given rank.
      * @param rank_neuron_ids The rank neuron ids
      * @param my_rank The current MPI rank, must be initialized
