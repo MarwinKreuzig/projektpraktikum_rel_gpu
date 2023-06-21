@@ -163,7 +163,6 @@ void AreaMonitor::write_data_to_file() {
     out << "Axons grown;Axons conn;Den ex grown;Den ex conn;Den inh grown;Den inh conn;Background;Syn input total;Syn input ex;Syn input inh;Calcium;Fire rate;Enabled neurons;";
     out << "\n";
 
-    RelearnTypes::step_type step = 0;
     // Data
     for (const auto& single_record : data) {
         out << step << ";";
