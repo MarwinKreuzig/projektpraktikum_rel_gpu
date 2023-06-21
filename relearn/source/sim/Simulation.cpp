@@ -362,6 +362,8 @@ void Simulation::simulate(const step_type number_steps) {
                 }
             }
 
+            neurons->print_fire_rate_to_file(step);
+
             neurons->get_neuron_model()->reset_fired_recorder(NeuronModel::FireRecorderPeriod::NeuronMonitor);
             Timers::stop_and_add(TimerRegion::CAPTURE_MONITORS);
         }

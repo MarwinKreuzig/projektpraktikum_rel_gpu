@@ -121,6 +121,7 @@ void LogFiles::init() {
     // Create log file for all calcium values
     LogFiles::add_logfile(EventType::CalciumValues, "calcium_values", MPIRank::uninitialized_rank());
     LogFiles::add_logfile(EventType::ExtremeCalciumValues, "extreme_calcium_values", MPIRank::uninitialized_rank());
+    LogFiles::add_logfile(EventType::FireRates, "fire_rates", MPIRank::uninitialized_rank());
 
     // Create log file for all synaptic inputs
     LogFiles::add_logfile(EventType::SynapticInput, "synaptic_inputs", MPIRank::uninitialized_rank());

@@ -426,6 +426,8 @@ public:
      */
     void print_calcium_values_to_file(step_type current_step);
 
+    void print_fire_rate_to_file(step_type current_step);
+
     /**
      * @brief Prints the synaptic inputs for the local neurons at the current simulation step
      * @param current_step The current simulation step

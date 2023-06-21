@@ -332,6 +332,7 @@ int main(int argc, char** argv) {
     const auto* flag_disable_printing_network = app.add_flag("--no-print-network", "Disables printing the network to a file.");
     const auto* flag_disable_printing_plasticity = app.add_flag("--no-print-plasticity", "Disables printing the plasticity changes to a file.");
     const auto* flag_disable_printing_calcium = app.add_flag("--no-print-calcium", "Disables printing the calcium changes to a file.");
+    const auto* flag_disable_printing_fire_rate = app.add_flag("--no-print-fire-rate", "Disables printing the fire rate changes to a file.");
     const auto* flag_disable_printing_overview = app.add_flag("--no-print-overview", "Disables printing the overviews to a file.");
     const auto* flag_disable_printing_area_mapping = app.add_flag("--no-print-mapping", "Disables printing the area mapping to a file.");
 
@@ -675,6 +676,10 @@ int main(int argc, char** argv) {
         if (static_cast<bool>(*flag_disable_printing_calcium)) {
             LogFiles::set_log_status(LogFiles::EventType::CalciumValues, true);
             LogFiles::set_log_status(LogFiles::EventType::ExtremeCalciumValues, true);
+        }
+
+        if (static_cast<bool>(*flag_disable_printing_fire_rate)) {
+            LogFiles::set_log_status(LogFiles::EventType::FireRates, true);
         }
 
         if (static_cast<bool>(*flag_disable_printing_overview)) {

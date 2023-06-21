@@ -1040,6 +1040,20 @@ void Neurons::print_calcium_values_to_file(const step_type current_step) {
     LogFiles::write_to_file(LogFiles::EventType::CalciumValues, false, ss.str());
 }
 
+void Neurons::print_fire_rate_to_file(const step_type current_step) {
+
+    const auto& fire_recorder = neuron_model->get_fired_recorder(NeuronModel::FireRecorderPeriod::NeuronMonitor);
+
+    std::stringstream ss{};
+
+    ss << '#' << current_step;
+    for (const auto val : fire_recorder) {
+        ss << ';' << val / static_cast<double>(Config::neuron_monitor_log_step);
+    }
+
+    LogFiles::write_to_file(LogFiles::EventType::FireRates, false, ss.str());
+}
+
 void Neurons::print_synaptic_inputs_to_file(const step_type current_step) {
     const auto& synaptic_input = neuron_model->get_synaptic_input();
 

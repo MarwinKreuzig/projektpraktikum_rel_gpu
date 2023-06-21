@@ -54,6 +54,7 @@ public:
         NetworkOutHistogramLocal,
         Essentials,
         CalciumValues,
+        FireRates,
         ExtremeCalciumValues,
         SynapticInput,
         AreaMapping,
