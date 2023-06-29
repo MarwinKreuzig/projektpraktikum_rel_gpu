@@ -51,6 +51,8 @@ public:
     Parameter& operator=(const Parameter& other) = default;
     Parameter& operator=(Parameter&& other) = default;
 
+    bool operator==(const Parameter<T>& other) const noexcept = default;
+
     /**
      * @brief Returns the name for the parameter
      * @return The name

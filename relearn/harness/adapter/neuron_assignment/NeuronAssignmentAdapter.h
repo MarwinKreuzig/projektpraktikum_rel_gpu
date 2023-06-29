@@ -99,6 +99,14 @@ public:
         return std::make_shared<LocalAreaTranslator>(area_id_to_area_name, neuron_id_to_area_id);
     }
 
+    static std::shared_ptr<LocalAreaTranslator> get_randomized_area_translator(const RelearnTypes::number_neurons_type num_neurons, std::mt19937& mt) {
+        const auto num_areas = std::max(size_t{ 1 }, num_neurons / 10);
+        auto area_id_to_area_name = NeuronAssignmentAdapter::get_random_area_names(num_areas, mt);
+        auto neuron_id_to_area_id = NeuronAssignmentAdapter::get_random_area_ids(area_id_to_area_name.size(), num_neurons, mt);
+
+        return std::make_shared<LocalAreaTranslator>(area_id_to_area_name, neuron_id_to_area_id);
+    }
+
     static std::string get_invalid_area_name(const std::vector<RelearnTypes::area_name>& area_id_to_area_name, std::mt19937& mt) {
         RelearnTypes::area_name area_name = "";
         do {

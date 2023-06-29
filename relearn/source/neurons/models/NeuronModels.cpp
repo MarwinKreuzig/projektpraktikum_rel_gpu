@@ -56,6 +56,7 @@ void NeuronModel::create_neurons(number_neurons_type creation_count) {
 void NeuronModel::update_electrical_activity(const step_type step) {
     Timers::start(TimerRegion::NEURON_MODEL_UPDATE_ELECTRICAL_ACTIVITY);
     input_calculator->update_input(step, fired);
+
     background_calculator->update_input(step);
     stimulus_calculator->update_stimulus(step);
 

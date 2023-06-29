@@ -13,7 +13,6 @@
 #include "Types.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "neurons/enums/UpdateStatus.h"
-#include "neurons/input/TransformationFunctions.h"
 #include "neurons/models/ModelParameter.h"
 #include "util/RelearnException.h"
 #include "util/NeuronID.h"
@@ -28,6 +27,7 @@ enum class BackgroundActivityCalculatorType : char {
     Constant,
     Normal,
     FastNormal,
+    Flexible
 };
 
 /**
@@ -71,10 +71,7 @@ public:
      * @param first_step The first step in which background activity is applied
      * @param last_step The last step in which background activity is applied
      */
-    explicit BackgroundActivityCalculator(std::unique_ptr<TransformationFunction>&& transformation_function, RelearnTypes::step_type first_step, RelearnTypes::step_type last_step)
-        : transformation_function(std::move(transformation_function))
-        , first_step{ first_step }
-        , last_step{ last_step } { }
+    explicit BackgroundActivityCalculator() { }
 
     virtual ~BackgroundActivityCalculator() = default;
 
@@ -89,7 +86,7 @@ public:
      * @param new_extra_info The new extra infos, must not be empty
      * @exception Throws a RelearnException if new_extra_info is empty
      */
-    void set_extra_infos(std::shared_ptr<NeuronsExtraInfo> new_extra_info) {
+    virtual void set_extra_infos(std::shared_ptr<NeuronsExtraInfo> new_extra_info) {
         const auto is_filled = new_extra_info.operator bool();
         RelearnException::check(is_filled, "BackgroundActivityCalculator::set_extra_infos: new_extra_info is empty");
         extra_infos = std::move(new_extra_info);
@@ -162,22 +159,6 @@ public:
     }
 
     /**
-     * @brief Returns the first step in which background activity is applied
-     * @return The first step in which background activity is applied
-     */
-    [[nodiscard]] RelearnTypes::step_type get_first_step() const noexcept {
-        return first_step;
-    }
-
-    /**
-     * @brief Returns the last step in which background activity is applied
-     * @return The last step in which background activity is applied
-     */
-    [[nodiscard]] RelearnTypes::step_type get_last_step() const noexcept {
-        return last_step;
-    }
-
-    /**
      * @brief Returns the parameters of this instance, i.e., the attributes which change the behavior when calculating the input
      * @return The parameters
      */
@@ -197,31 +178,20 @@ public:
     static constexpr double max_background_activity_mean{ 10000.0 };
     static constexpr double max_background_activity_stddev{ 10000.0 };
 
-    static constexpr RelearnTypes::step_type default_first_step{ 0 };
-    static constexpr RelearnTypes::step_type default_last_step{ std::numeric_limits<RelearnTypes::step_type>::max() };
-
 protected:
     /**
-     * @brief Sets the background activity for the given neuron and applies the transformation function
+     * @brief Sets the background activity for the given neuron
      * @param step The current step
      * @param neuron_id The local neuron
      * @param value The new background activity
      * @exception Throws a RelearnException if the neuron_id is to large
      */
-    void set_and_transform_background_activity(const RelearnTypes::step_type step, const number_neurons_type neuron_id, const double value) {
-        RelearnException::check(neuron_id < number_local_neurons, "SynapticInputCalculator::set_and_transform_background_activity: neuron_id was too large: {} vs {}", neuron_id, number_local_neurons);
-        if (step >= first_step && step <= last_step) {
-            background_activity[neuron_id] = transformation_function->transform(step, value);
-        } else {
-            background_activity[neuron_id] = 0.0;
-        }
+    void set_background_activity(const RelearnTypes::step_type step, const number_neurons_type neuron_id, const double value) {
+        RelearnException::check(neuron_id < number_local_neurons, "SynapticInputCalculator::set_background_activity: neuron_id was too large: {} vs {}", neuron_id, number_local_neurons);
+        background_activity[neuron_id] = value;
     }
 
-    std::unique_ptr<TransformationFunction> transformation_function;
     std::shared_ptr<NeuronsExtraInfo> extra_infos{};
-
-    RelearnTypes::step_type first_step{};
-    RelearnTypes::step_type last_step{};
 
 private:
     number_neurons_type number_local_neurons{};

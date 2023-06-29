@@ -105,6 +105,7 @@ target_sources(
           neuron_extra_info/test_neuron_extra_info.cpp
 		  
           neuron_io/test_neuron_io.cpp
+		neuron_io/test_background_activity_io.cpp
 		  
           neuron_models/test_neuron_models.cpp
 

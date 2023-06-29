@@ -270,6 +270,7 @@ int main(int argc, char** argv) {
         { "constant", BackgroundActivityCalculatorType::Constant },
         { "normal", BackgroundActivityCalculatorType::Normal },
         { "fast-normal", BackgroundActivityCalculatorType::FastNormal },
+        { "flexible", BackgroundActivityCalculatorType::Flexible }
     };
 
     TransformationFunctionType chosen_background_transformation = TransformationFunctionType::Identity;
@@ -415,13 +416,9 @@ int main(int argc, char** argv) {
     auto* const opt_base_background_activity = app.add_option("--base-background-activity", base_background_activity,
         "The base background activity by which all neurons are excited");
 
-    RelearnTypes::step_type first_step_with_background_activity{ BackgroundActivityCalculator::default_first_step };
-    app.add_option("--first-background-activity-step", first_step_with_background_activity,
-        "The first step in which background activity is applied");
-
-    RelearnTypes::step_type last_step_with_background_activity{ BackgroundActivityCalculator::default_last_step };
-    app.add_option("--last-background-activity-step", last_step_with_background_activity,
-        "The last step in which background activity is applied");
+    std::filesystem::path flexible_file_path{};
+    auto* const opt_background_activity_file_path = app.add_option("--background-activity-file-path", flexible_file_path,
+        "The file path for the flexible background activity");
 
     double background_activity_mean{ BackgroundActivityCalculator::default_background_activity_mean };
     auto* const opt_mean_background_activity = app.add_option("--background-activity-mean", background_activity_mean,
@@ -853,25 +850,29 @@ int main(int argc, char** argv) {
             RelearnException::check(!static_cast<bool>(*opt_base_background_activity), "Setting the base background activity is not valid when choosing the null-background calculator (or not setting it at all).");
             RelearnException::check(!static_cast<bool>(*opt_mean_background_activity), "Setting the mean background activity is not valid when choosing the null-background calculator (or not setting it at all).");
             RelearnException::check(!static_cast<bool>(*opt_stddev_background_activity), "Setting the stddev background activity is not valid when choosing the null-background calculator (or not setting it at all).");
-            return std::make_unique<NullBackgroundActivityCalculator>(std::move(transformation_function), first_step_with_background_activity, last_step_with_background_activity);
+            return std::make_unique<NullBackgroundActivityCalculator>();
         }
 
         if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Constant) {
             RelearnException::check(!static_cast<bool>(*opt_mean_background_activity), "Setting the mean background activity is not valid when choosing the constant-background calculator.");
             RelearnException::check(!static_cast<bool>(*opt_stddev_background_activity), "Setting the stddev background activity is not valid when choosing the constant-background calculator.");
-            return std::make_unique<ConstantBackgroundActivityCalculator>(std::move(transformation_function), first_step_with_background_activity, last_step_with_background_activity, base_background_activity);
+            return std::make_unique<ConstantBackgroundActivityCalculator>(base_background_activity);
         }
 
         if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Normal) {
             RelearnException::check(background_activity_stddev > 0.0, "When choosing the normal-background calculator, the standard deviation must be set to > 0.0.");
-            return std::make_unique<NormalBackgroundActivityCalculator>(std::move(transformation_function), first_step_with_background_activity, last_step_with_background_activity, background_activity_mean, background_activity_stddev);
+            return std::make_unique<NormalBackgroundActivityCalculator>(background_activity_mean, background_activity_stddev);
+        }
+
+        if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Flexible) {
+            return std::make_unique<FlexibleBackgroundActivityCalculator>(flexible_file_path, my_rank, subdomain->get_local_area_translator());
         }
 
         RelearnException::check(chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::FastNormal, "Chose a background activity calculator that is not implemented");
         RelearnException::check(background_activity_stddev > 0.0, "When choosing the fast-normal-background calculator, the standard deviation must be set to > 0.0.");
 
         // TODO Choose multiplier
-        return std::make_unique<FastNormalBackgroundActivityCalculator>(std::move(transformation_function), first_step_with_background_activity, last_step_with_background_activity, background_activity_mean, background_activity_stddev, 1000);
+        return std::make_unique<FastNormalBackgroundActivityCalculator>(background_activity_mean, background_activity_stddev, 1000);
     };
     auto background_activity_calculator = construct_background_activity_calculator();
 

@@ -10,9 +10,11 @@
  *
  */
 
+#include "adapter/mpi/MpiRankAdapter.h"
 #include "adapter/random/RandomAdapter.h"
 
 #include "util/NeuronID.h"
+#include "neurons/helper/RankNeuronId.h"
 
 #include <random>
 #include <unordered_set>
@@ -56,6 +58,20 @@ public:
                 neuron_id = get_random_neuron_id(number_neurons_in_sim, mt);
             } while (set.contains(neuron_id));
             set.insert(neuron_id);
+        }
+        return set;
+    }
+
+    static std::unordered_set<RankNeuronId> get_random_rank_neuron_ids(NeuronID::value_type number_neurons_per_rank, size_t num_ranks, NeuronID::value_type number_neurons_in_sample, std::mt19937& mt) {
+        std::unordered_set<RankNeuronId> set;
+        for (const auto _ : NeuronID::range_id(number_neurons_in_sample)) {
+            RankNeuronId rni;
+            do {
+                const auto neuron_id = get_random_neuron_id(number_neurons_per_rank, mt);
+                const auto rank = MPIRankAdapter::get_random_mpi_rank(num_ranks, mt);
+                rni = RankNeuronId(rank, neuron_id);
+            } while (set.contains(rni));
+            set.insert(rni);
         }
         return set;
     }

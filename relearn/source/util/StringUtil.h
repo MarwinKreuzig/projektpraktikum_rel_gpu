@@ -95,4 +95,9 @@ public:
         ss << std::setw(nr_of_digits) << std::setfill('0') << number;
         return ss.str();
     }
+
+    static void to_lower(std::string& str) {
+        std::transform(str.begin(), str.end(), str.begin(),
+            [](unsigned char c) { return std::tolower(c); });
+    }
 };
