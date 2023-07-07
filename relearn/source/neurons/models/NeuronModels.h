@@ -11,6 +11,7 @@
  */
 
 #include "Types.h"
+#include "cuda/CudaHelper.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/enums/FiredStatus.h"
 #include "neurons/enums/UpdateStatus.h"
@@ -274,7 +275,18 @@ public:
      *      Sets the initial membrane potential and initial synaptic inputs to 0.0 and fired to false
      * @param number_neurons The number of local neurons to store in this class
      */
-    virtual void init(number_neurons_type number_neurons);
+    virtual void init_cpu(number_neurons_type number_neurons);
+
+    virtual void init_gpu(number_neurons_type number_neurons);
+
+    void init(number_neurons_type number_neurons) {
+        if(CudaHelper::is_cuda_available()) {
+            init_gpu(number_neurons);
+        }
+        else {
+            init_cpu(number_neurons);
+        }
+    }
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
@@ -329,10 +341,22 @@ public:
     static constexpr unsigned int max_h{ 1000 };
 
 protected:
-    virtual void update_activity() = 0;
+
+    void update_activity() {
+        if(CudaHelper::is_cuda_available()) {
+            update_activity_gpu();
+        }
+        else {
+            update_activity_cpu();
+        }
+    }
+
+    virtual void update_activity_cpu() = 0;
+
+    virtual void update_activity_gpu() = 0;
 
     virtual void update_activity_benchmark() {
-        update_activity();
+        update_activity_cpu();
     }
 
     /**
@@ -341,7 +365,9 @@ protected:
      * @param start_id The first local neuron id to initialize
      * @param end_id The next to last local neuron id to initialize
      */
-    virtual void init_neurons(number_neurons_type start_id, number_neurons_type end_id) = 0;
+    virtual void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) = 0;
+
+    virtual void init_neurons_gpu(number_neurons_type start_id, number_neurons_type end_id) = 0;
 
     /**
      * @brief Sets the membrane potential for the specified neuron. Does not perform bound-checking
@@ -492,7 +518,9 @@ public:
      *      Sets the initial refractory_time counter to 0
      * @param number_neurons The number of local neurons to store in this class
      */
-    void init(number_neurons_type number_neurons) final;
+    void init_cpu(number_neurons_type number_neurons) final;
+
+    void init_gpu(number_neurons_type number_neurons) final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
@@ -513,11 +541,15 @@ public:
     static constexpr unsigned int max_refractory_time{ 1000 };
 
 protected:
-    void update_activity() final;
+    void update_activity_cpu() final;
+
+    void update_activity_gpu() final;
 
     void update_activity_benchmark() final;
 
-    void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final { }
+    void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) final;
+
+    void init_neurons_gpu(number_neurons_type start_id, number_neurons_type end_id) final;
 
 private:
     [[nodiscard]] double iter_x(const double x, const double input) const noexcept {
@@ -678,7 +710,9 @@ public:
      * @brief Initializes the model to include number_neurons many local neurons.
      * @param number_neurons The number of local neurons to store in this class
      */
-    void init(number_neurons_type number_neurons) final;
+    void init_cpu(number_neurons_type number_neurons) final;
+
+    void init_gpu(number_neurons_type number_neurons) final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
@@ -714,11 +748,15 @@ public:
     static constexpr double max_k3{ 200.0 };
 
 protected:
-    void update_activity() final;
+    void update_activity_cpu() final;
+
+    void update_activity_gpu() final;
 
     void update_activity_benchmark() final;
 
-    void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
+    void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) final;
+
+    void init_neurons_gpu(number_neurons_type start_id, number_neurons_type end_id) final;
 
 private:
     [[nodiscard]] double iter_x(double x, double u, double input) const noexcept;
@@ -835,7 +873,9 @@ public:
      * @brief Initializes the model to include number_neurons many local neurons.
      * @param number_neurons The number of local neurons to store in this class
      */
-    void init(number_neurons_type number_neurons) final;
+    void init_cpu(number_neurons_type number_neurons) final;
+
+    void init_gpu(number_neurons_type number_neurons) final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
@@ -859,11 +899,15 @@ public:
     static constexpr double init_w{ -0.6 };
 
 protected:
-    void update_activity() final;
+    void update_activity_cpu() final;
+
+    void update_activity_gpu() final;
 
     void update_activity_benchmark() final;
 
-    void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
+    void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) final;
+
+    void init_neurons_gpu(number_neurons_type start_id, number_neurons_type end_id) final;
 
 private:
     [[nodiscard]] static double iter_x(double x, double w, double input) noexcept;
@@ -1036,7 +1080,9 @@ public:
      * @brief Initializes the model to include number_neurons many local neurons.
      * @param number_neurons The number of local neurons to store in this class
      */
-    void init(number_neurons_type number_neurons) final;
+    void init_cpu(number_neurons_type number_neurons) final;
+
+    void init_gpu(number_neurons_type number_neurons) final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
@@ -1075,11 +1121,15 @@ public:
     static constexpr double max_V_spike{ 70.0 };
 
 protected:
-    void update_activity() final;
+    void update_activity_cpu() final;
+
+    void update_activity_gpu() final;
 
     void update_activity_benchmark() final;
 
-    void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
+    void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) final;
+
+    void init_neurons_gpu(number_neurons_type start_id, number_neurons_type end_id) final;
 
 private:
     [[nodiscard]] double f(double x) const noexcept;
