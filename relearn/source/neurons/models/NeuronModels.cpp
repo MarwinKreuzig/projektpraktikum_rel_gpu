@@ -34,7 +34,7 @@ void NeuronModel::init_cpu(number_neurons_type number_neurons) {
     stimulus_calculator->init(number_neurons);
 }
 
-void NeuronModel::create_neurons(number_neurons_type creation_count) {
+void NeuronModel::create_neurons_cpu(number_neurons_type creation_count) {
     RelearnException::check(number_local_neurons > 0, "NeuronModel::create_neurons: Was not initialized");
     RelearnException::check(creation_count > 0, "NeuronModel::create_neurons: Must create more than 0 neurons");
 
