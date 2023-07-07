@@ -44,8 +44,8 @@
 #include <range/v3/view/transform.hpp>
 
 void Neurons::init(const number_neurons_type number_neurons) {
-    RelearnException::check(this->number_neurons == 0, "Neurons::init: Was already initialized");
-    RelearnException::check(number_neurons > 0, "Neurons::init: number_neurons was 0");
+    RelearnException::check(this->number_neurons == 0, "Neurons::init_cpu: Was already initialized");
+    RelearnException::check(number_neurons > 0, "Neurons::init_cpu: number_neurons was 0");
 
     this->number_neurons = number_neurons;
 

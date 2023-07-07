@@ -23,8 +23,8 @@
 #include <range/v3/view/filter.hpp>
 
 void SynapticInputCalculator::init(const number_neurons_type number_neurons) {
-    RelearnException::check(number_local_neurons == 0, "SynapticInputCalculator::init: Was already initialized");
-    RelearnException::check(number_neurons > 0, "SynapticInputCalculator::init: number_neurons was 0");
+    RelearnException::check(number_local_neurons == 0, "SynapticInputCalculator::init_cpu: Was already initialized");
+    RelearnException::check(number_neurons > 0, "SynapticInputCalculator::init_cpu: number_neurons was 0");
 
     number_local_neurons = number_neurons;
     synaptic_input.resize(number_neurons, 0.0);

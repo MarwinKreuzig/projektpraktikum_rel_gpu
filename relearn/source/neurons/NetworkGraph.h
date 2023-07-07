@@ -401,8 +401,8 @@ class NetworkGraph {
          * @exception Throws a RelearnException if already called or if number_neurons == 0
          */
         void init(const number_neurons_type number_neurons) {
-            RelearnException::check(number_local_neurons == 0, "NetworkGraph::NetworkGraphBase::init: Was already initialized");
-            RelearnException::check(number_neurons > 0, "NetworkGraph::NetworkGraphBase::init: Cannot initialize with 0 neurons");
+            RelearnException::check(number_local_neurons == 0, "NetworkGraph::NetworkGraphBase::init_cpu: Was already initialized");
+            RelearnException::check(number_neurons > 0, "NetworkGraph::NetworkGraphBase::init_cpu: Cannot initialize with 0 neurons");
 
             number_local_neurons = number_neurons;
 

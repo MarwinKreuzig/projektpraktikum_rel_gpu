@@ -46,8 +46,8 @@ public:
      * @exception Throws an RelearnException if number_neurons is 0 or if called multiple times.
      */
     void init(const number_neurons_type number_neurons) {
-        RelearnException::check(number_neurons > 0, "NeuronsExtraInfo::init: number_neurons must be larger than 0.");
-        RelearnException::check(size == 0, "NeuronsExtraInfo::init: NeuronsExtraInfo initialized two times, its size is already {}", size);
+        RelearnException::check(number_neurons > 0, "NeuronsExtraInfo::init_cpu: number_neurons must be larger than 0.");
+        RelearnException::check(size == 0, "NeuronsExtraInfo::init_cpu: NeuronsExtraInfo initialized two times, its size is already {}", size);
 
         size = number_neurons;
         update_status.resize(number_neurons, UpdateStatus::Enabled);

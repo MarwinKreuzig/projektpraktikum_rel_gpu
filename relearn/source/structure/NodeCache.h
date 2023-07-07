@@ -223,7 +223,7 @@ public:
                 const auto& [iterator, inserted] = remote_nodes_cache.insert(cache_key_val_pair);
 
                 // Cache entry just inserted as it was not in cache
-                // So, we still need to init the entry by fetching
+                // So, we still need to init_cpu the entry by fetching
                 // from the target rank
                 if (inserted) {
                     node_type& ref = memory.emplace_back();

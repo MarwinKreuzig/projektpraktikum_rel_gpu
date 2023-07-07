@@ -17,9 +17,9 @@
 
 #include <range/v3/action/insert.hpp>
 
-void NeuronModel::init(number_neurons_type number_neurons) {
-    RelearnException::check(number_local_neurons == 0, "NeuronModel::init: Was already initialized");
-    RelearnException::check(number_neurons > 0, "NeuronModel::init: Must initialize with more than 0 neurons");
+void NeuronModel::init_cpu(number_neurons_type number_neurons) {
+    RelearnException::check(number_local_neurons == 0, "NeuronModel::init_cpu: Was already initialized");
+    RelearnException::check(number_neurons > 0, "NeuronModel::init_cpu: Must initialize with more than 0 neurons");
 
     number_local_neurons = number_neurons;
 

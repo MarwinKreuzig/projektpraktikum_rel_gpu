@@ -46,8 +46,8 @@ PoissonModel::PoissonModel(
     return "PoissonModel";
 }
 
-void PoissonModel::init(const number_neurons_type number_neurons) {
-    NeuronModel::init(number_neurons);
+void PoissonModel::init_cpu(number_neurons_type number_neurons) {
+    NeuronModel::init_cpu(number_neurons);
     refractory_time.resize(number_neurons, 0);
     init_neurons(0, number_neurons);
 }
@@ -110,7 +110,7 @@ void PoissonModel::update_activity_benchmark() {
     }
 }
 
-void PoissonModel::update_activity() {
+void PoissonModel::update_activity_cpu() {
     const auto number_local_neurons = get_number_neurons();
     const auto disable_flags = get_extra_infos()->get_disable_flags();
 
@@ -154,4 +154,8 @@ void PoissonModel::update_activity() {
 
         set_x(converted_id, x_val);
     }
+}
+
+void PoissonModel::update_activity_gpu() {
+    RelearnException::fail("No gpu support");
 }

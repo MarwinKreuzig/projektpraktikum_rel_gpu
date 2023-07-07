@@ -9,6 +9,9 @@ target_sources(
         algorithm/FMMInternal/FastMultipoleMethodsInverted.cpp
         algorithm/NaiveInternal/Naive.cpp
 
+        cuda/CudaIzhikevichModel.cu
+        cuda/CudaHelper.h
+
         # io
         io/CalciumIO.cpp
         io/Event.cpp

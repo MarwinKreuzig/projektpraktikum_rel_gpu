@@ -29,7 +29,7 @@ static void BM_NeuronModel_UpdateActivityBenchmark(benchmark::State& state) {
     extra_info->init(number_neurons);
 
     auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), std::make_unique<Stimulus>());
-    model->init(number_neurons);
+    model->init_cpu(number_neurons);
     model->set_extra_infos(extra_info);
 
     NeuronsExtraInfoFactory::enable_all(extra_info);
@@ -66,7 +66,7 @@ static void BM_NeuronModel_UpdateFullActivity(benchmark::State& state) {
     extra_info->init(number_neurons);
 
     auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), std::make_unique<Stimulus>());
-    model->init(number_neurons);
+    model->init_cpu(number_neurons);
     model->set_extra_infos(extra_info);
 
     NeuronsExtraInfoFactory::enable_all(extra_info);
@@ -100,7 +100,7 @@ static void BM_NeuronModel_UpdateFullActivityBenchmark(benchmark::State& state) 
     extra_info->init(number_neurons);
 
     auto model = NeuronModelFactory::construct_model<NeuronModelType>(10, std::move(synaptic_input), std::move(background), std::make_unique<Stimulus>());
-    model->init(number_neurons);
+    model->init_cpu(number_neurons);
     model->set_extra_infos(extra_info);
 
     NeuronsExtraInfoFactory::enable_all(extra_info);

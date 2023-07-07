@@ -61,8 +61,8 @@ IzhikevichModel::IzhikevichModel(
     return "IzhikevichModel";
 }
 
-void IzhikevichModel::init(const number_neurons_type number_neurons) {
-    NeuronModel::init(number_neurons);
+void IzhikevichModel::init_cpu(number_neurons_type number_neurons) {
+    NeuronModel::init_cpu(number_neurons);
     u.resize(number_neurons);
     init_neurons(0, number_neurons);
 }
@@ -127,7 +127,7 @@ void IzhikevichModel::update_activity_benchmark() {
     }
 }
 
-void IzhikevichModel::update_activity() {
+void IzhikevichModel::update_activity_cpu() {
     const auto number_local_neurons = get_number_neurons();
     const auto disable_flags = get_extra_infos()->get_disable_flags();
 
@@ -173,6 +173,10 @@ void IzhikevichModel::update_activity() {
         set_x(converted_id, x_val);
         u[neuron_id] = u_val;
     }
+}
+
+void IzhikevichModel::update_activity_gpu() {
+    RelearnException::fail("No gpu support");
 }
 
 void IzhikevichModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {

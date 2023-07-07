@@ -67,7 +67,7 @@ void min_sum_max(const void* invec, void* inoutvec, const int* len, void* dtype)
 /**
  * This class provides a static interface to every kind of MPI functionality that should be called from other classes.
  * It wraps functionality in a C++ type safe manner.
- * The first call must be MPIWrapper::init(...) and the last one MPIWrapper::finalize(), not calling any of those inbetween.
+ * The first call must be MPIWrapper::init_cpu(...) and the last one MPIWrapper::finalize(), not calling any of those inbetween.
  */
 
 /**
@@ -532,14 +532,14 @@ public:
         window->size = size;
 
         const int error_code_2 = MPI_Win_create(window->my_base_pointer, size, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &window->window);
-        RelearnException::check(error_code_2 == MPI_SUCCESS, "MPI_RMA_MemAllocator::init: Error code received: {}", error_code_2);
+        RelearnException::check(error_code_2 == MPI_SUCCESS, "MPI_RMA_MemAllocator::init_cpu: Error code received: {}", error_code_2);
 
         auto base_ptr = reinterpret_cast<int64_t>(window->my_base_pointer);
         std::vector<int64_t> base_pointers{};
         base_pointers.resize(number_ranks);
 
         const int error_code_3 = MPI_Allgather(&base_ptr, 1, MPI_AINT, base_pointers.data(), 1, MPI_AINT, MPI_COMM_WORLD);
-        RelearnException::check(error_code_3 == MPI_SUCCESS, "MPI_RMA_MemAllocator::init: Error code received: {}", error_code_3);
+        RelearnException::check(error_code_3 == MPI_SUCCESS, "MPI_RMA_MemAllocator::init_cpu: Error code received: {}", error_code_3);
 
         window->base_pointers = base_pointers;
 
@@ -610,7 +610,7 @@ private:
         // Store size of MPI_COMM_WORLD
         int my_num_ranks = -1;
         const int error_code_1 = MPI_Comm_size(MPI_COMM_WORLD, &my_num_ranks);
-        RelearnException::check(error_code_1 == 0, "MPI_RMA_MemAllocator::init: Error code received: {}", error_code_1);
+        RelearnException::check(error_code_1 == 0, "MPI_RMA_MemAllocator::init_cpu: Error code received: {}", error_code_1);
 
         const auto num_ranks = static_cast<size_t>(my_num_ranks);
 
