@@ -10,6 +10,7 @@
 
 #include "NeuronModels.h"
 
+#include "gpu/models/cuda_neuron_model.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "util/Random.h"
 
@@ -157,4 +158,21 @@ void PoissonModel::update_activity_cpu() {
 
         set_x(converted_id, x_val);
     }
+}
+
+void PoissonModel::init_gpu(number_neurons_type number_neurons) {
+    gpu::models::poisson::init_gpu(number_neurons);
+}
+
+void PoissonModel::init_neurons_gpu(const number_neurons_type start_id, const number_neurons_type end_id) {
+   gpu::models::poisson::init_neurons_gpu(start_id, end_id);
+}
+
+void PoissonModel::update_activity_gpu() {
+    gpu::models::poisson::update_activity_gpu();
+}
+
+
+void PoissonModel::create_neurons_gpu(const number_neurons_type creation_count) {
+    gpu::models::poisson::create_neurons_gpu(creation_count);
 }

@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 project(relearn)
+enable_language(CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(cmake/StandardProjectSettings.cmake)
@@ -14,6 +15,8 @@ add_library(project_options INTERFACE)
 
 # enable cache system
 include(cmake/Cache.cmake)
+
+#include(cmake/Cuda.cmake)
 
 # Add linker configuration
 include(cmake/Linker.cmake)

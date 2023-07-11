@@ -10,6 +10,7 @@
 
 #include "NeuronModels.h"
 
+#include "gpu/models/cuda_neuron_model.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "util/NeuronID.h"
 
@@ -198,18 +199,18 @@ bool IzhikevichModel::spiked(const double x) const noexcept {
 
 
 void IzhikevichModel::init_gpu(number_neurons_type number_neurons) {
-    RelearnException::fail("No gpu support");
+    gpu::models::izhekevich::init_gpu(number_neurons);
 }
 
 void IzhikevichModel::init_neurons_gpu(const number_neurons_type start_id, const number_neurons_type end_id) {
-    RelearnException::fail("No gpu support");
+   gpu::models::izhekevich::init_neurons_gpu(start_id, end_id);
 }
 
 void IzhikevichModel::update_activity_gpu() {
-    RelearnException::fail("No gpu support");
+    gpu::models::izhekevich::update_activity_gpu();
 }
 
 
 void IzhikevichModel::create_neurons_gpu(const number_neurons_type creation_count) {
-    RelearnException::fail("No gpu support");
+    gpu::models::izhekevich::create_neurons_gpu(creation_count);
 }

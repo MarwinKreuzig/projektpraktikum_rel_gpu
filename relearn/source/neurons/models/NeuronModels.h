@@ -11,7 +11,7 @@
  */
 
 #include "Types.h"
-#include "cuda/CudaHelper.h"
+#include "gpu/CudaHelper.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/enums/FiredStatus.h"
 #include "neurons/enums/UpdateStatus.h"
@@ -579,6 +579,17 @@ protected:
      * @param creation_count The number of local neurons that should be added
      */
     void create_neurons_cpu(number_neurons_type creation_count) final;
+
+
+    //GPU
+    void init_gpu(number_neurons_type number_neurons);
+
+void init_neurons_gpu(const number_neurons_type start_id, const number_neurons_type end_id);
+
+void update_activity_gpu();
+
+
+void create_neurons_gpu(const number_neurons_type creation_count);
 
 private:
     [[nodiscard]] double iter_x(const double x, const double input) const noexcept {

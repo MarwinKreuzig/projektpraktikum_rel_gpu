@@ -1,3 +1,5 @@
+include(../cmake/Cuda.cmake)
+
 add_library(relearn_lib STATIC)
 target_sources(
         relearn_lib
@@ -9,8 +11,6 @@ target_sources(
         algorithm/FMMInternal/FastMultipoleMethodsInverted.cpp
         algorithm/NaiveInternal/Naive.cpp
 
-        cuda/CudaIzhikevichModel.cu
-        cuda/CudaHelper.h
 
         # io
         io/CalciumIO.cpp
@@ -65,7 +65,10 @@ target_sources(
 
 target_include_directories(relearn_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(relearn_lib PROPERTIES ENABLE_EXPORTS 1)
-target_link_libraries(relearn_lib PUBLIC project_options project_libraries)
+target_link_libraries(relearn_lib PUBLIC project_options project_libraries relearn_gpu)
+set_target_properties(relearn_lib PROPERTIES CXX_STANDARD 20)
+
+#target_link_libraries(relearn_lib PUBLIC relearn_gpu)
 
 # benchmark# dont clutter the compile_commands file with libraries
 set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
@@ -88,6 +91,7 @@ target_sources(relearn PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/relearn.cpp)
 target_link_libraries(relearn PRIVATE relearn_lib)
 target_link_libraries(relearn PRIVATE CLI11::CLI11)
 set_target_properties(relearn PROPERTIES ENABLE_EXPORTS 1)
+set_target_properties(relearn PROPERTIES CXX_STANDARD 20)
 
 # relearn_analysis executable
 add_executable(relearn_analysis ${SRC_ANALYSIS})
@@ -99,4 +103,4 @@ target_link_libraries(relearn_lib PUBLIC project_options project_libraries)
 set_target_properties(relearn_analysis PROPERTIES ENABLE_EXPORTS 1)
 
 get_target_property(relearn_lib_sources relearn_lib SOURCES)
-source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${relearn_lib_sources})
+#source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${relearn_lib_sources})
