@@ -217,10 +217,6 @@ RelearnTypes::stimuli_function_type InteractiveNeuronIO::load_stimulus_interrupt
     });
 
     const auto consolidate_stimulus = [&local_area_translator](Stimulus stimulus) {
-        const auto translator_knows_name = [&local_area_translator](const auto& area) {
-            return local_area_translator->knows_area_name(area);
-        };
-
         const auto get_ids_in_area = [&local_area_translator](const auto& area) {
             const auto& area_ids = local_area_translator->get_area_ids_for_matching_area_names(area);
             return local_area_translator->get_neuron_ids_in_areas(area_ids);
@@ -229,7 +225,6 @@ RelearnTypes::stimuli_function_type InteractiveNeuronIO::load_stimulus_interrupt
         auto ids = ranges::views::concat(
                        stimulus.matching_ids,
                        stimulus.matching_area_names
-                           | ranges::views::filter(translator_knows_name)
                            | ranges::views::for_each(get_ids_in_area))
             | ranges::to<std::unordered_set>;
 
