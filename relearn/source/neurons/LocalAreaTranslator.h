@@ -25,6 +25,7 @@
 #include <range/v3/iterator/operations.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/filter.hpp>
+#include <regex>
 
 /**
  * Over all mpi ranks, neurons can be assigned to the same area. This area is identified by a name (string). Each mpi rank assigns this area an individual id.
@@ -168,8 +169,59 @@ public:
             | ranges::to_vector;
     }
 
+    [[nodiscard]] std::unordered_set<NeuronID> get_neuron_ids_in_areas(const std::unordered_set<RelearnTypes::area_id>& my_area_ids) const {
+        const auto is_id_in_my_ranks_areas = [my_area_ids, this](const NeuronID neuron_id) {
+            return ranges::contains(my_area_ids, neuron_id_to_area_id[neuron_id.get_neuron_id()]);
+        };
+
+        std::unordered_set<NeuronID> result;
+        for (const auto& id : NeuronID::range(neuron_id_to_area_id.size())) {
+            if (is_id_in_my_ranks_areas(id)) {
+                result.insert(id);
+            }
+        }
+        return result;
+    }
+
     [[nodiscard]] const std::vector<RelearnTypes::area_id>& get_neuron_ids_to_area_ids() const noexcept {
         return neuron_id_to_area_id;
+    }
+
+    [[nodiscard]] std::vector<RelearnTypes::area_id> translate_area_names_to_area_ids_ordered(const std::vector<std::string>& area_names) {
+        std::vector<RelearnTypes::area_id> area_ids;
+        area_ids.reserve(area_names.size());
+        for (const auto& name : area_names) {
+            const auto& id_ = get_area_id_for_area_name(name);
+            area_ids.push_back(id_);
+        }
+        return area_ids;
+    }
+
+    [[nodiscard]] std::unordered_set<RelearnTypes::area_id> translate_area_names_to_area_ids(const std::unordered_set<std::string>& area_names) const {
+        std::unordered_set<RelearnTypes::area_id> area_ids;
+        area_ids.reserve(area_names.size());
+        for (const auto& name : area_names) {
+            const auto& id_ = get_area_id_for_area_name(name);
+            area_ids.insert(id_);
+        }
+        return area_ids;
+    }
+
+    [[nodiscard]] std::unordered_set<RelearnTypes::area_name> get_matching_area_names(const std::string& area_regex) const {
+        std::unordered_set<RelearnTypes::area_name> matching_area_names{};
+        for (const auto& known_area_name : get_all_area_names()) {
+            std::smatch match;
+            const bool is_match = std::regex_match(known_area_name, match, std::regex(area_regex));
+            if (is_match) {
+                matching_area_names.insert(known_area_name);
+            }
+        }
+        return matching_area_names;
+    }
+
+    [[nodiscard]] std::unordered_set<RelearnTypes::area_id> get_area_ids_for_matching_area_names(const std::string& area_regex) const {
+        const auto& area_names = get_matching_area_names(area_regex);
+        return translate_area_names_to_area_ids(area_names);
     }
 
     void create_neurons(RelearnTypes::number_neurons_type created_neurons) {

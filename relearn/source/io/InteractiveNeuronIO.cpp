@@ -222,8 +222,8 @@ RelearnTypes::stimuli_function_type InteractiveNeuronIO::load_stimulus_interrupt
         };
 
         const auto get_ids_in_area = [&local_area_translator](const auto& area) {
-            const auto& area_id = local_area_translator->get_area_id_for_area_name(area);
-            return local_area_translator->get_neuron_ids_in_area(area_id);
+            const auto& area_ids = local_area_translator->get_area_ids_for_matching_area_names(area);
+            return local_area_translator->get_neuron_ids_in_areas(area_ids);
         };
 
         auto ids = ranges::views::concat(
