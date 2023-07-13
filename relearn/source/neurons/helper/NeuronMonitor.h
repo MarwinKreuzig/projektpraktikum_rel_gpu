@@ -44,7 +44,7 @@ public:
      * @param di_c The current number of connected inhibitory dendritic elements
      */
     NeuronInformation(const RelearnTypes::step_type step, const double c, const double tc, const double x, const bool f, const double ff, const double s,
-        const double i, const double ex_input, const double inh_input, const double b, const double ax, const double ax_c, const double de, const double de_c, const double di, const double di_c) noexcept
+        const double i, const double ex_input, const double inh_input, const double b, const double stim, const double ax, const double ax_c, const double de, const double de_c, const double di, const double di_c) noexcept
         : current_step(step)
         , calcium(c)
         , target_calcium(tc)
@@ -56,6 +56,7 @@ public:
         , ex_input(ex_input)
         , inh_input(inh_input)
         , background_activity(b)
+        , stimulation(stim)
         , axons_grown(ax)
         , axons_connected(ax_c)
         , excitatory_dendrites_grown(de)
@@ -176,6 +177,10 @@ public:
         return excitatory_dendrites_grown;
     }
 
+    [[nodiscard]] double get_stimulation() const noexcept {
+        return stimulation;
+    }
+
     /**
      * @brief Returns the stored number of connected excitatory dendritic elements
      * @return The stored number of connected excitatory dendritic elements
@@ -213,6 +218,7 @@ private:
     double ex_input{};
     double inh_input{};
     double background_activity{};
+    double stimulation{};
 
     double axons_grown{};
     double axons_connected{};
@@ -277,6 +283,7 @@ public:
         const auto secondary = neurons_to_monitor->neuron_model->get_secondary_variable(target_neuron_id);
         const auto synaptic_input = neurons_to_monitor->neuron_model->input_calculator->get_synaptic_input(target_neuron_id);
         const auto background_activity = neurons_to_monitor->neuron_model->background_calculator->get_background_activity(target_neuron_id);
+        const auto stimulation = neurons_to_monitor->neuron_model->stimulus_calculator->get_stimulus(target_neuron_id);
         const auto fired_ex_inputs = neurons_to_monitor->neuron_model->input_calculator->raw_ex_input[local_neuron_id];
         const auto fired_inh_input = neurons_to_monitor->neuron_model->input_calculator->raw_inh_input[local_neuron_id];
 
@@ -288,7 +295,7 @@ public:
         const auto inhibitory_dendrites_connected = neurons_to_monitor->dendrites_inh->connected_elements[local_neuron_id];
 
         information.emplace_back(current_step, calcium, target_calcium, x, fired, fired_fraction, secondary,
-            synaptic_input, fired_ex_inputs, fired_inh_input, background_activity, axons, axons_connected, excitatory_dendrites_grown,
+            synaptic_input, fired_ex_inputs, fired_inh_input, background_activity, stimulation, axons, axons_connected, excitatory_dendrites_grown,
             excitatory_dendrites_connected, inhibitory_dendrites_grown, inhibitory_dendrites_connected);
     }
 

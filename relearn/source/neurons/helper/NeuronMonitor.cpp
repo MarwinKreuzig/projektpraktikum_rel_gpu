@@ -27,7 +27,7 @@ void NeuronMonitor::init_print_file() {
     const auto& file_path = path / (MPIWrapper::get_my_rank_str() + '_' + std::to_string(target_neuron_id.get_neuron_id() + 1) + ".csv");
     std::ofstream outfile(file_path, std::ios_base::out | std::ios_base::trunc);
 
-    constexpr auto description = "# Step;Fired;Fired Fraction;x;Secondary Variable;Calcium;Target Calcium;Synaptic Input;Excitatory input; Inhibitory input;Background Activity;Grown Axons;Connected Axons;Grown Excitatory Dendrites;Connected Excitatory Dendrites;Grown Inhibitory Dendrites;Connected Inhibitory Dendrites\n";
+    constexpr auto description = "# Step;Fired;Fired Fraction;x;Secondary Variable;Calcium;Target Calcium;Synaptic Input;Excitatory input; Inhibitory input;Background Activity;Stimulation;Grown Axons;Connected Axons;Grown Excitatory Dendrites;Connected Excitatory Dendrites;Grown Inhibitory Dendrites;Connected Inhibitory Dendrites\n";
 
     outfile << std::setprecision(Constants::print_precision);
     outfile.imbue(std::locale());
@@ -59,6 +59,7 @@ void NeuronMonitor::flush_current_contents() {
         outfile << info.get_ex_input() << filler;
         outfile << info.get_inh_input() << filler;
         outfile << info.get_background_activity() << filler;
+        outfile << info.get_stimulation() << filler;
         outfile << info.get_axons() << filler;
         outfile << info.get_axons_connected() << filler;
         outfile << info.get_excitatory_dendrites_grown() << filler;
