@@ -78,7 +78,8 @@ public:
         : h(h)
         , input_calculator(std::move(synaptic_input_calculator))
         , background_calculator(std::move(background_activity_calculator))
-        , stimulus_calculator(std::move(stimulus_calculator)) { }
+        , stimulus_calculator(std::move(stimulus_calculator)) {
+         }
 
     /**
      * @brief Sets the extra infos. These are used to determine which neuron updates its electrical activity
@@ -151,10 +152,11 @@ public:
      * @return True iff the neuron spiked
      */
     [[nodiscard]] bool get_fired(const NeuronID neuron_id) const {
+
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < number_local_neurons, "NeuronModels::get_fired: id is too large: {}", neuron_id);
-        return fired[local_neuron_id] == FiredStatus::Fired;
+        return get_fired()[local_neuron_id] == FiredStatus::Fired;
     }
 
     /**
@@ -162,6 +164,11 @@ public:
      * @return A constant reference to the vector of flags. It is not invalidated by calls to other methods
      */
     [[nodiscard]] std::span<const FiredStatus> get_fired() const noexcept {
+        if(CudaHelper::is_cuda_available()) {
+            RelearnException::check(number_local_neurons > 0, "NeuronModels::get_fired: number_local_neurons not set");
+            RelearnException::check(gpu::models::NeuronModel::get_fired() != nullptr, "NeuronModels::get_fired: Invalid pointer");
+            return std::span<const FiredStatus>(gpu::models::NeuronModel::get_fired(), number_local_neurons);
+        }
         return fired;
     }
 
@@ -278,6 +285,10 @@ public:
     void init(number_neurons_type number_neurons) {
         if(CudaHelper::is_cuda_available()) {
             init_gpu(number_neurons);
+            number_local_neurons = number_neurons;
+            input_calculator->init(number_neurons);
+    background_calculator->init(number_neurons);
+    stimulus_calculator->init(number_neurons);
         }
         else {
             init_cpu(number_neurons);
@@ -329,6 +340,15 @@ public:
      * @param new_value True iff the neuron fired in the current simulation step
      */
     void set_fired(const NeuronID neuron_id, const FiredStatus new_value) {
+        if(CudaHelper::is_cuda_available()) {
+            set_fired_gpu(neuron_id,new_value);
+        }
+        else {
+            set_fired_cpu(neuron_id, new_value);
+        }
+    }
+
+    void set_fired_cpu(const NeuronID neuron_id, const FiredStatus new_value) {
         const auto local_neuron_id = neuron_id.get_neuron_id();
         fired[local_neuron_id] = new_value;
 
@@ -341,15 +361,17 @@ public:
         }
     }
 
+    void set_fired_gpu(const NeuronID neuron_id, const FiredStatus new_value);
+
     static constexpr unsigned int default_h{ 10 };
     static constexpr unsigned int min_h{ 1 };
     static constexpr unsigned int max_h{ 1000 };
 
 protected:
 
-    void update_activity() {
+    void update_activity(const step_type step) {
         if(CudaHelper::is_cuda_available()) {
-            update_activity_gpu();
+            update_activity_gpu(step);
         }
         else {
             update_activity_cpu();
@@ -358,7 +380,12 @@ protected:
 
 
     virtual void update_activity_benchmark() {
-        update_activity_cpu();
+        if(CudaHelper::is_cuda_available()) {
+            RelearnException::fail("No gpu support");
+        }
+        else {
+            update_activity_cpu();
+        }
     }
 
     /**
@@ -384,7 +411,7 @@ protected:
 
 
     //GPU
-    virtual void update_activity_gpu() {
+    virtual void update_activity_gpu(const step_type step) {
         RelearnException::fail("No gpu support");
     }
 
@@ -586,7 +613,7 @@ protected:
 
 void init_neurons_gpu(const number_neurons_type start_id, const number_neurons_type end_id);
 
-void update_activity_gpu();
+void update_activity_gpu(const step_type step);
 
 
 void create_neurons_gpu(const number_neurons_type creation_count);
@@ -794,7 +821,7 @@ protected:
 
     void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) override final;
 
-    void update_activity_gpu() override final;
+    void update_activity_gpu(const step_type step) override final;
 
     void init_neurons_gpu(number_neurons_type start_id, number_neurons_type end_id) override final;
 
