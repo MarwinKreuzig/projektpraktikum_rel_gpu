@@ -10,12 +10,17 @@
 
 #include "NeuronModels.h"
 
+#include "gpu/Interface.h"
 #include "neurons/NetworkGraph.h"
 #include "util/Random.h"
 #include "util/NeuronID.h"
 #include "util/Timers.h"
 
 #include <range/v3/action/insert.hpp>
+#include <range/v3/functional.hpp>
+#include <range/v3/numeric/accumulate.hpp>
+
+#include <iostream>
 
 void NeuronModel::init_cpu(number_neurons_type number_neurons) {
     RelearnException::check(number_local_neurons == 0, "NeuronModel::init_cpu: Was already initialized");
@@ -55,13 +60,21 @@ void NeuronModel::create_neurons_cpu(number_neurons_type creation_count) {
 
 void NeuronModel::update_electrical_activity(const step_type step) {
     Timers::start(TimerRegion::NEURON_MODEL_UPDATE_ELECTRICAL_ACTIVITY);
-    input_calculator->update_input(step, fired);
+    input_calculator->update_input(step, get_fired());
 
     background_calculator->update_input(step);
     stimulus_calculator->update_stimulus(step);
 
     Timers::start(TimerRegion::CALC_ACTIVITY);
-    update_activity();
+    update_activity(step);
+
+    auto fired = 0;
+    for(const auto& f: get_fired()) {
+        if(f==FiredStatus::Fired) {
+            fired++;
+        }
+    }
+    std::cout << "Number fired neurons: " << fired << '\n';
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
     Timers::stop_and_add(TimerRegion::NEURON_MODEL_UPDATE_ELECTRICAL_ACTIVITY);
 }
@@ -87,4 +100,8 @@ std::vector<ModelParameter> NeuronModel::get_parameter() {
     parameters.emplace_back(Parameter<unsigned int>{ "Number integration steps", h, NeuronModel::min_h, NeuronModel::max_h });
 
     return parameters;
+}
+
+void NeuronModel::set_fired_gpu(const NeuronID neuron_id, const FiredStatus new_value) {
+        RelearnException::fail("No gpu support");
 }

@@ -10,7 +10,7 @@
 
 #include "NeuronModels.h"
 
-#include "gpu/models/cuda_neuron_model.h"
+#include "gpu/Interface.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "util/Random.h"
 
@@ -28,6 +28,10 @@ PoissonModel::PoissonModel(
     , x_0{ x_0 }
     , tau_x{ tau_x }
     , refractory_period{ refractory_period } {
+
+        if(CudaHelper::is_cuda_available()) {
+             gpu::models::poisson::construct_gpu(h, x_0, tau_x, refractory_period);
+        }
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> PoissonModel::clone() const {
@@ -168,8 +172,8 @@ void PoissonModel::init_neurons_gpu(const number_neurons_type start_id, const nu
    gpu::models::poisson::init_neurons_gpu(start_id, end_id);
 }
 
-void PoissonModel::update_activity_gpu() {
-    gpu::models::poisson::update_activity_gpu();
+void PoissonModel::update_activity_gpu(const step_type step) {
+    gpu::models::poisson::update_activity_gpu(step);//get_synaptic_input(), get_background_activity(), get_stimulus()
 }
 
 

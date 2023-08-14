@@ -10,7 +10,7 @@
 
 #include "NeuronModels.h"
 
-#include "gpu/models/cuda_neuron_model.h"
+#include "gpu/Interface.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "util/NeuronID.h"
 
@@ -38,6 +38,9 @@ IzhikevichModel::IzhikevichModel(
     , k1{ k1 }
     , k2{ k2 }
     , k3{ k3 } {
+        if(CudaHelper::is_cuda_available()) {
+             gpu::models::izhekevich::construct_gpu(h);
+        }
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> IzhikevichModel::clone() const {
@@ -206,8 +209,8 @@ void IzhikevichModel::init_neurons_gpu(const number_neurons_type start_id, const
    gpu::models::izhekevich::init_neurons_gpu(start_id, end_id);
 }
 
-void IzhikevichModel::update_activity_gpu() {
-    gpu::models::izhekevich::update_activity_gpu();
+void IzhikevichModel::update_activity_gpu(const step_type step) {
+    gpu::models::izhekevich::update_activity_gpu(step);
 }
 
 

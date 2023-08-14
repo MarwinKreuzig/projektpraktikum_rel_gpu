@@ -11,6 +11,8 @@
  */
 
 #include "Types.h"
+#include "gpu/CudaHelper.h"
+#include "gpu/Interface.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/enums/UpdateStatus.h"
 #include "util/NeuronID.h"
@@ -53,6 +55,10 @@ public:
         update_status.resize(number_neurons, UpdateStatus::Enabled);
         deletions_log.resize(number_neurons, {});
         fire_history.resize(size);
+
+        if(CudaHelper::is_cuda_available()) {
+            gpu::neurons::NeuronsExtraInfos::init(number_neurons);
+        }
     }
 
     /**
