@@ -12,6 +12,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 
 #ifdef _OPENMP
 constexpr bool OPENMPAVAILABLE = true;
@@ -65,7 +66,7 @@ public:
     constexpr static std::uint32_t electrical_activity_update_step = 100; // NOLINT
 
     // End the connectivity updates at <last_plasticity_update> ms
-    inline static std::uint32_t last_plasticity_update = -1; // NOLINT
+    inline static std::uint32_t last_plasticity_update = std::numeric_limits<std::uint32_t>::max(); // NOLINT
     // By default: Update plasticity every <plasticity_update_step> ms
     constexpr static std::uint32_t plasticity_update_step = 100; // NOLINT
 

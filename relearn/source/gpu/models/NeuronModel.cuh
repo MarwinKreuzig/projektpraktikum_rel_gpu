@@ -6,29 +6,30 @@
 #include "gpu/GpuTypes.h"
 #include "gpu/NeuronsExtraInfos.cuh"
 
+//#include "gpu/neurons/NetworkGraph.cuh"
+
+#include "gpu/CudaVector.cuh"
+
 #include <numeric>
 
 namespace gpu::models::NeuronModel {
-__device__ double* x;
-__device__ FiredStatus* fired;
+__device__ gpu::Vector::CudaArray<double> x;
+gpu::Vector::CudaArrayDeviceHandle<double> handle_x(x);
 
-FiredStatus* fired_host;
+__device__ gpu::Vector::CudaArray<FiredStatus> fired;
+gpu::Vector::CudaArrayDeviceHandle<FiredStatus> handle_fired(fired);
+std::vector<FiredStatus> fired_host;
 
 __device__ __constant__ unsigned int h;
-
-//__device__ UpdateStatus* disable_flags;
 
 void construct_gpu(const unsigned int _h) {
     cuda_copy_to_device(h, _h);
 }
 
 void init_neuron_model(const RelearnTypes::number_neurons_type number_neurons) {
-
-    cuda_calloc_symbol(x, sizeof(double) * number_neurons, 0);
-    cuda_calloc_symbol( fired, sizeof(double) * number_neurons, 0);
-    fired_host = (FiredStatus*) malloc( sizeof(char) * number_neurons);
-
-    cuda_memcpy_to_host_symbol(fired, fired_host, sizeof(char), number_neurons);
+    handle_x.resize(number_neurons);
+    handle_fired.resize(number_neurons);
+    fired_host.resize(number_neurons);
 }
 
 __device__ void set_x(const size_t neuron_id, double _x) {
@@ -40,11 +41,11 @@ __device__ void set_fired(const size_t neuron_id, FiredStatus _fired) {
 }
 
 FiredStatus* get_fired() {
-    return fired_host;
+    return fired_host.data();
 }
 
 void finish_update() {
-    cuda_memcpy_to_host_symbol(fired, fired_host, sizeof(char), gpu::neurons::NeuronsExtraInfos::number_local_neurons_host);
+    handle_fired.copy_to_host(fired_host);
 }
 
 __device__ double get_stimulus(const size_t neuron_id) {

@@ -21,7 +21,7 @@
 #define cuda_copy_to_host(tgt, src)               \
     {                                               \
         gpu_check_last_error();                     \
-        cudaMemcpyToSymbol(&tgt, src, sizeof(tgt)); \
+        cudaMemcpyFromSymbol(&tgt, src, sizeof(tgt)); \
         gpu_check_last_error();                     \
     }
 
@@ -34,13 +34,13 @@
         cuda_malloc(size, p); \
     }
 
-#define cuda_calloc_symbol(symbol, size, value) \
+#define cuda_calloc_symbol(symbol, size) \
     {                                           \
         void* p;                                \
         gpu_check_last_error();                 \
         cudaGetSymbolAddress(&p, symbol);       \
         gpu_check_last_error();                 \
-        cuda_calloc(size, p, value);            \
+        cuda_calloc(size, p);            \
     }
 
 #define cuda_memcpy_to_host_symbol(symbol, hostPtr, size_type, number_elements) \
@@ -92,16 +92,34 @@ inline void* cuda_malloc(size_t size, void* devPtr) {
     gpu_check_last_error();
     cudaDeviceSynchronize();
 
-    cuda_memcpy_to_device(devPtr,&devPtrMalloc, sizeof(void*), 1);
+    cuda_memcpy_to_device(devPtr, &devPtrMalloc, sizeof(void*), 1);
 
     return devPtrMalloc;
 }
 
-inline void* cuda_calloc( size_t size, void* devPtr, size_t value) {
-    void* devPtrMalloc = cuda_malloc(size, devPtr);
-    cudaMemset(devPtrMalloc, value, size);
+inline void* cuda_malloc(size_t size) {
+    void* devPtrMalloc;
+    cudaDeviceSynchronize();
     gpu_check_last_error();
-    return devPtr;
+    cudaMalloc(&devPtrMalloc, size);
+    gpu_check_last_error();
+    cudaDeviceSynchronize();
+
+    return devPtrMalloc;
+}
+
+inline void* cuda_calloc(size_t size, void* devPtr) {
+    void* devPtrMalloc = cuda_malloc(size, devPtr);
+    cudaMemset(devPtrMalloc, 0, size);
+    gpu_check_last_error();
+    return devPtrMalloc;
+}
+
+inline void* cuda_calloc(size_t size) {
+    void* devPtrMalloc = cuda_malloc(size);
+    cudaMemset(devPtrMalloc, 0, size);
+    gpu_check_last_error();
+    return devPtrMalloc;
 }
 
 inline __device__ size_t block_thread_to_neuron_id(size_t block_id, size_t thread_id, size_t block_size) {
@@ -132,4 +150,19 @@ size_t get_number_threads(func_type kernel, size_t number_neurons) {
     }
 
     return threads;
+}
+
+template <typename T>
+__global__ void set_array_kernel(T* arr, size_t size, T value) {
+    auto thread = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
+    if (thread < size) {
+        arr[thread] = value;
+    }
+}
+
+template <typename T>
+__host__ void set_array(T* arr, const size_t size, const T value) {
+    const auto threads = get_number_threads(set_array_kernel<T>, size);
+    const auto blocks = get_number_blocks(threads, size);
+    set_array_kernel<<<blocks,threads>>>(arr,size,value);
 }

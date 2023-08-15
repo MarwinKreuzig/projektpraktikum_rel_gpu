@@ -40,7 +40,9 @@ void create_neurons_gpu(const RelearnTypes::number_neurons_type creation_count) 
 
 namespace gpu::models::poisson {
 
-    __device__ double* refractory_time;
+    __device__ gpu::Vector::CudaArray<double> refractory_time;
+    gpu::Vector::CudaArrayDeviceHandle<double> handle_refractory_time{refractory_time};
+
     __device__ __constant__ double x_0;
     __device__ __constant__ double tau_x;
     __device__ __constant__ unsigned int refractory_period;
@@ -60,7 +62,7 @@ void init_gpu(const RelearnTypes::number_neurons_type number_neurons) {
     std::cout << "INIT GPU " << std::endl;
     gpu::models::NeuronModel::init_neuron_model(number_neurons);
 
-    cuda_calloc_symbol(refractory_time, sizeof(double) * number_neurons, 0);
+    handle_refractory_time.resize(number_neurons);
 }
 
 void init_neurons_gpu(const RelearnTypes::number_neurons_type start_id, const RelearnTypes::number_neurons_type end_id) {
@@ -84,7 +86,6 @@ __global__ void update_activity_kernel(size_t step) {
 
     //Init
     auto curand_state = gpu::RandomHolder::init(step, gpu::RandomHolder::POISSON, neuron_id);
-
 
     if (gpu::neurons::NeuronsExtraInfos::disable_flags[neuron_id] == 0) {
             return;

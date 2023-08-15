@@ -10,7 +10,7 @@ namespace gpu::RandomHolder {
 
     using random_state_type = curandStateXORWOW_t;
 
-        __device__ enum RandomKeyHolder {
+        enum RandomKeyHolder {
             POISSON
         };
 
