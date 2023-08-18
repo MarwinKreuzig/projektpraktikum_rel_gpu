@@ -3,6 +3,13 @@
 #define cuda_available true
 
 
+#if __CUDACC__
+    #define GPU_AND_HOST __device__
+#else
+    #define GPU_AND_HOST
+#endif
+
+
 class CudaHelper {
 public:
 

@@ -9,6 +9,10 @@
 
 	enable_language(CUDA)
 
+	target_compile_options(relearn_gpu PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+                       --expt-relaxed-constexpr
+                       >)
+
 	target_sources(
         relearn_gpu
         PRIVATE
@@ -17,6 +21,7 @@
 		  set_target_properties(relearn_gpu PROPERTIES CUDA_ARCHITECTURES 61)
 
 		  set_target_properties(relearn_gpu PROPERTIES CMAKE_CUDA_STANDARD 17 CMAKE_CXX_STANDARD 17 CMAKE_CUDA_STANDARD_REQUIRED ON CMAKE_CXX_STANDARD_REQUIRED ON)
+
 
 		  target_include_directories(relearn_gpu PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

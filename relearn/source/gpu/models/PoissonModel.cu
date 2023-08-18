@@ -6,6 +6,8 @@
 #include "gpu/Random.cuh"
 #include "gpu/RelearnGPUException.h"
 
+#include "calculations/NeuronModelCalculations.h"
+
 #include "neurons/enums/FiredStatus.h"
 
 #include <cuda.h>
@@ -86,36 +88,22 @@ __global__ void update_activity_kernel(size_t step) {
 
     //Init
     auto curand_state = gpu::RandomHolder::init(step, gpu::RandomHolder::POISSON, neuron_id);
+    const auto random_value = gpu::RandomHolder::get_percentage(&curand_state);
 
     if (gpu::neurons::NeuronsExtraInfos::disable_flags[neuron_id] == 0) {
             return;
     }
         const auto synaptic_input = gpu::models::NeuronModel::get_synaptic_input(neuron_id);
-        const auto background = gpu::models::NeuronModel::get_background_activity(neuron_id);
+        const auto background_activity = gpu::models::NeuronModel::get_background_activity(neuron_id);
         const auto stimulus = gpu::models::NeuronModel::get_stimulus(neuron_id);
-        const auto input = synaptic_input + background + stimulus;
 
-        auto x_val = gpu::models::NeuronModel::x[neuron_id];
+        const auto x = gpu::models::NeuronModel::x[neuron_id];
 
-        for (unsigned int integration_steps = 0; integration_steps < gpu::models::NeuronModel::h; integration_steps++) {
-            x_val += ((x_0 - x_val) * tau_x_inverse + input) * scale;
-        }
+        const auto& [x_val, this_fired, this_refractory_time] = Calculations::poisson(x, synaptic_input, background_activity, stimulus, refractory_time[neuron_id], random_value, x_0, refractory_period, gpu::models::NeuronModel::h, scale, tau_x_inverse);
 
-        if (refractory_time[neuron_id] == 0) {
-            const auto threshold = gpu::RandomHolder::get_percentage(&curand_state);
-            const auto f = x_val >= threshold;
-            if (f) {
-                gpu::models::NeuronModel::set_fired(neuron_id, FiredStatus::Fired);
-                refractory_time[neuron_id] = refractory_period;
-            } else {
-                gpu::models::NeuronModel::set_fired(neuron_id, FiredStatus::Inactive);
-            }
-        } else {
-            gpu::models::NeuronModel::set_fired(neuron_id, FiredStatus::Inactive);
-            --refractory_time[neuron_id];
-        }
-
-        gpu::models::NeuronModel::set_x(0, 0.0);
+        refractory_time[neuron_id] = this_refractory_time;
+        gpu::models::NeuronModel::set_x(neuron_id, x_val);
+        gpu::models::NeuronModel::set_fired(neuron_id, this_fired);
 }
 
 void update_activity_gpu(size_t step, const double* stimulus, const double* background, const double* syn_input, size_t num_neurons) {

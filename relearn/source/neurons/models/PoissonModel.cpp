@@ -10,6 +10,7 @@
 
 #include "NeuronModels.h"
 
+#include "calculations/NeuronModelCalculations.h"
 #include "gpu/Interface.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "util/Random.h"
@@ -135,32 +136,12 @@ void PoissonModel::update_activity_cpu() {
 
         NeuronID converted_id{ neuron_id };
 
-        const auto synaptic_input = get_synaptic_input(converted_id);
-        const auto background = get_background_activity(converted_id);
-        const auto stimulus = get_stimulus(converted_id);
-        const auto input = synaptic_input + background + stimulus;
+        const auto random_value = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
 
-        auto x_val = get_x(converted_id);
-
-        for (unsigned int integration_steps = 0; integration_steps < h; integration_steps++) {
-            x_val += ((x_0 - x_val) * tau_x_inverse + input) * scale;
-        }
-
-        if (refractory_time[neuron_id] == 0) {
-            const auto threshold = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
-            const auto f = x_val >= threshold;
-            if (f) {
-                set_fired(converted_id, FiredStatus::Fired);
-                refractory_time[neuron_id] = refractory_period;
-            } else {
-                set_fired(converted_id, FiredStatus::Inactive);
-            }
-        } else {
-            set_fired(converted_id, FiredStatus::Inactive);
-            --refractory_time[neuron_id];
-        }
-
+        const auto& [x_val, this_fired, this_refractory_time] = Calculations::poisson(get_x(converted_id), get_synaptic_input(converted_id),get_background_activity(converted_id),get_stimulus(converted_id), refractory_time[neuron_id], random_value, x_0, refractory_period,  h,  scale, tau_x_inverse);
+        set_fired(converted_id, this_fired);
         set_x(converted_id, x_val);
+        refractory_time[neuron_id] = this_refractory_time;
     }
 }
 
