@@ -12,6 +12,7 @@
 #include "Types.h"
 #include "algorithm/Algorithms.h"
 #include "algorithm/Kernel/Kernel.h"
+#include "gpu/CudaHelper.h"
 #include "io/parser/MonitorParser.h"
 #include "io/CalciumIO.h"
 #include "io/InteractiveNeuronIO.h"
@@ -285,6 +286,8 @@ int main(int argc, char** argv) {
         { "random", TransmissionDelayType::Random },
         { "none", TransmissionDelayType::None }
     };
+
+    CudaHelper::set_use_cuda(true);
 
     RelearnTypes::step_type simulation_steps{};
     app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms.")->required();

@@ -11,6 +11,7 @@
 #include "RelearnTest.hpp"
 
 #include "algorithm/Cells.h"
+#include "gpu/CudaHelper.h"
 #include "io/LogFiles.h"
 
 #include "mpi/MPIWrapper.h"
@@ -38,6 +39,8 @@ RelearnTest::~RelearnTest() {
 }
 
 void RelearnTest::SetUp() {
+    CudaHelper::set_use_cuda(false);
+    
     if (use_predetermined_seed) {
         std::cerr << "Using predetermined seed: " << predetermined_seed << '\n';
         mt.seed(predetermined_seed);

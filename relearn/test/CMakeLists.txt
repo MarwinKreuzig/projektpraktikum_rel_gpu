@@ -155,10 +155,15 @@ target_sources(
 		  # for visual studio
 		  ${relearn_tests_additional_files})
 		  
+# TODO Remove this
+enable_language(CUDA)
 target_include_directories(relearn_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(relearn_tests PRIVATE project_options project_libraries)
-target_link_libraries(relearn_tests PRIVATE relearn_lib relearn_harness)
+target_link_libraries(relearn_tests PRIVATE relearn_lib)
+target_link_libraries(relearn_tests PRIVATE relearn_harness)
 target_link_libraries(relearn_tests PRIVATE gtest)
+set_target_properties(relearn_tests PROPERTIES CXX_STANDARD 20)
+set_target_properties(relearn_tests PROPERTIES ENABLE_EXPORTS 1)
 
 add_test(NAME SerialTests COMMAND relearn_tests)
 add_dependencies(check relearn_tests)

@@ -8,6 +8,7 @@ target_sources(
 
 target_include_directories(relearn_harness PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(relearn_harness PROPERTIES ENABLE_EXPORTS 1)
+set_target_properties(relearn_harness PROPERTIES CXX_STANDARD 20)
 
 target_link_libraries(relearn_harness PUBLIC project_options project_libraries)
 target_link_libraries(relearn_harness PRIVATE relearn_lib)

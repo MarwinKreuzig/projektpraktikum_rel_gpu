@@ -605,7 +605,6 @@ TEST_F(BackgroundActivityTest, testFlexibleMultiplePerStepFail) {
 }
 
 TEST_F(BackgroundActivityTest, testFlexibleSameCalculator) {
-    RelearnException::hide_messages = false;
     const auto num_steps = RandomAdapter::get_random_integer(100, 1000, mt);
     const auto num_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const MPIRank my_rank{ 0 };

@@ -68,8 +68,6 @@ set_target_properties(relearn_lib PROPERTIES ENABLE_EXPORTS 1)
 target_link_libraries(relearn_lib PUBLIC project_options project_libraries relearn_gpu)
 set_target_properties(relearn_lib PROPERTIES CXX_STANDARD 20)
 
-#target_link_libraries(relearn_lib PUBLIC relearn_gpu)
-
 # benchmark# dont clutter the compile_commands file with libraries
 set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
 
