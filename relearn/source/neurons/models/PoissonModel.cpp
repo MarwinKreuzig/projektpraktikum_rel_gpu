@@ -173,7 +173,7 @@ void PoissonModel::init_neurons_gpu(const number_neurons_type start_id, const nu
 }
 
 void PoissonModel::update_activity_gpu(const step_type step) {
-    gpu::models::poisson::update_activity_gpu(step);//get_synaptic_input(), get_background_activity(), get_stimulus()
+    gpu::models::poisson::update_activity_gpu(step, get_synaptic_input().data(), get_background_activity().data(), get_stimulus().data(), get_number_neurons());
 }
 
 

@@ -118,7 +118,11 @@ __global__ void update_activity_kernel(size_t step) {
         gpu::models::NeuronModel::set_x(0, 0.0);
 }
 
-void update_activity_gpu(const size_t step) {
+void update_activity_gpu(size_t step, const double* stimulus, const double* background, const double* syn_input, size_t num_neurons) {
+    
+    
+    gpu::models::NeuronModel::prepare_update(step, stimulus, background, syn_input, num_neurons);
+
         const auto number_local_neurons = gpu::neurons::NeuronsExtraInfos::number_local_neurons_host;
         const auto num_threads = get_number_threads(gpu::models::poisson::update_activity_kernel, number_local_neurons);
         const auto num_blocks = get_number_blocks(num_threads, number_local_neurons);

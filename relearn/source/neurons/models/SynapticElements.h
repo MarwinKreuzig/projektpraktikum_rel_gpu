@@ -353,7 +353,6 @@ public:
 
         RelearnException::check(local_neuron_id < connected_elements.size(), "SynapticElements::get_free_elements: neuron_id is too large: {}", neuron_id);
         RelearnException::check(connected_elements[local_neuron_id] <= grown_elements[local_neuron_id], "SynapticElements::get_free_elements: More elements were connected then free: {}, {} vs {}", neuron_id, connected_elements[local_neuron_id], grown_elements[local_neuron_id]);
-
         return static_cast<unsigned int>(grown_elements[local_neuron_id] - connected_elements[local_neuron_id]);
     }
 

@@ -285,6 +285,9 @@ public:
     void init(number_neurons_type number_neurons) {
         if(CudaHelper::is_cuda_available()) {
             init_gpu(number_neurons);
+            for (auto& recorder : fired_recorder) {
+        recorder.resize(number_neurons, 0U);
+    }
             number_local_neurons = number_neurons;
             input_calculator->init(number_neurons);
     background_calculator->init(number_neurons);
@@ -449,6 +452,10 @@ protected:
         return stimulus_calculator->get_stimulus(neuron_id);
     }
 
+    [[nodiscard]] const std::span<const double> get_stimulus() const {
+        return stimulus_calculator->get_stimulus();
+    }
+
     [[nodiscard]] const std::unique_ptr<SynapticInputCalculator>& get_synaptic_input_calculator() const noexcept {
         return input_calculator;
     }
@@ -570,8 +577,6 @@ public:
     [[nodiscard]] unsigned int get_refractory_time() const noexcept {
         return refractory_period;
     }
-
-    
 
     static constexpr double default_x_0{ 0.05 };
     static constexpr double default_tau_x{ 5.0 };

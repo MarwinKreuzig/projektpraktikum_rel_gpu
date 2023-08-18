@@ -82,6 +82,10 @@ public:
         Timers::stop_and_add(TimerRegion::CALC_STIMULUS);
     }
 
+    [[nodiscard]] const std::span<const double> get_stimulus() const {
+        return stimulus;
+    }
+
     [[nodiscard]] double get_stimulus(const NeuronID neuron_id) const {
         return stimulus[neuron_id.get_neuron_id()];
     }

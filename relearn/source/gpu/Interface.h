@@ -3,6 +3,8 @@
 #include "gpu/GpuTypes.h"
 #include "neurons/enums/FiredStatus.h"
 
+#include <span>
+
 namespace gpu::models::izhekevich {
 
 void construct_gpu(const unsigned int h);
@@ -27,7 +29,7 @@ void init_gpu(const RelearnTypes::number_neurons_type number_neurons) ;
 
 void init_neurons_gpu(const RelearnTypes::number_neurons_type start_id, const RelearnTypes::number_neurons_type end_id);
 
-void update_activity_gpu(const size_t step);
+void update_activity_gpu(const size_t step, const double* stimulus, const double* background, const double* syn_input, size_t num_neurons);
 
 
 void create_neurons_gpu(const RelearnTypes::number_neurons_type creation_count);

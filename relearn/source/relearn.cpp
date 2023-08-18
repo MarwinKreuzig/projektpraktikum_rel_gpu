@@ -652,9 +652,8 @@ int main(int argc, char** argv) {
 
         LogFiles::set_log_status(LogFiles::EventType::Events, !static_cast<bool>(*flag_enable_printing_events));
 
-        if (static_cast<bool>(*flag_disable_printing_positions)) {
-            LogFiles::set_log_status(LogFiles::EventType::Positions, true);
-        }
+        LogFiles::set_log_status(LogFiles::EventType::Positions, static_cast<bool>(*flag_disable_printing_positions));
+        
 
         if (static_cast<bool>(*flag_disable_printing_network)) {
             LogFiles::set_log_status(LogFiles::EventType::InNetwork, true);
@@ -670,10 +669,9 @@ int main(int argc, char** argv) {
             LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdateLocal, true);
         }
 
-        if (static_cast<bool>(*flag_disable_printing_calcium)) {
-            LogFiles::set_log_status(LogFiles::EventType::CalciumValues, true);
-            LogFiles::set_log_status(LogFiles::EventType::ExtremeCalciumValues, true);
-        }
+            LogFiles::set_log_status(LogFiles::EventType::CalciumValues, static_cast<bool>(*flag_disable_printing_calcium));
+            LogFiles::set_log_status(LogFiles::EventType::ExtremeCalciumValues, static_cast<bool>(*flag_disable_printing_calcium));
+    
 
         if (static_cast<bool>(*flag_disable_printing_fire_rate)) {
             LogFiles::set_log_status(LogFiles::EventType::FireRates, true);

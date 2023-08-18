@@ -20,6 +20,15 @@ __device__ gpu::Vector::CudaArray<FiredStatus> fired;
 gpu::Vector::CudaArrayDeviceHandle<FiredStatus> handle_fired(fired);
 std::vector<FiredStatus> fired_host;
 
+__device__ gpu::Vector::CudaArray<double> syn_input;
+gpu::Vector::CudaArrayDeviceHandle<double> handle_syn_input(syn_input);
+
+__device__ gpu::Vector::CudaArray<double> background;
+gpu::Vector::CudaArrayDeviceHandle<double> handle_background(background);
+
+__device__ gpu::Vector::CudaArray<double> stimulus;
+gpu::Vector::CudaArrayDeviceHandle<double> handle_stimulus(stimulus);
+
 __device__ __constant__ unsigned int h;
 
 void construct_gpu(const unsigned int _h) {
@@ -45,18 +54,25 @@ FiredStatus* get_fired() {
 }
 
 void finish_update() {
+    fired_host.resize(handle_fired.get_size());
     handle_fired.copy_to_host(fired_host);
 }
 
-__device__ double get_stimulus(const size_t neuron_id) {
-    return 0.0;
+void prepare_update(const size_t step, const double* _stimulus, const double* _background, const double* _syn_input, size_t num_neurons) {
+    handle_stimulus.copy_to_device(_stimulus, num_neurons);
+    handle_background.copy_to_device(_background, num_neurons);
+    handle_syn_input.copy_to_device(_syn_input, num_neurons);
+}
+
+    __device__ double get_stimulus(const size_t neuron_id) {
+    return stimulus[neuron_id];
 }
 
 __device__ double get_background_activity(const size_t neuron_id) {
-    return 0.0;
+    return background[neuron_id];
 
 }
 __device__ double get_synaptic_input(const size_t neuron_id) {
-    return 0.0;
+    return syn_input[neuron_id];
 }
 };
