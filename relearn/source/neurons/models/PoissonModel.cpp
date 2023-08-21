@@ -55,7 +55,6 @@ PoissonModel::PoissonModel(
 void PoissonModel::init_cpu(number_neurons_type number_neurons) {
     NeuronModel::init_cpu(number_neurons);
     refractory_time.resize(number_neurons, 0);
-    init_neurons(0, number_neurons);
 }
 
 void PoissonModel::init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) {
@@ -65,7 +64,6 @@ void PoissonModel::create_neurons_cpu(const number_neurons_type creation_count) 
     const auto old_size = NeuronModel::get_number_neurons();
     NeuronModel::create_neurons_cpu(creation_count);
     refractory_time.resize(old_size + creation_count, 0);
-    init_neurons(old_size, creation_count);
 }
 
 void PoissonModel::update_activity_benchmark(const NeuronID neuron_id) {

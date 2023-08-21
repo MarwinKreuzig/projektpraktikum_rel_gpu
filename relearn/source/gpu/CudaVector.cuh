@@ -51,6 +51,26 @@ namespace gpu::Vector {
             resize_copy(new_dev_ptr, new_size);            
         }
 
+        void fill(T value) {
+            set_array(struct_copy.data, struct_copy.size, value);
+        }
+
+        void fill(size_t begin, size_t end,T value) {
+            T* p = struct_copy.data;
+            p += begin;
+            size_t size = end-begin;
+            set_array(struct_copy.data, size, value);
+        }
+
+        void print_content() {
+            std::vector<T> cpy;
+            cpy.resize(struct_copy.size);
+            copy_to_host(cpy);
+            for(const auto& t : cpy) {
+                std::cout << t << std::endl;
+            }
+        }
+
         void reserve(size_t n) {
             if(n < struct_copy.max_size) {
                 
@@ -121,7 +141,8 @@ namespace gpu::Vector {
 
             void resize_copy(void* new_dev_ptr, size_t new_size) {
                 if (struct_copy.data != nullptr) {
-                    cudaMemcpy(new_dev_ptr, struct_copy.data, struct_copy.size * sizeof(T), cudaMemcpyDeviceToDevice);
+                    const auto s = struct_copy.size < new_size ? struct_copy.size : new_size;
+                    cudaMemcpy(new_dev_ptr, struct_copy.data, s * sizeof(T), cudaMemcpyDeviceToDevice);
                     gpu_check_last_error();
                     cudaDeviceSynchronize();
                     cudaFree(struct_copy.data);

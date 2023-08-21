@@ -42,6 +42,9 @@ AEIFModel::AEIFModel(
     , a{ a }
     , b{ b }
     , V_spike{ V_spike } {
+        if(CudaHelper::is_cuda_available()) {
+             gpu::models::aeif::construct_gpu(h,C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike  );
+        }
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> AEIFModel::clone() const {
@@ -178,16 +181,19 @@ void AEIFModel::init_neurons_cpu(const number_neurons_type start_id, const numbe
     }
 }
 
-double AEIFModel::f(const double x) const noexcept {
-    const auto linear_part = -g_L * (x - E_L);
-    const auto exp_part = g_L * d_T * exp((x - V_T) / d_T);
-    return linear_part + exp_part;
+void AEIFModel::init_gpu(number_neurons_type number_neurons) {
+    gpu::models::aeif::init_gpu(number_neurons);
 }
 
-double AEIFModel::iter_x(const double x, const double w, const double input) const noexcept {
-    return (f(x) - w + input) / C;
+void AEIFModel::init_neurons_gpu(const number_neurons_type start_id, const number_neurons_type end_id) {
+   gpu::models::aeif::init_neurons_gpu(start_id, end_id);
 }
 
-double AEIFModel::iter_refraction(const double w, const double x) const noexcept {
-    return (a * (x - E_L) - w) / tau_w;
+void AEIFModel::update_activity_gpu(const step_type step) {
+    gpu::models::aeif::update_activity_gpu(step, get_synaptic_input().data(), get_background_activity().data(), get_stimulus().data(), get_number_neurons());
+}
+
+
+void AEIFModel::create_neurons_gpu(const number_neurons_type creation_count) {
+    gpu::models::aeif::create_neurons_gpu(creation_count);
 }

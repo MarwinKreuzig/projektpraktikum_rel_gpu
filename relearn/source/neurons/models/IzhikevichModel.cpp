@@ -40,7 +40,7 @@ IzhikevichModel::IzhikevichModel(
     , k2{ k2 }
     , k3{ k3 } {
         if(CudaHelper::is_cuda_available()) {
-             gpu::models::izhekevich::construct_gpu(h);
+             gpu::models::izhekevich::construct_gpu(h,  V_spike,  a,  b,  c,  d,  k1,  k2,  k3);
         }
 }
 
@@ -69,14 +69,12 @@ IzhikevichModel::IzhikevichModel(
 void IzhikevichModel::init_cpu(number_neurons_type number_neurons) {
     NeuronModel::init_cpu(number_neurons);
     u.resize(number_neurons);
-    init_neurons(0, number_neurons);
 }
 
 void IzhikevichModel::create_neurons_cpu(const number_neurons_type creation_count) {
     const auto old_size = NeuronModel::get_number_neurons();
     NeuronModel::create_neurons_cpu(creation_count);
     u.resize(old_size + creation_count);
-    init_neurons(old_size, creation_count);
 }
 
 void IzhikevichModel::update_activity_benchmark(const NeuronID neuron_id) {
@@ -170,16 +168,8 @@ void IzhikevichModel::init_neurons_cpu(const number_neurons_type start_id, const
     }
 }
 
-double IzhikevichModel::iter_x(const double x, const double u, const double input) const noexcept {
-    return k1 * x * x + k2 * x + k3 - u + input;
-}
-
 double IzhikevichModel::iter_refraction(const double u, const double x) const noexcept {
     return a * (b * x - u);
-}
-
-bool IzhikevichModel::spiked(const double x) const noexcept {
-    return x >= V_spike;
 }
 
 
@@ -192,7 +182,7 @@ void IzhikevichModel::init_neurons_gpu(const number_neurons_type start_id, const
 }
 
 void IzhikevichModel::update_activity_gpu(const step_type step) {
-    gpu::models::izhekevich::update_activity_gpu(step);
+    gpu::models::izhekevich::update_activity_gpu(step, get_synaptic_input().data(), get_background_activity().data(), get_stimulus().data(), get_number_neurons());
 }
 
 

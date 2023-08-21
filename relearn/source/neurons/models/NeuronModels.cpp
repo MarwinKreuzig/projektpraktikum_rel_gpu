@@ -67,14 +67,15 @@ void NeuronModel::update_electrical_activity(const step_type step) {
 
     Timers::start(TimerRegion::CALC_ACTIVITY);
     update_activity(step);
-/*
+
     auto fired = 0;
     for(const auto& f: get_fired()) {
         if(f==FiredStatus::Fired) {
             fired++;
         }
     }
-    std::cout << "Number fired neurons: " << fired << '\n';*/
+    std::cout << "Number fired neurons: " << fired << '\n';
+
     Timers::stop_and_add(TimerRegion::CALC_ACTIVITY);
     Timers::stop_and_add(TimerRegion::NEURON_MODEL_UPDATE_ELECTRICAL_ACTIVITY);
 }

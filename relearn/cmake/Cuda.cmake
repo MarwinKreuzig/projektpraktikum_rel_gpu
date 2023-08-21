@@ -16,7 +16,7 @@
 	target_sources(
         relearn_gpu
         PRIVATE
-          gpu/models/PoissonModel.cu)
+          gpu/models/NeuronModels.cu)
 
 		  set_target_properties(relearn_gpu PROPERTIES CUDA_ARCHITECTURES 61)
 

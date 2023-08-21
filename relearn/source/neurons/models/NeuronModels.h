@@ -296,6 +296,7 @@ public:
         else {
             init_cpu(number_neurons);
         }
+        init_neurons(0, number_neurons);
     }
 
     /**
@@ -303,12 +304,14 @@ public:
      * @param creation_count The number of local neurons that should be added
      */
     void create_neurons(number_neurons_type creation_count) {
+        const auto old_size = get_number_neurons();
         if(CudaHelper::is_cuda_available()) {
             create_neurons_gpu(creation_count);
         }
         else {
             create_neurons_cpu(creation_count);
         }
+        init_neurons(old_size, creation_count);
     }
 
 
@@ -702,6 +705,8 @@ public:
         return u[local_neuron_id];
     }
 
+    double iter_refraction(double,double) const noexcept;
+
     /**
      * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
      * @return A vector with all adjustable ModelParameter
@@ -836,9 +841,6 @@ protected:
 
 
 private:
-    [[nodiscard]] double iter_x(double x, double u, double input) const noexcept;
-
-    [[nodiscard]] double iter_refraction(double u, double x) const noexcept;
 
     [[nodiscard]] bool spiked(double x) const noexcept;
 
@@ -980,6 +982,14 @@ protected:
     void update_activity_benchmark() final;
 
     void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) final;
+
+    void update_activity_gpu(const step_type step) override final;
+
+    void init_neurons_gpu(number_neurons_type start_id, number_neurons_type end_id) override final;
+
+    void create_neurons_gpu(const number_neurons_type creation_count) override;
+
+    void init_gpu(number_neurons_type number_neurons) override final;
 
 private:
     [[nodiscard]] static double iter_x(double x, double w, double input) noexcept;
@@ -1197,6 +1207,14 @@ protected:
     void update_activity_benchmark() final;
 
     void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) final;
+
+    void update_activity_gpu(const step_type step) override final;
+
+    void init_neurons_gpu(number_neurons_type start_id, number_neurons_type end_id) override final;
+
+    void create_neurons_gpu(const number_neurons_type creation_count) override;
+
+    void init_gpu(number_neurons_type number_neurons) override final;
 
 private:
     [[nodiscard]] double f(double x) const noexcept;

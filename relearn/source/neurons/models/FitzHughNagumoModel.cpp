@@ -28,6 +28,9 @@ FitzHughNagumoModel::FitzHughNagumoModel(
     , a{ a }
     , b{ b }
     , phi{ phi } {
+        if(CudaHelper::is_cuda_available()) {
+             gpu::models::fitz_hugh_nagumo::construct_gpu(h,a,b,phi, FitzHughNagumoModel::init_w, FitzHughNagumoModel::init_x );
+        }
 }
 
 std::unique_ptr<NeuronModel> FitzHughNagumoModel::clone() const {
@@ -145,14 +148,19 @@ void FitzHughNagumoModel::init_neurons_cpu(const number_neurons_type start_id, c
     }
 }
 
-double FitzHughNagumoModel::iter_x(const double x, const double w, const double input) noexcept {
-    return x - x * x * x / 3 - w + input;
+void FitzHughNagumoModel::init_gpu(number_neurons_type number_neurons) {
+    gpu::models::fitz_hugh_nagumo::init_gpu(number_neurons);
 }
 
-double FitzHughNagumoModel::iter_refraction(const double w, const double x) const noexcept {
-    return phi * (x + a - b * w);
+void FitzHughNagumoModel::init_neurons_gpu(const number_neurons_type start_id, const number_neurons_type end_id) {
+   gpu::models::fitz_hugh_nagumo::init_neurons_gpu(start_id, end_id);
 }
 
-bool FitzHughNagumoModel::spiked(const double x, const double w) noexcept {
-    return w > iter_x(x, 0, 0) && x > 1.;
+void FitzHughNagumoModel::update_activity_gpu(const step_type step) {
+    gpu::models::fitz_hugh_nagumo::update_activity_gpu(step, get_synaptic_input().data(), get_background_activity().data(), get_stimulus().data(), get_number_neurons());
+}
+
+
+void FitzHughNagumoModel::create_neurons_gpu(const number_neurons_type creation_count) {
+    gpu::models::fitz_hugh_nagumo::create_neurons_gpu(creation_count);
 }

@@ -1,3 +1,7 @@
+#pragma once
+
+#include "gpu/models/NeuronModel.cuh"
+
 #include "gpu/Interface.h"
 
 #include "gpu/NeuronsExtraInfos.cuh"
@@ -13,43 +17,16 @@
 #include <cuda.h>
 #include <curand.h>
 #include <curand_kernel.h>
-#include <thrust/device_vector.h>
-
-#include <iostream>
-
-namespace gpu::models::izhekevich {
-
-void construct_gpu(const unsigned int _h) {
-    gpu::models::NeuronModel::construct_gpu(_h);
-}
-
-void init_gpu(RelearnTypes::number_neurons_type number_neurons) {
-    RelearnGPUException::fail("No gpu support");
-}
-
-void init_neurons_gpu(const RelearnTypes::number_neurons_type start_id, const RelearnTypes::number_neurons_type end_id) {
-    RelearnGPUException::fail("No gpu support");
-}
-
-void update_activity_gpu(const size_t step) {
-    RelearnGPUException::fail("No gpu support");
-}
-
-void create_neurons_gpu(const RelearnTypes::number_neurons_type creation_count) {
-    RelearnGPUException::fail("No gpu support");
-}
-};
 
 namespace gpu::models::poisson {
-
-    __device__ gpu::Vector::CudaArray<double> refractory_time;
+__device__ gpu::Vector::CudaArray<double> refractory_time;
     gpu::Vector::CudaArrayDeviceHandle<double> handle_refractory_time{refractory_time};
 
     __device__ __constant__ double x_0;
     __device__ __constant__ double tau_x;
     __device__ __constant__ unsigned int refractory_period;
 
-        void
+      void
         construct_gpu(const unsigned int _h, const double _x_0,
             const double _tau_x,
             const unsigned int _refractory_period) {
@@ -61,7 +38,6 @@ namespace gpu::models::poisson {
     }
 
 void init_gpu(const RelearnTypes::number_neurons_type number_neurons) {
-    std::cout << "INIT GPU " << std::endl;
     gpu::models::NeuronModel::init_neuron_model(number_neurons);
 
     handle_refractory_time.resize(number_neurons);
@@ -77,7 +53,6 @@ void create_neurons_gpu(const RelearnTypes::number_neurons_type creation_count) 
 
 __global__ void update_activity_kernel(size_t step) {
 
-    const auto scale = 1.0 / gpu::models::NeuronModel::h;
     const auto tau_x_inverse = 1.0 / tau_x;
 
     const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
@@ -99,7 +74,7 @@ __global__ void update_activity_kernel(size_t step) {
 
         const auto x = gpu::models::NeuronModel::x[neuron_id];
 
-        const auto& [x_val, this_fired, this_refractory_time] = Calculations::poisson(x, synaptic_input, background_activity, stimulus, refractory_time[neuron_id], random_value, x_0, refractory_period, gpu::models::NeuronModel::h, scale, tau_x_inverse);
+        const auto& [x_val, this_fired, this_refractory_time] = Calculations::poisson(x, synaptic_input, background_activity, stimulus, refractory_time[neuron_id], random_value, x_0, refractory_period, gpu::models::NeuronModel::h, gpu::models::NeuronModel::scale, tau_x_inverse);
 
         refractory_time[neuron_id] = this_refractory_time;
         gpu::models::NeuronModel::set_x(neuron_id, x_val);
@@ -107,7 +82,6 @@ __global__ void update_activity_kernel(size_t step) {
 }
 
 void update_activity_gpu(size_t step, const double* stimulus, const double* background, const double* syn_input, size_t num_neurons) {
-    
     
     gpu::models::NeuronModel::prepare_update(step, stimulus, background, syn_input, num_neurons);
 
