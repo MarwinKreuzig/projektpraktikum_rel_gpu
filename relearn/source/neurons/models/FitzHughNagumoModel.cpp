@@ -10,6 +10,7 @@
 
 #include "NeuronModels.h"
 
+#include "calculations/NeuronModelCalculations.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "util/NeuronID.h"
 
@@ -126,27 +127,12 @@ void FitzHughNagumoModel::update_activity_cpu() {
         const auto synaptic_input = get_synaptic_input(converted_id);
         const auto background = get_background_activity(converted_id);
         const auto stimulus = get_stimulus(converted_id);
-        const auto input = synaptic_input + background + stimulus;
+        const auto _x = get_x(converted_id);
+        const auto _w = w[neuron_id];
+        
+        const auto& [x_val, fired, w_val] = Calculations::fitz_hugh_nagumo( _x,  synaptic_input,  background,  stimulus, _w,  h,  scale,  phi,  a,  b);
 
-        auto x_val = get_x(converted_id);
-        auto w_val = w[neuron_id];
-
-        for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-            const auto x_increase = x_val - x_val * x_val * x_val * (1.0 / 3.0) - w_val + input;
-            const auto w_increase = phi * (x_val + a - b * w_val);
-
-            x_val += x_increase * scale;
-            w_val += w_increase * scale;
-        }
-
-        const auto spiked = w_val > x_val - x_val * x_val * x_val * (1.0 / 3.0) && x_val > 1.0;
-
-        if (spiked) {
-            set_fired(converted_id, FiredStatus::Fired);
-        } else {
-            set_fired(converted_id, FiredStatus::Inactive);
-        }
-
+        set_fired(converted_id, fired);
         set_x(converted_id, x_val);
         w[neuron_id] = w_val;
     }
