@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gpu/Macros.h"
 #include "gpu/GpuTypes.h"
 #include "neurons/enums/FiredStatus.h"
 
@@ -62,8 +63,12 @@ void create_neurons_gpu(const RelearnTypes::number_neurons_type creation_count);
 
 namespace gpu::models::NeuronModel {
     FiredStatus* get_fired();
-}
+    void disable_neurons(const size_t* neuron_ids, size_t num_disabled_neurons);
+    void enable_neurons(const size_t* neuron_ids, size_t num_disabled_neurons);
+};
 
 namespace gpu::neurons::NeuronsExtraInfos {
+    void disable_neurons(const size_t* neuron_ids, size_t num_disabled_neurons);
+    void enable_neurons(const size_t* neuron_ids, size_t num_disabled_neurons);
     void init(const RelearnTypes::number_neurons_type num_neurons);
 };

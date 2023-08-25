@@ -30,6 +30,8 @@
 #include <sstream>
 
 #include <range/v3/functional/arithmetic.hpp>
+#include <range/v3/view/indices.hpp>
+#include <range/v3/view/zip.hpp>
 #include <range/v3/algorithm/count.hpp>
 #include <range/v3/algorithm/sort.hpp>
 

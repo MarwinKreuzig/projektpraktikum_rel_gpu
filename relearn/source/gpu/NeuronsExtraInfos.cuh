@@ -21,4 +21,26 @@ namespace gpu::neurons::NeuronsExtraInfos {
 
     number_local_neurons_host = num_neurons;
 }
+
+void create_neurons(size_t creation_count) {
+    const auto old_size = number_local_neurons_host;
+    const auto new_size = old_size + creation_count;
+    cuda_copy_to_device(number_local_neurons_device, new_size);
+    number_local_neurons_host = new_size;
+}
+
+void disable_neurons(const size_t* neuron_ids, size_t num_disabled_neurons)  {
+    if(num_disabled_neurons == 0) {
+        return;
+    }
+    cuda_set_for_indices<char>(handle_disable_flags.data(), neuron_ids, num_disabled_neurons, 0);
+}
+
+void enable_neurons(const size_t* neuron_ids, size_t num_enabled_neurons)  {
+    if (num_enabled_neurons == 0) {
+        return;
+    }
+    cuda_set_for_indices<char>(handle_disable_flags.data(), neuron_ids, num_enabled_neurons, 1);
+}
+
 };

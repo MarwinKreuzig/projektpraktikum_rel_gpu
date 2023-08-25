@@ -59,7 +59,7 @@ target_sources(
   relearn_tests
   PRIVATE ${CMAKE_BINARY_DIR}/test_get_relearn_path.cpp
           RelearnTest.cpp
-		  
+
 		  background_activity/test_background_activity.cpp
 		  
 		  barnes_hut/test_barnes_hut.cpp
@@ -157,6 +157,7 @@ target_sources(
 		  
 # TODO Remove this
 enable_language(CUDA)
+
 target_include_directories(relearn_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(relearn_tests PRIVATE project_options project_libraries)
 target_link_libraries(relearn_tests PRIVATE relearn_lib)

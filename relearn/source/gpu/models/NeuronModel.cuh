@@ -4,6 +4,7 @@
 
 #include "gpu/Commons.cuh"
 #include "gpu/GpuTypes.h"
+#include "gpu/Interface.h"
 #include "gpu/NeuronsExtraInfos.cuh"
 
 #include "gpu/CudaVector.cuh"
@@ -40,6 +41,23 @@ void init_neuron_model(const RelearnTypes::number_neurons_type number_neurons) {
     handle_x.resize(number_neurons);
     handle_fired.resize(number_neurons);
     fired_host.resize(number_neurons);
+}
+
+void create_neurons(size_t creation_count) {
+    gpu::neurons::NeuronsExtraInfos::create_neurons(creation_count);        
+}
+
+void disable_neurons(const size_t* neuron_ids, size_t num_disabled_neurons) {
+    if(num_disabled_neurons == 0) {
+        return;
+    }
+    cuda_set_for_indices<FiredStatus>(handle_fired.data(), neuron_ids, num_disabled_neurons, FiredStatus::Inactive);
+}
+
+void enable_neurons(const size_t* neuron_ids, size_t num_enabled_neurons) {
+    if(num_enabled_neurons == 0) {
+        return;
+    }
 }
 
 __device__ inline double get_x(size_t neuron_id) {

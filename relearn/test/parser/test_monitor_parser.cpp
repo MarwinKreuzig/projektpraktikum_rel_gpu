@@ -28,6 +28,7 @@
 #include <range/v3/view/for_each.hpp>
 #include <range/v3/view/generate.hpp>
 #include <range/v3/view/map.hpp>
+#include <range/v3/view/zip.hpp>
 #include <sstream>
 #include <vector>
 

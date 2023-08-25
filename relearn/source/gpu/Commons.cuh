@@ -1,6 +1,10 @@
 #pragma once
 
+#include "gpu/Macros.h"
+#include "gpu/RelearnGPUException.h"
+
 #include <iostream>
+
 
 #define gpu_check_error(ans) \
     { gpuAssert((ans), __FILE__, __LINE__); }
@@ -127,6 +131,8 @@ inline __device__ size_t block_thread_to_neuron_id(size_t block_id, size_t threa
 }
 
 inline int get_number_blocks(int number_threads_per_block, int number_total_threads) {
+    RelearnGPUException::check(number_total_threads > 0, "Commmons::get_number_blocks:numer_total_threads is 0");
+    RelearnGPUException::check(number_threads_per_block > 0, "Commmons::get_number_blocks:numer_threads_per_block is 0");
     int number_blocks = number_total_threads / number_threads_per_block;
     if (number_total_threads % number_threads_per_block != 0) {
         number_blocks++;
@@ -165,4 +171,34 @@ __host__ void set_array(T* arr, const size_t size, const T value) {
     const auto threads = get_number_threads(set_array_kernel<T>, size);
     const auto blocks = get_number_blocks(threads, size);
     set_array_kernel<<<blocks,threads>>>(arr,size,value);
+    gpu_check_last_error();
+    cudaDeviceSynchronize();
+    gpu_check_last_error();
+}
+
+
+template <typename T>
+__global__ void cuda_set_for_indices_kernel(T* arr, const size_t* indices, size_t size, T value) {
+    auto thread = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
+    if (thread < size) {
+        const auto key = indices[thread];
+        arr[key] = value;
+    }
+}
+
+template <typename T>
+__host__  void cuda_set_for_indices(T* arr, const size_t* indices,const size_t size, T value) {
+    RelearnGPUException::check(size > 0, "Commmons::Cuda_set_for_indices: Size of indices is 0");
+    void* dev_ptr = cuda_malloc(sizeof(size_t) * size);
+    cuda_memcpy_to_device(dev_ptr, (void*)indices, sizeof(size_t), size);
+    gpu_check_last_error();
+    cudaDeviceSynchronize();
+    const auto threads = get_number_threads(cuda_set_for_indices_kernel<T>, size);
+    const auto blocks = get_number_blocks(threads, size);
+    cuda_set_for_indices_kernel<T><<<blocks,threads>>>(arr,(size_t*)dev_ptr,size,value);
+    gpu_check_last_error();
+    cudaDeviceSynchronize();
+    gpu_check_last_error();
+    cudaFree(dev_ptr);
+    gpu_check_last_error();
 }

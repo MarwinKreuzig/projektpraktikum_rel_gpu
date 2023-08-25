@@ -101,7 +101,7 @@ FetchContent_MakeAvailable(fmt)
 get_target_property(fmt_includes fmt INTERFACE_INCLUDE_DIRECTORIES)
 set_target_properties(fmt PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
                                      "${fmt_includes}")
-                                     target_link_libraries(project_libraries_gpu INTERFACE fmt)
+                                     #target_link_libraries(project_libraries_gpu INTERFACE fmt)
                                      target_link_libraries(project_libraries INTERFACE fmt)
 
 # spdlog
@@ -109,7 +109,7 @@ FetchContent_MakeAvailable(spdlog)
 get_target_property(spdlog_includes spdlog INTERFACE_INCLUDE_DIRECTORIES)
 set_target_properties(spdlog PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
                                         "${spdlog_includes}")
-                                        target_link_libraries(project_libraries_gpu INTERFACE spdlog)
+                                        #target_link_libraries(project_libraries_gpu INTERFACE spdlog)
                                         target_link_libraries(project_libraries INTERFACE spdlog)
 
 # range-v3
@@ -125,4 +125,4 @@ target_link_libraries(project_options INTERFACE Boost::random)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
-find_package(Thrust REQUIRED)
+#find_package(Thrust REQUIRED)

@@ -86,6 +86,11 @@ public:
         RelearnException::check(!enabled_neurons.empty(), "NeuronsExtraInformation::set_enabled_neurons: enabled_neurons is empty");
 
         ranges::fill(enabled_neurons | ranges::views::transform(get_update_status), UpdateStatus::Enabled);
+
+        if(CudaHelper::is_cuda_available()) {
+            const auto ids = CudaHelper::convert_neuron_ids_to_primitives(enabled_neurons);
+            gpu::neurons::NeuronsExtraInfos::enable_neurons(ids.data(), ids.size());
+        }
     }
 
     /**
@@ -109,6 +114,11 @@ public:
         };
 
         ranges::fill(disabled_neurons | ranges::views::transform(get_update_status), UpdateStatus::Disabled);
+
+        if(CudaHelper::is_cuda_available()) {
+            const auto ids = CudaHelper::convert_neuron_ids_to_primitives(disabled_neurons);
+            gpu::neurons::NeuronsExtraInfos::disable_neurons(ids.data(), ids.size());
+        }
     }
 
     /**

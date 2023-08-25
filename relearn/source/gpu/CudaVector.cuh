@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gpu/Commons.cuh"
+#include "gpu/RelearnGPUException.h"
 
 #include <iostream>
 #include <vector>
@@ -27,35 +28,53 @@ namespace gpu::Vector {
             cudaGetSymbolAddress(&p, struct_device_symbol);
             gpu_check_last_error();
             struct_dev_ptr = (CudaArray<T>*)p;
+            is_device_symbol = true;
         }
 
         CudaArrayDeviceHandle(CudaArray<T>* struct_device_ptr) : struct_dev_ptr(struct_device_ptr) {
+            is_device_symbol = false;
         }
 
         ~CudaArrayDeviceHandle() {
-            if(struct_copy.data != nullptr) {
-                free();
+            if(usable()){
+            free();
             }
         }
 
         void resize(size_t new_size) {
-            void* new_dev_ptr = cuda_calloc(new_size * sizeof(T));
-            
-            resize_copy(new_dev_ptr, new_size);
-        }
+            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
+            if(new_size > get_size()){
+                void* new_dev_ptr = cuda_calloc(new_size * sizeof(T));
+                resize_copy(new_dev_ptr, new_size);
+            } else {
+                struct_copy.size = new_size;
+                update_struct_copy_to_device();
+            }
+            }
 
         void resize(size_t new_size, T value) {
-            void* new_dev_ptr = cuda_malloc(new_size * sizeof(T));
-            set_array((T*)new_dev_ptr, new_size, value);
-            
-            resize_copy(new_dev_ptr, new_size);            
-        }
+            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
+            if (new_size > get_size()) {
+                void* new_dev_ptr = cuda_malloc(new_size * sizeof(T));
+                set_array((T*)new_dev_ptr, new_size, value);
+
+                resize_copy(new_dev_ptr, new_size);
+            } else {
+                struct_copy.size = new_size;
+                update_struct_copy_to_device();
+            }
+            }
 
         void fill(T value) {
+            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
+            RelearnGPUException::check(!is_empty(), "CudaVector::fill: Cannot fill an empty vector");
             set_array(struct_copy.data, struct_copy.size, value);
         }
 
         void fill(size_t begin, size_t end,T value) {
+            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
+            RelearnGPUException::check(!is_empty(), "CudaVector::fill: Cannot fill an empty vector");
+            RelearnGPUException::check(begin<end, "CudaVector::fill: End {} < begin {}", end,begin);
             T* p = struct_copy.data;
             p += begin;
             size_t size = end-begin;
@@ -63,6 +82,7 @@ namespace gpu::Vector {
         }
 
         void print_content() {
+            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
             std::vector<T> cpy;
             cpy.resize(struct_copy.size);
             copy_to_host(cpy);
@@ -72,12 +92,14 @@ namespace gpu::Vector {
         }
 
         void reserve(size_t n) {
+            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
             if(n < struct_copy.max_size) {
                 
             }
         }
 
         void copy_to_device(const std::vector<T>& host_data) {
+            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
             const auto num_elements = host_data.size();
             if (num_elements > struct_copy.max_size) {
                 resize(num_elements, 0);
@@ -88,11 +110,13 @@ namespace gpu::Vector {
         }
 
         void copy_to_host(std::vector<T>& host_data) {
+            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
             host_data.resize(struct_copy.size);
             cuda_memcpy_to_host(struct_copy.data, host_data.data(), sizeof(T), struct_copy.size);
         }
 
         void copy_to_device(const T* host_data, size_t num_elements) {
+            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
             if (num_elements > struct_copy.max_size) {
                 resize(num_elements, 0);
             }
@@ -102,11 +126,13 @@ namespace gpu::Vector {
         }
 
         void copy_to_host(T* host_data, size_t num_elements) {
+            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
             //host_data.resize(struct_copy.size);
             cuda_memcpy_to_host(struct_copy.data, host_data, sizeof(T), struct_copy.size);
         }
 
-        void free() {
+        void free_contents() {
+            RelearnGPUException::check(struct_copy.data != nullptr, "CudaVector::free_contents: No contents to be freed");
             cudaFree(struct_copy.data);
             gpu_check_last_error();
             cudaDeviceSynchronize();
@@ -114,19 +140,49 @@ namespace gpu::Vector {
             update_struct_copy_to_device();
         }
 
+        void free() {
+            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
+            if(struct_copy.data !=nullptr){
+                free_contents();
+            }
+            if(!is_device_symbol){
+                cudaFree(struct_dev_ptr);
+                gpu_check_last_error();
+            }
+            struct_dev_ptr = nullptr;
+        }
+
+        void minimize_memory_usage() {
+            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
+            if(get_max_size() == get_size()) {
+                return;
+            }
+            
+            void* new_dev_ptr = cuda_calloc(get_size() * sizeof(T));
+            resize_copy(new_dev_ptr, get_size());
+        }        
+
+        bool usable() const {
+            return struct_dev_ptr != nullptr;
+        }
+
         size_t get_size() const {
+            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
             return struct_copy.size;
         }
 
         size_t get_max_size() const {
+            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
             return struct_copy.max_size;
         }
 
         T* data() const {
+                        RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
             return struct_copy.data;
         }
 
         bool is_empty() const {
+            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
             return struct_copy.data == nullptr;
         }
 
@@ -160,7 +216,18 @@ namespace gpu::Vector {
         CudaArray<T> struct_copy;
         CudaArray<T>* struct_dev_ptr;
 
+        bool is_device_symbol;
+
     };
+
+    template<typename T>
+    static CudaArrayDeviceHandle<T> create_array_in_device_memory() {
+        const auto size = sizeof(CudaArray<T>);
+        void* devPtr = cuda_malloc(size);
+        CudaArray<T> arr;
+        cuda_memcpy_to_device(devPtr, &arr, size, 1);
+        return CudaArrayDeviceHandle<T>((CudaArray<T>*)devPtr);
+    }
 
 /*
     template<typename T>

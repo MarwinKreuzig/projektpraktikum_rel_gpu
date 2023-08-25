@@ -1,13 +1,9 @@
 #pragma once
 
-#define cuda_available true
+#include "gpu/Macros.h"
 
-
-#if __CUDACC__
-    #define GPU_AND_HOST __device__
-#else
-    #define GPU_AND_HOST
-#endif
+#include <span>
+#include "Types.h"
 
 
 class CudaHelper {
@@ -19,6 +15,15 @@ public:
 
     static bool is_cuda_available() {
         return cuda_available && CudaHelper::use_cuda;
+    }
+
+    static std::vector<size_t> convert_neuron_ids_to_primitives(const std::span<const NeuronID> ids) {
+        std::vector<size_t> prims{};
+        prims.reserve(ids.size());
+        for(const auto & neuron_id : ids) {
+            prims.push_back(neuron_id.get_neuron_id());
+        }
+        return prims;
     }
 
     private:

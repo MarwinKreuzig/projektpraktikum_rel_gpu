@@ -20,6 +20,9 @@
 #include "neurons/enums/SignalType.h"
 #include "util/NeuronID.h"
 
+#include <range/v3/view/indices.hpp>
+
+
 #include <random>
 #include <tuple>
 #include <vector>

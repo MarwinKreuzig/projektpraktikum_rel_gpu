@@ -321,6 +321,7 @@ public:
      */
     void enable_neurons(const std::span<const NeuronID> neuron_ids) {
         extra_info->set_enabled_neurons(neuron_ids);
+        neuron_model->enable_neurons(neuron_ids);
     }
 
     /**

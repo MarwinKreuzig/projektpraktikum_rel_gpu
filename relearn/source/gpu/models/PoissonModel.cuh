@@ -8,7 +8,6 @@
 #include "gpu/Commons.cuh"
 #include "gpu/models/NeuronModel.cuh"
 #include "gpu/Random.cuh"
-#include "gpu/RelearnGPUException.h"
 
 #include "calculations/NeuronModelCalculations.h"
 
@@ -47,8 +46,12 @@ void init_neurons_gpu(const RelearnTypes::number_neurons_type start_id, const Re
 
 }
 
-void create_neurons_gpu(const RelearnTypes::number_neurons_type creation_count) {
-    RelearnGPUException::fail("No gpu support");
+void create_neurons_gpu(size_t creation_count) {
+    const auto old_size = gpu::neurons::NeuronsExtraInfos::number_local_neurons_host;
+    const auto new_size = old_size + creation_count;
+    handle_refractory_time.resize(new_size);
+
+    gpu::neurons::NeuronsExtraInfos::create_neurons(creation_count);
 }
 
 __global__ void update_activity_kernel(size_t step) {

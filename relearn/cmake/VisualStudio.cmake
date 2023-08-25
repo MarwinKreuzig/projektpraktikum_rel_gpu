@@ -2,6 +2,7 @@ set(relearn_benchmark_additional_files "" CACHE INTERNAL "")
 set(relearn_harness_additional_files "" CACHE INTERNAL "")
 set(relearn_lib_additional_files "" CACHE INTERNAL "")
 set(relearn_tests_additional_files "" CACHE INTERNAL "")
+set(relearn_tests_cuda_additional_files "" CACHE INTERNAL "")
 
 if(WIN32) # Benchmark
 	list(APPEND relearn_benchmark_additional_files "main.h")

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "neurons/enums/FiredStatus.h"
-#include "gpu/CudaHelper.h"
 
 #include <tuple>
 

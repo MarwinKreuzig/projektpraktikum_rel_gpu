@@ -305,13 +305,22 @@ public:
      */
     void create_neurons(number_neurons_type creation_count) {
         const auto old_size = get_number_neurons();
+        const auto new_size = old_size + creation_count;
         if(CudaHelper::is_cuda_available()) {
             create_neurons_gpu(creation_count);
+            for (auto& recorder : fired_recorder) {
+        recorder.resize(new_size, 0U);
+    }
+
+    input_calculator->create_neurons(creation_count);
+    background_calculator->create_neurons(creation_count);
+    stimulus_calculator->create_neurons(creation_count);
+    number_local_neurons = creation_count + old_size;
         }
         else {
             create_neurons_cpu(creation_count);
         }
-        init_neurons(old_size, creation_count);
+        init_neurons(old_size, old_size+creation_count);
     }
 
 
@@ -328,7 +337,28 @@ public:
      * @param neuron_ids The local neuron ids that should be disabled
      * @exception Throws a RelearnException if a specified id is too large
      */
-    virtual void disable_neurons(const std::span<const NeuronID> neuron_ids) {
+    void disable_neurons(const std::span<const NeuronID> neuron_ids) {
+         if(CudaHelper::is_cuda_available()) {
+            disable_neurons_gpu(neuron_ids);
+        }
+        else {
+            disable_neurons_cpu(neuron_ids);
+        }
+    }
+
+    void disable_neurons_gpu(const std::span<const NeuronID> neuron_ids) {
+        const auto ids = CudaHelper::convert_neuron_ids_to_primitives(neuron_ids);
+        gpu::models::NeuronModel::disable_neurons(ids.data(), ids.size());
+
+        for (const auto neuron_id : neuron_ids) {
+            const auto local_neuron_id = neuron_id.get_neuron_id();
+            for (auto& recorder : fired_recorder) {
+                recorder[local_neuron_id] = 0U;
+            }
+        }
+    }
+
+    void disable_neurons_cpu(const std::span<const NeuronID> neuron_ids) {
         for (const auto neuron_id : neuron_ids) {
             const auto local_neuron_id = neuron_id.get_neuron_id();
 
@@ -338,6 +368,30 @@ public:
                 recorder[local_neuron_id] = 0U;
             }
         }
+    }
+
+    /**
+     * @brief Performs all required steps to disable all neurons that are specified.
+     *      Disables incrementally, i.e., previously disabled neurons are not enabled.
+     * @param neuron_ids The local neuron ids that should be disabled
+     * @exception Throws a RelearnException if a specified id is too large
+     */
+    void enable_neurons(const std::span<const NeuronID> neuron_ids) {
+         if(CudaHelper::is_cuda_available()) {
+            enable_neurons_gpu(neuron_ids);
+        }
+        else {
+            enable_neurons_cpu(neuron_ids);
+        }
+    }
+
+    void enable_neurons_gpu(const std::span<const NeuronID> neuron_ids) {
+        const auto ids = CudaHelper::convert_neuron_ids_to_primitives(neuron_ids);
+        gpu::models::NeuronModel::enable_neurons(ids.data(), ids.size());
+    }
+
+    void enable_neurons_cpu(const std::span<const NeuronID> neuron_ids) {
+
     }
 
     /**

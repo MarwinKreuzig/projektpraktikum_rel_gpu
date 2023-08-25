@@ -10,9 +10,7 @@
  *
  */
 
-#include "fmt/ostream.h"
 
-#include <ostream>
 
 /**
  * An instance of this enum symbolizes if a neuron fired in the current simulation step.
@@ -23,6 +21,13 @@ enum class FiredStatus : char {
     Inactive = 0,
     Fired = 1,
 };
+
+
+
+#ifdef HOST_COMPILER
+
+#include "fmt/ostream.h"
+#include <ostream>
 
 /**
  * @brief Pretty-prints the fired status to the chosen stream
@@ -45,3 +50,5 @@ inline std::ostream& operator<<(std::ostream& out, const FiredStatus fired_statu
 
 template <>
 struct fmt::formatter<FiredStatus> : ostream_formatter { };
+
+#endif

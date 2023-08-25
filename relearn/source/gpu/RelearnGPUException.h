@@ -12,15 +12,13 @@
 
 #include "Config.h"
 
-#include "fmt/core.h"
-#include "fmt/format.h"
-
-#include <spdlog/spdlog.h>
 #include <iostream>
 
 #include <exception>
 #include <string>
 #include <utility>
+#include <memory>
+#include <stdexcept>
 
 /**
  * This class serves as a collective exception class that can check for conditions,
@@ -53,13 +51,13 @@ public:
      * @exception Throws an exception if the number of args does not match the number of placeholders in format
      *      Throws a RelearnException if the condition evaluates to false
      */
-    template <typename FormatString, typename... Args>
-    static constexpr void check(bool condition, FormatString&& format, Args&&... args) {
+    template <typename... Args>
+    static void check(bool condition, std::string&& format, Args&&... args) {
         if (condition) {
             return;
         }
 
-        fail(std::forward<FormatString>(format), std::forward<Args>(args)...);
+        fail(std::move(format), std::forward<Args>(args)...);
     }
 
     /**
@@ -71,15 +69,16 @@ public:
      * @exception Throws an exception if the number of args does not match the number of placeholders in format
      *      Throws a RelearnException
      */
-    template <typename FormatString, typename... Args>
-    [[noreturn]] static constexpr void fail(FormatString&& format, Args&&... args) {
+    template <typename... Args>
+    [[noreturn]] static void fail(std::string&& format, Args&&... args) {
         if (hide_messages) {
             throw RelearnGPUException{};
         }
 
-        auto message = fmt::format(fmt::runtime(std::forward<FormatString>(format)), std::forward<Args>(args)...);
+        const auto message = string_format(format, std::forward<Args>(args)...);
+
         log_message(message);
-        throw RelearnGPUException{ std::move(message) };
+        throw RelearnGPUException{ message };
     }
 
 private:
@@ -94,7 +93,7 @@ private:
      * @brief Constructs an instance with the associated message
      * @param mes The message of the exception
      */
-    explicit RelearnGPUException(std::string&& mes)
+    explicit RelearnGPUException(std::string mes)
         : message(std::move(mes)) {
 
     }
@@ -103,7 +102,16 @@ private:
 
     std::cerr << message << std::flush;
     fflush(stderr);
+}
 
-    spdlog::error("There was an error on host!\n{}", message);
+template<typename ... Args>
+static std::string string_format( const std::string& format, Args ... args )
+{
+    int size_s = std::snprintf( nullptr, 0, format.c_str(), args ... ) + 1; // Extra space for '\0'
+    if( size_s <= 0 ){ throw std::runtime_error( "Error during formatting." ); }
+    auto size = static_cast<size_t>( size_s );
+    std::unique_ptr<char[]> buf( new char[ size ] );
+    std::snprintf( buf.get(), size, format.c_str(), args ... );
+    return std::string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
 }
 };
