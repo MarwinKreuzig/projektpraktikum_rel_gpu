@@ -16,6 +16,8 @@ stages:
 info:
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: prebuild
+  services:
+    - docker:24.0.2-dind
   script:
     - gcc --version
     - nvcc --version
