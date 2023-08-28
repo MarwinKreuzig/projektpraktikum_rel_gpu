@@ -21,8 +21,6 @@ info:
 build-docker:
   stage: build
   image: docker:24.0.2-dind
-  services:
-    - docker:24.0.2-dind
   before_script:
     - docker info
   script:
@@ -36,8 +34,6 @@ build-mpi:
   - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: build
-  services:
-    - docker:24.0.2-dind
   before_script:
     - cd relearn && mkdir build-docker && cd build-docker  
   script:
@@ -53,8 +49,6 @@ build-clang-tidy:
   - if: $CLANG_TIDY == "TRUE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: build
-  services:
-    - docker:24.0.2-dind
   before_script:
     - cd relearn && mkdir build-clang-tidy && cd build-clang-tidy  
   script:
