@@ -1,60 +1,43 @@
 #pragma once
 
-#include "gpu/models/NeuronModel.cuh"
+#include "models/NeuronModel.cuh"
 
 #include "gpu/Interface.h"
 
-#include "gpu/NeuronsExtraInfos.cuh"
-#include "gpu/Commons.cuh"
-#include "gpu/models/NeuronModel.cuh"
-#include "gpu/Random.cuh"
+#include "NeuronsExtraInfos.cuh"
+#include "Commons.cuh"
+#include "models/NeuronModel.cuh"
+#include "Random.cuh"
 
 #include "calculations/NeuronModelCalculations.h"
 
-#include "neurons/enums/FiredStatus.h"
+#include "enums/FiredStatus.h"
 
-namespace gpu::models::aeif {
+namespace gpu::models::fitz_hugh_nagumo {
 
-    __device__ __constant__ double C;
-    __device__ __constant__ double g_L;
-    __device__ __constant__ double E_L;
-   __device__ __constant__ double V_T;
-    __device__ __constant__  double d_T;
-    __device__ __constant__ double tau_w;
     __device__ __constant__ double a;
     __device__ __constant__ double b;
-    __device__ __constant__ double V_spike;
-
-    __device__ __constant__ double d_T_inverse;
-    __device__ __constant__ double tau_w_inverse;
-    __device__ __constant__ double C_inverse;
+    __device__ __constant__ double phi;
+    __device__ __constant__ double init_w;
+    __device__ __constant__ double init_x;
+   
 
     __device__ gpu::Vector::CudaArray<double> w;
     gpu::Vector::CudaArrayDeviceHandle<double> handle_w{w};
 
-    double host_E_L;
+    double host_init_w;
+    double host_init_x;
 
-void construct_gpu(const unsigned int _h, double _C, double _g_L, double _E_L, double _V_T, double _d_T, double _tau_w, double _a, double _b, double _V_spike) {
+void construct_gpu(const unsigned int _h, double _a, double _b, double _phi, double _init_w, double _init_x) {
     gpu::models::NeuronModel::construct_gpu(_h);
 
-    cuda_copy_to_device(V_spike, _V_spike);
-    cuda_copy_to_device(C, _C);
-    cuda_copy_to_device(g_L, _g_L);
-    cuda_copy_to_device(E_L, _E_L);
-    cuda_copy_to_device(V_T, _V_T);
-    cuda_copy_to_device(d_T, _d_T);
-    cuda_copy_to_device(tau_w, _tau_w);
     cuda_copy_to_device(a, _a);
     cuda_copy_to_device(b, _b);
-    host_E_L = _E_L;
-
-    const auto _d_T_inverse = 1.0 / _d_T;
-    cuda_copy_to_device(d_T_inverse, _d_T_inverse);
-    const auto _tau_w_inverse = 1.0 / _tau_w;
-    cuda_copy_to_device(tau_w_inverse, _tau_w_inverse);
-    const auto _C_inverse = 1.0 / _C;
-    cuda_copy_to_device(C_inverse, _C_inverse);
-
+    cuda_copy_to_device(phi, _phi);
+    cuda_copy_to_device(init_w, _init_w);
+    cuda_copy_to_device(init_x, _init_x);
+    host_init_w = _init_w;
+    host_init_x = _init_x;
 }
 
 void init_gpu(RelearnTypes::number_neurons_type number_neurons) {
@@ -64,7 +47,8 @@ void init_gpu(RelearnTypes::number_neurons_type number_neurons) {
 }
 
 void init_neurons_gpu(const RelearnTypes::number_neurons_type start_id, const RelearnTypes::number_neurons_type end_id) {
-    gpu::models::NeuronModel::handle_x.fill(start_id,end_id,host_E_L);
+    gpu::models::NeuronModel::handle_x.fill(start_id,end_id,host_init_x);
+    handle_w.fill(start_id,end_id,host_init_w);
 }
 
 __global__ void update_activity_kernel(size_t step) {
@@ -87,7 +71,7 @@ __global__ void update_activity_kernel(size_t step) {
 
         const auto _w = w[neuron_id];
 
-        const auto& [x_val, this_fired, w_val] = Calculations::aeif(_x,  synaptic_input,  background_activity,  stimulus,  _w,  gpu::models::NeuronModel::h,  gpu::models::NeuronModel::scale, V_spike,  g_L,  E_L,  V_T, d_T, d_T_inverse,  a,  b,  C_inverse,  tau_w_inverse);
+        const auto& [x_val, this_fired, w_val] = Calculations::fitz_hugh_nagumo(_x,  synaptic_input,  background_activity,  stimulus,  _w,  gpu::models::NeuronModel::h,  gpu::models::NeuronModel::scale,phi, a, b);
 
         w[neuron_id] = w_val;
         gpu::models::NeuronModel::set_x(neuron_id, x_val);
@@ -111,7 +95,7 @@ void update_activity_gpu(const size_t step,  const double* stimulus, const doubl
         gpu::models::NeuronModel::finish_update();
 }
 
-void create_neurons_gpu(const size_t creation_count) {
+void create_neurons_gpu(size_t creation_count) {
     const auto old_size = gpu::neurons::NeuronsExtraInfos::number_local_neurons_host;
     const auto new_size = old_size + creation_count;
     handle_w.resize(new_size);

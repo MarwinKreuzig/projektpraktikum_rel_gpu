@@ -109,7 +109,7 @@ if(WIN32) # Lib
 	
 	# enums
 	list(APPEND relearn_lib_additional_files "neurons/enums/ElementType.h")
-	list(APPEND relearn_lib_additional_files "neurons/enums/FiredStatus.h")
+	list(APPEND relearn_lib_additional_files "enums/FiredStatus.h")
 	list(APPEND relearn_lib_additional_files "neurons/enums/SignalType.h")
 	list(APPEND relearn_lib_additional_files "neurons/enums/TargetCalciumDecay.h")
 	list(APPEND relearn_lib_additional_files "neurons/enums/UpdateStatus.h")	

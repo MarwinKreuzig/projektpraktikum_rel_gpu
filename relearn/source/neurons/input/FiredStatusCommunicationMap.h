@@ -14,7 +14,7 @@
 
 #include "Types.h"
 #include "mpi/CommunicationMap.h"
-#include "neurons/enums/FiredStatus.h"
+#include "enums/FiredStatus.h"
 #include "neurons/enums/UpdateStatus.h"
 #include "util/RelearnException.h"
 #include "util/NeuronID.h"

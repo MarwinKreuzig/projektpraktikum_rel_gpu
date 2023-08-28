@@ -12,7 +12,7 @@
 
 #include "Types.h"
 #include "neurons/NeuronsExtraInfo.h"
-#include "neurons/enums/FiredStatus.h"
+#include "enums/FiredStatus.h"
 #include "util/RelearnException.h"
 #include "util/NeuronID.h"
 

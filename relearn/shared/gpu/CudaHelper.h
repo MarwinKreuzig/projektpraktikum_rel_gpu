@@ -14,7 +14,7 @@ public:
     }
 
     static bool is_cuda_available() {
-        return cuda_available && CudaHelper::use_cuda;
+        return RELEARN_CUDA_FOUND && CudaHelper::use_cuda;
     }
 
     static std::vector<size_t> convert_neuron_ids_to_primitives(const std::span<const NeuronID> ids) {

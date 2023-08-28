@@ -13,7 +13,7 @@
 #include "Types.h"
 #include "gpu/CudaHelper.h"
 #include "mpi/CommunicationMap.h"
-#include "neurons/enums/FiredStatus.h"
+#include "enums/FiredStatus.h"
 #include "neurons/enums/UpdateStatus.h"
 #include "neurons/input/TransmissionDelayer.h"
 #include "neurons/input/BackgroundActivityCalculator.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#define cuda_available true
+#define RELEARN_CUDA_FOUND CUDA_FOUND
 
 #ifdef __CUDACC__
     #define CUDA_COMPILER

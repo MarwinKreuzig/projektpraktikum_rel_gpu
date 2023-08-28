@@ -15,7 +15,7 @@
 #include "adapter/random/RandomAdapter.h"
 #include "adapter/network_graph/NetworkGraphAdapter.h"
 #include "adapter/neuron_id/NeuronIdAdapter.h"
-#include "neurons/enums/FiredStatus.h"
+#include "enums/FiredStatus.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/input/FiredStatusCommunicationMap.h"
 #include "neurons/input/SynapticInputCalculator.h"

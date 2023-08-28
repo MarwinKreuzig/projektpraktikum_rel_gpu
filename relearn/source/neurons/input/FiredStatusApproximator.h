@@ -13,7 +13,7 @@
 #include "FiredStatusCommunicator.h"
 
 #include "Types.h"
-#include "neurons/enums/FiredStatus.h"
+#include "enums/FiredStatus.h"
 #include "util/MPIRank.h"
 #include "util/NeuronID.h"
 #include "util/RelearnException.h"

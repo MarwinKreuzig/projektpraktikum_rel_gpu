@@ -17,7 +17,7 @@
 #include "neurons/enums/UpdateStatus.h"
 #include "util/NeuronID.h"
 #include "util/RelearnException.h"
-#include "neurons/enums/FiredStatus.h"
+#include "enums/FiredStatus.h"
 #include "mpi/MPIWrapper.h"
 #include "util/Timers.h"
 

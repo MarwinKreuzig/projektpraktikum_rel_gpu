@@ -1,54 +1,59 @@
 #pragma once
 
-#include "gpu/models/NeuronModel.cuh"
+#include "models/NeuronModel.cuh"
 
 #include "gpu/Interface.h"
 
-#include "gpu/NeuronsExtraInfos.cuh"
-#include "gpu/Commons.cuh"
-#include "gpu/models/NeuronModel.cuh"
-#include "gpu/Random.cuh"
+#include "NeuronsExtraInfos.cuh"
+#include "Commons.cuh"
+#include "models/NeuronModel.cuh"
+#include "Random.cuh"
 
 #include "calculations/NeuronModelCalculations.h"
 
-#include "neurons/enums/FiredStatus.h"
+#include "enums/FiredStatus.h"
 
-namespace gpu::models::fitz_hugh_nagumo {
+namespace gpu::models::izhekevich {
 
+    __device__ __constant__ double V_spike;
     __device__ __constant__ double a;
     __device__ __constant__ double b;
-    __device__ __constant__ double phi;
-    __device__ __constant__ double init_w;
-    __device__ __constant__ double init_x;
-   
+    __device__ __constant__ double c;
+    __device__ __constant__ double d;
+    __device__ __constant__ double k1;
+    __device__ __constant__ double k2;
+    __device__ __constant__ double k3;
 
-    __device__ gpu::Vector::CudaArray<double> w;
-    gpu::Vector::CudaArrayDeviceHandle<double> handle_w{w};
+    __device__ gpu::Vector::CudaArray<double> u;
+    gpu::Vector::CudaArrayDeviceHandle<double> handle_u{u};
 
-    double host_init_w;
-    double host_init_x;
+    double host_c;
 
-void construct_gpu(const unsigned int _h, double _a, double _b, double _phi, double _init_w, double _init_x) {
+void construct_gpu(const unsigned int _h, double _V_spike, double _a, double _b, double _c, double _d, double _k1, double _k2, double _k3) {
     gpu::models::NeuronModel::construct_gpu(_h);
 
+    cuda_copy_to_device(V_spike, _V_spike);
     cuda_copy_to_device(a, _a);
     cuda_copy_to_device(b, _b);
-    cuda_copy_to_device(phi, _phi);
-    cuda_copy_to_device(init_w, _init_w);
-    cuda_copy_to_device(init_x, _init_x);
-    host_init_w = _init_w;
-    host_init_x = _init_x;
+    cuda_copy_to_device(c, _c);
+    cuda_copy_to_device(d, _d);
+    cuda_copy_to_device(k1, _k1);
+    cuda_copy_to_device(k2, _k2);
+    cuda_copy_to_device(k3, _k3);
+    host_c = _c;
 }
 
 void init_gpu(RelearnTypes::number_neurons_type number_neurons) {
     gpu::models::NeuronModel::init_neuron_model(number_neurons);
 
-    handle_w.resize(number_neurons, 0);
+    handle_u.resize(number_neurons, 0);
+    
 }
 
 void init_neurons_gpu(const RelearnTypes::number_neurons_type start_id, const RelearnTypes::number_neurons_type end_id) {
-    gpu::models::NeuronModel::handle_x.fill(start_id,end_id,host_init_x);
-    handle_w.fill(start_id,end_id,host_init_w);
+    gpu::models::NeuronModel::handle_x.fill(start_id,end_id,host_c);
+    gpu::models::NeuronModel::handle_x.print_content();
+    handle_u.print_content();
 }
 
 __global__ void update_activity_kernel(size_t step) {
@@ -67,13 +72,13 @@ __global__ void update_activity_kernel(size_t step) {
         const auto background_activity = gpu::models::NeuronModel::get_background_activity(neuron_id);
         const auto stimulus = gpu::models::NeuronModel::get_stimulus(neuron_id);
 
-        const auto _x = gpu::models::NeuronModel::get_x(neuron_id);
+        const auto _x = gpu::models::NeuronModel::x[neuron_id];
 
-        const auto _w = w[neuron_id];
+        const auto _u = u[neuron_id];
 
-        const auto& [x_val, this_fired, w_val] = Calculations::fitz_hugh_nagumo(_x,  synaptic_input,  background_activity,  stimulus,  _w,  gpu::models::NeuronModel::h,  gpu::models::NeuronModel::scale,phi, a, b);
+        const auto& [x_val, this_fired, u_val] = Calculations::izhikevich(_x, synaptic_input, background_activity, stimulus, _u, gpu::models::NeuronModel::h, gpu::models::NeuronModel::scale, V_spike, a, b,c, d, k1, k2, k3);
 
-        w[neuron_id] = w_val;
+        u[neuron_id] = u_val;
         gpu::models::NeuronModel::set_x(neuron_id, x_val);
         gpu::models::NeuronModel::set_fired(neuron_id, this_fired);
 }
@@ -87,7 +92,7 @@ void update_activity_gpu(const size_t step,  const double* stimulus, const doubl
 
         cudaDeviceSynchronize();
         gpu_check_last_error();
-        update_activity_kernel<<<num_blocks, num_threads>>>(step);
+        gpu::models::izhekevich::update_activity_kernel<<<num_blocks, num_threads>>>(step);
 
         cudaDeviceSynchronize();
         gpu_check_last_error();
@@ -98,7 +103,7 @@ void update_activity_gpu(const size_t step,  const double* stimulus, const doubl
 void create_neurons_gpu(size_t creation_count) {
     const auto old_size = gpu::neurons::NeuronsExtraInfos::number_local_neurons_host;
     const auto new_size = old_size + creation_count;
-    handle_w.resize(new_size);
+    handle_u.resize(new_size);
 
     gpu::neurons::NeuronsExtraInfos::create_neurons(creation_count);
 }

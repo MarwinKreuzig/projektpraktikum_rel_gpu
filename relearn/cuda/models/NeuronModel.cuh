@@ -1,13 +1,13 @@
 #pragma once
 
-#include "neurons/enums/FiredStatus.h"
+#include "enums/FiredStatus.h"
 
-#include "gpu/Commons.cuh"
+#include "Commons.cuh"
 #include "gpu/GpuTypes.h"
 #include "gpu/Interface.h"
-#include "gpu/NeuronsExtraInfos.cuh"
+#include "NeuronsExtraInfos.cuh"
 
-#include "gpu/CudaVector.cuh"
+#include "CudaVector.cuh"
 
 #include <numeric>
 

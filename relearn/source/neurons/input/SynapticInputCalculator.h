@@ -13,7 +13,7 @@
 #include "Types.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/NeuronsExtraInfo.h"
-#include "neurons/enums/FiredStatus.h"
+#include "enums/FiredStatus.h"
 #include "neurons/enums/UpdateStatus.h"
 #include "neurons/input/FiredStatusCommunicator.h"
 #include "neurons/input/TransmissionDelayer.h"

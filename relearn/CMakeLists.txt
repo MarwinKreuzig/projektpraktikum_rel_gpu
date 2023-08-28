@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 project(relearn)
 enable_language(CXX)
 
+include(CheckLanguage)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -16,7 +18,7 @@ add_library(project_options INTERFACE)
 # enable cache system
 include(cmake/Cache.cmake)
 
-#include(cmake/Cuda.cmake)
+include(cmake/Cuda.cmake)
 
 # Add linker configuration
 include(cmake/Linker.cmake)
@@ -49,6 +51,7 @@ include(cmake/VisualStudio.cmake)
 # utilities
 include(cmake/Utils.cmake)
 
+add_subdirectory(cuda)
 add_subdirectory(source)
 
 if(NOT ENABLE_SCOREP)

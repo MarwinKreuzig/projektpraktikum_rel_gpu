@@ -12,7 +12,7 @@
 
 #include "RelearnTest.hpp"
 
-#include "gpu/CudaVector.cuh"
+#include "CudaVector.cuh"
 
 class CudaTest : public RelearnGPUTest {
 

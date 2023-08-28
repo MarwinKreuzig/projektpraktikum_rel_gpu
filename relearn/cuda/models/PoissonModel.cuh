@@ -1,17 +1,17 @@
 #pragma once
 
-#include "gpu/models/NeuronModel.cuh"
+#include "models/NeuronModel.cuh"
 
 #include "gpu/Interface.h"
 
-#include "gpu/NeuronsExtraInfos.cuh"
-#include "gpu/Commons.cuh"
-#include "gpu/models/NeuronModel.cuh"
-#include "gpu/Random.cuh"
+#include "NeuronsExtraInfos.cuh"
+#include "Commons.cuh"
+#include "models/NeuronModel.cuh"
+#include "Random.cuh"
 
 #include "calculations/NeuronModelCalculations.h"
 
-#include "neurons/enums/FiredStatus.h"
+#include "enums/FiredStatus.h"
 
 #include <cuda.h>
 #include <curand.h>
@@ -94,10 +94,6 @@ void update_activity_gpu(size_t step, const double* stimulus, const double* back
 
         struct cudaDeviceProp properties;
         cudaGetDeviceProperties(&properties, 0);
-        //std::cout << "using " << properties.multiProcessorCount << " multiprocessors" << std::endl;
-        //std::cout << "max threads per processor: " << properties.maxThreadsPerMultiProcessor << std::endl;
-
-        //std::cout << "starting with " << num_blocks << " blocks and " << num_threads << " threads" << std::endl;
 
         cudaDeviceSynchronize();
         gpu_check_last_error();

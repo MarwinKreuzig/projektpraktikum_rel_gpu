@@ -200,6 +200,11 @@ int main(int argc, char** argv) {
     } else {
         LogFiles::print_message_rank(MPIRank::root_rank(), "I'm skipping Debug Checks");
     }
+    if (CudaHelper::is_cuda_available()) {
+        LogFiles::print_message_rank(MPIRank::root_rank(), "I'm using cuda");
+    } else {
+        LogFiles::print_message_rank(MPIRank::root_rank(), "I'm not using cuda");
+    }
 
     const auto my_rank = MPIWrapper::get_my_rank();
     const auto num_ranks = MPIWrapper::get_num_ranks();

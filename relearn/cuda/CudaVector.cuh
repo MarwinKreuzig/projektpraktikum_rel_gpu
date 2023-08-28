@@ -1,7 +1,7 @@
 #pragma once
 
-#include "gpu/Commons.cuh"
-#include "gpu/RelearnGPUException.h"
+#include "Commons.cuh"
+#include "RelearnGPUException.h"
 
 #include <iostream>
 #include <vector>
@@ -86,9 +86,6 @@ namespace gpu::Vector {
             std::vector<T> cpy;
             cpy.resize(struct_copy.size);
             copy_to_host(cpy);
-            for(const auto& t : cpy) {
-                std::cout << t << std::endl;
-            }
         }
 
         void reserve(size_t n) {

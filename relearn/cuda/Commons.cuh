@@ -1,7 +1,7 @@
 #pragma once
 
 #include "gpu/Macros.h"
-#include "gpu/RelearnGPUException.h"
+#include "RelearnGPUException.h"
 
 #include <iostream>
 

@@ -2,8 +2,8 @@
 
 #include "../harness/adapter/random/RandomAdapter.h"
 
-#include "gpu/CudaVector.cuh"
-#include "gpu/RelearnGPUException.h"
+#include "CudaVector.cuh"
+#include "RelearnGPUException.h"
 
 namespace test_variables {
 __device__ gpu::Vector::CudaArray<double> test_array_a;

@@ -10,7 +10,7 @@
  *
  */
 
-#include "neurons/enums/FiredStatus.h"
+#include "enums/FiredStatus.h"
 #include "util/Random.h"
 #include "util/Timers.h"
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "gpu/Commons.cuh"
+#include "Commons.cuh"
 #include "gpu/GpuTypes.h"
-#include "gpu/CudaVector.cuh"
+#include "CudaVector.cuh"
 
 #include <cuda.h>
 

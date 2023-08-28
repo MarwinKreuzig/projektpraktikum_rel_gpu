@@ -1,6 +1,7 @@
-include(../cmake/Cuda.cmake)
-
 add_library(relearn_lib STATIC)
+
+target_include_directories(relearn_lib PUBLIC ../shared)
+
 target_sources(
         relearn_lib
         PRIVATE # algorithm
@@ -10,6 +11,8 @@ target_sources(
         algorithm/FMMInternal/FastMultipoleMethods.cpp
         algorithm/FMMInternal/FastMultipoleMethodsInverted.cpp
         algorithm/NaiveInternal/Naive.cpp
+
+        gpu/Interface.cpp
 
 
         # io
@@ -65,8 +68,13 @@ target_sources(
 
 target_include_directories(relearn_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(relearn_lib PROPERTIES ENABLE_EXPORTS 1)
-target_link_libraries(relearn_lib PUBLIC project_options project_libraries relearn_gpu)
+target_link_libraries(relearn_lib PUBLIC project_options project_libraries)
 set_target_properties(relearn_lib PROPERTIES CXX_STANDARD 20)
+target_compile_definitions(relearn_lib PRIVATE RELEARN_LIB)
+
+if(CUDA_FOUND)
+        target_link_libraries(relearn_lib PUBLIC project_options relearn_gpu)
+endif()
 
 # benchmark# dont clutter the compile_commands file with libraries
 set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)

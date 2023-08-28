@@ -1,3 +1,4 @@
+if(CUDA_FOUND)
 enable_testing()
 
 # add custom check target, builds and tests all tests
@@ -19,13 +20,8 @@ FetchContent_MakeAvailable(googletest)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
-
-# TODO Remove this
-enable_language(CUDA)
-
-
-
 add_executable(relearn_tests_cuda ${SRC_TST} RelearnTest.cpp)
+target_include_directories(relearn_tests_cuda PRIVATE ../shared)
 target_sources(
   relearn_tests_cuda
   PRIVATE ${CMAKE_BINARY_DIR}/test_get_relearn_path.cpp
@@ -53,3 +49,4 @@ add_test(NAME SerialTests COMMAND relearn_tests_cuda)
 
 get_target_property(relearn_tests_cuda_sources relearn_tests_cuda SOURCES)
 source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${relearn_tests_cuda_sources})
+endif()

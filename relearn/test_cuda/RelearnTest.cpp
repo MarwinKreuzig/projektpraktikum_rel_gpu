@@ -14,11 +14,6 @@
 #include <chrono>
 #include <iostream>
 
-//TODO
-//Test CudaVector
-//Free everything between tests
-//Problem reusing __constant__ in Tests
-
 int RelearnGPUTest::iterations = 10;
 double RelearnGPUTest::eps = 0.001;
 
