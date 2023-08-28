@@ -7,6 +7,22 @@ variables:
 services:
   - docker:24.0.2-dind
 
+stages:
+  - prebuild
+  - build
+  - test
+  - deploy
+
+info:
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  stage: prebuild
+  script:
+    - gcc --version
+    - nvcc --version
+    - cmake --version
+    - nvidia-smi
+    - mpicc --version
+
 build-docker:
   stage: build
   image: docker:24.0.2-dind
@@ -81,6 +97,11 @@ build-nompi:
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: build
   before_script:
+    - gcc --version
+    - nvcc --version
+    - cmake --version
+    - nvidia-smi
+    - mpicc --version
     - cd relearn && mkdir build-docker-nompi && cd build-docker-nompi  
   script:
     - cmake -DENABLE_CLANG_TIDY=0 -DENABLE_MPI=0 .. && make -j 16
