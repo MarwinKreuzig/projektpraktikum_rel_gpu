@@ -17,7 +17,6 @@ info:
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
   stage: prebuild
   script:
-    - docker --version
     - gcc --version
     - nvcc --version
     - cmake --version
