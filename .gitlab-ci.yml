@@ -98,11 +98,6 @@ build-nompi:
   services:
     - docker:24.0.2-dind
   before_script:
-    - gcc --version
-    - nvcc --version
-    - cmake --version
-    - nvidia-smi
-    - mpicc --version
     - cd relearn && mkdir build-docker-nompi && cd build-docker-nompi  
   script:
     - cmake -DENABLE_CLANG_TIDY=0 -DENABLE_MPI=0 .. && make -j 16
