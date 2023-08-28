@@ -7,15 +7,9 @@ variables:
 services:
   - docker:24.0.2-dind
 
-stages:
-  - prebuild
-  - build
-  - test
-  - deploy
-
 info:
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
-  stage: prebuild
+  stage: build
   services:
     - docker:24.0.2-dind
   script:
