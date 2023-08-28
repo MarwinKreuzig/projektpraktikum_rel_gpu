@@ -22,7 +22,6 @@ info:
     - gcc --version
     - nvcc --version
     - cmake --version
-    - nvidia-smi
     - mpicc --version
 
 build-docker:
