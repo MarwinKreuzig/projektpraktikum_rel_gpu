@@ -33,6 +33,7 @@ target_link_libraries(relearn_benchmarks PRIVATE project_options
                                                  project_libraries)
 target_link_libraries(relearn_benchmarks PRIVATE relearn_lib relearn_harness)
 target_link_libraries(relearn_benchmarks PRIVATE benchmark::benchmark)
+set_target_properties(relearn_benchmarks PROPERTIES CXX_STANDARD 20)
 
 get_target_property(relearn_benchmark_sources relearn_benchmarks SOURCES)
 source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${relearn_benchmark_sources})
