@@ -106,6 +106,7 @@ target_sources(relearn_analysis
 target_link_libraries(relearn_analysis PRIVATE relearn_lib)
 target_link_libraries(relearn_analysis PRIVATE CLI11::CLI11)
 target_link_libraries(relearn_lib PUBLIC project_options project_libraries)
+set_target_properties(relearn_analysis PROPERTIES CXX_STANDARD 20)
 set_target_properties(relearn_analysis PROPERTIES ENABLE_EXPORTS 1)
 
 get_target_property(relearn_lib_sources relearn_lib SOURCES)
