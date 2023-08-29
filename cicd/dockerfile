@@ -5,9 +5,10 @@ RUN apt-get update
 
 RUN apt-get install -y build-essential wget m4 flex bison cmake git
 RUN apt-get install -y gcc-11
+RUN wget https://developer.download.nvidia.com/compute/cuda/12.2.1/local_installers/cuda_12.2.1_535.86.10_linux.run
+RUN sudo sh cuda_12.2.1_535.86.10_linux.run
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y clang-tidy
 RUN apt-get install -y libboost-all-dev
-RUN apt-get install -y nvidia-cuda-toolkit
 RUN apt-get install -y libglu1-mesa-dev
 RUN apt-get install -y freeglut3-dev
 RUN apt-get install -y mesa-common-dev
