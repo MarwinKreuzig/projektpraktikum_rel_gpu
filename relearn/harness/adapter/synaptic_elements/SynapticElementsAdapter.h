@@ -16,8 +16,8 @@
 
 #include "neurons/models/SynapticElements.h"
 #include "neurons/CalciumCalculator.h"
-#include "neurons/enums/ElementType.h"
-#include "neurons/enums/SignalType.h"
+#include "enums/ElementType.h"
+#include "enums/SignalType.h"
 #include "util/NeuronID.h"
 
 #include <memory>

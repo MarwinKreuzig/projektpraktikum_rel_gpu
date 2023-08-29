@@ -76,8 +76,8 @@ __global__ void update_activity_kernel(size_t step) {
         return;
     }
 
-    if (gpu::neurons::NeuronsExtraInfos::disable_flags[neuron_id] == 0) {
-            return;
+    if (gpu::neurons::NeuronsExtraInfos::disable_flags[neuron_id] == UpdateStatus::Disabled) {
+        return;
     }
         const auto synaptic_input = gpu::models::NeuronModel::get_synaptic_input(neuron_id);
         const auto background_activity = gpu::models::NeuronModel::get_background_activity(neuron_id);

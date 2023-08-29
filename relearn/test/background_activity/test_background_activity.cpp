@@ -13,7 +13,7 @@
 #include "adapter/neuron_assignment/NeuronAssignmentAdapter.h"
 #include "adapter/neuron_id/NeuronIdAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"
-#include "neurons/enums/UpdateStatus.h"
+#include "enums/UpdateStatus.h"
 #include "neurons/input/BackgroundActivityCalculator.h"
 #include "neurons/input/BackgroundActivityCalculators.h"
 #include "util/NeuronID.h"

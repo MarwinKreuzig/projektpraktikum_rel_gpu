@@ -11,7 +11,7 @@
 #include "Simulation.h"
 
 #include "algorithm/Algorithms.h"
-#include "neurons/enums/UpdateStatus.h"
+#include "enums/UpdateStatus.h"
 #include "util/NeuronID.h"
 #include "util/StringUtil.h"
 #include "io/LogFiles.h"

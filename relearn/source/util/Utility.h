@@ -10,7 +10,7 @@
  *
  */
 
-#include "neurons/enums/UpdateStatus.h"
+#include "enums/UpdateStatus.h"
 #include "util/RelearnException.h"
 #include "util/StringUtil.h"
 

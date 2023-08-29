@@ -19,7 +19,7 @@
 #include "adapter/synaptic_elements/SynapticElementsAdapter.h"
 #include "adapter/mpi/MpiRankAdapter.h"
 #include "adapter/neuron_id/NeuronIdAdapter.h"
-#include "neurons/enums/UpdateStatus.h"
+#include "enums/UpdateStatus.h"
 #include "adapter/neurons/NeuronTypesAdapter.h"
 #include "adapter/neurons/NeuronsAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"

@@ -108,11 +108,11 @@ if(WIN32) # Lib
 	list(APPEND relearn_lib_additional_files "neurons/NeuronsExtraInfo.h")
 	
 	# enums
-	list(APPEND relearn_lib_additional_files "neurons/enums/ElementType.h")
+	list(APPEND relearn_lib_additional_files "enums/ElementType.h")
 	list(APPEND relearn_lib_additional_files "enums/FiredStatus.h")
-	list(APPEND relearn_lib_additional_files "neurons/enums/SignalType.h")
+	list(APPEND relearn_lib_additional_files "enums/SignalType.h")
 	list(APPEND relearn_lib_additional_files "neurons/enums/TargetCalciumDecay.h")
-	list(APPEND relearn_lib_additional_files "neurons/enums/UpdateStatus.h")	
+	list(APPEND relearn_lib_additional_files "enums/UpdateStatus.h")	
 	
 	# helper
 	list(APPEND relearn_lib_additional_files "neurons/helper/AreaMonitor.h")

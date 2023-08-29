@@ -13,7 +13,7 @@
 #include "algorithm/Connector.h"
 #include "algorithm/Kernel/Kernel.h"
 #include "neurons/NeuronsExtraInfo.h"
-#include "neurons/enums/UpdateStatus.h"
+#include "enums/UpdateStatus.h"
 #include "structure/NodeCache.h"
 #include "structure/OctreeNode.h"
 #include "util/NeuronID.h"

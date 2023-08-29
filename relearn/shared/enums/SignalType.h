@@ -10,9 +10,7 @@
  *
  */
 
-#include "fmt/ostream.h"
-
-#include <ostream>
+#include "gpu/Macros.h"
 
 /**
  * An instance of this enum classifies a synaptic elements as either excitatory or inhibitory.
@@ -38,6 +36,9 @@ enum class SignalType : char {
     return SignalType::Excitatory;
 }
 
+#ifdef HOST_COMPILER
+#include <ostream>
+#include "fmt/ostream.h"
 /**
  * @brief Pretty-prints the signal type to the chosen stream
  * @param out The stream to which to print the signal type
@@ -58,3 +59,5 @@ inline std::ostream& operator<<(std::ostream& out, const SignalType signal_type)
 
 template <>
 struct fmt::formatter<SignalType> : ostream_formatter { };
+
+#endif

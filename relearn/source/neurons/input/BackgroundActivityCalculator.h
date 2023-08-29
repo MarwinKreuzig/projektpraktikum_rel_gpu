@@ -12,7 +12,7 @@
 
 #include "Types.h"
 #include "neurons/NeuronsExtraInfo.h"
-#include "neurons/enums/UpdateStatus.h"
+#include "enums/UpdateStatus.h"
 #include "neurons/models/ModelParameter.h"
 #include "util/RelearnException.h"
 #include "util/NeuronID.h"

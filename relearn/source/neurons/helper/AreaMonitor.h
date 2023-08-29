@@ -11,7 +11,7 @@
  */
 
 #include "Types.h"
-#include "neurons/enums/SignalType.h"
+#include "enums/SignalType.h"
 #include "util/NeuronID.h"
 #include "GlobalAreaMapper.h"
 

@@ -68,7 +68,7 @@ __global__ void update_activity_kernel(size_t step) {
     auto curand_state = gpu::RandomHolder::init(step, gpu::RandomHolder::POISSON, neuron_id);
     const auto random_value = gpu::RandomHolder::get_percentage(&curand_state);
 
-    if (gpu::neurons::NeuronsExtraInfos::disable_flags[neuron_id] == 0) {
+    if (gpu::neurons::NeuronsExtraInfos::disable_flags[neuron_id] == UpdateStatus::Disabled) {
             return;
     }
         const auto synaptic_input = gpu::models::NeuronModel::get_synaptic_input(neuron_id);

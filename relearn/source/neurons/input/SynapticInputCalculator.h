@@ -14,7 +14,7 @@
 #include "mpi/MPIWrapper.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "enums/FiredStatus.h"
-#include "neurons/enums/UpdateStatus.h"
+#include "enums/UpdateStatus.h"
 #include "neurons/input/FiredStatusCommunicator.h"
 #include "neurons/input/TransmissionDelayer.h"
 #include "neurons/models/ModelParameter.h"

@@ -14,7 +14,7 @@
 #include "gpu/CudaHelper.h"
 #include "gpu/Interface.h"
 #include "mpi/CommunicationMap.h"
-#include "neurons/enums/UpdateStatus.h"
+#include "enums/UpdateStatus.h"
 #include "util/NeuronID.h"
 #include "util/RelearnException.h"
 #include "enums/FiredStatus.h"

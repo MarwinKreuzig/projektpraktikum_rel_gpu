@@ -19,7 +19,7 @@
 #include "adapter/synaptic_elements/SynapticElementsAdapter.h"
 
 #include "neurons/NeuronsExtraInfo.h"
-#include "neurons/enums/UpdateStatus.h"
+#include "enums/UpdateStatus.h"
 #include "neurons/models/SynapticElements.h"
 #include "util/Random.h"
 #include "util/NeuronID.h"

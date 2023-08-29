@@ -17,7 +17,7 @@
 #include "neurons/models/NeuronModels.h"
 #include "neurons/LocalAreaTranslator.h"
 #include "neurons/NetworkGraph.h"
-#include "neurons/enums/UpdateStatus.h"
+#include "enums/UpdateStatus.h"
 #include "sim/Essentials.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"

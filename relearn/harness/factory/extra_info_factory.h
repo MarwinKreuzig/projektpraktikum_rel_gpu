@@ -11,7 +11,7 @@
  */
 
 #include "neurons/NeuronsExtraInfo.h"
-#include "neurons/enums/UpdateStatus.h"
+#include "enums/UpdateStatus.h"
 #include "util/NeuronID.h"
 #include "util/ranges/Functional.hpp"
 
