@@ -21,6 +21,8 @@ info:
 build-docker:
   stage: build
   image: docker:24.0.2-dind
+  services:
+    - docker:24.0.2-dind
   before_script:
     - docker info
   script:

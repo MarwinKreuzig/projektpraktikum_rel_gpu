@@ -15,6 +15,10 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
              "RelWithDebInfo")
 endif()
 
+# Workaround: Internal compiler error gcc
+add_compile_options(-fno-tree-fre)
+
+
 # Generate compile_commands.json to make it easier to work with clang based
 # tools
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
