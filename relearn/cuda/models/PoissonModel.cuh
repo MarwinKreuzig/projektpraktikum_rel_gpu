@@ -26,10 +26,10 @@ __device__ gpu::Vector::CudaArray<double> refractory_time;
     __device__ __constant__ unsigned int refractory_period;
 
       void
-        construct_gpu(const unsigned int _h, const double _x_0,
+        construct_gpu(const unsigned int _h, void* gpu_background_calculator,const double _x_0,
             const double _tau_x,
             const unsigned int _refractory_period) {
-    gpu::models::NeuronModel::construct_gpu(_h);
+    gpu::models::NeuronModel::construct_gpu(_h, gpu_background_calculator);
 
     cuda_copy_to_device(x_0,_x_0);
     cuda_copy_to_device(tau_x, _tau_x);

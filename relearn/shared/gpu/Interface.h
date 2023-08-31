@@ -16,7 +16,7 @@
 
 namespace gpu::models::izhekevich {
 
-void construct_gpu(const unsigned int h, double V_spike, double a, double b, double c, double d, double k1, double k2, double k3) CUDA_DEFINITION
+void construct_gpu(const unsigned int h, void* gpu_background_calculator, double V_spike, double a, double b, double c, double d, double k1, double k2, double k3) CUDA_DEFINITION
 
 void init_gpu(RelearnTypes::number_neurons_type number_neurons) CUDA_DEFINITION
 
@@ -29,7 +29,7 @@ void create_neurons_gpu(const RelearnTypes::number_neurons_type creation_count) 
 
 namespace gpu::models::poisson {
 
-void construct_gpu( const unsigned int h, const double x_0,
+void construct_gpu( const unsigned int h, void* gpu_background_calculator,const double x_0,
     const double tau_x,
     const unsigned int refractory_period) CUDA_DEFINITION
 
@@ -44,7 +44,7 @@ void create_neurons_gpu(const RelearnTypes::number_neurons_type creation_count) 
 
 namespace gpu::models::aeif {
 
-void construct_gpu( const unsigned int _h, double _C, double _g_L, double _E_L, double _V_T, double _d_T, double _tau_w, double _a, double _b, double _V_spike) CUDA_DEFINITION
+void construct_gpu( const unsigned int _h, void* gpu_background_calculator, double _C, double _g_L, double _E_L, double _V_T, double _d_T, double _tau_w, double _a, double _b, double _V_spike) CUDA_DEFINITION
 
 void init_gpu(const RelearnTypes::number_neurons_type number_neurons)  CUDA_DEFINITION
 
@@ -57,7 +57,7 @@ void create_neurons_gpu(const RelearnTypes::number_neurons_type creation_count) 
 
 namespace gpu::models::fitz_hugh_nagumo {
 
-void construct_gpu(const unsigned int _h, double _a, double _b, double _phi, double _init_w, double _init_x) CUDA_DEFINITION
+void construct_gpu(const unsigned int _h, void* gpu_background_calculator,double _a, double _b, double _phi, double _init_w, double _init_x) CUDA_DEFINITION
 
 void init_gpu(const RelearnTypes::number_neurons_type number_neurons)  CUDA_DEFINITION
 

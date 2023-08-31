@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Commons.cuh"
+#include "NeuronsExtraInfos.cuh"
+
 #include "cuda.h"
 #include "curand.h"
 #include "curand_kernel.h"
@@ -11,7 +14,8 @@ namespace gpu::RandomHolder {
     using random_state_type = curandStateXORWOW_t;
 
         enum RandomKeyHolder {
-            POISSON
+            POISSON,
+            BACKGROUND,
         };
 
     __device__ random_state_type init(const size_t step, const RandomKeyHolder key, const size_t neuron_id) {
@@ -29,5 +33,16 @@ namespace gpu::RandomHolder {
         const auto value = curand_uniform_double(state);
         skip_to_next_item(state);
         return value;      
+    }
+
+    __device__ double get_normal(curandState* state) {
+        const auto value = curand_normal_double(state);
+        skip_to_next_item(state);
+        return value;      
+    }
+
+    __device__ double get_normal(curandState* state, double mean, double stddev) {
+        const auto value = get_normal(state)*stddev + mean;
+        return value;
     }
 };

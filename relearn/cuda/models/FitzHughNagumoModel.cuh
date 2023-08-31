@@ -28,8 +28,8 @@ namespace gpu::models::fitz_hugh_nagumo {
     double host_init_w;
     double host_init_x;
 
-void construct_gpu(const unsigned int _h, double _a, double _b, double _phi, double _init_w, double _init_x) {
-    gpu::models::NeuronModel::construct_gpu(_h);
+void construct_gpu(const unsigned int _h, void* gpu_background_calculator, double _a, double _b, double _phi, double _init_w, double _init_x) {
+    gpu::models::NeuronModel::construct_gpu(_h,  gpu_background_calculator);
 
     cuda_copy_to_device(a, _a);
     cuda_copy_to_device(b, _b);

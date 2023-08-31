@@ -34,8 +34,8 @@ namespace gpu::models::aeif {
 
     double host_E_L;
 
-void construct_gpu(const unsigned int _h, double _C, double _g_L, double _E_L, double _V_T, double _d_T, double _tau_w, double _a, double _b, double _V_spike) {
-    gpu::models::NeuronModel::construct_gpu(_h);
+void construct_gpu(const unsigned int _h, void* gpu_background_calculator, double _C, double _g_L, double _E_L, double _V_T, double _d_T, double _tau_w, double _a, double _b, double _V_spike) {
+    gpu::models::NeuronModel::construct_gpu(_h, gpu_background_calculator);
 
     cuda_copy_to_device(V_spike, _V_spike);
     cuda_copy_to_device(C, _C);

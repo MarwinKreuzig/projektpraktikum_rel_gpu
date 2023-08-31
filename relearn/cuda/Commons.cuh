@@ -202,3 +202,25 @@ __host__  void cuda_set_for_indices(T* arr, const size_t* indices,const size_t s
     cudaFree(dev_ptr);
     gpu_check_last_error();
 }
+
+template <typename T, typename ... Args>
+__global__ void init_class_kernel(void** ptr, Args ... constructor_args) {
+    auto* constant = new T(constructor_args...);
+    *ptr = (void*) constant;
+}
+
+template <typename T, typename ... Args>
+inline void* init_class_on_device(Args ... constructor_args) {
+    void** ptr = (void**) cuda_malloc(sizeof(void**));
+    init_class_kernel<T, Args...><<<1,1>>>(ptr, std::forward<Args>(constructor_args)...);
+
+    cudaDeviceSynchronize();
+    gpu_check_last_error();
+
+    void* dev_ptr_class;
+    cuda_memcpy_to_host(ptr, &dev_ptr_class, sizeof(void**), 1);
+
+    return dev_ptr_class;
+
+
+}

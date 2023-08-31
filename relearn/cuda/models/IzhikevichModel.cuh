@@ -13,6 +13,10 @@
 
 #include "enums/FiredStatus.h"
 
+#include "background/BackgroundActivity.cuh"
+
+#include <iostream>
+
 namespace gpu::models::izhekevich {
 
     __device__ __constant__ double V_spike;
@@ -29,8 +33,13 @@ namespace gpu::models::izhekevich {
 
     double host_c;
 
-void construct_gpu(const unsigned int _h, double _V_spike, double _a, double _b, double _c, double _d, double _k1, double _k2, double _k3) {
-    gpu::models::NeuronModel::construct_gpu(_h);
+
+//__device__ gpu::Vector::CudaArray<double> bg__;
+//gpu::Vector::CudaArrayDeviceHandle<double> handle_bg__(bg__);
+
+
+void construct_gpu(const unsigned int _h,void* gpu_background_calculator, double _V_spike, double _a, double _b, double _c, double _d, double _k1, double _k2, double _k3) {
+    gpu::models::NeuronModel::construct_gpu(_h, gpu_background_calculator);
 
     cuda_copy_to_device(V_spike, _V_spike);
     cuda_copy_to_device(a, _a);
@@ -47,6 +56,7 @@ void init_gpu(RelearnTypes::number_neurons_type number_neurons) {
     gpu::models::NeuronModel::init_neuron_model(number_neurons);
 
     handle_u.resize(number_neurons, 0);
+    //handle_bg__.resize(number_neurons,0.0);
     
 }
 
@@ -57,6 +67,8 @@ void init_neurons_gpu(const RelearnTypes::number_neurons_type start_id, const Re
 }
 
 __global__ void update_activity_kernel(size_t step) {
+
+    gpu::background::BackgroundActivity* bgc = (gpu::background::BackgroundActivity*) background_calculator;
 
 
     const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
@@ -69,8 +81,10 @@ __global__ void update_activity_kernel(size_t step) {
         return;
     }
         const auto synaptic_input = gpu::models::NeuronModel::get_synaptic_input(neuron_id);
-        const auto background_activity = gpu::models::NeuronModel::get_background_activity(neuron_id);
+        const auto background_activity = bgc->get(step, neuron_id);
         const auto stimulus = gpu::models::NeuronModel::get_stimulus(neuron_id);
+
+        //bg__[neuron_id] = background_activity;
 
         const auto _x = gpu::models::NeuronModel::x[neuron_id];
 
@@ -83,6 +97,7 @@ __global__ void update_activity_kernel(size_t step) {
         gpu::models::NeuronModel::set_fired(neuron_id, this_fired);
 }
 
+
 void update_activity_gpu(const size_t step,  const double* stimulus, const double* background, const double* syn_input, size_t num_neurons) {
     gpu::models::NeuronModel::prepare_update(step, stimulus, background, syn_input, num_neurons);
 
@@ -90,12 +105,16 @@ void update_activity_gpu(const size_t step,  const double* stimulus, const doubl
         const auto num_threads = get_number_threads(gpu::models::poisson::update_activity_kernel, number_local_neurons);
         const auto num_blocks = get_number_blocks(num_threads, number_local_neurons);
 
-        cudaDeviceSynchronize();
-        gpu_check_last_error();
-        gpu::models::izhekevich::update_activity_kernel<<<num_blocks, num_threads>>>(step);
+        //void* dev_ptr = init_class_on_device<gpu::background::Constant>(3.5);
+        void* dev_ptr = init_class_on_device<gpu::background::Normal>(7.0,2.0);
+        
+        gpu::models::izhekevich::update_activity_kernel<<<num_blocks, num_threads>>>(step, dev_ptr);
 
         cudaDeviceSynchronize();
         gpu_check_last_error();
+
+        //std::cout << "HANDLE " << std::endl;
+        //handle_bg__.print_content();
 
         gpu::models::NeuronModel::finish_update();
 }

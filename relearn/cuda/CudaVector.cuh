@@ -86,6 +86,9 @@ namespace gpu::Vector {
             std::vector<T> cpy;
             cpy.resize(struct_copy.size);
             copy_to_host(cpy);
+            for(const auto& e:cpy) {
+                std:: cout << e << ", ";
+            }
         }
 
         void reserve(size_t n) {

@@ -3,6 +3,7 @@
 #include "enums/FiredStatus.h"
 
 #include "Commons.cuh"
+#include "background/BackgroundActivity.cuh"
 #include "gpu/GpuTypes.h"
 #include "gpu/Interface.h"
 #include "NeuronsExtraInfos.cuh"
@@ -31,10 +32,13 @@ gpu::Vector::CudaArrayDeviceHandle<double> handle_stimulus(stimulus);
 __device__ __constant__ unsigned int h;
 __device__ __constant__ double scale;
 
-void construct_gpu(const unsigned int _h) {
+__device__ gpu::background::BackgroundActivity* background_calculator;
+
+void construct_gpu(const unsigned int _h, void* gpu_background_calculator) {
     cuda_copy_to_device(h, _h);
     const auto _scale = 1.0/_h;
     cuda_copy_to_device(scale, _scale);
+    cuda_copy_to_device(background_calculator, gpu_background_calculator);
 }
 
 void init_neuron_model(const RelearnTypes::number_neurons_type number_neurons) {
