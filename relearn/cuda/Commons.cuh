@@ -4,10 +4,16 @@
 #include "RelearnGPUException.h"
 
 #include <iostream>
+#include <functional>
+
+#include <cuda.h>
 
 
 #define gpu_check_error(ans) \
     { gpuAssert((ans), __FILE__, __LINE__); }
+
+#define device_check_error(ans) \
+{ deviceAssert((ans), __FILE__, __LINE__); }
 
 #define gpu_check_last_error()                 \
     {                                          \
@@ -15,10 +21,18 @@
         gpuAssert(error, __FILE__, __LINE__);  \
     }
 
+#define device_check_last_error()                 \
+{                                          \
+    const auto error = cudaGetLastError(); \
+    deviceAssert(error, __FILE__, __LINE__);  \
+}
+
+
 #define cuda_copy_to_device(tgt, src)               \
     {                                               \
         gpu_check_last_error();                     \
         cudaMemcpyToSymbol(tgt, &src, sizeof(src)); \
+        cudaDeviceSynchronize(); \
         gpu_check_last_error();                     \
     }
 
@@ -70,6 +84,18 @@ inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort =
     }
 }
 
+inline __device__ void deviceAssert(cudaError_t code, const char* file, int line, bool abort = true) {
+    if (code == cudaSuccess) {
+        return;
+    }
+
+    printf("GPU device assert: %s %s %d\n", cudaGetErrorString(code), file, line);
+    if (abort) {
+        __trap();
+    }
+}
+
+
 inline void cuda_memcpy_to_host( void* devPtr, void* hostPtr, size_t size_type, size_t number_elements) {
     cudaDeviceSynchronize();
     gpu_check_last_error();
@@ -112,6 +138,13 @@ inline void* cuda_malloc(size_t size) {
     return devPtrMalloc;
 }
 
+inline __device__ void* device_malloc(size_t size) {
+    //#warning Do not use malloc in device code
+    void* devPtrMalloc;
+    cudaMalloc(&devPtrMalloc, size);
+    return devPtrMalloc;
+}
+
 inline void* cuda_calloc(size_t size, void* devPtr) {
     void* devPtrMalloc = cuda_malloc(size, devPtr);
     cudaMemset(devPtrMalloc, 0, size);
@@ -126,13 +159,19 @@ inline void* cuda_calloc(size_t size) {
     return devPtrMalloc;
 }
 
+inline __device__ void* device_calloc(size_t size) {
+    void* devPtrMalloc = device_malloc(size);
+    cudaMemsetAsync(devPtrMalloc, 0, size);
+    return devPtrMalloc;
+}
+
 inline __device__ size_t block_thread_to_neuron_id(size_t block_id, size_t thread_id, size_t block_size) {
     return block_id * block_size + thread_id;
 }
 
-inline int get_number_blocks(int number_threads_per_block, int number_total_threads) {
-    RelearnGPUException::check(number_total_threads > 0, "Commmons::get_number_blocks:numer_total_threads is 0");
-    RelearnGPUException::check(number_threads_per_block > 0, "Commmons::get_number_blocks:numer_threads_per_block is 0");
+inline __device__ __host__  int get_number_blocks(int number_threads_per_block, int number_total_threads) {
+    //RelearnGPUException::check(number_total_threads > 0, "Commmons::get_number_blocks:numer_total_threads is 0");
+    //RelearnGPUException::check(number_threads_per_block > 0, "Commmons::get_number_blocks:numer_threads_per_block is 0");
     int number_blocks = number_total_threads / number_threads_per_block;
     if (number_total_threads % number_threads_per_block != 0) {
         number_blocks++;
@@ -146,10 +185,25 @@ inline int get_number_blocks(int number_threads_per_block, int number_total_thre
 }
 
 template<typename func_type>
-size_t get_number_threads(func_type kernel, size_t number_neurons) {
+__host__ size_t get_number_threads(func_type kernel, size_t number_neurons) {
     int blocks = 0;
     int threads = 0;
-    gpu_check_error(cudaOccupancyMaxPotentialBlockSize(&blocks, &threads, kernel));
+    const auto e = cudaOccupancyMaxPotentialBlockSize(&blocks, &threads, kernel);
+    gpu_check_error(e);
+
+    if(number_neurons < threads) {
+        return number_neurons;
+    }
+
+    return threads;
+}
+
+template<typename func_type>
+__device__ size_t device_get_number_threads(func_type kernel, size_t number_neurons) {
+    int blocks = 0;
+    int threads = 0;
+    const auto e = cudaOccupancyMaxPotentialBlockSize(&blocks, &threads, kernel);
+    device_check_error(e);
 
     if(number_neurons < threads) {
         return number_neurons;
@@ -174,6 +228,16 @@ __host__ void set_array(T* arr, const size_t size, const T value) {
     gpu_check_last_error();
     cudaDeviceSynchronize();
     gpu_check_last_error();
+}
+
+template <typename T>
+__device__ void device_set_array(T* arr, const size_t size, const T value) {
+    const auto threads = device_get_number_threads(set_array_kernel<T>, size);
+    const auto blocks = get_number_blocks(threads, size);
+    set_array_kernel<<<blocks,threads>>>(arr,size,value);
+    device_check_last_error();
+    cudaDeviceSynchronize();
+    device_check_last_error();
 }
 
 
@@ -203,15 +267,29 @@ __host__  void cuda_set_for_indices(T* arr, const size_t* indices,const size_t s
     gpu_check_last_error();
 }
 
-template <typename T, typename ... Args>
-__global__ void init_class_kernel(void** ptr, Args ... constructor_args) {
-    auto* constant = new T(constructor_args...);
-    *ptr = (void*) constant;
+
+template <typename T>
+__device__  void device_set_for_indices(T* arr, const size_t* indices,const size_t size, T value) {
+    RelearnGPUException::device_check(size > 0, "Commmons::Cuda_set_for_indices: Size of indices is 0");
+    device_check_last_error();
+    const auto threads = device_get_number_threads(cuda_set_for_indices_kernel<T>, size);
+    const auto blocks = get_number_blocks(threads, size);
+    cuda_set_for_indices_kernel<T><<<blocks,threads>>>(arr,indices,size,value);
+    device_check_last_error();
+    cudaDeviceSynchronize();
+    device_check_last_error();
 }
 
 template <typename T, typename ... Args>
-inline void* init_class_on_device(Args ... constructor_args) {
-    void** ptr = (void**) cuda_malloc(sizeof(void**));
+__global__ void init_class_kernel(void* ptr, Args ... constructor_args) {
+    //auto* constant = new T(constructor_args...);
+    //*ptr = (void*) constant;
+    new (ptr) T(constructor_args...);
+}
+
+template <typename T, typename ... Args>
+inline T* init_class_on_device(Args ... constructor_args) {
+    /*void** ptr = (void**) cuda_malloc(sizeof(void**));
     init_class_kernel<T, Args...><<<1,1>>>(ptr, std::forward<Args>(constructor_args)...);
 
     cudaDeviceSynchronize();
@@ -220,7 +298,48 @@ inline void* init_class_on_device(Args ... constructor_args) {
     void* dev_ptr_class;
     cuda_memcpy_to_host(ptr, &dev_ptr_class, sizeof(void**), 1);
 
-    return dev_ptr_class;
+    return (T*)dev_ptr_class;*/
+
+    cudaDeviceSynchronize();
+    gpu_check_last_error();
+
+    void* dev_ptr = cuda_malloc(sizeof(T));
+
+    init_class_kernel<T><<<1,1>>>(dev_ptr, constructor_args...);
+
+    cudaDeviceSynchronize();
+    gpu_check_last_error();
+
+    
+    return (T*) dev_ptr;
+}
 
 
+template<typename Function, typename ... Args>
+__global__ void cuda_generic_kernel(Function f,Args... args)
+    {
+        f(args...);
+    }
+
+template<typename T,typename F, typename ...Args>
+__global__ void cuda_generic_kernel2(T* ptr,F f, Args... args)
+    {
+        *ptr = f(args...);
+    }
+
+template<typename T,typename F, typename ...Args>
+T execute_and_copy(F f, Args... args ) {
+    T* dev_ptr = (T*) cuda_malloc(sizeof(T));
+
+    cuda_generic_kernel2<<<1,1>>>(dev_ptr, f, args...);
+    cudaDeviceSynchronize();
+    gpu_check_last_error();
+
+    T host_data;
+    cuda_memcpy_to_host(dev_ptr, &host_data, sizeof(T), 1);
+
+    cudaFree(dev_ptr);
+    gpu_check_last_error();
+
+    return host_data;
 }

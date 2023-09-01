@@ -12,6 +12,8 @@
 
 #include "neurons/input/BackgroundActivityCalculator.h"
 
+#include "gpu/CudaHelper.h"
+#include "gpu/Interface.h"
 #include "io/BackgroundActivityIO.h"
 #include "io/InteractiveNeuronIO.h"
 #include "util/Random.h"
@@ -37,16 +39,13 @@ public:
      * @param last_step The last step in which background activity is applied
      */
     NullBackgroundActivityCalculator()
-        : BackgroundActivityCalculator() { }
+        : BackgroundActivityCalculator() { 
+            if(CudaHelper::is_cuda_available()) {
+                        gpu::models::set_constant_background(0);
+            }
+        }
 
     virtual ~NullBackgroundActivityCalculator() = default;
-
-    /**
-     * @brief This activity calculator does not provide any input
-     * @param step The current update step
-     */
-    void update_input([[maybe_unused]] const step_type step) override {
-    }
 
     /**
      * @brief Creates a clone of this instance (without neurons), copies all parameters
@@ -55,6 +54,18 @@ public:
     [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
         return std::make_unique<NullBackgroundActivityCalculator>();
     }
+
+    protected:
+     /**
+     * @brief This activity calculator does not provide any input
+     * @param step The current update step
+     */
+    void update_input_cpu([[maybe_unused]] const step_type step) override {
+    }
+
+    void init_gpu(const number_neurons_type number_neurons) override {
+    }
+
 };
 
 /**
@@ -71,27 +82,14 @@ public:
     ConstantBackgroundActivityCalculator(const double input) noexcept
         : BackgroundActivityCalculator()
         , base_input(input) {
+            if(CudaHelper::is_cuda_available()) {
+                        gpu::models::set_constant_background(base_input);
+            }
     }
 
     virtual ~ConstantBackgroundActivityCalculator() = default;
 
-    /**
-     * @brief Updates the input, providing constant or 0 input depending on the disable_flags
-     * @param step The current update step
-     */
-    void update_input([[maybe_unused]] const step_type step) override {
-        const auto& disable_flags = extra_infos->get_disable_flags();
-        const auto number_neurons = get_number_neurons();
-        RelearnException::check(disable_flags.size() == number_neurons,
-            "ConstantBackgroundActivityCalculator::update_input: Size of disable flags doesn't match number of local neurons: {} vs {}", disable_flags.size(), number_neurons);
-
-        Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
-        for (number_neurons_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
-            const auto input = !extra_infos->does_update_plasticity(NeuronID{ neuron_id }) ? 0.0 : base_input;
-            set_background_activity(step, neuron_id, input);
-        }
-        Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
-    }
+    
 
     /**
      * @brief Creates a clone of this instance (without neurons), copies all parameters
@@ -110,6 +108,29 @@ public:
         parameters.emplace_back(Parameter<double>("Base background activity", base_input, BackgroundActivityCalculator::min_base_background_activity, BackgroundActivityCalculator::max_base_background_activity));
 
         return parameters;
+    }
+
+    protected:
+    /**
+     * @brief Updates the input, providing constant or 0 input depending on the disable_flags
+     * @param step The current update step
+     */
+    void update_input_cpu([[maybe_unused]] const step_type step) override {
+        const auto& disable_flags = extra_infos->get_disable_flags();
+        const auto number_neurons = get_number_neurons();
+        RelearnException::check(disable_flags.size() == number_neurons,
+            "ConstantBackgroundActivityCalculator::update_input: Size of disable flags doesn't match number of local neurons: {} vs {}", disable_flags.size(), number_neurons);
+
+        Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
+        for (number_neurons_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
+            const auto input = !extra_infos->does_update_plasticity(NeuronID{ neuron_id }) ? 0.0 : base_input;
+            set_background_activity(step, neuron_id, input);
+        }
+        Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
+    }
+
+
+    void init_gpu(const number_neurons_type number_neurons) override {
     }
 
 private:
@@ -135,27 +156,13 @@ public:
         , mean_input(mean)
         , stddev_input(stddev) {
         RelearnException::check(stddev > 0.0, "NormalBackgroundActivityCalculator::NormalBackgroundActivityCalculator: stddev was: {}", stddev);
+
+        if(CudaHelper::is_cuda_available()) {
+            gpu::models::set_normal_background(mean_input, stddev_input);
+        }
     }
 
     virtual ~NormalBackgroundActivityCalculator() = default;
-
-    /**
-     * @brief Updates the input, providing normal or 0 input depending on the status of the neuron in the extra infos
-     * @param step The current update step
-     */
-    void update_input([[maybe_unused]] const step_type step) override {
-        const auto& disable_flags = extra_infos->get_disable_flags();
-        const auto number_neurons = get_number_neurons();
-        RelearnException::check(disable_flags.size() == number_neurons,
-            "NormalBackgroundActivityCalculator::update_input: Size of disable flags doesn't match number of local neurons: {} vs {}", disable_flags.size(), number_neurons);
-
-        Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
-        for (number_neurons_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
-            const auto input = !extra_infos->does_update_plasticity(NeuronID{ neuron_id }) ? 0.0 : RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
-            set_background_activity(step, neuron_id, input);
-        }
-        Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
-    }
 
     /**
      * @brief Creates a clone of this instance (without neurons), copies all parameters
@@ -175,6 +182,30 @@ public:
         parameters.emplace_back(Parameter<double>("Stddev background activity", stddev_input, BackgroundActivityCalculator::min_background_activity_stddev, BackgroundActivityCalculator::max_background_activity_stddev));
 
         return parameters;
+    }
+
+    protected:
+    /**
+     * @brief Updates the input, providing normal or 0 input depending on the status of the neuron in the extra infos
+     * @param step The current update step
+     */
+    void update_input_cpu([[maybe_unused]] const step_type step) override {
+        const auto& disable_flags = extra_infos->get_disable_flags();
+        const auto number_neurons = get_number_neurons();
+        RelearnException::check(disable_flags.size() == number_neurons,
+            "NormalBackgroundActivityCalculator::update_input: Size of disable flags doesn't match number of local neurons: {} vs {}", disable_flags.size(), number_neurons);
+
+        Timers::start(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
+        for (number_neurons_type neuron_id = 0U; neuron_id < number_neurons; neuron_id++) {
+            const auto input = !extra_infos->does_update_plasticity(NeuronID{ neuron_id }) ? 0.0 : RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input);
+            set_background_activity(step, neuron_id, input);
+        }
+        Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
+    }
+
+
+    void init_gpu(const number_neurons_type number_neurons) override {
+        
     }
 
 private:
@@ -211,10 +242,31 @@ public:
     virtual ~FastNormalBackgroundActivityCalculator() = default;
 
     /**
+     * @brief Creates a clone of this instance (without neurons), copies all parameters
+     * @return A copy of this instance
+     */
+    [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
+        return std::make_unique<FastNormalBackgroundActivityCalculator>(mean_input, stddev_input, multiplier);
+    }
+
+    /**
+     * @brief Returns the parameters of this instance, i.e., the attributes which change the behavior when calculating the input
+     * @return The parameters
+     */
+    [[nodiscard]] std::vector<ModelParameter> get_parameter() override {
+        auto parameters = BackgroundActivityCalculator::get_parameter();
+        parameters.emplace_back(Parameter<double>("Mean background activity", mean_input, BackgroundActivityCalculator::min_background_activity_mean, BackgroundActivityCalculator::max_background_activity_mean));
+        parameters.emplace_back(Parameter<double>("Stddev background activity", stddev_input, BackgroundActivityCalculator::min_background_activity_stddev, BackgroundActivityCalculator::max_background_activity_stddev));
+
+        return parameters;
+    }
+
+    protected:
+    /**
      * @brief Updates the input, providing constant to all neurons to speed up the calculations.
      * @param step The current update step
      */
-    void update_input([[maybe_unused]] const step_type step) override {
+    void update_input_cpu([[maybe_unused]] const step_type step) override {
         const auto number_neurons = get_number_neurons();
         const auto& disable_flags = extra_infos->get_disable_flags();
         RelearnException::check(disable_flags.size() == number_neurons,
@@ -237,7 +289,7 @@ public:
      * @param number_neurons The number of neurons for this instance, must be > 0
      * @exception Throws a RelearnException if number_neurons == 0
      */
-    void init(const number_neurons_type number_neurons) override {
+    void init_cpu(const number_neurons_type number_neurons) override {
         BackgroundActivityCalculator::init(number_neurons);
 
         pre_drawn_values.resize(number_neurons * multiplier);
@@ -249,7 +301,7 @@ public:
      * @param creation_count The number of neurons to create, must be > 0
      * @exception Throws a RelearnException if creation_count == 0 or if init_cpu(...) was not called before
      */
-    void create_neurons(const number_neurons_type number_neurons) override {
+    void create_neurons_cpu(const number_neurons_type number_neurons) override {
         const auto previous_number_neurons = get_number_neurons();
 
         BackgroundActivityCalculator::create_neurons(number_neurons);
@@ -265,7 +317,7 @@ public:
      * @exception Throws a RelearnException if the neuron_id is too large for the stored number of neurons
      * @return The background activity for the given neuron
      */
-    double get_background_activity(const NeuronID neuron_id) const override {
+    double get_background_activity_cpu(const NeuronID neuron_id) const override {
         const auto number_neurons = get_number_neurons();
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
@@ -280,28 +332,14 @@ public:
      * @brief Returns the calculated background activity for all. Changes after calls to update_input(...)
      * @return The background activity for all neurons
      */
-    [[nodiscard]] std::span<const double> get_background_activity() const noexcept override {
+    [[nodiscard]] std::span<const double> get_background_activity_cpu() const noexcept override {
         RelearnException::fail("FastNormalBackgroundActivityCalculator::get_background_activity: Not supported method with this calculator");
     }
 
-    /**
-     * @brief Creates a clone of this instance (without neurons), copies all parameters
-     * @return A copy of this instance
-     */
-    [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
-        return std::make_unique<FastNormalBackgroundActivityCalculator>(mean_input, stddev_input, multiplier);
-    }
 
-    /**
-     * @brief Returns the parameters of this instance, i.e., the attributes which change the behavior when calculating the input
-     * @return The parameters
-     */
-    [[nodiscard]] std::vector<ModelParameter> get_parameter() override {
-        auto parameters = BackgroundActivityCalculator::get_parameter();
-        parameters.emplace_back(Parameter<double>("Mean background activity", mean_input, BackgroundActivityCalculator::min_background_activity_mean, BackgroundActivityCalculator::max_background_activity_mean));
-        parameters.emplace_back(Parameter<double>("Stddev background activity", stddev_input, BackgroundActivityCalculator::min_background_activity_stddev, BackgroundActivityCalculator::max_background_activity_stddev));
 
-        return parameters;
+    void init_gpu(const number_neurons_type number_neurons) override {
+        RelearnException::fail("No gpu support");
     }
 
 private:
@@ -375,11 +413,87 @@ public:
         }
     }
 
+    
+
+    std::shared_ptr<BackgroundActivityCalculator> get_background_activity_calculator_for_neuron(const NeuronID& neuron_id) {
+        return neuron_id_to_background_activity_calculator[neuron_id.get_neuron_id()];
+    }
+
+    
+    /**
+     * @brief Creates a clone of this instance (without neurons), copies all parameters
+     * @return A copy of this instance
+     */
+    [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
+        return std::make_unique<FlexibleBackgroundActivityCalculator>(file_path, my_rank, local_area_translator);
+    }
+
+    /**
+     * @brief Returns the parameters of this instance, i.e., the attributes which change the behavior when calculating the input
+     * @return The parameters
+     */
+    [[nodiscard]] std::vector<ModelParameter> get_parameter() override {
+        auto parameters = BackgroundActivityCalculator::get_parameter();
+        return parameters;
+    }
+
+    protected: 
+    /**
+     * @brief Initializes this instance to hold the given number of neurons
+     * @param number_neurons The number of neurons for this instance, must be > 0
+     * @exception Throws a RelearnException if number_neurons == 0
+     */
+    void init_cpu(const number_neurons_type number_neurons) override {
+        BackgroundActivityCalculator::init(number_neurons);
+
+        const auto null_calculator = parse_calculator_type("null");
+        neuron_id_to_background_activity_calculator.resize(number_neurons, null_calculator);
+    }
+
+    /**
+     * @brief Additionally created the given number of neurons
+     * @param creation_count The number of neurons to create, must be > 0
+     * @exception Throws a RelearnException if creation_count == 0 or if init_cpu(...) was not called before
+     */
+    void create_neurons_cpu(const number_neurons_type number_neurons) override {
+        BackgroundActivityCalculator::create_neurons(number_neurons);
+        const auto now_number_neurons = get_number_neurons();
+
+        const auto null_calculator = parse_calculator_type("null");
+        neuron_id_to_background_activity_calculator.resize(now_number_neurons, null_calculator);
+
+        for (const auto& [_, calculator] : background_activity_calculators) {
+            calculator->create_neurons(number_neurons);
+        }
+    }
+
+    /**
+     * @brief Returns the calculated background activity for the given neuron. Changes after calls to update_input(...)
+     * @param neuron_id The neuron to query
+     * @exception Throws a RelearnException if the neuron_id is too large for the stored number of neurons
+     * @return The background activity for the given neuron
+     */
+    double get_background_activity_cpu(const NeuronID neuron_id) const override {
+        const auto number_neurons = get_number_neurons();
+        const auto local_neuron_id = neuron_id.get_neuron_id();
+
+        RelearnException::check(local_neuron_id < number_neurons, "FastNormalBackgroundActivityCalculator::get_background_activity: id is too large: {}", neuron_id);
+        return neuron_id_to_background_activity_calculator[local_neuron_id]->get_background_activity(neuron_id);
+    }
+
+    /**
+     * @brief Returns the calculated background activity for all. Changes after calls to update_input(...)
+     * @return The background activity for all neurons
+     */
+    [[nodiscard]] std::span<const double> get_background_activity_cpu() const noexcept override {
+        RelearnException::fail("FastNormalBackgroundActivityCalculator::get_background_activity: Not supported method with this calculator");
+    }
+
     /**
      * @brief Updates the input, providing constant to all neurons to speed up the calculations.
      * @param step The current update step
      */
-    void update_input([[maybe_unused]] const step_type step) override {
+    void update_input_cpu([[maybe_unused]] const step_type step) override {
         const auto number_neurons = get_number_neurons();
         const auto& disable_flags = extra_infos->get_disable_flags();
         RelearnException::check(disable_flags.size() == number_neurons,
@@ -407,77 +521,11 @@ public:
         Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
     }
 
-    std::shared_ptr<BackgroundActivityCalculator> get_background_activity_calculator_for_neuron(const NeuronID& neuron_id) {
-        return neuron_id_to_background_activity_calculator[neuron_id.get_neuron_id()];
+
+    void init_gpu(const number_neurons_type number_neurons) override {
+        RelearnException::fail("No gpu support");
     }
 
-    /**
-     * @brief Initializes this instance to hold the given number of neurons
-     * @param number_neurons The number of neurons for this instance, must be > 0
-     * @exception Throws a RelearnException if number_neurons == 0
-     */
-    void init(const number_neurons_type number_neurons) override {
-        BackgroundActivityCalculator::init(number_neurons);
-
-        const auto null_calculator = parse_calculator_type("null");
-        neuron_id_to_background_activity_calculator.resize(number_neurons, null_calculator);
-    }
-
-    /**
-     * @brief Additionally created the given number of neurons
-     * @param creation_count The number of neurons to create, must be > 0
-     * @exception Throws a RelearnException if creation_count == 0 or if init_cpu(...) was not called before
-     */
-    void create_neurons(const number_neurons_type number_neurons) override {
-        BackgroundActivityCalculator::create_neurons(number_neurons);
-        const auto now_number_neurons = get_number_neurons();
-
-        const auto null_calculator = parse_calculator_type("null");
-        neuron_id_to_background_activity_calculator.resize(now_number_neurons, null_calculator);
-
-        for (const auto& [_, calculator] : background_activity_calculators) {
-            calculator->create_neurons(number_neurons);
-        }
-    }
-
-    /**
-     * @brief Returns the calculated background activity for the given neuron. Changes after calls to update_input(...)
-     * @param neuron_id The neuron to query
-     * @exception Throws a RelearnException if the neuron_id is too large for the stored number of neurons
-     * @return The background activity for the given neuron
-     */
-    double get_background_activity(const NeuronID neuron_id) const override {
-        const auto number_neurons = get_number_neurons();
-        const auto local_neuron_id = neuron_id.get_neuron_id();
-
-        RelearnException::check(local_neuron_id < number_neurons, "FastNormalBackgroundActivityCalculator::get_background_activity: id is too large: {}", neuron_id);
-        return neuron_id_to_background_activity_calculator[local_neuron_id]->get_background_activity(neuron_id);
-    }
-
-    /**
-     * @brief Returns the calculated background activity for all. Changes after calls to update_input(...)
-     * @return The background activity for all neurons
-     */
-    [[nodiscard]] std::span<const double> get_background_activity() const noexcept override {
-        RelearnException::fail("FastNormalBackgroundActivityCalculator::get_background_activity: Not supported method with this calculator");
-    }
-
-    /**
-     * @brief Creates a clone of this instance (without neurons), copies all parameters
-     * @return A copy of this instance
-     */
-    [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
-        return std::make_unique<FlexibleBackgroundActivityCalculator>(file_path, my_rank, local_area_translator);
-    }
-
-    /**
-     * @brief Returns the parameters of this instance, i.e., the attributes which change the behavior when calculating the input
-     * @return The parameters
-     */
-    [[nodiscard]] std::vector<ModelParameter> get_parameter() override {
-        auto parameters = BackgroundActivityCalculator::get_parameter();
-        return parameters;
-    }
 
 private:
     std::shared_ptr<BackgroundActivityCalculator> parse_calculator_type(std::string type) {

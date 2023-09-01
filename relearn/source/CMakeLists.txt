@@ -94,7 +94,7 @@ set_target_properties(CLI11 PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
 # relearn executable
 add_executable(relearn)
 target_sources(relearn PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/relearn.cpp)
-target_link_libraries(relearn PRIVATE relearn_lib)
+target_link_libraries(relearn PUBLIC relearn_lib)
 target_link_libraries(relearn PRIVATE CLI11::CLI11)
 set_target_properties(relearn PROPERTIES ENABLE_EXPORTS 1)
 set_target_properties(relearn PROPERTIES CXX_STANDARD 20)

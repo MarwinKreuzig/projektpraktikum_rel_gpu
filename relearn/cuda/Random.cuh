@@ -25,7 +25,7 @@ namespace gpu::RandomHolder {
     }
 
     __device__ void skip_to_next_item(curandState* state) {
-        const auto& num_neurons = gpu::neurons::NeuronsExtraInfos::number_local_neurons_device;
+        const auto& num_neurons = gpu::neurons::NeuronsExtraInfos::extra_infos->get_number_local_neurons();
         skipahead(num_neurons, state);
     }
 

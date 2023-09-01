@@ -17,113 +17,80 @@
 
 #include <iostream>
 
-namespace gpu::models::izhekevich {
+namespace gpu::models {
 
-    __device__ __constant__ double V_spike;
-    __device__ __constant__ double a;
-    __device__ __constant__ double b;
-    __device__ __constant__ double c;
-    __device__ __constant__ double d;
-    __device__ __constant__ double k1;
-    __device__ __constant__ double k2;
-    __device__ __constant__ double k3;
+    class Izhikevich : public NeuronModel {
+        private:
 
-    __device__ gpu::Vector::CudaArray<double> u;
-    gpu::Vector::CudaArrayDeviceHandle<double> handle_u{u};
+    double V_spike;
+    double a;
+    double b;
+    double c;
+    double d;
+    double k1;
+    double k2;
+    double k3;
+
+    gpu::Vector::CudaVector<double> u;
 
     double host_c;
+public:
 
+__device__ Izhikevich(const unsigned int _h,gpu::background::BackgroundActivity* bgc,double _V_spike, double _a, double _b, double _c, double _d, double _k1, double _k2, double _k3) : NeuronModel(_h, bgc) ,V_spike(_V_spike),a(_a),b(_b),c(_c),d(_d),k1(_k1),k2(_k2),k3(_k3)  {}
 
-//__device__ gpu::Vector::CudaArray<double> bg__;
-//gpu::Vector::CudaArrayDeviceHandle<double> handle_bg__(bg__);
+__device__ void init(RelearnTypes::number_neurons_type number_neurons) override {
+    printf("Neuron model init2\n");
+    NeuronModel::init(number_neurons);
 
-
-void construct_gpu(const unsigned int _h,void* gpu_background_calculator, double _V_spike, double _a, double _b, double _c, double _d, double _k1, double _k2, double _k3) {
-    gpu::models::NeuronModel::construct_gpu(_h, gpu_background_calculator);
-
-    cuda_copy_to_device(V_spike, _V_spike);
-    cuda_copy_to_device(a, _a);
-    cuda_copy_to_device(b, _b);
-    cuda_copy_to_device(c, _c);
-    cuda_copy_to_device(d, _d);
-    cuda_copy_to_device(k1, _k1);
-    cuda_copy_to_device(k2, _k2);
-    cuda_copy_to_device(k3, _k3);
-    host_c = _c;
-}
-
-void init_gpu(RelearnTypes::number_neurons_type number_neurons) {
-    gpu::models::NeuronModel::init_neuron_model(number_neurons);
-
-    handle_u.resize(number_neurons, 0);
-    //handle_bg__.resize(number_neurons,0.0);
+    u.resize(number_neurons, 0);
     
 }
 
-void init_neurons_gpu(const RelearnTypes::number_neurons_type start_id, const RelearnTypes::number_neurons_type end_id) {
-    gpu::models::NeuronModel::handle_x.fill(start_id,end_id,host_c);
-    gpu::models::NeuronModel::handle_x.print_content();
-    handle_u.print_content();
-}
-
-__global__ void update_activity_kernel(size_t step) {
-
-    gpu::background::BackgroundActivity* bgc = (gpu::background::BackgroundActivity*) background_calculator;
+__device__ void update_activity(size_t step) override {
 
 
     const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
 
-    if (neuron_id >= gpu::neurons::NeuronsExtraInfos::number_local_neurons_device) {
+    if (neuron_id >= gpu::neurons::NeuronsExtraInfos::extra_infos->get_number_local_neurons()) {
         return;
     }
 
-    if (gpu::neurons::NeuronsExtraInfos::disable_flags[neuron_id] == UpdateStatus::Disabled) {
+   /* if (gpu::neurons::NeuronsExtraInfos::disable_flags[neuron_id] == UpdateStatus::Disabled) {
         return;
-    }
-        const auto synaptic_input = gpu::models::NeuronModel::get_synaptic_input(neuron_id);
-        const auto background_activity = bgc->get(step, neuron_id);
-        const auto stimulus = gpu::models::NeuronModel::get_stimulus(neuron_id);
-
+    }*/
+        const auto synaptic_input = get_synaptic_input(step,neuron_id);
+        const auto background_activity = get_background_activity(step,neuron_id);
+        const auto stimulus =get_stimulus(step,neuron_id);
         //bg__[neuron_id] = background_activity;
 
-        const auto _x = gpu::models::NeuronModel::x[neuron_id];
+        const auto _x = x[neuron_id];
 
         const auto _u = u[neuron_id];
 
-        const auto& [x_val, this_fired, u_val] = Calculations::izhikevich(_x, synaptic_input, background_activity, stimulus, _u, gpu::models::NeuronModel::h, gpu::models::NeuronModel::scale, V_spike, a, b,c, d, k1, k2, k3);
+        const auto& [x_val, this_fired, u_val] = Calculations::izhikevich(_x, synaptic_input, background_activity, stimulus, _u, h, scale, V_spike, a, b,c, d, k1, k2, k3);
 
         u[neuron_id] = u_val;
-        gpu::models::NeuronModel::set_x(neuron_id, x_val);
-        gpu::models::NeuronModel::set_fired(neuron_id, this_fired);
+        set_x(neuron_id, x_val);
+        set_fired(neuron_id, this_fired);
 }
 
+__device__ void create_neurons(size_t creation_count) override {
+    NeuronModel::create_neurons(creation_count);
+    const auto new_size = gpu::neurons::NeuronsExtraInfos::extra_infos->get_number_local_neurons();
+    u.resize(new_size);
 
-void update_activity_gpu(const size_t step,  const double* stimulus, const double* background, const double* syn_input, size_t num_neurons) {
-    gpu::models::NeuronModel::prepare_update(step, stimulus, background, syn_input, num_neurons);
-
-        const auto number_local_neurons = gpu::neurons::NeuronsExtraInfos::number_local_neurons_host;
-        const auto num_threads = get_number_threads(gpu::models::poisson::update_activity_kernel, number_local_neurons);
-        const auto num_blocks = get_number_blocks(num_threads, number_local_neurons);
-
-        //void* dev_ptr = init_class_on_device<gpu::background::Constant>(3.5);
-        void* dev_ptr = init_class_on_device<gpu::background::Normal>(7.0,2.0);
-        
-        gpu::models::izhekevich::update_activity_kernel<<<num_blocks, num_threads>>>(step, dev_ptr);
-
-        cudaDeviceSynchronize();
-        gpu_check_last_error();
-
-        //std::cout << "HANDLE " << std::endl;
-        //handle_bg__.print_content();
-
-        gpu::models::NeuronModel::finish_update();
 }
 
-void create_neurons_gpu(size_t creation_count) {
-    const auto old_size = gpu::neurons::NeuronsExtraInfos::number_local_neurons_host;
-    const auto new_size = old_size + creation_count;
-    handle_u.resize(new_size);
-
-    gpu::neurons::NeuronsExtraInfos::create_neurons(creation_count);
+__device__ void init_neurons(const RelearnTypes::number_neurons_type start_id, const RelearnTypes::number_neurons_type end_id) override {
+    x.fill(start_id,end_id,c);
 }
+};
+
+namespace izhekevich {
+
+void construct_gpu(const unsigned int _h,  double V_spike, double a, double b, double c, double d, double k1, double k2, double k3) {
+    gpu::models::construct<gpu::models::Izhikevich>(_h,  V_spike,  a,  b,  c,  d,  k1,  k2,  k3);
+}
+};
+
 };

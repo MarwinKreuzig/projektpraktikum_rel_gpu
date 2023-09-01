@@ -1,4 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
+set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CUDA_ARCHITECTURES OFF)
+
+
 project(relearn)
 enable_language(CXX)
 

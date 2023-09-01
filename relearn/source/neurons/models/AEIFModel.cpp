@@ -43,7 +43,7 @@ AEIFModel::AEIFModel(
     , b{ b }
     , V_spike{ V_spike } {
         if(CudaHelper::is_cuda_available()) {
-             gpu::models::aeif::construct_gpu(h,C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike  );
+            gpu::models::aeif::construct_gpu(h,C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike  );
         }
 }
 
@@ -179,21 +179,4 @@ void AEIFModel::init_neurons_cpu(const number_neurons_type start_id, const numbe
         w[neuron_id.get_neuron_id()] = 0.0;
         set_x(neuron_id, E_L);
     }
-}
-
-void AEIFModel::init_gpu(number_neurons_type number_neurons) {
-    gpu::models::aeif::init_gpu(number_neurons);
-}
-
-void AEIFModel::init_neurons_gpu(const number_neurons_type start_id, const number_neurons_type end_id) {
-   gpu::models::aeif::init_neurons_gpu(start_id, end_id);
-}
-
-void AEIFModel::update_activity_gpu(const step_type step) {
-    gpu::models::aeif::update_activity_gpu(step, get_synaptic_input().data(), get_background_activity().data(), get_stimulus().data(), get_number_neurons());
-}
-
-
-void AEIFModel::create_neurons_gpu(const number_neurons_type creation_count) {
-    gpu::models::aeif::create_neurons_gpu(creation_count);
 }

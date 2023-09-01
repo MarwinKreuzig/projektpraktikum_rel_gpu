@@ -11,6 +11,8 @@
  */
 
 #include "Types.h"
+#include "gpu/CudaHelper.h"
+#include "gpu/Interface.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "enums/UpdateStatus.h"
 #include "neurons/models/ModelParameter.h"
@@ -97,12 +99,12 @@ public:
      * @param number_neurons The number of neurons for this instance, must be > 0
      * @exception Throws a RelearnException if number_neurons == 0
      */
-    virtual void init(const number_neurons_type number_neurons) {
-        RelearnException::check(number_local_neurons == 0, "BackgroundActivityCalculator::init_cpu: Was already initialized");
-        RelearnException::check(number_neurons > 0, "BackgroundActivityCalculator::init_cpu: number_neurons was 0");
-
-        number_local_neurons = number_neurons;
-        background_activity.resize(number_neurons, 0.0);
+    void init(const number_neurons_type number_neurons) {
+        if(CudaHelper::is_cuda_available()) {
+            init_gpu(number_neurons);
+        } else {
+            init_cpu(number_neurons);
+        }
     }
 
     /**
@@ -110,15 +112,12 @@ public:
      * @param creation_count The number of neurons to create, must be > 0
      * @exception Throws a RelearnException if creation_count == 0 or if init_cpu(...) was not called before
      */
-    virtual void create_neurons(const number_neurons_type creation_count) {
-        RelearnException::check(number_local_neurons > 0, "BackgroundActivityCalculator::create_neurons: number_local_neurons was 0");
-        RelearnException::check(creation_count > 0, "BackgroundActivityCalculator::create_neurons: creation_count was 0");
-
-        const auto current_size = number_local_neurons;
-        const auto new_size = current_size + creation_count;
-
-        number_local_neurons = new_size;
-        background_activity.resize(new_size, 0.0);
+    void create_neurons(const number_neurons_type creation_count) {
+       if(CudaHelper::is_cuda_available()) {
+            create_neurons_gpu(creation_count);
+        } else {
+            create_neurons_cpu(creation_count);
+        }
     }
 
     /**
@@ -127,7 +126,13 @@ public:
      * @param disable_flags Which neurons are disabled
      * @exception Throws a RelearnException if the number of local neurons didn't match the sizes of the arguments
      */
-    virtual void update_input([[maybe_unused]] const step_type step) = 0;
+    void update_input([[maybe_unused]] const step_type step) {
+        if(CudaHelper::is_cuda_available()) {
+            update_input_gpu(step);
+        } else {
+            update_input_cpu(step);
+        }
+    }
 
     /**
      * @brief Returns the calculated background activity for the given neuron. Changes after calls to update_input(...)
@@ -135,19 +140,24 @@ public:
      * @exception Throws a RelearnException if the neuron_id is too large for the stored number of neurons
      * @return The background activity for the given neuron
      */
-    [[nodiscard]] virtual double get_background_activity(const NeuronID neuron_id) const {
-        const auto local_neuron_id = neuron_id.get_neuron_id();
-
-        RelearnException::check(local_neuron_id < number_local_neurons, "BackgroundActivityCalculator::get_background_activity: id is too large: {}", neuron_id);
-        return background_activity[local_neuron_id];
+    [[nodiscard]] double get_background_activity(const NeuronID neuron_id) const {
+        if(CudaHelper::is_cuda_available()) {
+            return get_background_activity_gpu(neuron_id);
+        } else {
+            return get_background_activity_cpu(neuron_id);
+        }
     }
 
     /**
      * @brief Returns the calculated background activity for all. Changes after calls to update_input(...)
      * @return The background activity for all neurons
      */
-    [[nodiscard]] virtual std::span<const double> get_background_activity() const noexcept {
-        return background_activity;
+    [[nodiscard]] std::span<const double> get_background_activity() const noexcept {
+        if(CudaHelper::is_cuda_available()) {
+            return get_background_activity_gpu();
+        } else {
+            return get_background_activity_cpu();
+        }
     }
 
     /**
@@ -190,6 +200,49 @@ protected:
         RelearnException::check(neuron_id < number_local_neurons, "SynapticInputCalculator::set_background_activity: neuron_id was too large: {} vs {}", neuron_id, number_local_neurons);
         background_activity[neuron_id] = value;
     }
+
+    virtual void init_cpu(const number_neurons_type number_neurons) {
+        RelearnException::check(number_local_neurons == 0, "BackgroundActivityCalculator::init_cpu: Was already initialized");
+        RelearnException::check(number_neurons > 0, "BackgroundActivityCalculator::init_cpu: number_neurons was 0");
+
+        number_local_neurons = number_neurons;
+        background_activity.resize(number_neurons, 0.0);
+    }
+
+    virtual void init_gpu(const number_neurons_type number_neurons) = 0;
+
+    virtual void create_neurons_cpu(const number_neurons_type creation_count) {
+        RelearnException::check(number_local_neurons > 0, "BackgroundActivityCalculator::create_neurons: number_local_neurons was 0");
+        RelearnException::check(creation_count > 0, "BackgroundActivityCalculator::create_neurons: creation_count was 0");
+
+        const auto current_size = number_local_neurons;
+        const auto new_size = current_size + creation_count;
+
+        number_local_neurons = new_size;
+        background_activity.resize(new_size, 0.0);
+    }
+
+    virtual void create_neurons_gpu(const number_neurons_type creation_count) {}
+
+    virtual void update_input_cpu([[maybe_unused]] const step_type step) {}
+
+    virtual void update_input_gpu([[maybe_unused]] const step_type step) {}
+
+    [[nodiscard]] virtual double get_background_activity_cpu(const NeuronID neuron_id) const {
+        const auto local_neuron_id = neuron_id.get_neuron_id();
+
+        RelearnException::check(local_neuron_id < number_local_neurons, "BackgroundActivityCalculator::get_background_activity: id is too large: {}", neuron_id);
+        return background_activity[local_neuron_id];
+    }
+
+    [[nodiscard]] virtual double get_background_activity_gpu(const NeuronID neuron_id) const {return {};}
+
+
+    [[nodiscard]] virtual std::span<const double> get_background_activity_cpu() const noexcept {
+        return background_activity;
+    }
+
+    [[nodiscard]] virtual std::span<const double> get_background_activity_gpu() const { return {};};
 
     std::shared_ptr<NeuronsExtraInfo> extra_infos{};
 

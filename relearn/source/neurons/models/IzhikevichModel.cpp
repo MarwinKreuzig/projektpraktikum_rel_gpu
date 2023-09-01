@@ -171,21 +171,3 @@ void IzhikevichModel::init_neurons_cpu(const number_neurons_type start_id, const
 double IzhikevichModel::iter_refraction(const double u, const double x) const noexcept {
     return a * (b * x - u);
 }
-
-
-void IzhikevichModel::init_gpu(number_neurons_type number_neurons) {
-    gpu::models::izhekevich::init_gpu(number_neurons);
-}
-
-void IzhikevichModel::init_neurons_gpu(const number_neurons_type start_id, const number_neurons_type end_id) {
-   gpu::models::izhekevich::init_neurons_gpu(start_id, end_id);
-}
-
-void IzhikevichModel::update_activity_gpu(const step_type step) {
-    gpu::models::izhekevich::update_activity_gpu(step, get_synaptic_input().data(), get_background_activity().data(), get_stimulus().data(), get_number_neurons());
-}
-
-
-void IzhikevichModel::create_neurons_gpu(const number_neurons_type creation_count) {
-    gpu::models::izhekevich::create_neurons_gpu(creation_count);
-}

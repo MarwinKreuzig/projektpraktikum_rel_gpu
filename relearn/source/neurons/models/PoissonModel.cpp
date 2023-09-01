@@ -142,20 +142,3 @@ void PoissonModel::update_activity_cpu() {
         refractory_time[neuron_id] = this_refractory_time;
     }
 }
-
-void PoissonModel::init_gpu(number_neurons_type number_neurons) {
-    gpu::models::poisson::init_gpu(number_neurons);
-}
-
-void PoissonModel::init_neurons_gpu(const number_neurons_type start_id, const number_neurons_type end_id) {
-   gpu::models::poisson::init_neurons_gpu(start_id, end_id);
-}
-
-void PoissonModel::update_activity_gpu(const step_type step) {
-    gpu::models::poisson::update_activity_gpu(step, get_synaptic_input().data(), get_background_activity().data(), get_stimulus().data(), get_number_neurons());
-}
-
-
-void PoissonModel::create_neurons_gpu(const number_neurons_type creation_count) {
-    gpu::models::poisson::create_neurons_gpu(creation_count);
-}

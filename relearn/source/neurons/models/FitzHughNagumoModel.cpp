@@ -147,20 +147,3 @@ void FitzHughNagumoModel::init_neurons_cpu(const number_neurons_type start_id, c
         set_x(neuron_id, FitzHughNagumoModel::init_x);
     }
 }
-
-void FitzHughNagumoModel::init_gpu(number_neurons_type number_neurons) {
-    gpu::models::fitz_hugh_nagumo::init_gpu(number_neurons);
-}
-
-void FitzHughNagumoModel::init_neurons_gpu(const number_neurons_type start_id, const number_neurons_type end_id) {
-   gpu::models::fitz_hugh_nagumo::init_neurons_gpu(start_id, end_id);
-}
-
-void FitzHughNagumoModel::update_activity_gpu(const step_type step) {
-    gpu::models::fitz_hugh_nagumo::update_activity_gpu(step, get_synaptic_input().data(), get_background_activity().data(), get_stimulus().data(), get_number_neurons());
-}
-
-
-void FitzHughNagumoModel::create_neurons_gpu(const number_neurons_type creation_count) {
-    gpu::models::fitz_hugh_nagumo::create_neurons_gpu(creation_count);
-}

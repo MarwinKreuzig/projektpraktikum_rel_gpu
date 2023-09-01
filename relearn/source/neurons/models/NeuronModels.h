@@ -166,8 +166,8 @@ public:
     [[nodiscard]] std::span<const FiredStatus> get_fired() const noexcept {
         if(CudaHelper::is_cuda_available()) {
             RelearnException::check(number_local_neurons > 0, "NeuronModels::get_fired: number_local_neurons not set");
-            RelearnException::check(gpu::models::NeuronModel::get_fired() != nullptr, "NeuronModels::get_fired: Invalid pointer");
-            return std::span<const FiredStatus>(gpu::models::NeuronModel::get_fired(), number_local_neurons);
+            RelearnException::check(gpu::models::get_fired() != nullptr, "NeuronModels::get_fired: Invalid pointer");
+            return std::span<const FiredStatus>(gpu::models::get_fired(), number_local_neurons);
         }
         return fired;
     }
@@ -348,7 +348,7 @@ public:
 
     void disable_neurons_gpu(const std::span<const NeuronID> neuron_ids) {
         const auto ids = CudaHelper::convert_neuron_ids_to_primitives(neuron_ids);
-        gpu::models::NeuronModel::disable_neurons(ids.data(), ids.size());
+        gpu::models::disable_neurons(ids.data(), ids.size());
 
         for (const auto neuron_id : neuron_ids) {
             const auto local_neuron_id = neuron_id.get_neuron_id();
@@ -387,7 +387,7 @@ public:
 
     void enable_neurons_gpu(const std::span<const NeuronID> neuron_ids) {
         const auto ids = CudaHelper::convert_neuron_ids_to_primitives(neuron_ids);
-        gpu::models::NeuronModel::enable_neurons(ids.data(), ids.size());
+        gpu::models::enable_neurons(ids.data(), ids.size());
     }
 
     void enable_neurons_cpu(const std::span<const NeuronID> neuron_ids) {
@@ -471,20 +471,20 @@ protected:
 
 
     //GPU
-    virtual void update_activity_gpu(const step_type step) {
-        RelearnException::fail("No gpu support");
+    void update_activity_gpu(const step_type step) {
+        gpu::models::update_activity(step, get_synaptic_input().data(), get_stimulus().data());
     }
 
-    virtual void init_neurons_gpu(number_neurons_type start_id, number_neurons_type end_id) {
-        RelearnException::fail("No gpu support");
+    void init_neurons_gpu(number_neurons_type start_id, number_neurons_type end_id) {
+        gpu::models::init_neurons(start_id, end_id);
     }
     
-    virtual void create_neurons_gpu(number_neurons_type creation_count) {
-        RelearnException::fail("No gpu support");
+    void create_neurons_gpu(number_neurons_type creation_count) {
+        gpu::models::create_neurons(creation_count);
     }
 
-    virtual void init_gpu(number_neurons_type number_neurons) {
-        RelearnException::fail("No gpu support");
+    void init_gpu(number_neurons_type number_neurons) {
+        gpu::models::init_neuron_model(number_neurons);
     }
 
     /**
@@ -668,17 +668,6 @@ protected:
      * @param creation_count The number of local neurons that should be added
      */
     void create_neurons_cpu(number_neurons_type creation_count) final;
-
-
-    //GPU
-    void init_gpu(number_neurons_type number_neurons);
-
-void init_neurons_gpu(const number_neurons_type start_id, const number_neurons_type end_id);
-
-void update_activity_gpu(const step_type step);
-
-
-void create_neurons_gpu(const number_neurons_type creation_count);
 
 private:
     [[nodiscard]] double iter_x(const double x, const double input) const noexcept {
@@ -885,13 +874,6 @@ protected:
 
     void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) override final;
 
-    void update_activity_gpu(const step_type step) override final;
-
-    void init_neurons_gpu(number_neurons_type start_id, number_neurons_type end_id) override final;
-
-    void create_neurons_gpu(const number_neurons_type creation_count) override;
-
-    void init_gpu(number_neurons_type number_neurons) override final;
 
 
 private:
@@ -1037,13 +1019,6 @@ protected:
 
     void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) final;
 
-    void update_activity_gpu(const step_type step) override final;
-
-    void init_neurons_gpu(number_neurons_type start_id, number_neurons_type end_id) override final;
-
-    void create_neurons_gpu(const number_neurons_type creation_count) override;
-
-    void init_gpu(number_neurons_type number_neurons) override final;
 
 private:
     [[nodiscard]] static double iter_x(double x, double w, double input) noexcept;
@@ -1261,14 +1236,6 @@ protected:
     void update_activity_benchmark() final;
 
     void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) final;
-
-    void update_activity_gpu(const step_type step) override final;
-
-    void init_neurons_gpu(number_neurons_type start_id, number_neurons_type end_id) override final;
-
-    void create_neurons_gpu(const number_neurons_type creation_count) override;
-
-    void init_gpu(number_neurons_type number_neurons) override final;
 
 private:
     [[nodiscard]] double f(double x) const noexcept;

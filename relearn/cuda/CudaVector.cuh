@@ -1,268 +1,171 @@
 #pragma once
 
 #include "Commons.cuh"
-#include "RelearnGPUException.h"
 
-#include <iostream>
-#include <vector>
 
 namespace gpu::Vector {
-    template<typename T>
-    struct CudaArray {
+template<typename T>
+    class CudaVector {
+        public:
+
+        struct meta {
         T* data = nullptr;
         size_t size = 0;
         size_t max_size = 0;
+        } ;
 
-        __device__ T& operator[](size_t index) {
-            return data[index];
-        }
-    };
+        __device__ CudaVector() {}
 
-    template<typename T>
-    class CudaArrayDeviceHandle {
-
-        public:
-        CudaArrayDeviceHandle(CudaArray<T>& struct_device_symbol) {
-            void* p;
-            gpu_check_last_error();
-            cudaGetSymbolAddress(&p, struct_device_symbol);
-            gpu_check_last_error();
-            struct_dev_ptr = (CudaArray<T>*)p;
-            is_device_symbol = true;
-        }
-
-        CudaArrayDeviceHandle(CudaArray<T>* struct_device_ptr) : struct_dev_ptr(struct_device_ptr) {
-            is_device_symbol = false;
-        }
-
-        ~CudaArrayDeviceHandle() {
-            if(usable()){
-            free();
-            }
-        }
-
-        void resize(size_t new_size) {
-            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
+        __device__ void resize(size_t new_size) {
             if(new_size > get_size()){
-                void* new_dev_ptr = cuda_calloc(new_size * sizeof(T));
+                void* new_dev_ptr = device_calloc(new_size * sizeof(T));
                 resize_copy(new_dev_ptr, new_size);
             } else {
-                struct_copy.size = new_size;
-                update_struct_copy_to_device();
+                meta_data.size = new_size;
             }
             }
 
-        void resize(size_t new_size, T value) {
-            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
+        __device__ void resize(size_t new_size, T value) {
             if (new_size > get_size()) {
-                void* new_dev_ptr = cuda_malloc(new_size * sizeof(T));
-                set_array((T*)new_dev_ptr, new_size, value);
+                void* new_dev_ptr = device_malloc(new_size * sizeof(T));
+                device_set_array((T*)new_dev_ptr, new_size, value);
 
                 resize_copy(new_dev_ptr, new_size);
             } else {
-                struct_copy.size = new_size;
-                update_struct_copy_to_device();
+                meta_data.size = new_size;
             }
             }
 
-        void fill(T value) {
-            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
+        __device__ void fill(T value) {
             RelearnGPUException::check(!is_empty(), "CudaVector::fill: Cannot fill an empty vector");
-            set_array(struct_copy.data, struct_copy.size, value);
+            set_array(meta_data.data, meta_data.size, value);
         }
 
-        void fill(size_t begin, size_t end,T value) {
-            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
-            RelearnGPUException::check(!is_empty(), "CudaVector::fill: Cannot fill an empty vector");
-            RelearnGPUException::check(begin<end, "CudaVector::fill: End {} < begin {}", end,begin);
-            T* p = struct_copy.data;
+        __device__ void fill(size_t begin, size_t end,T value) {
+            RelearnGPUException::device_check(!is_empty(), "CudaVector::fill: Cannot fill an empty vector");
+            RelearnGPUException::device_check(begin<end, "CudaVector::fill: End {} < begin {}", end,begin);
+            T* p = meta_data.data;
             p += begin;
             size_t size = end-begin;
-            set_array(struct_copy.data, size, value);
+            device_set_array(meta_data.data, size, value);
+        }
+
+        __device__ void reserve(size_t n) {
+            RelearnGPUException::fail("TODO");
+        }
+
+
+        __device__ T& operator[](size_t index) {
+            return meta_data.data[index];
+        }
+
+        __device__ void minimize_memory_usage() {
+            if(get_max_size() == get_size()) {
+                return;
+            }
+            
+            void* new_dev_ptr = device_calloc(get_size() * sizeof(T));
+            resize_copy(new_dev_ptr, get_size());
+        }        
+
+        __device__ size_t get_size() const {
+            return meta_data.size;
+        }
+
+        __device__ void set(const size_t* indices, size_t num_indices, T value) {
+            device_set_for_indices(meta_data.data,indices,meta_data.size,value);
+        }
+
+        __device__ size_t get_max_size() const {
+            return meta_data.max_size;
+        }
+
+        __device__ T* data_() const {
+            return meta_data.data;
+        }
+
+        __device__ bool is_empty() const {
+            return meta_data.size == 0;
+        }
+meta meta_data;
+        private:
+        
+
+
+        __device__ void resize_copy(void* new_dev_ptr, size_t new_size) {
+                if (meta_data.data != nullptr) {
+                    const auto s = meta_data.size < new_size ? meta_data.size : new_size;
+                    cudaMemcpyAsync(new_dev_ptr, meta_data.data, s * sizeof(T), cudaMemcpyDeviceToDevice);
+                    cudaFree(meta_data.data);
+                }
+                meta_data.data = (T*) new_dev_ptr;
+                meta_data.max_size = new_size;
+                meta_data.size = new_size;
+            }
+
+        
+    };
+/*
+    template<typename T>
+    class CudaVectorDeviceHandle {
+
+        public:
+
+        CudaVectorDeviceHandle(void* struct_device_ptr) : struct_dev_ptr(struct_device_ptr) {
+            update_meta_data_from_device();
+        }
+
+        CudaVectorDeviceHandle() {
+        }
+
+        ~CudaVectorDeviceHandle() {
         }
 
         void print_content() {
-            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
             std::vector<T> cpy;
-            cpy.resize(struct_copy.size);
+            cpy.resize(meta_data.size);
             copy_to_host(cpy);
             for(const auto& e:cpy) {
                 std:: cout << e << ", ";
             }
         }
 
-        void reserve(size_t n) {
-            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
-            if(n < struct_copy.max_size) {
-                
-            }
-        }
-
-        void copy_to_device(const std::vector<T>& host_data) {
-            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
-            const auto num_elements = host_data.size();
-            if (num_elements > struct_copy.max_size) {
-                resize(num_elements, 0);
-            }
-            cuda_memcpy_to_device(struct_copy.data, (void*)host_data.data(), sizeof(T), num_elements);
-            struct_copy.size = num_elements;
-            update_struct_copy_to_device();
-        }
-
         void copy_to_host(std::vector<T>& host_data) {
-            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
-            host_data.resize(struct_copy.size);
-            cuda_memcpy_to_host(struct_copy.data, host_data.data(), sizeof(T), struct_copy.size);
-        }
-
-        void copy_to_device(const T* host_data, size_t num_elements) {
-            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
-            if (num_elements > struct_copy.max_size) {
-                resize(num_elements, 0);
-            }
-            cuda_memcpy_to_device(struct_copy.data, (void*)host_data, sizeof(T), num_elements);
-            struct_copy.size = num_elements;
-            update_struct_copy_to_device();
+            update_meta_data_from_device();
+            RelearnGPUException::check(meta_data.data != nullptr, "CudaVector::copy_to_host: Vector is empty");
+            host_data.resize(meta_data.size);
+            cuda_memcpy_to_host(meta_data.data, host_data.data(), sizeof(T), meta_data.size);
         }
 
         void copy_to_host(T* host_data, size_t num_elements) {
-            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
-            //host_data.resize(struct_copy.size);
-            cuda_memcpy_to_host(struct_copy.data, host_data, sizeof(T), struct_copy.size);
-        }
-
-        void free_contents() {
-            RelearnGPUException::check(struct_copy.data != nullptr, "CudaVector::free_contents: No contents to be freed");
-            cudaFree(struct_copy.data);
-            gpu_check_last_error();
-            cudaDeviceSynchronize();
-            struct_copy = CudaArray<T>{};
-            update_struct_copy_to_device();
-        }
-
-        void free() {
-            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
-            if(struct_copy.data !=nullptr){
-                free_contents();
-            }
-            if(!is_device_symbol){
-                cudaFree(struct_dev_ptr);
-                gpu_check_last_error();
-            }
-            struct_dev_ptr = nullptr;
-        }
-
-        void minimize_memory_usage() {
-            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
-            if(get_max_size() == get_size()) {
-                return;
-            }
-            
-            void* new_dev_ptr = cuda_calloc(get_size() * sizeof(T));
-            resize_copy(new_dev_ptr, get_size());
-        }        
-
-        bool usable() const {
-            return struct_dev_ptr != nullptr;
-        }
+            update_meta_data_from_device();
+            RelearnGPUException::check(meta_data.data != nullptr, "CudaVector::copy_to_host: Vector is empty");
+            cuda_memcpy_to_host(meta_data.data, host_data, sizeof(T), meta_data.size);
+        }      
 
         size_t get_size() const {
-            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
-            return struct_copy.size;
+            return meta_data.size;
         }
 
         size_t get_max_size() const {
-            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
-            return struct_copy.max_size;
+            return meta_data.max_size;
         }
 
         T* data() const {
-                        RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
-            return struct_copy.data;
+            return meta_data.data;
         }
 
         bool is_empty() const {
-            RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
-            return struct_copy.data == nullptr;
+            return meta_data.size == 0;
+        }
+
+        void update_meta_data_from_device() {
+            this->meta_data = execute_and_copy<typename CudaVector<T>::meta>([=] __device__ (void* struct_dev_ptr)  -> typename CudaVector<T>::meta { return ((CudaVector<T>*) struct_dev_ptr)->meta_data;}, struct_dev_ptr);
         }
 
         private:
-            void update_struct_copy_from_device() {
-            cuda_memcpy_to_host(struct_dev_ptr, &struct_copy, sizeof(CudaArray<T>), 1);
-            }
+        typename CudaVector<T>::meta meta_data;
+        void* struct_dev_ptr;
 
-            void update_struct_copy_to_device() {
-            cuda_memcpy_to_device(struct_dev_ptr, &struct_copy, sizeof(CudaArray<T>), 1);
-            }
-
-            void resize_copy(void* new_dev_ptr, size_t new_size) {
-                if (struct_copy.data != nullptr) {
-                    const auto s = struct_copy.size < new_size ? struct_copy.size : new_size;
-                    cudaMemcpy(new_dev_ptr, struct_copy.data, s * sizeof(T), cudaMemcpyDeviceToDevice);
-                    gpu_check_last_error();
-                    cudaDeviceSynchronize();
-                    cudaFree(struct_copy.data);
-                    gpu_check_last_error();
-                    cudaDeviceSynchronize();
-                }
-                struct_copy.data = (T*) new_dev_ptr;
-                struct_copy.max_size = new_size;
-                struct_copy.size = new_size;
-
-                update_struct_copy_to_device();
-            }
-
-        private:
-        CudaArray<T> struct_copy;
-        CudaArray<T>* struct_dev_ptr;
-
-        bool is_device_symbol;
-
-    };
-
-    template<typename T>
-    static CudaArrayDeviceHandle<T> create_array_in_device_memory() {
-        const auto size = sizeof(CudaArray<T>);
-        void* devPtr = cuda_malloc(size);
-        CudaArray<T> arr;
-        cuda_memcpy_to_device(devPtr, &arr, size, 1);
-        return CudaArrayDeviceHandle<T>((CudaArray<T>*)devPtr);
-    }
-
-/*
-    template<typename T>
-    __global__ void free_pointers(T* dev_ptr, size_t size) {
-            const auto thread_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
-            if(thread_id < size) {
-                T* p = dev_ptr[thread_id];
-                if(p != nullptr) {
-                cudaFree(p);
-                }
-            }
-        }
-
-    template<typename T>
-    class CudaPtrArrayDeviceHandle : public CudaArrayDeviceHandle<T>  {
-        public:
-        CudaPtrArrayDeviceHandle(CudaArray<T>& struct_device_symbol) : CudaArrayDeviceHandle<T>(struct_device_symbol) {}
-
-        CudaPtrArrayDeviceHandle(CudaArray<T>* _struct_device_ptr) : CudaArrayDeviceHandle<T>(_struct_device_ptr) {}
-
-        ~CudaPtrArrayDeviceHandle() {
-            free();
-        }
-
-
-        void free() override {
-            if(get_size() > 0){
-            const auto num_threads = get_number_threads(free_pointers<T>, this->get_max_size());
-            const auto num_blocks = get_number_blocks(num_threads, this->get_max_size());
-            free_pointers<T><<<num_blocks,num_threads>>>(this->data(), this->get_max_size());
-            }
-
-            CudaArrayDeviceHandle<T>::free();
-        }
-
-    };
-    */
+    };*/
 };

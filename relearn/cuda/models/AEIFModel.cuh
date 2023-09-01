@@ -13,109 +13,85 @@
 
 #include "enums/FiredStatus.h"
 
-namespace gpu::models::aeif {
+namespace gpu::models{
 
-    __device__ __constant__ double C;
-    __device__ __constant__ double g_L;
-    __device__ __constant__ double E_L;
-   __device__ __constant__ double V_T;
-    __device__ __constant__  double d_T;
-    __device__ __constant__ double tau_w;
-    __device__ __constant__ double a;
-    __device__ __constant__ double b;
-    __device__ __constant__ double V_spike;
+    class AEIF : public NeuronModel {
+        public:
 
-    __device__ __constant__ double d_T_inverse;
-    __device__ __constant__ double tau_w_inverse;
-    __device__ __constant__ double C_inverse;
+    double C;
+    double g_L;
+    double E_L;
+   double V_T;
+     double d_T;
+    double tau_w;
+    double a;
+    double b;
+    double V_spike;
 
-    __device__ gpu::Vector::CudaArray<double> w;
-    gpu::Vector::CudaArrayDeviceHandle<double> handle_w{w};
+    double d_T_inverse;
+    double tau_w_inverse;
+    double C_inverse;
 
-    double host_E_L;
+    gpu::Vector::CudaVector<double> w;
 
-void construct_gpu(const unsigned int _h, void* gpu_background_calculator, double _C, double _g_L, double _E_L, double _V_T, double _d_T, double _tau_w, double _a, double _b, double _V_spike) {
-    gpu::models::NeuronModel::construct_gpu(_h, gpu_background_calculator);
+    __device__ AEIF(unsigned int h,gpu::background::BackgroundActivity* bgc,double _C, double _g_L, double _E_L, double _V_T, double _d_T, double _tau_w, double _a, double _b, double _V_spike) : NeuronModel(h,bgc), C(_C), g_L(_g_L), E_L(_E_L), V_T(_V_T), d_T(_d_T), tau_w(_tau_w), a(_a), b(_b), V_spike(_V_spike) {
 
-    cuda_copy_to_device(V_spike, _V_spike);
-    cuda_copy_to_device(C, _C);
-    cuda_copy_to_device(g_L, _g_L);
-    cuda_copy_to_device(E_L, _E_L);
-    cuda_copy_to_device(V_T, _V_T);
-    cuda_copy_to_device(d_T, _d_T);
-    cuda_copy_to_device(tau_w, _tau_w);
-    cuda_copy_to_device(a, _a);
-    cuda_copy_to_device(b, _b);
-    host_E_L = _E_L;
+    d_T_inverse = 1.0 / _d_T;
+    tau_w_inverse = 1.0 / _tau_w;
+    C_inverse = 1.0 / _C;
+    }
 
-    const auto _d_T_inverse = 1.0 / _d_T;
-    cuda_copy_to_device(d_T_inverse, _d_T_inverse);
-    const auto _tau_w_inverse = 1.0 / _tau_w;
-    cuda_copy_to_device(tau_w_inverse, _tau_w_inverse);
-    const auto _C_inverse = 1.0 / _C;
-    cuda_copy_to_device(C_inverse, _C_inverse);
 
+__device__ void init(RelearnTypes::number_neurons_type number_neurons) override {
+    NeuronModel::init(number_neurons);
+
+    w.resize(number_neurons, 0);
 }
 
-void init_gpu(RelearnTypes::number_neurons_type number_neurons) {
-    gpu::models::NeuronModel::init_neuron_model(number_neurons);
-
-    handle_w.resize(number_neurons, 0);
+__device__ void init_neurons(const RelearnTypes::number_neurons_type start_id, const RelearnTypes::number_neurons_type end_id) override {
+    NeuronModel::init_neurons(start_id,end_id);
+    x.fill(start_id,end_id,E_L);
 }
 
-void init_neurons_gpu(const RelearnTypes::number_neurons_type start_id, const RelearnTypes::number_neurons_type end_id) {
-    gpu::models::NeuronModel::handle_x.fill(start_id,end_id,host_E_L);
-}
-
-__global__ void update_activity_kernel(size_t step) {
+__device__ void update_activity(size_t step) override {
 
 
     const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
 
-    if (neuron_id >= gpu::neurons::NeuronsExtraInfos::number_local_neurons_device) {
+    if (neuron_id >= gpu::neurons::NeuronsExtraInfos::extra_infos->get_number_local_neurons()) {
         return;
     }
 
-    if (gpu::neurons::NeuronsExtraInfos::disable_flags[neuron_id] == UpdateStatus::Disabled) {
+    if (gpu::neurons::NeuronsExtraInfos::extra_infos->disable_flags[neuron_id] == UpdateStatus::Disabled) {
         return;
     }
-        const auto synaptic_input = gpu::models::NeuronModel::get_synaptic_input(neuron_id);
-        const auto background_activity = gpu::models::NeuronModel::get_background_activity(neuron_id);
-        const auto stimulus = gpu::models::NeuronModel::get_stimulus(neuron_id);
+        const auto synaptic_input = get_synaptic_input(step,neuron_id);
+        const auto background_activity = get_background_activity(step,neuron_id);
+        const auto stimulus =get_stimulus(step,neuron_id);
 
-        const auto _x = gpu::models::NeuronModel::get_x(neuron_id);
+        const auto _x = get_x(neuron_id);
 
         const auto _w = w[neuron_id];
 
         const auto& [x_val, this_fired, w_val] = Calculations::aeif(_x,  synaptic_input,  background_activity,  stimulus,  _w,  gpu::models::NeuronModel::h,  gpu::models::NeuronModel::scale, V_spike,  g_L,  E_L,  V_T, d_T, d_T_inverse,  a,  b,  C_inverse,  tau_w_inverse);
 
         w[neuron_id] = w_val;
-        gpu::models::NeuronModel::set_x(neuron_id, x_val);
-        gpu::models::NeuronModel::set_fired(neuron_id, this_fired);
+        set_x(neuron_id, x_val);
+        set_fired(neuron_id, this_fired);
 }
 
-void update_activity_gpu(const size_t step,  const double* stimulus, const double* background, const double* syn_input, size_t num_neurons) {
-    gpu::models::NeuronModel::prepare_update(step, stimulus, background, syn_input, num_neurons);
+__device__ void create_neurons(const size_t creation_count) override {
+    NeuronModel::create_neurons(creation_count);
+    const auto new_size = gpu::neurons::NeuronsExtraInfos::extra_infos->get_number_local_neurons();
+    w.resize(new_size);
 
-        const auto number_local_neurons = gpu::neurons::NeuronsExtraInfos::number_local_neurons_host;
-        const auto num_threads = get_number_threads(gpu::models::poisson::update_activity_kernel, number_local_neurons);
-        const auto num_blocks = get_number_blocks(num_threads, number_local_neurons);
-
-        cudaDeviceSynchronize();
-        gpu_check_last_error();
-        update_activity_kernel<<<num_blocks, num_threads>>>(step);
-
-        cudaDeviceSynchronize();
-        gpu_check_last_error();
-
-        gpu::models::NeuronModel::finish_update();
 }
+    };
 
-void create_neurons_gpu(const size_t creation_count) {
-    const auto old_size = gpu::neurons::NeuronsExtraInfos::number_local_neurons_host;
-    const auto new_size = old_size + creation_count;
-    handle_w.resize(new_size);
+    namespace aeif {
 
-    gpu::neurons::NeuronsExtraInfos::create_neurons(creation_count);
+void construct_gpu(const unsigned int _h,  double _C, double _g_L, double _E_L, double _V_T, double _d_T, double _tau_w, double _a, double _b, double _V_spike) {
+    gpu::models::construct<gpu::models::AEIF>(_h, _C,  _g_L,  _E_L,  _V_T,  _d_T,  _tau_w,  _a,  _b,  _V_spike );
 }
+};
 };

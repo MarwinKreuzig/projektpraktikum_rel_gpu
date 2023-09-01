@@ -12,6 +12,8 @@
 
 #include "Config.h"
 
+#include <cuda.h>
+
 #include <iostream>
 
 #include <exception>
@@ -58,6 +60,16 @@ public:
         }
 
         fail(std::move(format), std::forward<Args>(args)...);
+    }
+
+    template <typename... Args>
+    static __device__ void device_check(bool condition, const char* format, Args&&... args) {
+        if (condition) {
+            return;
+        }
+
+        //fail(std::move(format), std::forward<Args>(args)...);
+        __trap();
     }
 
     /**

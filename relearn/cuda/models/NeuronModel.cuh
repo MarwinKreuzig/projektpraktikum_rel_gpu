@@ -8,62 +8,53 @@
 #include "gpu/Interface.h"
 #include "NeuronsExtraInfos.cuh"
 
+#include "CudaArray.cuh"
 #include "CudaVector.cuh"
 
 #include <numeric>
 
-namespace gpu::models::NeuronModel {
-__device__ gpu::Vector::CudaArray<double> x;
-gpu::Vector::CudaArrayDeviceHandle<double> handle_x(x);
+namespace gpu::models {
 
-__device__ gpu::Vector::CudaArray<FiredStatus> fired;
-gpu::Vector::CudaArrayDeviceHandle<FiredStatus> handle_fired(fired);
-std::vector<FiredStatus> fired_host;
+    __device__ gpu::Vector::CudaArray<double> stimulus;
+gpu::Vector::CudaArrayDeviceHandle<double> handle_stimulation;
 
 __device__ gpu::Vector::CudaArray<double> syn_input;
-gpu::Vector::CudaArrayDeviceHandle<double> handle_syn_input(syn_input);
+gpu::Vector::CudaArrayDeviceHandle<double> handle_syn_input;
 
-__device__ gpu::Vector::CudaArray<double> background;
-gpu::Vector::CudaArrayDeviceHandle<double> handle_background(background);
 
-__device__ gpu::Vector::CudaArray<double> stimulus;
-gpu::Vector::CudaArrayDeviceHandle<double> handle_stimulus(stimulus);
+class NeuronModel {
+    protected:
 
-__device__ __constant__ unsigned int h;
-__device__ __constant__ double scale;
+gpu::Vector::CudaVector<double> x;
 
-__device__ gpu::background::BackgroundActivity* background_calculator;
+unsigned int h;
+double scale;
 
-void construct_gpu(const unsigned int _h, void* gpu_background_calculator) {
-    cuda_copy_to_device(h, _h);
+size_t cur_step;
+
+gpu::background::BackgroundActivity* background_calculator;
+
+public:
+
+gpu::Vector::CudaArray<FiredStatus> fired;
+
+__device__ NeuronModel(const unsigned int _h, void* gpu_background_calculator) {
+    h =  _h;
     const auto _scale = 1.0/_h;
-    cuda_copy_to_device(scale, _scale);
-    cuda_copy_to_device(background_calculator, gpu_background_calculator);
+    scale =  _scale;
+    background_calculator =  (gpu::background::BackgroundActivity*) gpu_background_calculator;
 }
 
-void init_neuron_model(const RelearnTypes::number_neurons_type number_neurons) {
-    handle_x.resize(number_neurons);
-    handle_fired.resize(number_neurons);
-    fired_host.resize(number_neurons);
+__device__ virtual void init(const RelearnTypes::number_neurons_type number_neurons) {
+    printf("Neuron model init1\n");
+    x.resize(number_neurons);
 }
 
-void create_neurons(size_t creation_count) {
-    gpu::neurons::NeuronsExtraInfos::create_neurons(creation_count);        
+__device__ virtual void create_neurons(size_t creation_count) {
+    gpu::neurons::NeuronsExtraInfos::extra_infos->create_neurons(creation_count);        
 }
 
-void disable_neurons(const size_t* neuron_ids, size_t num_disabled_neurons) {
-    if(num_disabled_neurons == 0) {
-        return;
-    }
-    cuda_set_for_indices<FiredStatus>(handle_fired.data(), neuron_ids, num_disabled_neurons, FiredStatus::Inactive);
-}
-
-void enable_neurons(const size_t* neuron_ids, size_t num_enabled_neurons) {
-    if(num_enabled_neurons == 0) {
-        return;
-    }
-}
-
+__device__ virtual void init_neurons(const RelearnTypes::number_neurons_type start_id, const RelearnTypes::number_neurons_type end_id) {}
 __device__ inline double get_x(size_t neuron_id) {
     return x[neuron_id];
 }
@@ -76,31 +67,122 @@ __device__ inline void set_fired(const size_t neuron_id, FiredStatus _fired) {
     fired[neuron_id] = _fired;
 }
 
-FiredStatus* get_fired() {
-    return fired_host.data();
-}
-
-void finish_update() {
-    fired_host.resize(handle_fired.get_size());
-    handle_fired.copy_to_host(fired_host);
-
-}
-
-void prepare_update(const size_t step, const double* _stimulus, const double* _background, const double* _syn_input, size_t num_neurons) {
-    handle_stimulus.copy_to_device(_stimulus, num_neurons);
-    handle_background.copy_to_device(_background, num_neurons);
-    handle_syn_input.copy_to_device(_syn_input, num_neurons);
-}
-
-    __device__ inline double get_stimulus(const size_t neuron_id) {
+__device__ inline double get_stimulus(size_t step,const size_t neuron_id) {
     return stimulus[neuron_id];
 }
 
-__device__ inline double get_background_activity(const size_t neuron_id) {
-    return background[neuron_id];
+__device__ inline double get_background_activity(size_t step,const size_t neuron_id) {
+    return background_calculator->get(step,neuron_id);
 
 }
-__device__ inline double get_synaptic_input(const size_t neuron_id) {
+__device__ inline double get_synaptic_input(size_t step,const size_t neuron_id) {
     return syn_input[neuron_id];
+}
+
+__device__ virtual void update_activity(size_t step) =0;
+
+};
+
+__device__ NeuronModel* neuron_model;
+
+void* neuron_model_on_device;
+gpu::Vector::CudaArrayDeviceHandle<FiredStatus> handle_fired;
+
+void init_neuron_model(const RelearnTypes::number_neurons_type number_neurons) {
+    gpu_check_last_error();
+    cudaDeviceSynchronize();
+    cuda_generic_kernel<<<1,1>>>([=]__device__(size_t number_neurons){
+        neuron_model->init(number_neurons);
+        }, number_neurons);
+    gpu_check_last_error();
+    cudaDeviceSynchronize();
+    gpu_check_last_error();
+
+    void* fired_ptr = execute_and_copy<void*>([=] __device__ () -> void* {return (void*)&(neuron_model->fired);});
+    handle_fired = gpu::Vector::CudaArrayDeviceHandle<FiredStatus>(fired_ptr);
+    handle_fired.resize(number_neurons);
+}
+
+void init_neurons(const RelearnTypes::number_neurons_type start_id, const RelearnTypes::number_neurons_type end_id) {
+    cuda_generic_kernel<<<1,1>>>([]__device__(size_t start_id, size_t end_id){neuron_model->init_neurons(start_id, end_id);}, start_id, end_id);
+    gpu_check_last_error();
+    cudaDeviceSynchronize();
+}
+
+void create_neurons(size_t creation_count) {
+    cuda_generic_kernel<<<1,1>>>([]__device__(size_t number_neurons){neuron_model->create_neurons(number_neurons);}, creation_count);  
+    gpu_check_last_error();
+    cudaDeviceSynchronize();
+}
+
+void disable_neurons(const size_t* neuron_ids, size_t num_disabled_neurons) {
+    if(num_disabled_neurons == 0) {
+        return;
+    }
+    //cuda_generic_kernel<<<1,1>>>([]__device__(const size_t* neuron_ids, size_t num_disabled_neurons){neuron_model->disable_neurons(neuron_ids, num_disabled_neurons);},neuron_ids, num_disabled_neurons);
+    gpu_check_last_error();
+    cudaDeviceSynchronize();
+}
+
+void enable_neurons(const size_t* neuron_ids, size_t num_enabled_neurons) {
+    if(num_enabled_neurons == 0) {
+        return;
+    }
+}
+
+std::vector<FiredStatus> vec_f{};
+
+FiredStatus* get_fired() {
+    handle_fired.copy_to_host(vec_f);
+
+    size_t fired = 0;
+    for(const auto e:vec_f) {
+        if(e==FiredStatus::Fired) {
+            fired++;
+        }
+    }
+
+    std::cout << "Fired " << fired << "\n";
+
+    return vec_f.data();
+}
+
+
+__global__ void update_activity_kernel(size_t step) {
+    neuron_model->update_activity(step);
+}
+
+void update_activity(size_t step, const double* syn_input, const double* stimulation) {
+    const auto number_local_neurons = gpu::neurons::NeuronsExtraInfos::number_local_neurons_host;
+
+    handle_stimulation.copy_to_device(stimulation, number_local_neurons);
+    handle_syn_input.copy_to_device(syn_input, number_local_neurons);
+
+        const auto num_threads = get_number_threads(gpu::models::update_activity_kernel, number_local_neurons);
+        const auto num_blocks = get_number_blocks(num_threads, number_local_neurons);
+
+        update_activity_kernel<<<num_blocks, num_threads>>>(step);
+}
+
+gpu::background::BackgroundActivity* background_calculator;
+
+template<typename T,typename... Args>
+void construct(double _h, Args...args) {
+    RelearnGPUException::check(background_calculator != nullptr, "NeuronModel::construct: Background activity not set");
+
+    gpu_get_handle_for_device_symbol(double,handle_stimulation, stimulus);
+    gpu_get_handle_for_device_symbol(double,handle_syn_input, syn_input);
+
+    void* model = (void*)init_class_on_device<T>(_h,background_calculator,args...);
+    cuda_copy_to_device(gpu::models::neuron_model, model);
+    gpu::models::neuron_model_on_device = (void*)model;
+}
+
+void set_constant_background(double c) {
+    background_calculator = init_class_on_device<gpu::background::Constant>(c);
+}
+
+void set_normal_background(double mean, double stddev) {
+    background_calculator= init_class_on_device<gpu::background::Normal>(mean, stddev);
 }
 };

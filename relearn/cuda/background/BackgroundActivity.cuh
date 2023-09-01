@@ -41,7 +41,8 @@ class Normal : public BackgroundActivity {
 
     }
 
-    __device__  inline double get(size_t step, size_t neuron_id) const override {
+    __device__ inline double get(size_t step, size_t neuron_id) const override {
+        //return 7.0;
         auto curand_state = gpu::RandomHolder::init(step, gpu::RandomHolder::BACKGROUND, neuron_id);
         const auto random_value = gpu::RandomHolder::get_normal(&curand_state, mean, stddev);
         return random_value;
