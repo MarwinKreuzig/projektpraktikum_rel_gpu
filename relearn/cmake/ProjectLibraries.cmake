@@ -101,7 +101,7 @@ FetchContent_MakeAvailable(fmt)
 get_target_property(fmt_includes fmt INTERFACE_INCLUDE_DIRECTORIES)
 set_target_properties(fmt PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
                                      "${fmt_includes}")
-                                     #target_link_libraries(project_libraries_gpu INTERFACE fmt)
+                                     target_link_libraries(project_libraries_gpu INTERFACE fmt)
                                      target_link_libraries(project_libraries INTERFACE fmt)
 
 # spdlog

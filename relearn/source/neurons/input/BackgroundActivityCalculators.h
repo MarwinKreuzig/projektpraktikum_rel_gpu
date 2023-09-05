@@ -41,7 +41,7 @@ public:
     NullBackgroundActivityCalculator()
         : BackgroundActivityCalculator() { 
             if(CudaHelper::is_cuda_available()) {
-                        gpu::models::set_constant_background(0);
+                        gpu_handle = gpu::background::set_constant_background(0);
             }
         }
 
@@ -64,6 +64,7 @@ public:
     }
 
     void init_gpu(const number_neurons_type number_neurons) override {
+        BackgroundActivityCalculator::init_gpu(number_neurons);
     }
 
 };
@@ -83,7 +84,7 @@ public:
         : BackgroundActivityCalculator()
         , base_input(input) {
             if(CudaHelper::is_cuda_available()) {
-                        gpu::models::set_constant_background(base_input);
+                        gpu_handle = gpu::background::set_constant_background(base_input);
             }
     }
 
@@ -131,6 +132,7 @@ public:
 
 
     void init_gpu(const number_neurons_type number_neurons) override {
+        BackgroundActivityCalculator::init_gpu(number_neurons);
     }
 
 private:
@@ -158,7 +160,7 @@ public:
         RelearnException::check(stddev > 0.0, "NormalBackgroundActivityCalculator::NormalBackgroundActivityCalculator: stddev was: {}", stddev);
 
         if(CudaHelper::is_cuda_available()) {
-            gpu::models::set_normal_background(mean_input, stddev_input);
+            gpu_handle = gpu::background::set_normal_background(mean_input, stddev_input);
         }
     }
 
@@ -205,7 +207,7 @@ public:
 
 
     void init_gpu(const number_neurons_type number_neurons) override {
-        
+        BackgroundActivityCalculator::init_gpu(number_neurons);
     }
 
 private:
@@ -237,6 +239,9 @@ public:
         , multiplier(multiplier) {
         RelearnException::check(stddev > 0.0, "FastNormalBackgroundActivityCalculator::FastNormalBackgroundActivityCalculator: stddev was: {}", stddev);
         RelearnException::check(multiplier > 0, "FastNormalBackgroundActivityCalculator::FastNormalBackgroundActivityCalculator: multiplier was: 0", stddev);
+        if(CudaHelper::is_cuda_available()) {
+            gpu_handle = gpu::background::set_fast_normal_background(mean,stddev, multiplier);
+        }
     }
 
     virtual ~FastNormalBackgroundActivityCalculator() = default;
@@ -339,7 +344,8 @@ public:
 
 
     void init_gpu(const number_neurons_type number_neurons) override {
-        RelearnException::fail("No gpu support");
+        BackgroundActivityCalculator::init_gpu(number_neurons);
+        //RelearnException::fail("No gpu support");
     }
 
 private:
@@ -401,6 +407,10 @@ public:
                 flattened_set.erase(std::unique(flattened_set.begin(), flattened_set.end()), flattened_set.end());
                 RelearnException::check(flattened_set.size() == flattened.size(), "FlexibleBackgroundActivityCalculator::FlexibleBackgroundActivityCalculator: Multiple background activity calculators specified for the same neuron in the same step {}", step);
             }
+        }
+
+        if(CudaHelper::is_cuda_available()) {
+            RelearnException::fail("No gpu support");
         }
     }
 
@@ -523,6 +533,7 @@ public:
 
 
     void init_gpu(const number_neurons_type number_neurons) override {
+        BackgroundActivityCalculator::init_gpu(number_neurons);
         RelearnException::fail("No gpu support");
     }
 

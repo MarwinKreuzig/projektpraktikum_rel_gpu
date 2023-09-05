@@ -31,7 +31,7 @@ PoissonModel::PoissonModel(
     , refractory_period{ refractory_period } {
 
         if(CudaHelper::is_cuda_available()) {
-             gpu::models::poisson::construct_gpu(h, x_0, tau_x, refractory_period);
+             gpu_handle = gpu::models::poisson::construct_gpu( get_background_activity_calculator()->get_gpu_handle(), h, x_0, tau_x, refractory_period);
         }
 }
 

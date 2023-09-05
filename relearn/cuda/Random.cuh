@@ -18,15 +18,17 @@ namespace gpu::RandomHolder {
             BACKGROUND,
         };
 
-    __device__ random_state_type init(const size_t step, const RandomKeyHolder key, const size_t neuron_id) {
+        __device__ size_t number_neurons;
+
+    __device__ random_state_type init(const size_t step, size_t _number_neurons, const RandomKeyHolder key, const size_t neuron_id) {
+        number_neurons = _number_neurons;
         random_state_type state;
         curand_init(seed+step, neuron_id, key, &state);
         return state;
     }
 
     __device__ void skip_to_next_item(curandState* state) {
-        const auto& num_neurons = gpu::neurons::NeuronsExtraInfos::extra_infos->get_number_local_neurons();
-        skipahead(num_neurons, state);
+        skipahead(number_neurons, state);
     }
 
     __device__ double get_percentage(curandState* state) {

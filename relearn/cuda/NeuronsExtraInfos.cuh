@@ -3,8 +3,11 @@
 #include "Commons.cuh"
 #include "enums/UpdateStatus.h"
 #include "gpu/GpuTypes.h"
+#include "gpu/Interface.h"
+#include "CudaArray.cuh"
 #include "CudaVector.cuh"
 
+#include <iostream>
 #include <cuda.h>
 
 namespace gpu::neurons::NeuronsExtraInfos {
@@ -12,45 +15,25 @@ namespace gpu::neurons::NeuronsExtraInfos {
     class NeuronsExtraInfos {
 
         public:
- size_t number_local_neurons_device;
+ size_t number_local_neurons_device=0;
 
-     gpu::Vector::CudaVector<UpdateStatus> disable_flags;
+     gpu::Vector::CudaArray<UpdateStatus> disable_flags;
+
+
 
     
 
- __device__ void init(const RelearnTypes::number_neurons_type num_neurons) {
-   disable_flags.resize(num_neurons, UpdateStatus::Enabled);
 
-    number_local_neurons_device = num_neurons;
-}
 
 public:
 
- __device__ NeuronsExtraInfos(size_t num_neurons) : number_local_neurons_device(num_neurons) {
-        init(num_neurons);
+ __device__ NeuronsExtraInfos()   {
      }
 
 
-__device__ void create_neurons(size_t creation_count) {
-    const auto old_size = number_local_neurons_device;
-    const auto new_size = old_size + creation_count;
-    number_local_neurons_device = new_size;
-    disable_flags.resize(new_size, UpdateStatus::Enabled);
-}
 
-__device__ void disable_neurons(const size_t* neuron_ids, size_t num_disabled_neurons)  {
-    if(num_disabled_neurons == 0) {
-        return;
-    }
-    disable_flags.set(neuron_ids, num_disabled_neurons, UpdateStatus::Disabled);
-}
 
-__device__ void enable_neurons(const size_t* neuron_ids, size_t num_enabled_neurons)  {
-    if (num_enabled_neurons == 0) {
-        return;
-    }
-    disable_flags.set(neuron_ids, num_enabled_neurons, UpdateStatus::Enabled);
-}
+
 
  inline __device__ size_t get_number_local_neurons() {
     return number_local_neurons_device;
@@ -58,45 +41,79 @@ __device__ void enable_neurons(const size_t* neuron_ids, size_t num_enabled_neur
 
     };
 
-     size_t number_local_neurons_host;
 
-     __device__ NeuronsExtraInfos* extra_infos;
+class  NeuronsExtraInfosHandleImpl : public  NeuronsExtraInfosHandle {
+    public:
+    NeuronsExtraInfosHandleImpl(const char* t,void* _dev_ptr) : device_ptr(_dev_ptr) {
+        _init();
+    }
 
+    void _init() {
+        void* disable_flags_ptr = execute_and_copy<void*>([=]__device__(NeuronsExtraInfos* extra_infos){ return (void*) &extra_infos->disable_flags;}, (neurons::NeuronsExtraInfos::NeuronsExtraInfos*)device_ptr);
+        handle_disable_flags = gpu::Vector::CudaArrayDeviceHandle<UpdateStatus>(disable_flags_ptr);
+    }
 
-  void init(const RelearnTypes::number_neurons_type num_neurons) {
-    void* extra_infos_dev_ptr = init_class_on_device<NeuronsExtraInfos>(num_neurons);
-    cuda_copy_to_device(extra_infos, extra_infos_dev_ptr);
-  // cuda_generic_kernel<<<1,1>>>([=]__device__(size_t n) {device_init(n);}, num_neurons);
+    void* get_device_pointer() override {
+        return device_ptr;
+    }
+    ~NeuronsExtraInfosHandleImpl() {
+    }
 
-    cudaDeviceSynchronize();
-    gpu_check_last_error();
-       number_local_neurons_host = num_neurons;
-}
-
-void disable_neurons(const size_t* neuron_ids, size_t num_disabled_neurons)  {
-    void* dev_ptr = cuda_malloc(sizeof(size_t)*num_disabled_neurons);
-    cuda_memcpy_to_device(dev_ptr, (void*)neuron_ids, sizeof(size_t), num_disabled_neurons);
-
-    cuda_generic_kernel<<<1,1>>>([=]__device__(size_t* ids, size_t num) {extra_infos->disable_neurons(ids,num);}, (size_t*)dev_ptr, num_disabled_neurons);
-
-    cudaDeviceSynchronize();
-    gpu_check_last_error();
-
-    cudaFree(dev_ptr);
-    gpu_check_last_error();
+    void disable_neurons(const size_t* neuron_ids, size_t num_disabled_neurons)  {
+    if(num_disabled_neurons == 0) {
+        return;
+    }
+    handle_disable_flags.set(neuron_ids, num_disabled_neurons, UpdateStatus::Disabled);
 }
 
 void enable_neurons(const size_t* neuron_ids, size_t num_enabled_neurons)  {
-    void* dev_ptr = cuda_malloc(sizeof(size_t)*num_enabled_neurons);
-    cuda_memcpy_to_device(dev_ptr, (void*) neuron_ids, sizeof(size_t), num_enabled_neurons);
+    if (num_enabled_neurons == 0) {
+        return;
+    }
+    handle_disable_flags.set(neuron_ids, num_enabled_neurons, UpdateStatus::Enabled);
+}
 
-    cuda_generic_kernel<<<1,1>>>([=]__device__(size_t* ids, size_t num) {extra_infos->enable_neurons(ids,num);},(size_t*)dev_ptr, num_enabled_neurons);
+void init(const RelearnTypes::number_neurons_type _num_neurons) {
+    handle_disable_flags.resize(_num_neurons, UpdateStatus::Enabled);
+    num_neurons = _num_neurons;
+    set_num_neurons(_num_neurons);
+
+}
+
+void set_num_neurons(size_t _num_neurons) {
+    num_neurons = _num_neurons;
+    void* ptr = execute_and_copy<void*>([=]__device__(NeuronsExtraInfos* extra_infos){ return (void*) &extra_infos->number_local_neurons_device;}, (neurons::NeuronsExtraInfos::NeuronsExtraInfos*)device_ptr);
+    cuda_memcpy_to_device(ptr,&num_neurons,sizeof(size_t), 1);
+}
+
+void create_neurons(size_t creation_count) {
+    const auto old_size = num_neurons;
+    const auto new_size = old_size + creation_count;
+    num_neurons = new_size;
+    handle_disable_flags.resize(new_size, UpdateStatus::Enabled);
+    set_num_neurons(num_neurons);
+}
+
+private:
+void* device_ptr;
+size_t num_neurons;
+
+gpu::Vector::CudaArrayDeviceHandle<UpdateStatus> handle_disable_flags;
+};
+
+
+
+
+std::unique_ptr<NeuronsExtraInfosHandle> create() {
+    void* extra_infos_dev_ptr = init_class_on_device<NeuronsExtraInfos>();
 
     cudaDeviceSynchronize();
     gpu_check_last_error();
 
-    cudaFree(dev_ptr);
-    gpu_check_last_error();
+    auto a = std::make_unique<NeuronsExtraInfosHandleImpl>("HI2",extra_infos_dev_ptr);
+    return std::move(a);
 }
 
+
+  
 };

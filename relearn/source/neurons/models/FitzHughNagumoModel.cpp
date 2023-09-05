@@ -29,7 +29,7 @@ FitzHughNagumoModel::FitzHughNagumoModel(
     , b{ b }
     , phi{ phi } {
         if(CudaHelper::is_cuda_available()) {
-             gpu::models::fitz_hugh_nagumo::construct_gpu(h,a,b,phi, FitzHughNagumoModel::init_w, FitzHughNagumoModel::init_x );
+             gpu_handle = gpu::models::fitz_hugh_nagumo::construct_gpu(get_background_activity_calculator()->get_gpu_handle(),h,a,b,phi, FitzHughNagumoModel::init_w, FitzHughNagumoModel::init_x );
         }
 }
 

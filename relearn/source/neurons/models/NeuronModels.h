@@ -12,6 +12,7 @@
 
 #include "Types.h"
 #include "gpu/CudaHelper.h"
+#include "gpu/Interface.h"
 #include "mpi/CommunicationMap.h"
 #include "enums/FiredStatus.h"
 #include "enums/UpdateStatus.h"
@@ -91,6 +92,11 @@ public:
         RelearnException::check(is_filled, "NeuronModel::set_extra_infos: new_extra_info is empty");
         extra_infos = std::move(new_extra_info);
 
+        if(CudaHelper::is_cuda_available()) {
+            RelearnException::check(gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
+            gpu_handle->set_extra_infos(extra_infos->get_gpu_handle());
+        }
+
         input_calculator->set_extra_infos(extra_infos);
         background_calculator->set_extra_infos(extra_infos);
         stimulus_calculator->set_extra_infos(extra_infos);
@@ -166,8 +172,9 @@ public:
     [[nodiscard]] std::span<const FiredStatus> get_fired() const noexcept {
         if(CudaHelper::is_cuda_available()) {
             RelearnException::check(number_local_neurons > 0, "NeuronModels::get_fired: number_local_neurons not set");
-            RelearnException::check(gpu::models::get_fired() != nullptr, "NeuronModels::get_fired: Invalid pointer");
-            return std::span<const FiredStatus>(gpu::models::get_fired(), number_local_neurons);
+            RelearnException::check(this->gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
+            RelearnException::check(this->gpu_handle->get_fired() != nullptr, "NeuronModels::get_fired: Invalid pointer");
+            return std::span<const FiredStatus>(this->gpu_handle->get_fired(), number_local_neurons);
         }
         return fired;
     }
@@ -348,7 +355,8 @@ public:
 
     void disable_neurons_gpu(const std::span<const NeuronID> neuron_ids) {
         const auto ids = CudaHelper::convert_neuron_ids_to_primitives(neuron_ids);
-        gpu::models::disable_neurons(ids.data(), ids.size());
+        RelearnException::check(gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
+        gpu_handle->disable_neurons(ids.data(), ids.size());
 
         for (const auto neuron_id : neuron_ids) {
             const auto local_neuron_id = neuron_id.get_neuron_id();
@@ -387,7 +395,8 @@ public:
 
     void enable_neurons_gpu(const std::span<const NeuronID> neuron_ids) {
         const auto ids = CudaHelper::convert_neuron_ids_to_primitives(neuron_ids);
-        gpu::models::enable_neurons(ids.data(), ids.size());
+        RelearnException::check(gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
+        gpu_handle->enable_neurons(ids.data(), ids.size());
     }
 
     void enable_neurons_cpu(const std::span<const NeuronID> neuron_ids) {
@@ -472,19 +481,23 @@ protected:
 
     //GPU
     void update_activity_gpu(const step_type step) {
-        gpu::models::update_activity(step, get_synaptic_input().data(), get_stimulus().data());
+        RelearnException::check(gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
+        gpu_handle->update_activity(step, get_synaptic_input().data(), get_stimulus().data(), number_local_neurons);
     }
 
     void init_neurons_gpu(number_neurons_type start_id, number_neurons_type end_id) {
-        gpu::models::init_neurons(start_id, end_id);
+        RelearnException::check(gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
+        gpu_handle->init_neurons(start_id, end_id);
     }
     
     void create_neurons_gpu(number_neurons_type creation_count) {
-        gpu::models::create_neurons(creation_count);
+        RelearnException::check(gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
+        gpu_handle->create_neurons(creation_count);
     }
 
     void init_gpu(number_neurons_type number_neurons) {
-        gpu::models::init_neuron_model(number_neurons);
+        RelearnException::check(gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
+        gpu_handle->init_neuron_model(number_neurons);
     }
 
     /**
@@ -528,6 +541,8 @@ protected:
     [[nodiscard]] const std::shared_ptr<NeuronsExtraInfo>& get_extra_infos() const noexcept {
         return extra_infos;
     }
+
+    std::shared_ptr<gpu::models::NeuronModelHandle> gpu_handle{};
 
 private:
     // My local number of neurons

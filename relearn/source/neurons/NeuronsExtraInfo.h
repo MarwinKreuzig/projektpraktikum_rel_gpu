@@ -22,8 +22,10 @@
 #include "util/Timers.h"
 
 #include <bitset>
+#include <memory>
 #include <span>
 #include <string>
+#include <iostream>
 #include <vector>
 
 #include <range/v3/algorithm/fill.hpp>
@@ -41,6 +43,14 @@ public:
     static constexpr unsigned int fire_history_length = 1000;
     constexpr static bool fire_history_enabled = true;
 
+    std::unique_ptr<gpu::neurons::NeuronsExtraInfos::NeuronsExtraInfosHandle> gpu_handle555{};
+
+    NeuronsExtraInfo() {
+        if(CudaHelper::is_cuda_available()) {
+            this->gpu_handle555 = std::move(gpu::neurons::NeuronsExtraInfos::create());
+        }
+    }
+
     /**
      * @brief Initializes a NeuronsExtraInfo that holds at most the given number of neurons.
      *      Must only be called once. Sets up all neurons so that they update, but does not initialize the positions.
@@ -57,8 +67,16 @@ public:
         fire_history.resize(size);
 
         if(CudaHelper::is_cuda_available()) {
-            gpu::neurons::NeuronsExtraInfos::init(number_neurons);
+            gpu_handle555->init(number_neurons);
         }
+
+        
+    }
+
+    const std::unique_ptr<gpu::neurons::NeuronsExtraInfos::NeuronsExtraInfosHandle>& get_gpu_handle() {
+        RelearnException::check(CudaHelper::is_cuda_available(), "NeuronsExtraInfos::get_gpu_handle: GPU not supported");
+        RelearnException::check(this->gpu_handle555!=nullptr, "NeuronsExtraInfos::get_gpu_handle: GPU handle not set");
+        return this->gpu_handle555;
     }
 
     /**
@@ -89,7 +107,7 @@ public:
 
         if(CudaHelper::is_cuda_available()) {
             const auto ids = CudaHelper::convert_neuron_ids_to_primitives(enabled_neurons);
-            gpu::neurons::NeuronsExtraInfos::enable_neurons(ids.data(), ids.size());
+            gpu_handle555->enable_neurons(ids.data(), ids.size());
         }
     }
 
@@ -117,7 +135,7 @@ public:
 
         if(CudaHelper::is_cuda_available()) {
             const auto ids = CudaHelper::convert_neuron_ids_to_primitives(disabled_neurons);
-            gpu::neurons::NeuronsExtraInfos::disable_neurons(ids.data(), ids.size());
+            gpu_handle555->disable_neurons(ids.data(), ids.size());
         }
     }
 
@@ -269,4 +287,6 @@ private:
 
     std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>>> deletions_log{};
     std::vector<std::bitset<fire_history_length>> fire_history{};
+
+    
 };

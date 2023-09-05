@@ -92,6 +92,10 @@ public:
         const auto is_filled = new_extra_info.operator bool();
         RelearnException::check(is_filled, "BackgroundActivityCalculator::set_extra_infos: new_extra_info is empty");
         extra_infos = std::move(new_extra_info);
+        if(CudaHelper::is_cuda_available()) {
+            RelearnException::check(gpu_handle!=nullptr, "BackgroundActivityCalculator::set_extra_infos: GPU handle not set");
+            gpu_handle->set_extra_infos(extra_infos->get_gpu_handle());
+        } 
     }
 
     /**
@@ -100,8 +104,14 @@ public:
      * @exception Throws a RelearnException if number_neurons == 0
      */
     void init(const number_neurons_type number_neurons) {
+        RelearnException::check(number_local_neurons == 0, "BackgroundActivityCalculator::init_cpu: Was already initialized");
+        RelearnException::check(number_neurons > 0, "BackgroundActivityCalculator::init_cpu: number_neurons was 0");
+        number_local_neurons = number_neurons;
+
         if(CudaHelper::is_cuda_available()) {
             init_gpu(number_neurons);
+            RelearnException::check(gpu_handle!=nullptr, "BackgroundActivityCalculator::init_gpu: GPU handle not set");
+        background_activity = gpu_handle->get_background_activity();
         } else {
             init_cpu(number_neurons);
         }
@@ -113,6 +123,13 @@ public:
      * @exception Throws a RelearnException if creation_count == 0 or if init_cpu(...) was not called before
      */
     void create_neurons(const number_neurons_type creation_count) {
+        RelearnException::check(number_local_neurons > 0, "BackgroundActivityCalculator::create_neurons: number_local_neurons was 0");
+        RelearnException::check(creation_count > 0, "BackgroundActivityCalculator::create_neurons: creation_count was 0");
+
+        const auto current_size = number_local_neurons;
+        const auto new_size = current_size + creation_count;
+        number_local_neurons = new_size;
+
        if(CudaHelper::is_cuda_available()) {
             create_neurons_gpu(creation_count);
         } else {
@@ -126,9 +143,12 @@ public:
      * @param disable_flags Which neurons are disabled
      * @exception Throws a RelearnException if the number of local neurons didn't match the sizes of the arguments
      */
-    void update_input([[maybe_unused]] const step_type step) {
+    void update_input([[maybe_unused]] const step_type step, bool update_now_for_all_neurons_on_gpu=false) {
         if(CudaHelper::is_cuda_available()) {
             update_input_gpu(step);
+            if(update_now_for_all_neurons_on_gpu) {
+                update_input_for_all_neurons_on_gpu(step);
+            }
         } else {
             update_input_cpu(step);
         }
@@ -176,6 +196,10 @@ public:
         return {};
     }
 
+    [[nodiscard]] std::shared_ptr<gpu::background::BackgroundHandle> get_gpu_handle() {
+        return gpu_handle;
+    }
+
     static constexpr double default_base_background_activity{ 0.0 };
     static constexpr double default_background_activity_mean{ 0.0 };
     static constexpr double default_background_activity_stddev{ 0.0 };
@@ -202,27 +226,23 @@ protected:
     }
 
     virtual void init_cpu(const number_neurons_type number_neurons) {
-        RelearnException::check(number_local_neurons == 0, "BackgroundActivityCalculator::init_cpu: Was already initialized");
-        RelearnException::check(number_neurons > 0, "BackgroundActivityCalculator::init_cpu: number_neurons was 0");
-
-        number_local_neurons = number_neurons;
         background_activity.resize(number_neurons, 0.0);
     }
 
-    virtual void init_gpu(const number_neurons_type number_neurons) = 0;
-
-    virtual void create_neurons_cpu(const number_neurons_type creation_count) {
-        RelearnException::check(number_local_neurons > 0, "BackgroundActivityCalculator::create_neurons: number_local_neurons was 0");
-        RelearnException::check(creation_count > 0, "BackgroundActivityCalculator::create_neurons: creation_count was 0");
-
-        const auto current_size = number_local_neurons;
-        const auto new_size = current_size + creation_count;
-
-        number_local_neurons = new_size;
-        background_activity.resize(new_size, 0.0);
+    virtual void init_gpu(const number_neurons_type number_neurons) {
+        RelearnException::check(gpu_handle!=nullptr, "BackgroundActivityCalculator::init_gpu: GPU handle not set");
+        gpu_handle->init(number_neurons);
     }
 
-    virtual void create_neurons_gpu(const number_neurons_type creation_count) {}
+    virtual void create_neurons_cpu(const number_neurons_type creation_count) {
+        background_activity.resize(number_local_neurons, 0.0);
+    }
+
+    virtual void create_neurons_gpu(const number_neurons_type creation_count) {
+        RelearnException::check(gpu_handle!=nullptr, "BackgroundActivityCalculator::init_gpu: GPU handle not set");
+        gpu_handle->create_neurons(creation_count);
+        background_activity = gpu_handle->get_background_activity();
+    }
 
     virtual void update_input_cpu([[maybe_unused]] const step_type step) {}
 
@@ -230,21 +250,33 @@ protected:
 
     [[nodiscard]] virtual double get_background_activity_cpu(const NeuronID neuron_id) const {
         const auto local_neuron_id = neuron_id.get_neuron_id();
-
         RelearnException::check(local_neuron_id < number_local_neurons, "BackgroundActivityCalculator::get_background_activity: id is too large: {}", neuron_id);
         return background_activity[local_neuron_id];
     }
 
-    [[nodiscard]] virtual double get_background_activity_gpu(const NeuronID neuron_id) const {return {};}
+    [[nodiscard]] virtual double get_background_activity_gpu(const NeuronID neuron_id) const {
+        const auto local_neuron_id = neuron_id.get_neuron_id();
+        RelearnException::check(local_neuron_id < number_local_neurons, "BackgroundActivityCalculator::get_background_activity: id is too large: {}", neuron_id);
+        return background_activity[local_neuron_id];
+    }
 
 
     [[nodiscard]] virtual std::span<const double> get_background_activity_cpu() const noexcept {
         return background_activity;
     }
 
-    [[nodiscard]] virtual std::span<const double> get_background_activity_gpu() const { return {};};
+    [[nodiscard]] virtual std::span<const double> get_background_activity_gpu() const  { 
+        return background_activity;
+    };
+
+    void update_input_for_all_neurons_on_gpu(step_type step) {
+        RelearnException::check(gpu_handle!=nullptr, "BackgroundActivityCalculator::init_gpu: GPU handle not set");
+        gpu_handle->update_input_for_all_neurons_on_gpu(step, number_local_neurons);
+        background_activity = gpu_handle->get_background_activity();
+    }
 
     std::shared_ptr<NeuronsExtraInfo> extra_infos{};
+    std::shared_ptr<gpu::background::BackgroundHandle> gpu_handle{};
 
 private:
     number_neurons_type number_local_neurons{};

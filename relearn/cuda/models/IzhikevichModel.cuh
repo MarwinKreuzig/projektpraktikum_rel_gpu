@@ -51,13 +51,13 @@ __device__ void update_activity(size_t step) override {
 
     const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
 
-    if (neuron_id >= gpu::neurons::NeuronsExtraInfos::extra_infos->get_number_local_neurons()) {
+    if (neuron_id >= extra_infos->get_number_local_neurons()) {
         return;
     }
 
-   /* if (gpu::neurons::NeuronsExtraInfos::disable_flags[neuron_id] == UpdateStatus::Disabled) {
+    if (extra_infos->disable_flags[neuron_id] == UpdateStatus::Disabled) {
         return;
-    }*/
+    }
         const auto synaptic_input = get_synaptic_input(step,neuron_id);
         const auto background_activity = get_background_activity(step,neuron_id);
         const auto stimulus =get_stimulus(step,neuron_id);
@@ -76,7 +76,7 @@ __device__ void update_activity(size_t step) override {
 
 __device__ void create_neurons(size_t creation_count) override {
     NeuronModel::create_neurons(creation_count);
-    const auto new_size = gpu::neurons::NeuronsExtraInfos::extra_infos->get_number_local_neurons();
+    const auto new_size =extra_infos->get_number_local_neurons();
     u.resize(new_size);
 
 }
@@ -88,8 +88,8 @@ __device__ void init_neurons(const RelearnTypes::number_neurons_type start_id, c
 
 namespace izhekevich {
 
-void construct_gpu(const unsigned int _h,  double V_spike, double a, double b, double c, double d, double k1, double k2, double k3) {
-    gpu::models::construct<gpu::models::Izhikevich>(_h,  V_spike,  a,  b,  c,  d,  k1,  k2,  k3);
+std::shared_ptr<NeuronModelHandle> construct_gpu(std::shared_ptr<gpu::background::BackgroundHandle> background_handle,const unsigned int _h,  double V_spike, double a, double b, double c, double d, double k1, double k2, double k3) {
+   return gpu::models::construct<gpu::models::Izhikevich>(background_handle, _h,  V_spike,  a,  b,  c,  d,  k1,  k2,  k3);
 }
 };
 

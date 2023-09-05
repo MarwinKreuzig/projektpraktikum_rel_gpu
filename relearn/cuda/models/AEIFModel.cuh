@@ -58,11 +58,11 @@ __device__ void update_activity(size_t step) override {
 
     const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
 
-    if (neuron_id >= gpu::neurons::NeuronsExtraInfos::extra_infos->get_number_local_neurons()) {
+    if (neuron_id >= extra_infos->get_number_local_neurons()) {
         return;
     }
 
-    if (gpu::neurons::NeuronsExtraInfos::extra_infos->disable_flags[neuron_id] == UpdateStatus::Disabled) {
+    if (extra_infos->disable_flags[neuron_id] == UpdateStatus::Disabled) {
         return;
     }
         const auto synaptic_input = get_synaptic_input(step,neuron_id);
@@ -82,16 +82,15 @@ __device__ void update_activity(size_t step) override {
 
 __device__ void create_neurons(const size_t creation_count) override {
     NeuronModel::create_neurons(creation_count);
-    const auto new_size = gpu::neurons::NeuronsExtraInfos::extra_infos->get_number_local_neurons();
+    const auto new_size = extra_infos->get_number_local_neurons();
     w.resize(new_size);
 
 }
     };
 
     namespace aeif {
-
-void construct_gpu(const unsigned int _h,  double _C, double _g_L, double _E_L, double _V_T, double _d_T, double _tau_w, double _a, double _b, double _V_spike) {
-    gpu::models::construct<gpu::models::AEIF>(_h, _C,  _g_L,  _E_L,  _V_T,  _d_T,  _tau_w,  _a,  _b,  _V_spike );
+std::shared_ptr<NeuronModelHandle> construct_gpu(std::shared_ptr<gpu::background::BackgroundHandle> background_handle, const unsigned int _h,  double _C, double _g_L, double _E_L, double _V_T, double _d_T, double _tau_w, double _a, double _b, double _V_spike) {
+    return gpu::models::construct<gpu::models::AEIF>(background_handle,_h, _C,  _g_L,  _E_L,  _V_T,  _d_T,  _tau_w,  _a,  _b,  _V_spike );
 }
 };
 };

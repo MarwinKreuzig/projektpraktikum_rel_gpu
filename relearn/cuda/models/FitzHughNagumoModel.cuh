@@ -49,11 +49,11 @@ __device__ void update_activity(size_t step) override{
 
     const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
 
-    if (neuron_id >= gpu::neurons::NeuronsExtraInfos::extra_infos->get_number_local_neurons()) {
+    if (neuron_id >= extra_infos->get_number_local_neurons()) {
         return;
     }
 
-    if (gpu::neurons::NeuronsExtraInfos::extra_infos->disable_flags[neuron_id] == UpdateStatus::Disabled) {
+    if (extra_infos->disable_flags[neuron_id] == UpdateStatus::Disabled) {
         return;
     }
         const auto synaptic_input = get_synaptic_input(step,neuron_id);
@@ -74,7 +74,7 @@ __device__ void update_activity(size_t step) override{
 
 __device__ void create_neurons(size_t creation_count) override {
     NeuronModel::create_neurons(creation_count);
-    const auto new_size = gpu::neurons::NeuronsExtraInfos::extra_infos->get_number_local_neurons();
+    const auto new_size = extra_infos->get_number_local_neurons();
     w.resize(new_size);
 
 }
@@ -82,8 +82,8 @@ __device__ void create_neurons(size_t creation_count) override {
 
     namespace fitz_hugh_nagumo {
 
-void construct_gpu(const unsigned int _h,  double _a, double _b, double _phi, double _init_w, double _init_x) {
-    gpu::models::construct<gpu::models::FitzHughNagumo>(_h,  _a,  _b,  _phi,  _init_w,  _init_x);
+std::shared_ptr<NeuronModelHandle> construct_gpu(std::shared_ptr<gpu::background::BackgroundHandle> background_handle,const unsigned int _h,  double _a, double _b, double _phi, double _init_w, double _init_x) {
+    return gpu::models::construct<gpu::models::FitzHughNagumo>(background_handle, _h,  _a,  _b,  _phi,  _init_w,  _init_x);
 }
 };
 };

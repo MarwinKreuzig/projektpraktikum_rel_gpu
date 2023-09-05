@@ -72,9 +72,10 @@ template<typename T>
             return meta_data.size;
         }
 
-        __device__ void set(const size_t* indices, size_t num_indices, T value) {
+        /*__device__ void set(const size_t* indices, size_t num_indices, T value) {
+            RelearnGPUException::device_check(num_indices>0, "CudaVector::set: Num indices is 0");
             device_set_for_indices(meta_data.data,indices,meta_data.size,value);
-        }
+        }*/
 
         __device__ size_t get_max_size() const {
             return meta_data.max_size;

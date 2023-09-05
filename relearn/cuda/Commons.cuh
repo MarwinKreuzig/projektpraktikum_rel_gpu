@@ -236,22 +236,24 @@ __device__ void device_set_array(T* arr, const size_t size, const T value) {
     const auto blocks = get_number_blocks(threads, size);
     set_array_kernel<<<blocks,threads>>>(arr,size,value);
     device_check_last_error();
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
     device_check_last_error();
 }
 
 
 template <typename T>
-__global__ void cuda_set_for_indices_kernel(T* arr, const size_t* indices, size_t size, T value) {
+__global__ void cuda_set_for_indices_kernel(T* arr, const size_t* indices, size_t size, size_t array_size, T value) {
+    RelearnGPUException::device_check(size > 0,"Commons::cuda_set_for_indices_kernel: Size is 0");
     auto thread = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
     if (thread < size) {
         const auto key = indices[thread];
+        RelearnGPUException::device_check(key < array_size, "Commons::cuda_set_for_indices_kernel: Index {} is out of bound {}", key, array_size);
         arr[key] = value;
     }
 }
 
 template <typename T>
-__host__  void cuda_set_for_indices(T* arr, const size_t* indices,const size_t size, T value) {
+__host__  void cuda_set_for_indices(T* arr, const size_t* indices,const size_t size, size_t array_size, T value) {
     RelearnGPUException::check(size > 0, "Commmons::Cuda_set_for_indices: Size of indices is 0");
     void* dev_ptr = cuda_malloc(sizeof(size_t) * size);
     cuda_memcpy_to_device(dev_ptr, (void*)indices, sizeof(size_t), size);
@@ -259,7 +261,7 @@ __host__  void cuda_set_for_indices(T* arr, const size_t* indices,const size_t s
     cudaDeviceSynchronize();
     const auto threads = get_number_threads(cuda_set_for_indices_kernel<T>, size);
     const auto blocks = get_number_blocks(threads, size);
-    cuda_set_for_indices_kernel<T><<<blocks,threads>>>(arr,(size_t*)dev_ptr,size,value);
+    cuda_set_for_indices_kernel<T><<<blocks,threads>>>(arr,(size_t*)dev_ptr,size, array_size,value);
     gpu_check_last_error();
     cudaDeviceSynchronize();
     gpu_check_last_error();
@@ -274,6 +276,7 @@ __device__  void device_set_for_indices(T* arr, const size_t* indices,const size
     device_check_last_error();
     const auto threads = device_get_number_threads(cuda_set_for_indices_kernel<T>, size);
     const auto blocks = get_number_blocks(threads, size);
+    printf("Set %i\n", size);
     cuda_set_for_indices_kernel<T><<<blocks,threads>>>(arr,indices,size,value);
     device_check_last_error();
     cudaDeviceSynchronize();

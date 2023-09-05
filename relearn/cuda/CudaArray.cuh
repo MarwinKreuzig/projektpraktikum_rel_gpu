@@ -69,6 +69,11 @@ namespace gpu::Vector {
             }
             }
 
+        void set(const size_t* indices, size_t num_indices, T value) {
+            RelearnGPUException::check(num_indices>0, "CudaVector::set: Num indices is 0");
+            cuda_set_for_indices(struct_copy.data,indices,num_indices, struct_copy.size,value);
+        }
+
         void fill(T value) {
             RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
             RelearnGPUException::check(!is_empty(), "CudaVector::fill: Cannot fill an empty vector");

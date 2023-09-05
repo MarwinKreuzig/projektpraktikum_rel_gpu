@@ -43,7 +43,7 @@ AEIFModel::AEIFModel(
     , b{ b }
     , V_spike{ V_spike } {
         if(CudaHelper::is_cuda_available()) {
-            gpu::models::aeif::construct_gpu(h,C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike  );
+            gpu_handle = gpu::models::aeif::construct_gpu(get_background_activity_calculator()->get_gpu_handle(),h,C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike  );
         }
 }
 

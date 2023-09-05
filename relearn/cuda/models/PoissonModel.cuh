@@ -44,7 +44,7 @@ __device__ void init(const RelearnTypes::number_neurons_type number_neurons) ove
 
 __device__ void create_neurons(size_t creation_count) override {
     NeuronModel::create_neurons(creation_count);
-    const auto new_size = gpu::neurons::NeuronsExtraInfos::extra_infos->get_number_local_neurons();
+    const auto new_size = extra_infos->get_number_local_neurons();
     refractory_time.resize(new_size);
 }
 
@@ -54,15 +54,15 @@ __device__ void update_activity(size_t step) {
 
     const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
 
-    if (neuron_id >= gpu::neurons::NeuronsExtraInfos::extra_infos->get_number_local_neurons()) {
+    if (neuron_id >=extra_infos->get_number_local_neurons()) {
         return;
     }
 
     //Init
-    auto curand_state = gpu::RandomHolder::init(step, gpu::RandomHolder::POISSON, neuron_id);
+    auto curand_state = gpu::RandomHolder::init(step, extra_infos->get_number_local_neurons(), gpu::RandomHolder::POISSON, neuron_id);
     const auto random_value = gpu::RandomHolder::get_percentage(&curand_state);
 
-    if (gpu::neurons::NeuronsExtraInfos::extra_infos->disable_flags[neuron_id] == UpdateStatus::Disabled) {
+    if (extra_infos->disable_flags[neuron_id] == UpdateStatus::Disabled) {
             return;
     }
         const auto synaptic_input = get_synaptic_input(step,neuron_id);
@@ -82,8 +82,8 @@ __device__ void update_activity(size_t step) {
 
     namespace poisson {
 
-void construct_gpu(const unsigned int _h,  double x_0, double _tau_x,const unsigned int _refractory_period) {
-    gpu::models::construct<gpu::models::PoissonModel>(_h, x_0, _tau_x, _refractory_period);
+std::shared_ptr<NeuronModelHandle> construct_gpu(std::shared_ptr<gpu::background::BackgroundHandle> background_handle, const unsigned int _h,  double x_0, double _tau_x,const unsigned int _refractory_period) {
+    return gpu::models::construct<gpu::models::PoissonModel>(background_handle, _h, x_0, _tau_x, _refractory_period);
 }
 };
 };
