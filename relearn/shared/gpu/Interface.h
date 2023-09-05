@@ -24,7 +24,7 @@ namespace gpu::neurons::NeuronsExtraInfos {
     virtual void create_neurons(size_t num_created_neurons)=0;
     };
 
-    std::unique_ptr<NeuronsExtraInfosHandle> create() CUDA_DEFINITION
+    std::unique_ptr<NeuronsExtraInfosHandle> create() CUDA_PTR_DEFINITION
 };
 
 
@@ -38,9 +38,9 @@ namespace gpu::background {
     virtual void set_extra_infos(const std::unique_ptr<gpu::neurons::NeuronsExtraInfos::NeuronsExtraInfosHandle>& extra_infos_handle)=0;
     };
 
-    std::shared_ptr<BackgroundHandle> set_constant_background(double c);
-    std::shared_ptr<BackgroundHandle> set_normal_background(double mean, double stddev);
-    std::shared_ptr<BackgroundHandle> set_fast_normal_background(double mean, double stddev, size_t multiplier);
+    std::shared_ptr<BackgroundHandle> set_constant_background(double c) CUDA_PTR_DEFINITION
+    std::shared_ptr<BackgroundHandle> set_normal_background(double mean, double stddev) CUDA_PTR_DEFINITION
+    std::shared_ptr<BackgroundHandle> set_fast_normal_background(double mean, double stddev, size_t multiplier) CUDA_PTR_DEFINITION
     
 };
 
@@ -66,7 +66,7 @@ virtual void set_extra_infos(const std::unique_ptr<gpu::neurons::NeuronsExtraInf
 
 namespace gpu::models::izhekevich {
 
-std::shared_ptr<NeuronModelHandle> construct_gpu(std::shared_ptr<gpu::background::BackgroundHandle> background_handle,const unsigned int h, double V_spike, double a, double b, double c, double d, double k1, double k2, double k3) CUDA_DEFINITION
+std::shared_ptr<NeuronModelHandle> construct_gpu(std::shared_ptr<gpu::background::BackgroundHandle> background_handle,const unsigned int h, double V_spike, double a, double b, double c, double d, double k1, double k2, double k3) CUDA_PTR_DEFINITION
 
 };
 
@@ -74,19 +74,19 @@ namespace gpu::models::poisson {
 
 std::shared_ptr<NeuronModelHandle> construct_gpu( std::shared_ptr<gpu::background::BackgroundHandle> background_handle,const unsigned int h,const double x_0,
     const double tau_x,
-    const unsigned int refractory_period) CUDA_DEFINITION
+    const unsigned int refractory_period) CUDA_PTR_DEFINITION
 
 };
 
 namespace gpu::models::aeif {
 
-std::shared_ptr<NeuronModelHandle> construct_gpu( std::shared_ptr<gpu::background::BackgroundHandle> background_handle,const unsigned int _h, double _C, double _g_L, double _E_L, double _V_T, double _d_T, double _tau_w, double _a, double _b, double _V_spike) CUDA_DEFINITION
+std::shared_ptr<NeuronModelHandle> construct_gpu( std::shared_ptr<gpu::background::BackgroundHandle> background_handle,const unsigned int _h, double _C, double _g_L, double _E_L, double _V_T, double _d_T, double _tau_w, double _a, double _b, double _V_spike) CUDA_PTR_DEFINITION
 
 };
 
 namespace gpu::models::fitz_hugh_nagumo {
 
-std::shared_ptr<NeuronModelHandle> construct_gpu(std::shared_ptr<gpu::background::BackgroundHandle> background_handle,const unsigned int _h,double _a, double _b, double _phi, double _init_w, double _init_x) CUDA_DEFINITION
+std::shared_ptr<NeuronModelHandle> construct_gpu(std::shared_ptr<gpu::background::BackgroundHandle> background_handle,const unsigned int _h,double _a, double _b, double _phi, double _init_w, double _init_x) CUDA_PTR_DEFINITION
 };
 
 

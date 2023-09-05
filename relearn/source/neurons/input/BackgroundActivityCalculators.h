@@ -295,7 +295,7 @@ public:
      * @exception Throws a RelearnException if number_neurons == 0
      */
     void init_cpu(const number_neurons_type number_neurons) override {
-        BackgroundActivityCalculator::init(number_neurons);
+        BackgroundActivityCalculator::init_cpu(number_neurons);
 
         pre_drawn_values.resize(number_neurons * multiplier);
         ranges::generate(pre_drawn_values, [this]() { return RandomHolder::get_random_normal_double(RandomHolderKey::BackgroundActivity, mean_input, stddev_input); });
@@ -309,7 +309,7 @@ public:
     void create_neurons_cpu(const number_neurons_type number_neurons) override {
         const auto previous_number_neurons = get_number_neurons();
 
-        BackgroundActivityCalculator::create_neurons(number_neurons);
+        BackgroundActivityCalculator::create_neurons_cpu(number_neurons);
 
         const auto now_number_neurons = get_number_neurons();
         pre_drawn_values.resize(now_number_neurons * multiplier);
@@ -454,7 +454,7 @@ public:
      * @exception Throws a RelearnException if number_neurons == 0
      */
     void init_cpu(const number_neurons_type number_neurons) override {
-        BackgroundActivityCalculator::init(number_neurons);
+        BackgroundActivityCalculator::init_cpu(number_neurons);
 
         const auto null_calculator = parse_calculator_type("null");
         neuron_id_to_background_activity_calculator.resize(number_neurons, null_calculator);
