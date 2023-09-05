@@ -266,7 +266,7 @@ deploy-single-cuda:
   script:
     - relearn/build-docker-cuda/bin/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/ --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16
   dependencies:
-    - test-mpi-multiple-cuda
+    - test-mpi-cuda-multiple
   artifacts:
     paths:
       - relearn/build-docker-cuda
@@ -296,7 +296,7 @@ deploy-create-cuda:
   script:
     - relearn/build-docker-cuda/bin/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/ --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --creation-interrupts relearn/input/tests/create-100-interrupt.txt
   dependencies:
-    - test-mpi-multiple-cuda
+    - test-mpi-cuda-multiple
   artifacts:
     paths:
       - relearn/build-docker-cuda
@@ -326,7 +326,7 @@ deploy-disable-cuda:
   script:
     - relearn/build-docker-cuda/bin/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/ --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --disable-interrupts relearn/input/tests/disable-100-interrupt.txt
   dependencies:
-    - test-mpi-multiple-cuda
+    - test-mpi-cuda-multiple
   artifacts:
     paths:
       - relearn/build-docker-cuda       
@@ -356,7 +356,7 @@ deploy-single-nompi-cuda:
   script:
     - relearn/build-docker-nompi-cuda/bin/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/ --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16
   dependencies:
-    - test-nompi-multiple-cuda
+    - test-nompi-cuda-multiple
   artifacts:
     paths:
       - relearn/build-docker-nompi-cuda
@@ -386,7 +386,7 @@ deploy-create-nompi-cuda:
   script:
     - relearn/build-docker-nompi-cuda/bin/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/ --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --creation-interrupts relearn/input/tests/create-100-interrupt.txt
   dependencies:
-    - test-nompi-multiple-cuda
+    - test-nompi-cuda-multiple
   artifacts:
     paths:
       - relearn/build-docker-nompi-cuda     
@@ -416,7 +416,7 @@ deploy-disable-nompi-cuda:
   script:
     - relearn/build-docker-nompi-cuda/bin/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/ --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16 --disable-interrupts relearn/input/tests/disable-100-interrupt.txt
   dependencies:
-    - test-nompi-multiple-cuda
+    - test-nompi-cuda-multiple
   artifacts:
     paths:
       - relearn/build-docker-nompi-cuda    
@@ -476,7 +476,7 @@ deploy-mpi-4-cuda:
   script:
     - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 4 relearn/build-docker-cuda/bin/relearn --algorithm barnes-hut --steps 1000 --num-neurons-per-rank 500 --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 4
   dependencies:
-    - test-mpi-multiple-cuda
+    - test-mpi-cuda-multiple
   artifacts:
     paths:
       - relearn/build-docker-cuda
