@@ -170,8 +170,6 @@ inline __device__ size_t block_thread_to_neuron_id(size_t block_id, size_t threa
 }
 
 inline __device__ __host__  int get_number_blocks(int number_threads_per_block, int number_total_threads) {
-    //RelearnGPUException::check(number_total_threads > 0, "Commmons::get_number_blocks:numer_total_threads is 0");
-    //RelearnGPUException::check(number_threads_per_block > 0, "Commmons::get_number_blocks:numer_threads_per_block is 0");
     int number_blocks = number_total_threads / number_threads_per_block;
     if (number_total_threads % number_threads_per_block != 0) {
         number_blocks++;
@@ -285,23 +283,11 @@ __device__  void device_set_for_indices(T* arr, const size_t* indices,const size
 
 template <typename T, typename ... Args>
 __global__ void init_class_kernel(void* ptr, Args ... constructor_args) {
-    //auto* constant = new T(constructor_args...);
-    //*ptr = (void*) constant;
     new (ptr) T(constructor_args...);
 }
 
 template <typename T, typename ... Args>
 inline T* init_class_on_device(Args ... constructor_args) {
-    /*void** ptr = (void**) cuda_malloc(sizeof(void**));
-    init_class_kernel<T, Args...><<<1,1>>>(ptr, std::forward<Args>(constructor_args)...);
-
-    cudaDeviceSynchronize();
-    gpu_check_last_error();
-
-    void* dev_ptr_class;
-    cuda_memcpy_to_host(ptr, &dev_ptr_class, sizeof(void**), 1);
-
-    return (T*)dev_ptr_class;*/
 
     cudaDeviceSynchronize();
     gpu_check_last_error();

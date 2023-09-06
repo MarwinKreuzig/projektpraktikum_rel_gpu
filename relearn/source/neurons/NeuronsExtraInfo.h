@@ -43,11 +43,11 @@ public:
     static constexpr unsigned int fire_history_length = 1000;
     constexpr static bool fire_history_enabled = true;
 
-    std::unique_ptr<gpu::neurons::NeuronsExtraInfos::NeuronsExtraInfosHandle> gpu_handle555{};
+    std::unique_ptr<gpu::neurons::NeuronsExtraInfosHandle> gpu_handle{};
 
     NeuronsExtraInfo() {
         if(CudaHelper::is_cuda_available()) {
-            this->gpu_handle555 = std::move(gpu::neurons::NeuronsExtraInfos::create());
+            this->gpu_handle = std::move(gpu::neurons::create());
         }
     }
 
@@ -67,16 +67,16 @@ public:
         fire_history.resize(size);
 
         if(CudaHelper::is_cuda_available()) {
-            gpu_handle555->init(number_neurons);
+            gpu_handle->init(number_neurons);
         }
 
         
     }
 
-    const std::unique_ptr<gpu::neurons::NeuronsExtraInfos::NeuronsExtraInfosHandle>& get_gpu_handle() {
+    const std::unique_ptr<gpu::neurons::NeuronsExtraInfosHandle>& get_gpu_handle() {
         RelearnException::check(CudaHelper::is_cuda_available(), "NeuronsExtraInfos::get_gpu_handle: GPU not supported");
-        RelearnException::check(this->gpu_handle555!=nullptr, "NeuronsExtraInfos::get_gpu_handle: GPU handle not set");
-        return this->gpu_handle555;
+        RelearnException::check(gpu_handle!=nullptr, "NeuronsExtraInfos::get_gpu_handle: GPU handle not set");
+        return gpu_handle;
     }
 
     /**
@@ -107,7 +107,7 @@ public:
 
         if(CudaHelper::is_cuda_available()) {
             const auto ids = CudaHelper::convert_neuron_ids_to_primitives(enabled_neurons);
-            gpu_handle555->enable_neurons(ids.data(), ids.size());
+            gpu_handle->enable_neurons(ids);
         }
     }
 
@@ -135,7 +135,7 @@ public:
 
         if(CudaHelper::is_cuda_available()) {
             const auto ids = CudaHelper::convert_neuron_ids_to_primitives(disabled_neurons);
-            gpu_handle555->disable_neurons(ids.data(), ids.size());
+            gpu_handle->disable_neurons(ids);
         }
     }
 

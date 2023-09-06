@@ -12,6 +12,7 @@
 
 #include "Config.h"
 
+
 #include <cuda.h>
 
 #include <iostream>
@@ -68,8 +69,7 @@ public:
             return;
         }
 
-        //fail(std::move(format), std::forward<Args>(args)...);
-        __trap();
+        fail_device(std::move(format), std::forward<Args>(args)...);
     }
 
     /**
@@ -82,7 +82,7 @@ public:
      *      Throws a RelearnException
      */
     template <typename... Args>
-    [[noreturn]] static void fail(std::string&& format, Args&&... args) {
+    [[noreturn]] static void fail(const std::string&& format, Args&&... args) {
         if (hide_messages) {
             throw RelearnGPUException{};
         }
@@ -91,6 +91,14 @@ public:
 
         log_message(message);
         throw RelearnGPUException{ message };
+    }
+
+    template <typename... Args>
+    [[noreturn]] static __device__ void fail_device(const char* format, Args&&... args) {
+
+        printf(format,args...);
+
+        __trap();
     }
 
 private:

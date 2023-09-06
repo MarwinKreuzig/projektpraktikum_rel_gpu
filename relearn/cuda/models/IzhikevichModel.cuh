@@ -38,7 +38,7 @@ public:
 
 __device__ Izhikevich(const unsigned int _h,gpu::background::BackgroundActivity* bgc,double _V_spike, double _a, double _b, double _c, double _d, double _k1, double _k2, double _k3) : NeuronModel(_h, bgc) ,V_spike(_V_spike),a(_a),b(_b),c(_c),d(_d),k1(_k1),k2(_k2),k3(_k3)  {}
 
-__device__ void init(RelearnTypes::number_neurons_type number_neurons) override {
+__device__ void init(RelearnGPUTypes::number_neurons_type number_neurons) override {
     printf("Neuron model init2\n");
     NeuronModel::init(number_neurons);
 
@@ -46,7 +46,7 @@ __device__ void init(RelearnTypes::number_neurons_type number_neurons) override 
     
 }
 
-__device__ void update_activity(size_t step) override {
+__device__ void update_activity(RelearnGPUTypes::step_type step) override {
 
 
     const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
@@ -74,19 +74,19 @@ __device__ void update_activity(size_t step) override {
         set_fired(neuron_id, this_fired);
 }
 
-__device__ void create_neurons(size_t creation_count) override {
+__device__ void create_neurons(RelearnGPUTypes::number_neurons_type creation_count) override {
     NeuronModel::create_neurons(creation_count);
     const auto new_size =extra_infos->get_number_local_neurons();
     u.resize(new_size);
 
 }
 
-__device__ void init_neurons(const RelearnTypes::number_neurons_type start_id, const RelearnTypes::number_neurons_type end_id) override {
+__device__ void init_neurons(const RelearnGPUTypes::number_neurons_type start_id, const RelearnGPUTypes::number_neurons_type end_id) override {
     x.fill(start_id,end_id,c);
 }
 };
 
-namespace izhekevich {
+namespace izhikevich {
 
 std::shared_ptr<NeuronModelHandle> construct_gpu(std::shared_ptr<gpu::background::BackgroundHandle> background_handle,const unsigned int _h,  double V_spike, double a, double b, double c, double d, double k1, double k2, double k3) {
    return gpu::models::construct<gpu::models::Izhikevich>(background_handle, _h,  V_spike,  a,  b,  c,  d,  k1,  k2,  k3);

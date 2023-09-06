@@ -6,8 +6,14 @@
 namespace gpu::Vector {
 template<typename T>
     class CudaVector {
+        /**
+         * Simple cuda implementation of a vector. Can only be accessed from the gpu
+        */
         public:
 
+        /**
+         * Contains the pointer to the array and its size
+        */
         struct meta {
         T* data = nullptr;
         size_t size = 0;
@@ -50,11 +56,6 @@ template<typename T>
             device_set_array(meta_data.data, size, value);
         }
 
-        __device__ void reserve(size_t n) {
-            RelearnGPUException::fail("TODO");
-        }
-
-
         __device__ T& operator[](size_t index) {
             return meta_data.data[index];
         }
@@ -72,11 +73,6 @@ template<typename T>
             return meta_data.size;
         }
 
-        /*__device__ void set(const size_t* indices, size_t num_indices, T value) {
-            RelearnGPUException::device_check(num_indices>0, "CudaVector::set: Num indices is 0");
-            device_set_for_indices(meta_data.data,indices,meta_data.size,value);
-        }*/
-
         __device__ size_t get_max_size() const {
             return meta_data.max_size;
         }
@@ -88,7 +84,8 @@ template<typename T>
         __device__ bool is_empty() const {
             return meta_data.size == 0;
         }
-meta meta_data;
+
+        meta meta_data;
         private:
         
 
@@ -106,67 +103,4 @@ meta meta_data;
 
         
     };
-/*
-    template<typename T>
-    class CudaVectorDeviceHandle {
-
-        public:
-
-        CudaVectorDeviceHandle(void* struct_device_ptr) : struct_dev_ptr(struct_device_ptr) {
-            update_meta_data_from_device();
-        }
-
-        CudaVectorDeviceHandle() {
-        }
-
-        ~CudaVectorDeviceHandle() {
-        }
-
-        void print_content() {
-            std::vector<T> cpy;
-            cpy.resize(meta_data.size);
-            copy_to_host(cpy);
-            for(const auto& e:cpy) {
-                std:: cout << e << ", ";
-            }
-        }
-
-        void copy_to_host(std::vector<T>& host_data) {
-            update_meta_data_from_device();
-            RelearnGPUException::check(meta_data.data != nullptr, "CudaVector::copy_to_host: Vector is empty");
-            host_data.resize(meta_data.size);
-            cuda_memcpy_to_host(meta_data.data, host_data.data(), sizeof(T), meta_data.size);
-        }
-
-        void copy_to_host(T* host_data, size_t num_elements) {
-            update_meta_data_from_device();
-            RelearnGPUException::check(meta_data.data != nullptr, "CudaVector::copy_to_host: Vector is empty");
-            cuda_memcpy_to_host(meta_data.data, host_data, sizeof(T), meta_data.size);
-        }      
-
-        size_t get_size() const {
-            return meta_data.size;
-        }
-
-        size_t get_max_size() const {
-            return meta_data.max_size;
-        }
-
-        T* data() const {
-            return meta_data.data;
-        }
-
-        bool is_empty() const {
-            return meta_data.size == 0;
-        }
-
-        void update_meta_data_from_device() {
-            this->meta_data = execute_and_copy<typename CudaVector<T>::meta>([=] __device__ (void* struct_dev_ptr)  -> typename CudaVector<T>::meta { return ((CudaVector<T>*) struct_dev_ptr)->meta_data;}, struct_dev_ptr);
-        }
-
-        private:
-        typename CudaVector<T>::meta meta_data;
-        void* struct_dev_ptr;
-
-    };*/
 };

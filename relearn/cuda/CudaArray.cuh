@@ -9,6 +9,9 @@
 namespace gpu::Vector {
     template<typename T>
     struct CudaArray {
+        /**
+         * Vector on gpu that can only be accessed element wise. All other methods are managed by the cpu
+        */
         T* data = nullptr;
         size_t size = 0;
         size_t max_size = 0;
@@ -17,13 +20,15 @@ namespace gpu::Vector {
             return data[index];
         }
 
-
     };
 
     
 
     template<typename T>
     class CudaArrayDeviceHandle {
+        /**
+         * A handle to control a CudaArray from the cpu
+        */
 
         public:
 
@@ -31,12 +36,13 @@ namespace gpu::Vector {
             struct_dev_ptr = nullptr;
         }
 
+        /**
+         * @param struct_device_pointer Pointer to a CudaArray instance on the gpu
+        */
         CudaArrayDeviceHandle(CudaArray<T>* struct_device_ptr) : struct_dev_ptr((void*)struct_device_ptr) {
-            is_device_symbol = false;
         }
 
         CudaArrayDeviceHandle(void* struct_device_ptr) : struct_dev_ptr(struct_device_ptr) {
-            is_device_symbol = false;
         }
 
         ~CudaArrayDeviceHandle() {
@@ -151,11 +157,7 @@ namespace gpu::Vector {
             RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
             if(struct_copy.data !=nullptr){
                 free_contents();
-            }/*
-            if(!is_device_symbol){
-                cudaFree(struct_dev_ptr);
-                gpu_check_last_error();
-            }*/
+            }
             struct_dev_ptr = nullptr;
         }
 
@@ -222,8 +224,6 @@ namespace gpu::Vector {
         private:
         CudaArray<T> struct_copy;
         void* struct_dev_ptr;
-
-        bool is_device_symbol;
 
     };
 

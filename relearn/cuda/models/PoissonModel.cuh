@@ -36,19 +36,19 @@ gpu::Vector::CudaVector<double> refractory_time;
     unsigned int refractory_period;
 
 
-__device__ void init(const RelearnTypes::number_neurons_type number_neurons) override{
+__device__ void init(const RelearnGPUTypes::number_neurons_type number_neurons) override{
     NeuronModel::init(number_neurons);
 
     refractory_time.resize(number_neurons);
 }
 
-__device__ void create_neurons(size_t creation_count) override {
+__device__ void create_neurons(RelearnGPUTypes::number_neurons_type creation_count) override {
     NeuronModel::create_neurons(creation_count);
     const auto new_size = extra_infos->get_number_local_neurons();
     refractory_time.resize(new_size);
 }
 
-__device__ void update_activity(size_t step) {
+__device__ void update_activity(RelearnGPUTypes::step_type step) override {
 
     const auto tau_x_inverse = 1.0 / tau_x;
 

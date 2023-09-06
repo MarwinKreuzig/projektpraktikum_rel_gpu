@@ -40,7 +40,7 @@ IzhikevichModel::IzhikevichModel(
     , k2{ k2 }
     , k3{ k3 } {
         if(CudaHelper::is_cuda_available()) {
-             gpu_handle = gpu::models::izhekevich::construct_gpu(get_background_activity_calculator()->get_gpu_handle(),h,  V_spike,  a,  b,  c,  d,  k1,  k2,  k3);
+             gpu_handle = gpu::models::izhikevich::construct_gpu(get_background_activity_calculator()->get_gpu_handle(),h,  V_spike,  a,  b,  c,  d,  k1,  k2,  k3);
         }
 }
 

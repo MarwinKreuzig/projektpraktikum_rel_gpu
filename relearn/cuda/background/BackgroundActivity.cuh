@@ -13,11 +13,20 @@
 namespace gpu::background {
 
 class BackgroundActivity {
+    /**
+     * BackgroundActivityCalculator on the gpu
+    */
 
 
     public:
     __device__ BackgroundActivity() {}
 
+    /**
+     * Returns the background activity for a certain neuron id at a certain step
+     * @param step Current step
+     * @param neuron_id Neuron id
+     * @return The background activity for the neuron at the step
+    */
      __device__ double get(size_t step, size_t neuron_id) {
         double b;
         if(extra_infos->disable_flags[neuron_id] == UpdateStatus::Disabled) {
@@ -29,16 +38,35 @@ class BackgroundActivity {
         background_cache[neuron_id] = b;
         return b;
      }
+
+     /**
+      * Virtual method to implement the actual background activitiy calculator
+      * @param step Current step
+     * @param neuron_id Neuron id
+     * @return The background activity for the neuron at the step
+     */
      __device__ virtual double get_internal(size_t step, size_t neuron_id) const =0;
 
+    /**
+     * Caches the last values of background activity for every neuron to test the implementation
+    */
     gpu::Vector::CudaArray<double> background_cache;
-    gpu::neurons::NeuronsExtraInfos::NeuronsExtraInfos* extra_infos;
 
-    __device__ void set_extra_infos(gpu::neurons::NeuronsExtraInfos::NeuronsExtraInfos* _extra_infos) {
+    gpu::neurons::NeuronsExtraInfos* extra_infos;
+
+    /**
+     * Sets the NeuronsExtraInfos
+     * @param _extra_infos Pointer to the NeuronsExtraInfos instance on the gpu
+    */
+    __device__ void set_extra_infos(gpu::neurons::NeuronsExtraInfos* _extra_infos) {
         extra_infos = _extra_infos;
     }
 
-    __device__ gpu::neurons::NeuronsExtraInfos::NeuronsExtraInfos* get_extra_infos() {
+    /**
+     * Returns the NeuronsExtraInfos
+     * @return Pointer to the NeuronsExtraInfos instance on the gpu
+    */
+    __device__ gpu::neurons::NeuronsExtraInfos* get_extra_infos() {
         RelearnGPUException::device_check(extra_infos!=nullptr, "BackgroundActivity::get_extra_infos: Pointer is null");
         return extra_infos;
     }
@@ -71,7 +99,6 @@ class Normal : public BackgroundActivity {
         const auto random_value = gpu::RandomHolder::get_normal(&curand_state, mean, stddev);
         return random_value;
     }
-
 
     private:
     double mean;
@@ -109,13 +136,13 @@ std::vector<double> get_background_activity() override  {
 }
 
 
-void set_extra_infos(const std::unique_ptr<gpu::neurons::NeuronsExtraInfos::NeuronsExtraInfosHandle>& extra_infos_handle) override {
-    cuda_generic_kernel<<<1,1>>>([=]__device__(BackgroundActivity* calculator,gpu::neurons::NeuronsExtraInfos::NeuronsExtraInfos* extra_infos){ calculator->set_extra_infos(extra_infos);}, (BackgroundActivity*) background_calculator, (neurons::NeuronsExtraInfos::NeuronsExtraInfos*)extra_infos_handle->get_device_pointer());
+void set_extra_infos(const std::unique_ptr<gpu::neurons::NeuronsExtraInfosHandle>& extra_infos_handle) override {
+    cuda_generic_kernel<<<1,1>>>([=]__device__(BackgroundActivity* calculator,gpu::neurons::NeuronsExtraInfos* extra_infos){ calculator->set_extra_infos(extra_infos);}, (BackgroundActivity*) background_calculator, (neurons::NeuronsExtraInfos*) static_cast<neurons::NeuronsExtraInfosHandleImpl*>(extra_infos_handle.get())->get_device_pointer());
 }
 
 
 
-void update_input_for_all_neurons_on_gpu(size_t step,size_t number_local_neurons) override {
+void update_input_for_all_neurons_on_gpu(RelearnGPUTypes::step_type step, RelearnGPUTypes::number_neurons_type number_local_neurons) override {
     RelearnGPUException::check(number_local_neurons>0,"BackgroundActivity::update_input_for_all_neurons_on_gpu: Number neurons is 0");
     RelearnGPUException::check(background_calculator!=nullptr, "BackgroundActivity::update_input_for_all_neurons_on_gpu: Device pointer is null");
 

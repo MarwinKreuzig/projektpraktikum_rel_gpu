@@ -26,6 +26,7 @@
 #include "util/RelearnException.h"
 #include "util/NeuronID.h"
 #include "Types.h"
+#include "util/Utility.h"
 
 #include <algorithm>
 #include <array>
@@ -173,8 +174,7 @@ public:
         if(CudaHelper::is_cuda_available()) {
             RelearnException::check(number_local_neurons > 0, "NeuronModels::get_fired: number_local_neurons not set");
             RelearnException::check(this->gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
-            RelearnException::check(this->gpu_handle->get_fired() != nullptr, "NeuronModels::get_fired: Invalid pointer");
-            return std::span<const FiredStatus>(this->gpu_handle->get_fired(), number_local_neurons);
+            return std::span<const FiredStatus>(gpu_handle->get_fired());
         }
         return fired;
     }
@@ -356,7 +356,7 @@ public:
     void disable_neurons_gpu(const std::span<const NeuronID> neuron_ids) {
         const auto ids = CudaHelper::convert_neuron_ids_to_primitives(neuron_ids);
         RelearnException::check(gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
-        gpu_handle->disable_neurons(ids.data(), ids.size());
+        gpu_handle->disable_neurons(ids);
 
         for (const auto neuron_id : neuron_ids) {
             const auto local_neuron_id = neuron_id.get_neuron_id();
@@ -396,7 +396,7 @@ public:
     void enable_neurons_gpu(const std::span<const NeuronID> neuron_ids) {
         const auto ids = CudaHelper::convert_neuron_ids_to_primitives(neuron_ids);
         RelearnException::check(gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
-        gpu_handle->enable_neurons(ids.data(), ids.size());
+        gpu_handle->enable_neurons(ids);
     }
 
     void enable_neurons_cpu(const std::span<const NeuronID> neuron_ids) {
@@ -482,7 +482,8 @@ protected:
     //GPU
     void update_activity_gpu(const step_type step) {
         RelearnException::check(gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
-        gpu_handle->update_activity(step, get_synaptic_input().data(), get_stimulus().data(), number_local_neurons);
+        
+        gpu_handle->update_activity(step, Util::vectorify_span(get_synaptic_input()), Util::vectorify_span(get_stimulus()));
     }
 
     void init_neurons_gpu(number_neurons_type start_id, number_neurons_type end_id) {

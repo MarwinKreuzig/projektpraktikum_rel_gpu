@@ -42,18 +42,18 @@ namespace gpu::models{
     }
 
 
-__device__ void init(RelearnTypes::number_neurons_type number_neurons) override {
+__device__ void init(RelearnGPUTypes::number_neurons_type number_neurons) override {
     NeuronModel::init(number_neurons);
 
     w.resize(number_neurons, 0);
 }
 
-__device__ void init_neurons(const RelearnTypes::number_neurons_type start_id, const RelearnTypes::number_neurons_type end_id) override {
+__device__ void init_neurons(const RelearnGPUTypes::number_neurons_type start_id, const RelearnGPUTypes::number_neurons_type end_id) override {
     NeuronModel::init_neurons(start_id,end_id);
     x.fill(start_id,end_id,E_L);
 }
 
-__device__ void update_activity(size_t step) override {
+__device__ void update_activity(RelearnGPUTypes::step_type step) override {
 
 
     const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
@@ -80,7 +80,7 @@ __device__ void update_activity(size_t step) override {
         set_fired(neuron_id, this_fired);
 }
 
-__device__ void create_neurons(const size_t creation_count) override {
+__device__ void create_neurons(RelearnGPUTypes::number_neurons_type creation_count) override {
     NeuronModel::create_neurons(creation_count);
     const auto new_size = extra_infos->get_number_local_neurons();
     w.resize(new_size);

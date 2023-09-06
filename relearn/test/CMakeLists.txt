@@ -154,9 +154,7 @@ target_sources(
 
 		  # for visual studio
 		  ${relearn_tests_additional_files})
-		  
-# TODO Remove this
-enable_language(CUDA)
+		
 
 target_include_directories(relearn_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(relearn_tests PRIVATE project_options project_libraries)
