@@ -23,7 +23,7 @@ class NeuronsTest : public RelearnTest {
 protected:
     static std::tuple<std::shared_ptr<Neurons>, std::shared_ptr<NetworkGraph>> create_neurons_object(std::shared_ptr<Partition>& partition, MPIRank rank) {
         auto model = std::make_unique<models::PoissonModel>(models::PoissonModel::default_h,
-            std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_conductance, std::make_unique<FiredStatusCommunicationMap>(1), std::make_unique<ConstantTransmissionDelayer>(0)),
+            std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_conductance, std::make_unique<FiredStatusCommunicationMap>(1)),
             std::make_unique<NullBackgroundActivityCalculator>(),
             std::make_unique<Stimulus>(),
             models::PoissonModel::default_x_0,

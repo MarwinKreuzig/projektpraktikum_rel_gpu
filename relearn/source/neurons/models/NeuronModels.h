@@ -16,7 +16,6 @@
 #include "mpi/CommunicationMap.h"
 #include "enums/FiredStatus.h"
 #include "enums/UpdateStatus.h"
-#include "neurons/input/TransmissionDelayer.h"
 #include "neurons/input/BackgroundActivityCalculator.h"
 #include "neurons/input/Stimulus.h"
 #include "neurons/input/SynapticInputCalculator.h"
@@ -73,7 +72,6 @@ public:
      * @param synaptic_input_calculator The object that is responsible for calculating the synaptic input
      * @param background_activity_calculator The object that is responsible for calculating the background activity
      * @param stimulus_calculator The object that is responsible for calculating the stimulus
-     * @param transmission_delayerThe object that is responsible to delay the transmission of the firing of neurons to their target neurons
      */
     NeuronModel(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator)

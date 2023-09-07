@@ -33,9 +33,6 @@ void SynapticInputCalculator::init(const number_neurons_type number_neurons) {
 
     fired_status_comm->init(number_neurons);
 
-    if (transmission_delayer != nullptr) {
-        transmission_delayer->init(number_neurons);
-    }
 }
 
 void SynapticInputCalculator::create_neurons(const number_neurons_type creation_count) {
@@ -51,9 +48,6 @@ void SynapticInputCalculator::create_neurons(const number_neurons_type creation_
     raw_inh_input.resize(new_size, 0.0);
 
     fired_status_comm->create_neurons(creation_count);
-    if (transmission_delayer != nullptr) {
-        transmission_delayer->create_neurons(creation_count);
-    }
 }
 
 void SynapticInputCalculator::set_synaptic_input(const double value) noexcept {
@@ -63,12 +57,8 @@ void SynapticInputCalculator::set_synaptic_input(const double value) noexcept {
 double SynapticInputCalculator::get_local_and_distant_synaptic_input(const std::span<const FiredStatus> fired, const NeuronID& neuron_id) {
     auto local_input = 0.0;
 
-    if (transmission_delayer == nullptr) {
-
         // Walk through local in-edges
         const auto& [local_in_edges_plastic, local_in_edges_static] = network_graph->get_local_in_edges(neuron_id);
-        //        register_local_in_edges(local_in_edges_plastic);
-        //        register_local_in_edges(local_in_edges_static);
         for (const auto& [src_neuron_id, edge_val] : local_in_edges_static) {
             const auto spike = fired[src_neuron_id.get_neuron_id()];
             if (spike == FiredStatus::Fired) {
@@ -95,8 +85,6 @@ double SynapticInputCalculator::get_local_and_distant_synaptic_input(const std::
 
         // Walk through the distant in-edges of my neuron
         const auto& [distant_in_edges_plastic, distant_in_edges_static] = network_graph->get_distant_in_edges(neuron_id);
-        //        register_distant_in_edges(distant_in_edges_plastic);
-        //        register_distant_in_edges(distant_in_edges_static);
         for (const auto& [key, edge_val] : distant_in_edges_static) {
             const auto& rank = key.get_rank();
             const auto& initiator_neuron_id = key.get_neuron_id();
@@ -124,20 +112,6 @@ double SynapticInputCalculator::get_local_and_distant_synaptic_input(const std::
                     raw_inh_input[neuron_id.get_neuron_id()] += std::abs(edge_val);
                 }
             }
-        }
-
-    } else if (transmission_delayer->has_delayed_inputs()) {
-        const auto& [last_valid_ref, fired_neurons] = transmission_delayer->get_delayed_inputs_efficient(neuron_id);
-        for (auto i = 0; i < last_valid_ref; i++) {
-            const auto& [src_neuron_id, edge_val] = fired_neurons[i];
-            local_input += synapse_conductance * edge_val;
-            if (edge_val > 0.0) {
-                raw_ex_input[neuron_id.get_neuron_id()] += edge_val;
-            } else {
-                raw_inh_input[neuron_id.get_neuron_id()] += std::abs(edge_val);
-            }
-        }
     }
-
     return local_input;
 }
