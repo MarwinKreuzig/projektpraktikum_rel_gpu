@@ -28,7 +28,8 @@ build-docker:
   script:
     - cd cicd/
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-    - docker build -t registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11 .
+    - docker pull registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11 || true
+    - docker build --cache-from registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11 -t registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11 .
     - docker push registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
 
 build-mpi:
