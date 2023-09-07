@@ -59,7 +59,6 @@ TEST_F(BarnesHutTest, testBarnesHutGetterSetter) {
 }
 
 TEST_F(BarnesHutTest, testUpdateFunctor) {
-    RelearnException::hide_messages = false;
     const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) * 0 + 4;
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(mt);
 
@@ -196,5 +195,4 @@ TEST_F(BarnesHutTest, testUpdateFunctor) {
             }
         }
     }
-    RelearnException::hide_messages = true;
 }
