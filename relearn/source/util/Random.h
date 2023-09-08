@@ -59,10 +59,9 @@ enum class RandomHolderKey : char {
     Connector = 7,
     BackgroundActivity = 8,
     FiringStatusApproximator = 9,
-    TransmissionDelay = 10,
 };
 
-constexpr size_t NUMBER_RANDOM_HOLDER_KEYS = 11;
+constexpr size_t NUMBER_RANDOM_HOLDER_KEYS = 10;
 
 enum class RNGType {
     Mersenne,
