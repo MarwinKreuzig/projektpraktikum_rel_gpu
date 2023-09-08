@@ -7,32 +7,6 @@ variables:
 services:
   - docker:24.0.2-dind
 
-info:
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
-  stage: build
-  services:
-    - docker:24.0.2-dind
-  script:
-    - gcc --version
-    - nvcc --version
-    - cmake --version
-    - mpicc --version
-
-#build-docker:
-#  stage: build
-#  image: docker:24.0.2-dind
-#  services:
-#    - docker:24.0.2-dind
-#  before_script:
-#    - docker info
-#  script:
-#    - cd cicd/
-#    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-#    - docker pull registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11:latest || true
-#    - docker build --cache-from registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11:latest -t registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11:latest .
-#    - docker push registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11:latest
-#
-
 build-mpi:
   rules:
   - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
@@ -45,19 +19,6 @@ build-mpi:
   artifacts:
     paths:
       - relearn/build-docker
-
-build-mpi-cuda:
-  rules:
-  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
-  stage: build
-  before_script:
-    - cd relearn && mkdir build-docker-cuda && cd build-docker-cuda
-  script:
-    - cmake -DENABLE_CLANG_TIDY=0 .. && make -j 16
-  artifacts:
-    paths:
-      - relearn/build-docker-cuda
 
 
 
@@ -89,23 +50,6 @@ test-mpi-once:
     paths:
       - relearn/build-docker
 
-# run tests using the binary built before
-test-mpi-once:
-  rules:
-  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
-  stage: test
-  services:
-    - docker:24.0.2-dind
-  before_script:
-    - cd relearn/build-docker
-  script:
-    - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 ./bin/relearn_tests --gtest_filter=*ONCE
-  dependencies: 
-    - build-mpi
-  artifacts:
-    paths:
-      - relearn/build-docker
       
 # run tests using the binary built before
 test-mpi-multiple:
@@ -139,21 +83,6 @@ build-nompi:
   artifacts:
     paths:
       - relearn/build-docker-nompi
-
-build-nompi-cuda:
-  rules:
-  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
-  stage: build
-  services:
-    - docker:24.0.2-dind
-  before_script:
-    - cd relearn && mkdir build-docker-nompi-cuda && cd build-docker-nompi-cuda
-  script:
-    - cmake -DENABLE_CLANG_TIDY=0 -DENABLE_MPI=0 .. && make -j 16
-  artifacts:
-    paths:
-      - relearn/build-docker-nompi-cuda
 
 # run tests using the binary built before
 test-nompi-once:
@@ -354,3 +283,59 @@ benchmark-hhlr:
     - docker:24.0.2-dind
   script:
     - sshpass -p $HHLR_PW ssh -o StrictHostKeyChecking=no da03robo@lcluster18.hrz.tu-darmstadt.de "./gitlab-script.sh"
+
+
+#info:
+#  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+#  stage: build
+#  services:
+#    - docker:24.0.2-dind
+#  script:
+#    - gcc --version
+#    - nvcc --version
+#    - cmake --version
+#    - mpicc --version
+
+#build-docker:
+#  stage: build
+#  image: docker:24.0.2-dind
+#  services:
+#    - docker:24.0.2-dind
+#  before_script:
+#    - docker info
+#  script:
+#    - cd cicd/
+#    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+#    - docker pull registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11:latest || true
+#    - docker build --cache-from registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11:latest -t registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11:latest .
+#    - docker push registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11:latest
+#
+
+#build-nompi-cuda:
+#  rules:
+#  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+#  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+#  stage: build
+#  services:
+#    - docker:24.0.2-dind
+#  before_script:
+#    - cd relearn && mkdir build-docker-nompi-cuda && cd build-docker-nompi-cuda
+#  script:
+#    - cmake -DENABLE_CLANG_TIDY=0 -DENABLE_MPI=0 .. && make -j 16
+#  artifacts:
+#    paths:
+#      - relearn/build-docker-nompi-cuda
+
+#
+#build-mpi-cuda:
+#  rules:
+#  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+#  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+#  stage: build
+#  before_script:
+#    - cd relearn && mkdir build-docker-cuda && cd build-docker-cuda
+#  script:
+#    - cmake -DENABLE_CLANG_TIDY=0 .. && make -j 16
+#  artifacts:
+#    paths:
+#      - relearn/build-docker-cuda

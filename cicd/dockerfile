@@ -1,25 +1,8 @@
-FROM nvidia/cuda:11.8.0-devel-ubuntu22.04  
+FROM ubuntu:22.04
 
 RUN apt-get update
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qq -y build-essential wget m4 flex bison cmake git software-properties-common
-RUN apt install gcc
-#RUN wget https://ftp.mpi-inf.mpg.de/mirrors/gnu/mirror/gcc.gnu.org/pub/gcc/releases/gcc-11.2.0/gcc-11.2.0.tar.gz
-#RUN tar -xf gcc-11.2.0.tar.gz
-#RUN cd gcc-11.2.0 && mkdir build && cd build && ./../configure  --enable-languages=c,c++
-#RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test
-#RUN apt-get update
-#RUN apt-get install -y gcc-11
-#RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
-#RUN mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
-#RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub
-#RUN add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
-#RUN apt-get update 
-#RUN apt-get -y install cuda
-#RUN wget https://developer.download.nvidia.com/compute/cuda/11.4.4/local_installers/cuda_11.4.4_470.82.01_linux.run
-#RUN sh cuda_11.4.4_470.82.01_linux.run --help
-#RUN sh cuda_11.4.4_470.82.01_linux.run --silent --toolkit --no-opengl-libs
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y clang-tidy
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qq -y build-essential wget m4 flex bison cmake git software-properties-common clang-tidy
 RUN apt-get install -y libboost-all-dev
 RUN apt-get install -y libglu1-mesa-dev
 RUN apt-get install -y freeglut3-dev
@@ -35,5 +18,6 @@ RUN ln -nsf /usr/bin/mpif77.mpich /etc/alternatives/mpif77
 RUN ln -nsf /usr/bin/mpif90.mpich /etc/alternatives/mpif90
 RUN ln -nsf /usr/bin/mpifort.mpich /etc/alternatives/mpifort
 RUN ln -nsf /usr/bin/mpirun.mpich /etc/alternatives/mpirun
+
 
 CMD [ "/bin/bash" ]
