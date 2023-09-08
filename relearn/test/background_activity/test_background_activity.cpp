@@ -599,7 +599,7 @@ TEST_F(BackgroundActivityTest, testFlexibleMultiplePerStepFail) {
     std::vector<std::tuple<RelearnTypes::step_type, std::vector<std::pair<std::string, double>>, std::vector<NeuronID>>> gold;
     std::vector<NeuronID> flattened_neurons;
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, num_steps, mt);
-    const auto num_selected_neurons = RandomAdapter::get_random_integer<size_t>(1, num_neurons, mt);
+    const auto num_selected_neurons = RandomAdapter::get_random_integer<size_t>(num_changes, num_neurons, mt);
     const auto& neurons = NeuronIdAdapter::get_random_rank_neuron_ids(num_neurons, 1, num_selected_neurons, mt) | ranges::to_vector;
 
     auto local_neurons = neurons | ranges::view::filter([my_rank](const auto& rni) { return rni.get_rank() == my_rank; }) | ranges::view::transform([](const auto& rni) { return rni.get_neuron_id(); })

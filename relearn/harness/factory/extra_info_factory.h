@@ -29,7 +29,9 @@ public:
         const auto disable_flags = extra_info->get_disable_flags();
         const auto ids_to_enable = NeuronID::range(disable_flags.size()) | ranges::views::filter(equal_to(UpdateStatus::Disabled), lookup(disable_flags, &NeuronID::get_neuron_id)) | ranges::to_vector;
 
-        extra_info->set_enabled_neurons(ids_to_enable);
+        if (!ids_to_enable.empty()) {
+            extra_info->set_enabled_neurons(ids_to_enable);
+        }
     }
 
     static void disable_all(const std::shared_ptr<NeuronsExtraInfo>& extra_info) {
@@ -37,6 +39,8 @@ public:
 
         const auto ids_to_disable = NeuronID::range(disable_flags.size()) | ranges::views::filter(equal_to(UpdateStatus::Enabled), lookup(disable_flags, &NeuronID::get_neuron_id)) | ranges::to_vector;
 
-        extra_info->set_disabled_neurons(ids_to_disable);
+        if (!ids_to_disable.empty()) {
+            extra_info->set_disabled_neurons(ids_to_disable);
+        }
     }
 };

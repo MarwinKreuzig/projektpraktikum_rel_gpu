@@ -368,14 +368,12 @@ test-mpi-cuda-multiple:
   script:
     - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 ./bin/relearn_tests --gtest_filter=*-*ONCE  --gtest_repeat=10 --gtest_shuffle
   dependencies:
-    - build-mpi
+    - build-mpi-cuda
   artifacts:
     paths:
       - relearn/build-docker-cuda
 
 deploy-cuda:
-  rules:
-    - if: $TEST_DEPLOY == "TRUE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:

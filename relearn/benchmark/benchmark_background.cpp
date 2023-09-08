@@ -27,7 +27,7 @@ static void BM_null_background_activity_100(benchmark::State& state) {
     background->set_extra_infos(std::move(extra_info));
 
     for (auto _ : state) {
-        background->update_input(1000);
+        background->update_input(1000, true);
         state.PauseTiming();
 
         auto sum = 0.0;
@@ -54,7 +54,7 @@ static void BM_constant_background_activity_100(benchmark::State& state) {
     background->set_extra_infos(std::move(extra_info));
 
     for (auto _ : state) {
-        background->update_input(1000);
+        background->update_input(1000, true);
         state.PauseTiming();
 
         auto sum = 0.0;
@@ -81,7 +81,7 @@ static void BM_normal_background_activity_100(benchmark::State& state) {
     background->set_extra_infos(std::move(extra_info));
 
     for (auto _ : state) {
-        background->update_input(1000);
+        background->update_input(1000, true);
         state.PauseTiming();
 
         auto sum = 0.0;
@@ -108,7 +108,7 @@ static void BM_fast_normal_background_activity_100(benchmark::State& state) {
     background->set_extra_infos(std::move(extra_info));
 
     for (auto _ : state) {
-        background->update_input(1000);
+        background->update_input(1000, true);
         state.PauseTiming();
 
         auto sum = 0.0;

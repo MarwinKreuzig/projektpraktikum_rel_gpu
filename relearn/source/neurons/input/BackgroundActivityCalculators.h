@@ -333,12 +333,11 @@ protected:
      * @return The background activity for all neurons
      */
     [[nodiscard]] std::span<const double> get_background_activity_cpu() const noexcept override {
-        RelearnException::fail("FastNormalBackgroundActivityCalculator::get_background_activity: Not supported method with this calculator");
+        return std::span(&pre_drawn_values[offset], get_number_neurons());
     }
 
     void init_gpu(const number_neurons_type number_neurons) override {
         BackgroundActivityCalculator::init_gpu(number_neurons);
-        // RelearnException::fail("No gpu support");
     }
 
 private:
