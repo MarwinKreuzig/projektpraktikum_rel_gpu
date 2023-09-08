@@ -13,7 +13,7 @@
 #include "FiredStatusCommunicator.h"
 
 #include "Types.h"
-#include "neurons/enums/FiredStatus.h"
+#include "enums/FiredStatus.h"
 #include "util/MPIRank.h"
 #include "util/NeuronID.h"
 #include "util/RelearnException.h"
@@ -59,7 +59,7 @@ public:
     /**
      * @brief Additionally created the given number of neurons
      * @param creation_count The number of neurons to create, must be > 0
-     * @exception Throws a RelearnException if creation_count == 0 or if init(...) was not called before
+     * @exception Throws a RelearnException if creation_count == 0 or if init_cpu(...) was not called before
      */
     void create_neurons(const number_neurons_type creation_count) override {
         const auto old_size = get_number_local_neurons();

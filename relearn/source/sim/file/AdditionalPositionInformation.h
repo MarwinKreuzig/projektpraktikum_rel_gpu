@@ -12,7 +12,7 @@
 
 #include "Types.h"
 
-#include "neurons/enums/SignalType.h"
+#include "enums/SignalType.h"
 
 #include <cstdint>
 #include <string>

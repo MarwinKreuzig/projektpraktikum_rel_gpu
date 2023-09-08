@@ -11,17 +11,21 @@
  */
 
 #include "Types.h"
+#include "gpu/CudaHelper.h"
+#include "gpu/Interface.h"
 #include "mpi/CommunicationMap.h"
-#include "neurons/enums/UpdateStatus.h"
+#include "enums/UpdateStatus.h"
 #include "util/NeuronID.h"
 #include "util/RelearnException.h"
-#include "neurons/enums/FiredStatus.h"
+#include "enums/FiredStatus.h"
 #include "mpi/MPIWrapper.h"
 #include "util/Timers.h"
 
 #include <bitset>
+#include <memory>
 #include <span>
 #include <string>
+#include <iostream>
 #include <vector>
 
 #include <range/v3/algorithm/fill.hpp>
@@ -39,6 +43,14 @@ public:
     static constexpr unsigned int fire_history_length = 1000;
     constexpr static bool fire_history_enabled = true;
 
+    std::unique_ptr<gpu::neurons::NeuronsExtraInfosHandle> gpu_handle{};
+
+    NeuronsExtraInfo() {
+        if(CudaHelper::is_cuda_available()) {
+            this->gpu_handle = std::move(gpu::neurons::create());
+        }
+    }
+
     /**
      * @brief Initializes a NeuronsExtraInfo that holds at most the given number of neurons.
      *      Must only be called once. Sets up all neurons so that they update, but does not initialize the positions.
@@ -46,13 +58,25 @@ public:
      * @exception Throws an RelearnException if number_neurons is 0 or if called multiple times.
      */
     void init(const number_neurons_type number_neurons) {
-        RelearnException::check(number_neurons > 0, "NeuronsExtraInfo::init: number_neurons must be larger than 0.");
-        RelearnException::check(size == 0, "NeuronsExtraInfo::init: NeuronsExtraInfo initialized two times, its size is already {}", size);
+        RelearnException::check(number_neurons > 0, "NeuronsExtraInfo::init_cpu: number_neurons must be larger than 0.");
+        RelearnException::check(size == 0, "NeuronsExtraInfo::init_cpu: NeuronsExtraInfo initialized two times, its size is already {}", size);
 
         size = number_neurons;
         update_status.resize(number_neurons, UpdateStatus::Enabled);
         deletions_log.resize(number_neurons, {});
         fire_history.resize(size);
+
+        if(CudaHelper::is_cuda_available()) {
+            gpu_handle->init(number_neurons);
+        }
+
+        
+    }
+
+    const std::unique_ptr<gpu::neurons::NeuronsExtraInfosHandle>& get_gpu_handle() {
+        RelearnException::check(CudaHelper::is_cuda_available(), "NeuronsExtraInfos::get_gpu_handle: GPU not supported");
+        RelearnException::check(gpu_handle!=nullptr, "NeuronsExtraInfos::get_gpu_handle: GPU handle not set");
+        return gpu_handle;
     }
 
     /**
@@ -80,6 +104,11 @@ public:
         RelearnException::check(!enabled_neurons.empty(), "NeuronsExtraInformation::set_enabled_neurons: enabled_neurons is empty");
 
         ranges::fill(enabled_neurons | ranges::views::transform(get_update_status), UpdateStatus::Enabled);
+
+        if(CudaHelper::is_cuda_available()) {
+            const auto ids = CudaHelper::convert_neuron_ids_to_primitives(enabled_neurons);
+            gpu_handle->enable_neurons(ids);
+        }
     }
 
     /**
@@ -103,6 +132,11 @@ public:
         };
 
         ranges::fill(disabled_neurons | ranges::views::transform(get_update_status), UpdateStatus::Disabled);
+
+        if(CudaHelper::is_cuda_available()) {
+            const auto ids = CudaHelper::convert_neuron_ids_to_primitives(disabled_neurons);
+            gpu_handle->disable_neurons(ids);
+        }
     }
 
     /**
@@ -253,4 +287,6 @@ private:
 
     std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>>> deletions_log{};
     std::vector<std::bitset<fire_history_length>> fire_history{};
+
+    
 };

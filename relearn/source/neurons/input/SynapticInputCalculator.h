@@ -13,10 +13,9 @@
 #include "Types.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/NeuronsExtraInfo.h"
-#include "neurons/enums/FiredStatus.h"
-#include "neurons/enums/UpdateStatus.h"
+#include "enums/FiredStatus.h"
+#include "enums/UpdateStatus.h"
 #include "neurons/input/FiredStatusCommunicator.h"
-#include "neurons/input/TransmissionDelayer.h"
 #include "neurons/models/ModelParameter.h"
 #include "neurons/NetworkGraph.h"
 #include "util/RelearnException.h"
@@ -83,9 +82,8 @@ public:
      * @param communicator The communicator for the fired status of distant neurons, not nullptr
      * @exception Throws a RelearnException if communicator is empty
      */
-    SynapticInputCalculator(const double synapse_conductance, std::unique_ptr<FiredStatusCommunicator>&& communicator, std::unique_ptr<TransmissionDelayer>&& transmission_delayer)
+    SynapticInputCalculator(const double synapse_conductance, std::unique_ptr<FiredStatusCommunicator>&& communicator)
         : synapse_conductance(synapse_conductance)
-        , transmission_delayer(std::move(transmission_delayer))
         , fired_status_comm(std::move(communicator)) {
         RelearnException::check(fired_status_comm.operator bool(), "SynapticInputCalculator::SynapticInputCalculator: communicator was empty.");
     }
@@ -132,7 +130,7 @@ public:
     /**
      * @brief Additionally created the given number of neurons
      * @param creation_count The number of neurons to create, must be > 0
-     * @exception Throws a RelearnException if creation_count == 0 or if init(...) was not called before
+     * @exception Throws a RelearnException if creation_count == 0 or if init_cpu(...) was not called before
      */
     void create_neurons(number_neurons_type creation_count);
 
@@ -155,11 +153,6 @@ public:
 
         fired_status_comm->set_local_fired_status(step, fired);
         fired_status_comm->exchange_fired_status(step);
-
-        if (transmission_delayer != nullptr) {
-            transmission_delayer->prepare_update(number_local_neurons);
-            update_transmission_delayer(fired);
-        }
 
         update_synaptic_input(fired);
     }
@@ -208,10 +201,6 @@ public:
      */
     [[nodiscard]] double get_synapse_conductance() const noexcept {
         return synapse_conductance;
-    }
-
-    [[nodiscard]] const std::unique_ptr<TransmissionDelayer>& get_transmission_delayer() const noexcept {
-        return transmission_delayer;
     }
 
     /**
@@ -263,7 +252,6 @@ protected:
 
     [[nodiscard]] double get_local_and_distant_synaptic_input(const std::span<const FiredStatus> fired, const NeuronID& neuron_id);
 
-    std::unique_ptr<TransmissionDelayer> transmission_delayer;
 
 protected:
     std::shared_ptr<NeuronsExtraInfo> extra_infos{};
@@ -280,60 +268,4 @@ private:
     std::vector<double> raw_inh_input{};
 
     std::unique_ptr<FiredStatusCommunicator> fired_status_comm{};
-
-    void update_transmission_delayer(const std::span<const FiredStatus> fired) {
-        RelearnException::check(transmission_delayer != nullptr, "SynapticInputCalculator::update_transmission_delayer: TransmissionDelayer is null");
-        Timers::start(TimerRegion::CALC_UPDATE_TRANSMISSION);
-
-        // auto register_local_in_edges = [this, fired](const NeuronID& neuron_id, const std::vector<std::pair<NeuronID, RelearnTypes::static_synapse_weight>>& local_in_edges) {
-        // };
-
-        //        auto register_distant_in_edges = [this](const NeuronID& neuron_id, const std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>>& distant_in_edges) {
-        //        };
-
-        for (const auto& neuron_id : NeuronID::range(number_local_neurons)) {
-            // Walk through local in-edges
-            const auto& [local_in_edges_plastic, local_in_edges_static] = network_graph->get_local_in_edges(neuron_id);
-            const auto my_rank = MPIWrapper::get_my_rank();
-            for (const auto& [src_neuron_id, edge_val] : local_in_edges_static) {
-                const auto spike = fired[src_neuron_id.get_neuron_id()];
-                if (spike == FiredStatus::Fired) {
-                    transmission_delayer->register_fired_input(neuron_id, RankNeuronId(my_rank, src_neuron_id),
-                        edge_val, number_local_neurons);
-                }
-            }
-
-            for (const auto& [src_neuron_id, edge_val] : local_in_edges_plastic) {
-                const auto spike = fired[src_neuron_id.get_neuron_id()];
-                if (spike == FiredStatus::Fired) {
-                    transmission_delayer->register_fired_input(neuron_id, RankNeuronId(my_rank, src_neuron_id),
-                        edge_val, number_local_neurons);
-                }
-            }
-
-            // Walk through the distant in-edges of my neuron
-            const auto& [distant_in_edges_plastic, distant_in_edges_static] = network_graph->get_distant_in_edges(neuron_id);
-            for (const auto& [key, edge_val] : distant_in_edges_plastic) {
-                const auto& rank = key.get_rank();
-                const auto& initiator_neuron_id = key.get_neuron_id();
-
-                const auto contains_id = fired_status_comm->contains(rank, initiator_neuron_id);
-                if (contains_id) {
-                    transmission_delayer->register_fired_input(neuron_id, RankNeuronId(rank, initiator_neuron_id),
-                        edge_val, number_local_neurons);
-                }
-            }
-            for (const auto& [key, edge_val] : distant_in_edges_static) {
-                const auto& rank = key.get_rank();
-                const auto& initiator_neuron_id = key.get_neuron_id();
-
-                const auto contains_id = fired_status_comm->contains(rank, initiator_neuron_id);
-                if (contains_id) {
-                    transmission_delayer->register_fired_input(neuron_id, RankNeuronId(rank, initiator_neuron_id),
-                        edge_val, number_local_neurons);
-                }
-            }
-        }
-        Timers::stop_and_add(TimerRegion::CALC_UPDATE_TRANSMISSION);
-    }
 };

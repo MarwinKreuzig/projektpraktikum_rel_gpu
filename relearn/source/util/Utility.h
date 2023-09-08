@@ -10,9 +10,11 @@
  *
  */
 
-#include "neurons/enums/UpdateStatus.h"
+#include "enums/UpdateStatus.h"
 #include "util/RelearnException.h"
 #include "util/StringUtil.h"
+
+#include <range/v3/range/conversion.hpp>
 
 #include <filesystem>
 #include <functional>
@@ -80,6 +82,11 @@ static constexpr T factorial(T value) noexcept {
 
     return result;
 }
+
+template <typename T>
+    static std::vector<std::decay_t<T>> vectorify_span(const std::span<T> span) {
+        return span | ranges::to_vector;
+    }
 
 /**
  * @brief Looks for a given file in a directory. Path: directory / prefix rank suffix. Tries different formats for the rank.

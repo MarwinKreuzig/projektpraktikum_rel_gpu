@@ -46,6 +46,10 @@ void NeuronsExtraInfo::create_neurons(const number_neurons_type creation_count) 
     }
 
     size = new_size;
+
+    if(CudaHelper::is_cuda_available()) {
+         gpu_handle->create_neurons(creation_count);
+    }
 }
 
 CommunicationMap<RelearnTypes::position_type> NeuronsExtraInfo::get_positions_for(const CommunicationMap<NeuronID>& local_neurons) {

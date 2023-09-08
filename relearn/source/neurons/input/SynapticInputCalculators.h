@@ -24,15 +24,15 @@ public:
      * @param communicator The communicator for the fired status of distant neurons, not nullptr
      * @exception Throws a RelearnException if communicator is empty
      */
-    LinearSynapticInputCalculator(const double synapse_conductance, std::unique_ptr<FiredStatusCommunicator>&& communicator, std::unique_ptr<TransmissionDelayer>&& transmission_delayer)
-        : SynapticInputCalculator(synapse_conductance, std::move(communicator), std::move(transmission_delayer)) { }
+    LinearSynapticInputCalculator(const double synapse_conductance, std::unique_ptr<FiredStatusCommunicator>&& communicator)
+        : SynapticInputCalculator(synapse_conductance, std::move(communicator)) { }
 
     /**
      * @brief Creates a clone of this instance (without neurons), copies all parameters
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<SynapticInputCalculator> clone() const final {
-        return std::make_unique<LinearSynapticInputCalculator>(get_synapse_conductance(), get_fired_status_communicator()->clone(), get_transmission_delayer()->clone());
+        return std::make_unique<LinearSynapticInputCalculator>(get_synapse_conductance(), get_fired_status_communicator()->clone());
     }
 
 protected:
@@ -52,8 +52,8 @@ public:
      * @param communicator The communicator for the fired status of distant neurons, not nullptr
      * @exception Throws a RelearnException if communicator is empty
      */
-    LogarithmicSynapticInputCalculator(const double synapse_conductance, const double scaling_factor, std::unique_ptr<FiredStatusCommunicator>&& communicator, std::unique_ptr<TransmissionDelayer>&& transmission_delayer)
-        : SynapticInputCalculator(synapse_conductance, std::move(communicator), std::move(transmission_delayer))
+    LogarithmicSynapticInputCalculator(const double synapse_conductance, const double scaling_factor, std::unique_ptr<FiredStatusCommunicator>&& communicator)
+        : SynapticInputCalculator(synapse_conductance, std::move(communicator))
         , scale_factor(scaling_factor) { }
 
     /**
@@ -61,7 +61,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<SynapticInputCalculator> clone() const final {
-        return std::make_unique<LogarithmicSynapticInputCalculator>(get_synapse_conductance(), get_scale_factor(), get_fired_status_communicator()->clone(), get_transmission_delayer()->clone());
+        return std::make_unique<LogarithmicSynapticInputCalculator>(get_synapse_conductance(), get_scale_factor(), get_fired_status_communicator()->clone());
     }
 
     /**
@@ -104,8 +104,8 @@ public:
      * @param communicator The communicator for the fired status of distant neurons, not nullptr
      * @exception Throws a RelearnException if communicator is empty
      */
-    HyperbolicTangentSynapticInputCalculator(const double synapse_conductance, const double scaling_factor, std::unique_ptr<FiredStatusCommunicator>&& communicator, std::unique_ptr<TransmissionDelayer>&& transmission_delayer)
-        : SynapticInputCalculator(synapse_conductance, std::move(communicator), std::move(transmission_delayer))
+    HyperbolicTangentSynapticInputCalculator(const double synapse_conductance, const double scaling_factor, std::unique_ptr<FiredStatusCommunicator>&& communicator)
+        : SynapticInputCalculator(synapse_conductance, std::move(communicator))
         , scale_factor(scaling_factor) { }
 
     /**
@@ -113,7 +113,7 @@ public:
      * @return A copy of this instance
      */
     [[nodiscard]] std::unique_ptr<SynapticInputCalculator> clone() const final {
-        return std::make_unique<HyperbolicTangentSynapticInputCalculator>(get_synapse_conductance(), get_scale_factor(), get_fired_status_communicator()->clone(), get_transmission_delayer()->clone());
+        return std::make_unique<HyperbolicTangentSynapticInputCalculator>(get_synapse_conductance(), get_scale_factor(), get_fired_status_communicator()->clone());
     }
 
     /**

@@ -1,5 +1,6 @@
 #pragma once
 
+
 /*
  * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
@@ -10,9 +11,7 @@
  *
  */
 
-#include "fmt/ostream.h"
-
-#include <ostream>
+#include "gpu/Macros.h"
 
 /**
  * An instance of this enum signals if a neuron should be updated or not.
@@ -22,6 +21,11 @@ enum class UpdateStatus : char {
     Enabled = 1,
     Static = 2
 };
+
+#ifdef HOST_COMPILER
+
+#include <ostream>
+#include "fmt/ostream.h"
 
 /**
  * @brief Pretty-prints the update status to the chosen stream
@@ -47,3 +51,5 @@ inline std::ostream& operator<<(std::ostream& out, const UpdateStatus update_sta
 
 template <>
 struct fmt::formatter<UpdateStatus> : ostream_formatter { };
+
+#endif

@@ -12,6 +12,7 @@
 #include "Types.h"
 #include "algorithm/Algorithms.h"
 #include "algorithm/Kernel/Kernel.h"
+#include "gpu/CudaHelper.h"
 #include "io/parser/MonitorParser.h"
 #include "io/CalciumIO.h"
 #include "io/InteractiveNeuronIO.h"
@@ -19,7 +20,7 @@
 #include "mpi/CommunicationMap.h"
 #include "mpi/MPIWrapper.h"
 #include "neurons/CalciumCalculator.h"
-#include "neurons/enums/ElementType.h"
+#include "enums/ElementType.h"
 #include "neurons/LocalAreaTranslator.h"
 #include "neurons/helper/NeuronMonitor.h"
 #include "neurons/helper/SynapseDeletionFinder.h"
@@ -30,7 +31,6 @@
 #include "neurons/input/FiredStatusCommunicator.h"
 #include "neurons/input/SynapticInputCalculator.h"
 #include "neurons/input/SynapticInputCalculators.h"
-#include "neurons/input/TransformationFunctions.h"
 #include "neurons/models/NeuronModels.h"
 #include "neurons/models/SynapticElements.h"
 #include "sim/Essentials.h"
@@ -199,6 +199,11 @@ int main(int argc, char** argv) {
     } else {
         LogFiles::print_message_rank(MPIRank::root_rank(), "I'm skipping Debug Checks");
     }
+    if (CudaHelper::is_cuda_available()) {
+        LogFiles::print_message_rank(MPIRank::root_rank(), "I'm using cuda");
+    } else {
+        LogFiles::print_message_rank(MPIRank::root_rank(), "I'm not using cuda");
+    }
 
     const auto my_rank = MPIWrapper::get_my_rank();
     const auto num_ranks = MPIWrapper::get_num_ranks();
@@ -273,18 +278,7 @@ int main(int argc, char** argv) {
         { "flexible", BackgroundActivityCalculatorType::Flexible }
     };
 
-    TransformationFunctionType chosen_background_transformation = TransformationFunctionType::Identity;
-    std::map<std::string, TransformationFunctionType> cli_parse_transformation_type{
-        { "identity", TransformationFunctionType::Identity },
-        { "linear", TransformationFunctionType::Linear }
-    };
-
-    TransmissionDelayType chosen_transmission_delay_type = TransmissionDelayType::None;
-    std::map<std::string, TransmissionDelayType> cli_parse_transmission_delay_type{
-        { "constant", TransmissionDelayType::Constant },
-        { "random", TransmissionDelayType::Random },
-        { "none", TransmissionDelayType::None }
-    };
+    CudaHelper::set_use_cuda(true);
 
     RelearnTypes::step_type simulation_steps{};
     app.add_option("-s,--steps", simulation_steps, "Simulation steps in ms.")->required();
@@ -428,20 +422,6 @@ int main(int argc, char** argv) {
     auto* const opt_stddev_background_activity = app.add_option("--background-activity-stddev", background_activity_stddev,
         "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as N(mean, stddev)");
 
-    auto* const opt_background_transformation_type = app.add_option("--background-transformation", chosen_background_transformation, "The type of the background activity transformation. Default: Identity");
-    opt_background_transformation_type->transform(CLI::CheckedTransformer(cli_parse_transformation_type, CLI::ignore_case));
-
-    double background_transformation_factor{ LinearTransformation::default_factor };
-    auto* const opt_stddev_background_transformation_factor = app.add_option("--background-transformation-factor", background_transformation_factor,
-        "The linear factor for the background activity transformation");
-
-    double background_transformation_cut_off{ LinearTransformation::default_factor_cutoff };
-    auto* const opt_stddev_background_transformation_cut_off = app.add_option("--background-transformation-cutoff", background_transformation_cut_off,
-        "The min/max of the linear factor for the background activity transformation");
-
-    double background_transformation_factor_start{ LinearTransformation::default_factor_start };
-    auto* const opt_stddev_background_transformation_factor_start = app.add_option("--background-transformation-factor-start", background_transformation_factor_start,
-        "The start of the linear function for the background actvity transformation");
 
     double synapse_conductance{ SynapticInputCalculator::default_conductance };
     app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transferred to its neighbors when a neuron spikes. Default is 0.03");
@@ -526,18 +506,6 @@ int main(int argc, char** argv) {
     double percentage_initial_fired_neurons{ 0.0 };
     app.add_option("--percentage-initial-fired-neurons", percentage_initial_fired_neurons, "The percentage of neurons that fired in the (imaginary) 0th step. Must be from [0.0, 1.0]. Default ist 0.0");
 
-    auto* const opt_transmission_delay_type = app.add_option("--transmission-delay", chosen_transmission_delay_type, "The type of the delay between the trnsmission of the firing of a source neuron to a target neuron. Default: constant");
-    opt_transmission_delay_type->transform(CLI::CheckedTransformer(cli_parse_transmission_delay_type, CLI::ignore_case));
-
-    RelearnTypes::step_type transmission_delay_constant{ 0 };
-    auto* const opt_transmission_delay_constant = app.add_option("--transmission-delay-constant", transmission_delay_constant, "The delay in steps that a synapse needs to transmit to another neuron. Default ist 0");
-
-    double transmission_delay_mean{ 0 };
-    auto* const opt_transmission_delay_mean = app.add_option("--transmission-delay-mean", transmission_delay_mean, "The mean of a normal distribution for the delay in steps that a synapse needs to transmit to another neuron");
-
-    double transmission_delay_stddev{ 1 };
-    auto* const opt_transmission_delay_stddev = app.add_option("--transmission-delay-stddev", transmission_delay_stddev, "The standard deviation of a normal distribution for the delay in steps that a synapse needs to transmit to another neuron");
-
     monitor_option->excludes(flag_monitor_all);
     flag_monitor_all->excludes(monitor_option);
 
@@ -575,9 +543,6 @@ int main(int argc, char** argv) {
     opt_log_path->check(CLI::ExistingDirectory);
 
     opt_file_external_stimulation->check(CLI::ExistingFile);
-
-    opt_transmission_delay_constant->excludes(opt_transmission_delay_mean);
-    opt_transmission_delay_constant->excludes(opt_transmission_delay_stddev);
 
     CLI11_PARSE(app, argc, argv);
 
@@ -652,9 +617,8 @@ int main(int argc, char** argv) {
 
         LogFiles::set_log_status(LogFiles::EventType::Events, !static_cast<bool>(*flag_enable_printing_events));
 
-        if (static_cast<bool>(*flag_disable_printing_positions)) {
-            LogFiles::set_log_status(LogFiles::EventType::Positions, true);
-        }
+        LogFiles::set_log_status(LogFiles::EventType::Positions, static_cast<bool>(*flag_disable_printing_positions));
+        
 
         if (static_cast<bool>(*flag_disable_printing_network)) {
             LogFiles::set_log_status(LogFiles::EventType::InNetwork, true);
@@ -670,10 +634,9 @@ int main(int argc, char** argv) {
             LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdateLocal, true);
         }
 
-        if (static_cast<bool>(*flag_disable_printing_calcium)) {
-            LogFiles::set_log_status(LogFiles::EventType::CalciumValues, true);
-            LogFiles::set_log_status(LogFiles::EventType::ExtremeCalciumValues, true);
-        }
+            LogFiles::set_log_status(LogFiles::EventType::CalciumValues, static_cast<bool>(*flag_disable_printing_calcium));
+            LogFiles::set_log_status(LogFiles::EventType::ExtremeCalciumValues, static_cast<bool>(*flag_disable_printing_calcium));
+    
 
         if (static_cast<bool>(*flag_disable_printing_fire_rate)) {
             LogFiles::set_log_status(LogFiles::EventType::FireRates, true);
@@ -836,14 +799,6 @@ int main(int argc, char** argv) {
     };
     auto subdomain = construct_subdomain();
 
-    std::unique_ptr<TransformationFunction> transformation_function;
-    if (chosen_background_transformation == TransformationFunctionType::Identity) {
-        transformation_function = std::make_unique<IdentityTransformation>();
-    } else if (chosen_background_transformation == TransformationFunctionType::Linear) {
-        transformation_function = std::make_unique<LinearTransformation>(background_transformation_factor, background_transformation_factor_start, background_transformation_cut_off);
-    } else {
-        RelearnException::fail("Unknown background activity transformation {}", chosen_background_transformation);
-    }
 
     auto construct_background_activity_calculator = [&]() -> std::unique_ptr<BackgroundActivityCalculator> {
         if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Null) {
@@ -894,32 +849,19 @@ int main(int argc, char** argv) {
         return std::make_unique<FiredStatusApproximator>(MPIWrapper::get_num_ranks());
     };
 
-    std::unique_ptr<TransmissionDelayer> transmission_delayer{ nullptr };
-    if (chosen_transmission_delay_type == TransmissionDelayType::None) {
-        transmission_delayer = nullptr;
-    } else if (chosen_transmission_delay_type == TransmissionDelayType::Constant) {
-        transmission_delayer = std::make_unique<ConstantTransmissionDelayer>(transmission_delay_constant);
-    } else if (chosen_transmission_delay_type == TransmissionDelayType::Random) {
-        if (!*opt_transmission_delay_mean || !*opt_transmission_delay_stddev) {
-            RelearnException::fail("Mean and standard deviation are required for random transmission delay");
-        }
-        transmission_delayer = std::make_unique<RandomizedTransmissionDelayer>(transmission_delay_mean, transmission_delay_stddev);
-    } else {
-        RelearnException::fail("Unknown transmission delayer type {}", chosen_transmission_delay_type);
-    }
 
     auto construct_input = [&]() -> std::unique_ptr<SynapticInputCalculator> {
         auto fired_status_communicator = construct_fired_status_communicator();
 
         if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Linear) {
-            return std::make_unique<LinearSynapticInputCalculator>(synapse_conductance, std::move(fired_status_communicator), std::move(transmission_delayer));
+            return std::make_unique<LinearSynapticInputCalculator>(synapse_conductance, std::move(fired_status_communicator));
         }
         if (chosen_synapse_input_calculator_type == SynapticInputCalculatorType::Logarithmic) {
-            return std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, input_scale, std::move(fired_status_communicator), std::move(transmission_delayer));
+            return std::make_unique<LogarithmicSynapticInputCalculator>(synapse_conductance, input_scale, std::move(fired_status_communicator));
         }
 
         RelearnException::check(chosen_synapse_input_calculator_type == SynapticInputCalculatorType::HyperbolicTangent, "Chose a synaptic input calculator that is not implemented");
-        return std::make_unique<HyperbolicTangentSynapticInputCalculator>(synapse_conductance, input_scale, std::move(fired_status_communicator), std::move(transmission_delayer));
+        return std::make_unique<HyperbolicTangentSynapticInputCalculator>(synapse_conductance, input_scale, std::move(fired_status_communicator));
     };
     auto input_calculator = construct_input();
 

@@ -10,7 +10,7 @@
  *
  */
 
-#include "neurons/enums/FiredStatus.h"
+#include "enums/FiredStatus.h"
 #include "util/NeuronID.h"
 
 #include <range/v3/algorithm/fill.hpp>
@@ -48,7 +48,7 @@ public:
     }
 
     void update_activity() {
-        model.update_activity();
+        model.update_activity_cpu();
     }
 
     void update_activity_benchmark() {

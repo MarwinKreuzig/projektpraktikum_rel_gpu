@@ -12,7 +12,7 @@
 
 #include "Config.h"
 #include "Types.h"
-#include "neurons/enums/SignalType.h"
+#include "enums/SignalType.h"
 #include "sim/LoadedNeuron.h"
 #include "sim/SynapseLoader.h"
 #include "util/RelearnException.h"

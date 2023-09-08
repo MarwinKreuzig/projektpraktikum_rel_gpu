@@ -18,6 +18,7 @@
 #include <vector>
 
 #include <range/v3/algorithm/copy.hpp>
+#include <range/v3/view/indices.hpp>
 
 class StimulusAdapter {
 public:

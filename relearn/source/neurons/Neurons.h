@@ -17,11 +17,11 @@
 #include "models/SynapticElements.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/CalciumCalculator.h"
-#include "neurons/enums/ElementType.h"
+#include "enums/ElementType.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/NeuronsExtraInfo.h"
-#include "neurons/enums/SignalType.h"
-#include "neurons/enums/UpdateStatus.h"
+#include "enums/SignalType.h"
+#include "enums/UpdateStatus.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "neurons/helper/SynapseDeletionFinder.h"
 #include "neurons/helper/SynapseDeletionRequests.h"
@@ -321,6 +321,7 @@ public:
      */
     void enable_neurons(const std::span<const NeuronID> neuron_ids) {
         extra_info->set_enabled_neurons(neuron_ids);
+        neuron_model->enable_neurons(neuron_ids);
     }
 
     /**

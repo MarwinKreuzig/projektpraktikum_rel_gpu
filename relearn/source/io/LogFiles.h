@@ -65,7 +65,7 @@ public:
      * @brief Sets the folder path in which the log files will be generated. Automatically appends '/' if necessary.
      *      Default is: "../output/"
      * @param path_to_containing_folder The path to the folder in which the files should be generated
-     * @exception Throws a RelearnException if called after init()
+     * @exception Throws a RelearnException if called after init_cpu()
      */
     static void set_output_path(const std::filesystem::path& path_to_containing_folder) {
         RelearnException::check(!initialized, "LogFiles::set_output_path: LogFiles are already initialized");
@@ -84,7 +84,7 @@ public:
      * @brief Sets the general prefix for every log file.
      *      Default is: "rank_"
      * @param prefix The prefix for every file
-     * @exception Throws a RelearnException if called after init()
+     * @exception Throws a RelearnException if called after init_cpu()
      */
     static void set_general_prefix(const std::string& prefix) {
         RelearnException::check(!initialized, "LogFiles::set_general_prefix: LogFiles are already initialized");
@@ -119,7 +119,7 @@ public:
      * @brief Sets the status of the event type, i.e., if the log for that type is disabled
      * @param type The event type
      * @param status True iff the log shall be disabled
-     * @exception Throws a RelearnException if called after init()
+     * @exception Throws a RelearnException if called after init_cpu()
      */
     static void set_log_status(const EventType type, const bool disabled) {
         RelearnException::check(!initialized, "LogFiles::set_log_status: LogFiles are already initialized");

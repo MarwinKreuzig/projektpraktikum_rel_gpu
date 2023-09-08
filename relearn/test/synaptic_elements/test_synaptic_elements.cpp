@@ -19,7 +19,7 @@
 #include "adapter/synaptic_elements/SynapticElementsAdapter.h"
 
 #include "neurons/NeuronsExtraInfo.h"
-#include "neurons/enums/UpdateStatus.h"
+#include "enums/UpdateStatus.h"
 #include "neurons/models/SynapticElements.h"
 #include "util/Random.h"
 #include "util/NeuronID.h"
@@ -30,6 +30,8 @@
 #include <sstream>
 
 #include <range/v3/functional/arithmetic.hpp>
+#include <range/v3/view/indices.hpp>
+#include <range/v3/view/zip.hpp>
 #include <range/v3/algorithm/count.hpp>
 #include <range/v3/algorithm/sort.hpp>
 

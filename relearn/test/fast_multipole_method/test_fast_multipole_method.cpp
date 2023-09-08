@@ -25,6 +25,7 @@
 
 #include <range/v3/action/sort.hpp>
 #include <range/v3/algorithm/sort.hpp>
+#include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/repeat_n.hpp>
 

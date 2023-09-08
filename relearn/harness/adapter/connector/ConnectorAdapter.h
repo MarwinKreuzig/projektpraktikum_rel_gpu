@@ -17,8 +17,11 @@
 #include "adapter/random/RandomAdapter.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/helper/SynapseCreationRequests.h"
-#include "neurons/enums/SignalType.h"
+#include "enums/SignalType.h"
 #include "util/NeuronID.h"
+
+#include <range/v3/view/indices.hpp>
+
 
 #include <random>
 #include <tuple>

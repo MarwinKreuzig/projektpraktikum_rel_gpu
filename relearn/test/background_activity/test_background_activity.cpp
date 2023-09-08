@@ -13,7 +13,8 @@
 #include "adapter/neuron_assignment/NeuronAssignmentAdapter.h"
 #include "adapter/neuron_id/NeuronIdAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"
-#include "neurons/enums/UpdateStatus.h"
+#include "enums/UpdateStatus.h"
+#include "gpu/CudaHelper.h"
 #include "neurons/input/BackgroundActivityCalculator.h"
 #include "neurons/input/BackgroundActivityCalculators.h"
 #include "util/NeuronID.h"
@@ -136,7 +137,7 @@ TEST_F(BackgroundActivityTest, testNullBackgroundActivityConstruct) {
     const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
 
-    test_init_create(background_calculator, number_neurons_init, number_neurons_create, mt);
+    test_init_create(background_calculator, number_neurons_init, number_neurons_create, mt, true, true);
 }
 
 TEST_F(BackgroundActivityTest, testConstantBackgroundActivityConstruct) {
@@ -147,7 +148,7 @@ TEST_F(BackgroundActivityTest, testConstantBackgroundActivityConstruct) {
     const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
 
-    test_init_create(background_calculator, number_neurons_init, number_neurons_create, mt);
+    test_init_create(background_calculator, number_neurons_init, number_neurons_create, mt, true,true);
 
     const auto& parameters = background_calculator->get_parameter();
     ASSERT_EQ(parameters.size(), 1);
@@ -169,7 +170,7 @@ TEST_F(BackgroundActivityTest, testNormalBackgroundActivityConstruct) {
     const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
 
-    test_init_create(background_calculator, number_neurons_init, number_neurons_create, mt);
+    test_init_create(background_calculator, number_neurons_init, number_neurons_create, mt, true, true);
 
     const auto& parameters = background_calculator->get_parameter();
     ASSERT_EQ(parameters.size(), 2);
@@ -221,6 +222,8 @@ TEST_F(BackgroundActivityTest, testFastNormalBackgroundActivityConstruct) {
 TEST_F(BackgroundActivityTest, testNullBackgroundActivityUpdate) {
     std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NullBackgroundActivityCalculator>();
 
+    const auto check_equality = !CudaHelper::is_cuda_available();
+
     const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     background_calculator->init(number_neurons);
 
@@ -238,9 +241,11 @@ TEST_F(BackgroundActivityTest, testNullBackgroundActivityUpdate) {
     }
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
-    background_calculator->update_input(step);
+    background_calculator->update_input(step, true);
 
-    test_background_equality(background_calculator);
+    if(check_equality) {
+        test_background_equality(background_calculator);
+    }
 
     const auto& background_input = background_calculator->get_background_activity();
     for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
@@ -252,6 +257,8 @@ TEST_F(BackgroundActivityTest, testConstantBackgroundActivityUpdate) {
     const auto constant_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_base_background_activity, BackgroundActivityCalculator::max_base_background_activity, mt);
     std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<ConstantBackgroundActivityCalculator>(constant_background);
 
+    const auto check_equality = !CudaHelper::is_cuda_available();
+
     const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     background_calculator->init(number_neurons);
 
@@ -269,10 +276,11 @@ TEST_F(BackgroundActivityTest, testConstantBackgroundActivityUpdate) {
     }
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
-    background_calculator->update_input(step);
+    background_calculator->update_input(step, true);
 
-    test_background_equality(background_calculator);
-
+if(check_equality) {
+        test_background_equality(background_calculator);
+    }
     const auto& background_input = background_calculator->get_background_activity();
     for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
         if (update_status[neuron_id] == UpdateStatus::Disabled) {
@@ -286,6 +294,8 @@ TEST_F(BackgroundActivityTest, testConstantBackgroundActivityUpdate) {
 TEST_F(BackgroundActivityTest, testNormalBackgroundActivityUpdate) {
     const auto mean_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_background_activity_mean, BackgroundActivityCalculator::max_background_activity_mean, mt);
     const auto stddev_background = RandomAdapter::get_random_double<double>(BackgroundActivityCalculator::min_background_activity_stddev, BackgroundActivityCalculator::max_background_activity_stddev, mt);
+
+    const auto check_equality = !CudaHelper::is_cuda_available();
 
     std::unique_ptr<BackgroundActivityCalculator> background_calculator = std::make_unique<NormalBackgroundActivityCalculator>(mean_background, stddev_background);
 
@@ -306,10 +316,11 @@ TEST_F(BackgroundActivityTest, testNormalBackgroundActivityUpdate) {
     }
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
-    background_calculator->update_input(step);
+    background_calculator->update_input(step, true);
 
-    test_background_equality(background_calculator);
-
+    if(check_equality) {
+        test_background_equality(background_calculator);
+    }
     std::vector<double> background_values{};
     background_values.reserve(number_neurons);
 
@@ -356,7 +367,7 @@ TEST_F(BackgroundActivityTest, testFastNormalBackgroundActivityUpdate) {
     }
 
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
-    background_calculator->update_input(step);
+    background_calculator->update_input(step, true);
 
 
     const auto background_values = NeuronID::range_id(number_neurons)
@@ -401,6 +412,10 @@ std::pair<std::string, std::vector<std::pair<std::string, double>>> get_random_c
 }
 
 TEST_F(BackgroundActivityTest, testFlexible) {
+    if(CudaHelper::is_cuda_available()) {
+        return;
+    }
+
     const auto num_steps = RandomAdapter::get_random_integer(100, 1000, mt);
     const auto num_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 500;
     const MPIRank my_rank{ 0 };
@@ -461,7 +476,7 @@ TEST_F(BackgroundActivityTest, testFlexible) {
     std::vector<std::vector<std::pair<std::string, double>>> neurons_to_params(num_neurons);
 
     for (auto step = 0; step < num_steps; step++) {
-        flexible_calculator->update_input(step);
+        flexible_calculator->update_input(step, true);
 
         while (cur_index < gold.size() && std::get<0>(gold[cur_index]) <= step) {
             const auto& [_step, params, neurons] = gold[cur_index];
@@ -484,6 +499,10 @@ TEST_F(BackgroundActivityTest, testFlexible) {
 }
 
 TEST_F(BackgroundActivityTest, testFlexibleMultiplePerStep) {
+    if(CudaHelper::is_cuda_available()) {
+        return;
+    }
+
     const auto num_steps = RandomAdapter::get_random_integer(100, 1000, mt);
     const auto num_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 100;
     const MPIRank my_rank{ 0 };
@@ -539,7 +558,7 @@ TEST_F(BackgroundActivityTest, testFlexibleMultiplePerStep) {
     for (const auto neuron_id : NeuronID::range(num_neurons)) {
         ASSERT_EQ(0, flexible_calculator->get_background_activity(neuron_id));
     }
-    flexible_calculator->update_input(step);
+    flexible_calculator->update_input(step, true);
     for (const auto& [_1, params, my_neurons] : gold) {
         for (auto neuron_id : my_neurons) {
             const auto calculator_params = flexible_calculator->get_background_activity_calculator_for_neuron(neuron_id)->get_parameter();
@@ -557,6 +576,10 @@ TEST_F(BackgroundActivityTest, testFlexibleMultiplePerStep) {
 }
 
 TEST_F(BackgroundActivityTest, testFlexibleMultiplePerStepFail) {
+    if(CudaHelper::is_cuda_available()) {
+        return;
+    }
+
     const auto num_steps = RandomAdapter::get_random_integer(100, 1000, mt);
     const auto num_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 100;
     const MPIRank my_rank{ 0 };
@@ -604,8 +627,27 @@ TEST_F(BackgroundActivityTest, testFlexibleMultiplePerStepFail) {
     ASSERT_THROW(std::make_unique<FlexibleBackgroundActivityCalculator>(file_path, my_rank, local_area_translator), RelearnException);
 }
 
+TEST_F(BackgroundActivityTest, testFlexibleCalculatorGPU) {
+    if(!CudaHelper::is_cuda_available()) {
+        return;
+    }
+
+    const auto num_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 100;
+    const MPIRank my_rank{ 0 };
+    auto local_area_translator = NeuronAssignmentAdapter::get_randomized_area_translator(num_neurons, mt);
+
+    std::filesystem::path file_path{ "./background_activity.tmp" };
+
+    std::ofstream of(file_path, std::ios::binary | std::ios::out);
+
+    ASSERT_THROW( std::make_unique<FlexibleBackgroundActivityCalculator>(file_path, my_rank, local_area_translator), RelearnException);
+}
+
 TEST_F(BackgroundActivityTest, testFlexibleSameCalculator) {
-    RelearnException::hide_messages = false;
+    if(CudaHelper::is_cuda_available()) {
+        return;
+    }
+
     const auto num_steps = RandomAdapter::get_random_integer(100, 1000, mt);
     const auto num_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
     const MPIRank my_rank{ 0 };
@@ -670,7 +712,7 @@ TEST_F(BackgroundActivityTest, testFlexibleSameCalculator) {
     std::shared_ptr<BackgroundActivityCalculator> last_calculator{};
 
     for (auto step = 0; step < num_steps; step++) {
-        flexible_calculator->update_input(step);
+        flexible_calculator->update_input(step, true);
 
         while (cur_index < gold.size() && std::get<0>(gold[cur_index]) <= step) {
             const auto& [_step, params, neurons] = gold[cur_index];

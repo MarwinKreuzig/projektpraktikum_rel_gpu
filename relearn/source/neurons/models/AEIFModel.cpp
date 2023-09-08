@@ -10,6 +10,7 @@
 
 #include "NeuronModels.h"
 
+#include "calculations/NeuronModelCalculations.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "util/NeuronID.h"
 
@@ -41,6 +42,9 @@ AEIFModel::AEIFModel(
     , a{ a }
     , b{ b }
     , V_spike{ V_spike } {
+        if(CudaHelper::is_cuda_available()) {
+            gpu_handle = gpu::models::aeif::construct_gpu(get_background_activity_calculator()->get_gpu_handle(),h,C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike  );
+        }
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> AEIFModel::clone() const {
@@ -66,13 +70,13 @@ AEIFModel::AEIFModel(
     return "AEIFModel";
 }
 
-void AEIFModel::init(const number_neurons_type number_neurons) {
-    NeuronModel::init(number_neurons);
+void AEIFModel::init_cpu(number_neurons_type number_neurons) {
+    NeuronModel::init_cpu(number_neurons);
     w.resize(number_neurons);
     init_neurons(0, number_neurons);
 }
 
-void AEIFModel::create_neurons(const number_neurons_type creation_count) {
+void AEIFModel::create_neurons_cpu(const number_neurons_type creation_count) {
     const auto old_size = NeuronModel::get_number_neurons();
     NeuronModel::create_neurons(creation_count);
     w.resize(old_size + creation_count);
@@ -136,7 +140,7 @@ void AEIFModel::update_activity_benchmark() {
     }
 }
 
-void AEIFModel::update_activity() {
+void AEIFModel::update_activity_cpu() {
     const auto number_local_neurons = get_number_neurons();
     const auto disable_flags = get_extra_infos()->get_disable_flags();
 
@@ -158,53 +162,21 @@ void AEIFModel::update_activity() {
         const auto synaptic_input = get_synaptic_input(converted_id);
         const auto background = get_background_activity(converted_id);
         const auto stimulus = get_stimulus(converted_id);
-        const auto input = synaptic_input + background + stimulus;
 
-        auto x_val = get_x(converted_id);
-        auto w_val = w[neuron_id];
+        auto _x = get_x(converted_id);
+        auto _w = w[neuron_id];
 
-        auto has_spiked = FiredStatus::Inactive;
+        const auto& [x_val, fired, w_val] = Calculations::aeif( _x,  synaptic_input,  background,  stimulus,  _w,  h,  scale, V_spike,  g_L,  E_L,  V_T, d_T, d_T_inverse,  a,  b,  C_inverse,  tau_w_inverse);
 
-        for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-            const auto linear_part = -g_L * (x_val - E_L);
-            const auto exp_part = g_L * d_T * std::exp((x_val - V_T) * d_T_inverse);
-            const auto x_increase = (linear_part + exp_part - w_val + input) * C_inverse;
-            const auto w_increase = (a * (x_val - E_L) - w_val) * tau_w_inverse;
-
-            x_val += x_increase * scale;
-            w_val += w_increase * scale;
-
-            if (x_val >= V_spike) {
-                x_val = E_L;
-                w_val += b;
-                has_spiked = FiredStatus::Fired;
-                break;
-            }
-        }
-
-        set_fired(converted_id, has_spiked);
+        set_fired(converted_id, fired);
         set_x(converted_id, x_val);
         w[neuron_id] = w_val;
     }
 }
 
-void AEIFModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {
+void AEIFModel::init_neurons_cpu(const number_neurons_type start_id, const number_neurons_type end_id) {
     for (const auto neuron_id : NeuronID::range(start_id, end_id)) {
         w[neuron_id.get_neuron_id()] = 0.0;
         set_x(neuron_id, E_L);
     }
-}
-
-double AEIFModel::f(const double x) const noexcept {
-    const auto linear_part = -g_L * (x - E_L);
-    const auto exp_part = g_L * d_T * exp((x - V_T) / d_T);
-    return linear_part + exp_part;
-}
-
-double AEIFModel::iter_x(const double x, const double w, const double input) const noexcept {
-    return (f(x) - w + input) / C;
-}
-
-double AEIFModel::iter_refraction(const double w, const double x) const noexcept {
-    return (a * (x - E_L) - w) / tau_w;
 }

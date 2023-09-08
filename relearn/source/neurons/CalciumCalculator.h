@@ -11,7 +11,7 @@
  */
 
 #include "Types.h"
-#include "neurons/enums/FiredStatus.h"
+#include "enums/FiredStatus.h"
 #include "neurons/enums/TargetCalciumDecay.h"
 #include "util/MPIRank.h"
 #include "util/RelearnException.h"
@@ -172,7 +172,7 @@ public:
 
     /**
      * @brief Sets the function that is used to determine the initial calcium value of the neurons.
-     *      When calling init(...), the initial calcium calculator must not be empty. It can be so inbetween.
+     *      When calling init_cpu(...), the initial calcium calculator must not be empty. It can be so inbetween.
      * @param calculator The function that maps neuron id to initial calcium value
      */
     void set_initial_calcium_calculator(std::function<double(MPIRank, NeuronID::value_type)> initiator) noexcept {
@@ -181,7 +181,7 @@ public:
 
     /**
      * @brief Sets the function that is used to determine the target calcium value of the neurons
-     *      When calling init(...), the target calcium calculator must not be empty. It can be so inbetween.
+     *      When calling init_cpu(...), the target calcium calculator must not be empty. It can be so inbetween.
      * @param calculator The function that maps neuron id to target calcium value
      */
     void set_target_calcium_calculator(std::function<double(MPIRank, NeuronID::value_type)> calculator) noexcept {

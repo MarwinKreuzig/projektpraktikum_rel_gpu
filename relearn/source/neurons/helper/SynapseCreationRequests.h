@@ -10,7 +10,7 @@
  *
  */
 
-#include "neurons/enums/SignalType.h"
+#include "enums/SignalType.h"
 #include "util/RelearnException.h"
 #include "util/NeuronID.h"
 

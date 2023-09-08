@@ -1,9 +1,17 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.17)
+set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CUDA_ARCHITECTURES OFF)
+
+
 project(relearn)
+enable_language(CXX)
+
+include(CheckLanguage)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(cmake/StandardProjectSettings.cmake)
@@ -14,6 +22,8 @@ add_library(project_options INTERFACE)
 
 # enable cache system
 include(cmake/Cache.cmake)
+
+include(cmake/Cuda.cmake)
 
 # Add linker configuration
 include(cmake/Linker.cmake)
@@ -46,10 +56,12 @@ include(cmake/VisualStudio.cmake)
 # utilities
 include(cmake/Utils.cmake)
 
+add_subdirectory(cuda)
 add_subdirectory(source)
 
 if(NOT ENABLE_SCOREP)
   add_subdirectory(benchmark)
   add_subdirectory(harness)
   add_subdirectory(test)
+  add_subdirectory(test_cuda)
 endif()

@@ -13,9 +13,9 @@
 #include "adapter/random/RandomAdapter.h"
 
 #include "neurons/NeuronsExtraInfo.h"
-#include "neurons/enums/ElementType.h"
-#include "neurons/enums/FiredStatus.h"
-#include "neurons/enums/SignalType.h"
+#include "enums/ElementType.h"
+#include "enums/FiredStatus.h"
+#include "enums/SignalType.h"
 #include "neurons/helper/DistantNeuronRequests.h"
 #include "util/shuffle/shuffle.h"
 

@@ -30,6 +30,7 @@
 
 #include <range/v3/action/insert.hpp>
 #include <range/v3/algorithm/for_each.hpp>
+#include <range/v3/view/indices.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/range/traits.hpp>
 #include <range/v3/utility/tuple_algorithm.hpp>

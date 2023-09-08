@@ -10,9 +10,7 @@
  *
  */
 
-#include "fmt/ostream.h"
-
-#include <ostream>
+#include "gpu/Macros.h"
 
 /**
  * An instance of this enum classifies the synaptic elements of a neuron.
@@ -37,6 +35,11 @@ enum class ElementType : char {
     return ElementType::Axon;
 }
 
+#ifdef HOST_COMPILER
+
+#include <ostream>
+#include "fmt/ostream.h"
+
 /**
  * @brief Pretty-prints the element type to the chosen stream
  * @param out The stream to which to print the element type
@@ -57,3 +60,5 @@ inline std::ostream& operator<<(std::ostream& out, const ElementType element_typ
 
 template <>
 struct fmt::formatter<ElementType> : ostream_formatter { };
+
+#endif

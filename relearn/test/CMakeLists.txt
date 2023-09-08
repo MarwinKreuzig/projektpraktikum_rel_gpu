@@ -54,12 +54,12 @@ file(
   "#include <filesystem>\nstd::filesystem::path get_relearn_path() { return \"${CMAKE_SOURCE_DIR}\"; }"
 )
 
-add_executable(relearn_tests ${SRC_TST} transmission_delay/test_transmission_delay.cpp)
+add_executable(relearn_tests ${SRC_TST})
 target_sources(
   relearn_tests
   PRIVATE ${CMAKE_BINARY_DIR}/test_get_relearn_path.cpp
           RelearnTest.cpp
-		  
+
 		  background_activity/test_background_activity.cpp
 		  
 		  barnes_hut/test_barnes_hut.cpp
@@ -154,11 +154,15 @@ target_sources(
 
 		  # for visual studio
 		  ${relearn_tests_additional_files})
-		  
+		
+
 target_include_directories(relearn_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(relearn_tests PRIVATE project_options project_libraries)
-target_link_libraries(relearn_tests PRIVATE relearn_lib relearn_harness)
+target_link_libraries(relearn_tests PRIVATE relearn_lib)
+target_link_libraries(relearn_tests PRIVATE relearn_harness)
 target_link_libraries(relearn_tests PRIVATE gtest)
+set_target_properties(relearn_tests PROPERTIES CXX_STANDARD 20)
+set_target_properties(relearn_tests PROPERTIES ENABLE_EXPORTS 1)
 
 add_test(NAME SerialTests COMMAND relearn_tests)
 add_dependencies(check relearn_tests)

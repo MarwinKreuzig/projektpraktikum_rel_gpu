@@ -12,5 +12,9 @@
 
 #include "RelearnTest.hpp"
 
-class TransmissionDelayTest : public RelearnTest {
+#include "CudaVector.cuh"
+
+class CudaTest : public RelearnGPUTest {
+
+    
 };

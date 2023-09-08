@@ -50,8 +50,8 @@ public:
     }
 
     void init(const RelearnTypes::number_neurons_type number_neurons) {
-        RelearnException::check(stimulus.empty(), "Stimulus::init: Was already initialized");
-        RelearnException::check(number_neurons > 0, "Stimulus::init: Cannot initialize with 0 neurons");
+        RelearnException::check(stimulus.empty(), "Stimulus::init_cpu: Was already initialized");
+        RelearnException::check(number_neurons > 0, "Stimulus::init_cpu: Cannot initialize with 0 neurons");
         stimulus.resize(number_neurons, 0.0);
     }
 
@@ -80,6 +80,10 @@ public:
                 intensity);
         }
         Timers::stop_and_add(TimerRegion::CALC_STIMULUS);
+    }
+
+    [[nodiscard]] const std::span<const double> get_stimulus() const {
+        return stimulus;
     }
 
     [[nodiscard]] double get_stimulus(const NeuronID neuron_id) const {

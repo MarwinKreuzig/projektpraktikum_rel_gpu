@@ -71,7 +71,7 @@ void MPIWrapper::init(int argc, char** argv) {
     // the connectivity update works correctly
     const std::bitset<sizeof(int) * 8> bitset_num_ranks(num_ranks);
     if (1 != bitset_num_ranks.count() && (MPIRank::root_rank() == my_rank)) {
-        RelearnException::fail("MPIWrapper::init: Number of ranks must be of the form 2^n");
+        RelearnException::fail("MPIWrapper::init_cpu: Number of ranks must be of the form 2^n");
     }
 
     register_custom_function();

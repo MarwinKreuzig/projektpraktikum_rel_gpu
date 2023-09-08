@@ -14,7 +14,7 @@
 #include "adapter/random/RandomAdapter.h"
 
 #include "Types.h"
-#include "neurons/enums/SignalType.h"
+#include "enums/SignalType.h"
 #include "sim/random/SubdomainFromNeuronDensity.h"
 #include "structure/Partition.h"
 #include "util/ranges/Functional.hpp"

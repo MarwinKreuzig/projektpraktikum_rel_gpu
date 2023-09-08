@@ -10,8 +10,8 @@
  *
  */
 
-#include "util/ranges/Functional.hpp"
-#include "util/shuffle/shuffle.h"
+#include "gpu/Macros.h"
+
 
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
@@ -24,11 +24,17 @@
 #include <unordered_set>
 #include <vector>
 
+#ifdef HOST_COMPILER
 #include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/indices.hpp>
 #include <range/v3/view/transform.hpp>
+
+#include "util/ranges/Functional.hpp"
+#include "util/shuffle/shuffle.h"
+
+#endif
 
 class RandomAdapter {
 public:
@@ -38,10 +44,19 @@ public:
         return urd(mt);
     }
 
+    static double get_random_double(std::mt19937& mt) {
+        return get_random_double(std::numeric_limits<double>::min(),std::numeric_limits<double>::max(), mt);
+    }
+
     template <typename T>
     static T get_random_integer(T min, T max, std::mt19937& mt) {
         boost::random::uniform_int_distribution<T> uid(min, max);
         return uid(mt);
+    }
+
+    template <typename T>
+    static T get_random_integer(std::mt19937& mt) {
+        return get_random_integer<T>(std::numeric_limits<T>::min(),std::numeric_limits<T>::max(), mt);
     }
 
     template <typename T>
@@ -66,6 +81,8 @@ public:
         const auto val = get_random_integer(0, 1, mt);
         return val == 0;
     }
+
+    #ifdef HOST_COMPILER
 
     static std::vector<size_t> get_random_derangement(size_t size, std::mt19937& mt) {
         auto derangement = ranges::views::indices(size) | ranges::to_vector;
@@ -122,4 +139,5 @@ public:
         const size_t sample_size = RandomAdapter::get_random_integer<size_t>(size_t{ 0 }, vector.size() - 1, mt);
         return sample(vector, sample_size, mt);
     }
+    #endif
 };

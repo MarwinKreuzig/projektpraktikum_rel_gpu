@@ -1,4 +1,7 @@
 add_library(relearn_lib STATIC)
+
+target_include_directories(relearn_lib PUBLIC ../shared)
+
 target_sources(
         relearn_lib
         PRIVATE # algorithm
@@ -8,6 +11,9 @@ target_sources(
         algorithm/FMMInternal/FastMultipoleMethods.cpp
         algorithm/FMMInternal/FastMultipoleMethodsInverted.cpp
         algorithm/NaiveInternal/Naive.cpp
+
+        gpu/Interface.cpp
+
 
         # io
         io/CalciumIO.cpp
@@ -63,6 +69,12 @@ target_sources(
 target_include_directories(relearn_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(relearn_lib PROPERTIES ENABLE_EXPORTS 1)
 target_link_libraries(relearn_lib PUBLIC project_options project_libraries)
+set_target_properties(relearn_lib PROPERTIES CXX_STANDARD 20)
+target_compile_definitions(relearn_lib PRIVATE RELEARN_LIB)
+
+if(CUDA_FOUND)
+        target_link_libraries(relearn_lib PUBLIC project_options relearn_gpu)
+endif()
 
 # benchmark# dont clutter the compile_commands file with libraries
 set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
@@ -82,9 +94,10 @@ set_target_properties(CLI11 PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
 # relearn executable
 add_executable(relearn)
 target_sources(relearn PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/relearn.cpp)
-target_link_libraries(relearn PRIVATE relearn_lib)
+target_link_libraries(relearn PUBLIC relearn_lib)
 target_link_libraries(relearn PRIVATE CLI11::CLI11)
 set_target_properties(relearn PROPERTIES ENABLE_EXPORTS 1)
+set_target_properties(relearn PROPERTIES CXX_STANDARD 20)
 
 # relearn_analysis executable
 add_executable(relearn_analysis ${SRC_ANALYSIS})
@@ -93,7 +106,8 @@ target_sources(relearn_analysis
 target_link_libraries(relearn_analysis PRIVATE relearn_lib)
 target_link_libraries(relearn_analysis PRIVATE CLI11::CLI11)
 target_link_libraries(relearn_lib PUBLIC project_options project_libraries)
+set_target_properties(relearn_analysis PROPERTIES CXX_STANDARD 20)
 set_target_properties(relearn_analysis PROPERTIES ENABLE_EXPORTS 1)
 
 get_target_property(relearn_lib_sources relearn_lib SOURCES)
-source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${relearn_lib_sources})
+#source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${relearn_lib_sources})

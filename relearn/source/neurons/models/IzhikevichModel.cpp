@@ -10,6 +10,8 @@
 
 #include "NeuronModels.h"
 
+#include "calculations/NeuronModelCalculations.h"
+#include "gpu/Interface.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "util/NeuronID.h"
 
@@ -37,6 +39,9 @@ IzhikevichModel::IzhikevichModel(
     , k1{ k1 }
     , k2{ k2 }
     , k3{ k3 } {
+        if(CudaHelper::is_cuda_available()) {
+             gpu_handle = gpu::models::izhikevich::construct_gpu(get_background_activity_calculator()->get_gpu_handle(),h,  V_spike,  a,  b,  c,  d,  k1,  k2,  k3);
+        }
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> IzhikevichModel::clone() const {
@@ -61,17 +66,15 @@ IzhikevichModel::IzhikevichModel(
     return "IzhikevichModel";
 }
 
-void IzhikevichModel::init(const number_neurons_type number_neurons) {
-    NeuronModel::init(number_neurons);
+void IzhikevichModel::init_cpu(number_neurons_type number_neurons) {
+    NeuronModel::init_cpu(number_neurons);
     u.resize(number_neurons);
-    init_neurons(0, number_neurons);
 }
 
-void IzhikevichModel::create_neurons(const number_neurons_type creation_count) {
+void IzhikevichModel::create_neurons_cpu(const number_neurons_type creation_count) {
     const auto old_size = NeuronModel::get_number_neurons();
-    NeuronModel::create_neurons(creation_count);
+    NeuronModel::create_neurons_cpu(creation_count);
     u.resize(old_size + creation_count);
-    init_neurons(old_size, creation_count);
 }
 
 void IzhikevichModel::update_activity_benchmark(const NeuronID neuron_id) {
@@ -127,7 +130,7 @@ void IzhikevichModel::update_activity_benchmark() {
     }
 }
 
-void IzhikevichModel::update_activity() {
+void IzhikevichModel::update_activity_cpu() {
     const auto number_local_neurons = get_number_neurons();
     const auto disable_flags = get_extra_infos()->get_disable_flags();
 
@@ -145,51 +148,26 @@ void IzhikevichModel::update_activity() {
         const auto synaptic_input = get_synaptic_input(converted_id);
         const auto background = get_background_activity(converted_id);
         const auto stimulus = get_stimulus(converted_id);
-        const auto input = synaptic_input + background + stimulus;
+        const auto _x = get_x(converted_id);
+        const auto _u = u[neuron_id];
+        
+        const auto& [x_val, fired, u_val] = Calculations::izhikevich(_x, synaptic_input, background, stimulus, _u, h, scale, V_spike, a, b,c, d, k1, k2, k3);
 
-        auto x_val = get_x(converted_id);
-        auto u_val = u[neuron_id];
-
-        auto has_spiked = FiredStatus::Inactive;
-
-        for (unsigned int integration_steps = 0; integration_steps < h; ++integration_steps) {
-            const auto x_increase = k1 * x_val * x_val + k2 * x_val + k3 - u_val + input;
-            const auto u_increase = a * (b * x_val - u_val);
-
-            x_val += x_increase * scale;
-            u_val += u_increase * scale;
-
-            const auto spiked = x_val >= V_spike;
-
-            if (spiked) {
-                x_val = c;
-                u_val += d;
-                has_spiked = FiredStatus::Fired;
-                break;
-            }
-        }
-
-        set_fired(converted_id, has_spiked);
+        set_fired(converted_id, fired);
         set_x(converted_id, x_val);
         u[neuron_id] = u_val;
     }
 }
 
-void IzhikevichModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {
+
+
+void IzhikevichModel::init_neurons_cpu(const number_neurons_type start_id, const number_neurons_type end_id) {
     for (const auto neuron_id : NeuronID::range(start_id, end_id)) {
         u[neuron_id.get_neuron_id()] = iter_refraction(b * c, c);
         set_x(neuron_id, c);
     }
 }
 
-double IzhikevichModel::iter_x(const double x, const double u, const double input) const noexcept {
-    return k1 * x * x + k2 * x + k3 - u + input;
-}
-
 double IzhikevichModel::iter_refraction(const double u, const double x) const noexcept {
     return a * (b * x - u);
-}
-
-bool IzhikevichModel::spiked(const double x) const noexcept {
-    return x >= V_spike;
 }

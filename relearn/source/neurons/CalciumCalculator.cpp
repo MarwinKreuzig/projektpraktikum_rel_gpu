@@ -15,11 +15,11 @@
 #include "util/Timers.h"
 
 void CalciumCalculator::init(const number_neurons_type number_neurons) {
-    RelearnException::check(calcium.empty(), "CalciumCalculator::init: Was already initialized");
-    RelearnException::check(number_neurons > 0, "CalciumCalculator::init: number_neurons was 0");
+    RelearnException::check(calcium.empty(), "CalciumCalculator::init_cpu: Was already initialized");
+    RelearnException::check(number_neurons > 0, "CalciumCalculator::init_cpu: number_neurons was 0");
 
-    RelearnException::check(initial_calcium_initiator.operator bool(), "CalciumCalculator::init: initial_calcium_initiator is empty");
-    RelearnException::check(target_calcium_calculator.operator bool(), "CalciumCalculator::init: target_calcium_calculator is empty");
+    RelearnException::check(initial_calcium_initiator.operator bool(), "CalciumCalculator::init_cpu: initial_calcium_initiator is empty");
+    RelearnException::check(target_calcium_calculator.operator bool(), "CalciumCalculator::init_cpu: target_calcium_calculator is empty");
 
     calcium.resize(number_neurons);
     target_calcium.resize(number_neurons);

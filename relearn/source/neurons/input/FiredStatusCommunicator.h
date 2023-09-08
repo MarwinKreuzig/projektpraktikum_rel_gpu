@@ -12,7 +12,7 @@
 
 #include "Types.h"
 #include "neurons/NeuronsExtraInfo.h"
-#include "neurons/enums/FiredStatus.h"
+#include "enums/FiredStatus.h"
 #include "util/RelearnException.h"
 #include "util/NeuronID.h"
 
@@ -75,8 +75,8 @@ public:
      * @exception Throws a RelearnException if number_neurons == 0
      */
     virtual void init(const number_neurons_type number_neurons) {
-        RelearnException::check(number_local_neurons == 0, "FiredStatusCommunicator::init: Was already initialized");
-        RelearnException::check(number_neurons > 0, "FiredStatusCommunicator::init: Cannot initialize with 0 neurons");
+        RelearnException::check(number_local_neurons == 0, "FiredStatusCommunicator::init_cpu: Was already initialized");
+        RelearnException::check(number_neurons > 0, "FiredStatusCommunicator::init_cpu: Cannot initialize with 0 neurons");
 
         number_local_neurons = number_neurons;
     }
@@ -84,7 +84,7 @@ public:
     /**
      * @brief Additionally created the given number of neurons
      * @param creation_count The number of neurons to create, must be > 0
-     * @exception Throws a RelearnException if creation_count == 0 or if init(...) was not called before
+     * @exception Throws a RelearnException if creation_count == 0 or if init_cpu(...) was not called before
      */
     virtual void create_neurons(const number_neurons_type creation_count) {
         RelearnException::check(number_local_neurons > 0, "FiredStatusCommunicator::create_neurons: Was not previously initialized");
