@@ -57,7 +57,7 @@ TEST_F(StimulusTest, testStimulusWithNeuronIds) {
         std::unordered_set<NeuronID> my_ids{};
         for (const auto& neuron_id : ids) {
             const auto rank = MPIRank(RandomAdapter::get_random_integer(0, num_rank - 1, mt));
-            rank_ids.insert(std::to_string(rank.get_rank()) + ":" + std::to_string(neuron_id.get_neuron_id()+1));
+            rank_ids.insert(std::to_string(rank.get_rank()) + ":" + std::to_string(neuron_id.get_neuron_id() + 1));
             if (rank == my_rank) {
                 my_ids.insert(neuron_id);
             }
@@ -167,7 +167,7 @@ TEST_F(StimulusTest, testFrequency) {
     const auto& ids = NeuronIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(RelearnTypes::number_neurons_type(1), num_neurons, mt), mt);
     std::unordered_set<std::string> rank_ids{};
     for (const auto& neuron_id : ids) {
-        rank_ids.insert("0:" + std::to_string(neuron_id.get_neuron_id()+1));
+        rank_ids.insert("0:" + std::to_string(neuron_id.get_neuron_id() + 1));
     }
 
     write_stimuli_to_file(path, { std::make_tuple(begin, end, frequency, intensity, rank_ids) });
@@ -205,7 +205,7 @@ TEST_F(StimulusTest, testEmptyNeurons) {
         const auto& ids = (i % 2 == 0) ? NeuronIdAdapter::get_random_neuron_ids(num_neurons, RandomAdapter::get_random_integer(RelearnTypes::number_neurons_type(1), num_neurons, mt), mt) : std::unordered_set<NeuronID>{};
         std::unordered_set<std::string> rank_ids{};
         for (const auto& neuron_id : ids) {
-            rank_ids.insert("0:" + std::to_string(neuron_id.get_neuron_id()+1));
+            rank_ids.insert("0:" + std::to_string(neuron_id.get_neuron_id() + 1));
         }
         stimuli.emplace_back(std::make_tuple(interval.begin, interval.end, 1U, intensity, rank_ids));
         my_stimuli.emplace_back(std::make_tuple(interval.begin, interval.end, 1U, intensity, ids));

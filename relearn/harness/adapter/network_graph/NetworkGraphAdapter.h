@@ -42,10 +42,10 @@ namespace detail {
 const auto to_neuron_id = element<0>;
 const auto to_edge_weight = element<1>;
 const auto to_rank_neuron_id_and_weight_pair = [](const auto my_rank) {
-  return [my_rank](const auto local_edge) {
-    return std::pair{RankNeuronId{my_rank, to_neuron_id(local_edge)},
-                     to_edge_weight(local_edge)};
-  };
+    return [my_rank](const auto local_edge) {
+        return std::pair{ RankNeuronId{ my_rank, to_neuron_id(local_edge) },
+            to_edge_weight(local_edge) };
+    };
 };
 } // namespace detail
 
@@ -105,33 +105,29 @@ public:
             synapse_map[{ target, source }] += weight;
         }
 
-        return synapse_map |
-               ranges::views::filter(not_equal_to(0), detail::to_edge_weight) |
-               ranges::views::transform(
-                   [](const auto &val) -> PlasticLocalSynapse {
-                     return {val.first.first, val.first.second, detail::to_edge_weight(val)};
-                   }) |
-               ranges::to_vector;
+        return synapse_map | ranges::views::filter(not_equal_to(0), detail::to_edge_weight) | ranges::views::transform([](const auto& val) -> PlasticLocalSynapse {
+            return { val.first.first, val.first.second, detail::to_edge_weight(val) };
+        }) | ranges::to_vector;
     }
 
     static std::shared_ptr<NetworkGraph> create_network_graph_all_to_all(size_t number_neurons, MPIRank mpi_rank, std::mt19937& mt) {
         auto ptr = std::make_shared<NetworkGraph>(mpi_rank);
         ptr->init(number_neurons);
 
-        const auto not_the_same_id = [](const auto &id_pair) {
-          return element<0>(id_pair) != element<1>(id_pair);
+        const auto not_the_same_id = [](const auto& id_pair) {
+            return element<0>(id_pair) != element<1>(id_pair);
         };
 
         ranges::for_each(
             ranges::views::cartesian_product(NeuronID::range(number_neurons),
-                                             NeuronID::range(number_neurons)) |
-                ranges::views::filter(not_the_same_id),
-            [&mt, &ptr](const auto &id_pair) {
-              const auto &[source_id, target_id] = id_pair;
-              const auto weight = get_random_plastic_synapse_weight(mt);
-              PlasticLocalSynapse ls(target_id, source_id, weight);
+                NeuronID::range(number_neurons))
+                | ranges::views::filter(not_the_same_id),
+            [&mt, &ptr](const auto& id_pair) {
+                const auto& [source_id, target_id] = id_pair;
+                const auto weight = get_random_plastic_synapse_weight(mt);
+                PlasticLocalSynapse ls(target_id, source_id, weight);
 
-              ptr->add_synapse(ls);
+                ptr->add_synapse(ls);
             });
 
         return ptr;
@@ -164,24 +160,18 @@ public:
     template <ranges::range LocalEdgeRangeType, ranges::range DistantEdgeRangeType>
         requires std::same_as<typename ranges::range_value_t<LocalEdgeRangeType>::second_type, typename ranges::range_value_t<DistantEdgeRangeType>::second_type>
     [[nodiscard]] static std::vector<std::pair<RankNeuronId, typename ranges::range_value_t<LocalEdgeRangeType>::second_type>> get_all_edges(const LocalEdgeRangeType& all_local_edges, const DistantEdgeRangeType& all_distant_edges, const MPIRank my_rank, const SignalType signal_type) {
-    switch (signal_type) {
+        switch (signal_type) {
         case SignalType::Excitatory:
             return ranges::views::concat(
-                       all_local_edges |
-                           ranges::views::filter(greater(0), detail::to_edge_weight) |
-                           ranges::views::transform(detail::to_rank_neuron_id_and_weight_pair(my_rank)),
-                       all_distant_edges |
-                           ranges::views::filter(greater(0), detail::to_edge_weight)) |
-                   ranges::to_vector;
+                       all_local_edges | ranges::views::filter(greater(0), detail::to_edge_weight) | ranges::views::transform(detail::to_rank_neuron_id_and_weight_pair(my_rank)),
+                       all_distant_edges | ranges::views::filter(greater(0), detail::to_edge_weight))
+                | ranges::to_vector;
 
         case SignalType::Inhibitory:
             return ranges::views::concat(
-                       all_local_edges |
-                           ranges::views::filter(less(0), detail::to_edge_weight) |
-                           ranges::views::transform(detail::to_rank_neuron_id_and_weight_pair(my_rank)),
-                       all_distant_edges |
-                           ranges::views::filter(less(0), detail::to_edge_weight)) |
-                   ranges::to_vector;
+                       all_local_edges | ranges::views::filter(less(0), detail::to_edge_weight) | ranges::views::transform(detail::to_rank_neuron_id_and_weight_pair(my_rank)),
+                       all_distant_edges | ranges::views::filter(less(0), detail::to_edge_weight))
+                | ranges::to_vector;
         }
         RelearnException::fail("NetworkGraphAdapter::create_empty_network_graph: Unknown SignalType {}", signal_type);
     }
@@ -190,11 +180,9 @@ public:
         requires std::same_as<typename ranges::range_value_t<LocalEdgeRangeType>::second_type, typename ranges::range_value_t<DistantEdgeRangeType>::second_type>
     [[nodiscard]] static std::vector<std::pair<RankNeuronId, typename ranges::range_value_t<LocalEdgeRangeType>::second_type>> get_all_edges(const LocalEdgeRangeType& all_local_edges, const DistantEdgeRangeType& all_distant_edges, const MPIRank my_rank) {
         return ranges::views::concat(
-                   all_local_edges |
-                       ranges::views::transform(
-                           detail::to_rank_neuron_id_and_weight_pair(my_rank)),
-                   all_distant_edges) |
-               ranges::to_vector;
+                   all_local_edges | ranges::views::transform(detail::to_rank_neuron_id_and_weight_pair(my_rank)),
+                   all_distant_edges)
+            | ranges::to_vector;
     }
 
     [[nodiscard]] static std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>> get_all_plastic_in_edges(const NetworkGraph& ng, const MPIRank my_rank, const NeuronID neuron_id, const SignalType signal_type) {
@@ -260,7 +248,7 @@ public:
         std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>> all_edges{};
         all_edges.reserve(plastic_distant_edges.size() + plastic_local_edges.size() + static_distant_edges.size() + static_local_edges.size());
 
-        auto local_to_distant_edges = [my_rank](const std::pair<NeuronID, RelearnTypes::static_synapse_weight> & pair) { return std::make_pair(RankNeuronId{my_rank, pair.first}, pair.second); };
+        auto local_to_distant_edges = [my_rank](const std::pair<NeuronID, RelearnTypes::static_synapse_weight>& pair) { return std::make_pair(RankNeuronId{ my_rank, pair.first }, pair.second); };
 
         std::copy(static_distant_edges.begin(), static_distant_edges.end(), std::back_inserter(all_edges));
         std::copy(plastic_distant_edges.begin(), plastic_distant_edges.end(), std::back_inserter(all_edges));
@@ -278,7 +266,7 @@ public:
         std::vector<std::pair<RankNeuronId, RelearnTypes::static_synapse_weight>> all_edges{};
         all_edges.reserve(plastic_distant_edges.size() + plastic_local_edges.size() + static_distant_edges.size() + static_local_edges.size());
 
-        auto local_to_distant_edges = [my_rank](const std::pair<NeuronID, RelearnTypes::static_synapse_weight> & pair) { return std::make_pair(RankNeuronId{my_rank, pair.first}, pair.second); };
+        auto local_to_distant_edges = [my_rank](const std::pair<NeuronID, RelearnTypes::static_synapse_weight>& pair) { return std::make_pair(RankNeuronId{ my_rank, pair.first }, pair.second); };
 
         std::copy(static_distant_edges.begin(), static_distant_edges.end(), std::back_inserter(all_edges));
         std::copy(plastic_distant_edges.begin(), plastic_distant_edges.end(), std::back_inserter(all_edges));

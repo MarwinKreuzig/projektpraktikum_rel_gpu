@@ -4,7 +4,7 @@
 // MS compatible compilers support #pragma once
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
-# pragma once
+#pragma once
 #endif
 
 //  core::typeinfo, BOOST_CORE_TYPEID
@@ -17,112 +17,101 @@
 
 #include <boost/config.hpp>
 
-#if defined( BOOST_NO_TYPEID )
+#if defined(BOOST_NO_TYPEID)
 
 #include <boost/current_function.hpp>
 #include <functional>
 #include <cstring>
 
-namespace boost
-{
+namespace boost {
 
-namespace core
-{
+namespace core {
 
-class typeinfo
-{
-private:
+    class typeinfo {
+    private:
+        typeinfo(typeinfo const&);
+        typeinfo& operator=(typeinfo const&);
 
-    typeinfo( typeinfo const& );
-    typeinfo& operator=( typeinfo const& );
+        char const* name_;
+        void (*lib_id_)();
 
-    char const * name_;
-    void (*lib_id_)();
+    public:
+        typeinfo(char const* name, void (*lib_id)())
+            : name_(name)
+            , lib_id_(lib_id) {
+        }
 
-public:
+        bool operator==(typeinfo const& rhs) const {
+#if (defined(_WIN32) || defined(__CYGWIN__)) && (defined(__GNUC__) || defined(__clang__)) && !defined(BOOST_DISABLE_CURRENT_FUNCTION)
 
-    typeinfo( char const * name, void (*lib_id)() ): name_( name ), lib_id_( lib_id )
-    {
-    }
-
-    bool operator==( typeinfo const& rhs ) const
-    {
-#if ( defined(_WIN32) || defined(__CYGWIN__) ) && ( defined(__GNUC__) || defined(__clang__) ) && !defined(BOOST_DISABLE_CURRENT_FUNCTION)
-
-        return lib_id_ == rhs.lib_id_? this == &rhs: std::strcmp( name_, rhs.name_ ) == 0;
+            return lib_id_ == rhs.lib_id_ ? this == &rhs : std::strcmp(name_, rhs.name_) == 0;
 
 #else
 
-        return this == &rhs;
+            return this == &rhs;
 
 #endif
-    }
+        }
 
-    bool operator!=( typeinfo const& rhs ) const
-    {
-        return !( *this == rhs );
-    }
+        bool operator!=(typeinfo const& rhs) const {
+            return !(*this == rhs);
+        }
 
-    bool before( typeinfo const& rhs ) const
-    {
-#if ( defined(_WIN32) || defined(__CYGWIN__) ) && ( defined(__GNUC__) || defined(__clang__) ) && !defined(BOOST_DISABLE_CURRENT_FUNCTION)
+        bool before(typeinfo const& rhs) const {
+#if (defined(_WIN32) || defined(__CYGWIN__)) && (defined(__GNUC__) || defined(__clang__)) && !defined(BOOST_DISABLE_CURRENT_FUNCTION)
 
-        return lib_id_ == rhs.lib_id_? std::less< typeinfo const* >()( this, &rhs ): std::strcmp( name_, rhs.name_ ) < 0;
+            return lib_id_ == rhs.lib_id_ ? std::less<typeinfo const*>()(this, &rhs) : std::strcmp(name_, rhs.name_) < 0;
 
 #else
 
-        return std::less< typeinfo const* >()( this, &rhs );
+            return std::less<typeinfo const*>()(this, &rhs);
 
 #endif
-    }
+        }
 
-    char const* name() const
-    {
-        return name_;
-    }
-};
+        char const* name() const {
+            return name_;
+        }
+    };
 
-inline char const * demangled_name( core::typeinfo const & ti )
-{
-    return ti.name();
-}
+    inline char const* demangled_name(core::typeinfo const& ti) {
+        return ti.name();
+    }
 
 } // namespace core
 
-namespace detail
-{
+namespace detail {
 
-template<class T> struct BOOST_SYMBOL_VISIBLE core_typeid_
-{
-    static boost::core::typeinfo ti_;
+    template <class T>
+    struct BOOST_SYMBOL_VISIBLE core_typeid_ {
+        static boost::core::typeinfo ti_;
 
-    static char const * name()
-    {
-        return BOOST_CURRENT_FUNCTION;
+        static char const* name() {
+            return BOOST_CURRENT_FUNCTION;
+        }
+    };
+
+    BOOST_SYMBOL_VISIBLE inline void core_typeid_lib_id() {
     }
-};
 
-BOOST_SYMBOL_VISIBLE inline void core_typeid_lib_id()
-{
-}
+    template <class T>
+    boost::core::typeinfo core_typeid_<T>::ti_(core_typeid_<T>::name(), &core_typeid_lib_id);
 
-template<class T> boost::core::typeinfo core_typeid_< T >::ti_( core_typeid_< T >::name(), &core_typeid_lib_id );
+    template <class T>
+    struct core_typeid_<T&> : core_typeid_<T> {
+    };
 
-template<class T> struct core_typeid_< T & >: core_typeid_< T >
-{
-};
+    template <class T>
+    struct core_typeid_<T const> : core_typeid_<T> {
+    };
 
-template<class T> struct core_typeid_< T const >: core_typeid_< T >
-{
-};
+    template <class T>
+    struct core_typeid_<T volatile> : core_typeid_<T> {
+    };
 
-template<class T> struct core_typeid_< T volatile >: core_typeid_< T >
-{
-};
-
-template<class T> struct core_typeid_< T const volatile >: core_typeid_< T >
-{
-};
+    template <class T>
+    struct core_typeid_<T const volatile> : core_typeid_<T> {
+    };
 
 } // namespace detail
 
@@ -135,26 +124,23 @@ template<class T> struct core_typeid_< T const volatile >: core_typeid_< T >
 #include <boost/core/demangle.hpp>
 #include <typeinfo>
 
-namespace boost
-{
+namespace boost {
 
-namespace core
-{
+namespace core {
 
-#if defined( BOOST_NO_STD_TYPEINFO )
+#if defined(BOOST_NO_STD_TYPEINFO)
 
-typedef ::type_info typeinfo;
+    typedef ::type_info typeinfo;
 
 #else
 
-typedef std::type_info typeinfo;
+    typedef std::type_info typeinfo;
 
 #endif
 
-inline std::string demangled_name( core::typeinfo const & ti )
-{
-    return core::demangle( ti.name() );
-}
+    inline std::string demangled_name(core::typeinfo const& ti) {
+        return core::demangle(ti.name());
+    }
 
 } // namespace core
 
@@ -164,4 +150,4 @@ inline std::string demangled_name( core::typeinfo const & ti )
 
 #endif
 
-#endif  // #ifndef BOOST_CORE_TYPEINFO_HPP_INCLUDED
+#endif // #ifndef BOOST_CORE_TYPEINFO_HPP_INCLUDED

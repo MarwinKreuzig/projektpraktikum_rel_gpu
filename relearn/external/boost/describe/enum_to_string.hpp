@@ -13,34 +13,30 @@
 #include <boost/mp11/algorithm.hpp>
 
 #if defined(_MSC_VER) && _MSC_VER == 1900
-# pragma warning(push)
-# pragma warning(disable: 4100) // unreferenced formal parameter
+#pragma warning(push)
+#pragma warning(disable : 4100) // unreferenced formal parameter
 #endif
 
-namespace boost
-{
-namespace describe
-{
+namespace boost {
+namespace describe {
 
-template<class E, class De = describe_enumerators<E>>
-char const * enum_to_string( E e, char const* def ) noexcept
-{
-    char const * r = def;
+    template <class E, class De = describe_enumerators<E>>
+    char const* enum_to_string(E e, char const* def) noexcept {
+        char const* r = def;
 
-    mp11::mp_for_each<De>([&](auto D){
+        mp11::mp_for_each<De>([&](auto D) {
+            if (e == D.value)
+                r = D.name;
+        });
 
-        if( e == D.value ) r = D.name;
-
-    });
-
-    return r;
-}
+        return r;
+    }
 
 } // namespace describe
 } // namespace boost
 
 #if defined(_MSC_VER) && _MSC_VER == 1900
-# pragma warning(pop)
+#pragma warning(pop)
 #endif
 
 #endif // defined(BOOST_DESCRIBE_CXX14)

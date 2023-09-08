@@ -45,7 +45,6 @@ protected:
         return static_cast<size_t>(new_val);
     }
 
-
     constexpr static int number_neurons_out_of_scope = 100;
 
     std::mt19937 mt;

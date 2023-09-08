@@ -72,9 +72,9 @@ target_link_libraries(relearn_lib PUBLIC project_options project_libraries)
 set_target_properties(relearn_lib PROPERTIES CXX_STANDARD 20)
 target_compile_definitions(relearn_lib PRIVATE RELEARN_LIB)
 
-if(CUDA_FOUND)
-        target_link_libraries(relearn_lib PUBLIC project_options relearn_gpu)
-endif()
+if (CUDA_FOUND)
+    target_link_libraries(relearn_lib PUBLIC project_options relearn_gpu)
+endif ()
 
 # benchmark# dont clutter the compile_commands file with libraries
 set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)

@@ -9,19 +9,15 @@
 
 #if defined(BOOST_DESCRIBE_CXX11)
 
-namespace boost
-{
-namespace describe
-{
-namespace detail
-{
+namespace boost {
+namespace describe {
+    namespace detail {
 
-constexpr bool cx_streq( char const * s1, char const * s2 )
-{
-    return s1[0] == s2[0] && ( s1[0] == 0 || cx_streq( s1 + 1, s2 + 1 ) );
-}
+        constexpr bool cx_streq(char const* s1, char const* s2) {
+            return s1[0] == s2[0] && (s1[0] == 0 || cx_streq(s1 + 1, s2 + 1));
+        }
 
-} // namespace detail
+    } // namespace detail
 } // namespace describe
 } // namespace boost
 

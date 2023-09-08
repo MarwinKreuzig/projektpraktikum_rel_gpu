@@ -28,15 +28,14 @@
 namespace boost {
 
 //! A function object that does nothing and can be used as an empty deleter for \c shared_ptr
-struct null_deleter
-{
+struct null_deleter {
     //! Function object result type
     typedef void result_type;
     /*!
      * Does nothing
      */
-    template< typename T >
-    void operator() (T*) const BOOST_NOEXCEPT {}
+    template <typename T>
+    void operator()(T*) const BOOST_NOEXCEPT { }
 };
 
 } // namespace boost

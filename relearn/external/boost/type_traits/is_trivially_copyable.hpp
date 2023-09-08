@@ -18,13 +18,9 @@ or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 namespace boost {
 
-template<class T>
+template <class T>
 struct is_trivially_copyable
-    : integral_constant<bool, has_trivial_copy<T>::value &&
-        has_trivial_assign<T>::value &&
-        has_trivial_move_constructor<T>::value &&
-        has_trivial_move_assign<T>::value &&
-        has_trivial_destructor<T>::value> { };
+    : integral_constant<bool, has_trivial_copy<T>::value && has_trivial_assign<T>::value && has_trivial_move_constructor<T>::value && has_trivial_move_assign<T>::value && has_trivial_destructor<T>::value> { };
 
 } /* boost */
 

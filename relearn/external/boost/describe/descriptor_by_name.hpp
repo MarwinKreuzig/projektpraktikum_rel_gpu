@@ -14,24 +14,26 @@
 #include <boost/mp11/bind.hpp>
 #include <boost/mp11/integral.hpp>
 
-namespace boost
-{
-namespace describe
-{
+namespace boost {
+namespace describe {
 
-namespace detail
-{
+    namespace detail {
 
-template<class D, class N> using match_by_name = mp11::mp_bool<cx_streq(N::name(), D::name)>;
+        template <class D, class N>
+        using match_by_name = mp11::mp_bool<cx_streq(N::name(), D::name)>;
 
-#define BOOST_DESCRIBE_MAKE_NAME_IMPL2(s, k) struct _boost_name_##s##_##k { static constexpr char const * name() { return #s; } }
+#define BOOST_DESCRIBE_MAKE_NAME_IMPL2(s, k)               \
+    struct _boost_name_##s##_##k {                         \
+        static constexpr char const* name() { return #s; } \
+    }
 #define BOOST_DESCRIBE_MAKE_NAME_IMPL(s, k) BOOST_DESCRIBE_MAKE_NAME_IMPL2(s, k)
 
-} // namespace detail
+    } // namespace detail
 
 #define BOOST_DESCRIBE_MAKE_NAME(s) BOOST_DESCRIBE_MAKE_NAME_IMPL(s, __LINE__)
 
-template<class L, class N> using descriptor_by_name = mp11::mp_at<L, mp11::mp_find_if_q<L, mp11::mp_bind_back<detail::match_by_name, N>>>;
+    template <class L, class N>
+    using descriptor_by_name = mp11::mp_at<L, mp11::mp_find_if_q<L, mp11::mp_bind_back<detail::match_by_name, N>>>;
 
 } // namespace describe
 } // namespace boost

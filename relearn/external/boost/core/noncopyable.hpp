@@ -18,46 +18,45 @@ namespace boost {
 
 //  Contributed by Dave Abrahams
 
-namespace noncopyable_  // protection from unintended ADL
+namespace noncopyable_ // protection from unintended ADL
 {
 #ifndef BOOST_NONCOPYABLE_BASE_TOKEN_DEFINED
 #define BOOST_NONCOPYABLE_BASE_TOKEN_DEFINED
 
-// noncopyable derives from base_token to enable Type Traits to detect
-// whether a type derives from noncopyable without needing the definition
-// of noncopyable itself.
-//
-// The definition of base_token is macro-guarded so that Type Traits can
-// define it locally without including this header, to avoid a dependency
-// on Core.
+    // noncopyable derives from base_token to enable Type Traits to detect
+    // whether a type derives from noncopyable without needing the definition
+    // of noncopyable itself.
+    //
+    // The definition of base_token is macro-guarded so that Type Traits can
+    // define it locally without including this header, to avoid a dependency
+    // on Core.
 
-  struct base_token {};
+    struct base_token { };
 
 #endif // #ifndef BOOST_NONCOPYABLE_BASE_TOKEN_DEFINED
 
-  class noncopyable: base_token
-  {
-  protected:
+    class noncopyable : base_token {
+    protected:
 #if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) && !defined(BOOST_NO_CXX11_NON_PUBLIC_DEFAULTED_FUNCTIONS)
-      BOOST_CONSTEXPR noncopyable() = default;
-      ~noncopyable() = default;
+        BOOST_CONSTEXPR noncopyable() = default;
+        ~noncopyable() = default;
 #else
-      noncopyable() {}
-      ~noncopyable() {}
+        noncopyable() { }
+        ~noncopyable() { }
 #endif
 #if !defined(BOOST_NO_CXX11_DELETED_FUNCTIONS)
-      noncopyable( const noncopyable& ) = delete;
-      noncopyable& operator=( const noncopyable& ) = delete;
+        noncopyable(const noncopyable&) = delete;
+        noncopyable& operator=(const noncopyable&) = delete;
 #else
-  private:  // emphasize the following members are private
-      noncopyable( const noncopyable& );
-      noncopyable& operator=( const noncopyable& );
+    private: // emphasize the following members are private
+        noncopyable(const noncopyable&);
+        noncopyable& operator=(const noncopyable&);
 #endif
-  };
+    };
 }
 
 typedef noncopyable_::noncopyable noncopyable;
 
 } // namespace boost
 
-#endif  // BOOST_CORE_NONCOPYABLE_HPP
+#endif // BOOST_CORE_NONCOPYABLE_HPP

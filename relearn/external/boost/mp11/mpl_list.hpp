@@ -10,17 +10,16 @@
 
 #include <boost/mp11/detail/mpl_common.hpp>
 
-namespace boost
-{
-namespace mpl
-{
+namespace boost {
+namespace mpl {
 
-template< typename Sequence > struct sequence_tag;
+    template <typename Sequence>
+    struct sequence_tag;
 
-template<class... T> struct sequence_tag<mp11::mp_list<T...>>
-{
-    using type = aux::mp11_tag;
-};
+    template <class... T>
+    struct sequence_tag<mp11::mp_list<T...>> {
+        using type = aux::mp11_tag;
+    };
 
 } // namespace mpl
 } // namespace boost

@@ -12,31 +12,30 @@
 
 #include <type_traits>
 
-namespace boost
-{
-namespace describe
-{
+namespace boost {
+namespace describe {
 
-// describe_enumerators<E>
+    // describe_enumerators<E>
 
-template<class E> using describe_enumerators = decltype( boost_enum_descriptor_fn( static_cast<E**>(0) ) );
+    template <class E>
+    using describe_enumerators = decltype(boost_enum_descriptor_fn(static_cast<E**>(0)));
 
-// has_describe_enumerators<E>
+    // has_describe_enumerators<E>
 
-namespace detail
-{
+    namespace detail {
 
-template<class E, class En = void> struct has_describe_enumerators: std::false_type
-{
-};
+        template <class E, class En = void>
+        struct has_describe_enumerators : std::false_type {
+        };
 
-template<class E> struct has_describe_enumerators<E, void_t<describe_enumerators<E>>>: std::true_type
-{
-};
+        template <class E>
+        struct has_describe_enumerators<E, void_t<describe_enumerators<E>>> : std::true_type {
+        };
 
-} // namespace detail
+    } // namespace detail
 
-template<class E> using has_describe_enumerators = detail::has_describe_enumerators<E>;
+    template <class E>
+    using has_describe_enumerators = detail::has_describe_enumerators<E>;
 
 } // namespace describe
 } // namespace boost

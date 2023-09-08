@@ -999,7 +999,7 @@ TEST_F(CalciumCalculatorTest, testCalciumCalculatorUpdateRelativeDisabled) {
 
     std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
     std::vector<FiredStatus> fired_status2(number_neurons, FiredStatus::Fired);
-    const auto neuron_ids = NeuronID::range(number_neurons)|ranges::to_vector;
+    const auto neuron_ids = NeuronID::range(number_neurons) | ranges::to_vector;
     extra_info->set_disabled_neurons(neuron_ids);
     const auto update_status = extra_info->get_disable_flags();
 

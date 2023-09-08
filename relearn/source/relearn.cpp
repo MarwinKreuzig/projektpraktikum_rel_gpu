@@ -422,7 +422,6 @@ int main(int argc, char** argv) {
     auto* const opt_stddev_background_activity = app.add_option("--background-activity-stddev", background_activity_stddev,
         "The standard deviation of the background activity by which all neurons are excited. The background activity is calculated as N(mean, stddev)");
 
-
     double synapse_conductance{ SynapticInputCalculator::default_conductance };
     app.add_option("--synapse-conductance", synapse_conductance, "The activity that is transferred to its neighbors when a neuron spikes. Default is 0.03");
 
@@ -618,7 +617,6 @@ int main(int argc, char** argv) {
         LogFiles::set_log_status(LogFiles::EventType::Events, !static_cast<bool>(*flag_enable_printing_events));
 
         LogFiles::set_log_status(LogFiles::EventType::Positions, static_cast<bool>(*flag_disable_printing_positions));
-        
 
         if (static_cast<bool>(*flag_disable_printing_network)) {
             LogFiles::set_log_status(LogFiles::EventType::InNetwork, true);
@@ -634,9 +632,8 @@ int main(int argc, char** argv) {
             LogFiles::set_log_status(LogFiles::EventType::PlasticityUpdateLocal, true);
         }
 
-            LogFiles::set_log_status(LogFiles::EventType::CalciumValues, static_cast<bool>(*flag_disable_printing_calcium));
-            LogFiles::set_log_status(LogFiles::EventType::ExtremeCalciumValues, static_cast<bool>(*flag_disable_printing_calcium));
-    
+        LogFiles::set_log_status(LogFiles::EventType::CalciumValues, static_cast<bool>(*flag_disable_printing_calcium));
+        LogFiles::set_log_status(LogFiles::EventType::ExtremeCalciumValues, static_cast<bool>(*flag_disable_printing_calcium));
 
         if (static_cast<bool>(*flag_disable_printing_fire_rate)) {
             LogFiles::set_log_status(LogFiles::EventType::FireRates, true);
@@ -799,7 +796,6 @@ int main(int argc, char** argv) {
     };
     auto subdomain = construct_subdomain();
 
-
     auto construct_background_activity_calculator = [&]() -> std::unique_ptr<BackgroundActivityCalculator> {
         if (chosen_background_activity_calculator_type == BackgroundActivityCalculatorType::Null) {
             RelearnException::check(!static_cast<bool>(*opt_base_background_activity), "Setting the base background activity is not valid when choosing the null-background calculator (or not setting it at all).");
@@ -848,7 +844,6 @@ int main(int argc, char** argv) {
         RelearnException::check(chosen_fired_status_communicator_type == FiredStatusCommunicatorType::Approximator, "Type {} of fired status communicator is not supported.", chosen_fired_status_communicator_type);
         return std::make_unique<FiredStatusApproximator>(MPIWrapper::get_num_ranks());
     };
-
 
     auto construct_input = [&]() -> std::unique_ptr<SynapticInputCalculator> {
         auto fired_status_communicator = construct_fired_status_communicator();

@@ -3,7 +3,6 @@
 #include <cstddef>
 #include <cstdint>
 
-
 namespace RelearnGPUTypes {
 
 using step_type = std::uint32_t;

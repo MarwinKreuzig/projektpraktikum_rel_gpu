@@ -109,10 +109,9 @@ public:
     static std::vector<SynapseType> invert_synapses(const std::vector<SynapseType>& synapses) {
         static constexpr auto to_weight = element<2>;
         return synapses | ranges::views::transform([](SynapseType synapse) {
-                 to_weight(synapse) = -to_weight(synapse);
-                 return synapse;
-               }) |
-               ranges::to_vector;
+            to_weight(synapse) = -to_weight(synapse);
+            return synapse;
+        }) | ranges::to_vector;
     }
 
     template <typename SynapseType>

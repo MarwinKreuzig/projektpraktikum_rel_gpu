@@ -10,7 +10,6 @@
 
 #include "RelearnTest.hpp"
 
-
 #include <chrono>
 #include <iostream>
 
@@ -27,8 +26,8 @@ RelearnGPUTest::~RelearnGPUTest() {
 }
 
 void RelearnGPUTest::SetUp() {
-    //CudaHelper::set_use_cuda(false);
-    
+    // CudaHelper::set_use_cuda(false);
+
     if (use_predetermined_seed) {
         std::cerr << "Using predetermined seed: " << predetermined_seed << '\n';
         mt.seed(predetermined_seed);

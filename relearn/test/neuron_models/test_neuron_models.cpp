@@ -15,10 +15,10 @@
 // #include <numeric>
 // #include <random>
 // #include <stack>
-//#include <tuple>
-//#include <vector>
+// #include <tuple>
+// #include <vector>
 //
-//void assert_getter_equality(const std::unique_ptr<NeuronModel>& model) {
+// void assert_getter_equality(const std::unique_ptr<NeuronModel>& model) {
 //    const auto number_neurons = model->get_number_neurons();
 //
 //    const auto& all_fired = model->get_fired();
@@ -44,7 +44,7 @@
 //    }
 //}
 //
-//void assert_getter_throws(const std::unique_ptr<NeuronModel>& model) {
+// void assert_getter_throws(const std::unique_ptr<NeuronModel>& model) {
 //    const auto number_neurons = model->get_number_neurons();
 //
 //    const auto& invalid_local_ids = NeuronID::range(number_neurons, number_neurons + number_neurons);
@@ -56,7 +56,7 @@
 //    }
 //}
 //
-//void test_initialization(std::unique_ptr<NeuronModel> model, size_t number_neurons) {
+// void test_initialization(std::unique_ptr<NeuronModel> model, size_t number_neurons) {
 //    const auto number_neurons_pre_init = model->get_number_neurons();
 //    ASSERT_EQ(number_neurons_pre_init, 0);
 //
@@ -73,7 +73,7 @@
 //    assert_getter_throws(model);
 //}
 //
-//void test_creation(std::unique_ptr<NeuronModel> model, size_t number_neurons_init, size_t number_neurons_create) {
+// void test_creation(std::unique_ptr<NeuronModel> model, size_t number_neurons_init, size_t number_neurons_create) {
 //    model->init(number_neurons_init);
 //
 //    // Copy on purpose
@@ -129,7 +129,7 @@
 //    assert_getter_throws(model);
 //}
 //
-//void NeuronModelsTest::test_update(std::unique_ptr<NeuronModel> model, std::shared_ptr<NetworkGraph> ng, size_t number_neurons) {
+// void NeuronModelsTest::test_update(std::unique_ptr<NeuronModel> model, std::shared_ptr<NetworkGraph> ng, size_t number_neurons) {
 //    model->init(number_neurons);
 //
 //    const auto conductance = model->get_k();
@@ -182,7 +182,7 @@
 //    }
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorPoisson) {
+// TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorPoisson) {
 //    using namespace models;
 //
 //    const auto expected_k = NeuronModel::default_k;
@@ -208,7 +208,7 @@
 //    ASSERT_EQ(expected_tau_x, model->get_tau_x());
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorIzhikevich) {
+// TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorIzhikevich) {
 //    using namespace models;
 //
 //    const auto expected_k = NeuronModel::default_k;
@@ -244,7 +244,7 @@
 //    ASSERT_EQ(expected_k3, model->get_k3());
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorFitzHughNagumo) {
+// TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorFitzHughNagumo) {
 //    using namespace models;
 //
 //    const auto expected_k = NeuronModel::default_k;
@@ -270,7 +270,7 @@
 //    ASSERT_EQ(expected_phi, model->get_phi());
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorAEIF) {
+// TEST_F(NeuronModelsTest, testNeuronModelsDefaultConstructorAEIF) {
 //    using namespace models;
 //
 //    const auto expected_k = NeuronModel::default_k;
@@ -308,7 +308,7 @@
 //    ASSERT_EQ(expected_V_spike, model->get_V_spike());
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorPoisson) {
+// TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorPoisson) {
 //    using namespace models;
 //    using urd = uniform_real_distribution<double>;
 //    using uid = uniform_int_distribution<unsigned int>;
@@ -347,7 +347,7 @@
 //    ASSERT_EQ(expected_tau_x, model->get_tau_x());
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorIzhikevich) {
+// TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorIzhikevich) {
 //    using namespace models;
 //    using urd = uniform_real_distribution<double>;
 //    using uid = uniform_int_distribution<unsigned int>;
@@ -401,7 +401,7 @@
 //    ASSERT_EQ(expected_k3, model->get_k3());
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorFitzHughNagumo) {
+// TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorFitzHughNagumo) {
 //    using namespace models;
 //    using urd = uniform_real_distribution<double>;
 //    using uid = uniform_int_distribution<unsigned int>;
@@ -440,7 +440,7 @@
 //    ASSERT_EQ(expected_phi, model->get_phi());
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorAEIF) {
+// TEST_F(NeuronModelsTest, testNeuronModelsRandomConstructorAEIF) {
 //    using namespace models;
 //    using urd = uniform_real_distribution<double>;
 //    using uid = uniform_int_distribution<unsigned int>;
@@ -497,7 +497,7 @@
 //    ASSERT_EQ(expected_V_spike, model->get_V_spike());
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsClonePoisson) {
+// TEST_F(NeuronModelsTest, testNeuronModelsClonePoisson) {
 //    using namespace models;
 //    using urd = uniform_real_distribution<double>;
 //    using uid = uniform_int_distribution<unsigned int>;
@@ -550,7 +550,7 @@
 //    ASSERT_EQ(expected_tau_x, cast_cloned_model->get_tau_x());
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsCloneIzhikevich) {
+// TEST_F(NeuronModelsTest, testNeuronModelsCloneIzhikevich) {
 //    using namespace models;
 //    using urd = uniform_real_distribution<double>;
 //    using uid = uniform_int_distribution<unsigned int>;
@@ -623,7 +623,7 @@
 //    ASSERT_EQ(expected_k3, cast_cloned_model->get_k3());
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsCloneFitzHughNagumo) {
+// TEST_F(NeuronModelsTest, testNeuronModelsCloneFitzHughNagumo) {
 //    using namespace models;
 //    using urd = uniform_real_distribution<double>;
 //    using uid = uniform_int_distribution<unsigned int>;
@@ -676,7 +676,7 @@
 //    ASSERT_EQ(expected_phi, cast_cloned_model->get_phi());
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsCloneAEIF) {
+// TEST_F(NeuronModelsTest, testNeuronModelsCloneAEIF) {
 //    using namespace models;
 //    using urd = uniform_real_distribution<double>;
 //    using uid = uniform_int_distribution<unsigned int>;
@@ -753,7 +753,7 @@
 //    ASSERT_EQ(expected_V_spike, cast_cloned_model->get_V_spike());
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsCreatePoisson) {
+// TEST_F(NeuronModelsTest, testNeuronModelsCreatePoisson) {
 //    using namespace models;
 //    using urd = uniform_real_distribution<double>;
 //    using uid = uniform_int_distribution<unsigned int>;
@@ -792,7 +792,7 @@
 //    ASSERT_EQ(expected_tau_x, model->get_tau_x());
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsCreateIzhikevich) {
+// TEST_F(NeuronModelsTest, testNeuronModelsCreateIzhikevich) {
 //    using namespace models;
 //    using urd = uniform_real_distribution<double>;
 //    using uid = uniform_int_distribution<unsigned int>;
@@ -846,7 +846,7 @@
 //    ASSERT_EQ(expected_k3, model->get_k3());
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsCreateFitzHughNagumo) {
+// TEST_F(NeuronModelsTest, testNeuronModelsCreateFitzHughNagumo) {
 //    using namespace models;
 //    using urd = uniform_real_distribution<double>;
 //    using uid = uniform_int_distribution<unsigned int>;
@@ -885,7 +885,7 @@
 //    ASSERT_EQ(expected_phi, model->get_phi());
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsCreateAEIF) {
+// TEST_F(NeuronModelsTest, testNeuronModelsCreateAEIF) {
 //    using namespace models;
 //    using urd = uniform_real_distribution<double>;
 //    using uid = uniform_int_distribution<unsigned int>;
@@ -942,7 +942,7 @@
 //    ASSERT_EQ(expected_V_spike, model->get_V_spike());
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsInitPoisson) {
+// TEST_F(NeuronModelsTest, testNeuronModelsInitPoisson) {
 //    using namespace models;
 //    auto model = std::make_unique<PoissonModel>();
 //
@@ -951,7 +951,7 @@
 //    test_initialization(std::move(model), number_neurons);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsInitIzhikevich) {
+// TEST_F(NeuronModelsTest, testNeuronModelsInitIzhikevich) {
 //    using namespace models;
 //    auto model = std::make_unique<IzhikevichModel>();
 //
@@ -960,7 +960,7 @@
 //    test_initialization(std::move(model), number_neurons);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsInitFitzHughNagumo) {
+// TEST_F(NeuronModelsTest, testNeuronModelsInitFitzHughNagumo) {
 //    using namespace models;
 //    auto model = std::make_unique<FitzHughNagumoModel>();
 //
@@ -969,7 +969,7 @@
 //    test_initialization(std::move(model), number_neurons);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsInitAEIF) {
+// TEST_F(NeuronModelsTest, testNeuronModelsInitAEIF) {
 //    using namespace models;
 //    auto model = std::make_unique<AEIFModel>();
 //
@@ -978,7 +978,7 @@
 //    test_initialization(std::move(model), number_neurons);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsPoisson) {
+// TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsPoisson) {
 //    using namespace models;
 //    auto model = std::make_unique<PoissonModel>();
 //
@@ -988,7 +988,7 @@
 //    test_creation(std::move(model), number_neurons_init, number_neurons_create);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsIzhikevich) {
+// TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsIzhikevich) {
 //    using namespace models;
 //    auto model = std::make_unique<IzhikevichModel>();
 //
@@ -998,7 +998,7 @@
 //    test_creation(std::move(model), number_neurons_init, number_neurons_create);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsFitzHughNagumo) {
+// TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsFitzHughNagumo) {
 //    using namespace models;
 //    auto model = std::make_unique<FitzHughNagumoModel>();
 //
@@ -1008,7 +1008,7 @@
 //    test_creation(std::move(model), number_neurons_init, number_neurons_create);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsAEIF) {
+// TEST_F(NeuronModelsTest, testNeuronModelsCreateNeuronsAEIF) {
 //    using namespace models;
 //    auto model = std::make_unique<AEIFModel>();
 //
@@ -1018,7 +1018,7 @@
 //    test_creation(std::move(model), number_neurons_init, number_neurons_create);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputEmptyPoisson) {
+// TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputEmptyPoisson) {
 //    using namespace models;
 //    auto model = std::make_unique<PoissonModel>();
 //
@@ -1029,7 +1029,7 @@
 //    test_update(std::move(model), std::move(ng), number_neurons);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputEmptyIzhikevich) {
+// TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputEmptyIzhikevich) {
 //    using namespace models;
 //    auto model = std::make_unique<IzhikevichModel>();
 //
@@ -1040,7 +1040,7 @@
 //    test_update(std::move(model), std::move(ng), number_neurons);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputEmptyFitzHughNagumo) {
+// TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputEmptyFitzHughNagumo) {
 //    using namespace models;
 //    auto model = std::make_unique<FitzHughNagumoModel>();
 //
@@ -1051,7 +1051,7 @@
 //    test_update(std::move(model), std::move(ng), number_neurons);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputEmptyAEIF) {
+// TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputEmptyAEIF) {
 //    using namespace models;
 //    auto model = std::make_unique<AEIFModel>();
 //
@@ -1062,7 +1062,7 @@
 //    test_update(std::move(model), std::move(ng), number_neurons);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputSomePoisson) {
+// TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputSomePoisson) {
 //    using namespace models;
 //    auto model = std::make_unique<PoissonModel>();
 //
@@ -1074,7 +1074,7 @@
 //    test_update(std::move(model), std::move(ng), number_neurons);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputSomeIzhikevich) {
+// TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputSomeIzhikevich) {
 //    using namespace models;
 //    auto model = std::make_unique<IzhikevichModel>();
 //
@@ -1086,7 +1086,7 @@
 //    test_update(std::move(model), std::move(ng), number_neurons);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputSomeFitzHughNagumo) {
+// TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputSomeFitzHughNagumo) {
 //    using namespace models;
 //    auto model = std::make_unique<FitzHughNagumoModel>();
 //
@@ -1098,7 +1098,7 @@
 //    test_update(std::move(model), std::move(ng), number_neurons);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputSomeAEIF) {
+// TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputSomeAEIF) {
 //    using namespace models;
 //    auto model = std::make_unique<AEIFModel>();
 //
@@ -1110,7 +1110,7 @@
 //    test_update(std::move(model), std::move(ng), number_neurons);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputFullPoisson) {
+// TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputFullPoisson) {
 //    using namespace models;
 //    auto model = std::make_unique<PoissonModel>(
 //        NeuronModel::default_k,
@@ -1125,7 +1125,7 @@
 //    test_update(std::move(model), std::move(ng), number_neurons);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputFullIzhikevich) {
+// TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputFullIzhikevich) {
 //    using namespace models;
 //    auto model = std::make_unique<IzhikevichModel>(
 //        NeuronModel::default_k,
@@ -1143,7 +1143,7 @@
 //    test_update(std::move(model), std::move(ng), number_neurons);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputFullFitzHughNagumo) {
+// TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputFullFitzHughNagumo) {
 //    using namespace models;
 //    auto model = std::make_unique<FitzHughNagumoModel>(
 //        NeuronModel::default_k,
@@ -1158,7 +1158,7 @@
 //    test_update(std::move(model), std::move(ng), number_neurons);
 //}
 //
-//TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputFullAEIF) {
+// TEST_F(NeuronModelsTest, testNeuronModelsSynapticInputFullAEIF) {
 //    using namespace models;
 //    auto model = std::make_unique<AEIFModel>(
 //        NeuronModel::default_k,

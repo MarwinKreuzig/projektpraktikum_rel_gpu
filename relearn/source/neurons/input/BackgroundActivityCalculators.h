@@ -39,11 +39,11 @@ public:
      * @param last_step The last step in which background activity is applied
      */
     NullBackgroundActivityCalculator()
-        : BackgroundActivityCalculator() { 
-            if(CudaHelper::is_cuda_available()) {
-                        gpu_handle = gpu::background::set_constant_background(0);
-            }
+        : BackgroundActivityCalculator() {
+        if (CudaHelper::is_cuda_available()) {
+            gpu_handle = gpu::background::set_constant_background(0);
         }
+    }
 
     virtual ~NullBackgroundActivityCalculator() = default;
 
@@ -55,8 +55,8 @@ public:
         return std::make_unique<NullBackgroundActivityCalculator>();
     }
 
-    protected:
-     /**
+protected:
+    /**
      * @brief This activity calculator does not provide any input
      * @param step The current update step
      */
@@ -66,7 +66,6 @@ public:
     void init_gpu(const number_neurons_type number_neurons) override {
         BackgroundActivityCalculator::init_gpu(number_neurons);
     }
-
 };
 
 /**
@@ -83,14 +82,12 @@ public:
     ConstantBackgroundActivityCalculator(const double input) noexcept
         : BackgroundActivityCalculator()
         , base_input(input) {
-            if(CudaHelper::is_cuda_available()) {
-                        gpu_handle = gpu::background::set_constant_background(base_input);
-            }
+        if (CudaHelper::is_cuda_available()) {
+            gpu_handle = gpu::background::set_constant_background(base_input);
+        }
     }
 
     virtual ~ConstantBackgroundActivityCalculator() = default;
-
-    
 
     /**
      * @brief Creates a clone of this instance (without neurons), copies all parameters
@@ -111,7 +108,7 @@ public:
         return parameters;
     }
 
-    protected:
+protected:
     /**
      * @brief Updates the input, providing constant or 0 input depending on the disable_flags
      * @param step The current update step
@@ -129,7 +126,6 @@ public:
         }
         Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
     }
-
 
     void init_gpu(const number_neurons_type number_neurons) override {
         BackgroundActivityCalculator::init_gpu(number_neurons);
@@ -159,7 +155,7 @@ public:
         , stddev_input(stddev) {
         RelearnException::check(stddev > 0.0, "NormalBackgroundActivityCalculator::NormalBackgroundActivityCalculator: stddev was: {}", stddev);
 
-        if(CudaHelper::is_cuda_available()) {
+        if (CudaHelper::is_cuda_available()) {
             gpu_handle = gpu::background::set_normal_background(mean_input, stddev_input);
         }
     }
@@ -186,7 +182,7 @@ public:
         return parameters;
     }
 
-    protected:
+protected:
     /**
      * @brief Updates the input, providing normal or 0 input depending on the status of the neuron in the extra infos
      * @param step The current update step
@@ -204,7 +200,6 @@ public:
         }
         Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
     }
-
 
     void init_gpu(const number_neurons_type number_neurons) override {
         BackgroundActivityCalculator::init_gpu(number_neurons);
@@ -239,8 +234,8 @@ public:
         , multiplier(multiplier) {
         RelearnException::check(stddev > 0.0, "FastNormalBackgroundActivityCalculator::FastNormalBackgroundActivityCalculator: stddev was: {}", stddev);
         RelearnException::check(multiplier > 0, "FastNormalBackgroundActivityCalculator::FastNormalBackgroundActivityCalculator: multiplier was: 0", stddev);
-        if(CudaHelper::is_cuda_available()) {
-            gpu_handle = gpu::background::set_fast_normal_background(mean,stddev, multiplier);
+        if (CudaHelper::is_cuda_available()) {
+            gpu_handle = gpu::background::set_fast_normal_background(mean, stddev, multiplier);
         }
     }
 
@@ -266,7 +261,7 @@ public:
         return parameters;
     }
 
-    protected:
+protected:
     /**
      * @brief Updates the input, providing constant to all neurons to speed up the calculations.
      * @param step The current update step
@@ -341,11 +336,9 @@ public:
         RelearnException::fail("FastNormalBackgroundActivityCalculator::get_background_activity: Not supported method with this calculator");
     }
 
-
-
     void init_gpu(const number_neurons_type number_neurons) override {
         BackgroundActivityCalculator::init_gpu(number_neurons);
-        //RelearnException::fail("No gpu support");
+        // RelearnException::fail("No gpu support");
     }
 
 private:
@@ -409,7 +402,7 @@ public:
             }
         }
 
-        if(CudaHelper::is_cuda_available()) {
+        if (CudaHelper::is_cuda_available()) {
             RelearnException::fail("No gpu support");
         }
     }
@@ -423,13 +416,10 @@ public:
         }
     }
 
-    
-
     std::shared_ptr<BackgroundActivityCalculator> get_background_activity_calculator_for_neuron(const NeuronID& neuron_id) {
         return neuron_id_to_background_activity_calculator[neuron_id.get_neuron_id()];
     }
 
-    
     /**
      * @brief Creates a clone of this instance (without neurons), copies all parameters
      * @return A copy of this instance
@@ -447,7 +437,7 @@ public:
         return parameters;
     }
 
-    protected: 
+protected:
     /**
      * @brief Initializes this instance to hold the given number of neurons
      * @param number_neurons The number of neurons for this instance, must be > 0
@@ -531,12 +521,10 @@ public:
         Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_BACKGROUND);
     }
 
-
     void init_gpu(const number_neurons_type number_neurons) override {
         BackgroundActivityCalculator::init_gpu(number_neurons);
         RelearnException::fail("No gpu support");
     }
-
 
 private:
     std::shared_ptr<BackgroundActivityCalculator> parse_calculator_type(std::string type) {

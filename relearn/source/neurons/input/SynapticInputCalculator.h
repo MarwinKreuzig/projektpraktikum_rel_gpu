@@ -252,7 +252,6 @@ protected:
 
     [[nodiscard]] double get_local_and_distant_synaptic_input(const std::span<const FiredStatus> fired, const NeuronID& neuron_id);
 
-
 protected:
     std::shared_ptr<NeuronsExtraInfo> extra_infos{};
     std::shared_ptr<NetworkGraph> network_graph{};

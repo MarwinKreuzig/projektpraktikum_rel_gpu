@@ -16,14 +16,13 @@
 
 TEST_F(RelearnExceptionTest, testFail) {
     RelearnException::hide_messages = false;
-    
-    const std::string message = "sadflhbcn\nkow97430921*:)§\" $SDMFSL ";
+
+    const std::string message = "sadflhbcn\nkow97430921*:)ï¿½\" $SDMFSL ";
     ASSERT_THROW(RelearnException::fail(message), RelearnException);
 
     try {
         RelearnException::fail(message);
-    }
-    catch (const RelearnException& ex) {
+    } catch (const RelearnException& ex) {
         const auto& reason = ex.what();
         ASSERT_EQ(message, reason);
     }
@@ -34,7 +33,7 @@ TEST_F(RelearnExceptionTest, testFail) {
 TEST_F(RelearnExceptionTest, testCheck) {
     RelearnException::hide_messages = false;
 
-    const std::string message = "sadflhbcn\nkow97430921*:)§\" $SDMFSL ";
+    const std::string message = "sadflhbcn\nkow97430921*:)ï¿½\" $SDMFSL ";
 
     ASSERT_NO_THROW(RelearnException::check(true, message));
     ASSERT_THROW(RelearnException::check(false, message), RelearnException);

@@ -7,7 +7,6 @@
 //
 //  See http://www.boost.org/libs/type_traits for most recent version including documentation.
 
-
 #ifndef BOOST_TT_IS_FINAL_HPP_INCLUDED
 #define BOOST_TT_IS_FINAL_HPP_INCLUDED
 
@@ -20,9 +19,11 @@
 namespace boost {
 
 #ifdef BOOST_IS_FINAL
-template <class T> struct is_final : public integral_constant<bool, BOOST_IS_FINAL(T)> {};
+template <class T>
+struct is_final : public integral_constant<bool, BOOST_IS_FINAL(T)> { };
 #else
-template <class T> struct is_final : public integral_constant<bool, false> {};
+template <class T>
+struct is_final : public integral_constant<bool, false> { };
 #endif
 
 } // namespace boost

@@ -148,7 +148,7 @@ TEST_F(BackgroundActivityTest, testConstantBackgroundActivityConstruct) {
     const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
     const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
 
-    test_init_create(background_calculator, number_neurons_init, number_neurons_create, mt, true,true);
+    test_init_create(background_calculator, number_neurons_init, number_neurons_create, mt, true, true);
 
     const auto& parameters = background_calculator->get_parameter();
     ASSERT_EQ(parameters.size(), 1);
@@ -243,7 +243,7 @@ TEST_F(BackgroundActivityTest, testNullBackgroundActivityUpdate) {
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
     background_calculator->update_input(step, true);
 
-    if(check_equality) {
+    if (check_equality) {
         test_background_equality(background_calculator);
     }
 
@@ -278,7 +278,7 @@ TEST_F(BackgroundActivityTest, testConstantBackgroundActivityUpdate) {
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
     background_calculator->update_input(step, true);
 
-if(check_equality) {
+    if (check_equality) {
         test_background_equality(background_calculator);
     }
     const auto& background_input = background_calculator->get_background_activity();
@@ -318,7 +318,7 @@ TEST_F(BackgroundActivityTest, testNormalBackgroundActivityUpdate) {
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
     background_calculator->update_input(step, true);
 
-    if(check_equality) {
+    if (check_equality) {
         test_background_equality(background_calculator);
     }
     std::vector<double> background_values{};
@@ -369,7 +369,6 @@ TEST_F(BackgroundActivityTest, testFastNormalBackgroundActivityUpdate) {
     const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
     background_calculator->update_input(step, true);
 
-
     const auto background_values = NeuronID::range_id(number_neurons)
         | ranges::views::filter(not_equal_to(UpdateStatus::Disabled), lookup(update_status))
         | ranges::views::transform([&background_calculator, mean_background](const auto neuron_id) { return background_calculator->get_background_activity(NeuronID(neuron_id)) - mean_background; })
@@ -412,7 +411,7 @@ std::pair<std::string, std::vector<std::pair<std::string, double>>> get_random_c
 }
 
 TEST_F(BackgroundActivityTest, testFlexible) {
-    if(CudaHelper::is_cuda_available()) {
+    if (CudaHelper::is_cuda_available()) {
         return;
     }
 
@@ -499,7 +498,7 @@ TEST_F(BackgroundActivityTest, testFlexible) {
 }
 
 TEST_F(BackgroundActivityTest, testFlexibleMultiplePerStep) {
-    if(CudaHelper::is_cuda_available()) {
+    if (CudaHelper::is_cuda_available()) {
         return;
     }
 
@@ -576,7 +575,7 @@ TEST_F(BackgroundActivityTest, testFlexibleMultiplePerStep) {
 }
 
 TEST_F(BackgroundActivityTest, testFlexibleMultiplePerStepFail) {
-    if(CudaHelper::is_cuda_available()) {
+    if (CudaHelper::is_cuda_available()) {
         return;
     }
 
@@ -628,7 +627,7 @@ TEST_F(BackgroundActivityTest, testFlexibleMultiplePerStepFail) {
 }
 
 TEST_F(BackgroundActivityTest, testFlexibleCalculatorGPU) {
-    if(!CudaHelper::is_cuda_available()) {
+    if (!CudaHelper::is_cuda_available()) {
         return;
     }
 
@@ -640,11 +639,11 @@ TEST_F(BackgroundActivityTest, testFlexibleCalculatorGPU) {
 
     std::ofstream of(file_path, std::ios::binary | std::ios::out);
 
-    ASSERT_THROW( std::make_unique<FlexibleBackgroundActivityCalculator>(file_path, my_rank, local_area_translator), RelearnException);
+    ASSERT_THROW(std::make_unique<FlexibleBackgroundActivityCalculator>(file_path, my_rank, local_area_translator), RelearnException);
 }
 
 TEST_F(BackgroundActivityTest, testFlexibleSameCalculator) {
-    if(CudaHelper::is_cuda_available()) {
+    if (CudaHelper::is_cuda_available()) {
         return;
     }
 

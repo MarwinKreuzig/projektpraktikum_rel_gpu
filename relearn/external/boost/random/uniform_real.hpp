@@ -32,14 +32,12 @@ namespace boost {
  * This class is deprecated.  Please use @c uniform_real_distribution in
  * new code.
  */
-template<class RealType = double>
-class uniform_real : public random::uniform_real_distribution<RealType>
-{
+template <class RealType = double>
+class uniform_real : public random::uniform_real_distribution<RealType> {
     typedef random::uniform_real_distribution<RealType> base_type;
-public:
 
-    class param_type : public base_type::param_type
-    {
+public:
+    class param_type : public base_type::param_type {
     public:
         typedef uniform_real distribution_type;
         /**
@@ -48,9 +46,8 @@ public:
          * Requires: min <= max
          */
         explicit param_type(RealType min_arg = RealType(0.0),
-                            RealType max_arg = RealType(1.0))
-          : base_type::param_type(min_arg, max_arg)
-        {}
+            RealType max_arg = RealType(1.0))
+            : base_type::param_type(min_arg, max_arg) { }
     };
 
     /**
@@ -60,16 +57,14 @@ public:
      * Requires: min <= max
      */
     explicit uniform_real(RealType min_arg = RealType(0.0),
-                          RealType max_arg = RealType(1.0))
-      : base_type(min_arg, max_arg)
-    {
+        RealType max_arg = RealType(1.0))
+        : base_type(min_arg, max_arg) {
         BOOST_ASSERT(min_arg < max_arg);
     }
 
     /** Constructs a uniform_real distribution from its parameters. */
     explicit uniform_real(const param_type& parm)
-      : base_type(parm)
-    {}
+        : base_type(parm) { }
 
     /** Returns the parameters of the distribution */
     param_type param() const { return param_type(this->a(), this->b()); }

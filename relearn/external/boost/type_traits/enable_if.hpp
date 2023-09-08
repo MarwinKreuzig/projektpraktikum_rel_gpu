@@ -19,16 +19,16 @@ or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 namespace boost {
 
-template<bool B, class T = void>
+template <bool B, class T = void>
 struct enable_if_ {
     typedef T type;
 };
 
-template<class T>
+template <class T>
 struct enable_if_<false, T> { };
 
 #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
-template<bool B, class T = void>
+template <bool B, class T = void>
 using enable_if_t = typename enable_if_<B, T>::type;
 #endif
 

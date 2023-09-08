@@ -13,5 +13,4 @@
 #include "RelearnTest.hpp"
 
 class FMMTest : public RelearnMemoryTest {
-
 };

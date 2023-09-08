@@ -162,14 +162,10 @@ TEST_F(NeuronIdParserTest, testExtractNeuronIDs) {
     rank_neuron_ids.insert(rank_neuron_ids.begin() + position_1, RankNeuronId(my_rank, NeuronID(42)));
     rank_neuron_ids.insert(rank_neuron_ids.begin() + position_2, RankNeuronId(my_rank, NeuronID(9874)));
 
-    const std::vector<NeuronID> golden_ids =
-        rank_neuron_ids |
-        ranges::views::filter(equal_to(my_rank), &RankNeuronId::get_rank) |
-        ranges::views::transform([](const RankNeuronId &rni) {
-          const auto &[rank, id] = rni;
-          return NeuronID(id.get_neuron_id());
-        }) |
-        ranges::to_vector;
+    const std::vector<NeuronID> golden_ids = rank_neuron_ids | ranges::views::filter(equal_to(my_rank), &RankNeuronId::get_rank) | ranges::views::transform([](const RankNeuronId& rni) {
+        const auto& [rank, id] = rni;
+        return NeuronID(id.get_neuron_id());
+    }) | ranges::to_vector;
 
     const auto& extracted_ids = NeuronIdParser::extract_my_ids(rank_neuron_ids, my_rank);
 

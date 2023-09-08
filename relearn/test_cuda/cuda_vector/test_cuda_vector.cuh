@@ -15,6 +15,4 @@
 #include "CudaVector.cuh"
 
 class CudaTest : public RelearnGPUTest {
-
-    
 };

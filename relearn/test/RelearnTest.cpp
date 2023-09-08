@@ -22,11 +22,6 @@
 #include <chrono>
 #include <iostream>
 
-//TODO
-//Test CudaVector
-//Free everything between tests
-//Problem reusing __constant__ in Tests
-
 int RelearnTest::iterations = 10;
 double RelearnTest::eps = 0.001;
 
@@ -44,8 +39,8 @@ RelearnTest::~RelearnTest() {
 }
 
 void RelearnTest::SetUp() {
-    //CudaHelper::set_use_cuda(false);
-    
+    // CudaHelper::set_use_cuda(false);
+
     if (use_predetermined_seed) {
         std::cerr << "Using predetermined seed: " << predetermined_seed << '\n';
         mt.seed(predetermined_seed);

@@ -2,18 +2,18 @@ variables:
   DOCKER_AUTH_CONFIG: "echo {\"auths\": {\"registry.git.rwth-aachen.de\": {\"auth\": \"${GIT_TOKEN}\"}}}"
   DOCKER_TLS_CERTDIR: "/certs"
   DOCKER_HOST: tcp://docker:2376/
-  
+
 
 services:
   - docker:24.0.2-dind
 
 build-mpi:
   rules:
-  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: build
   before_script:
-    - cd relearn && mkdir build-docker && cd build-docker  
+    - cd relearn && mkdir build-docker && cd build-docker
   script:
     - cmake -DENABLE_CLANG_TIDY=0 -DENABLE_CUDA=0 .. && make -j 16
   artifacts:
@@ -24,18 +24,18 @@ build-mpi:
 
 build-clang-tidy:
   rules:
-  - if: $CLANG_TIDY == "TRUE"
+    - if: $CLANG_TIDY == "TRUE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: build
   before_script:
-    - cd relearn && mkdir build-clang-tidy && cd build-clang-tidy  
+    - cd relearn && mkdir build-clang-tidy && cd build-clang-tidy
   script:
     - cmake -DENABLE_CLANG_TIDY=0 .. && chmod 755 ../check_tidy.sh && ../check_tidy.sh
 
 # run tests using the binary built before
 test-mpi-once:
   rules:
-  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: test
   services:
@@ -44,17 +44,17 @@ test-mpi-once:
     - cd relearn/build-docker
   script:
     - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 ./bin/relearn_tests --gtest_filter=*ONCE
-  dependencies: 
+  dependencies:
     - build-mpi
   artifacts:
     paths:
       - relearn/build-docker
 
-      
+
 # run tests using the binary built before
 test-mpi-multiple:
   rules:
-  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: test
   services:
@@ -63,7 +63,7 @@ test-mpi-multiple:
     - cd relearn/build-docker
   script:
     - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 ./bin/relearn_tests --gtest_filter=*-*ONCE  --gtest_repeat=10 --gtest_shuffle
-  dependencies: 
+  dependencies:
     - build-mpi
   artifacts:
     paths:
@@ -71,13 +71,13 @@ test-mpi-multiple:
 
 build-nompi:
   rules:
-  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: build
   services:
     - docker:24.0.2-dind
   before_script:
-    - cd relearn && mkdir build-docker-nompi && cd build-docker-nompi  
+    - cd relearn && mkdir build-docker-nompi && cd build-docker-nompi
   script:
     - cmake -DENABLE_CLANG_TIDY=0 -DENABLE_MPI=0 -DENABLE_CUDA=0 .. && make -j 16
   artifacts:
@@ -87,7 +87,7 @@ build-nompi:
 # run tests using the binary built before
 test-nompi-once:
   rules:
-  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: test
   services:
@@ -96,7 +96,7 @@ test-nompi-once:
     - cd relearn/build-docker-nompi
   script:
     - ./bin/relearn_tests --gtest_filter=*ONCE
-  dependencies: 
+  dependencies:
     - build-nompi
   artifacts:
     paths:
@@ -106,7 +106,7 @@ test-nompi-once:
 # run tests using the binary built before
 test-nompi-multiple:
   rules:
-  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: test
   services:
@@ -115,15 +115,15 @@ test-nompi-multiple:
     - cd relearn/build-docker-nompi
   script:
     - ./bin/relearn_tests --gtest_filter=*-*ONCE  --gtest_repeat=10 --gtest_shuffle
-  dependencies: 
+  dependencies:
     - build-nompi
   artifacts:
     paths:
-      - relearn/build-docker-nompi  
+      - relearn/build-docker-nompi
 
 deploy-single:
   rules:
-  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
@@ -134,11 +134,11 @@ deploy-single:
     - test-mpi-multiple
   artifacts:
     paths:
-      - relearn/build-docker  
+      - relearn/build-docker
 
-deploy-create:    
+deploy-create:
   rules:
-  - if: $TEST_DEPLOY == "TRUE"
+    - if: $TEST_DEPLOY == "TRUE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
@@ -151,9 +151,9 @@ deploy-create:
     paths:
       - relearn/build-docker
 
-deploy-disable:    
+deploy-disable:
   rules:
-  - if: $TEST_DEPLOY == "TRUE"
+    - if: $TEST_DEPLOY == "TRUE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
@@ -164,11 +164,11 @@ deploy-disable:
     - test-mpi-multiple
   artifacts:
     paths:
-      - relearn/build-docker    
+      - relearn/build-docker
 
-deploy-single-nompi:    
+deploy-single-nompi:
   rules:
-  - if: $TEST_DEPLOY == "TRUE"
+    - if: $TEST_DEPLOY == "TRUE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
@@ -179,11 +179,11 @@ deploy-single-nompi:
     - test-nompi-multiple
   artifacts:
     paths:
-      - relearn/build-docker-nompi 
-      
-deploy-create-nompi:    
+      - relearn/build-docker-nompi
+
+deploy-create-nompi:
   rules:
-  - if: $TEST_DEPLOY == "TRUE"
+    - if: $TEST_DEPLOY == "TRUE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
@@ -194,12 +194,12 @@ deploy-create-nompi:
     - test-nompi-multiple
   artifacts:
     paths:
-      - relearn/build-docker-nompi   
-  
+      - relearn/build-docker-nompi
 
-deploy-disable-nompi:   
+
+deploy-disable-nompi:
   rules:
-  - if: $TEST_DEPLOY == "TRUE"
+    - if: $TEST_DEPLOY == "TRUE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
@@ -210,12 +210,12 @@ deploy-disable-nompi:
     - test-nompi-multiple
   artifacts:
     paths:
-      - relearn/build-docker-nompi  
+      - relearn/build-docker-nompi
 
 
-deploy-mpi-1:    
+deploy-mpi-1:
   rules:
-  - if: $TEST_DEPLOY == "TRUE"
+    - if: $TEST_DEPLOY == "TRUE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
@@ -226,11 +226,11 @@ deploy-mpi-1:
     - test-mpi-multiple
   artifacts:
     paths:
-      - relearn/build-docker  
-   
-deploy-mpi-2:    
+      - relearn/build-docker
+
+deploy-mpi-2:
   rules:
-  - if: $TEST_DEPLOY == "TRUE"
+    - if: $TEST_DEPLOY == "TRUE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
@@ -241,11 +241,11 @@ deploy-mpi-2:
     - test-mpi-multiple
   artifacts:
     paths:
-      - relearn/build-docker 
-      
-deploy-mpi-4:    
+      - relearn/build-docker
+
+deploy-mpi-4:
   rules:
-  - if: $TEST_DEPLOY == "TRUE"
+    - if: $TEST_DEPLOY == "TRUE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
@@ -256,12 +256,12 @@ deploy-mpi-4:
     - test-mpi-multiple
   artifacts:
     paths:
-      - relearn/build-docker 
+      - relearn/build-docker
 
-      
-deploy-mpi-8:  
+
+deploy-mpi-8:
   rules:
-  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
@@ -272,13 +272,13 @@ deploy-mpi-8:
     - test-mpi-multiple
   artifacts:
     paths:
-      - relearn/build-docker 
+      - relearn/build-docker
 
 benchmark-hhlr:
   rules:
-  - if: $TEST_HHLR == "TRUE"
+    - if: $TEST_HHLR == "TRUE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
-  stage: deploy 
+  stage: deploy
   services:
     - docker:24.0.2-dind
   script:
@@ -313,7 +313,7 @@ info:
 
 build-nompi-cuda:
   rules:
-  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: build
   services:
@@ -328,7 +328,7 @@ build-nompi-cuda:
 
 build-mpi-cuda:
   rules:
-  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: build
   before_script:

@@ -149,7 +149,7 @@ TEST_F(TimersTest, testNonInterference) {
 
     Timers::reset_elapsed(first_region);
     Timers::reset_elapsed(second_region);
-    
+
     Timers::start(first_region);
     std::this_thread::sleep_for(10000ns);
     Timers::stop_and_add(first_region);

@@ -12,7 +12,6 @@
 
 #include "gpu/Macros.h"
 
-
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
@@ -45,7 +44,7 @@ public:
     }
 
     static double get_random_double(std::mt19937& mt) {
-        return get_random_double(std::numeric_limits<double>::min(),std::numeric_limits<double>::max(), mt);
+        return get_random_double(std::numeric_limits<double>::min(), std::numeric_limits<double>::max(), mt);
     }
 
     template <typename T>
@@ -56,7 +55,7 @@ public:
 
     template <typename T>
     static T get_random_integer(std::mt19937& mt) {
-        return get_random_integer<T>(std::numeric_limits<T>::min(),std::numeric_limits<T>::max(), mt);
+        return get_random_integer<T>(std::numeric_limits<T>::min(), std::numeric_limits<T>::max(), mt);
     }
 
     template <typename T>
@@ -82,7 +81,7 @@ public:
         return val == 0;
     }
 
-    #ifdef HOST_COMPILER
+#ifdef HOST_COMPILER
 
     static std::vector<size_t> get_random_derangement(size_t size, std::mt19937& mt) {
         auto derangement = ranges::views::indices(size) | ranges::to_vector;
@@ -139,5 +138,5 @@ public:
         const size_t sample_size = RandomAdapter::get_random_integer<size_t>(size_t{ 0 }, vector.size() - 1, mt);
         return sample(vector, sample_size, mt);
     }
-    #endif
+#endif
 };

@@ -27,30 +27,28 @@ namespace boost {
 
 namespace detail {
 
-template< typename EnumType, typename Void = void >
-struct underlying_type_impl;
+    template <typename EnumType, typename Void = void>
+    struct underlying_type_impl;
 
 #if defined(BOOST_NO_CXX11_SCOPED_ENUMS)
 
-// Support for boost/core/scoped_enum.hpp
-template< typename EnumType >
-struct underlying_type_impl< EnumType, typename EnumType::is_boost_scoped_enum_tag >
-{
-    /**
-     * The member typedef type names the underlying type of EnumType. It is EnumType::underlying_type when the EnumType is an emulated scoped enum,
-     */
-    typedef typename EnumType::underlying_type type;
-};
+    // Support for boost/core/scoped_enum.hpp
+    template <typename EnumType>
+    struct underlying_type_impl<EnumType, typename EnumType::is_boost_scoped_enum_tag> {
+        /**
+         * The member typedef type names the underlying type of EnumType. It is EnumType::underlying_type when the EnumType is an emulated scoped enum,
+         */
+        typedef typename EnumType::underlying_type type;
+    };
 
 #endif
 
 #if defined(BOOST_DETAIL_HAS_STD_UNDERLYING_TYPE)
 
-template< typename EnumType, typename Void >
-struct underlying_type_impl
-{
-    typedef typename std::underlying_type< EnumType >::type type;
-};
+    template <typename EnumType, typename Void>
+    struct underlying_type_impl {
+        typedef typename std::underlying_type<EnumType>::type type;
+    };
 
 #endif
 
@@ -68,12 +66,10 @@ struct underlying_type_impl
  * to deduce the underlying type of enums. The user is expected to specialize
  * this trait in this case.
  */
-template< typename EnumType >
-struct underlying_type :
-    public detail::underlying_type_impl< EnumType >
-{
+template <typename EnumType>
+struct underlying_type : public detail::underlying_type_impl<EnumType> {
 };
 
 } // namespace boost
 
-#endif  // BOOST_CORE_UNDERLYING_TYPE_HPP
+#endif // BOOST_CORE_UNDERLYING_TYPE_HPP

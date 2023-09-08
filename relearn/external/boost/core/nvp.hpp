@@ -14,41 +14,40 @@ Distributed under the Boost Software License, Version 1.0.
 namespace boost {
 namespace serialization {
 
-template<class T>
-class nvp {
-public:
-    nvp(const char* n, T& v) BOOST_NOEXCEPT
-        : n_(n)
-        , v_(boost::addressof(v)) { }
+    template <class T>
+    class nvp {
+    public:
+        nvp(const char* n, T& v) BOOST_NOEXCEPT
+            : n_(n),
+              v_(boost::addressof(v)) { }
 
-    const char* name() const BOOST_NOEXCEPT {
-        return n_;
+        const char* name() const BOOST_NOEXCEPT {
+            return n_;
+        }
+
+        T& value() const BOOST_NOEXCEPT {
+            return *v_;
+        }
+
+        const T& const_value() const BOOST_NOEXCEPT {
+            return *v_;
+        }
+
+    private:
+        const char* n_;
+        T* v_;
+    };
+
+    template <class T>
+    inline const nvp<T>
+    make_nvp(const char* n, T& v) BOOST_NOEXCEPT {
+        return nvp<T>(n, v);
     }
-
-    T& value() const BOOST_NOEXCEPT {
-        return *v_;
-    }
-
-    const T& const_value() const BOOST_NOEXCEPT {
-        return *v_;
-    }
-
-private:
-    const char* n_;
-    T* v_;
-};
-
-template<class T>
-inline const nvp<T>
-make_nvp(const char* n, T& v) BOOST_NOEXCEPT
-{
-    return nvp<T>(n, v);
-}
 
 } /* serialization */
 
-using serialization::nvp;
 using serialization::make_nvp;
+using serialization::nvp;
 
 } /* boost */
 

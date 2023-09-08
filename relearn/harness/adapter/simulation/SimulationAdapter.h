@@ -44,9 +44,9 @@ public:
     }
 
     static RelearnTypes::bounding_box_type round_bounding_box(RelearnTypes::bounding_box_type bb) {
-        Vec3d min{static_cast<double>(static_cast<int>(bb.get_minimum().get_x())), static_cast<double>(static_cast<int>(bb.get_minimum().get_y())), static_cast<double>(static_cast<int>(bb.get_minimum().get_z()))};
-        Vec3d max{static_cast<double>(static_cast<int>(bb.get_maximum().get_x())), static_cast<double>(static_cast<int>(bb.get_maximum().get_y())), static_cast<double>(static_cast<int>(bb.get_maximum().get_z()))};
-        return { min,max };
+        Vec3d min{ static_cast<double>(static_cast<int>(bb.get_minimum().get_x())), static_cast<double>(static_cast<int>(bb.get_minimum().get_y())), static_cast<double>(static_cast<int>(bb.get_minimum().get_z())) };
+        Vec3d max{ static_cast<double>(static_cast<int>(bb.get_maximum().get_x())), static_cast<double>(static_cast<int>(bb.get_maximum().get_y())), static_cast<double>(static_cast<int>(bb.get_maximum().get_z())) };
+        return { min, max };
     }
 
     static double get_random_position_element(std::mt19937& mt) {
@@ -87,8 +87,8 @@ public:
     }
 
     static Vec3d get_random_position_in_box(const RelearnTypes::bounding_box_type bb, std::mt19937& mt) {
-        const auto& [min,max] = bb;
-        return get_random_position_in_box(min,max,mt);
+        const auto& [min, max] = bb;
+        return get_random_position_in_box(min, max, mt);
     }
 
     static std::uint8_t get_random_refinement_level(std::mt19937& mt) noexcept {

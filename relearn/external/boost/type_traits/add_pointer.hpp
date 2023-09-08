@@ -20,36 +20,30 @@ namespace boost {
 // to arrays for some reason though (shrug...) (JM 20021104)
 //
 template <typename T>
-struct add_pointer
-{
+struct add_pointer {
     typedef T* type;
 };
 template <typename T>
-struct add_pointer<T&>
-{
+struct add_pointer<T&> {
     typedef T* type;
 };
 template <typename T>
-struct add_pointer<T&const>
-{
+struct add_pointer<T& const> {
     typedef T* type;
 };
 template <typename T>
-struct add_pointer<T&volatile>
-{
+struct add_pointer<T& volatile> {
     typedef T* type;
 };
 template <typename T>
-struct add_pointer<T&const volatile>
-{
+struct add_pointer<T& const volatile> {
     typedef T* type;
 };
 
 #else
 
 template <typename T>
-struct add_pointer
-{
+struct add_pointer {
     typedef typename remove_reference<T>::type no_ref_type;
     typedef no_ref_type* type;
 };
@@ -58,7 +52,8 @@ struct add_pointer
 
 #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
-   template <class T> using add_pointer_t = typename add_pointer<T>::type;
+template <class T>
+using add_pointer_t = typename add_pointer<T>::type;
 
 #endif
 

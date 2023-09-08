@@ -11,7 +11,7 @@
 
 #ifdef __has_include
 #if __has_include(<unistd.h>)
-#  define BOOST_HAS_UNISTD_H
+#define BOOST_HAS_UNISTD_H
 #endif
 #endif
 

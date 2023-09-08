@@ -22,7 +22,7 @@ class NetworkGraphTest : public RelearnTest {
 protected:
     template <typename T, typename synapse_weight>
     void erase_empty(std::map<T, synapse_weight>& edges) {
-        std::erase_if(edges, [](const auto &val){ return val.second == 0; });
+        std::erase_if(edges, [](const auto& val) { return val.second == 0; });
     }
 
     template <typename T, typename synapse_weight>

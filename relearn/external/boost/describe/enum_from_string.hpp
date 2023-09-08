@@ -14,38 +14,32 @@
 #include <cstring>
 
 #if defined(_MSC_VER) && _MSC_VER == 1900
-# pragma warning(push)
-# pragma warning(disable: 4100) // unreferenced formal parameter
+#pragma warning(push)
+#pragma warning(disable : 4100) // unreferenced formal parameter
 #endif
 
-namespace boost
-{
-namespace describe
-{
+namespace boost {
+namespace describe {
 
-template<class E, class De = describe_enumerators<E>>
-bool enum_from_string( char const* name, E& e ) noexcept
-{
-    bool found = false;
+    template <class E, class De = describe_enumerators<E>>
+    bool enum_from_string(char const* name, E& e) noexcept {
+        bool found = false;
 
-    mp11::mp_for_each<De>([&](auto D){
+        mp11::mp_for_each<De>([&](auto D) {
+            if (!found && std::strcmp(D.name, name) == 0) {
+                found = true;
+                e = D.value;
+            }
+        });
 
-        if( !found && std::strcmp( D.name, name ) == 0 )
-        {
-            found = true;
-            e = D.value;
-        }
-
-    });
-
-    return found;
-}
+        return found;
+    }
 
 } // namespace describe
 } // namespace boost
 
 #if defined(_MSC_VER) && _MSC_VER == 1900
-# pragma warning(pop)
+#pragma warning(pop)
 #endif
 
 #endif // defined(BOOST_DESCRIBE_CXX14)

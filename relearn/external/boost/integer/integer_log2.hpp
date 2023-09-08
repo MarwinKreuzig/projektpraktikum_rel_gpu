@@ -29,85 +29,72 @@
 namespace boost {
 namespace detail {
 
-// helper to find the maximum power of two
-// less than p
-template< unsigned int p, unsigned int n, bool = ((2u * n) < p) >
-struct max_pow2_less :
-    public max_pow2_less< p, 2u * n >
-{
-};
+    // helper to find the maximum power of two
+    // less than p
+    template <unsigned int p, unsigned int n, bool = ((2u * n) < p)>
+    struct max_pow2_less : public max_pow2_less<p, 2u * n> {
+    };
 
-template< unsigned int p, unsigned int n >
-struct max_pow2_less< p, n, false >
-{
-    BOOST_STATIC_CONSTANT(unsigned int, value = n);
-};
+    template <unsigned int p, unsigned int n>
+    struct max_pow2_less<p, n, false> {
+        BOOST_STATIC_CONSTANT(unsigned int, value = n);
+    };
 
-template< typename T >
-inline typename boost::disable_if< boost::is_integral< T >, int >::type integer_log2_impl(T x)
-{
-    unsigned int n = detail::max_pow2_less<
-        std::numeric_limits< T >::digits,
-        CHAR_BIT / 2u
-    >::value;
+    template <typename T>
+    inline typename boost::disable_if<boost::is_integral<T>, int>::type integer_log2_impl(T x) {
+        unsigned int n = detail::max_pow2_less<
+            std::numeric_limits<T>::digits,
+            CHAR_BIT / 2u>::value;
 
-    int result = 0;
-    while (x != 1)
-    {
-        T t(x >> n);
-        if (t)
-        {
-            result += static_cast< int >(n);
+        int result = 0;
+        while (x != 1) {
+            T t(x >> n);
+            if (t) {
+                result += static_cast<int>(n);
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-            x = static_cast< T&& >(t);
+                x = static_cast<T&&>(t);
 #else
-            x = t;
+                x = t;
 #endif
+            }
+            n >>= 1u;
         }
-        n >>= 1u;
+
+        return result;
     }
 
-    return result;
-}
-
-template< typename T >
-inline typename boost::enable_if< boost::is_integral< T >, int >::type integer_log2_impl(T x)
-{
-    // We could simply rely on numeric_limits but sometimes
-    // Borland tries to use numeric_limits<const T>, because
-    // of its usual const-related problems in argument deduction
-    // - gps
-    return static_cast< int >((sizeof(T) * CHAR_BIT - 1u) -
-        boost::core::countl_zero(static_cast< typename boost::make_unsigned< T >::type >(x)));
-}
+    template <typename T>
+    inline typename boost::enable_if<boost::is_integral<T>, int>::type integer_log2_impl(T x) {
+        // We could simply rely on numeric_limits but sometimes
+        // Borland tries to use numeric_limits<const T>, because
+        // of its usual const-related problems in argument deduction
+        // - gps
+        return static_cast<int>((sizeof(T) * CHAR_BIT - 1u) - boost::core::countl_zero(static_cast<typename boost::make_unsigned<T>::type>(x)));
+    }
 
 #if defined(BOOST_HAS_INT128)
-// We need to provide explicit overloads for __int128 because (a) boost/core/bit.hpp currently does not support it and
-// (b) std::numeric_limits are not specialized for __int128 in some standard libraries.
-inline int integer_log2_impl(boost::uint128_type x)
-{
-    const boost::uint64_t x_hi = static_cast< boost::uint64_t >(x >> 64u);
-    if (x_hi != 0u)
-        return 127 - boost::core::countl_zero(x_hi);
-    else
-        return 63 - boost::core::countl_zero(static_cast< boost::uint64_t >(x));
-}
+    // We need to provide explicit overloads for __int128 because (a) boost/core/bit.hpp currently does not support it and
+    // (b) std::numeric_limits are not specialized for __int128 in some standard libraries.
+    inline int integer_log2_impl(boost::uint128_type x) {
+        const boost::uint64_t x_hi = static_cast<boost::uint64_t>(x >> 64u);
+        if (x_hi != 0u)
+            return 127 - boost::core::countl_zero(x_hi);
+        else
+            return 63 - boost::core::countl_zero(static_cast<boost::uint64_t>(x));
+    }
 
-inline int integer_log2_impl(boost::int128_type x)
-{
-    return detail::integer_log2_impl(static_cast< boost::uint128_type >(x));
-}
+    inline int integer_log2_impl(boost::int128_type x) {
+        return detail::integer_log2_impl(static_cast<boost::uint128_type>(x));
+    }
 #endif // defined(BOOST_HAS_INT128)
 
 } // namespace detail
 
-
 // ------------
 // integer_log2
 // ------------
-template< typename T >
-inline int integer_log2(T x)
-{
+template <typename T>
+inline int integer_log2(T x) {
     BOOST_ASSERT(x > 0);
     return detail::integer_log2_impl(x);
 }

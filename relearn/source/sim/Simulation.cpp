@@ -302,16 +302,16 @@ void Simulation::initialize() {
         Timers::stop_and_add(TimerRegion::CAPTURE_AREA_MONITORS);
     }
 
-    if(percentage_initially_fired > 0.0){
-    const auto fired_neurons = static_cast<size_t>(number_local_neurons * percentage_initially_fired);
+    if (percentage_initially_fired > 0.0) {
+        const auto fired_neurons = static_cast<size_t>(number_local_neurons * percentage_initially_fired);
 
-    const auto initial_fired = ranges::views::concat(
-                                   ranges::views::repeat_n(FiredStatus::Fired, fired_neurons),
-                                   ranges::views::repeat_n(FiredStatus::Inactive, number_local_neurons - fired_neurons))
-        | ranges::to_vector
-        | RandomHolder::shuffleAction(RandomHolderKey::BackgroundActivity);
-    
-    neurons->set_fired(std::move(initial_fired));
+        const auto initial_fired = ranges::views::concat(
+                                       ranges::views::repeat_n(FiredStatus::Fired, fired_neurons),
+                                       ranges::views::repeat_n(FiredStatus::Inactive, number_local_neurons - fired_neurons))
+            | ranges::to_vector
+            | RandomHolder::shuffleAction(RandomHolderKey::BackgroundActivity);
+
+        neurons->set_fired(std::move(initial_fired));
     }
 
     MPIWrapper::create_rma_window<std::bitset<NeuronsExtraInfo::fire_history_length>>(MPIWindow::FireHistory, number_local_neurons, MPIWrapper::get_num_ranks());

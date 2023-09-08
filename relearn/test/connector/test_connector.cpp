@@ -252,7 +252,7 @@ TEST_F(ConnectorTest, testForwardConnectorIncoming) {
 
     // If there are still vacant elements, then all requests are connected
     for (const auto neuron_id : NeuronID::range(number_neurons)) {
-        const auto vacant_excitatory_elements = excitatory_dendrites->get_free_elements( neuron_id );
+        const auto vacant_excitatory_elements = excitatory_dendrites->get_free_elements(neuron_id);
         if (vacant_excitatory_elements > 0) {
             ASSERT_EQ(newly_connected_excitatory_dendrites[neuron_id.get_neuron_id()], number_excitatory_requests[neuron_id.get_neuron_id()]) << neuron_id;
         }

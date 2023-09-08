@@ -11,4 +11,4 @@ Checks: "
   "
 WarningsAsErrors: ''
 HeaderFilterRegex: '.*'
-FormatStyle:     none
+FormatStyle: none

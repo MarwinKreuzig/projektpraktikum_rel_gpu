@@ -32,7 +32,6 @@ void SynapticInputCalculator::init(const number_neurons_type number_neurons) {
     raw_inh_input.resize(number_neurons, 0.0);
 
     fired_status_comm->init(number_neurons);
-
 }
 
 void SynapticInputCalculator::create_neurons(const number_neurons_type creation_count) {
@@ -57,61 +56,61 @@ void SynapticInputCalculator::set_synaptic_input(const double value) noexcept {
 double SynapticInputCalculator::get_local_and_distant_synaptic_input(const std::span<const FiredStatus> fired, const NeuronID& neuron_id) {
     auto local_input = 0.0;
 
-        // Walk through local in-edges
-        const auto& [local_in_edges_plastic, local_in_edges_static] = network_graph->get_local_in_edges(neuron_id);
-        for (const auto& [src_neuron_id, edge_val] : local_in_edges_static) {
-            const auto spike = fired[src_neuron_id.get_neuron_id()];
-            if (spike == FiredStatus::Fired) {
-                local_input += synapse_conductance * edge_val;
-                if (edge_val > 0.0) {
-                    raw_ex_input[neuron_id.get_neuron_id()] += edge_val;
-                } else {
-                    raw_inh_input[neuron_id.get_neuron_id()] += std::abs(edge_val);
-                }
+    // Walk through local in-edges
+    const auto& [local_in_edges_plastic, local_in_edges_static] = network_graph->get_local_in_edges(neuron_id);
+    for (const auto& [src_neuron_id, edge_val] : local_in_edges_static) {
+        const auto spike = fired[src_neuron_id.get_neuron_id()];
+        if (spike == FiredStatus::Fired) {
+            local_input += synapse_conductance * edge_val;
+            if (edge_val > 0.0) {
+                raw_ex_input[neuron_id.get_neuron_id()] += edge_val;
+            } else {
+                raw_inh_input[neuron_id.get_neuron_id()] += std::abs(edge_val);
             }
         }
+    }
 
-        for (const auto& [src_neuron_id, edge_val] : local_in_edges_plastic) {
-            const auto spike = fired[src_neuron_id.get_neuron_id()];
-            if (spike == FiredStatus::Fired) {
-                local_input += synapse_conductance * edge_val;
-                if (edge_val > 0.0) {
-                    raw_ex_input[neuron_id.get_neuron_id()] += edge_val;
-                } else {
-                    raw_inh_input[neuron_id.get_neuron_id()] += std::abs(edge_val);
-                }
+    for (const auto& [src_neuron_id, edge_val] : local_in_edges_plastic) {
+        const auto spike = fired[src_neuron_id.get_neuron_id()];
+        if (spike == FiredStatus::Fired) {
+            local_input += synapse_conductance * edge_val;
+            if (edge_val > 0.0) {
+                raw_ex_input[neuron_id.get_neuron_id()] += edge_val;
+            } else {
+                raw_inh_input[neuron_id.get_neuron_id()] += std::abs(edge_val);
             }
         }
+    }
 
-        // Walk through the distant in-edges of my neuron
-        const auto& [distant_in_edges_plastic, distant_in_edges_static] = network_graph->get_distant_in_edges(neuron_id);
-        for (const auto& [key, edge_val] : distant_in_edges_static) {
-            const auto& rank = key.get_rank();
-            const auto& initiator_neuron_id = key.get_neuron_id();
+    // Walk through the distant in-edges of my neuron
+    const auto& [distant_in_edges_plastic, distant_in_edges_static] = network_graph->get_distant_in_edges(neuron_id);
+    for (const auto& [key, edge_val] : distant_in_edges_static) {
+        const auto& rank = key.get_rank();
+        const auto& initiator_neuron_id = key.get_neuron_id();
 
-            const auto contains_id = fired_status_comm->contains(rank, initiator_neuron_id);
-            if (contains_id) {
-                local_input += synapse_conductance * edge_val;
-                if (edge_val > 0.0) {
-                    raw_ex_input[neuron_id.get_neuron_id()] += edge_val;
-                } else {
-                    raw_inh_input[neuron_id.get_neuron_id()] += std::abs(edge_val);
-                }
+        const auto contains_id = fired_status_comm->contains(rank, initiator_neuron_id);
+        if (contains_id) {
+            local_input += synapse_conductance * edge_val;
+            if (edge_val > 0.0) {
+                raw_ex_input[neuron_id.get_neuron_id()] += edge_val;
+            } else {
+                raw_inh_input[neuron_id.get_neuron_id()] += std::abs(edge_val);
             }
         }
-        for (const auto& [key, edge_val] : distant_in_edges_plastic) {
-            const auto& rank = key.get_rank();
-            const auto& initiator_neuron_id = key.get_neuron_id();
+    }
+    for (const auto& [key, edge_val] : distant_in_edges_plastic) {
+        const auto& rank = key.get_rank();
+        const auto& initiator_neuron_id = key.get_neuron_id();
 
-            const auto contains_id = fired_status_comm->contains(rank, initiator_neuron_id);
-            if (contains_id) {
-                local_input += synapse_conductance * edge_val;
-                if (edge_val > 0.0) {
-                    raw_ex_input[neuron_id.get_neuron_id()] += edge_val;
-                } else {
-                    raw_inh_input[neuron_id.get_neuron_id()] += std::abs(edge_val);
-                }
+        const auto contains_id = fired_status_comm->contains(rank, initiator_neuron_id);
+        if (contains_id) {
+            local_input += synapse_conductance * edge_val;
+            if (edge_val > 0.0) {
+                raw_ex_input[neuron_id.get_neuron_id()] += edge_val;
+            } else {
+                raw_inh_input[neuron_id.get_neuron_id()] += std::abs(edge_val);
             }
+        }
     }
     return local_input;
 }

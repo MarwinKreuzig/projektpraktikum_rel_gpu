@@ -108,8 +108,8 @@ TEST_F(LocalAreaTranslatorTest, getterAreaTest) {
         ASSERT_TRUE(ranges::contains(area1, i.get_neuron_id()));
     }
 
-    auto read2_area0 = translator.get_neuron_ids_in_areas({ 0 });
-    auto read2_area1 = translator.get_neuron_ids_in_areas({ 1 });
+    auto read2_area0 = translator.get_neuron_ids_in_areas(std::vector<RelearnTypes::area_id>{ 0 });
+    auto read2_area1 = translator.get_neuron_ids_in_areas(std::vector<RelearnTypes::area_id>{ 1 });
     for (auto i : read2_area0) {
         ASSERT_TRUE(ranges::contains(area0, i.get_neuron_id()));
     }
@@ -117,7 +117,7 @@ TEST_F(LocalAreaTranslatorTest, getterAreaTest) {
         ASSERT_TRUE(ranges::contains(area1, i.get_neuron_id()));
     }
 
-    auto read_all = translator.get_neuron_ids_in_areas({ 0, 1 });
+    auto read_all = translator.get_neuron_ids_in_areas(std::vector<RelearnTypes::area_id>{ 0, 1 });
     ASSERT_EQ(num_neurons, read_all.size());
 }
 

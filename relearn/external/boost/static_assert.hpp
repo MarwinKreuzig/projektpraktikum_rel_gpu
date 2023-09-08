@@ -1,6 +1,6 @@
 //  (C) Copyright John Maddock 2000.
-//  Use, modification and distribution are subject to the 
-//  Boost Software License, Version 1.0. (See accompanying file 
+//  Use, modification and distribution are subject to the
+//  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 //  See http://www.boost.org/libs/static_assert for documentation.
@@ -28,13 +28,13 @@
 #endif
 
 #ifndef BOOST_NO_CXX11_STATIC_ASSERT
-#  ifndef BOOST_NO_CXX11_VARIADIC_MACROS
-#     define BOOST_STATIC_ASSERT_MSG( ... ) static_assert(__VA_ARGS__)
-#  else
-#     define BOOST_STATIC_ASSERT_MSG( B, Msg ) static_assert( B, Msg )
-#  endif
+#ifndef BOOST_NO_CXX11_VARIADIC_MACROS
+#define BOOST_STATIC_ASSERT_MSG(...) static_assert(__VA_ARGS__)
 #else
-#     define BOOST_STATIC_ASSERT_MSG( B, Msg ) BOOST_STATIC_ASSERT( B )
+#define BOOST_STATIC_ASSERT_MSG(B, Msg) static_assert(B, Msg)
+#endif
+#else
+#define BOOST_STATIC_ASSERT_MSG(B, Msg) BOOST_STATIC_ASSERT(B)
 #endif
 
 #ifdef BOOST_BORLANDC
@@ -45,7 +45,7 @@
 
 #if defined(__GNUC__) && (__GNUC__ == 3) && ((__GNUC_MINOR__ == 3) || (__GNUC_MINOR__ == 4))
 // gcc 3.3 and 3.4 don't produce good error messages with the default version:
-#  define BOOST_SA_GCC_WORKAROUND
+#define BOOST_SA_GCC_WORKAROUND
 #endif
 
 //
@@ -53,36 +53,41 @@
 // then enable this:
 //
 #if defined(__GNUC__) && ((__GNUC__ > 3) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4)))
-#  ifndef BOOST_NO_CXX11_VARIADIC_MACROS
-#     define BOOST_STATIC_ASSERT_BOOL_CAST( ... ) ((__VA_ARGS__) != 0)
-#  else
-#     define BOOST_STATIC_ASSERT_BOOL_CAST( x ) ((x) != 0)
-#  endif
+#ifndef BOOST_NO_CXX11_VARIADIC_MACROS
+#define BOOST_STATIC_ASSERT_BOOL_CAST(...) ((__VA_ARGS__) != 0)
 #else
-#  ifndef BOOST_NO_CXX11_VARIADIC_MACROS
-#     define BOOST_STATIC_ASSERT_BOOL_CAST( ... ) (bool)(__VA_ARGS__)
-#  else
-#     define BOOST_STATIC_ASSERT_BOOL_CAST(x) (bool)(x)
-#  endif
+#define BOOST_STATIC_ASSERT_BOOL_CAST(x) ((x) != 0)
+#endif
+#else
+#ifndef BOOST_NO_CXX11_VARIADIC_MACROS
+#define BOOST_STATIC_ASSERT_BOOL_CAST(...) (bool)(__VA_ARGS__)
+#else
+#define BOOST_STATIC_ASSERT_BOOL_CAST(x) (bool)(x)
+#endif
 #endif
 
 #ifndef BOOST_NO_CXX11_STATIC_ASSERT
-#  ifndef BOOST_NO_CXX11_VARIADIC_MACROS
-#     define BOOST_STATIC_ASSERT( ... ) static_assert(__VA_ARGS__, #__VA_ARGS__)
-#  else
-#     define BOOST_STATIC_ASSERT( B ) static_assert(B, #B)
-#  endif
+#ifndef BOOST_NO_CXX11_VARIADIC_MACROS
+#define BOOST_STATIC_ASSERT(...) static_assert(__VA_ARGS__, #__VA_ARGS__)
+#else
+#define BOOST_STATIC_ASSERT(B) static_assert(B, #B)
+#endif
 #else
 
-namespace boost{
+namespace boost {
 
 // HP aCC cannot deal with missing names for template value parameters
-template <bool x> struct STATIC_ASSERTION_FAILURE;
+template <bool x>
+struct STATIC_ASSERTION_FAILURE;
 
-template <> struct STATIC_ASSERTION_FAILURE<true> { enum { value = 1 }; };
+template <>
+struct STATIC_ASSERTION_FAILURE<true> {
+    enum { value = 1 };
+};
 
 // HP aCC cannot deal with missing names for template value parameters
-template<std::size_t x> struct static_assert_test{};
+template <std::size_t x>
+struct static_assert_test { };
 
 }
 
@@ -111,71 +116,68 @@ template<std::size_t x> struct static_assert_test{};
 #if !defined(BOOST_BUGGY_INTEGRAL_CONSTANT_EXPRESSIONS)
 
 #if defined(BOOST_MSVC) && defined(BOOST_NO_CXX11_VARIADIC_MACROS)
-#define BOOST_STATIC_ASSERT( B ) \
-   typedef ::boost::static_assert_test<\
-      sizeof(::boost::STATIC_ASSERTION_FAILURE< BOOST_STATIC_ASSERT_BOOL_CAST ( B ) >)>\
-         BOOST_JOIN(boost_static_assert_typedef_, __COUNTER__)
+#define BOOST_STATIC_ASSERT(B)                                                       \
+    typedef ::boost::static_assert_test<                                             \
+        sizeof(::boost::STATIC_ASSERTION_FAILURE<BOOST_STATIC_ASSERT_BOOL_CAST(B)>)> \
+    BOOST_JOIN(boost_static_assert_typedef_, __COUNTER__)
 #elif defined(BOOST_MSVC)
-#define BOOST_STATIC_ASSERT(...) \
-   typedef ::boost::static_assert_test<\
-      sizeof(::boost::STATIC_ASSERTION_FAILURE< BOOST_STATIC_ASSERT_BOOL_CAST (__VA_ARGS__) >)>\
-         BOOST_JOIN(boost_static_assert_typedef_, __COUNTER__)
-#elif (defined(BOOST_INTEL_CXX_VERSION) || defined(BOOST_SA_GCC_WORKAROUND))  && defined(BOOST_NO_CXX11_VARIADIC_MACROS)
-// agurt 15/sep/02: a special care is needed to force Intel C++ issue an error 
+#define BOOST_STATIC_ASSERT(...)                                                               \
+    typedef ::boost::static_assert_test<                                                       \
+        sizeof(::boost::STATIC_ASSERTION_FAILURE<BOOST_STATIC_ASSERT_BOOL_CAST(__VA_ARGS__)>)> \
+    BOOST_JOIN(boost_static_assert_typedef_, __COUNTER__)
+#elif (defined(BOOST_INTEL_CXX_VERSION) || defined(BOOST_SA_GCC_WORKAROUND)) && defined(BOOST_NO_CXX11_VARIADIC_MACROS)
+// agurt 15/sep/02: a special care is needed to force Intel C++ issue an error
 // instead of warning in case of failure
-# define BOOST_STATIC_ASSERT( B ) \
+#define BOOST_STATIC_ASSERT(B)                                      \
     typedef char BOOST_JOIN(boost_static_assert_typedef_, __LINE__) \
-        [ ::boost::STATIC_ASSERTION_FAILURE< BOOST_STATIC_ASSERT_BOOL_CAST( B ) >::value ]
-#elif (defined(BOOST_INTEL_CXX_VERSION) || defined(BOOST_SA_GCC_WORKAROUND))  && !defined(BOOST_NO_CXX11_VARIADIC_MACROS)
-// agurt 15/sep/02: a special care is needed to force Intel C++ issue an error 
+        [::boost::STATIC_ASSERTION_FAILURE<BOOST_STATIC_ASSERT_BOOL_CAST(B)>::value]
+#elif (defined(BOOST_INTEL_CXX_VERSION) || defined(BOOST_SA_GCC_WORKAROUND)) && !defined(BOOST_NO_CXX11_VARIADIC_MACROS)
+// agurt 15/sep/02: a special care is needed to force Intel C++ issue an error
 // instead of warning in case of failure
-# define BOOST_STATIC_ASSERT(...) \
+#define BOOST_STATIC_ASSERT(...)                                    \
     typedef char BOOST_JOIN(boost_static_assert_typedef_, __LINE__) \
-        [ ::boost::STATIC_ASSERTION_FAILURE< BOOST_STATIC_ASSERT_BOOL_CAST( __VA_ARGS__ ) >::value ]
+        [::boost::STATIC_ASSERTION_FAILURE<BOOST_STATIC_ASSERT_BOOL_CAST(__VA_ARGS__)>::value]
 #elif defined(__sgi)
 // special version for SGI MIPSpro compiler
-#define BOOST_STATIC_ASSERT( B ) \
-   BOOST_STATIC_CONSTANT(bool, \
-     BOOST_JOIN(boost_static_assert_test_, __LINE__) = ( B )); \
-   typedef ::boost::static_assert_test<\
-     sizeof(::boost::STATIC_ASSERTION_FAILURE< \
-       BOOST_JOIN(boost_static_assert_test_, __LINE__) >)>\
-         BOOST_JOIN(boost_static_assert_typedef_, __LINE__)
+#define BOOST_STATIC_ASSERT(B)                                  \
+    BOOST_STATIC_CONSTANT(bool,                                 \
+        BOOST_JOIN(boost_static_assert_test_, __LINE__) = (B)); \
+    typedef ::boost::static_assert_test<                        \
+        sizeof(::boost::STATIC_ASSERTION_FAILURE<               \
+            BOOST_JOIN(boost_static_assert_test_, __LINE__)>)>  \
+    BOOST_JOIN(boost_static_assert_typedef_, __LINE__)
 #elif BOOST_WORKAROUND(__MWERKS__, <= 0x3003)
 // special version for CodeWarrior <= 8.x
-#define BOOST_STATIC_ASSERT( B ) \
-   BOOST_STATIC_CONSTANT(int, \
-     BOOST_JOIN(boost_static_assert_test_, __LINE__) = \
-       sizeof(::boost::STATIC_ASSERTION_FAILURE< BOOST_STATIC_ASSERT_BOOL_CAST( B ) >) )
+#define BOOST_STATIC_ASSERT(B) \
+    BOOST_STATIC_CONSTANT(int, \
+        BOOST_JOIN(boost_static_assert_test_, __LINE__) = sizeof(::boost::STATIC_ASSERTION_FAILURE<BOOST_STATIC_ASSERT_BOOL_CAST(B)>))
 #else
 // generic version
-#  ifndef BOOST_NO_CXX11_VARIADIC_MACROS
-#     define BOOST_STATIC_ASSERT( ... ) \
-         typedef ::boost::static_assert_test<\
-            sizeof(::boost::STATIC_ASSERTION_FAILURE< BOOST_STATIC_ASSERT_BOOL_CAST( __VA_ARGS__ ) >)>\
-               BOOST_JOIN(boost_static_assert_typedef_, __LINE__) BOOST_ATTRIBUTE_UNUSED
-#  else
-#     define BOOST_STATIC_ASSERT( B ) \
-         typedef ::boost::static_assert_test<\
-            sizeof(::boost::STATIC_ASSERTION_FAILURE< BOOST_STATIC_ASSERT_BOOL_CAST( B ) >)>\
-               BOOST_JOIN(boost_static_assert_typedef_, __LINE__) BOOST_ATTRIBUTE_UNUSED
-#  endif
+#ifndef BOOST_NO_CXX11_VARIADIC_MACROS
+#define BOOST_STATIC_ASSERT(...)                                                               \
+    typedef ::boost::static_assert_test<                                                       \
+        sizeof(::boost::STATIC_ASSERTION_FAILURE<BOOST_STATIC_ASSERT_BOOL_CAST(__VA_ARGS__)>)> \
+    BOOST_JOIN(boost_static_assert_typedef_, __LINE__) BOOST_ATTRIBUTE_UNUSED
+#else
+#define BOOST_STATIC_ASSERT(B)                                                       \
+    typedef ::boost::static_assert_test<                                             \
+        sizeof(::boost::STATIC_ASSERTION_FAILURE<BOOST_STATIC_ASSERT_BOOL_CAST(B)>)> \
+    BOOST_JOIN(boost_static_assert_typedef_, __LINE__) BOOST_ATTRIBUTE_UNUSED
+#endif
 #endif
 
 #else
 // alternative enum based implementation:
-#  ifndef BOOST_NO_CXX11_VARIADIC_MACROS
-#    define BOOST_STATIC_ASSERT( ... ) \
-         enum { BOOST_JOIN(boost_static_assert_enum_, __LINE__) \
-            = sizeof(::boost::STATIC_ASSERTION_FAILURE< (bool)( __VA_ARGS__ ) >) }
-#  else
-#    define BOOST_STATIC_ASSERT(B) \
-         enum { BOOST_JOIN(boost_static_assert_enum_, __LINE__) \
-            = sizeof(::boost::STATIC_ASSERTION_FAILURE< (bool)( B ) >) }
-#  endif
+#ifndef BOOST_NO_CXX11_VARIADIC_MACROS
+#define BOOST_STATIC_ASSERT(...)                           \
+    enum { BOOST_JOIN(boost_static_assert_enum_, __LINE__) \
+        = sizeof(::boost::STATIC_ASSERTION_FAILURE<(bool)(__VA_ARGS__)>) }
+#else
+#define BOOST_STATIC_ASSERT(B)                             \
+    enum { BOOST_JOIN(boost_static_assert_enum_, __LINE__) \
+        = sizeof(::boost::STATIC_ASSERTION_FAILURE<(bool)(B)>) }
+#endif
 #endif
 #endif // defined(BOOST_NO_CXX11_STATIC_ASSERT)
 
 #endif // BOOST_STATIC_ASSERT_HPP
-
-

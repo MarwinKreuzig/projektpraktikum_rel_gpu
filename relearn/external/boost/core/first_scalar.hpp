@@ -14,29 +14,27 @@ Distributed under the Boost Software License, Version 1.0.
 namespace boost {
 namespace detail {
 
-template<class T>
-struct make_scalar {
-    typedef T type;
-};
+    template <class T>
+    struct make_scalar {
+        typedef T type;
+    };
 
-template<class T, std::size_t N>
-struct make_scalar<T[N]> {
-    typedef typename make_scalar<T>::type type;
-};
+    template <class T, std::size_t N>
+    struct make_scalar<T[N]> {
+        typedef typename make_scalar<T>::type type;
+    };
 
 } /* detail */
 
-template<class T>
+template <class T>
 BOOST_CONSTEXPR inline T*
-first_scalar(T* p) BOOST_NOEXCEPT
-{
+first_scalar(T* p) BOOST_NOEXCEPT {
     return p;
 }
 
-template<class T, std::size_t N>
+template <class T, std::size_t N>
 BOOST_CONSTEXPR inline typename detail::make_scalar<T>::type*
-first_scalar(T (*p)[N]) BOOST_NOEXCEPT
-{
+first_scalar(T (*p)[N]) BOOST_NOEXCEPT {
     return boost::first_scalar(&(*p)[0]);
 }
 

@@ -17,30 +17,29 @@
 #include <boost/type_traits/is_same.hpp>
 #include <iterator>
 
-namespace boost
-{
-namespace hash_detail
-{
+namespace boost {
+namespace hash_detail {
 
-template<class It, class T, class S>
-    integral_constant< bool, is_same<typename std::iterator_traits<It>::value_type, T>::value && is_integral<S>::value >
-        is_contiguous_range_check( It first, It last, T const*, T const*, S );
+    template <class It, class T, class S>
+    integral_constant<bool, is_same<typename std::iterator_traits<It>::value_type, T>::value && is_integral<S>::value>
+    is_contiguous_range_check(It first, It last, T const*, T const*, S);
 
-template<class T> decltype( is_contiguous_range_check( declval<T const&>().begin(), declval<T const&>().end(), declval<T const&>().data(), declval<T const&>().data() + declval<T const&>().size(), declval<T const&>().size() ) ) is_contiguous_range_( int );
-template<class T> false_type is_contiguous_range_( ... );
+    template <class T>
+    decltype(is_contiguous_range_check(declval<T const&>().begin(), declval<T const&>().end(), declval<T const&>().data(), declval<T const&>().data() + declval<T const&>().size(), declval<T const&>().size())) is_contiguous_range_(int);
+    template <class T>
+    false_type is_contiguous_range_(...);
 
-template<class T> struct is_contiguous_range: decltype( hash_detail::is_contiguous_range_<T>( 0 ) )
-{
-};
+    template <class T>
+    struct is_contiguous_range : decltype(hash_detail::is_contiguous_range_<T>(0)) {
+    };
 
 } // namespace hash_detail
 
-namespace container_hash
-{
+namespace container_hash {
 
-template<class T> struct is_contiguous_range: integral_constant< bool, is_range<T>::value && hash_detail::is_contiguous_range<T>::value >
-{
-};
+    template <class T>
+    struct is_contiguous_range : integral_constant<bool, is_range<T>::value && hash_detail::is_contiguous_range<T>::value> {
+    };
 
 } // namespace container_hash
 } // namespace boost
@@ -54,32 +53,30 @@ template<class T> struct is_contiguous_range: integral_constant< bool, is_range<
 #include <array>
 #endif
 
-namespace boost
-{
-namespace container_hash
-{
+namespace boost {
+namespace container_hash {
 
-template<class T> struct is_contiguous_range: false_type
-{
-};
+    template <class T>
+    struct is_contiguous_range : false_type {
+    };
 
-template<class E, class T, class A> struct is_contiguous_range< std::basic_string<E, T, A> >: true_type
-{
-};
+    template <class E, class T, class A>
+    struct is_contiguous_range<std::basic_string<E, T, A>> : true_type {
+    };
 
-template<class E, class T, class A> struct is_contiguous_range< std::basic_string<E, T, A> const >: true_type
-{
-};
+    template <class E, class T, class A>
+    struct is_contiguous_range<std::basic_string<E, T, A> const> : true_type {
+    };
 
 #if !defined(BOOST_NO_CXX11_HDR_ARRAY)
 
-template<class T, std::size_t N> struct is_contiguous_range< std::array<T, N> >: true_type
-{
-};
+    template <class T, std::size_t N>
+    struct is_contiguous_range<std::array<T, N>> : true_type {
+    };
 
-template<class T, std::size_t N> struct is_contiguous_range< std::array<T, N> const >: true_type
-{
-};
+    template <class T, std::size_t N>
+    struct is_contiguous_range<std::array<T, N> const> : true_type {
+    };
 
 #endif
 

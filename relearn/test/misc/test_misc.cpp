@@ -220,13 +220,11 @@ TEST_F(MiscTest, testMinMaxAccSizet) {
 
     const auto number_values = number_enabled + number_disabled + number_static;
 
-    const auto update_status =
-        ranges::views::concat(
-            ranges::views::repeat_n(UpdateStatus::Enabled, number_enabled),
-            ranges::views::repeat_n(UpdateStatus::Disabled, number_disabled),
-            ranges::views::repeat_n(UpdateStatus::Static,
-                                    number_values -
-                                        (number_disabled + number_enabled)))
+    const auto update_status = ranges::views::concat(
+                                   ranges::views::repeat_n(UpdateStatus::Enabled, number_enabled),
+                                   ranges::views::repeat_n(UpdateStatus::Disabled, number_disabled),
+                                   ranges::views::repeat_n(UpdateStatus::Static,
+                                       number_values - (number_disabled + number_enabled)))
         | ranges::to_vector | actions::shuffle(mt);
 
     std::vector<size_t> values{};

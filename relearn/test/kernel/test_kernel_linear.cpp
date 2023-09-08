@@ -92,7 +92,7 @@ TEST_F(ProbabilityKernelTest, testLinearLinearFreeElements) {
         const auto attractiveness = LinearDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, number_elements);
 
         const auto expected_attractiveness = attractiveness_one * number_elements;
-        
+
         std::stringstream ss{};
         ss << "Cutoff Point: " << cutoff_point << '\n';
         ss << "Source Position: " << source_position << '\n';

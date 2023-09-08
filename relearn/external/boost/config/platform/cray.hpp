@@ -3,7 +3,6 @@
 //  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-
 //  See http://www.boost.org for most recent version.
 
 //  SGI Irix specific config options:
@@ -13,6 +12,3 @@
 // boilerplate code:
 #define BOOST_HAS_UNISTD_H
 #include <boost/config/detail/posix_features.hpp>
-
-
-

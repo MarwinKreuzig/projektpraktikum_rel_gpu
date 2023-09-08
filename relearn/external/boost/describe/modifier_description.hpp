@@ -8,21 +8,19 @@
 #include <boost/describe/modifiers.hpp>
 #include <boost/describe/enum.hpp>
 
-namespace boost
-{
-namespace describe
-{
+namespace boost {
+namespace describe {
 
-BOOST_DESCRIBE_ENUM(modifiers,
-    mod_public,
-    mod_protected,
-    mod_private,
-    mod_virtual,
-    mod_static,
-    mod_function,
-    mod_any_member,
-    mod_inherited,
-    mod_hidden)
+    BOOST_DESCRIBE_ENUM(modifiers,
+        mod_public,
+        mod_protected,
+        mod_private,
+        mod_virtual,
+        mod_static,
+        mod_function,
+        mod_any_member,
+        mod_inherited,
+        mod_hidden)
 
 } // namespace describe
 } // namespace boost

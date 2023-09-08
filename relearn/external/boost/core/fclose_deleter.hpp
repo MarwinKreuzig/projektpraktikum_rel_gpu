@@ -27,15 +27,13 @@
 namespace boost {
 
 //! A function object that closes a file
-struct fclose_deleter
-{
+struct fclose_deleter {
     //! Function object result type
     typedef void result_type;
     /*!
      * Closes the file handle
      */
-    void operator() (std::FILE* p) const BOOST_NOEXCEPT
-    {
+    void operator()(std::FILE* p) const BOOST_NOEXCEPT {
         if (BOOST_LIKELY(!!p))
             std::fclose(p);
     }

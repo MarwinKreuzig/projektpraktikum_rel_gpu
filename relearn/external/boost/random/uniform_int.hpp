@@ -32,14 +32,12 @@ namespace boost {
  * This class is deprecated.  Please use @c uniform_int_distribution in
  * new code.
  */
-template<class IntType = int>
-class uniform_int : public random::uniform_int_distribution<IntType>
-{
+template <class IntType = int>
+class uniform_int : public random::uniform_int_distribution<IntType> {
     typedef random::uniform_int_distribution<IntType> base_type;
-public:
 
-    class param_type : public base_type::param_type
-    {
+public:
+    class param_type : public base_type::param_type {
     public:
         typedef uniform_int distribution_type;
         /**
@@ -48,8 +46,7 @@ public:
          * Requires: min <= max
          */
         explicit param_type(IntType min_arg = 0, IntType max_arg = 9)
-          : base_type::param_type(min_arg, max_arg)
-        {}
+            : base_type::param_type(min_arg, max_arg) { }
     };
 
     /**
@@ -59,13 +56,11 @@ public:
      * Requires: min <= max
      */
     explicit uniform_int(IntType min_arg = 0, IntType max_arg = 9)
-      : base_type(min_arg, max_arg)
-    {}
+        : base_type(min_arg, max_arg) { }
 
     /** Constructs a uniform_int distribution from its parameters. */
     explicit uniform_int(const param_type& parm)
-      : base_type(parm)
-    {}
+        : base_type(parm) { }
 
     /** Returns the parameters of the distribution */
     param_type param() const { return param_type(this->a(), this->b()); }
@@ -74,21 +69,18 @@ public:
 
     // Codergear seems to have trouble with a using declaration here
 
-    template<class Engine>
-    IntType operator()(Engine& eng) const
-    {
+    template <class Engine>
+    IntType operator()(Engine& eng) const {
         return static_cast<const base_type&>(*this)(eng);
     }
 
-    template<class Engine>
-    IntType operator()(Engine& eng, const param_type& parm) const
-    {
+    template <class Engine>
+    IntType operator()(Engine& eng, const param_type& parm) const {
         return static_cast<const base_type&>(*this)(eng, parm);
     }
 
-    template<class Engine>
-    IntType operator()(Engine& eng, IntType n) const
-    {
+    template <class Engine>
+    IntType operator()(Engine& eng, IntType n) const {
         BOOST_ASSERT(n > 0);
         return static_cast<const base_type&>(*this)(eng, param_type(0, n - 1));
     }

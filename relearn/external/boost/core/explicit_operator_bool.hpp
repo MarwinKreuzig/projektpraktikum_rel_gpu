@@ -34,10 +34,9 @@
  * support the conversion. The class should also implement <tt>operator!</tt>,
  * in terms of which the conversion operator will be implemented.
  */
-#define BOOST_EXPLICIT_OPERATOR_BOOL()\
-    BOOST_FORCEINLINE explicit operator bool () const\
-    {\
-        return !this->operator! ();\
+#define BOOST_EXPLICIT_OPERATOR_BOOL()                 \
+    BOOST_FORCEINLINE explicit operator bool() const { \
+        return !this->operator!();                     \
     }
 
 /*!
@@ -47,10 +46,9 @@
  * support the conversion. The class should also implement <tt>operator!</tt>,
  * in terms of which the conversion operator will be implemented.
  */
-#define BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()\
-    BOOST_FORCEINLINE explicit operator bool () const BOOST_NOEXCEPT\
-    {\
-        return !this->operator! ();\
+#define BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()                       \
+    BOOST_FORCEINLINE explicit operator bool() const BOOST_NOEXCEPT { \
+        return !this->operator!();                                    \
     }
 
 #if !BOOST_WORKAROUND(BOOST_GCC, < 40700)
@@ -62,10 +60,9 @@
  * support the conversion. The class should also implement <tt>operator!</tt>,
  * in terms of which the conversion operator will be implemented.
  */
-#define BOOST_CONSTEXPR_EXPLICIT_OPERATOR_BOOL()\
-    BOOST_FORCEINLINE BOOST_CONSTEXPR explicit operator bool () const BOOST_NOEXCEPT\
-    {\
-        return !this->operator! ();\
+#define BOOST_CONSTEXPR_EXPLICIT_OPERATOR_BOOL()                                      \
+    BOOST_FORCEINLINE BOOST_CONSTEXPR explicit operator bool() const BOOST_NOEXCEPT { \
+        return !this->operator!();                                                    \
     }
 
 #else
@@ -89,26 +86,24 @@ namespace detail {
 
 #if !defined(_MSC_VER) && !defined(__IBMCPP__)
 
-    struct unspecified_bool
-    {
+    struct unspecified_bool {
         // NOTE TO THE USER: If you see this in error messages then you tried
         // to apply an unsupported operator on the object that supports
         // explicit conversion to bool.
         struct OPERATORS_NOT_ALLOWED;
-        static void true_value(OPERATORS_NOT_ALLOWED*) {}
+        static void true_value(OPERATORS_NOT_ALLOWED*) { }
     };
     typedef void (*unspecified_bool_type)(unspecified_bool::OPERATORS_NOT_ALLOWED*);
 
 #else
 
     // MSVC and VACPP are too eager to convert pointer to function to void* even though they shouldn't
-    struct unspecified_bool
-    {
+    struct unspecified_bool {
         // NOTE TO THE USER: If you see this in error messages then you tried
         // to apply an unsupported operator on the object that supports
         // explicit conversion to bool.
         struct OPERATORS_NOT_ALLOWED;
-        void true_value(OPERATORS_NOT_ALLOWED*) {}
+        void true_value(OPERATORS_NOT_ALLOWED*) { }
     };
     typedef void (unspecified_bool::*unspecified_bool_type)(unspecified_bool::OPERATORS_NOT_ALLOWED*);
 
@@ -118,42 +113,36 @@ namespace detail {
 
 } // namespace boost
 
-#define BOOST_EXPLICIT_OPERATOR_BOOL()\
-    BOOST_FORCEINLINE operator boost::detail::unspecified_bool_type () const\
-    {\
-        return (!this->operator! () ? &boost::detail::unspecified_bool::true_value : (boost::detail::unspecified_bool_type)0);\
+#define BOOST_EXPLICIT_OPERATOR_BOOL()                                                                                        \
+    BOOST_FORCEINLINE operator boost::detail::unspecified_bool_type() const {                                                 \
+        return (!this->operator!() ? &boost::detail::unspecified_bool::true_value : (boost::detail::unspecified_bool_type)0); \
     }
 
-#define BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()\
-    BOOST_FORCEINLINE operator boost::detail::unspecified_bool_type () const BOOST_NOEXCEPT\
-    {\
-        return (!this->operator! () ? &boost::detail::unspecified_bool::true_value : (boost::detail::unspecified_bool_type)0);\
+#define BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()                                                                               \
+    BOOST_FORCEINLINE operator boost::detail::unspecified_bool_type() const BOOST_NOEXCEPT {                                  \
+        return (!this->operator!() ? &boost::detail::unspecified_bool::true_value : (boost::detail::unspecified_bool_type)0); \
     }
 
-#define BOOST_CONSTEXPR_EXPLICIT_OPERATOR_BOOL()\
-    BOOST_FORCEINLINE BOOST_CONSTEXPR operator boost::detail::unspecified_bool_type () const BOOST_NOEXCEPT\
-    {\
-        return (!this->operator! () ? &boost::detail::unspecified_bool::true_value : (boost::detail::unspecified_bool_type)0);\
+#define BOOST_CONSTEXPR_EXPLICIT_OPERATOR_BOOL()                                                                              \
+    BOOST_FORCEINLINE BOOST_CONSTEXPR operator boost::detail::unspecified_bool_type() const BOOST_NOEXCEPT {                  \
+        return (!this->operator!() ? &boost::detail::unspecified_bool::true_value : (boost::detail::unspecified_bool_type)0); \
     }
 
 #else // !defined(BOOST_NO_UNSPECIFIED_BOOL)
 
-#define BOOST_EXPLICIT_OPERATOR_BOOL()\
-    BOOST_FORCEINLINE operator bool () const\
-    {\
-        return !this->operator! ();\
+#define BOOST_EXPLICIT_OPERATOR_BOOL()        \
+    BOOST_FORCEINLINE operator bool() const { \
+        return !this->operator!();            \
     }
 
-#define BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()\
-    BOOST_FORCEINLINE operator bool () const BOOST_NOEXCEPT\
-    {\
-        return !this->operator! ();\
+#define BOOST_EXPLICIT_OPERATOR_BOOL_NOEXCEPT()              \
+    BOOST_FORCEINLINE operator bool() const BOOST_NOEXCEPT { \
+        return !this->operator!();                           \
     }
 
-#define BOOST_CONSTEXPR_EXPLICIT_OPERATOR_BOOL()\
-    BOOST_FORCEINLINE BOOST_CONSTEXPR operator bool () const BOOST_NOEXCEPT\
-    {\
-        return !this->operator! ();\
+#define BOOST_CONSTEXPR_EXPLICIT_OPERATOR_BOOL()                             \
+    BOOST_FORCEINLINE BOOST_CONSTEXPR operator bool() const BOOST_NOEXCEPT { \
+        return !this->operator!();                                           \
     }
 
 #endif // !defined(BOOST_NO_UNSPECIFIED_BOOL)

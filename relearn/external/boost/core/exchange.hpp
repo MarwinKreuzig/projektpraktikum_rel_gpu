@@ -17,26 +17,23 @@ Distributed under the Boost Software License, Version 1.0.
 namespace boost {
 
 #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-template<class T, class U>
-inline T exchange(T& t, const U& u)
-{
+template <class T, class U>
+inline T exchange(T& t, const U& u) {
     T v = t;
     t = u;
     return v;
 }
 #else
 #if BOOST_WORKAROUND(BOOST_MSVC, < 1800)
-template<class T, class U>
-inline T exchange(T& t, U&& u)
-{
+template <class T, class U>
+inline T exchange(T& t, U&& u) {
     T v = std::move(t);
     t = std::forward<U>(u);
     return v;
 }
 #else
-template<class T, class U = T>
-BOOST_CXX14_CONSTEXPR inline T exchange(T& t, U&& u)
-{
+template <class T, class U = T>
+BOOST_CXX14_CONSTEXPR inline T exchange(T& t, U&& u) {
     T v = std::move(t);
     t = std::forward<U>(u);
     return v;

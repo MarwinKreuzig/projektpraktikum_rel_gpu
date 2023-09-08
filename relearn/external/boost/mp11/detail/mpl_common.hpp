@@ -11,148 +11,155 @@
 #include <boost/mp11/list.hpp>
 #include <boost/mp11/algorithm.hpp>
 
-namespace boost
-{
-namespace mpl
-{
+namespace boost {
+namespace mpl {
 
-struct forward_iterator_tag;
+    struct forward_iterator_tag;
 
-namespace aux
-{
+    namespace aux {
 
-struct mp11_tag {};
+        struct mp11_tag { };
 
-template<class L> struct mp11_iterator
-{
-    using category = forward_iterator_tag;
+        template <class L>
+        struct mp11_iterator {
+            using category = forward_iterator_tag;
 
-    using type = mp11::mp_first<L>;
-    using next = mp11_iterator<mp11::mp_rest<L>>;
-};
+            using type = mp11::mp_first<L>;
+            using next = mp11_iterator<mp11::mp_rest<L>>;
+        };
 
-} // namespace aux
+    } // namespace aux
 
-// at
+    // at
 
-template< typename Tag > struct at_impl;
+    template <typename Tag>
+    struct at_impl;
 
-template<> struct at_impl<aux::mp11_tag>
-{
-    template<class L, class I> struct apply
-    {
-        using type = mp11::mp_at<L, I>;
+    template <>
+    struct at_impl<aux::mp11_tag> {
+        template <class L, class I>
+        struct apply {
+            using type = mp11::mp_at<L, I>;
+        };
     };
-};
 
-// back
+    // back
 
-template< typename Tag > struct back_impl;
+    template <typename Tag>
+    struct back_impl;
 
-template<> struct back_impl<aux::mp11_tag>
-{
-    template<class L> struct apply
-    {
-        using N = mp11::mp_size<L>;
-        using type = mp11::mp_at_c<L, N::value - 1>;
+    template <>
+    struct back_impl<aux::mp11_tag> {
+        template <class L>
+        struct apply {
+            using N = mp11::mp_size<L>;
+            using type = mp11::mp_at_c<L, N::value - 1>;
+        };
     };
-};
 
-// begin
+    // begin
 
-template< typename Tag > struct begin_impl;
+    template <typename Tag>
+    struct begin_impl;
 
-template<> struct begin_impl<aux::mp11_tag>
-{
-    template<class L> struct apply
-    {
-        using type = aux::mp11_iterator<L>;
+    template <>
+    struct begin_impl<aux::mp11_tag> {
+        template <class L>
+        struct apply {
+            using type = aux::mp11_iterator<L>;
+        };
     };
-};
 
-// clear
+    // clear
 
-template< typename Tag > struct clear_impl;
+    template <typename Tag>
+    struct clear_impl;
 
-template<> struct clear_impl<aux::mp11_tag>
-{
-    template<class L> struct apply
-    {
-        using type = mp11::mp_clear<L>;
+    template <>
+    struct clear_impl<aux::mp11_tag> {
+        template <class L>
+        struct apply {
+            using type = mp11::mp_clear<L>;
+        };
     };
-};
 
-// end
+    // end
 
-template< typename Tag > struct end_impl;
+    template <typename Tag>
+    struct end_impl;
 
-template<> struct end_impl<aux::mp11_tag>
-{
-    template<class L> struct apply
-    {
-        using type = aux::mp11_iterator<mp11::mp_clear<L>>;
+    template <>
+    struct end_impl<aux::mp11_tag> {
+        template <class L>
+        struct apply {
+            using type = aux::mp11_iterator<mp11::mp_clear<L>>;
+        };
     };
-};
 
-// front
+    // front
 
-template< typename Tag > struct front_impl;
+    template <typename Tag>
+    struct front_impl;
 
-template<> struct front_impl<aux::mp11_tag>
-{
-    template<class L> struct apply
-    {
-        using type = mp11::mp_front<L>;
+    template <>
+    struct front_impl<aux::mp11_tag> {
+        template <class L>
+        struct apply {
+            using type = mp11::mp_front<L>;
+        };
     };
-};
 
-// pop_front
+    // pop_front
 
-template< typename Tag > struct pop_front_impl;
+    template <typename Tag>
+    struct pop_front_impl;
 
-template<> struct pop_front_impl<aux::mp11_tag>
-{
-    template<class L> struct apply
-    {
-        using type = mp11::mp_pop_front<L>;
+    template <>
+    struct pop_front_impl<aux::mp11_tag> {
+        template <class L>
+        struct apply {
+            using type = mp11::mp_pop_front<L>;
+        };
     };
-};
 
-// push_back
+    // push_back
 
-template< typename Tag > struct push_back_impl;
+    template <typename Tag>
+    struct push_back_impl;
 
-template<> struct push_back_impl<aux::mp11_tag>
-{
-    template<class L, class T> struct apply
-    {
-        using type = mp11::mp_push_back<L, T>;
+    template <>
+    struct push_back_impl<aux::mp11_tag> {
+        template <class L, class T>
+        struct apply {
+            using type = mp11::mp_push_back<L, T>;
+        };
     };
-};
 
-// push_front
+    // push_front
 
-template< typename Tag > struct push_front_impl;
+    template <typename Tag>
+    struct push_front_impl;
 
-template<> struct push_front_impl<aux::mp11_tag>
-{
-    template<class L, class T> struct apply
-    {
-        using type = mp11::mp_push_front<L, T>;
+    template <>
+    struct push_front_impl<aux::mp11_tag> {
+        template <class L, class T>
+        struct apply {
+            using type = mp11::mp_push_front<L, T>;
+        };
     };
-};
 
-// size
+    // size
 
-template< typename Tag > struct size_impl;
+    template <typename Tag>
+    struct size_impl;
 
-template<> struct size_impl<aux::mp11_tag>
-{
-    template<class L> struct apply
-    {
-        using type = mp11::mp_size<L>;
+    template <>
+    struct size_impl<aux::mp11_tag> {
+        template <class L>
+        struct apply {
+            using type = mp11::mp_size<L>;
+        };
     };
-};
 
 } // namespace mpl
 } // namespace boost

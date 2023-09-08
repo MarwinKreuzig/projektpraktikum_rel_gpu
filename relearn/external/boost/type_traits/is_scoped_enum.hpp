@@ -17,9 +17,9 @@ or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 namespace boost {
 
-template<class T>
+template <class T>
 struct is_scoped_enum
-    : conjunction<is_enum<T>, negation<is_convertible<T, int> > >::type { };
+    : conjunction<is_enum<T>, negation<is_convertible<T, int>>>::type { };
 
 } /* boost */
 

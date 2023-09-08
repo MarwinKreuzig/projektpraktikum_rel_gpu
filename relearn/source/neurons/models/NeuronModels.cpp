@@ -94,5 +94,5 @@ std::vector<ModelParameter> NeuronModel::get_parameter() {
 }
 
 void NeuronModel::set_fired_gpu(const NeuronID neuron_id, const FiredStatus new_value) {
-        RelearnException::fail("No gpu support");
+    RelearnException::fail("No gpu support");
 }

@@ -22,5 +22,4 @@
 #include <sstream>
 
 TEST_F(SynapseDeletionFinderTest, testRandom) {
-
 }

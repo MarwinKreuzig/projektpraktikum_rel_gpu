@@ -28,9 +28,9 @@ FitzHughNagumoModel::FitzHughNagumoModel(
     , a{ a }
     , b{ b }
     , phi{ phi } {
-        if(CudaHelper::is_cuda_available()) {
-             gpu_handle = gpu::models::fitz_hugh_nagumo::construct_gpu(get_background_activity_calculator()->get_gpu_handle(),h,a,b,phi, FitzHughNagumoModel::init_w, FitzHughNagumoModel::init_x );
-        }
+    if (CudaHelper::is_cuda_available()) {
+        gpu_handle = gpu::models::fitz_hugh_nagumo::construct_gpu(get_background_activity_calculator()->get_gpu_handle(), h, a, b, phi, FitzHughNagumoModel::init_w, FitzHughNagumoModel::init_x);
+    }
 }
 
 std::unique_ptr<NeuronModel> FitzHughNagumoModel::clone() const {
@@ -132,8 +132,8 @@ void FitzHughNagumoModel::update_activity_cpu() {
         const auto stimulus = get_stimulus(converted_id);
         const auto _x = get_x(converted_id);
         const auto _w = w[neuron_id];
-        
-        const auto& [x_val, fired, w_val] = Calculations::fitz_hugh_nagumo( _x,  synaptic_input,  background,  stimulus, _w,  h,  scale,  phi,  a,  b);
+
+        const auto& [x_val, fired, w_val] = Calculations::fitz_hugh_nagumo(_x, synaptic_input, background, stimulus, _w, h, scale, phi, a, b);
 
         set_fired(converted_id, fired);
         set_x(converted_id, x_val);

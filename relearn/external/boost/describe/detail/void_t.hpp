@@ -9,21 +9,19 @@
 
 #if defined(BOOST_DESCRIBE_CXX11)
 
-namespace boost
-{
-namespace describe
-{
-namespace detail
-{
+namespace boost {
+namespace describe {
+    namespace detail {
 
-template<class...> struct make_void
-{
-    using type = void;
-};
+        template <class...>
+        struct make_void {
+            using type = void;
+        };
 
-template<class... T> using void_t = typename make_void<T...>::type;
+        template <class... T>
+        using void_t = typename make_void<T...>::type;
 
-} // namespace detail
+    } // namespace detail
 } // namespace describe
 } // namespace boost
 

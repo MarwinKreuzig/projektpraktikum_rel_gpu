@@ -9,29 +9,24 @@
 #include <boost/type_traits/integral_constant.hpp>
 #include <boost/type_traits/is_same.hpp>
 
-namespace boost
-{
-namespace hash_detail
-{
+namespace boost {
+namespace hash_detail {
 
-template<class T, class E = true_type> struct has_hasher_: false_type
-{
-};
+    template <class T, class E = true_type>
+    struct has_hasher_ : false_type {
+    };
 
-template<class T> struct has_hasher_< T, integral_constant< bool,
-        is_same<typename T::hasher, typename T::hasher>::value
-    > >: true_type
-{
-};
+    template <class T>
+    struct has_hasher_<T, integral_constant<bool, is_same<typename T::hasher, typename T::hasher>::value>> : true_type {
+    };
 
 } // namespace hash_detail
 
-namespace container_hash
-{
+namespace container_hash {
 
-template<class T> struct is_unordered_range: integral_constant< bool, is_range<T>::value && hash_detail::has_hasher_<T>::value >
-{
-};
+    template <class T>
+    struct is_unordered_range : integral_constant<bool, is_range<T>::value && hash_detail::has_hasher_<T>::value> {
+    };
 
 } // namespace container_hash
 } // namespace boost

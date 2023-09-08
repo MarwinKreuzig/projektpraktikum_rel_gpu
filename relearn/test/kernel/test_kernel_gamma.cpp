@@ -129,7 +129,6 @@ TEST_F(ProbabilityKernelTest, testGammaPrecalculatedValues) {
     }
 }
 
-
 TEST_F(KernelTest, testGammaKernelIntegration) {
     const auto& neuron_id_1 = NeuronIdAdapter::get_random_neuron_id(1000, mt);
     const auto& neuron_id_2 = NeuronIdAdapter::get_random_neuron_id(1000, 1000, mt);
@@ -149,10 +148,14 @@ TEST_F(KernelTest, testGammaKernelIntegration) {
     const auto& target_excitatory_dendrite_position = SimulationAdapter::get_random_position(mt);
     const auto& target_inhibitory_dendrite_position = SimulationAdapter::get_random_position(mt);
 
-    const auto& number_vacant_excitatory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);;
-    const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);;
-    const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);;
-    const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);;
+    const auto& number_vacant_excitatory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    ;
+    const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    ;
+    const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    ;
+    const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    ;
 
     OctreeNode<FastMultipoleMethodsCell> node{};
     node.set_cell_neuron_id(neuron_id_1);

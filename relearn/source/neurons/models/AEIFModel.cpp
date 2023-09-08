@@ -42,9 +42,9 @@ AEIFModel::AEIFModel(
     , a{ a }
     , b{ b }
     , V_spike{ V_spike } {
-        if(CudaHelper::is_cuda_available()) {
-            gpu_handle = gpu::models::aeif::construct_gpu(get_background_activity_calculator()->get_gpu_handle(),h,C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike  );
-        }
+    if (CudaHelper::is_cuda_available()) {
+        gpu_handle = gpu::models::aeif::construct_gpu(get_background_activity_calculator()->get_gpu_handle(), h, C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike);
+    }
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> AEIFModel::clone() const {
@@ -166,7 +166,7 @@ void AEIFModel::update_activity_cpu() {
         auto _x = get_x(converted_id);
         auto _w = w[neuron_id];
 
-        const auto& [x_val, fired, w_val] = Calculations::aeif( _x,  synaptic_input,  background,  stimulus,  _w,  h,  scale, V_spike,  g_L,  E_L,  V_T, d_T, d_T_inverse,  a,  b,  C_inverse,  tau_w_inverse);
+        const auto& [x_val, fired, w_val] = Calculations::aeif(_x, synaptic_input, background, stimulus, _w, h, scale, V_spike, g_L, E_L, V_T, d_T, d_T_inverse, a, b, C_inverse, tau_w_inverse);
 
         set_fired(converted_id, fired);
         set_x(converted_id, x_val);

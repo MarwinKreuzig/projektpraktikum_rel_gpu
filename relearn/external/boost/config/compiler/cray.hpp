@@ -123,22 +123,22 @@
 
 #if BOOST_CRAY_x == BOOST_CRAY_APPEND(_RELEASE_PATCHLEVEL)
 
-    // This is a developer build.
-    //
-    // - _RELEASE_PATCHLEVEL is defined as x, and x is not defined as a macro.
+// This is a developer build.
+//
+// - _RELEASE_PATCHLEVEL is defined as x, and x is not defined as a macro.
 
-    // Pretend _RELEASE_PATCHLEVEL is 99, so we get the configuration for the
-    // most recent patch level in this release.
+// Pretend _RELEASE_PATCHLEVEL is 99, so we get the configuration for the
+// most recent patch level in this release.
 
-    #define BOOST_CRAY_VERSION (_RELEASE_MAJOR * 10000 + _RELEASE_MINOR * 100 + 99)
+#define BOOST_CRAY_VERSION (_RELEASE_MAJOR * 10000 + _RELEASE_MINOR * 100 + 99)
 
 #else
 
-    // This is a production build.
-    //
-    // _RELEASE_PATCHLEVEL is not defined as x, or x is defined as a macro.
+// This is a production build.
+//
+// _RELEASE_PATCHLEVEL is not defined as x, or x is defined as a macro.
 
-    #define BOOST_CRAY_VERSION (_RELEASE_MAJOR * 10000 + _RELEASE_MINOR * 100 + _RELEASE_PATCHLEVEL)
+#define BOOST_CRAY_VERSION (_RELEASE_MAJOR * 10000 + _RELEASE_MINOR * 100 + _RELEASE_PATCHLEVEL)
 
 #endif // BOOST_CRAY_x == BOOST_CRAY_APPEND(_RELEASE_PATCHLEVEL)
 
@@ -146,13 +146,12 @@
 #undef BOOST_CRAY_APPEND
 #undef BOOST_CRAY_x
 
-
 #ifdef __GNUC__
-#   define BOOST_GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+#define BOOST_GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #endif
 
 #ifndef BOOST_COMPILER
-#   define BOOST_COMPILER "Cray C++ version " BOOST_STRINGIZE(_RELEASE_MAJOR) "." BOOST_STRINGIZE(_RELEASE_MINOR) "." BOOST_STRINGIZE(_RELEASE_PATCHLEVEL)
+#define BOOST_COMPILER "Cray C++ version " BOOST_STRINGIZE(_RELEASE_MAJOR) "." BOOST_STRINGIZE(_RELEASE_MINOR) "." BOOST_STRINGIZE(_RELEASE_PATCHLEVEL)
 #endif
 
 // Since the Cray compiler defines '__GNUC__', we have to emulate some
@@ -162,7 +161,7 @@
 // macros for GCC emulation?
 
 #if __cplusplus >= 201103L && defined(__GNUC__) && !defined(__GXX_EXPERIMENTAL_CXX0X__)
-#   define __GXX_EXPERIMENTAL_CXX0X__ 1
+#define __GXX_EXPERIMENTAL_CXX0X__ 1
 #endif
 
 ////
@@ -173,13 +172,13 @@
 // the Boost.Config tests?
 
 #if BOOST_CRAY_VERSION < 80000
-#  error "Boost is not configured for Cray compilers prior to version 8, please try the configure script."
+#error "Boost is not configured for Cray compilers prior to version 8, please try the configure script."
 #endif
 
 // We only support recent EDG based compilers.
 
 #ifndef __EDG__
-#  error "Unsupported Cray compiler, please try running the configure script."
+#error "Unsupported Cray compiler, please try running the configure script."
 #endif
 
 ////
@@ -225,20 +224,20 @@
 #define BOOST_NO_SFINAE_EXPR
 #define BOOST_NO_TWO_PHASE_NAME_LOOKUP
 
-//#define BOOST_BCB_PARTIAL_SPECIALIZATION_BUG
+// #define BOOST_BCB_PARTIAL_SPECIALIZATION_BUG
 #define BOOST_MATH_DISABLE_STD_FPCLASSIFY
-//#define BOOST_HAS_FPCLASSIFY
+// #define BOOST_HAS_FPCLASSIFY
 
-#define BOOST_SP_USE_PTHREADS 
-#define BOOST_AC_USE_PTHREADS 
+#define BOOST_SP_USE_PTHREADS
+#define BOOST_AC_USE_PTHREADS
 
 //
 // Everything that follows is working around what are thought to be
 // compiler shortcomings. Revist all of these regularly.
 //
 
-//#define BOOST_USE_ENUM_STATIC_ASSERT
-//#define BOOST_BUGGY_INTEGRAL_CONSTANT_EXPRESSIONS //(this may be implied by the previous #define
+// #define BOOST_USE_ENUM_STATIC_ASSERT
+// #define BOOST_BUGGY_INTEGRAL_CONSTANT_EXPRESSIONS //(this may be implied by the previous #define
 
 // These constants should be provided by the compiler.
 
@@ -300,8 +299,8 @@
 #undef BOOST_NO_SFINAE_EXPR
 #undef BOOST_NO_TWO_PHASE_NAME_LOOKUP
 #undef BOOST_MATH_DISABLE_STD_FPCLASSIFY
-#undef BOOST_SP_USE_PTHREADS 
-#undef BOOST_AC_USE_PTHREADS 
+#undef BOOST_SP_USE_PTHREADS
+#undef BOOST_AC_USE_PTHREADS
 
 #define BOOST_HAS_VARIADIC_TMPL
 #define BOOST_HAS_UNISTD_H
@@ -344,17 +343,17 @@
 #define BOOST_HAS_FLOAT128
 #define BOOST_HAS_PTHREAD_YIELD // This is a platform macro, but it improves test results.
 #define BOOST_NO_COMPLETE_VALUE_INITIALIZATION // This is correct. Test compiles, but fails to run.
-#undef  BOOST_NO_CXX11_CHAR16_T
-#undef  BOOST_NO_CXX11_CHAR32_T
-#undef  BOOST_NO_CXX11_INLINE_NAMESPACES
-#undef  BOOST_NO_CXX11_FINAL
+#undef BOOST_NO_CXX11_CHAR16_T
+#undef BOOST_NO_CXX11_CHAR32_T
+#undef BOOST_NO_CXX11_INLINE_NAMESPACES
+#undef BOOST_NO_CXX11_FINAL
 #undef BOOST_NO_CXX11_OVERRIDE
-#undef  BOOST_NO_CXX11_FIXED_LENGTH_VARIADIC_TEMPLATE_EXPANSION_PACKS
-#undef  BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS
+#undef BOOST_NO_CXX11_FIXED_LENGTH_VARIADIC_TEMPLATE_EXPANSION_PACKS
+#undef BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS
 #define BOOST_NO_CXX11_SFINAE_EXPR // This is correct, even though '*_fail.cpp' test fails.
-#undef  BOOST_NO_CXX11_UNIFIED_INITIALIZATION_SYNTAX
-#undef  BOOST_NO_CXX11_VARIADIC_MACROS
-#undef  BOOST_NO_CXX11_VARIADIC_TEMPLATES
+#undef BOOST_NO_CXX11_UNIFIED_INITIALIZATION_SYNTAX
+#undef BOOST_NO_CXX11_VARIADIC_MACROS
+#undef BOOST_NO_CXX11_VARIADIC_TEMPLATES
 // 'BOOST_NO_DEDUCED_TYPENAME' test is broken. The test files are enabled /
 // disabled with an '#ifdef BOOST_DEDUCED_TYPENAME'. However,
 // 'boost/libs/config/include/boost/config/detail/suffix.hpp' ensures that
@@ -368,25 +367,25 @@
 // Therefore, if you wish to test changes to 'BOOST_NO_DEDUCED_TYPENAME',
 // you have to modify 'no_ded_typename_pass.cpp' to unconditionally include
 // 'boost_no_ded_typename.ipp'.
-#undef  BOOST_NO_DEDUCED_TYPENAME // This is correct. Test is broken.
-#undef  BOOST_NO_SFINAE_EXPR
-#undef  BOOST_NO_TWO_PHASE_NAME_LOOKUP
+#undef BOOST_NO_DEDUCED_TYPENAME // This is correct. Test is broken.
+#undef BOOST_NO_SFINAE_EXPR
+#undef BOOST_NO_TWO_PHASE_NAME_LOOKUP
 #endif // __cplusplus >= 199711L
 
 #if __cplusplus >= 201103L
-#undef  BOOST_NO_CXX11_ALIGNAS
-#undef  BOOST_NO_CXX11_ALIGNOF
-#undef  BOOST_NO_CXX11_DECLTYPE_N3276
+#undef BOOST_NO_CXX11_ALIGNAS
+#undef BOOST_NO_CXX11_ALIGNOF
+#undef BOOST_NO_CXX11_DECLTYPE_N3276
 #define BOOST_NO_CXX11_HDR_ATOMIC
-#undef  BOOST_NO_CXX11_HDR_FUNCTIONAL
+#undef BOOST_NO_CXX11_HDR_FUNCTIONAL
 #define BOOST_NO_CXX11_HDR_REGEX // This is correct. Test compiles, but fails to run.
-#undef  BOOST_NO_CXX11_SFINAE_EXPR
-#undef  BOOST_NO_CXX11_SMART_PTR
-#undef  BOOST_NO_CXX11_TRAILING_RESULT_TYPES
+#undef BOOST_NO_CXX11_SFINAE_EXPR
+#undef BOOST_NO_CXX11_SMART_PTR
+#undef BOOST_NO_CXX11_TRAILING_RESULT_TYPES
 #endif // __cplusplus >= 201103L
 
 #if __cplusplus >= 201402L
-#undef  BOOST_NO_CXX14_CONSTEXPR
+#undef BOOST_NO_CXX14_CONSTEXPR
 #define BOOST_NO_CXX14_DIGIT_SEPARATORS
 #endif // __cplusplus == 201402L
 
@@ -407,8 +406,8 @@
 #endif // __cplusplus >= 199711L
 
 #if __cplusplus >= 201103L
-#undef  BOOST_NO_CXX11_HDR_ATOMIC
-#undef  BOOST_NO_CXX11_HDR_REGEX
+#undef BOOST_NO_CXX11_HDR_ATOMIC
+#undef BOOST_NO_CXX11_HDR_REGEX
 #endif // __cplusplus >= 201103L
 
 #if __cplusplus >= 201402L
@@ -440,7 +439,7 @@
 // I've commented out some '#undef' statements to signify that we purposely
 // want to keep certain macros.
 
-//#undef __GXX_EXPERIMENTAL_CXX0X__
-//#undef BOOST_COMPILER
+// #undef __GXX_EXPERIMENTAL_CXX0X__
+// #undef BOOST_COMPILER
 #undef BOOST_GCC_VERSION
 #undef BOOST_CRAY_VERSION

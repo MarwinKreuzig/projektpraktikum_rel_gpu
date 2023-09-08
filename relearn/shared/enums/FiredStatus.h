@@ -10,8 +10,6 @@
  *
  */
 
-
-
 /**
  * An instance of this enum symbolizes if a neuron fired in the current simulation step.
  * That is, the model of electrical activity determined that the activity spiked and thus
@@ -21,8 +19,6 @@ enum class FiredStatus : char {
     Inactive = 0,
     Fired = 1,
 };
-
-
 
 #ifdef HOST_COMPILER
 
@@ -46,7 +42,6 @@ inline std::ostream& operator<<(std::ostream& out, const FiredStatus fired_statu
 
     return out;
 }
-
 
 template <>
 struct fmt::formatter<FiredStatus> : ostream_formatter { };

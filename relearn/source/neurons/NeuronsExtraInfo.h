@@ -46,7 +46,7 @@ public:
     std::unique_ptr<gpu::neurons::NeuronsExtraInfosHandle> gpu_handle{};
 
     NeuronsExtraInfo() {
-        if(CudaHelper::is_cuda_available()) {
+        if (CudaHelper::is_cuda_available()) {
             this->gpu_handle = std::move(gpu::neurons::create());
         }
     }
@@ -66,16 +66,14 @@ public:
         deletions_log.resize(number_neurons, {});
         fire_history.resize(size);
 
-        if(CudaHelper::is_cuda_available()) {
+        if (CudaHelper::is_cuda_available()) {
             gpu_handle->init(number_neurons);
         }
-
-        
     }
 
     const std::unique_ptr<gpu::neurons::NeuronsExtraInfosHandle>& get_gpu_handle() {
         RelearnException::check(CudaHelper::is_cuda_available(), "NeuronsExtraInfos::get_gpu_handle: GPU not supported");
-        RelearnException::check(gpu_handle!=nullptr, "NeuronsExtraInfos::get_gpu_handle: GPU handle not set");
+        RelearnException::check(gpu_handle != nullptr, "NeuronsExtraInfos::get_gpu_handle: GPU handle not set");
         return gpu_handle;
     }
 
@@ -105,7 +103,7 @@ public:
 
         ranges::fill(enabled_neurons | ranges::views::transform(get_update_status), UpdateStatus::Enabled);
 
-        if(CudaHelper::is_cuda_available()) {
+        if (CudaHelper::is_cuda_available()) {
             const auto ids = CudaHelper::convert_neuron_ids_to_primitives(enabled_neurons);
             gpu_handle->enable_neurons(ids);
         }
@@ -133,7 +131,7 @@ public:
 
         ranges::fill(disabled_neurons | ranges::views::transform(get_update_status), UpdateStatus::Disabled);
 
-        if(CudaHelper::is_cuda_available()) {
+        if (CudaHelper::is_cuda_available()) {
             const auto ids = CudaHelper::convert_neuron_ids_to_primitives(disabled_neurons);
             gpu_handle->disable_neurons(ids);
         }
@@ -287,6 +285,4 @@ private:
 
     std::vector<std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>>> deletions_log{};
     std::vector<std::bitset<fire_history_length>> fire_history{};
-
-    
 };

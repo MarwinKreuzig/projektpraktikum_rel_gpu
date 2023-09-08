@@ -10,13 +10,13 @@
 
 // Oldest library version currently supported is 2.1 (V2R1)
 #if __TARGET_LIB__ < 0x42010000
-#  error "Library version not supported or configured - please reconfigure"
+#error "Library version not supported or configured - please reconfigure"
 #endif
 
 #if __TARGET_LIB__ > 0x42010000
-#  if defined(BOOST_ASSERT_CONFIG)
-#     error "Unknown library version - please run the configure tests and report the results"
-#  endif
+#if defined(BOOST_ASSERT_CONFIG)
+#error "Unknown library version - please run the configure tests and report the results"
+#endif
 #endif
 
 #define BOOST_STDLIB "IBM z/OS XL C/C++ standard library"

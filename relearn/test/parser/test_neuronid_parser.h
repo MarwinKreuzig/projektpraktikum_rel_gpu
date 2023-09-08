@@ -13,5 +13,4 @@
 #include "RelearnTest.hpp"
 
 class NeuronIdParserTest : public RelearnTest {
-
 };

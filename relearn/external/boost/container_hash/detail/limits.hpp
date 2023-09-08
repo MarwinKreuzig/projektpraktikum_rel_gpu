@@ -7,13 +7,11 @@
 
 #include <limits>
 
-namespace boost
-{
-    namespace hash_detail
-    {
-        template <class T>
-        struct limits : std::numeric_limits<T> {};
-    }
+namespace boost {
+namespace hash_detail {
+    template <class T>
+    struct limits : std::numeric_limits<T> { };
+}
 }
 
 #endif // #ifndef BOOST_FUNCTIONAL_HASH_DETAIL_LIMITS_HEADER

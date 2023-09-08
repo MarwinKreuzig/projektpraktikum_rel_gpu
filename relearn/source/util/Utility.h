@@ -84,9 +84,9 @@ static constexpr T factorial(T value) noexcept {
 }
 
 template <typename T>
-    static std::vector<std::decay_t<T>> vectorify_span(const std::span<T> span) {
-        return span | ranges::to_vector;
-    }
+static std::vector<std::decay_t<T>> vectorify_span(const std::span<T> span) {
+    return span | ranges::to_vector;
+}
 
 /**
  * @brief Looks for a given file in a directory. Path: directory / prefix rank suffix. Tries different formats for the rank.

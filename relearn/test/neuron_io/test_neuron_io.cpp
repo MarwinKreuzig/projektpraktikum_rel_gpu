@@ -1230,12 +1230,12 @@ TEST_F(IOTest, additionalPositionInformationTest) {
 
     auto sim_box = SimulationAdapter::round_bounding_box(SimulationAdapter::get_random_simulation_box_size(mt));
     std::vector<RelearnTypes::bounding_box_type> subdomain_boxes{};
-    for(auto i=0;i<num_subdomains;i++) {
+    for (auto i = 0; i < num_subdomains; i++) {
         subdomain_boxes.push_back(SimulationAdapter::round_bounding_box(SimulationAdapter::get_random_simulation_box_size(mt)));
     }
 
     for (auto i = 0; i < number_neurons; i++) {
-        correct_ids.push_back(NeuronID {i});
+        correct_ids.push_back(NeuronID{ i });
         correct_position.emplace_back(SimulationAdapter::get_random_position_in_box(sim_box, mt));
         correct_area_names.emplace_back("area_" + std::to_string(i));
         correct_area_ids.emplace_back(i);

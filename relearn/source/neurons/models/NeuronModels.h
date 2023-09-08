@@ -79,7 +79,7 @@ public:
         , input_calculator(std::move(synaptic_input_calculator))
         , background_calculator(std::move(background_activity_calculator))
         , stimulus_calculator(std::move(stimulus_calculator)) {
-         }
+    }
 
     /**
      * @brief Sets the extra infos. These are used to determine which neuron updates its electrical activity
@@ -91,8 +91,8 @@ public:
         RelearnException::check(is_filled, "NeuronModel::set_extra_infos: new_extra_info is empty");
         extra_infos = std::move(new_extra_info);
 
-        if(CudaHelper::is_cuda_available()) {
-            RelearnException::check(gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
+        if (CudaHelper::is_cuda_available()) {
+            RelearnException::check(gpu_handle != nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
             gpu_handle->set_extra_infos(extra_infos->get_gpu_handle());
         }
 
@@ -169,9 +169,9 @@ public:
      * @return A constant reference to the vector of flags. It is not invalidated by calls to other methods
      */
     [[nodiscard]] std::span<const FiredStatus> get_fired() const noexcept {
-        if(CudaHelper::is_cuda_available()) {
+        if (CudaHelper::is_cuda_available()) {
             RelearnException::check(number_local_neurons > 0, "NeuronModels::get_fired: number_local_neurons not set");
-            RelearnException::check(this->gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
+            RelearnException::check(this->gpu_handle != nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
             return std::span<const FiredStatus>(gpu_handle->get_fired());
         }
         return fired;
@@ -288,17 +288,16 @@ public:
      * @param number_neurons The number of local neurons to store in this class
      */
     void init(number_neurons_type number_neurons) {
-        if(CudaHelper::is_cuda_available()) {
+        if (CudaHelper::is_cuda_available()) {
             init_gpu(number_neurons);
             for (auto& recorder : fired_recorder) {
-        recorder.resize(number_neurons, 0U);
-    }
+                recorder.resize(number_neurons, 0U);
+            }
             number_local_neurons = number_neurons;
             input_calculator->init(number_neurons);
-    background_calculator->init(number_neurons);
-    stimulus_calculator->init(number_neurons);
-        }
-        else {
+            background_calculator->init(number_neurons);
+            stimulus_calculator->init(number_neurons);
+        } else {
             init_cpu(number_neurons);
         }
         init_neurons(0, number_neurons);
@@ -311,24 +310,21 @@ public:
     void create_neurons(number_neurons_type creation_count) {
         const auto old_size = get_number_neurons();
         const auto new_size = old_size + creation_count;
-        if(CudaHelper::is_cuda_available()) {
+        if (CudaHelper::is_cuda_available()) {
             create_neurons_gpu(creation_count);
             for (auto& recorder : fired_recorder) {
-        recorder.resize(new_size, 0U);
-    }
+                recorder.resize(new_size, 0U);
+            }
 
-    input_calculator->create_neurons(creation_count);
-    background_calculator->create_neurons(creation_count);
-    stimulus_calculator->create_neurons(creation_count);
-    number_local_neurons = creation_count + old_size;
-        }
-        else {
+            input_calculator->create_neurons(creation_count);
+            background_calculator->create_neurons(creation_count);
+            stimulus_calculator->create_neurons(creation_count);
+            number_local_neurons = creation_count + old_size;
+        } else {
             create_neurons_cpu(creation_count);
         }
-        init_neurons(old_size, old_size+creation_count);
+        init_neurons(old_size, old_size + creation_count);
     }
-
-
 
     /**
      * @brief Returns the name of the current model
@@ -343,17 +339,16 @@ public:
      * @exception Throws a RelearnException if a specified id is too large
      */
     void disable_neurons(const std::span<const NeuronID> neuron_ids) {
-         if(CudaHelper::is_cuda_available()) {
+        if (CudaHelper::is_cuda_available()) {
             disable_neurons_gpu(neuron_ids);
-        }
-        else {
+        } else {
             disable_neurons_cpu(neuron_ids);
         }
     }
 
     void disable_neurons_gpu(const std::span<const NeuronID> neuron_ids) {
         const auto ids = CudaHelper::convert_neuron_ids_to_primitives(neuron_ids);
-        RelearnException::check(gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
+        RelearnException::check(gpu_handle != nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
         gpu_handle->disable_neurons(ids);
 
         for (const auto neuron_id : neuron_ids) {
@@ -383,22 +378,20 @@ public:
      * @exception Throws a RelearnException if a specified id is too large
      */
     void enable_neurons(const std::span<const NeuronID> neuron_ids) {
-         if(CudaHelper::is_cuda_available()) {
+        if (CudaHelper::is_cuda_available()) {
             enable_neurons_gpu(neuron_ids);
-        }
-        else {
+        } else {
             enable_neurons_cpu(neuron_ids);
         }
     }
 
     void enable_neurons_gpu(const std::span<const NeuronID> neuron_ids) {
         const auto ids = CudaHelper::convert_neuron_ids_to_primitives(neuron_ids);
-        RelearnException::check(gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
+        RelearnException::check(gpu_handle != nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
         gpu_handle->enable_neurons(ids);
     }
 
     void enable_neurons_cpu(const std::span<const NeuronID> neuron_ids) {
-
     }
 
     /**
@@ -407,10 +400,9 @@ public:
      * @param new_value True iff the neuron fired in the current simulation step
      */
     void set_fired(const NeuronID neuron_id, const FiredStatus new_value) {
-        if(CudaHelper::is_cuda_available()) {
-            set_fired_gpu(neuron_id,new_value);
-        }
-        else {
+        if (CudaHelper::is_cuda_available()) {
+            set_fired_gpu(neuron_id, new_value);
+        } else {
             set_fired_cpu(neuron_id, new_value);
         }
     }
@@ -435,22 +427,18 @@ public:
     static constexpr unsigned int max_h{ 1000 };
 
 protected:
-
     void update_activity(const step_type step) {
-        if(CudaHelper::is_cuda_available()) {
+        if (CudaHelper::is_cuda_available()) {
             update_activity_gpu(step);
-        }
-        else {
+        } else {
             update_activity_cpu();
         }
     }
 
-
     virtual void update_activity_benchmark() {
-        if(CudaHelper::is_cuda_available()) {
+        if (CudaHelper::is_cuda_available()) {
             RelearnException::fail("No gpu support");
-        }
-        else {
+        } else {
             update_activity_cpu();
         }
     }
@@ -462,40 +450,38 @@ protected:
      * @param end_id The next to last local neuron id to initialize
      */
     void init_neurons(number_neurons_type start_id, number_neurons_type end_id) {
-        if(CudaHelper::is_cuda_available()) {
+        if (CudaHelper::is_cuda_available()) {
             init_neurons_gpu(start_id, end_id);
-        }
-        else {
+        } else {
             init_neurons_cpu(start_id, end_id);
         }
     }
 
-    //CPU
+    // CPU
     virtual void update_activity_cpu() = 0;
     virtual void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) = 0;
     virtual void create_neurons_cpu(number_neurons_type creation_count);
     virtual void init_cpu(number_neurons_type number_neurons) = 0;
 
-
-    //GPU
+    // GPU
     void update_activity_gpu(const step_type step) {
-        RelearnException::check(gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
-        
+        RelearnException::check(gpu_handle != nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
+
         gpu_handle->update_activity(step, Util::vectorify_span(get_synaptic_input()), Util::vectorify_span(get_stimulus()));
     }
 
     void init_neurons_gpu(number_neurons_type start_id, number_neurons_type end_id) {
-        RelearnException::check(gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
+        RelearnException::check(gpu_handle != nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
         gpu_handle->init_neurons(start_id, end_id);
     }
-    
+
     void create_neurons_gpu(number_neurons_type creation_count) {
-        RelearnException::check(gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
+        RelearnException::check(gpu_handle != nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
         gpu_handle->create_neurons(creation_count);
     }
 
     void init_gpu(number_neurons_type number_neurons) {
-        RelearnException::check(gpu_handle!=nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
+        RelearnException::check(gpu_handle != nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
         gpu_handle->init_neuron_model(number_neurons);
     }
 
@@ -668,14 +654,12 @@ protected:
 
     void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) final;
 
-
     /**
      * @brief Initializes the model to include number_neurons many local neurons.
      *      Sets the initial refractory_time counter to 0
      * @param number_neurons The number of local neurons to store in this class
      */
     void init_cpu(number_neurons_type number_neurons) override final;
-
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
@@ -762,7 +746,7 @@ public:
         return u[local_neuron_id];
     }
 
-    double iter_refraction(double,double) const noexcept;
+    double iter_refraction(double, double) const noexcept;
 
     /**
      * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
@@ -846,7 +830,6 @@ public:
      */
     void init_cpu(number_neurons_type number_neurons) override final;
 
-
     /**
      * @brief Creates new neurons and adds those to the local portion.
      * @param creation_count The number of local neurons that should be added
@@ -880,7 +863,6 @@ public:
     static constexpr double max_k2{ 10.0 };
     static constexpr double max_k3{ 200.0 };
 
-
 protected:
     void update_activity_cpu() override final;
 
@@ -888,10 +870,7 @@ protected:
 
     void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) override final;
 
-
-
 private:
-
     [[nodiscard]] bool spiked(double x) const noexcept;
 
     void update_activity_benchmark(NeuronID neuron_id);
@@ -1004,7 +983,6 @@ public:
      */
     void init_cpu(number_neurons_type number_neurons) override final;
 
-
     /**
      * @brief Creates new neurons and adds those to the local portion.
      * @param creation_count The number of local neurons that should be added
@@ -1032,7 +1010,6 @@ protected:
     void update_activity_benchmark() final;
 
     void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) final;
-
 
 private:
     [[nodiscard]] static double iter_x(double x, double w, double input) noexcept;
@@ -1206,7 +1183,6 @@ public:
      * @param number_neurons The number of local neurons to store in this class
      */
     void init_cpu(number_neurons_type number_neurons) final;
-
 
     /**
      * @brief Creates new neurons and adds those to the local portion.

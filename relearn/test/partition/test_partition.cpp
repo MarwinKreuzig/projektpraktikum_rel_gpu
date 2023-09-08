@@ -277,7 +277,7 @@ TEST_F(PartitionTest, testPartitionSubdomainBoundaries) {
         auto partition_local_subdomain_boundaries = partition.get_all_local_subdomain_boundaries();
 
         struct {
-            bool operator()(RelearnTypes::bounding_box_type& a,RelearnTypes::bounding_box_type& b) const { return a < b; }
+            bool operator()(RelearnTypes::bounding_box_type& a, RelearnTypes::bounding_box_type& b) const { return a < b; }
         } customLess;
 
         ranges::sort(local_subdomain_boundaries, customLess);

@@ -268,9 +268,8 @@
 // Always define to zero, if it's used it'll be defined my MPL:
 #define BOOST_MPL_CFG_GCC_WORKAROUND_GUARD 0
 
-#define BOOST_WORKAROUND(symbol, test)                \
-       ((symbol ## _WORKAROUND_GUARD + 0 == 0) &&     \
-       (symbol != 0) && (1 % (( (symbol test) ) + 1)))
+#define BOOST_WORKAROUND(symbol, test) \
+    ((symbol##_WORKAROUND_GUARD + 0 == 0) && (symbol != 0) && (1 % (((symbol test)) + 1)))
 //                              ^ ^           ^ ^
 // The extra level of parenthesis nesting above, along with the
 // BOOST_OPEN_PAREN indirection below, is required to satisfy the
@@ -290,10 +289,10 @@
 //
 
 #ifdef BOOST_DETECT_OUTDATED_WORKAROUNDS
-#  define BOOST_OPEN_PAREN (
-#  define BOOST_TESTED_AT(value)  > value) ?(-1): BOOST_OPEN_PAREN 1
+#define BOOST_OPEN_PAREN (
+#define BOOST_TESTED_AT(value)  > value) ?(-1): BOOST_OPEN_PAREN 1
 #else
-#  define BOOST_TESTED_AT(value) != ((value)-(value))
+#define BOOST_TESTED_AT(value) != ((value) - (value))
 #endif
 
 #else

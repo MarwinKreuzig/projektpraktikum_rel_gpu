@@ -10,25 +10,21 @@
 #include <boost/describe/bases.hpp>
 #include <boost/describe/members.hpp>
 
-namespace boost
-{
-namespace container_hash
-{
+namespace boost {
+namespace container_hash {
 
 #if defined(BOOST_DESCRIBE_CXX11)
 
-template<class T> struct is_described_class: boost::integral_constant<bool,
-    describe::has_describe_bases<T>::value &&
-    describe::has_describe_members<T>::value &&
-    !boost::is_union<T>::value>
-{
-};
+    template <class T>
+    struct is_described_class : boost::integral_constant<bool,
+                                    describe::has_describe_bases<T>::value && describe::has_describe_members<T>::value && !boost::is_union<T>::value> {
+    };
 
 #else
 
-template<class T> struct is_described_class: boost::false_type
-{
-};
+    template <class T>
+    struct is_described_class : boost::false_type {
+    };
 
 #endif
 

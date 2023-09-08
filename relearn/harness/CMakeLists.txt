@@ -1,10 +1,10 @@
 add_library(relearn_harness STATIC)
 target_sources(
-	relearn_harness
-	PRIVATE
-			harness.cpp
-			# for visual studio
-			${relearn_harness_additional_files})
+        relearn_harness
+        PRIVATE
+        harness.cpp
+        # for visual studio
+        ${relearn_harness_additional_files})
 
 target_include_directories(relearn_harness PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(relearn_harness PROPERTIES ENABLE_EXPORTS 1)

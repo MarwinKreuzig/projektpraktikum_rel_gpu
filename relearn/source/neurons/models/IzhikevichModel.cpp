@@ -39,9 +39,9 @@ IzhikevichModel::IzhikevichModel(
     , k1{ k1 }
     , k2{ k2 }
     , k3{ k3 } {
-        if(CudaHelper::is_cuda_available()) {
-             gpu_handle = gpu::models::izhikevich::construct_gpu(get_background_activity_calculator()->get_gpu_handle(),h,  V_spike,  a,  b,  c,  d,  k1,  k2,  k3);
-        }
+    if (CudaHelper::is_cuda_available()) {
+        gpu_handle = gpu::models::izhikevich::construct_gpu(get_background_activity_calculator()->get_gpu_handle(), h, V_spike, a, b, c, d, k1, k2, k3);
+    }
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> IzhikevichModel::clone() const {
@@ -150,16 +150,14 @@ void IzhikevichModel::update_activity_cpu() {
         const auto stimulus = get_stimulus(converted_id);
         const auto _x = get_x(converted_id);
         const auto _u = u[neuron_id];
-        
-        const auto& [x_val, fired, u_val] = Calculations::izhikevich(_x, synaptic_input, background, stimulus, _u, h, scale, V_spike, a, b,c, d, k1, k2, k3);
+
+        const auto& [x_val, fired, u_val] = Calculations::izhikevich(_x, synaptic_input, background, stimulus, _u, h, scale, V_spike, a, b, c, d, k1, k2, k3);
 
         set_fired(converted_id, fired);
         set_x(converted_id, x_val);
         u[neuron_id] = u_val;
     }
 }
-
-
 
 void IzhikevichModel::init_neurons_cpu(const number_neurons_type start_id, const number_neurons_type end_id) {
     for (const auto neuron_id : NeuronID::range(start_id, end_id)) {

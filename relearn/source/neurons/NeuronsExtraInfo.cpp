@@ -47,8 +47,8 @@ void NeuronsExtraInfo::create_neurons(const number_neurons_type creation_count) 
 
     size = new_size;
 
-    if(CudaHelper::is_cuda_available()) {
-         gpu_handle->create_neurons(creation_count);
+    if (CudaHelper::is_cuda_available()) {
+        gpu_handle->create_neurons(creation_count);
     }
 }
 

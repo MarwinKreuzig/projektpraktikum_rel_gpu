@@ -15,24 +15,24 @@ or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 namespace boost {
 
-template<class T>
+template <class T>
 struct is_bounded_array
     : false_type { };
 
 #if !defined(BOOST_NO_ARRAY_TYPE_SPECIALIZATIONS)
-template<class T, std::size_t N>
+template <class T, std::size_t N>
 struct is_bounded_array<T[N]>
     : true_type { };
 
-template<class T, std::size_t N>
+template <class T, std::size_t N>
 struct is_bounded_array<const T[N]>
     : true_type { };
 
-template<class T, std::size_t N>
+template <class T, std::size_t N>
 struct is_bounded_array<volatile T[N]>
     : true_type { };
 
-template<class T, std::size_t N>
+template <class T, std::size_t N>
 struct is_bounded_array<const volatile T[N]>
     : true_type { };
 #endif

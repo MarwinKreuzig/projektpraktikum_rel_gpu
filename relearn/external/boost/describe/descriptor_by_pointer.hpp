@@ -13,32 +13,31 @@
 #include <boost/mp11/bind.hpp>
 #include <boost/mp11/integral.hpp>
 
-namespace boost
-{
-namespace describe
-{
+namespace boost {
+namespace describe {
 
-namespace detail
-{
+    namespace detail {
 
-template<class Pm> constexpr bool cx_pmeq( Pm p1, Pm p2 )
-{
-    return p1 == p2;
-}
+        template <class Pm>
+        constexpr bool cx_pmeq(Pm p1, Pm p2) {
+            return p1 == p2;
+        }
 
-template<class Pm1, class Pm2> constexpr bool cx_pmeq( Pm1, Pm2 )
-{
-    return false;
-}
+        template <class Pm1, class Pm2>
+        constexpr bool cx_pmeq(Pm1, Pm2) {
+            return false;
+        }
 
-template<auto Pm> struct match_by_pointer
-{
-    template<class D> using fn = mp11::mp_bool< cx_pmeq( D::pointer, Pm ) >;
-};
+        template <auto Pm>
+        struct match_by_pointer {
+            template <class D>
+            using fn = mp11::mp_bool<cx_pmeq(D::pointer, Pm)>;
+        };
 
-} // namespace detail
+    } // namespace detail
 
-template<class L, auto Pm> using descriptor_by_pointer = mp11::mp_at<L, mp11::mp_find_if_q<L, detail::match_by_pointer<Pm>>>;
+    template <class L, auto Pm>
+    using descriptor_by_pointer = mp11::mp_at<L, mp11::mp_find_if_q<L, detail::match_by_pointer<Pm>>>;
 
 } // namespace describe
 } // namespace boost

@@ -12,27 +12,24 @@
 #include <boost/config.hpp>
 
 #if defined(BOOST_HAS_PRAGMA_ONCE)
-# pragma once
+#pragma once
 #endif
 
-namespace boost
-{
-namespace core
-{
-namespace detail
-{
+namespace boost {
+namespace core {
+    namespace detail {
 
-template< class T1, class T2 > struct is_same
-{
-    BOOST_STATIC_CONSTANT( bool, value = false );
-};
+        template <class T1, class T2>
+        struct is_same {
+            BOOST_STATIC_CONSTANT(bool, value = false);
+        };
 
-template< class T > struct is_same< T, T >
-{
-    BOOST_STATIC_CONSTANT( bool, value = true );
-};
+        template <class T>
+        struct is_same<T, T> {
+            BOOST_STATIC_CONSTANT(bool, value = true);
+        };
 
-} // namespace detail
+    } // namespace detail
 } // namespace core
 } // namespace boost
 

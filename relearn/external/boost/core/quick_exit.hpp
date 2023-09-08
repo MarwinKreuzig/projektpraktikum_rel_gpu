@@ -4,7 +4,7 @@
 // MS compatible compilers support #pragma once
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
-# pragma once
+#pragma once
 #endif
 
 //  boost/core/quick_exit.hpp
@@ -20,7 +20,7 @@
 
 #if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
 
-extern "C" _CRTIMP __cdecl __MINGW_NOTHROW  void _exit (int) __MINGW_ATTRIB_NORETURN;
+extern "C" _CRTIMP __cdecl __MINGW_NOTHROW void _exit(int) __MINGW_ATTRIB_NORETURN;
 
 #endif
 
@@ -30,30 +30,28 @@ extern "C" _Noreturn void quick_exit(int);
 
 #endif
 
-namespace boost
-{
+namespace boost {
 
-BOOST_NORETURN inline void quick_exit( int code ) BOOST_NOEXCEPT
-{
+BOOST_NORETURN inline void quick_exit(int code) BOOST_NOEXCEPT {
 #if defined(_MSC_VER) && _MSC_VER < 1900
 
-    ::_exit( code );
+    ::_exit(code);
 
 #elif defined(__MINGW32__)
 
-    ::_exit( code );
+    ::_exit(code);
 
 #elif defined(__APPLE__)
 
-    ::_Exit( code );
+    ::_Exit(code);
 
 #else
 
-    ::quick_exit( code );
+    ::quick_exit(code);
 
 #endif
 }
 
 } // namespace boost
 
-#endif  // #ifndef BOOST_CORE_QUICK_EXIT_HPP_INCLUDED
+#endif // #ifndef BOOST_CORE_QUICK_EXIT_HPP_INCLUDED

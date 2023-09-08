@@ -15,33 +15,33 @@ or copy at http://www.boost.org/LICENSE_1_0.txt)
 namespace boost {
 
 #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-template<class...>
+template <class...>
 struct make_void {
     typedef void type;
 };
 
 #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
-template<class... Ts>
+template <class... Ts>
 using void_t = typename make_void<Ts...>::type;
 #endif
 
 #else /* BOOST_NO_CXX11_VARIADIC_TEMPLATES */
 
-template<class = void,
-         class = void,
-         class = void,
-         class = void,
-         class = void>
+template <class = void,
+    class = void,
+    class = void,
+    class = void,
+    class = void>
 struct make_void {
     typedef void type;
 };
 
 #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
-template<class A = void,
-         class B = void,
-         class C = void,
-         class D = void,
-         class E = void>
+template <class A = void,
+    class B = void,
+    class C = void,
+    class D = void,
+    class E = void>
 using void_t = typename make_void<A, B, C, D, E>::type;
 #endif
 

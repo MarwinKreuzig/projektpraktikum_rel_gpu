@@ -8,32 +8,32 @@
 //  See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt
 
-namespace boost
-{
-namespace mp11
-{
+namespace boost {
+namespace mp11 {
 
-// mp_rename<L, B>
-namespace detail
-{
+    // mp_rename<L, B>
+    namespace detail {
 
-template<class A, template<class...> class B> struct mp_rename_impl
-{
-// An error "no type named 'type'" here means that the first argument to mp_rename is not a list
-};
+        template <class A, template <class...> class B>
+        struct mp_rename_impl {
+            // An error "no type named 'type'" here means that the first argument to mp_rename is not a list
+        };
 
-template<template<class...> class A, class... T, template<class...> class B> struct mp_rename_impl<A<T...>, B>
-{
-    using type = B<T...>;
-};
+        template <template <class...> class A, class... T, template <class...> class B>
+        struct mp_rename_impl<A<T...>, B> {
+            using type = B<T...>;
+        };
 
-} // namespace detail
+    } // namespace detail
 
-template<class A, template<class...> class B> using mp_rename = typename detail::mp_rename_impl<A, B>::type;
+    template <class A, template <class...> class B>
+    using mp_rename = typename detail::mp_rename_impl<A, B>::type;
 
-template<template<class...> class F, class L> using mp_apply = typename detail::mp_rename_impl<L, F>::type;
+    template <template <class...> class F, class L>
+    using mp_apply = typename detail::mp_rename_impl<L, F>::type;
 
-template<class Q, class L> using mp_apply_q = typename detail::mp_rename_impl<L, Q::template fn>::type;
+    template <class Q, class L>
+    using mp_apply_q = typename detail::mp_rename_impl<L, Q::template fn>::type;
 
 } // namespace mp11
 } // namespace boost

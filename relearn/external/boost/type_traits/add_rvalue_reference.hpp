@@ -33,38 +33,36 @@ namespace boost {
 namespace type_traits_detail {
 
     template <typename T, bool b>
-    struct add_rvalue_reference_helper
-    { typedef T   type; };
+    struct add_rvalue_reference_helper {
+        typedef T type;
+    };
 
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template <typename T>
-    struct add_rvalue_reference_helper<T, true>
-    {
-        typedef T&&   type;
+    struct add_rvalue_reference_helper<T, true> {
+        typedef T&& type;
     };
 #endif
 
     template <typename T>
-    struct add_rvalue_reference_imp
-    {
-       typedef typename boost::type_traits_detail::add_rvalue_reference_helper
-                  <T, (is_void<T>::value == false && is_reference<T>::value == false) >::type type;
+    struct add_rvalue_reference_imp {
+        typedef typename boost::type_traits_detail::add_rvalue_reference_helper<T, (is_void<T>::value == false && is_reference<T>::value == false)>::type type;
     };
 
 }
 
-template <class T> struct add_rvalue_reference
-{
-   typedef typename boost::type_traits_detail::add_rvalue_reference_imp<T>::type type;
+template <class T>
+struct add_rvalue_reference {
+    typedef typename boost::type_traits_detail::add_rvalue_reference_imp<T>::type type;
 };
 
 #if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
-   template <class T> using add_rvalue_reference_t = typename add_rvalue_reference<T>::type;
+template <class T>
+using add_rvalue_reference_t = typename add_rvalue_reference<T>::type;
 
 #endif
 
-}  // namespace boost
+} // namespace boost
 
-#endif  // BOOST_TYPE_TRAITS_EXT_ADD_RVALUE_REFERENCE__HPP
-
+#endif // BOOST_TYPE_TRAITS_EXT_ADD_RVALUE_REFERENCE__HPP

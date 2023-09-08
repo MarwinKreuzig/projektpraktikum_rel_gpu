@@ -8,23 +8,21 @@
 //  See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt
 
-namespace boost
-{
-namespace mp11
-{
+namespace boost {
+namespace mp11 {
 
-// mp_void<T...>
-namespace detail
-{
+    // mp_void<T...>
+    namespace detail {
 
-template<class... T> struct mp_void_impl
-{
-    using type = void;
-};
+        template <class... T>
+        struct mp_void_impl {
+            using type = void;
+        };
 
-} // namespace detail
+    } // namespace detail
 
-template<class... T> using mp_void = typename detail::mp_void_impl<T...>::type;
+    template <class... T>
+    using mp_void = typename detail::mp_void_impl<T...>::type;
 
 } // namespace mp11
 } // namespace boost

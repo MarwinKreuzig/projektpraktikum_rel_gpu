@@ -30,9 +30,9 @@ PoissonModel::PoissonModel(
     , tau_x{ tau_x }
     , refractory_period{ refractory_period } {
 
-        if(CudaHelper::is_cuda_available()) {
-             gpu_handle = gpu::models::poisson::construct_gpu( get_background_activity_calculator()->get_gpu_handle(), h, x_0, tau_x, refractory_period);
-        }
+    if (CudaHelper::is_cuda_available()) {
+        gpu_handle = gpu::models::poisson::construct_gpu(get_background_activity_calculator()->get_gpu_handle(), h, x_0, tau_x, refractory_period);
+    }
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> PoissonModel::clone() const {
@@ -136,7 +136,7 @@ void PoissonModel::update_activity_cpu() {
 
         const auto random_value = RandomHolder::get_random_uniform_double(RandomHolderKey::PoissonModel, 0.0, 1.0);
 
-        const auto& [x_val, this_fired, this_refractory_time] = Calculations::poisson(get_x(converted_id), get_synaptic_input(converted_id),get_background_activity(converted_id),get_stimulus(converted_id), refractory_time[neuron_id], random_value, x_0, refractory_period,  h,  scale, tau_x_inverse);
+        const auto& [x_val, this_fired, this_refractory_time] = Calculations::poisson(get_x(converted_id), get_synaptic_input(converted_id), get_background_activity(converted_id), get_stimulus(converted_id), refractory_time[neuron_id], random_value, x_0, refractory_period, h, scale, tau_x_inverse);
         set_fired(converted_id, this_fired);
         set_x(converted_id, x_val);
         refractory_time[neuron_id] = this_refractory_time;

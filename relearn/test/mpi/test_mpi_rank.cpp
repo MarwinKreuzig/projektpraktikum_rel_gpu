@@ -21,17 +21,17 @@
 
 template <typename T>
 concept verifier_get_rank = requires(T a) {
-                                { static_cast<T&>(a).get_rank() } -> std::same_as<int>;
-                                { static_cast<const T&>(a).get_rank() } -> std::same_as<int>;
-                                { std::move(a).get_rank() } -> std::same_as<int>;
-                            };
+    { static_cast<T&>(a).get_rank() } -> std::same_as<int>;
+    { static_cast<const T&>(a).get_rank() } -> std::same_as<int>;
+    { std::move(a).get_rank() } -> std::same_as<int>;
+};
 
 template <typename T>
 concept verifier_is_initialized = requires(T a) {
-                                      { static_cast<T&>(a).is_initialized() } -> std::same_as<bool>;
-                                      { static_cast<const T&>(a).is_initialized() } -> std::same_as<bool>;
-                                      { std::move(a).is_initialized() } -> std::same_as<bool>;
-                                  };
+    { static_cast<T&>(a).is_initialized() } -> std::same_as<bool>;
+    { static_cast<const T&>(a).is_initialized() } -> std::same_as<bool>;
+    { std::move(a).is_initialized() } -> std::same_as<bool>;
+};
 
 static_assert(verifier_get_rank<MPIRank>, "MPIRank::get_rank() does not return int");
 static_assert(verifier_is_initialized<MPIRank>, "MPIRank::is_initialized() does not return bool");

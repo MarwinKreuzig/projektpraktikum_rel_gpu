@@ -4,7 +4,7 @@
 // MS compatible compilers support #pragma once
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
-# pragma once
+#pragma once
 #endif
 
 #include <boost/config.hpp>
@@ -23,49 +23,46 @@
 //  See http://www.boost.org/libs/core/doc/html/core/checked_delete.html for documentation.
 //
 
-namespace boost
-{
+namespace boost {
 
 // verify that types are complete for increased safety
 
-template<class T> inline void checked_delete(T * x) BOOST_NOEXCEPT
-{
+template <class T>
+inline void checked_delete(T* x) BOOST_NOEXCEPT {
     // intentionally complex - simplification causes regressions
-    typedef char type_must_be_complete[ sizeof(T)? 1: -1 ];
-    (void) sizeof(type_must_be_complete);
+    typedef char type_must_be_complete[sizeof(T) ? 1 : -1];
+    (void)sizeof(type_must_be_complete);
     delete x;
 }
 
-template<class T> inline void checked_array_delete(T * x) BOOST_NOEXCEPT
-{
-    typedef char type_must_be_complete[ sizeof(T)? 1: -1 ];
-    (void) sizeof(type_must_be_complete);
-    delete [] x;
+template <class T>
+inline void checked_array_delete(T* x) BOOST_NOEXCEPT {
+    typedef char type_must_be_complete[sizeof(T) ? 1 : -1];
+    (void)sizeof(type_must_be_complete);
+    delete[] x;
 }
 
-template<class T> struct checked_deleter
-{
+template <class T>
+struct checked_deleter {
     typedef void result_type;
-    typedef T * argument_type;
+    typedef T* argument_type;
 
-    void operator()(T * x) const BOOST_NOEXCEPT
-    {
+    void operator()(T* x) const BOOST_NOEXCEPT {
         // boost:: disables ADL
         boost::checked_delete(x);
     }
 };
 
-template<class T> struct checked_array_deleter
-{
+template <class T>
+struct checked_array_deleter {
     typedef void result_type;
-    typedef T * argument_type;
+    typedef T* argument_type;
 
-    void operator()(T * x) const BOOST_NOEXCEPT
-    {
+    void operator()(T* x) const BOOST_NOEXCEPT {
         boost::checked_array_delete(x);
     }
 };
 
 } // namespace boost
 
-#endif  // #ifndef BOOST_CORE_CHECKED_DELETE_HPP
+#endif // #ifndef BOOST_CORE_CHECKED_DELETE_HPP

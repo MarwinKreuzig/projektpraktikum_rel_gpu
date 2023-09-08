@@ -53,8 +53,8 @@ TEST_F(MonitorParserTest, testParseIds) {
     };
 
     const auto rank_neuron_ids = ranges::views::zip(
-                               MPIRank::range(number_ranks),
-                               ranges::views::generate(random_number_neurons))
+                                     MPIRank::range(number_ranks),
+                                     ranges::views::generate(random_number_neurons))
         | ranges::views::for_each(create_rank_neuron_ids)
         | ranges::to_vector
         | actions::shuffle(mt);

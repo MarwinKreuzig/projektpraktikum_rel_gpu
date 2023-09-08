@@ -9,16 +9,14 @@
 
 #if defined(BOOST_DESCRIBE_CXX11)
 
-namespace boost
-{
-namespace describe
-{
-namespace detail
-{
+namespace boost {
+namespace describe {
+    namespace detail {
 
-template<class... T> struct list {};
+        template <class... T>
+        struct list { };
 
-} // namespace detail
+    } // namespace detail
 } // namespace describe
 } // namespace boost
 

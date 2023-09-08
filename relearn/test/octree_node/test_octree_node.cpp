@@ -170,8 +170,8 @@ TYPED_TEST(OctreeNodeTest, testInsert) {
 
     std::vector<std::pair<Vec3d, NeuronID>> placed_neurons = OctreeAdapter::template extract_neurons<AdditionalCellAttributes>(&node);
 
-    ranges::sort(neurons_to_place, std::greater{},element<1>);
-    ranges::sort(placed_neurons, std::greater{},element<1>);
+    ranges::sort(neurons_to_place, std::greater{}, element<1>);
+    ranges::sort(placed_neurons, std::greater{}, element<1>);
 
     ASSERT_EQ(neurons_to_place.size(), placed_neurons.size());
 

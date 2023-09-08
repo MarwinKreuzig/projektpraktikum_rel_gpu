@@ -10,10 +10,9 @@
 BOOST_HEADER_DEPRECATED("<iterator>")
 
 #include <iterator>
-#include <cstddef>           // std::ptrdiff_t
+#include <cstddef> // std::ptrdiff_t
 
-namespace boost
-{
+namespace boost {
 
 using std::iterator;
 

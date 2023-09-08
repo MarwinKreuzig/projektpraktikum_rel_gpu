@@ -13,20 +13,18 @@
 #include <boost/core/detail/is_same.hpp>
 
 #if defined(BOOST_HAS_PRAGMA_ONCE)
-# pragma once
+#pragma once
 #endif
 
 #include <boost/config/header_deprecated.hpp>
 
 BOOST_HEADER_DEPRECATED("<boost/type_traits/is_same.hpp>")
 
-namespace boost
-{
+namespace boost {
 
-namespace core
-{
+namespace core {
 
-using boost::core::detail::is_same;
+    using boost::core::detail::is_same;
 
 } // namespace core
 

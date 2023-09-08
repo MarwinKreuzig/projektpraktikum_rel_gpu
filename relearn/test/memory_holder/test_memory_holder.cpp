@@ -353,7 +353,7 @@ TYPED_TEST(MemoryHolderTest, testGetOffsetDisorganized) {
 
         auto* child = root.get_child(child_index);
 
-    const std::vector<unsigned int> indices_child = ranges::views::iota(0U, Constants::number_oct) | ranges::to_vector | actions::shuffle(this->mt);
+        const std::vector<unsigned int> indices_child = ranges::views::iota(0U, Constants::number_oct) | ranges::to_vector | actions::shuffle(this->mt);
 
         for (auto j = 0U; j < Constants::number_oct; j++) {
             auto child_child_index = indices_child[j];

@@ -7,25 +7,22 @@
 
 #include <boost/describe/detail/config.hpp>
 
-namespace boost
-{
-namespace describe
-{
+namespace boost {
+namespace describe {
 
-enum modifiers
-{
-    mod_public = 1,
-    mod_protected = 2,
-    mod_private = 4,
-    mod_virtual = 8,
-    mod_static = 16,
-    mod_function = 32,
-    mod_any_member = 64,
-    mod_inherited = 128,
-    mod_hidden = 256
-};
+    enum modifiers {
+        mod_public = 1,
+        mod_protected = 2,
+        mod_private = 4,
+        mod_virtual = 8,
+        mod_static = 16,
+        mod_function = 32,
+        mod_any_member = 64,
+        mod_inherited = 128,
+        mod_hidden = 256
+    };
 
-BOOST_DESCRIBE_CONSTEXPR_OR_CONST modifiers mod_any_access = static_cast<modifiers>( mod_public | mod_protected | mod_private );
+    BOOST_DESCRIBE_CONSTEXPR_OR_CONST modifiers mod_any_access = static_cast<modifiers>(mod_public | mod_protected | mod_private);
 
 } // namespace describe
 } // namespace boost

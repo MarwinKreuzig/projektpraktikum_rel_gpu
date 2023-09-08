@@ -27,7 +27,6 @@
 #include "sim/random/SubdomainFromNeuronPerRank.h"
 #include "structure/Partition.h"
 
-
 #include <algorithm>
 #include <fstream>
 #include <memory>
