@@ -164,7 +164,6 @@ public:
     constexpr NeuronID(NeuronID&&) noexcept = default;
     constexpr NeuronID& operator=(NeuronID&&) noexcept = default;
 
-    constexpr bool operator==(const NeuronID&) const noexcept = default;
 
     constexpr ~NeuronID() = default;
 
