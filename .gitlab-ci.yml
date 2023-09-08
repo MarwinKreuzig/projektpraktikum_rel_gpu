@@ -10,7 +10,7 @@ services:
 build-mpi:
   rules:
   - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: build
   before_script:
     - cd relearn && mkdir build-docker && cd build-docker  
@@ -25,7 +25,7 @@ build-mpi:
 build-clang-tidy:
   rules:
   - if: $CLANG_TIDY == "TRUE"
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: build
   before_script:
     - cd relearn && mkdir build-clang-tidy && cd build-clang-tidy  
@@ -36,7 +36,7 @@ build-clang-tidy:
 test-mpi-once:
   rules:
   - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: test
   services:
     - docker:24.0.2-dind
@@ -55,7 +55,7 @@ test-mpi-once:
 test-mpi-multiple:
   rules:
   - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: test
   services:
     - docker:24.0.2-dind
@@ -72,7 +72,7 @@ test-mpi-multiple:
 build-nompi:
   rules:
   - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: build
   services:
     - docker:24.0.2-dind
@@ -88,7 +88,7 @@ build-nompi:
 test-nompi-once:
   rules:
   - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: test
   services:
     - docker:24.0.2-dind
@@ -107,7 +107,7 @@ test-nompi-once:
 test-nompi-multiple:
   rules:
   - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: test
   services:
     - docker:24.0.2-dind
@@ -124,7 +124,7 @@ test-nompi-multiple:
 deploy-single:
   rules:
   - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
     - docker:24.0.2-dind
@@ -139,7 +139,7 @@ deploy-single:
 deploy-create:    
   rules:
   - if: $TEST_DEPLOY == "TRUE"
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
     - docker:24.0.2-dind
@@ -154,7 +154,7 @@ deploy-create:
 deploy-disable:    
   rules:
   - if: $TEST_DEPLOY == "TRUE"
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
     - docker:24.0.2-dind
@@ -169,7 +169,7 @@ deploy-disable:
 deploy-single-nompi:    
   rules:
   - if: $TEST_DEPLOY == "TRUE"
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
     - docker:24.0.2-dind
@@ -184,7 +184,7 @@ deploy-single-nompi:
 deploy-create-nompi:    
   rules:
   - if: $TEST_DEPLOY == "TRUE"
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
     - docker:24.0.2-dind
@@ -200,7 +200,7 @@ deploy-create-nompi:
 deploy-disable-nompi:   
   rules:
   - if: $TEST_DEPLOY == "TRUE"
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
     - docker:24.0.2-dind
@@ -216,7 +216,7 @@ deploy-disable-nompi:
 deploy-mpi-1:    
   rules:
   - if: $TEST_DEPLOY == "TRUE"
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
     - docker:24.0.2-dind
@@ -231,7 +231,7 @@ deploy-mpi-1:
 deploy-mpi-2:    
   rules:
   - if: $TEST_DEPLOY == "TRUE"
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
     - docker:24.0.2-dind
@@ -246,7 +246,7 @@ deploy-mpi-2:
 deploy-mpi-4:    
   rules:
   - if: $TEST_DEPLOY == "TRUE"
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
     - docker:24.0.2-dind
@@ -262,7 +262,7 @@ deploy-mpi-4:
 deploy-mpi-8:  
   rules:
   - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
     - docker:24.0.2-dind
@@ -277,7 +277,7 @@ deploy-mpi-8:
 benchmark-hhlr:
   rules:
   - if: $TEST_HHLR == "TRUE"
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy 
   services:
     - docker:24.0.2-dind
@@ -285,16 +285,16 @@ benchmark-hhlr:
     - sshpass -p $HHLR_PW ssh -o StrictHostKeyChecking=no da03robo@lcluster18.hrz.tu-darmstadt.de "./gitlab-script.sh"
 
 
-#info:
-#  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
-#  stage: build
-#  services:
-#    - docker:24.0.2-dind
-#  script:
-#    - gcc --version
-#    - nvcc --version
-#    - cmake --version
-#    - mpicc --version
+info:
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
+  stage: build
+  services:
+    - docker:24.0.2-dind
+  script:
+    - gcc --version
+    - nvcc --version
+    - cmake --version
+    - mpicc --version
 
 #build-docker:
 #  stage: build
@@ -306,36 +306,84 @@ benchmark-hhlr:
 #  script:
 #    - cd cicd/
 #    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-#    - docker pull registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11:latest || true
-#    - docker build --cache-from registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11:latest -t registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11:latest .
-#    - docker push registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11:latest
+#    - docker pull registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda:latest || true
+#    - docker build --cache-from registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda:latest -t registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda:latest .
+#    - docker push registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda:latest
 #
 
-#build-nompi-cuda:
-#  rules:
-#  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-#  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
-#  stage: build
-#  services:
-#    - docker:24.0.2-dind
-#  before_script:
-#    - cd relearn && mkdir build-docker-nompi-cuda && cd build-docker-nompi-cuda
-#  script:
-#    - cmake -DENABLE_CLANG_TIDY=0 -DENABLE_MPI=0 .. && make -j 16
-#  artifacts:
-#    paths:
-#      - relearn/build-docker-nompi-cuda
+build-nompi-cuda:
+  rules:
+  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
+  stage: build
+  services:
+    - docker:24.0.2-dind
+  before_script:
+    - cd relearn && mkdir build-docker-nompi-cuda && cd build-docker-nompi-cuda
+  script:
+    - cmake -DENABLE_CLANG_TIDY=0 -DENABLE_MPI=0 .. && make -j 16
+  artifacts:
+    paths:
+      - relearn/build-docker-nompi-cuda
 
-#
-#build-mpi-cuda:
-#  rules:
-#  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
-#  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-gcc-11
-#  stage: build
-#  before_script:
-#    - cd relearn && mkdir build-docker-cuda && cd build-docker-cuda
-#  script:
-#    - cmake -DENABLE_CLANG_TIDY=0 .. && make -j 16
-#  artifacts:
-#    paths:
-#      - relearn/build-docker-cuda
+build-mpi-cuda:
+  rules:
+  - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
+  stage: build
+  before_script:
+    - cd relearn && mkdir build-docker-cuda && cd build-docker-cuda
+  script:
+    - cmake -DENABLE_CLANG_TIDY=0 .. && make -j 16
+  artifacts:
+    paths:
+      - relearn/build-docker-cuda
+
+test-nompi-cuda-multiple:
+  rules:
+    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
+  stage: test
+  services:
+    - docker:24.0.2-dind
+  before_script:
+    - cd relearn/build-docker-nompi-cuda
+  script:
+    - ./bin/relearn_tests --gtest_filter=*-*ONCE  --gtest_repeat=10 --gtest_shuffle
+  dependencies:
+    - build-nompi-cuda
+  artifacts:
+    paths:
+      - relearn/build-docker-nompi-cuda
+
+test-mpi-cuda-multiple:
+  rules:
+    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
+  stage: test
+  services:
+    - docker:24.0.2-dind
+  before_script:
+    - cd relearn/build-docker-cuda
+  script:
+    - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 ./bin/relearn_tests --gtest_filter=*-*ONCE  --gtest_repeat=10 --gtest_shuffle
+  dependencies:
+    - build-mpi
+  artifacts:
+    paths:
+      - relearn/build-docker-cuda
+
+deploy-cuda:
+  rules:
+    - if: $TEST_DEPLOY == "TRUE"
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
+  stage: deploy
+  services:
+    - docker:24.0.2-dind
+  script:
+    - export OMPI_MCA_btl_vader_single_copy_mechanism=none && mpiexec -n 1 relearn/build-docker-cuda/bin/relearn --algorithm barnes-hut --steps 1000 --file relearn/input/positions.txt --graph relearn/input/ --synaptic-elements-lower-bound 1.3 --synaptic-elements-upper-bound 1.7 --openmp 16
+  dependencies:
+    - test-nompi-cuda-multiple
+  artifacts:
+    paths:
+      - relearn/build-docker-cuda

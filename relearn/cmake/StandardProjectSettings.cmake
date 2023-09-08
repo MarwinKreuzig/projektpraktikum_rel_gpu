@@ -16,7 +16,23 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 # Workaround: Internal compiler error gcc
+add_compile_options(-fno-tree-bit-ccp)
+add_compile_options(-fno-tree-ccp)
+add_compile_options(-fno-tree-ch)
+add_compile_options(-fno-tree-coalesce-vars)
+add_compile_options(-fno-tree-copy-prop)
+add_compile_options(-fno-tree-dce)
+add_compile_options(-fno-tree-dominator-opts)
+add_compile_options(-fno-tree-dse)
+add_compile_options(-fno-tree-forwprop)
 add_compile_options(-fno-tree-fre)
+add_compile_options(-fno-tree-phiprop)
+add_compile_options(-fno-tree-pta)
+add_compile_options(-fno-tree-scev-cprop)
+add_compile_options(-fno-tree-sink)
+add_compile_options(-fno-tree-slsr)
+add_compile_options(-fno-tree-sra)
+add_compile_options(-fno-tree-ter)
 
 
 # Generate compile_commands.json to make it easier to work with clang based

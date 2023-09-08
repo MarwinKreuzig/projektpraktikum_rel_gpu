@@ -1,8 +1,17 @@
-FROM ubuntu:22.04
+FROM nvidia/cuda:11.4.3-devel-ubuntu20.04
 
 RUN apt-get update
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -qq -y build-essential wget m4 flex bison cmake git software-properties-common clang-tidy
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -qq -y build-essential wget m4 flex bison git software-properties-common clang-tidy
+
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.27.4/cmake-3.27.4-linux-x86_64.sh && mkdir /cmake && sh cmake-3.27.4-linux-x86_64.sh --prefix=/cmake --skip-license
+RUN wget https://ftp.mpi-inf.mpg.de/mirrors/gnu/mirror/gcc.gnu.org/pub/gcc/releases/gcc-11.2.0/gcc-11.2.0.tar.gz && mkdir /gcc && tar -xf gcc-11.2.0.tar.gz && cd gcc-11.2.0 && sh contrib/download_prerequisites && sh configure --prefix=/gcc --disable-multilib --enable-languages=c++,c && make -j && make -j install
+
+RUN update-alternatives --install /usr/bin/gcc gcc /gcc/bin/gcc 40
+RUN update-alternatives --install /usr/bin/g++ g++ /gcc/bin/g++ 40
+RUN update-alternatives --install /usr/bin/cmake cmake /cmake/bin/cmake 40
+RUN export LD_LIBRARY_PATH=/gcc/lib64:$LD_LIBRARY_PATH
+
 RUN apt-get install -y libboost-all-dev
 RUN apt-get install -y libglu1-mesa-dev
 RUN apt-get install -y freeglut3-dev
@@ -19,5 +28,7 @@ RUN ln -nsf /usr/bin/mpif90.mpich /etc/alternatives/mpif90
 RUN ln -nsf /usr/bin/mpifort.mpich /etc/alternatives/mpifort
 RUN ln -nsf /usr/bin/mpirun.mpich /etc/alternatives/mpirun
 
+
+ENV LD_LIBRARY_PATH=/gcc/lib64:$LD_LIBRARY_PATH
 
 CMD [ "/bin/bash" ]
