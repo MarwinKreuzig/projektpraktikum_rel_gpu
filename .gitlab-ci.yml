@@ -17,6 +17,7 @@ build-mpi:
   script:
     - cmake -DENABLE_CLANG_TIDY=0 -DENABLE_CUDA=0 .. && make -j 16
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker
 
@@ -47,6 +48,7 @@ test-mpi-once:
   dependencies:
     - build-mpi
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker
 
@@ -66,6 +68,7 @@ test-mpi-multiple:
   dependencies:
     - build-mpi
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker
 
@@ -81,6 +84,7 @@ build-nompi:
   script:
     - cmake -DENABLE_CLANG_TIDY=0 -DENABLE_MPI=0 -DENABLE_CUDA=0 .. && make -j 16
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker-nompi
 
@@ -99,6 +103,7 @@ test-nompi-once:
   dependencies:
     - build-nompi
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker-nompi
 
@@ -118,6 +123,7 @@ test-nompi-multiple:
   dependencies:
     - build-nompi
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker-nompi
 
@@ -133,6 +139,7 @@ deploy-single:
   dependencies:
     - test-mpi-multiple
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker
 
@@ -148,6 +155,7 @@ deploy-create:
   dependencies:
     - test-mpi-multiple
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker
 
@@ -163,6 +171,7 @@ deploy-disable:
   dependencies:
     - test-mpi-multiple
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker
 
@@ -178,6 +187,7 @@ deploy-single-nompi:
   dependencies:
     - test-nompi-multiple
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker-nompi
 
@@ -193,6 +203,7 @@ deploy-create-nompi:
   dependencies:
     - test-nompi-multiple
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker-nompi
 
@@ -209,6 +220,7 @@ deploy-disable-nompi:
   dependencies:
     - test-nompi-multiple
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker-nompi
 
@@ -225,6 +237,7 @@ deploy-mpi-1:
   dependencies:
     - test-mpi-multiple
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker
 
@@ -240,6 +253,7 @@ deploy-mpi-2:
   dependencies:
     - test-mpi-multiple
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker
 
@@ -255,6 +269,7 @@ deploy-mpi-4:
   dependencies:
     - test-mpi-multiple
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker
 
@@ -271,6 +286,7 @@ deploy-mpi-8:
   dependencies:
     - test-mpi-multiple
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker
 
@@ -323,6 +339,7 @@ build-nompi-cuda:
   script:
     - cmake -DENABLE_CLANG_TIDY=0 -DENABLE_MPI=0 .. && make -j 16
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker-nompi-cuda
 
@@ -336,6 +353,7 @@ build-mpi-cuda:
   script:
     - cmake -DENABLE_CLANG_TIDY=0 .. && make -j 16
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker-cuda
 
@@ -353,6 +371,7 @@ test-nompi-cuda-multiple:
   dependencies:
     - build-nompi-cuda
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker-nompi-cuda
 
@@ -370,6 +389,7 @@ test-mpi-cuda-multiple:
   dependencies:
     - build-mpi-cuda
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker-cuda
 
@@ -383,5 +403,6 @@ deploy-cuda:
   dependencies:
     - test-mpi-cuda-multiple
   artifacts:
+    expire_in: 1 week
     paths:
       - relearn/build-docker-cuda
