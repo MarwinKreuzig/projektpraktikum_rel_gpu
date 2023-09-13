@@ -40,7 +40,6 @@ endif ()
 
 if (WIN32) # Lib
     # root files
-    list(APPEND relearn_lib_additional_files "Config.h")
     list(APPEND relearn_lib_additional_files "Types.h")
 
     # algorithm
@@ -108,11 +107,7 @@ if (WIN32) # Lib
     list(APPEND relearn_lib_additional_files "neurons/NeuronsExtraInfo.h")
 
     # enums
-    list(APPEND relearn_lib_additional_files "enums/ElementType.h")
-    list(APPEND relearn_lib_additional_files "enums/FiredStatus.h")
-    list(APPEND relearn_lib_additional_files "enums/SignalType.h")
     list(APPEND relearn_lib_additional_files "neurons/enums/TargetCalciumDecay.h")
-    list(APPEND relearn_lib_additional_files "enums/UpdateStatus.h")
 
     # helper
     list(APPEND relearn_lib_additional_files "neurons/helper/AreaMonitor.h")
@@ -139,6 +134,14 @@ if (WIN32) # Lib
     list(APPEND relearn_lib_additional_files "neurons/models/ModelParameter.h")
     list(APPEND relearn_lib_additional_files "neurons/models/NeuronModels.h")
     list(APPEND relearn_lib_additional_files "neurons/models/SynapticElements.h")
+
+    # shared
+    list(APPEND relearn_lib_additional_files "shared/Config.h")
+    list(APPEND relearn_lib_additional_files "shared/calculations/NeuronModelCalculations.h")
+    list(APPEND relearn_lib_additional_files "shared/enums/ElementType.h")
+    list(APPEND relearn_lib_additional_files "shared/enums/FiredStatus.h")
+    list(APPEND relearn_lib_additional_files "shared/enums/SignalType.h")
+    list(APPEND relearn_lib_additional_files "shared/enums/UpdateStatus.h")
 
     # sim
     list(APPEND relearn_lib_additional_files "sim/Essentials.h")

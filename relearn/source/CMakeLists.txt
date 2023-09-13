@@ -1,6 +1,6 @@
 add_library(relearn_lib STATIC)
 
-target_include_directories(relearn_lib PUBLIC ../shared)
+#target_include_directories(relearn_lib PUBLIC shared)
 
 target_sources(
         relearn_lib
@@ -66,7 +66,7 @@ target_sources(
         # for visual studio
         ${relearn_lib_additional_files})
 
-target_include_directories(relearn_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(relearn_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} shared)
 set_target_properties(relearn_lib PROPERTIES ENABLE_EXPORTS 1)
 target_link_libraries(relearn_lib PUBLIC project_options project_libraries)
 set_target_properties(relearn_lib PROPERTIES CXX_STANDARD 20)

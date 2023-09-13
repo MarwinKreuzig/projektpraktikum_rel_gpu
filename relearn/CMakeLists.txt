@@ -56,7 +56,7 @@ include(cmake/VisualStudio.cmake)
 # utilities
 include(cmake/Utils.cmake)
 
-add_subdirectory(cuda)
+add_subdirectory(source/cuda)
 add_subdirectory(source)
 
 if (NOT ENABLE_SCOREP)
