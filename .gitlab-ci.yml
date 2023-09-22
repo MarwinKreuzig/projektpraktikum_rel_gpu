@@ -9,7 +9,7 @@ services:
 
 build-mpi:
   rules:
-    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $SCHEDULED == null || $SCHEDULED == "FALSE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: build
   before_script:
@@ -36,7 +36,7 @@ build-clang-tidy:
 # run tests using the binary built before
 test-mpi-once:
   rules:
-    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $SCHEDULED == null || $SCHEDULED == "FALSE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: test
   services:
@@ -56,7 +56,7 @@ test-mpi-once:
 # run tests using the binary built before
 test-mpi-multiple:
   rules:
-    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $SCHEDULED == null || $SCHEDULED == "FALSE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: test
   services:
@@ -74,7 +74,7 @@ test-mpi-multiple:
 
 build-nompi:
   rules:
-    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $SCHEDULED == null || $SCHEDULED == "FALSE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: build
   services:
@@ -91,7 +91,7 @@ build-nompi:
 # run tests using the binary built before
 test-nompi-once:
   rules:
-    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $SCHEDULED == null || $SCHEDULED == "FALSE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: test
   services:
@@ -111,7 +111,7 @@ test-nompi-once:
 # run tests using the binary built before
 test-nompi-multiple:
   rules:
-    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $SCHEDULED == null || $SCHEDULED == "FALSE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: test
   services:
@@ -129,7 +129,7 @@ test-nompi-multiple:
 
 deploy-single:
   rules:
-    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $SCHEDULED == null || $SCHEDULED == "FALSE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
@@ -276,7 +276,7 @@ deploy-mpi-4:
 
 deploy-mpi-8:
   rules:
-    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $SCHEDULED == null || $SCHEDULED == "FALSE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
@@ -289,17 +289,6 @@ deploy-mpi-8:
     expire_in: 1 week
     paths:
       - relearn/build-docker
-
-benchmark-hhlr:
-  rules:
-    - if: $TEST_HHLR == "TRUE"
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
-  stage: deploy
-  services:
-    - docker:24.0.2-dind
-  script:
-    - sshpass -p $HHLR_PW ssh -o StrictHostKeyChecking=no da03robo@lcluster18.hrz.tu-darmstadt.de "./gitlab-script.sh"
-
 
 info:
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
@@ -329,7 +318,7 @@ info:
 
 build-nompi-cuda:
   rules:
-    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $SCHEDULED == null || $SCHEDULED == "FALSE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: build
   services:
@@ -345,7 +334,7 @@ build-nompi-cuda:
 
 build-mpi-cuda:
   rules:
-    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $SCHEDULED == null || $SCHEDULED == "FALSE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: build
   before_script:
@@ -359,7 +348,7 @@ build-mpi-cuda:
 
 test-nompi-cuda-multiple:
   rules:
-    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $SCHEDULED == null || $SCHEDULED == "FALSE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: test
   services:
@@ -377,7 +366,7 @@ test-nompi-cuda-multiple:
 
 test-mpi-cuda-multiple:
   rules:
-    - if: $CLANG_TIDY == null && ($TEST_HHLR == null || $TEST_HHLR == "FALSE")
+    - if: $SCHEDULED == null || $SCHEDULED == "FALSE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: test
   services:
@@ -406,3 +395,33 @@ deploy-cuda:
     expire_in: 1 week
     paths:
       - relearn/build-docker-cuda
+
+benchmark:
+  rules:
+    - if: '$CI_COMMIT_REF_PROTECTED == "true"'
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
+  stage: deploy
+  services:
+    - docker:24.0.2-dind
+  script:
+    - mkdir artifacts
+    - cd artifacts
+    - curl -H "PRIVATE-TOKEN:$API_TOKEN" -o artifact1.zip https://git.rwth-aachen.de/api/v4/projects/48713/jobs/artifacts/master/download?job=build-mpi
+    - unzip -qq artifact1.zip
+    - ls relearn
+    - ./relearn/build-docker/bin/relearn_benchmarks
+
+benchmark-cuda:
+  rules:
+    - if: '$CI_COMMIT_REF_PROTECTED == "true"'
+  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
+  stage: deploy
+  services:
+    - docker:24.0.2-dind
+  script:
+    - mkdir artifacts
+    - cd artifacts
+    - curl -H "PRIVATE-TOKEN:$API_TOKEN" -o artifact1.zip https://git.rwth-aachen.de/api/v4/projects/48713/jobs/artifacts/master/download?job=build-mpi-cuda
+    - unzip -qq artifact1.zip
+    - ls relearn
+    - ./relearn/build-docker-cuda/bin/relearn_benchmarks
