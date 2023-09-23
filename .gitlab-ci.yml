@@ -383,6 +383,8 @@ test-mpi-cuda-multiple:
       - relearn/build-docker-cuda
 
 deploy-cuda:
+  rules:
+    - if: $TEST_DEPLOY == "TRUE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
