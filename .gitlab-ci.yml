@@ -21,18 +21,6 @@ build-mpi:
     paths:
       - relearn/build-docker
 
-
-
-build-clang-tidy:
-  rules:
-    - if: $CLANG_TIDY == "TRUE"
-  image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
-  stage: build
-  before_script:
-    - cd relearn && mkdir build-clang-tidy && cd build-clang-tidy
-  script:
-    - cmake -DENABLE_CLANG_TIDY=0 .. && chmod 755 ../check_tidy.sh && ../check_tidy.sh
-
 # run tests using the binary built before
 test-mpi-once:
   rules:
