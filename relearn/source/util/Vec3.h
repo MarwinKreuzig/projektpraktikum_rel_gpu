@@ -308,6 +308,10 @@ public:
         return *this;
     }
 
+    [[nodiscard]] Vec3<T> abs() {
+        return { std::abs(x), std::abs(y), std::abs(z) };
+    }
+
     /**
      * @brief Calculates the p-norm of the (absolute value of the) current object
      * @param p The exponent of the norm, must be >= 1.0

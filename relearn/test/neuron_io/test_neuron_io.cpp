@@ -1228,10 +1228,10 @@ TEST_F(IOTest, additionalPositionInformationTest) {
     std::vector<RelearnTypes::area_name> correct_area_names;
     std::vector<SignalType> correct_signal_types;
 
-    auto sim_box = SimulationAdapter::round_bounding_box(SimulationAdapter::get_random_simulation_box_size(mt));
+    auto sim_box = SimulationAdapter::get_random_simulation_box_size(mt);
     std::vector<RelearnTypes::bounding_box_type> subdomain_boxes{};
     for (auto i = 0; i < num_subdomains; i++) {
-        subdomain_boxes.push_back(SimulationAdapter::round_bounding_box(SimulationAdapter::get_random_simulation_box_size(mt)));
+        subdomain_boxes.push_back(SimulationAdapter::get_random_simulation_box_size(mt));
     }
 
     for (auto i = 0; i < number_neurons; i++) {
@@ -1251,6 +1251,6 @@ TEST_F(IOTest, additionalPositionInformationTest) {
 
     ASSERT_EQ(infos.total_neurons, total_neurons);
     ASSERT_EQ(infos.local_neurons, number_neurons);
-    ASSERT_EQ(sim_box, infos.sim_size);
+    ASSERT_TRUE(sim_box.equals_eps(infos.sim_size));
     ASSERT_EQ(subdomain_boxes, infos.subdomain_sizes);
 }

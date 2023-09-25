@@ -106,15 +106,14 @@ public:
     }
 
     [[nodiscard]] constexpr bool operator==(const BoundingBox<T>& other) const noexcept {
-        return minimum == other.minimum && maximum == other.maximum;
+        return equals_eps(other);
     }
 
-    /*
-    [[nodiscard]] bool equals_eps(const BoundingBox<T>& other) {
-        const auto diff_min = std::abs(other.minimum-minimum);
-        const auto diff_max = std::abs(other.maximum-maximum);
+    [[nodiscard]] bool equals_eps(const BoundingBox<T>& other) const noexcept {
+        const auto diff_min = (other.minimum - minimum).abs();
+        const auto diff_max = (other.maximum - maximum).abs();
         return diff_max.calculate_1_norm() + diff_min.calculate_1_norm() < Constants::eps;
-    }*/
+    }
 
     [[nodiscard]] constexpr bool operator<(const BoundingBox<T>& other) const noexcept {
         if (minimum < other.minimum) {
