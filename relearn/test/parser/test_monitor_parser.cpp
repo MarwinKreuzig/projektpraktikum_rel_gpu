@@ -111,7 +111,7 @@ TEST_F(MonitorParserTest, testParseAreas) {
 }
 
 TEST_F(MonitorParserTest, testParseAreasRegex) {
-    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt) + 15;
     const auto num_regex_areas = RandomAdapter::get_random_integer(0, 10, mt);
 
     std::vector<RelearnTypes::area_name> area_names = NeuronAssignmentAdapter::get_random_area_names(10, mt);
