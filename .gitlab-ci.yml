@@ -388,7 +388,7 @@ deploy-cuda:
 
 benchmark:
   rules:
-    - if: '$CI_COMMIT_REF_PROTECTED == "true"'
+    - if: $CI_COMMIT_REF_PROTECTED == "true" && $SCHEDULED == "TRUE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
@@ -403,7 +403,7 @@ benchmark:
 
 benchmark-cuda:
   rules:
-    - if: '$CI_COMMIT_REF_PROTECTED == "true"'
+    - if: $CI_COMMIT_REF_PROTECTED == "true" && $SCHEDULED == "TRUE"
   image: registry.git.rwth-aachen.de/parallel/relearn/relearn-ci-cuda
   stage: deploy
   services:
