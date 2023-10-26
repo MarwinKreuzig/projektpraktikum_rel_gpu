@@ -359,3 +359,4 @@ ASALocalRun/
 /build
 **/out
 /relearn/build*
+/relearn/external
