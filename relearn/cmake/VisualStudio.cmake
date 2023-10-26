@@ -19,6 +19,7 @@ if (WIN32) # Harness
     list(APPEND relearn_harness_additional_files "adapter/mpi/MpiRankAdapter.h")
     list(APPEND relearn_harness_additional_files "adapter/network_graph/NetworkGraphAdapter.h")
     list(APPEND relearn_harness_additional_files "adapter/neuron_assignment/NeuronAssignmentAdapter.h")
+    list(APPEND relearn_harness_additional_files "adapter/neuron_id/NeuronIdAdapter.h")
     list(APPEND relearn_harness_additional_files "adapter/neurons/NeuronsAdapter.h")
     list(APPEND relearn_harness_additional_files "adapter/neurons/NeuronTypesAdapter.h")
     list(APPEND relearn_harness_additional_files "adapter/node_cache/NodeCacheAdapter.h")
@@ -27,7 +28,6 @@ if (WIN32) # Harness
     list(APPEND relearn_harness_additional_files "adapter/simulation/SimulationAdapter.h")
     list(APPEND relearn_harness_additional_files "adapter/stimulus/StimulusAdapter.h")
     list(APPEND relearn_harness_additional_files "adapter/synaptic_elements/SynapticElementsAdapter.h")
-    list(APPEND relearn_harness_additional_files "adapter/tagged_id/NeuronIdAdapter.h")
     list(APPEND relearn_harness_additional_files "adapter/timers/TimersAdapter.h")
 
     list(APPEND relearn_harness_additional_files "factory/background_factory.h")
@@ -80,6 +80,7 @@ if (WIN32) # Lib
     list(APPEND relearn_lib_additional_files "algorithm/NaiveInternal/NaiveCell.h")
 
     # io
+    list(APPEND relearn_lib_additional_files "io/BackgroundActivityIO.h")
     list(APPEND relearn_lib_additional_files "io/CalciumIO.h")
     list(APPEND relearn_lib_additional_files "io/Event.h")
     list(APPEND relearn_lib_additional_files "io/FileValidator.h")
@@ -112,6 +113,7 @@ if (WIN32) # Lib
     # helper
     list(APPEND relearn_lib_additional_files "neurons/helper/AreaMonitor.h")
     list(APPEND relearn_lib_additional_files "neurons/helper/DistantNeuronRequests.h")
+    list(APPEND relearn_lib_additional_files "neurons/helper/GlobalAreaMapper.h")
     list(APPEND relearn_lib_additional_files "neurons/helper/NeuronMonitor.h")
     list(APPEND relearn_lib_additional_files "neurons/helper/RankNeuronId.h")
     list(APPEND relearn_lib_additional_files "neurons/helper/Synapse.h")
@@ -151,10 +153,9 @@ if (WIN32) # Lib
     list(APPEND relearn_lib_additional_files "sim/SynapseLoader.h")
 
     # file
-    list(APPEND relearn_lib_additional_files "sim/file/FileSynapseLoader.h")
+    list(APPEND relearn_lib_additional_files "sim/file/AdditionalPositionInformation.h")
     list(APPEND relearn_lib_additional_files "sim/file/MultipleFilesSynapseLoader.h")
     list(APPEND relearn_lib_additional_files "sim/file/MultipleSubdomainsFromFile.h")
-    list(APPEND relearn_lib_additional_files "sim/file/SubdomainFromFile.h")
 
     # random
     list(APPEND relearn_lib_additional_files "sim/random/BoxBasedRandomSubdomainAssignment.h")
@@ -173,9 +174,11 @@ if (WIN32) # Lib
     list(APPEND relearn_lib_additional_files "structure/SpaceFillingCurve.h")
 
     # util
+    list(APPEND relearn_lib_additional_files "util/BoundingBox.h")
     list(APPEND relearn_lib_additional_files "util/Interval.h")
     list(APPEND relearn_lib_additional_files "util/MemoryHolder.h")
     list(APPEND relearn_lib_additional_files "util/MPIRank.h")
+    list(APPEND relearn_lib_additional_files "util/NeuronID.h")
     list(APPEND relearn_lib_additional_files "util/ProbabilityPicker.h")
     list(APPEND relearn_lib_additional_files "util/Random.h")
     list(APPEND relearn_lib_additional_files "util/RelearnException.h")
@@ -183,7 +186,6 @@ if (WIN32) # Lib
     list(APPEND relearn_lib_additional_files "util/Stack.h")
     list(APPEND relearn_lib_additional_files "util/StatisticalMeasures.h")
     list(APPEND relearn_lib_additional_files "util/StringUtil.h")
-    list(APPEND relearn_lib_additional_files "util/TaggedID.h")
     list(APPEND relearn_lib_additional_files "util/Timers.h")
     list(APPEND relearn_lib_additional_files "util/Utility.h")
     list(APPEND relearn_lib_additional_files "util/Vec3.h")

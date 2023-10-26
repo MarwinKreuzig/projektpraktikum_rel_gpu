@@ -39,7 +39,7 @@ CommunicationMap<SynapseCreationRequest> BarnesHut::find_target_neurons(const nu
 
     // For my neurons; OpenMP is picky when it comes to the type of loop variable, so no ranges here
 #pragma omp parallel for default(none) shared(root, my_rank, number_neurons, disable_flags, synapse_creation_requests_outgoing)
-    for (NeuronID::value_type neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
+    for (auto neuron_id = 0; neuron_id < number_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] != UpdateStatus::Enabled) {
             continue;
         }

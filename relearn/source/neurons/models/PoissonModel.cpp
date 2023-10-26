@@ -107,7 +107,7 @@ void PoissonModel::update_activity_benchmark() {
     const auto disable_flags = get_extra_infos()->get_disable_flags();
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons) default(none)
-    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_local_neurons; ++neuron_id) {
+    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
@@ -127,7 +127,7 @@ void PoissonModel::update_activity_cpu() {
     const auto tau_x_inverse = 1.0 / tau_x;
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons, h, scale, tau_x_inverse) default(none)
-    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_local_neurons; ++neuron_id) {
+    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }

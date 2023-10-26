@@ -119,8 +119,6 @@ set_target_properties(range-v3 PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
         "${range-v3_includes}")
 target_link_libraries(project_libraries INTERFACE range-v3)
 
-target_link_libraries(project_options INTERFACE Boost::random)
-
 # set compile commands back to on
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

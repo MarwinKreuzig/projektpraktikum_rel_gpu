@@ -23,7 +23,7 @@ void LinearSynapticInputCalculator::update_synaptic_input(const std::span<const 
     const auto number_local_neurons = get_number_neurons();
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons, fired) default(none)
-    for (NeuronID::value_type neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
+    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
@@ -45,7 +45,7 @@ void LogarithmicSynapticInputCalculator::update_synaptic_input(const std::span<c
     const auto number_local_neurons = get_number_neurons();
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons, fired) default(none)
-    for (NeuronID::value_type neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
+    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
@@ -71,7 +71,7 @@ void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const std::
     const auto number_local_neurons = get_number_neurons();
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons, fired) default(none)
-    for (NeuronID::value_type neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
+    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }

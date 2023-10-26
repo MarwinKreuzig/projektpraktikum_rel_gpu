@@ -15,6 +15,10 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
             "RelWithDebInfo")
 endif ()
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  # using Clang
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  # using GCC
 # Workaround: Internal compiler error gcc
 add_compile_options(-fno-tree-bit-ccp)
 add_compile_options(-fno-tree-ccp)
@@ -33,6 +37,11 @@ add_compile_options(-fno-tree-sink)
 add_compile_options(-fno-tree-slsr)
 add_compile_options(-fno-tree-sra)
 add_compile_options(-fno-tree-ter)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+  # using Intel C++
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  # using Visual Studio C++
+endif()
 
 
 # Generate compile_commands.json to make it easier to work with clang based

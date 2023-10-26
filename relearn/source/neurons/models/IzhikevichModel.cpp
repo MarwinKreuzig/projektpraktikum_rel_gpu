@@ -120,7 +120,7 @@ void IzhikevichModel::update_activity_benchmark() {
     const auto disable_flags = get_extra_infos()->get_disable_flags();
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons) default(none)
-    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_local_neurons; ++neuron_id) {
+    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
@@ -138,7 +138,7 @@ void IzhikevichModel::update_activity_cpu() {
     const auto scale = 1.0 / h;
 
 #pragma omp parallel for shared(disable_flags, number_local_neurons, h, scale) default(none)
-    for (NeuronID::value_type neuron_id = 0U; neuron_id < number_local_neurons; ++neuron_id) {
+    for (auto neuron_id = 0; neuron_id < number_local_neurons; ++neuron_id) {
         if (disable_flags[neuron_id] == UpdateStatus::Disabled) {
             continue;
         }
