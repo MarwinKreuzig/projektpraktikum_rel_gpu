@@ -12,7 +12,7 @@
 
 #include "algorithm/Internal/ExchangingAlgorithm.h"
 
-#include "algorithm/FMMInternal/FastMultipoleMethodsCell.h"
+#include "algorithm/FMMInternal/FastMultipoleMethodCell.h"
 #include "mpi/CommunicationMap.h"
 #include "enums/UpdateStatus.h"
 #include "neurons/helper/SynapseCreationRequests.h"
@@ -29,11 +29,11 @@ class OctreeImplementation;
  * This class represents the implementation and adaptation of fast multipole method. The parameters can be set on the fly.
  * It is strongly tied to Octree, and might perform MPI communication via NodeCache::download_children()
  */
-class FastMultipoleMethods : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, FastMultipoleMethodsCell> {
+class FastMultipoleMethod : public ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, FastMultipoleMethodCell> {
     friend class FMMTest;
 
 public:
-    using AdditionalCellAttributes = FastMultipoleMethodsCell;
+    using AdditionalCellAttributes = FastMultipoleMethodCell;
     using number_neurons_type = RelearnTypes::number_neurons_type;
 
     /**
@@ -41,7 +41,7 @@ public:
      * @param octree The octree on which the algorithm is to be performed, not null
      * @exception Throws a RelearnException if octree is nullptr
      */
-    explicit FastMultipoleMethods(const std::shared_ptr<OctreeImplementation<FastMultipoleMethodsCell>>& octree)
+    explicit FastMultipoleMethod(const std::shared_ptr<OctreeImplementation<FastMultipoleMethodCell>>& octree)
         : ForwardAlgorithm(octree) { }
 
 protected:

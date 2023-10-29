@@ -8,8 +8,8 @@ target_sources(
         algorithm/BarnesHutInternal/BarnesHut.cpp
         algorithm/BarnesHutInternal/BarnesHutInverted.cpp
         algorithm/BarnesHutInternal/BarnesHutLocationAware.cpp
-        algorithm/FMMInternal/FastMultipoleMethods.cpp
-        algorithm/FMMInternal/FastMultipoleMethodsInverted.cpp
+        algorithm/FMMInternal/FastMultipoleMethod.cpp
+        algorithm/FMMInternal/FastMultipoleMethodInverted.cpp
         algorithm/NaiveInternal/Naive.cpp
 
         gpu/Interface.cpp
@@ -110,4 +110,4 @@ set_target_properties(relearn_analysis PROPERTIES CXX_STANDARD 20)
 set_target_properties(relearn_analysis PROPERTIES ENABLE_EXPORTS 1)
 
 get_target_property(relearn_lib_sources relearn_lib SOURCES)
-#source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${relearn_lib_sources})
+source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${relearn_lib_sources})

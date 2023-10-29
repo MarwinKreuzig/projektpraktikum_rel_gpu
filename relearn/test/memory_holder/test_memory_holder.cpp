@@ -22,7 +22,7 @@
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/iota.hpp>
 
-using test_types = ::testing::Types<BarnesHutCell, BarnesHutInvertedCell, FastMultipoleMethodsCell, NaiveCell>;
+using test_types = ::testing::Types<BarnesHutCell, BarnesHutInvertedCell, FastMultipoleMethodCell, NaiveCell>;
 TYPED_TEST_SUITE(MemoryHolderTest, test_types);
 
 TYPED_TEST(MemoryHolderTest, testInit) {

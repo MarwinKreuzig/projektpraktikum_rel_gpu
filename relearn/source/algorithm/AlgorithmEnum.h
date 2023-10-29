@@ -22,7 +22,7 @@ enum class AlgorithmEnum {
     BarnesHut,
     BarnesHutInverted,
     BarnesHutLocationAware,
-    FastMultipoleMethods,
+    FastMultipoleMethod,
 };
 
 /**
@@ -42,7 +42,7 @@ constexpr inline bool is_barnes_hut(const AlgorithmEnum algorithm_enum) {
  * @return True iff the specified algorithm implements the Fast Multipole Method
  */
 constexpr inline bool is_fast_multipole_method(const AlgorithmEnum algorithm_enum) {
-    return algorithm_enum == AlgorithmEnum::FastMultipoleMethods;
+    return algorithm_enum == AlgorithmEnum::FastMultipoleMethod;
 }
 
 inline std::string stringify(const AlgorithmEnum& algorithm_enum) {
@@ -55,8 +55,8 @@ inline std::string stringify(const AlgorithmEnum& algorithm_enum) {
         return "BarnesHutInverted";
     case AlgorithmEnum::BarnesHutLocationAware:
         return "BarnesHutLocationAware";
-    case AlgorithmEnum::FastMultipoleMethods:
-        return "FastMultipoleMethods";
+    case AlgorithmEnum::FastMultipoleMethod:
+        return "FastMultipoleMethod";
     default:
         return "";
     }

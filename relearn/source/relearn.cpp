@@ -93,17 +93,17 @@ void print_sizes() {
     constexpr auto sizeof_virtual_plasticity_element = sizeof(VirtualPlasticityElement);
 
     constexpr auto sizeof_empty_t = sizeof(empty_t);
-    constexpr auto sizeof_fmm_cell_attributes = sizeof(FastMultipoleMethodsCell);
+    constexpr auto sizeof_fmm_cell_attributes = sizeof(FastMultipoleMethodCell);
     constexpr auto sizeof_bh_cell_attributes = sizeof(BarnesHutCell);
     constexpr auto sizeof_bh_naive_attributes = sizeof(NaiveCell);
 
     constexpr auto sizeof_empty_cell = sizeof(Cell<empty_t>);
-    constexpr auto sizeof_fmm_cell = sizeof(Cell<FastMultipoleMethodsCell>);
+    constexpr auto sizeof_fmm_cell = sizeof(Cell<FastMultipoleMethodCell>);
     constexpr auto sizeof_bh_cell = sizeof(Cell<BarnesHutCell>);
     constexpr auto sizeof_naive_cell = sizeof(Cell<NaiveCell>);
 
     constexpr auto sizeof_octree_node = sizeof(OctreeNode<empty_t>);
-    constexpr auto sizeof_fmm_octree_node = sizeof(OctreeNode<FastMultipoleMethodsCell>);
+    constexpr auto sizeof_fmm_octree_node = sizeof(OctreeNode<FastMultipoleMethodCell>);
     constexpr auto sizeof_bh_octree_node = sizeof(OctreeNode<BarnesHutCell>);
     constexpr auto sizeof_naive_octree_node = sizeof(OctreeNode<NaiveCell>);
 
@@ -136,19 +136,19 @@ void print_sizes() {
     ss << "Size of Vec3s: " << sizeof_vec3_size_t << '\n';
 
     ss << "Size of VirtualPlasticityElement: " << sizeof_virtual_plasticity_element << '\n';
-    ss << "Size of FastMultipoleMethodsCell: " << sizeof_fmm_cell_attributes << '\n';
+    ss << "Size of FastMultipoleMethodCell: " << sizeof_fmm_cell_attributes << '\n';
 
     ss << "Size of empty_t: " << sizeof_empty_t << '\n';
     ss << "Size of BarnesHutCell: " << sizeof_bh_cell_attributes << '\n';
     ss << "Size of NaiveCell: " << sizeof_bh_naive_attributes << '\n';
 
     ss << "Size of Cell<empty_t>: " << sizeof_empty_cell << '\n';
-    ss << "Size of Cell<FastMultipoleMethodsCell>: " << sizeof_fmm_cell << '\n';
+    ss << "Size of Cell<FastMultipoleMethodCell>: " << sizeof_fmm_cell << '\n';
     ss << "Size of Cell<BarnesHutCell>: " << sizeof_bh_cell << '\n';
     ss << "Size of Cell<NaiveCell>: " << sizeof_naive_cell << '\n';
 
     ss << "Size of OctreeNode<empty_t>: " << sizeof_octree_node << '\n';
-    ss << "Size of OctreeNode<FastMultipoleMethodsCell>: " << sizeof_fmm_octree_node << '\n';
+    ss << "Size of OctreeNode<FastMultipoleMethodCell>: " << sizeof_fmm_octree_node << '\n';
     ss << "Size of OctreeNode<BarnesHutCell>: " << sizeof_bh_octree_node << '\n';
     ss << "Size of OctreeNode<NaiveCell>: " << sizeof_naive_octree_node << '\n';
 
@@ -217,7 +217,7 @@ int main(int argc, char** argv) {
         { "barnes-hut", AlgorithmEnum::BarnesHut },
         { "barnes-hut-inverted", AlgorithmEnum::BarnesHutInverted },
         { "barnes-hut-location-aware", AlgorithmEnum::BarnesHutLocationAware },
-        { "fast-multipole-methods", AlgorithmEnum::FastMultipoleMethods }
+        { "fast-multipole-methods", AlgorithmEnum::FastMultipoleMethod }
     };
 
     NeuronModelEnum chosen_neuron_model = NeuronModelEnum::Poisson;
@@ -747,10 +747,10 @@ int main(int argc, char** argv) {
             Kernel<BarnesHutInvertedCell>::set_kernel_type(chosen_kernel_type);
             NodeCache<BarnesHutInvertedCell>::set_cache_type(chosen_cache_type);
             MPIWrapper::init_buffer_octree<BarnesHutInvertedCell>();
-        } else if (chosen_algorithm == AlgorithmEnum::FastMultipoleMethods) {
-            Kernel<FastMultipoleMethodsCell>::set_kernel_type(chosen_kernel_type);
-            NodeCache<FastMultipoleMethodsCell>::set_cache_type(chosen_cache_type);
-            MPIWrapper::init_buffer_octree<FastMultipoleMethodsCell>();
+        } else if (chosen_algorithm == AlgorithmEnum::FastMultipoleMethod) {
+            Kernel<FastMultipoleMethodCell>::set_kernel_type(chosen_kernel_type);
+            NodeCache<FastMultipoleMethodCell>::set_cache_type(chosen_cache_type);
+            MPIWrapper::init_buffer_octree<FastMultipoleMethodCell>();
         } else {
             RelearnException::check(chosen_algorithm == AlgorithmEnum::Naive, "An algorithm was chosen that is not supported");
             Kernel<NaiveCell>::set_kernel_type(chosen_kernel_type);

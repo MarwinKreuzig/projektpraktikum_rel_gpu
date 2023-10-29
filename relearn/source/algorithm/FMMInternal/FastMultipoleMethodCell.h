@@ -13,4 +13,4 @@
 #include "structure/BaseCell.h"
 
 // We need axons and dendrites for FMM
-using FastMultipoleMethodsCell = BaseCell<true, true, true, true>;
+using FastMultipoleMethodCell = BaseCell<true, true, true, true>;

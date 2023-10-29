@@ -182,8 +182,8 @@ void Simulation::initialize() {
         global_tree = std::make_shared<OctreeImplementation<BarnesHutInvertedCell>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
     } else if (algorithm_enum == AlgorithmEnum::BarnesHutLocationAware) {
         global_tree = std::make_shared<OctreeImplementation<BarnesHutCell>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
-    } else if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
-        global_tree = std::make_shared<OctreeImplementation<FastMultipoleMethodsCell>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
+    } else if (algorithm_enum == AlgorithmEnum::FastMultipoleMethod) {
+        global_tree = std::make_shared<OctreeImplementation<FastMultipoleMethodCell>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
     } else if (algorithm_enum == AlgorithmEnum::Naive) {
         global_tree = std::make_shared<OctreeImplementation<NaiveCell>>(simulation_box_min, simulation_box_max, level_of_branch_nodes);
     } else {
@@ -216,9 +216,9 @@ void Simulation::initialize() {
         auto algorithm_barnes_hut_location_aware = std::make_shared<BarnesHutLocationAware>(std::move(cast));
         algorithm_barnes_hut_location_aware->set_acceptance_criterion(accept_criterion);
         algorithm = std::move(algorithm_barnes_hut_location_aware);
-    } else if (algorithm_enum == AlgorithmEnum::FastMultipoleMethods) {
-        auto cast = std::static_pointer_cast<OctreeImplementation<FastMultipoleMethodsCell>>(global_tree);
-        auto algorithm_fmm = std::make_shared<FastMultipoleMethods>(std::move(cast));
+    } else if (algorithm_enum == AlgorithmEnum::FastMultipoleMethod) {
+        auto cast = std::static_pointer_cast<OctreeImplementation<FastMultipoleMethodCell>>(global_tree);
+        auto algorithm_fmm = std::make_shared<FastMultipoleMethod>(std::move(cast));
         algorithm = std::move(algorithm_fmm);
     } else {
         RelearnException::fail("Simulation::initialize: AlgorithmEnum {} not yet implemented!", static_cast<int>(algorithm_enum));

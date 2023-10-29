@@ -1476,56 +1476,56 @@ TEST_F(CellTest, testBarnesHutInvertedCellOctantsSize) {
     test_cell_octants_size<BarnesHutInvertedCell>();
 }
 
-TEST_F(CellTest, testFastMultipoleMethodsCellSize) {
-    test_cell_size<FastMultipoleMethodsCell>();
+TEST_F(CellTest, testFastMultipoleMethodCellSize) {
+    test_cell_size<FastMultipoleMethodCell>();
 }
 
-TEST_F(CellTest, testFastMultipoleMethodsDendritesPosition) {
-    test_cell_dendrites_position<FastMultipoleMethodsCell>();
+TEST_F(CellTest, testFastMultipoleMethodDendritesPosition) {
+    test_cell_dendrites_position<FastMultipoleMethodCell>();
 }
 
-TEST_F(CellTest, testFastMultipoleMethodsDendritesPositionException) {
-    test_cell_dendrites_position_exception<FastMultipoleMethodsCell>();
+TEST_F(CellTest, testFastMultipoleMethodDendritesPositionException) {
+    test_cell_dendrites_position_exception<FastMultipoleMethodCell>();
 }
 
-TEST_F(CellTest, testFastMultipoleMethodsDendritesPositionCombined) {
-    test_cell_dendrites_position_combined<FastMultipoleMethodsCell>();
+TEST_F(CellTest, testFastMultipoleMethodDendritesPositionCombined) {
+    test_cell_dendrites_position_combined<FastMultipoleMethodCell>();
 }
 
-TEST_F(CellTest, testFastMultipoleMethodsSetNumberDendrites) {
-    test_cell_set_number_dendrites<FastMultipoleMethodsCell>();
+TEST_F(CellTest, testFastMultipoleMethodetNumberDendrites) {
+    test_cell_set_number_dendrites<FastMultipoleMethodCell>();
 }
 
-TEST_F(CellTest, testFastMultipoleMethodsCellAxonsPosition) {
-    test_cell_axons_position<FastMultipoleMethodsCell>();
+TEST_F(CellTest, testFastMultipoleMethodCellAxonsPosition) {
+    test_cell_axons_position<FastMultipoleMethodCell>();
 }
 
-TEST_F(CellTest, testFastMultipoleMethodsCellAxonsPositionException) {
-    test_cell_axons_position_exception<FastMultipoleMethodsCell>();
+TEST_F(CellTest, testFastMultipoleMethodCellAxonsPositionException) {
+    test_cell_axons_position_exception<FastMultipoleMethodCell>();
 }
 
-TEST_F(CellTest, testFastMultipoleMethodsCellAxonsPositionCombined) {
-    test_cell_axons_position_combined<FastMultipoleMethodsCell>();
+TEST_F(CellTest, testFastMultipoleMethodCellAxonsPositionCombined) {
+    test_cell_axons_position_combined<FastMultipoleMethodCell>();
 }
 
-TEST_F(CellTest, testFastMultipoleMethodsCellSetNumberAxons) {
-    test_cell_set_number_axons<FastMultipoleMethodsCell>();
+TEST_F(CellTest, testFastMultipoleMethodCellSetNumberAxons) {
+    test_cell_set_number_axons<FastMultipoleMethodCell>();
 }
 
-TEST_F(CellTest, testFastMultipoleMethodsCellSetNeuronId) {
-    test_cell_set_neuron_id<FastMultipoleMethodsCell>();
+TEST_F(CellTest, testFastMultipoleMethodCellSetNeuronId) {
+    test_cell_set_neuron_id<FastMultipoleMethodCell>();
 }
 
-TEST_F(CellTest, testFastMultipoleMethodsCellOctants) {
-    test_cell_octants<FastMultipoleMethodsCell>();
+TEST_F(CellTest, testFastMultipoleMethodCellOctants) {
+    test_cell_octants<FastMultipoleMethodCell>();
 }
 
-TEST_F(CellTest, testFastMultipoleMethodsCellOctantsException) {
-    test_cell_octants_exception<FastMultipoleMethodsCell>();
+TEST_F(CellTest, testFastMultipoleMethodCellOctantsException) {
+    test_cell_octants_exception<FastMultipoleMethodCell>();
 }
 
-TEST_F(CellTest, testFastMultipoleMethodsCellOctantsSize) {
-    test_cell_octants_size<FastMultipoleMethodsCell>();
+TEST_F(CellTest, testFastMultipoleMethodCellOctantsSize) {
+    test_cell_octants_size<FastMultipoleMethodCell>();
 }
 
 TEST_F(CellTest, testVPEManualNumberFreeElements) {

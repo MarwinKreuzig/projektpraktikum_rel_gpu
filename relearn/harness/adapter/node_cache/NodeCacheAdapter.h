@@ -18,14 +18,14 @@ public:
     static void set_node_cache_testing_purposes() {
         NodeCache<BarnesHutCell>::is_already_downloaded = true;
         NodeCache<BarnesHutInvertedCell>::is_already_downloaded = true;
-        NodeCache<FastMultipoleMethodsCell>::is_already_downloaded = true;
+        NodeCache<FastMultipoleMethodCell>::is_already_downloaded = true;
         NodeCache<NaiveCell>::is_already_downloaded = true;
     }
 
     static void reset_node_cache_testing_purposes() {
         NodeCache<BarnesHutCell>::is_already_downloaded = false;
         NodeCache<BarnesHutInvertedCell>::is_already_downloaded = false;
-        NodeCache<FastMultipoleMethodsCell>::is_already_downloaded = false;
+        NodeCache<FastMultipoleMethodCell>::is_already_downloaded = false;
         NodeCache<NaiveCell>::is_already_downloaded = false;
     }
 };

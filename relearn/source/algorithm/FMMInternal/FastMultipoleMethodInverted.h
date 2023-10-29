@@ -12,7 +12,7 @@
 
 #include "algorithm/Internal/ExchangingAlgorithm.h"
 
-#include "algorithm/FMMInternal/FastMultipoleMethodsCell.h"
+#include "algorithm/FMMInternal/FastMultipoleMethodCell.h"
 #include "mpi/CommunicationMap.h"
 #include "enums/UpdateStatus.h"
 #include "neurons/helper/SynapseCreationRequests.h"
@@ -26,14 +26,14 @@ template <typename T>
 class OctreeImplementation;
 
 /**
- * This class represents the implementation and adaptation of the FastMultipoleMethodsInverted algorithm. The parameters can be set on the fly.
+ * This class represents the implementation and adaptation of the FastMultipoleMethodInverted algorithm. The parameters can be set on the fly.
  * It is strongly tied to Octree, which might perform MPI communication via NodeCache::download_children()
  */
-class FastMultipoleMethodsInverted : public BackwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, FastMultipoleMethodsCell> {
+class FastMultipoleMethodInverted : public BackwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, FastMultipoleMethodCell> {
     friend class FMMTest;
 
 public:
-    using AdditionalCellAttributes = FastMultipoleMethodsCell;
+    using AdditionalCellAttributes = FastMultipoleMethodCell;
     using number_neurons_type = RelearnTypes::number_neurons_type;
 
     /**
@@ -41,7 +41,7 @@ public:
      * @param octree The octree on which the algorithm is to be performed, not null
      * @exception Throws a RelearnException if octree is nullptr
      */
-    explicit FastMultipoleMethodsInverted(const std::shared_ptr<OctreeImplementation<FastMultipoleMethodsCell>>& octree)
+    explicit FastMultipoleMethodInverted(const std::shared_ptr<OctreeImplementation<FastMultipoleMethodCell>>& octree)
         : BackwardAlgorithm(octree) { }
 
 protected:

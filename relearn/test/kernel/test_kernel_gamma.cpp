@@ -135,7 +135,7 @@ TEST_F(KernelTest, testGammaKernelIntegration) {
 
     const auto& source_position = SimulationAdapter::get_random_position(mt);
 
-    Kernel<FastMultipoleMethodsCell>::set_kernel_type(KernelType::Gamma);
+    Kernel<FastMultipoleMethodCell>::set_kernel_type(KernelType::Gamma);
 
     const auto k = KernelAdapter::get_random_gamma_k(mt);
     const auto theta = KernelAdapter::get_random_gamma_theta(mt);
@@ -157,7 +157,7 @@ TEST_F(KernelTest, testGammaKernelIntegration) {
     const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
     ;
 
-    OctreeNode<FastMultipoleMethodsCell> node{};
+    OctreeNode<FastMultipoleMethodCell> node{};
     node.set_cell_neuron_id(neuron_id_1);
     node.set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
 
@@ -169,10 +169,10 @@ TEST_F(KernelTest, testGammaKernelIntegration) {
     node.set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
     node.set_cell_number_dendrites(number_vacant_excitatory_dendrites, number_vacant_inhibitory_dendrites);
 
-    const auto attr_exc_axons = Kernel<FastMultipoleMethodsCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Axon, SignalType::Excitatory);
-    const auto attr_inh_axons = Kernel<FastMultipoleMethodsCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Axon, SignalType::Inhibitory);
-    const auto attr_exc_dendrites = Kernel<FastMultipoleMethodsCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Dendrite, SignalType::Excitatory);
-    const auto attr_inh_dendrites = Kernel<FastMultipoleMethodsCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Dendrite, SignalType::Inhibitory);
+    const auto attr_exc_axons = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Axon, SignalType::Excitatory);
+    const auto attr_inh_axons = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Axon, SignalType::Inhibitory);
+    const auto attr_exc_dendrites = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Dendrite, SignalType::Excitatory);
+    const auto attr_inh_dendrites = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Dendrite, SignalType::Inhibitory);
 
     const auto golden_attr_exc_axons = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position, target_excitatory_axon_position, number_vacant_excitatory_axons);
     const auto golden_attr_inh_axons = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position, target_inhibitory_axon_position, number_vacant_inhibitory_axons);

@@ -30,7 +30,7 @@ unsigned int RelearnTest::predetermined_seed = 2818124801;
 
 std::vector<OctreeNode<BarnesHutCell>> holder_bh_cells{};
 std::vector<OctreeNode<BarnesHutInvertedCell>> holder_bhi_cells{};
-std::vector<OctreeNode<FastMultipoleMethodsCell>> holder_fmm_cells{};
+std::vector<OctreeNode<FastMultipoleMethodCell>> holder_fmm_cells{};
 
 RelearnTest::RelearnTest() {
 }
@@ -71,7 +71,7 @@ void RelearnTest::TearDown() {
 RelearnMemoryTest::RelearnMemoryTest() {
     MemoryHolder<BarnesHutCell>::init(holder_bh_cells);
     MemoryHolder<BarnesHutInvertedCell>::init(holder_bhi_cells);
-    MemoryHolder<FastMultipoleMethodsCell>::init(holder_fmm_cells);
+    MemoryHolder<FastMultipoleMethodCell>::init(holder_fmm_cells);
 }
 
 RelearnMemoryTest::~RelearnMemoryTest() {
@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
 
     MemoryHolder<BarnesHutCell>::init(holder_bh_cells);
     MemoryHolder<BarnesHutInvertedCell>::init(holder_bhi_cells);
-    MemoryHolder<FastMultipoleMethodsCell>::init(holder_fmm_cells);
+    MemoryHolder<FastMultipoleMethodCell>::init(holder_fmm_cells);
 
     const auto tests_return_code = RUN_ALL_TESTS();
 

@@ -12,7 +12,7 @@
 
 #include "Config.h"
 #include "Types.h"
-#include "algorithm/FMMInternal/FastMultipoleMethodsCell.h"
+#include "algorithm/FMMInternal/FastMultipoleMethodCell.h"
 #include "algorithm/Kernel/Gaussian.h"
 #include "neurons/helper/SynapseCreationRequests.h"
 #include "enums/ElementType.h"
@@ -117,9 +117,9 @@ public:
  * It purely calculates things, but does not change any state.
  * @tparam AdditionalCellAttributes The cell attributes that are
  */
-class FastMultipoleMethodsBase {
+class FastMultipoleMethodBase {
 public:
-    using AdditionalCellAttributes = FastMultipoleMethodsCell;
+    using AdditionalCellAttributes = FastMultipoleMethodCell;
     using interaction_list_type = std::vector<OctreeNode<AdditionalCellAttributes>*>;
     using position_type = typename Cell<AdditionalCellAttributes>::position_type;
     using counter_type = typename Cell<AdditionalCellAttributes>::counter_type;
@@ -207,8 +207,8 @@ public:
      */
     [[nodiscard]] static CalculationType check_calculation_requirements(const OctreeNode<AdditionalCellAttributes>* source, const OctreeNode<AdditionalCellAttributes>* target,
         const ElementType searched_element_type, const SignalType signal_type) {
-        RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::check_calculation_requirements: source is nullptr");
-        RelearnException::check(target != nullptr, "FastMultipoleMethodsBase::check_calculation_requirements: target is nullptr");
+        RelearnException::check(source != nullptr, "FastMultipoleMethodBase::check_calculation_requirements: source is nullptr");
+        RelearnException::check(target != nullptr, "FastMultipoleMethodBase::check_calculation_requirements: target is nullptr");
 
         if (source->is_leaf() || target->is_leaf()) {
             return CalculationType::Direct;
@@ -240,8 +240,8 @@ public:
      */
     [[nodiscard]] static double calc_direct_gauss(OctreeNode<AdditionalCellAttributes>* source, OctreeNode<AdditionalCellAttributes>* target,
         const ElementType searched_element_type, const SignalType signal_type) {
-        RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::calc_direct_gauss: source is nullptr");
-        RelearnException::check(target != nullptr, "FastMultipoleMethodsBase::calc_direct_gauss: target is nullptr");
+        RelearnException::check(source != nullptr, "FastMultipoleMethodBase::calc_direct_gauss: source is nullptr");
+        RelearnException::check(target != nullptr, "FastMultipoleMethodBase::calc_direct_gauss: target is nullptr");
 
         const auto sigma = GaussianDistributionKernel::get_sigma();
         const auto other_element_type = get_other_element_type(searched_element_type);
@@ -271,8 +271,8 @@ public:
      * @returns Returns the hermite coefficients.
      */
     [[nodiscard]] static std::vector<double> calc_hermite_coefficients(const OctreeNode<AdditionalCellAttributes>* source, const ElementType seaching_element_type, const SignalType signal_type_needed) {
-        RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::calc_hermite_coefficients: source is nullptr");
-        RelearnException::check(source->is_parent(), "FastMultipoleMethodsBase::calc_hermite_coefficients: source node was a leaf node");
+        RelearnException::check(source != nullptr, "FastMultipoleMethodBase::calc_hermite_coefficients: source is nullptr");
+        RelearnException::check(source->is_parent(), "FastMultipoleMethodBase::calc_hermite_coefficients: source node was a leaf node");
 
         Timers::start(TimerRegion::CALC_HERMITE_COEFFICIENTS);
 
@@ -284,7 +284,7 @@ public:
 
         const auto& source_cell = source->get_cell();
         const auto& source_position_opt = source_cell.get_position_for(seaching_element_type, signal_type_needed);
-        RelearnException::check(source_position_opt.has_value(), "FastMultipoleMethodsBase::calc_hermite_coefficients: source has no valid position.");
+        RelearnException::check(source_position_opt.has_value(), "FastMultipoleMethodBase::calc_hermite_coefficients: source has no valid position.");
 
         const auto& source_position = source_position_opt.value();
 
@@ -304,7 +304,7 @@ public:
                 }
 
                 const auto& child_pos = cell.get_position_for(seaching_element_type, signal_type_needed);
-                RelearnException::check(child_pos.has_value(), "FastMultipoleMethodsBase::calc_hermite_coefficients: source child has no valid position.");
+                RelearnException::check(child_pos.has_value(), "FastMultipoleMethodBase::calc_hermite_coefficients: source child has no valid position.");
 
                 const auto& temp_vec = (child_pos.value() - source_position) / sigma;
                 child_attraction += child_number_axons * (temp_vec.get_componentwise_power(indices[index]));
@@ -332,8 +332,8 @@ public:
      */
     [[nodiscard]] static std::vector<double> calc_taylor_coefficients(const OctreeNode<AdditionalCellAttributes>* source, const position_type& target_center,
         const ElementType seaching_element_type, const SignalType signal_type) {
-        RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::calc_taylor_coefficients: source is nullptr");
-        RelearnException::check(source->is_parent(), "FastMultipoleMethodsBase::calc_taylor_coefficients: source node was a leaf node");
+        RelearnException::check(source != nullptr, "FastMultipoleMethodBase::calc_taylor_coefficients: source is nullptr");
+        RelearnException::check(source->is_parent(), "FastMultipoleMethodBase::calc_taylor_coefficients: source node was a leaf node");
 
         Timers::start(TimerRegion::CALC_TAYLOR_COEFFICIENTS);
 
@@ -362,7 +362,7 @@ public:
                 }
 
                 const auto& child_pos = cell.get_position_for(seaching_element_type, signal_type);
-                RelearnException::check(child_pos.has_value(), "FastMultipoleMethodsBase::calc_taylor_coefficients: source child has no position.");
+                RelearnException::check(child_pos.has_value(), "FastMultipoleMethodBase::calc_taylor_coefficients: source child has no position.");
 
                 const auto& temp_vec = (child_pos.value() - target_center) / sigma;
                 child_attraction += number_elements * h_multi_index(current_index, temp_vec);
@@ -398,18 +398,18 @@ public:
      */
     [[nodiscard]] static double calc_hermite(const OctreeNode<AdditionalCellAttributes>* source, OctreeNode<AdditionalCellAttributes>* target,
         std::span<const double> coefficients_buffer, const ElementType seaching_element_type, const SignalType signal_type_needed) {
-        RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::calc_hermite::calc_direct_gauss: source is nullptr");
-        RelearnException::check(target != nullptr, "FastMultipoleMethodsBase::calc_hermite::calc_direct_gauss: target is nullptr");
+        RelearnException::check(source != nullptr, "FastMultipoleMethodBase::calc_hermite::calc_direct_gauss: source is nullptr");
+        RelearnException::check(target != nullptr, "FastMultipoleMethodBase::calc_hermite::calc_direct_gauss: target is nullptr");
         RelearnException::check(coefficients_buffer.size() == Constants::p3,
-            "FastMultipoleMethodsBase::calc_hermite::calc_direct_gauss: The coefficients must have size {} but have size {}", Constants::p3, coefficients_buffer.size());
+            "FastMultipoleMethodBase::calc_hermite::calc_direct_gauss: The coefficients must have size {} but have size {}", Constants::p3, coefficients_buffer.size());
 
-        RelearnException::check(target->is_parent(), "FastMultipoleMethodsBase::calc_hermite: target node was a leaf node");
+        RelearnException::check(target->is_parent(), "FastMultipoleMethodBase::calc_hermite: target node was a leaf node");
 
         const auto sigma = GaussianDistributionKernel::get_sigma();
         const auto other_element_type = get_other_element_type(seaching_element_type);
 
         const auto& opt_source_center = source->get_cell().get_position_for(seaching_element_type, signal_type_needed);
-        RelearnException::check(opt_source_center.has_value(), "FastMultipoleMethodsBase::calc_hermite: source node has no axon position.");
+        RelearnException::check(opt_source_center.has_value(), "FastMultipoleMethodBase::calc_hermite: source node has no axon position.");
 
         const auto& source_center = opt_source_center.value();
 
@@ -431,7 +431,7 @@ public:
             }
 
             const auto& child_pos = cell.get_position_for(other_element_type, signal_type_needed);
-            RelearnException::check(child_pos.has_value(), "FastMultipoleMethodsBase::calc_hermite: target child node has no axon position.");
+            RelearnException::check(child_pos.has_value(), "FastMultipoleMethodBase::calc_hermite: target child node has no axon position.");
 
             const auto& temp_vec = (child_pos.value() - source_center) / sigma;
 
@@ -458,14 +458,14 @@ public:
      */
     [[nodiscard]] static double calc_taylor(const OctreeNode<AdditionalCellAttributes>* source, OctreeNode<AdditionalCellAttributes>* target,
         const ElementType element_type, const SignalType signal_type_needed) {
-        RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::calc_taylor: source is nullptr");
-        RelearnException::check(target != nullptr, "FastMultipoleMethodsBase::calc_taylor: target is nullptr");
+        RelearnException::check(source != nullptr, "FastMultipoleMethodBase::calc_taylor: source is nullptr");
+        RelearnException::check(target != nullptr, "FastMultipoleMethodBase::calc_taylor: target is nullptr");
 
         const auto sigma = GaussianDistributionKernel::get_sigma();
         const auto other_element_type = get_other_element_type(element_type);
 
         const auto& opt_target_center = target->get_cell().get_position_for(other_element_type, signal_type_needed);
-        RelearnException::check(opt_target_center.has_value(), "FastMultipoleMethodsBase::calc_taylor: target node has no position.");
+        RelearnException::check(opt_target_center.has_value(), "FastMultipoleMethodBase::calc_taylor: target node has no position.");
 
         const auto& target_center = opt_target_center.value();
         const auto& taylor_coefficients = calc_taylor_coefficients(source, target_center, other_element_type, signal_type_needed);
@@ -486,7 +486,7 @@ public:
             }
 
             const auto& child_pos = cell.get_position_for(other_element_type, signal_type_needed);
-            RelearnException::check(child_pos.has_value(), "FastMultipoleMethodsBase::calc_taylor: target child has no position.");
+            RelearnException::check(child_pos.has_value(), "FastMultipoleMethodBase::calc_taylor: target child has no position.");
 
             const auto& temp_vec = (child_pos.value() - target_center) / sigma;
 
@@ -512,7 +512,7 @@ public:
      */
     [[nodiscard]] static std::vector<double> calc_attractiveness_to_connect(OctreeNode<AdditionalCellAttributes>* source, const interaction_list_type& interaction_list,
         const ElementType element_type, const SignalType signal_type_needed) {
-        RelearnException::check(source != nullptr, "FastMultipoleMethodsBase::calc_attractiveness_to_connect: Source was a nullptr.");
+        RelearnException::check(source != nullptr, "FastMultipoleMethodBase::calc_attractiveness_to_connect: Source was a nullptr.");
 
         std::vector<double> result{};
         result.reserve(interaction_list.size());
@@ -563,8 +563,8 @@ public:
      */
     [[nodiscard]] static interaction_list_type align_interaction_list(OctreeNode<AdditionalCellAttributes>* source_node, OctreeNode<AdditionalCellAttributes>* target_parent,
         const ElementType element_type, const SignalType signal_type) {
-        RelearnException::check(source_node != nullptr, "FastMultipoleMethodsBase::align_interaction_list: source_node was null!");
-        RelearnException::check(target_parent != nullptr, "FastMultipoleMethodsBase::align_interaction_list: target_parent was null!");
+        RelearnException::check(source_node != nullptr, "FastMultipoleMethodBase::align_interaction_list: source_node was null!");
+        RelearnException::check(target_parent != nullptr, "FastMultipoleMethodBase::align_interaction_list: target_parent was null!");
 
         interaction_list_type result{};
         const auto expected_number_nodes = static_cast<size_t>(std::pow(Constants::number_oct, Constants::unpacking + 1));
@@ -614,8 +614,8 @@ public:
      */
     [[nodiscard]] static std::vector<OctreeNode<AdditionalCellAttributes>*> make_target_list(OctreeNode<AdditionalCellAttributes>* source_node, const interaction_list_type& interaction_list,
         const ElementType element_type, const SignalType signal_type_needed) {
-        RelearnException::check(source_node != nullptr, "FastMultipoleMethodsBase::make_target_list: source_node is nullptr");
-        RelearnException::check(source_node->is_leaf(), "FastMultipoleMethodsBase::make_target_list: source_node is not a leaf");
+        RelearnException::check(source_node != nullptr, "FastMultipoleMethodBase::make_target_list: source_node is nullptr");
+        RelearnException::check(source_node->is_leaf(), "FastMultipoleMethodBase::make_target_list: source_node is not a leaf");
 
         const auto other_element_type = get_other_element_type(element_type);
 
@@ -655,8 +655,8 @@ public:
      */
     static void make_stack_entries_for_leaf(OctreeNode<AdditionalCellAttributes>* target_node, const SignalType signal_type_needed, const ElementType element_type,
         Stack<stack_entry>& stack, const std::array<OctreeNode<AdditionalCellAttributes>*, Constants::number_oct>& source_children) {
-        RelearnException::check(target_node != nullptr, "FastMultipoleMethodsBase::make_stack_entries_for_leaf: target_node is nullptr");
-        RelearnException::check(target_node->is_leaf(), "FastMultipoleMethodsBase::make_stack_entries_for_leaf: target_node wasn't a leaf");
+        RelearnException::check(target_node != nullptr, "FastMultipoleMethodBase::make_stack_entries_for_leaf: target_node is nullptr");
+        RelearnException::check(target_node->is_leaf(), "FastMultipoleMethodBase::make_stack_entries_for_leaf: target_node wasn't a leaf");
 
         const auto other_element_type = get_other_element_type(element_type);
         const auto fixed_interaction_list = interaction_list_type{ target_node };
@@ -678,7 +678,7 @@ public:
 
             number_source_children++;
             const auto& connection_probabilities = calc_attractiveness_to_connect(source_child, fixed_interaction_list, element_type, signal_type_needed);
-            RelearnException::check(connection_probabilities.size() == 1, "FastMultipoleMethodsBase::make_stack_entries_for_leaf: The number of connection probabilities wasn't 1");
+            RelearnException::check(connection_probabilities.size() == 1, "FastMultipoleMethodBase::make_stack_entries_for_leaf: The number of connection probabilities wasn't 1");
 
             attractiveness[i] = connection_probabilities[0];
         }
@@ -765,7 +765,7 @@ public:
         const auto& initial_pair = stack.pop_back();
         const auto& [source_node, target_node, unpacked] = initial_pair;
 
-        RelearnException::check(source_node != nullptr, "FastMultipoleMethodsBase::unpack_node_pair: Source node was null!");
+        RelearnException::check(source_node != nullptr, "FastMultipoleMethodBase::unpack_node_pair: Source node was null!");
         if (source_node->is_leaf() || unpacked == true) {
             stack.emplace_back(source_node, target_node, true);
             return;
@@ -807,7 +807,7 @@ public:
      */
     static void make_creation_request_for(OctreeNode<AdditionalCellAttributes>* root, const std::vector<OctreeNode<AdditionalCellAttributes>*>& local_roots,
         const std::uint16_t branch_level, const ElementType element_type, const SignalType signal_type_needed, CommunicationMap<SynapseCreationRequest>& request) {
-        RelearnException::check(root != nullptr, "FastMultipoleMethodsBase::make_creation_request_for: root is nullptr");
+        RelearnException::check(root != nullptr, "FastMultipoleMethodBase::make_creation_request_for: root is nullptr");
 
         const auto other_element_type = get_other_element_type(element_type);
         auto stack = init_stack(root, local_roots, branch_level, element_type, signal_type_needed);
@@ -875,7 +875,7 @@ public:
         }
     }
 
-    static void print_calculation(std::ostream& out_stream, OctreeNode<FastMultipoleMethodsCell>* source, OctreeNode<FastMultipoleMethodsCell>* target,
+    static void print_calculation(std::ostream& out_stream, OctreeNode<FastMultipoleMethodCell>* source, OctreeNode<FastMultipoleMethodCell>* target,
         const ElementType element_type, const SignalType needed) {
 
         const auto other_element_type = get_other_element_type(element_type);

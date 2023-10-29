@@ -37,7 +37,7 @@
 
 #include <range/v3/algorithm/sort.hpp>
 
-using test_types = ::testing::Types<BarnesHutCell, BarnesHutInvertedCell, FastMultipoleMethodsCell, NaiveCell>;
+using test_types = ::testing::Types<BarnesHutCell, BarnesHutInvertedCell, FastMultipoleMethodCell, NaiveCell>;
 TYPED_TEST_SUITE(OctreeNodeTest, test_types);
 
 TYPED_TEST(OctreeNodeTest, testReset) {

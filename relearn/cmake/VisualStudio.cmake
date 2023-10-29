@@ -59,10 +59,10 @@ if (WIN32) # Lib
     list(APPEND relearn_lib_additional_files "algorithm/BarnesHutInternal/BarnesHutLocationAware.h")
 
     # FMMInternal
-    list(APPEND relearn_lib_additional_files "algorithm/FMMInternal/FastMultipoleMethods.h")
-    list(APPEND relearn_lib_additional_files "algorithm/FMMInternal/FastMultipoleMethodsBase.h")
-    list(APPEND relearn_lib_additional_files "algorithm/FMMInternal/FastMultipoleMethodsCell.h")
-    list(APPEND relearn_lib_additional_files "algorithm/FMMInternal/FastMultipoleMethodsInverted.h")
+    list(APPEND relearn_lib_additional_files "algorithm/FMMInternal/FastMultipoleMethod.h")
+    list(APPEND relearn_lib_additional_files "algorithm/FMMInternal/FastMultipoleMethodBase.h")
+    list(APPEND relearn_lib_additional_files "algorithm/FMMInternal/FastMultipoleMethodCell.h")
+    list(APPEND relearn_lib_additional_files "algorithm/FMMInternal/FastMultipoleMethodInverted.h")
 
     # Internal
     list(APPEND relearn_lib_additional_files "algorithm/Internal/AlgorithmImpl.h")

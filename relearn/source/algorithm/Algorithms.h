@@ -14,5 +14,5 @@
 #include "BarnesHutInternal/BarnesHut.h"
 #include "BarnesHutInternal/BarnesHutInverted.h"
 #include "BarnesHutInternal/BarnesHutLocationAware.h"
-#include "FMMInternal/FastMultipoleMethods.h"
+#include "FMMInternal/FastMultipoleMethod.h"
 #include "NaiveInternal/Naive.h"
