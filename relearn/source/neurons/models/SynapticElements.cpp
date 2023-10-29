@@ -11,6 +11,7 @@
 #include "SynapticElements.h"
 
 #include "neurons/NeuronsExtraInfo.h"
+#include "util/MemoryFootprint.h"
 #include "util/Random.h"
 
 #include <range/v3/view/drop.hpp>
@@ -138,6 +139,21 @@ void SynapticElements::update_number_elements_delta(const std::span<const double
 
         deltas_since_last_update[neuron_id] += inc;
     }
+}
+
+void SynapticElements::record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+    const auto my_footprint = sizeof(*this)
+        + grown_elements.capacity() * sizeof(double)
+        + deltas_since_last_update.capacity() * sizeof(double)
+        + connected_elements.capacity() * sizeof(unsigned int)
+        + signal_types.capacity() * sizeof(SignalType);
+
+    std::stringstream identifier{};
+    identifier << "SynapticElements-" << type << '-' << signal_types[0];
+
+    footprint->emplace(identifier.str(), my_footprint);
+
+    // growthrate_calculator->record_memory_footprint(footprint);
 }
 
 unsigned int SynapticElements::update_number_elements(const NeuronID neuron_id) {

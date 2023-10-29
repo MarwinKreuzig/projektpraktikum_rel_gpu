@@ -35,6 +35,12 @@ public:
         return std::make_unique<LinearSynapticInputCalculator>(get_synapse_conductance(), get_fired_status_communicator()->clone());
     }
 
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override;
+
 protected:
     void update_synaptic_input(std::span<const FiredStatus> fired) override;
 };
@@ -81,6 +87,12 @@ public:
         base_params.emplace_back(Parameter<double>{ "scale_factor", scale_factor, min_scaling, max_scaling });
         return base_params;
     }
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override;
 
     static constexpr double default_scaling{ 1.0 };
 
@@ -133,6 +145,12 @@ public:
         base_params.emplace_back(Parameter<double>{ "scale_factor", scale_factor, min_scaling, max_scaling });
         return base_params;
     }
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override;
 
     static constexpr double default_scaling{ 1.0 };
 

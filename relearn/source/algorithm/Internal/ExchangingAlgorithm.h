@@ -78,6 +78,17 @@ public:
         };
     }
 
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this) - sizeof(AlgorithmImpl<AdditionalCellAttributes>);
+        footprint->emplace("ForwardAlgorithm", my_footprint);
+
+        AlgorithmImpl<AdditionalCellAttributes>::record_memory_footprint(footprint);
+    }
+
 protected:
     /**
      * @brief Returns a collection of proposed synapse creations for each neuron
@@ -156,6 +167,17 @@ public:
         return {
             std::move(local_synapses), std::move(distant_in_synapses), std::move(distant_out_synapses)
         };
+    }
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this) - sizeof(AlgorithmImpl<AdditionalCellAttributes>);
+        footprint->emplace("BackwardAlgorithm", my_footprint);
+
+        AlgorithmImpl<AdditionalCellAttributes>::record_memory_footprint(footprint);
     }
 
 protected:

@@ -246,7 +246,7 @@ public:
      */
     template <typename T>
     [[nodiscard]] static std::vector<T> all_gather(T own_data) {
-        std::vector<T> results(get_num_ranks());
+        std::vector<T> results(get_number_ranks());
         all_gather(&own_data, results.data(), sizeof(T));
         return results;
     }
@@ -308,7 +308,7 @@ public:
      */
     template <typename RequestType>
     [[nodiscard]] static CommunicationMap<RequestType> exchange_requests(const CommunicationMap<RequestType>& outgoing_requests) {
-        const auto number_ranks = get_num_ranks();
+        const auto number_ranks = get_number_ranks();
         const auto my_rank = get_my_rank();
 
         const auto& number_requests_outgoing = outgoing_requests.get_request_sizes_vector();
@@ -388,7 +388,7 @@ public:
      * @exception Throws a RelearnException if the MPIWrapper is not initialized
      * @return The number of MPI ranks
      */
-    [[nodiscard]] static int get_num_ranks();
+    [[nodiscard]] static int get_number_ranks();
 
     /**
      * @brief Returns the current MPI rank's id

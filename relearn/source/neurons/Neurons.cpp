@@ -339,6 +339,24 @@ void Neurons::update_number_synaptic_elements_delta() {
     dendrites_inh->update_number_elements_delta(calcium, target_calcium);
 }
 
+void Neurons::record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+    const auto my_footprint = sizeof(*this);
+    footprint->emplace("Neurons", my_footprint);
+
+    partition->record_memory_footprint(footprint);
+    local_area_translator->record_memory_footprint(footprint);
+    global_tree->record_memory_footprint(footprint);
+    algorithm->record_memory_footprint(footprint);
+    network_graph->record_memory_footprint(footprint);
+    neuron_model->record_memory_footprint(footprint);
+    calcium_calculator->record_memory_footprint(footprint);
+    axons->record_memory_footprint(footprint);
+    dendrites_exc->record_memory_footprint(footprint);
+    dendrites_inh->record_memory_footprint(footprint);
+    synapse_deletion_finder->record_memory_footprint(footprint);
+    extra_info->record_memory_footprint(footprint);
+}
+
 StatisticalMeasures Neurons::global_statistics(const std::span<const double> local_values, const MPIRank root) const {
     const auto disable_flags = extra_info->get_disable_flags();
     const auto [d_my_min, d_my_max, d_my_acc, d_num_values] = Util::min_max_acc(local_values, extra_info);
@@ -351,7 +369,7 @@ StatisticalMeasures Neurons::global_statistics(const std::span<const double> loc
         MPIWrapper::ReduceFunction::Sum));
 
     // Get global avg at all ranks (needed for variance)
-    const double avg = MPIWrapper::all_reduce_double(my_avg, MPIWrapper::ReduceFunction::Sum) / MPIWrapper::get_num_ranks();
+    const double avg = MPIWrapper::all_reduce_double(my_avg, MPIWrapper::ReduceFunction::Sum) / MPIWrapper::get_number_ranks();
 
     /**
      * Calc variance

@@ -18,7 +18,7 @@
 
 CommunicationMap<SynapseCreationRequest> FastMultipoleMethod::find_target_neurons(const number_neurons_type number_neurons) {
     const auto& disable_flags = extra_infos->get_disable_flags();
-    const auto number_ranks = MPIWrapper::get_num_ranks();
+    const auto number_ranks = MPIWrapper::get_number_ranks();
 
     const auto size_hint = std::min(number_neurons_type(number_ranks), number_neurons);
     CommunicationMap<SynapseCreationRequest> synapse_creation_requests_outgoing(number_ranks, size_hint);

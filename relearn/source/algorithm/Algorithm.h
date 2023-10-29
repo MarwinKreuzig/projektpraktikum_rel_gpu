@@ -11,6 +11,7 @@
  */
 
 #include "Types.h"
+#include "util/MemoryFootprint.h"
 #include "util/RelearnException.h"
 
 #include <memory>
@@ -75,6 +76,15 @@ public:
      * @exception Can throw a RelearnException
      */
     virtual void update_octree() = 0;
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    virtual void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+        const auto my_footprint = sizeof(*this);
+        footprint->emplace("Algorithm", my_footprint);
+    }
 
 protected:
     std::shared_ptr<SynapticElements> axons{}; // NOLINT

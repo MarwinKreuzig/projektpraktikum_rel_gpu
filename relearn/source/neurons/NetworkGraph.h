@@ -13,6 +13,7 @@
 #include "Config.h"
 #include "Types.h"
 #include "enums/SignalType.h"
+#include "util/MemoryFootprint.h"
 #include "util/MPIRank.h"
 #include "util/RelearnException.h"
 #include "util/NeuronID.h"
@@ -431,6 +432,29 @@ class NetworkGraph {
             neuron_local_out_neighborhood.resize(new_size);
 
             number_local_neurons = new_size;
+        }
+
+        /**
+         * @brief Calculates the memory footprint of the current object
+         * @return The memory footprint in bytes
+         */
+        std::uint64_t get_memory_footprint() {
+            auto get_some_size = [](const auto& vec_vec) {
+                auto total_size = std::uint64_t(0);
+                total_size += (vec_vec.capacity() * sizeof(vec_vec[0]));
+                for (const auto& vec : vec_vec) {
+                    total_size += (vec.capacity() * sizeof(vec[0]));
+                }
+                return total_size;
+            };
+
+            const auto my_footprint = sizeof(*this)
+                + get_some_size(neuron_distant_in_neighborhood)
+                + get_some_size(neuron_distant_out_neighborhood)
+                + get_some_size(neuron_local_in_neighborhood)
+                + get_some_size(neuron_local_out_neighborhood);
+
+            return my_footprint;
         }
 
         /**
@@ -879,6 +903,17 @@ public:
     void debug_check() const {
         plastic_network_graph.debug_check();
         static_network_graph.debug_check();
+    }
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+        const auto size_1 = plastic_network_graph.get_memory_footprint();
+        const auto size_2 = static_network_graph.get_memory_footprint();
+
+        footprint->emplace("NetworkGraph", size_1 + size_2);
     }
 
     NetworkGraphBase<plastic_synapse_weight> plastic_network_graph{};

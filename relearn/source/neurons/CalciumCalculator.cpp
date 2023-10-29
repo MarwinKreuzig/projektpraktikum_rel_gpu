@@ -71,6 +71,13 @@ void CalciumCalculator::update_calcium(const step_type step, const std::span<con
     Timers::stop_and_add(TimerRegion::UPDATE_TARGET_CALCIUM);
 }
 
+void CalciumCalculator::record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+    const auto my_footprint = sizeof(*this)
+        + calcium.capacity() * sizeof(double)
+        + target_calcium.capacity() * sizeof(double);
+    footprint->emplace("CalciumCalculator", my_footprint);
+}
+
 void CalciumCalculator::update_current_calcium(std::span<const FiredStatus> fired_status) noexcept {
     const auto scale = (1.0 / static_cast<double>(h));
     const auto tau_C_inverse = -1.0 / tau_C;

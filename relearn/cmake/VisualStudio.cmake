@@ -176,6 +176,7 @@ if (WIN32) # Lib
     # util
     list(APPEND relearn_lib_additional_files "util/BoundingBox.h")
     list(APPEND relearn_lib_additional_files "util/Interval.h")
+    list(APPEND relearn_lib_additional_files "util/MemoryFootprint.h")
     list(APPEND relearn_lib_additional_files "util/MemoryHolder.h")
     list(APPEND relearn_lib_additional_files "util/MPIRank.h")
     list(APPEND relearn_lib_additional_files "util/NeuronID.h")
@@ -211,6 +212,7 @@ if (WIN32) # Tests
     list(APPEND relearn_tests_additional_files "kernel/test_kernel.h")
     list(APPEND relearn_tests_additional_files "local_area_translator/test_local_area_translator.h")
     list(APPEND relearn_tests_additional_files "memory_holder/test_memory_holder.h")
+    list(APPEND relearn_tests_additional_files "memory_footprint/test_memory_footprint.h")
     list(APPEND relearn_tests_additional_files "misc/test_misc.h")
     list(APPEND relearn_tests_additional_files "mpi/test_mpi_rank.h")
     list(APPEND relearn_tests_additional_files "network_graph/test_network_graph.h")
@@ -239,5 +241,5 @@ if (WIN32) # Tests
     list(APPEND relearn_tests_additional_files "synaptic_input/test_synaptic_input.h")
     list(APPEND relearn_tests_additional_files "neuron_id/test_neuron_id.h")
     list(APPEND relearn_tests_additional_files "timers/test_timers.h")
-    list(APPEND relearn_tests_additional_files "vector/test_vector.h")
+    list(APPEND relearn_tests_additional_files "vec3/test_vec3.h")
 endif ()

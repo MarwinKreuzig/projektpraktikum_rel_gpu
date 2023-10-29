@@ -102,6 +102,28 @@ public:
      */
     void notify_of_plasticity_change(step_type step) override;
 
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_easy_footprint = sizeof(*this) - sizeof(FiredStatusCommunicator)
+            + accumulated_fired.capacity() * sizeof(size_t)
+            + latest_firing_rate.capacity() * sizeof(double);
+
+        auto my_hard_footprint = firing_rate_cache.capacity() * sizeof(std::unordered_map<NeuronID, double>);
+        for (const auto& cache : firing_rate_cache) {
+            // Some internet approximation of an unordered_map's size
+            my_hard_footprint += static_cast<std::size_t>((cache.size() * (sizeof(double) + sizeof(void*))
+                                                              + cache.bucket_count() * (sizeof(void*) + sizeof(size_t)))
+                * 1.5);
+        }
+
+        footprint->emplace("FiredStatusApproximator", my_hard_footprint + my_easy_footprint);
+
+        FiredStatusCommunicator::record_memory_footprint(footprint);
+    }
+
 private:
     std::vector<size_t> accumulated_fired{};
     std::vector<double> latest_firing_rate{};

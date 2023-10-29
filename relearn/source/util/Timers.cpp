@@ -102,7 +102,7 @@ void Timers::print(const std::unique_ptr<Essentials>& essentials) {
     for (auto i = index_type(0); i < NUMBER_TIMERS; i++) {
         const index_type idx = 3 * i + 1U;
         // NOLINTNEXTLINE
-        timers_global[idx] /= MPIWrapper::get_num_ranks();
+        timers_global[idx] /= MPIWrapper::get_number_ranks();
     }
 
     // Set precision for aligned double output

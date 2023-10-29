@@ -276,7 +276,7 @@ void MPIWrapper::get(MPIWindow::Window window_type, void* origin, const size_t s
     add_to_remotely_accessed(download_size);
 }
 
-int MPIWrapper::get_num_ranks() {
+int MPIWrapper::get_number_ranks() {
     RelearnException::check(num_ranks >= 1, "MPIWrapper::get_num_ranks: MPIWrapper is not initialized");
     return num_ranks;
 }

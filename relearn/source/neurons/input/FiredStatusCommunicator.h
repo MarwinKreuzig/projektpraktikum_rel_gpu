@@ -13,6 +13,7 @@
 #include "Types.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "enums/FiredStatus.h"
+#include "util/MemoryFootprint.h"
 #include "util/RelearnException.h"
 #include "util/NeuronID.h"
 
@@ -170,6 +171,15 @@ public:
      */
     [[nodiscard]] number_neurons_type get_number_local_neurons() const noexcept {
         return number_local_neurons;
+    }
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    virtual void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+        const auto my_footprint = sizeof(*this);
+        footprint->emplace("FiredStatusCommunicator", my_footprint);
     }
 
     virtual ~FiredStatusCommunicator() = default;

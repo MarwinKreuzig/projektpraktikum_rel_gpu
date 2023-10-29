@@ -226,7 +226,7 @@ public:
 
         const auto number_neurons = axons->get_size();
         const auto my_rank = MPIWrapper::get_my_rank();
-        const auto number_ranks = MPIWrapper::get_num_ranks();
+        const auto number_ranks = MPIWrapper::get_number_ranks();
 
         const auto size_hint = creation_requests.size();
         CommunicationMap<SynapseCreationResponse> responses(number_ranks, size_hint);

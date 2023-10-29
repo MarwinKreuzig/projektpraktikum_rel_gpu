@@ -12,5 +12,5 @@
 
 #include "RelearnTest.hpp"
 
-class SemiStableVec3Test : public RelearnTest {
+class MemoryFootprintTest : public RelearnTest {
 };

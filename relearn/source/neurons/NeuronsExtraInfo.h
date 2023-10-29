@@ -11,14 +11,15 @@
  */
 
 #include "Types.h"
+#include "enums/FiredStatus.h"
+#include "enums/UpdateStatus.h"
 #include "gpu/CudaHelper.h"
 #include "gpu/Interface.h"
 #include "mpi/CommunicationMap.h"
-#include "enums/UpdateStatus.h"
+#include "mpi/MPIWrapper.h"
+#include "util/MemoryFootprint.h"
 #include "util/NeuronID.h"
 #include "util/RelearnException.h"
-#include "enums/FiredStatus.h"
-#include "mpi/MPIWrapper.h"
 #include "util/Timers.h"
 
 #include <bitset>
@@ -275,6 +276,17 @@ public:
 
     const std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>>& get_deletions_log(const NeuronID& neuron_id) const {
         return deletions_log[neuron_id.get_neuron_id()];
+    }
+        
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+        const auto my_footprint = sizeof(*this)
+            + positions.capacity() * sizeof(position_type)
+            + update_status.capacity() * sizeof(UpdateStatus);
+        footprint->emplace("ExtraInfos", my_footprint);
     }
 
 private:

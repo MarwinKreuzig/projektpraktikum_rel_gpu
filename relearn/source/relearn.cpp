@@ -206,7 +206,7 @@ int main(int argc, char** argv) {
     }
 
     const auto my_rank = MPIWrapper::get_my_rank();
-    const auto num_ranks = MPIWrapper::get_num_ranks();
+    const auto num_ranks = MPIWrapper::get_number_ranks();
 
     // Command line arguments
     CLI::App app{ "" };
@@ -838,11 +838,11 @@ int main(int argc, char** argv) {
 
     auto construct_fired_status_communicator = [&]() -> std::unique_ptr<FiredStatusCommunicator> {
         if (chosen_fired_status_communicator_type == FiredStatusCommunicatorType::Map) {
-            return std::make_unique<FiredStatusCommunicationMap>(MPIWrapper::get_num_ranks());
+            return std::make_unique<FiredStatusCommunicationMap>(MPIWrapper::get_number_ranks());
         }
 
         RelearnException::check(chosen_fired_status_communicator_type == FiredStatusCommunicatorType::Approximator, "Type {} of fired status communicator is not supported.", chosen_fired_status_communicator_type);
-        return std::make_unique<FiredStatusApproximator>(MPIWrapper::get_num_ranks());
+        return std::make_unique<FiredStatusApproximator>(MPIWrapper::get_number_ranks());
     };
 
     auto construct_input = [&]() -> std::unique_ptr<SynapticInputCalculator> {

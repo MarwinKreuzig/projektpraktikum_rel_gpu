@@ -22,7 +22,7 @@
 
 void RelearnException::log_message(const std::string& message) {
     const auto my_rank = MPIWrapper::get_my_rank();
-    const auto num_ranks = MPIWrapper::get_num_ranks();
+    const auto num_ranks = MPIWrapper::get_number_ranks();
 
     std::cerr << message << std::flush;
     fflush(stderr);

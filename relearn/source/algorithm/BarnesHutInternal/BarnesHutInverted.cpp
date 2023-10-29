@@ -29,7 +29,7 @@ void BarnesHutInverted::set_acceptance_criterion(const double acceptance_criteri
 
 CommunicationMap<SynapseCreationRequest> BarnesHutInverted::find_target_neurons(const number_neurons_type number_neurons) {
     const auto& disable_flags = extra_infos->get_disable_flags();
-    const auto number_ranks = MPIWrapper::get_num_ranks();
+    const auto number_ranks = MPIWrapper::get_number_ranks();
     const auto my_rank = MPIWrapper::get_my_rank();
 
     const auto size_hint = std::min(number_neurons, number_neurons_type(number_ranks));

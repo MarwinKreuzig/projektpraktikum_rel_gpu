@@ -11,6 +11,7 @@
  */
 
 #include "Types.h"
+#include "util/MemoryFootprint.h"
 #include "util/NeuronID.h"
 #include "util/ranges/Functional.hpp"
 
@@ -228,6 +229,23 @@ public:
         RelearnException::check(!neuron_id_to_area_id.empty(), "LocalAreaTranslator::create_neurons: Was not initialized");
         RelearnException::check(created_neurons > 0, "LocalAreaTranslator::create_neurons: Cannot create 0 neurons");
         neuron_id_to_area_id.insert(neuron_id_to_area_id.end(), created_neurons, 0UL);
+    }
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+        const auto my_easy_footprint = sizeof(*this)
+            + area_id_to_area_name.capacity() * sizeof(RelearnTypes::area_name)
+            + neuron_id_to_area_id.capacity() * sizeof(RelearnTypes::area_id);
+
+        auto my_hard_footprint = std::uint64_t(0);
+        for (const auto& str : area_id_to_area_name) {
+            my_hard_footprint += str.capacity() * sizeof(RelearnTypes::area_name::value_type);
+        }
+
+        footprint->emplace("LocalAreaTranslator", my_hard_footprint + my_easy_footprint);
     }
 
 private:

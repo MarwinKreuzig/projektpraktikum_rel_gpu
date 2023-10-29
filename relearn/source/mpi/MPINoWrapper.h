@@ -166,7 +166,7 @@ public:
         RelearnException::fail("MPINoWrapper::download_octree_node: Cannot perform the offset version without MPI.");
     }
 
-    [[nodiscard]] static int get_num_ranks();
+    [[nodiscard]] static int get_number_ranks();
 
     [[nodiscard]] static MPIRank get_my_rank();
 

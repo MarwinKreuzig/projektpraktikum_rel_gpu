@@ -25,6 +25,7 @@
 #include "sim/NeuronToSubdomainAssignment.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"
+#include "util/MemoryFootprint.h"
 #include "util/Random.h"
 #include "util/RelearnException.h"
 #include "util/Timers.h"
@@ -163,7 +164,7 @@ void Simulation::initialize() {
     auto local_area_translator = neuron_to_subdomain_assignment->get_local_area_translator();
     auto signal_types = neuron_to_subdomain_assignment->get_neuron_types_in_subdomains();
 
-    global_area_mapper = std::make_shared<GlobalAreaMapper>(local_area_translator, MPIWrapper::get_num_ranks(), my_rank);
+    global_area_mapper = std::make_shared<GlobalAreaMapper>(local_area_translator, MPIWrapper::get_number_ranks(), my_rank);
 
     RelearnException::check(neuron_positions.size() == number_local_neurons, "Simulation::initialize: neuron_positions had the wrong size");
     RelearnException::check(local_area_translator->get_number_neurons_in_total() == number_local_neurons, "Simulation::initialize: neuron_id_vs_area_id had the wrong size {} != {}", local_area_translator->get_number_neurons_in_total(), number_local_neurons);
@@ -314,7 +315,7 @@ void Simulation::initialize() {
         neurons->set_fired(std::move(initial_fired));
     }
 
-    MPIWrapper::create_rma_window<std::bitset<NeuronsExtraInfo::fire_history_length>>(MPIWindow::FireHistory, number_local_neurons, MPIWrapper::get_num_ranks());
+    MPIWrapper::create_rma_window<std::bitset<NeuronsExtraInfo::fire_history_length>>(MPIWindow::FireHistory, number_local_neurons, MPIWrapper::get_number_ranks());
 
     neurons->debug_check_counts();
     neurons->print_neurons_overview_to_log_file_on_rank_0(0);
@@ -338,7 +339,7 @@ void Simulation::simulate(const step_type number_steps) {
     for (; step <= final_step_count; ++step) { // NOLINT(altera-id-dependent-backward-branch)
         for (const auto& [disable_step, disable_ids] : disable_interrupts | ranges::views::filter(equal_to(step), element<0>)) {
             LogFiles::write_to_file(LogFiles::EventType::Cout, true, "Disabling {} neurons in step {}", disable_ids.size(), disable_step);
-            const auto& [num_deleted_synapses, synapse_deletion_requests_outgoing] = neurons->disable_neurons(step, disable_ids, MPIWrapper::get_num_ranks());
+            const auto& [num_deleted_synapses, synapse_deletion_requests_outgoing] = neurons->disable_neurons(step, disable_ids, MPIWrapper::get_number_ranks());
             total_synapse_deletions += static_cast<int64_t>(num_deleted_synapses);
             const auto& synapse_deletion_requests_ingoing = MPIWrapper::exchange_requests(synapse_deletion_requests_outgoing);
             total_synapse_deletions += neurons->delete_disabled_distant_synapses(synapse_deletion_requests_ingoing, my_rank);

@@ -94,6 +94,16 @@ public:
         return std::make_unique<Stimulus>(stimulus_function);
     }
 
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+        const auto my_footprint = sizeof(*this)
+            + stimulus.capacity() * sizeof(double);
+        footprint->emplace("Stimulus", my_footprint);
+    }
+
 private:
     std::vector<double> stimulus{};
     std::shared_ptr<NeuronsExtraInfo> extra_infos{};

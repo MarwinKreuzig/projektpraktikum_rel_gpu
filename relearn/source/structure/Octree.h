@@ -16,6 +16,7 @@
 #include "structure/OctreeNode.h"
 #include "structure/OctreeNodeHelper.h"
 #include "structure/SpaceFillingCurve.h"
+#include "util/MemoryFootprint.h"
 #include "util/RelearnException.h"
 #include "util/Stack.h"
 #include "util/Timers.h"
@@ -134,6 +135,15 @@ public:
         out_stream << ss.rdbuf();
         out_stream.flush();
         out_stream.close();
+    }
+
+    /**
+     * @brief Records the memory footprint of the current object as "Octree"
+     * @param footprint Where to store the current footprint
+     */
+    virtual void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+        const auto my_footprint = sizeof(*this);
+        footprint->emplace("Octree", my_footprint);
     }
 
 protected:
@@ -315,6 +325,22 @@ public:
         RelearnException::check(res != nullptr, "Octree::insert: res was nullptr");
     }
 
+    /**
+     * @brief Records the memory footprint of the current object as "Octree", "OctreeImplementation", and "OctreeNode"
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this) - sizeof(Octree)
+            + branch_nodes.capacity() * sizeof(OctreeNode<AdditionalCellAttributes>*)
+            + all_leaf_nodes.capacity() * sizeof(OctreeNode<AdditionalCellAttributes>*);
+        footprint->emplace("OctreeImplementation", my_footprint);
+
+        const auto octree_node_footprint = MemoryHolder<AdditionalCellAttributes>::get_size() * sizeof(OctreeNode<AdditionalCellAttributes>);
+        footprint->emplace("OctreeNode", octree_node_footprint);
+
+        Octree::record_memory_footprint(footprint);
+    }
+
 protected:
     /**
      * Print a visualization of this tree to a stringstream
@@ -426,7 +452,7 @@ protected:
         auto exchange_branch_nodes = branch_nodes | ranges::views::indirect | ranges::to_vector;
 
         // All-gather in-place branch nodes from every rank
-        const auto number_local_branch_nodes = number_branch_nodes / MPIWrapper::get_num_ranks();
+        const auto number_local_branch_nodes = number_branch_nodes / MPIWrapper::get_number_ranks();
         RelearnException::check(number_local_branch_nodes < static_cast<size_t>(std::numeric_limits<int>::max()),
             "OctreeImplementation::synchronize_local_trees: Too many branch nodes: {}", number_local_branch_nodes);
         MPIWrapper::all_gather_inline(std::span{ exchange_branch_nodes.data(), number_local_branch_nodes });

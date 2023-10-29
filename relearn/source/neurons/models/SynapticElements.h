@@ -26,6 +26,7 @@
 
 #include <range/v3/view/transform.hpp>
 
+class MemoryFootprint;
 class NeuronMonitor;
 class NeuronsExtraInfo;
 
@@ -460,6 +461,12 @@ public:
     [[nodiscard]] double get_total_deletions() const noexcept {
         return total_deletions;
     }
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint);
 
 private:
     /**

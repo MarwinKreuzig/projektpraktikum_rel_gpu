@@ -22,6 +22,7 @@
 #include "enums/UpdateStatus.h"
 #include "neurons/input/BackgroundActivityCalculator.h"
 #include "neurons/models/ModelParameter.h"
+#include "util/MemoryFootprint.h"
 #include "util/RelearnException.h"
 #include "util/NeuronID.h"
 #include "Types.h"
@@ -422,6 +423,12 @@ public:
 
     void set_fired_gpu(const NeuronID neuron_id, const FiredStatus new_value);
 
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    virtual void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint);
+
     static constexpr unsigned int default_h{ 10 };
     static constexpr unsigned int min_h{ 1 };
     static constexpr unsigned int max_h{ 1000 };
@@ -635,6 +642,18 @@ public:
         return refractory_period;
     }
 
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this) - sizeof(NeuronModel)
+            + refractory_time.capacity() * sizeof(unsigned int);
+        footprint->emplace("PoissonModel", my_footprint);
+
+        NeuronModel::record_memory_footprint(footprint);
+    }
+
     static constexpr double default_x_0{ 0.05 };
     static constexpr double default_tau_x{ 5.0 };
     static constexpr unsigned int default_refractory_period{ 4 }; // In Sebastian's work: 4
@@ -836,6 +855,18 @@ public:
      */
     void create_neurons_cpu(number_neurons_type creation_count) override final;
 
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this) - sizeof(NeuronModel)
+            + u.capacity() * sizeof(double);
+        footprint->emplace("IzhikevichModel", my_footprint);
+
+        NeuronModel::record_memory_footprint(footprint);
+    }
+
     static constexpr double default_a{ 0.1 };
     static constexpr double default_b{ 0.2 };
     static constexpr double default_c{ -65.0 };
@@ -988,6 +1019,18 @@ public:
      * @param creation_count The number of local neurons that should be added
      */
     void create_neurons_cpu(number_neurons_type creation_count) override final;
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this) - sizeof(NeuronModel)
+            + w.capacity() * sizeof(double);
+        footprint->emplace("FitzHughNagumoModel", my_footprint);
+
+        NeuronModel::record_memory_footprint(footprint);
+    }
 
     static constexpr double default_a{ 0.7 };
     static constexpr double default_b{ 0.8 };
@@ -1189,6 +1232,18 @@ public:
      * @param creation_count The number of local neurons that should be added
      */
     void create_neurons_cpu(number_neurons_type creation_count) override final;
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this) - sizeof(NeuronModel)
+            + w.capacity() * sizeof(double);
+        footprint->emplace("AEIFModel", my_footprint);
+
+        NeuronModel::record_memory_footprint(footprint);
+    }
 
     static constexpr double default_C{ 281.0 };
     static constexpr double default_g_L{ 30.0 };

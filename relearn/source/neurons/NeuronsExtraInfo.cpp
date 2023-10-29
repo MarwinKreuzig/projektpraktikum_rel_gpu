@@ -17,7 +17,7 @@ void NeuronsExtraInfo::create_neurons(const number_neurons_type creation_count) 
     RelearnException::check(!positions.empty(), "NeuronsExtraInfo::create_neurons: Was not initialized");
     RelearnException::check(creation_count != 0, "Cannot add 0 neurons");
 
-    const auto num_ranks = MPIWrapper::get_num_ranks();
+    const auto num_ranks = MPIWrapper::get_number_ranks();
 
     RelearnException::check(num_ranks == 1, "NeuronsExtraInfo::create_neurons: Cannot create neurons if more than 1 MPI rank is computing");
 

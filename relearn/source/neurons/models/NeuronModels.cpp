@@ -56,6 +56,19 @@ void NeuronModel::create_neurons_cpu(number_neurons_type creation_count) {
     stimulus_calculator->create_neurons(creation_count);
 }
 
+void NeuronModel::record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+    const auto my_footprint = sizeof(*this)
+        + x.capacity() * sizeof(double)
+        + fired_recorder[0].capacity() * sizeof(unsigned int)
+        + fired_recorder[1].capacity() * sizeof(unsigned int)
+        + fired.capacity() * sizeof(FiredStatus);
+    footprint->emplace("NeuronModel", my_footprint);
+
+    input_calculator->record_memory_footprint(footprint);
+    background_calculator->record_memory_footprint(footprint);
+    stimulus_calculator->record_memory_footprint(footprint);
+}
+
 void NeuronModel::update_electrical_activity(const step_type step) {
     Timers::start(TimerRegion::NEURON_MODEL_UPDATE_ELECTRICAL_ACTIVITY);
     input_calculator->update_input(step, get_fired());

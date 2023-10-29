@@ -16,6 +16,7 @@
 #include "gpu/Interface.h"
 #include "io/BackgroundActivityIO.h"
 #include "io/InteractiveNeuronIO.h"
+#include "util/MemoryFootprint.h"
 #include "util/Random.h"
 #include "util/Timers.h"
 #include "util/ranges/Functional.hpp"
@@ -53,6 +54,17 @@ public:
      */
     [[nodiscard]] std::unique_ptr<BackgroundActivityCalculator> clone() const override {
         return std::make_unique<NullBackgroundActivityCalculator>();
+    }
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this) - sizeof(BackgroundActivityCalculator);
+        footprint->emplace("NullBackgroundActivityCalculator", my_footprint);
+
+        BackgroundActivityCalculator::record_memory_footprint(footprint);
     }
 
 protected:
@@ -106,6 +118,17 @@ public:
         parameters.emplace_back(Parameter<double>("Base background activity", base_input, BackgroundActivityCalculator::min_base_background_activity, BackgroundActivityCalculator::max_base_background_activity));
 
         return parameters;
+    }
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this) - sizeof(BackgroundActivityCalculator);
+        footprint->emplace("ConstantBackgroundActivityCalculator", my_footprint);
+
+        BackgroundActivityCalculator::record_memory_footprint(footprint);
     }
 
 protected:
@@ -180,6 +203,17 @@ public:
         parameters.emplace_back(Parameter<double>("Stddev background activity", stddev_input, BackgroundActivityCalculator::min_background_activity_stddev, BackgroundActivityCalculator::max_background_activity_stddev));
 
         return parameters;
+    }
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this) - sizeof(BackgroundActivityCalculator);
+        footprint->emplace("NormalBackgroundActivityCalculator", my_footprint);
+
+        BackgroundActivityCalculator::record_memory_footprint(footprint);
     }
 
 protected:
@@ -259,6 +293,18 @@ public:
         parameters.emplace_back(Parameter<double>("Stddev background activity", stddev_input, BackgroundActivityCalculator::min_background_activity_stddev, BackgroundActivityCalculator::max_background_activity_stddev));
 
         return parameters;
+    }
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this) - sizeof(BackgroundActivityCalculator)
+            + pre_drawn_values.capacity() * sizeof(double);
+        footprint->emplace("FastNormalBackgroundActivityCalculator", my_footprint);
+
+        BackgroundActivityCalculator::record_memory_footprint(footprint);
     }
 
 protected:

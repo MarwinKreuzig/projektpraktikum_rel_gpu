@@ -8,14 +8,14 @@
  *
  */
 
-#include "test_vector.h"
+#include "test_vec3.h"
 
 #include "adapter/simulation/SimulationAdapter.h"
 #include "util/Vec3.h"
 
 #include <sstream>
 
-TEST_F(VectorTest, testVectorEmptyConstructor) {
+TEST_F(Vec3Test, testVectorEmptyConstructor) {
     const Vec3<double> v{};
 
     ASSERT_EQ(0.0, v.get_x());
@@ -23,7 +23,7 @@ TEST_F(VectorTest, testVectorEmptyConstructor) {
     ASSERT_EQ(0.0, v.get_z());
 }
 
-TEST_F(VectorTest, testVectorSameValueConstructor) {
+TEST_F(Vec3Test, testVectorSameValueConstructor) {
     const auto val = SimulationAdapter::get_random_position_element(mt);
 
     const Vec3<double> v{ val };
@@ -36,7 +36,7 @@ TEST_F(VectorTest, testVectorSameValueConstructor) {
     ASSERT_EQ(val, v.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorThreeValuesConstructor) {
+TEST_F(Vec3Test, testVectorThreeValuesConstructor) {
     const auto x = SimulationAdapter::get_random_position_element(mt);
     const auto y = SimulationAdapter::get_random_position_element(mt);
     const auto z = SimulationAdapter::get_random_position_element(mt);
@@ -51,7 +51,7 @@ TEST_F(VectorTest, testVectorThreeValuesConstructor) {
     ASSERT_EQ(z, v.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorStructuredBinding) {
+TEST_F(Vec3Test, testVectorStructuredBinding) {
     const auto x = SimulationAdapter::get_random_position_element(mt);
     const auto y = SimulationAdapter::get_random_position_element(mt);
     const auto z = SimulationAdapter::get_random_position_element(mt);
@@ -94,7 +94,7 @@ TEST_F(VectorTest, testVectorStructuredBinding) {
     ASSERT_EQ(new_z, v.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorCopyConstructor) {
+TEST_F(Vec3Test, testVectorCopyConstructor) {
     const auto x = SimulationAdapter::get_random_position_element(mt);
     const auto y = SimulationAdapter::get_random_position_element(mt);
     const auto z = SimulationAdapter::get_random_position_element(mt);
@@ -111,7 +111,7 @@ TEST_F(VectorTest, testVectorCopyConstructor) {
     ASSERT_EQ(z, w.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorCopyAssignment) {
+TEST_F(Vec3Test, testVectorCopyAssignment) {
     const auto x = SimulationAdapter::get_random_position_element(mt);
     const auto y = SimulationAdapter::get_random_position_element(mt);
     const auto z = SimulationAdapter::get_random_position_element(mt);
@@ -129,7 +129,7 @@ TEST_F(VectorTest, testVectorCopyAssignment) {
     ASSERT_EQ(z, w.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorMoveConstructor) {
+TEST_F(Vec3Test, testVectorMoveConstructor) {
     const auto x = SimulationAdapter::get_random_position_element(mt);
     const auto y = SimulationAdapter::get_random_position_element(mt);
     const auto z = SimulationAdapter::get_random_position_element(mt);
@@ -146,7 +146,7 @@ TEST_F(VectorTest, testVectorMoveConstructor) {
     ASSERT_EQ(z, w.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorMoveAssignment) {
+TEST_F(Vec3Test, testVectorMoveAssignment) {
     const auto x = SimulationAdapter::get_random_position_element(mt);
     const auto y = SimulationAdapter::get_random_position_element(mt);
     const auto z = SimulationAdapter::get_random_position_element(mt);
@@ -164,7 +164,7 @@ TEST_F(VectorTest, testVectorMoveAssignment) {
     ASSERT_EQ(z, w.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorSetComponents) {
+TEST_F(Vec3Test, testVectorSetComponents) {
     const auto x1 = SimulationAdapter::get_random_position_element(mt);
     const auto y1 = SimulationAdapter::get_random_position_element(mt);
     const auto z1 = SimulationAdapter::get_random_position_element(mt);
@@ -188,7 +188,7 @@ TEST_F(VectorTest, testVectorSetComponents) {
     ASSERT_EQ(z2, v.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorOperatorPlusVector) {
+TEST_F(Vec3Test, testVectorOperatorPlusVector) {
     const Vec3<double> v = SimulationAdapter::get_random_position(mt);
     const auto& [x1, y1, z1] = v;
 
@@ -214,7 +214,7 @@ TEST_F(VectorTest, testVectorOperatorPlusVector) {
     ASSERT_EQ(z1 + z2, sum.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorOperatorMinusVector) {
+TEST_F(Vec3Test, testVectorOperatorMinusVector) {
     const Vec3<double> v = SimulationAdapter::get_random_position(mt);
     const auto& [x1, y1, z1] = v;
 
@@ -240,7 +240,7 @@ TEST_F(VectorTest, testVectorOperatorMinusVector) {
     ASSERT_EQ(z1 - z2, diff.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorOperatorPlusScalar) {
+TEST_F(Vec3Test, testVectorOperatorPlusScalar) {
     const Vec3<double> v = SimulationAdapter::get_random_position(mt);
     const auto& [x1, y1, z1] = v;
 
@@ -261,7 +261,7 @@ TEST_F(VectorTest, testVectorOperatorPlusScalar) {
     ASSERT_EQ(z1 + scalar, sum.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorOperatorMinusScalar) {
+TEST_F(Vec3Test, testVectorOperatorMinusScalar) {
     const Vec3<double> v = SimulationAdapter::get_random_position(mt);
     const auto& [x1, y1, z1] = v;
 
@@ -282,7 +282,7 @@ TEST_F(VectorTest, testVectorOperatorMinusScalar) {
     ASSERT_EQ(z1 - scalar, sum.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorOperatorMultiplyScalar) {
+TEST_F(Vec3Test, testVectorOperatorMultiplyScalar) {
     const Vec3<double> v = SimulationAdapter::get_random_position(mt);
     const auto& [x1, y1, z1] = v;
 
@@ -303,7 +303,7 @@ TEST_F(VectorTest, testVectorOperatorMultiplyScalar) {
     ASSERT_EQ(z1 * scalar, prod.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorOperatorDivideScalar) {
+TEST_F(Vec3Test, testVectorOperatorDivideScalar) {
     const Vec3<double> v = SimulationAdapter::get_random_position(mt);
     const auto& [x1, y1, z1] = v;
 
@@ -327,7 +327,7 @@ TEST_F(VectorTest, testVectorOperatorDivideScalar) {
     ASSERT_EQ(z1 / scalar, prod.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorOperatorPlusAssignVector) {
+TEST_F(Vec3Test, testVectorOperatorPlusAssignVector) {
     Vec3<double> v = SimulationAdapter::get_random_position(mt);
     const auto [x1, y1, z1] = v;
 
@@ -345,7 +345,7 @@ TEST_F(VectorTest, testVectorOperatorPlusAssignVector) {
     ASSERT_EQ(z1 + z2, v.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorOperatorPlusAssignScalar) {
+TEST_F(Vec3Test, testVectorOperatorPlusAssignScalar) {
     Vec3<double> v = SimulationAdapter::get_random_position(mt);
     const auto [x1, y1, z1] = v;
 
@@ -362,7 +362,7 @@ TEST_F(VectorTest, testVectorOperatorPlusAssignScalar) {
     ASSERT_EQ(z1 + scalar, v.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorOperatorMinusAssignVector) {
+TEST_F(Vec3Test, testVectorOperatorMinusAssignVector) {
     Vec3<double> v = SimulationAdapter::get_random_position(mt);
     const auto [x1, y1, z1] = v;
 
@@ -380,7 +380,7 @@ TEST_F(VectorTest, testVectorOperatorMinusAssignVector) {
     ASSERT_EQ(z1 - z2, v.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorOperatorMinusAssignScalar) {
+TEST_F(Vec3Test, testVectorOperatorMinusAssignScalar) {
     Vec3<double> v = SimulationAdapter::get_random_position(mt);
     const auto [x1, y1, z1] = v;
 
@@ -397,7 +397,7 @@ TEST_F(VectorTest, testVectorOperatorMinusAssignScalar) {
     ASSERT_EQ(z1 - scalar, v.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorOperatorMultiplyAssignScalar) {
+TEST_F(Vec3Test, testVectorOperatorMultiplyAssignScalar) {
     Vec3<double> v = SimulationAdapter::get_random_position(mt);
     const auto [x1, y1, z1] = v;
 
@@ -414,7 +414,7 @@ TEST_F(VectorTest, testVectorOperatorMultiplyAssignScalar) {
     ASSERT_EQ(z1 * scalar, v.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorOperatorDivideAssignScalar) {
+TEST_F(Vec3Test, testVectorOperatorDivideAssignScalar) {
     Vec3<double> v = SimulationAdapter::get_random_position(mt);
     const auto [x1, y1, z1] = v;
 
@@ -434,7 +434,7 @@ TEST_F(VectorTest, testVectorOperatorDivideAssignScalar) {
     ASSERT_EQ(z1 / scalar, v.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorVolume) {
+TEST_F(Vec3Test, testVectorVolume) {
     Vec3<double> v = SimulationAdapter::get_random_position(mt);
     const auto [x, y, z] = v;
 
@@ -450,7 +450,7 @@ TEST_F(VectorTest, testVectorVolume) {
     ASSERT_EQ(z, v.get_z()) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorEqual) {
+TEST_F(Vec3Test, testVectorEqual) {
     const auto x = SimulationAdapter::get_random_position_element(mt);
     const auto y = SimulationAdapter::get_random_position_element(mt);
     const auto z = SimulationAdapter::get_random_position_element(mt);
@@ -466,7 +466,7 @@ TEST_F(VectorTest, testVectorEqual) {
     ASSERT_TRUE(is_equal) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorUnequal) {
+TEST_F(Vec3Test, testVectorUnequal) {
     const auto x = SimulationAdapter::get_random_position_element(mt);
     const auto y = x + 1;
     const auto z = y + 1;
@@ -494,7 +494,7 @@ TEST_F(VectorTest, testVectorUnequal) {
     ASSERT_FALSE(is_equal_6) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorComponentwiseMinMax) {
+TEST_F(Vec3Test, testVectorComponentwiseMinMax) {
     const auto x1 = SimulationAdapter::get_random_position_element(mt);
     const auto y1 = SimulationAdapter::get_random_position_element(mt);
     const auto z1 = SimulationAdapter::get_random_position_element(mt);
@@ -531,7 +531,7 @@ TEST_F(VectorTest, testVectorComponentwiseMinMax) {
     ASSERT_TRUE(is_equal_min) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorMinMax) {
+TEST_F(Vec3Test, testVectorMinMax) {
     const Vec3<double> v = SimulationAdapter::get_random_position(mt);
     const auto [x, y, z] = v;
 
@@ -556,7 +556,7 @@ TEST_F(VectorTest, testVectorMinMax) {
     ASSERT_TRUE(is_equal_min) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorComponentwiseFloor) {
+TEST_F(Vec3Test, testVectorComponentwiseFloor) {
     const auto x = std::abs(SimulationAdapter::get_random_position_element(mt)) + eps;
     const auto y = std::abs(SimulationAdapter::get_random_position_element(mt)) + eps;
     const auto z = std::abs(SimulationAdapter::get_random_position_element(mt)) + eps;
@@ -582,7 +582,7 @@ TEST_F(VectorTest, testVectorComponentwiseFloor) {
     ASSERT_TRUE(is_equal) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorComponentwiseFloorExceptionX) {
+TEST_F(Vec3Test, testVectorComponentwiseFloorExceptionX) {
     auto x = std::abs(SimulationAdapter::get_random_position_element(mt)) + eps;
     const auto y = std::abs(SimulationAdapter::get_random_position_element(mt)) + eps;
     const auto z = std::abs(SimulationAdapter::get_random_position_element(mt)) + eps;
@@ -596,7 +596,7 @@ TEST_F(VectorTest, testVectorComponentwiseFloorExceptionX) {
     ASSERT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorComponentwiseFloorExceptionY) {
+TEST_F(Vec3Test, testVectorComponentwiseFloorExceptionY) {
     const auto x = std::abs(SimulationAdapter::get_random_position_element(mt)) + eps;
     auto y = std::abs(SimulationAdapter::get_random_position_element(mt)) + eps;
     const auto z = std::abs(SimulationAdapter::get_random_position_element(mt)) + eps;
@@ -610,7 +610,7 @@ TEST_F(VectorTest, testVectorComponentwiseFloorExceptionY) {
     ASSERT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorComponentwiseFloorExceptionZ) {
+TEST_F(Vec3Test, testVectorComponentwiseFloorExceptionZ) {
     const auto x = std::abs(SimulationAdapter::get_random_position_element(mt)) + eps;
     const auto y = std::abs(SimulationAdapter::get_random_position_element(mt)) + eps;
     auto z = std::abs(SimulationAdapter::get_random_position_element(mt)) + eps;
@@ -624,7 +624,7 @@ TEST_F(VectorTest, testVectorComponentwiseFloorExceptionZ) {
     ASSERT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorFactorial) {
+TEST_F(Vec3Test, testVectorFactorial) {
     const auto x = RandomAdapter::get_random_integer<size_t>(0, 20, mt);
     const auto y = RandomAdapter::get_random_integer<size_t>(0, 20, mt);
     const auto z = RandomAdapter::get_random_integer<size_t>(0, 20, mt);
@@ -642,7 +642,7 @@ TEST_F(VectorTest, testVectorFactorial) {
     ASSERT_EQ(fac, product);
 }
 
-TEST_F(VectorTest, testVectorPower) {
+TEST_F(Vec3Test, testVectorPower) {
     const auto x_exponent = RandomAdapter::get_random_integer<unsigned int>(0, 10, mt);
     const auto y_exponent = RandomAdapter::get_random_integer<unsigned int>(0, 10, mt);
     const auto z_exponent = RandomAdapter::get_random_integer<unsigned int>(0, 10, mt);
@@ -666,7 +666,7 @@ TEST_F(VectorTest, testVectorPower) {
     ASSERT_EQ(power, product);
 }
 
-TEST_F(VectorTest, testVectorNorm) {
+TEST_F(Vec3Test, testVectorNorm) {
     const auto x = SimulationAdapter::get_random_position_element(mt);
     const auto y = SimulationAdapter::get_random_position_element(mt);
     const auto z = SimulationAdapter::get_random_position_element(mt);
@@ -691,7 +691,7 @@ TEST_F(VectorTest, testVectorNorm) {
     ASSERT_NEAR(v_normed, p_norm, eps) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorNorm1) {
+TEST_F(Vec3Test, testVectorNorm1) {
     const auto x = SimulationAdapter::get_random_position_element(mt);
     const auto y = SimulationAdapter::get_random_position_element(mt);
     const auto z = SimulationAdapter::get_random_position_element(mt);
@@ -712,7 +712,7 @@ TEST_F(VectorTest, testVectorNorm1) {
     ASSERT_NEAR(v_normed, sum, eps) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorNorm2) {
+TEST_F(Vec3Test, testVectorNorm2) {
     const auto x = SimulationAdapter::get_random_position_element(mt);
     const auto y = SimulationAdapter::get_random_position_element(mt);
     const auto z = SimulationAdapter::get_random_position_element(mt);
@@ -736,7 +736,7 @@ TEST_F(VectorTest, testVectorNorm2) {
     ASSERT_NEAR(v_normed_squared, sum, eps) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorNormException) {
+TEST_F(Vec3Test, testVectorNormException) {
     const auto x = SimulationAdapter::get_random_position_element(mt);
     const auto y = SimulationAdapter::get_random_position_element(mt);
     const auto z = SimulationAdapter::get_random_position_element(mt);
@@ -752,7 +752,7 @@ TEST_F(VectorTest, testVectorNormException) {
     ASSERT_THROW(auto v_normed = v.calculate_p_norm(p), RelearnException) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorRound) {
+TEST_F(Vec3Test, testVectorRound) {
     const auto x = SimulationAdapter::get_random_position_element(mt);
     const auto y = SimulationAdapter::get_random_position_element(mt);
     const auto z = SimulationAdapter::get_random_position_element(mt);
@@ -796,7 +796,7 @@ TEST_F(VectorTest, testVectorRound) {
     ASSERT_NEAR(z_rounded_div, z_rounded_div_rounded, eps) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorOrderEqual) {
+TEST_F(Vec3Test, testVectorOrderEqual) {
     const auto x = SimulationAdapter::get_random_position_element(mt);
     const auto y = SimulationAdapter::get_random_position_element(mt);
     const auto z = SimulationAdapter::get_random_position_element(mt);
@@ -811,7 +811,7 @@ TEST_F(VectorTest, testVectorOrderEqual) {
     ASSERT_FALSE(is_smaller) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorOrderSmallerX) {
+TEST_F(Vec3Test, testVectorOrderSmallerX) {
     const auto x = SimulationAdapter::get_random_position_element(mt);
     const auto y = SimulationAdapter::get_random_position_element(mt);
     const auto z = SimulationAdapter::get_random_position_element(mt);
@@ -832,7 +832,7 @@ TEST_F(VectorTest, testVectorOrderSmallerX) {
     ASSERT_FALSE(is_smaller_2_1) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorOrderSmallerY) {
+TEST_F(Vec3Test, testVectorOrderSmallerY) {
     const auto x = SimulationAdapter::get_random_position_element(mt);
     const auto y = SimulationAdapter::get_random_position_element(mt);
     const auto z = SimulationAdapter::get_random_position_element(mt);
@@ -853,7 +853,7 @@ TEST_F(VectorTest, testVectorOrderSmallerY) {
     ASSERT_FALSE(is_smaller_2_1) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorOrderSmallerZ) {
+TEST_F(Vec3Test, testVectorOrderSmallerZ) {
     const auto x = SimulationAdapter::get_random_position_element(mt);
     const auto y = SimulationAdapter::get_random_position_element(mt);
     const auto z = SimulationAdapter::get_random_position_element(mt);
@@ -874,7 +874,7 @@ TEST_F(VectorTest, testVectorOrderSmallerZ) {
     ASSERT_FALSE(is_smaller_2_1) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorOrder) {
+TEST_F(Vec3Test, testVectorOrder) {
     const auto x1 = SimulationAdapter::get_random_position_element(mt);
     const auto y1 = SimulationAdapter::get_random_position_element(mt);
     const auto z1 = SimulationAdapter::get_random_position_element(mt);
@@ -909,7 +909,7 @@ TEST_F(VectorTest, testVectorOrder) {
     }
 }
 
-TEST_F(VectorTest, testVectorCast) {
+TEST_F(Vec3Test, testVectorCast) {
     const auto x = std::abs(SimulationAdapter::get_random_position_element(mt));
     const auto y = std::abs(SimulationAdapter::get_random_position_element(mt));
     const auto z = std::abs(SimulationAdapter::get_random_position_element(mt));
@@ -929,7 +929,7 @@ TEST_F(VectorTest, testVectorCast) {
     ASSERT_TRUE(is_equal) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorInBoxNoThrow) {
+TEST_F(Vec3Test, testVectorInBoxNoThrow) {
     const auto x1 = SimulationAdapter::get_random_position_element(mt);
     const auto y1 = SimulationAdapter::get_random_position_element(mt);
     const auto z1 = SimulationAdapter::get_random_position_element(mt);
@@ -948,7 +948,7 @@ TEST_F(VectorTest, testVectorInBoxNoThrow) {
     ASSERT_NO_THROW(std::ignore = w.check_in_box(v, v)) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorInBoxTrue) {
+TEST_F(Vec3Test, testVectorInBoxTrue) {
     const auto x1 = SimulationAdapter::get_random_position_element(mt);
     const auto y1 = SimulationAdapter::get_random_position_element(mt);
     const auto z1 = SimulationAdapter::get_random_position_element(mt);
@@ -982,7 +982,7 @@ TEST_F(VectorTest, testVectorInBoxTrue) {
     ASSERT_TRUE(is_in_box) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorInBoxFalseXlarge) {
+TEST_F(Vec3Test, testVectorInBoxFalseXlarge) {
     const auto x1 = SimulationAdapter::get_random_position_element(mt);
     const auto y1 = SimulationAdapter::get_random_position_element(mt);
     const auto z1 = SimulationAdapter::get_random_position_element(mt);
@@ -1016,7 +1016,7 @@ TEST_F(VectorTest, testVectorInBoxFalseXlarge) {
     ASSERT_FALSE(is_in_box) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorInBoxFalseYlarge) {
+TEST_F(Vec3Test, testVectorInBoxFalseYlarge) {
     const auto x1 = SimulationAdapter::get_random_position_element(mt);
     const auto y1 = SimulationAdapter::get_random_position_element(mt);
     const auto z1 = SimulationAdapter::get_random_position_element(mt);
@@ -1050,7 +1050,7 @@ TEST_F(VectorTest, testVectorInBoxFalseYlarge) {
     ASSERT_FALSE(is_in_box) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorInBoxFalseZlarge) {
+TEST_F(Vec3Test, testVectorInBoxFalseZlarge) {
     const auto x1 = SimulationAdapter::get_random_position_element(mt);
     const auto y1 = SimulationAdapter::get_random_position_element(mt);
     const auto z1 = SimulationAdapter::get_random_position_element(mt);
@@ -1084,7 +1084,7 @@ TEST_F(VectorTest, testVectorInBoxFalseZlarge) {
     ASSERT_FALSE(is_in_box) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorInBoxFalseXsmall) {
+TEST_F(Vec3Test, testVectorInBoxFalseXsmall) {
     const auto x1 = SimulationAdapter::get_random_position_element(mt);
     const auto y1 = SimulationAdapter::get_random_position_element(mt);
     const auto z1 = SimulationAdapter::get_random_position_element(mt);
@@ -1118,7 +1118,7 @@ TEST_F(VectorTest, testVectorInBoxFalseXsmall) {
     ASSERT_FALSE(is_in_box) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorInBoxFalseYsmall) {
+TEST_F(Vec3Test, testVectorInBoxFalseYsmall) {
     const auto x1 = SimulationAdapter::get_random_position_element(mt);
     const auto y1 = SimulationAdapter::get_random_position_element(mt);
     const auto z1 = SimulationAdapter::get_random_position_element(mt);
@@ -1152,7 +1152,7 @@ TEST_F(VectorTest, testVectorInBoxFalseYsmall) {
     ASSERT_FALSE(is_in_box) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorInBoxFalseZsmall) {
+TEST_F(Vec3Test, testVectorInBoxFalseZsmall) {
     const auto x1 = SimulationAdapter::get_random_position_element(mt);
     const auto y1 = SimulationAdapter::get_random_position_element(mt);
     const auto z1 = SimulationAdapter::get_random_position_element(mt);
@@ -1186,7 +1186,7 @@ TEST_F(VectorTest, testVectorInBoxFalseZsmall) {
     ASSERT_FALSE(is_in_box) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorInBoxExceptionX) {
+TEST_F(Vec3Test, testVectorInBoxExceptionX) {
     const auto x1 = SimulationAdapter::get_random_position_element(mt);
     const auto y1 = SimulationAdapter::get_random_position_element(mt);
     const auto z1 = SimulationAdapter::get_random_position_element(mt);
@@ -1219,7 +1219,7 @@ TEST_F(VectorTest, testVectorInBoxExceptionX) {
     ASSERT_THROW(const auto is_in_box = v.check_in_box(v_min, v_max), RelearnException) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorInBoxExceptionY) {
+TEST_F(Vec3Test, testVectorInBoxExceptionY) {
     const auto x1 = SimulationAdapter::get_random_position_element(mt);
     const auto y1 = SimulationAdapter::get_random_position_element(mt);
     const auto z1 = SimulationAdapter::get_random_position_element(mt);
@@ -1252,7 +1252,7 @@ TEST_F(VectorTest, testVectorInBoxExceptionY) {
     ASSERT_THROW(const auto is_in_box = v.check_in_box(v_min, v_max), RelearnException) << ss.str();
 }
 
-TEST_F(VectorTest, testVectorInBoxExceptionZ) {
+TEST_F(Vec3Test, testVectorInBoxExceptionZ) {
     const auto x1 = SimulationAdapter::get_random_position_element(mt);
     const auto y1 = SimulationAdapter::get_random_position_element(mt);
     const auto z1 = SimulationAdapter::get_random_position_element(mt);

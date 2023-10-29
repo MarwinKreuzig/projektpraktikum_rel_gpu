@@ -12,5 +12,5 @@
 
 #include "RelearnTest.hpp"
 
-class VectorTest : public RelearnTest {
+class Vec3Test : public RelearnTest {
 };

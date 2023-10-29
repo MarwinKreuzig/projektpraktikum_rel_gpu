@@ -44,6 +44,17 @@ public:
     explicit FastMultipoleMethodInverted(const std::shared_ptr<OctreeImplementation<FastMultipoleMethodCell>>& octree)
         : BackwardAlgorithm(octree) { }
 
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this) - sizeof(BackwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, FastMultipoleMethodCell>);
+        footprint->emplace("FastMultipoleMethodInverted", my_footprint);
+
+        BackwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, FastMultipoleMethodCell>::record_memory_footprint(footprint);
+    }
+
 protected:
     /**
      * @brief Returns a collection of proposed synapse creations for each neuron with vacant axons.

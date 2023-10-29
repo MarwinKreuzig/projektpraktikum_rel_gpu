@@ -14,6 +14,7 @@
 #include "enums/FiredStatus.h"
 #include "neurons/NetworkGraph.h"
 #include "neurons/input/FiredStatusCommunicationMap.h"
+#include "util/MemoryFootprint.h"
 #include "util/NeuronID.h"
 #include "util/ranges/Functional.hpp"
 
@@ -47,6 +48,14 @@ void SynapticInputCalculator::create_neurons(const number_neurons_type creation_
     raw_inh_input.resize(new_size, 0.0);
 
     fired_status_comm->create_neurons(creation_count);
+}
+
+void SynapticInputCalculator::record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+    const auto my_footprint = sizeof(*this)
+        + synaptic_input.capacity() * sizeof(double);
+    footprint->emplace("SynapticInputCalculator", my_footprint);
+
+    fired_status_comm->record_memory_footprint(footprint);
 }
 
 void SynapticInputCalculator::set_synaptic_input(const double value) noexcept {

@@ -92,6 +92,7 @@ target_sources(
 
         local_area_translator/test_local_area_translator.cpp
 
+		memory_footprint/test_memory_footprint.cpp
         memory_holder/test_memory_holder.cpp
 
         misc/test_misc.cpp
@@ -150,7 +151,7 @@ target_sources(
 
         timers/test_timers.cpp
 
-        vector/test_vector.cpp
+        vec3/test_vec3.cpp
 
         # for visual studio
         ${relearn_tests_additional_files})

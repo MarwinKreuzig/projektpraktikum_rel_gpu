@@ -13,6 +13,7 @@
 #include "Config.h"
 #include "Types.h"
 #include "structure/SpaceFillingCurve.h"
+#include "util/MemoryFootprint.h"
 #include "util/MPIRank.h"
 #include "util/RelearnException.h"
 
@@ -333,6 +334,17 @@ public:
     void set_boundary_correction_function(std::function<box_size_type(box_size_type)> corrector) {
         RelearnException::check(corrector.operator bool(), "Partition::set_boundary_correction_function: corrector was empty");
         boundary_corrector = std::move(corrector);
+    }
+
+    /**
+     * @brief Records the memory footprint as "Partition" of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+        const auto my_footprint = sizeof(*this)
+            + local_subdomains.capacity() * sizeof(Subdomain);
+
+        footprint->emplace("Partition", my_footprint);
     }
 
 private:

@@ -11,10 +11,18 @@
 #include "SynapticInputCalculators.h"
 
 #include "neurons/NetworkGraph.h"
+#include "util/MemoryFootprint.h"
 #include "util/NeuronID.h"
 #include "util/Timers.h"
 
 #include <cmath>
+
+void LinearSynapticInputCalculator::record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+    const auto my_footprint = sizeof(*this) - sizeof(SynapticInputCalculator);
+    footprint->emplace("LinearSynapticInputCalculator", my_footprint);
+
+    SynapticInputCalculator::record_memory_footprint(footprint);
+}
 
 void LinearSynapticInputCalculator::update_synaptic_input(const std::span<const FiredStatus> fired) {
     Timers::start(TimerRegion::CALC_SYNAPTIC_INPUT);
@@ -36,6 +44,13 @@ void LinearSynapticInputCalculator::update_synaptic_input(const std::span<const 
     }
 
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
+}
+
+void LogarithmicSynapticInputCalculator::record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+    const auto my_footprint = sizeof(*this) - sizeof(SynapticInputCalculator);
+    footprint->emplace("LogarithmicSynapticInputCalculator", my_footprint);
+
+    SynapticInputCalculator::record_memory_footprint(footprint);
 }
 
 void LogarithmicSynapticInputCalculator::update_synaptic_input(const std::span<const FiredStatus> fired) {
@@ -62,6 +77,13 @@ void LogarithmicSynapticInputCalculator::update_synaptic_input(const std::span<c
     }
 
     Timers::stop_and_add(TimerRegion::CALC_SYNAPTIC_INPUT);
+}
+
+void HyperbolicTangentSynapticInputCalculator::record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+    const auto my_footprint = sizeof(*this) - sizeof(SynapticInputCalculator);
+    footprint->emplace("HyperbolicTangentSynapticInputCalculator", my_footprint);
+
+    SynapticInputCalculator::record_memory_footprint(footprint);
 }
 
 void HyperbolicTangentSynapticInputCalculator::update_synaptic_input(const std::span<const FiredStatus> fired) {

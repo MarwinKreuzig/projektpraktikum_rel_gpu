@@ -62,6 +62,17 @@ public:
         return acceptance_criterion;
     }
 
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this) - sizeof(ForwardAlgorithm<DistantNeuronRequest, DistantNeuronResponse, BarnesHutCell>);
+        footprint->emplace("BarnesHutLocationAware", my_footprint);
+
+        ForwardAlgorithm<DistantNeuronRequest, DistantNeuronResponse, BarnesHutCell>::record_memory_footprint(footprint);
+    }
+
 protected:
     /**
      * @brief Returns a collection of proposed synapse creations for each neuron with vacant axons

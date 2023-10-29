@@ -59,7 +59,7 @@ void testSizeConst(const SemiStableVector<T>& ssv, size_t expected_size) {
     }
 }
 
-TEST_F(SemiStableVectorTest, testConstructor) {
+TEST_F(SemiStableVec3Test, testConstructor) {
     SemiStableVector<double> ssv_1{};
     testSize(ssv_1, 0);
     testSizeConst(ssv_1, 0);
@@ -77,7 +77,7 @@ TEST_F(SemiStableVectorTest, testConstructor) {
     testSizeConst(ssv_4, 0);
 }
 
-TEST_F(SemiStableVectorTest, testPushReference) {
+TEST_F(SemiStableVec3Test, testPushReference) {
     SemiStableVector<std::pair<int, int>> ssv{};
 
     auto check = [](const SemiStableVector<std::pair<int, int>>& ssv, int i) {
@@ -122,7 +122,7 @@ TEST_F(SemiStableVectorTest, testPushReference) {
     }
 }
 
-TEST_F(SemiStableVectorTest, testPushMove) {
+TEST_F(SemiStableVec3Test, testPushMove) {
     SemiStableVector<std::pair<int, int>> ssv{};
 
     auto check = [](const SemiStableVector<std::pair<int, int>>& ssv, int i) {
@@ -159,7 +159,7 @@ TEST_F(SemiStableVectorTest, testPushMove) {
     }
 }
 
-TEST_F(SemiStableVectorTest, testEmplace) {
+TEST_F(SemiStableVec3Test, testEmplace) {
     SemiStableVector<std::pair<int, int>> ssv{};
 
     auto check = [](const SemiStableVector<std::pair<int, int>>& ssv, int i) {
@@ -204,7 +204,7 @@ TEST_F(SemiStableVectorTest, testEmplace) {
     ASSERT_EQ(ref_6, ssv[6]);
 }
 
-TEST_F(SemiStableVectorTest, testResize) {
+TEST_F(SemiStableVec3Test, testResize) {
     SemiStableVector<double> ssv{};
 
     ssv.resize(20);
@@ -245,7 +245,7 @@ TEST_F(SemiStableVectorTest, testResize) {
     ASSERT_EQ(ssv[7], 1.0);
 }
 
-TEST_F(SemiStableVectorTest, testIterators) {
+TEST_F(SemiStableVec3Test, testIterators) {
     SemiStableVector<float> ssv{};
 
     for (auto i = 0; i < iterations; i++) {
@@ -275,7 +275,7 @@ TEST_F(SemiStableVectorTest, testIterators) {
     }
 }
 
-TEST_F(SemiStableVectorTest, testPointerStability) {
+TEST_F(SemiStableVec3Test, testPointerStability) {
     using value_type = OctreeNode<Cell<BaseCell<true, false, false, true>>>;
     constexpr std::size_t bound = 1024 * 1024;
 
@@ -294,7 +294,7 @@ TEST_F(SemiStableVectorTest, testPointerStability) {
     }
 }
 
-TEST_F(SemiStableVectorTest, testReferences) {
+TEST_F(SemiStableVec3Test, testReferences) {
     SemiStableVector<double> ssv{};
     for (auto i = 0; i < 1024; i++) {
         auto& ref = ssv.emplace_back(i);

@@ -13,6 +13,7 @@
 #include "Types.h"
 #include "enums/FiredStatus.h"
 #include "neurons/enums/TargetCalciumDecay.h"
+#include "util/MemoryFootprint.h"
 #include "util/MPIRank.h"
 #include "util/RelearnException.h"
 #include "util/NeuronID.h"
@@ -227,6 +228,12 @@ public:
     constexpr NeuronID get_current_maximum() const noexcept {
         return current_maximum;
     }
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint);
 
     static constexpr double default_C_target{ 0.7 }; // In Sebastian's work: 0.5
 

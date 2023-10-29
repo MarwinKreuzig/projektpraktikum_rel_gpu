@@ -93,6 +93,23 @@ public:
      */
     bool contains(MPIRank rank, NeuronID neuron_id) const override;
 
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_easy_footprint = sizeof(*this) - sizeof(FiredStatusCommunicator);
+
+        auto my_hard_footprint = std::uint64_t(0);
+        for (const auto& rank : MPIRank::range(outgoing_ids.get_number_ranks())) {
+            my_hard_footprint += outgoing_ids.get_size_in_bytes(rank) + incoming_ids.get_size_in_bytes(rank);
+        }
+
+        footprint->emplace("FiredStatusCommunicationMap", my_hard_footprint + my_easy_footprint);
+
+        FiredStatusCommunicator::record_memory_footprint(footprint);
+    }
+
 private:
     CommunicationMap<NeuronID> outgoing_ids;
     CommunicationMap<NeuronID> incoming_ids;

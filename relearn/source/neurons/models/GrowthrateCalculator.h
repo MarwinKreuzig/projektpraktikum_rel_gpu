@@ -11,6 +11,7 @@
  */
 
 #include "Types.h"
+#include "util/MemoryFootprint.h"
 #include "util/NeuronID.h"
 #include "util/RelearnException.h"
 
@@ -25,6 +26,12 @@ public:
     virtual void create_neurons(number_neurons_type creation_count) = 0;
 
     [[nodiscard]] virtual double get_growth_rate(NeuronID neuron_id) const = 0;
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    virtual void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) = 0;
 
     static constexpr double default_growth_rate{ 1e-5 }; // In Sebastian's work: 1e-5
     static constexpr double min_growth_rate{ 0.0 };
@@ -47,6 +54,15 @@ public:
 
     [[nodiscard]] double get_growth_rate([[maybe_unused]] const NeuronID neuron_id) const noexcept override {
         return intended_growth_rate;
+    }
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this);
+        footprint->emplace("ConstantGrowthrateCalculator", my_footprint);
     }
 
 private:
@@ -87,6 +103,18 @@ public:
         RelearnException::check(local_neuron_id < growth_rates.size(), "AdaptiveGrowthrateCalculator::get_growth_rate: NeuronID {} is larger than the number of neurons {}", neuron_id, growth_rates.size());
 
         return growth_rates[local_neuron_id];
+    }
+
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this)
+            + growth_rates.capacity() * sizeof(double)
+            + dampening.capacity() * sizeof(double)
+            + last_changes.capacity() * sizeof(double);
+        footprint->emplace("DecayGrowthrateCalculator", my_footprint);
     }
 
     static constexpr double default_decay{ 1.0e+3 };

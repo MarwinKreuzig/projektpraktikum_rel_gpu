@@ -63,7 +63,7 @@ std::pair<uint64_t, uint64_t> SynapseDeletionFinder::delete_synapses() {
 CommunicationMap<SynapseDeletionRequest> SynapseDeletionFinder::find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) {
     const auto& [sum_to_delete, number_deletions] = to_delete;
 
-    const auto number_ranks = MPIWrapper::get_num_ranks();
+    const auto number_ranks = MPIWrapper::get_number_ranks();
 
     const auto size_hint = std::min(size_t(number_ranks), synaptic_elements->get_size());
     CommunicationMap<SynapseDeletionRequest> deletion_requests(number_ranks, size_hint);
@@ -290,7 +290,7 @@ CommunicationMap<SynapseDeletionRequest> InverseLengthSynapseDeletionFinder::fin
 CommunicationMap<NeuronID> InverseLengthSynapseDeletionFinder::find_partners_to_locate(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) {
     const auto& [sum_to_delete, number_deletions] = to_delete;
 
-    const auto number_ranks = MPIWrapper::get_num_ranks();
+    const auto number_ranks = MPIWrapper::get_number_ranks();
 
     const auto size_hint = std::min(size_t(number_ranks), synaptic_elements->get_size());
     CommunicationMap<NeuronID> partners_to_locate(number_ranks, size_hint);

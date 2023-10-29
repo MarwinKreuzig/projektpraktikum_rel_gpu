@@ -67,7 +67,7 @@ public:
     void exchange_requests() {
         send_requests();
         next_request.clear();
-        next_request.resize(MPIWrapper::get_num_ranks(), {});
+        next_request.resize(MPIWrapper::get_number_ranks(), {});
     }
 
 private:

@@ -49,6 +49,17 @@ public:
     explicit Naive(const std::shared_ptr<OctreeImplementation<NaiveCell>>& octree)
         : ForwardAlgorithm(octree) { }
 
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this) - sizeof(ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, NaiveCell>);
+        footprint->emplace("Naive", my_footprint);
+
+        ForwardAlgorithm<SynapseCreationRequest, SynapseCreationResponse, NaiveCell>::record_memory_footprint(footprint);
+    }
+
 protected:
     /**
      * @brief Returns a collection of proposed synapse creations for each neuron with vacant axons

@@ -200,6 +200,16 @@ public:
         return gpu_handle;
     }
 
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    virtual void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+        const auto my_footprint = sizeof(*this)
+            + background_activity.capacity() * sizeof(double);
+        footprint->emplace("BackgroundActivityCalculator", my_footprint);
+    }
+
     static constexpr double default_base_background_activity{ 0.0 };
     static constexpr double default_background_activity_mean{ 0.0 };
     static constexpr double default_background_activity_stddev{ 0.0 };

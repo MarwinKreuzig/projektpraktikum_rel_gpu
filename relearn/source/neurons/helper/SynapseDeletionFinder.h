@@ -17,6 +17,7 @@
 #include "enums/SignalType.h"
 #include "neurons/helper/RankNeuronId.h"
 #include "neurons/helper/SynapseDeletionRequests.h"
+#include "util/MemoryFootprint.h"
 #include "util/NeuronID.h"
 #include "util/RelearnException.h"
 
@@ -137,6 +138,15 @@ public:
      */
     [[nodiscard]] std::pair<std::uint64_t, std::uint64_t> delete_synapses();
 
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    virtual void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
+        const auto my_footprint = sizeof(*this);
+        footprint->emplace("SynapseDeletionFinder", my_footprint);
+    }
+
 protected:
     [[nodiscard]] virtual CommunicationMap<SynapseDeletionRequest> find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete);
 
@@ -159,11 +169,35 @@ protected:
  * synapses to delete uniformely at random.
  */
 class RandomSynapseDeletionFinder : public SynapseDeletionFinder {
+public:
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this) - sizeof(SynapseDeletionFinder);
+        footprint->emplace("RandomSynapseDeletionFinder", my_footprint);
+
+        SynapseDeletionFinder::record_memory_footprint(footprint);
+    }
+
 protected:
     [[nodiscard]] std::vector<RankNeuronId> find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete) override;
 };
 
 class CoActivationSynapseDeletionFinder : public SynapseDeletionFinder {
+public:
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_footprint = sizeof(*this) - sizeof(SynapseDeletionFinder);
+        footprint->emplace("CoActivationSynapseDeletionFinder", my_footprint);
+
+        SynapseDeletionFinder::record_memory_footprint(footprint);
+    }
+
 protected:
     [[nodiscard]] std::vector<RankNeuronId> find_synapses_on_neuron(NeuronID neuron_id, ElementType element_type, SignalType signal_type, unsigned int num_synapses_to_delete) override;
 
@@ -186,6 +220,24 @@ private:
  * shorted synapses more likely (linearly dependent on the length)
  */
 class InverseLengthSynapseDeletionFinder : public SynapseDeletionFinder {
+public:
+    /**
+     * @brief Records the memory footprint of the current object
+     * @param footprint Where to store the current footprint
+     */
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
+        const auto my_easy_footprint = sizeof(*this) - sizeof(SynapseDeletionFinder);
+
+        auto my_hard_footprint = std::uint64_t(0);
+        for (const auto& rank : MPIRank::range(partners.get_number_ranks())) {
+            my_hard_footprint += partners.get_size_in_bytes(rank) + positions.get_size_in_bytes(rank);
+        }
+
+        footprint->emplace("InverseLengthSynapseDeletionFinder", my_hard_footprint + my_easy_footprint);
+
+        SynapseDeletionFinder::record_memory_footprint(footprint);
+    }
+
 protected:
     [[nodiscard]] CommunicationMap<SynapseDeletionRequest> find_synapses_to_delete(const std::shared_ptr<SynapticElements>& synaptic_elements, const std::pair<unsigned int, std::vector<unsigned int>>& to_delete) override;
 
