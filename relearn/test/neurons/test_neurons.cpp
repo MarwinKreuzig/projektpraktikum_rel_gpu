@@ -1,39 +1,49 @@
 #include "test_neurons.h"
 
+#include "neurons/Neurons.h"
+#include "neurons/helper/SynapseDeletionFinder.h"
+#include "neurons/input/FiredStatusCommunicationMap.h"
+#include "neurons/input/SynapticInputCalculators.h"
+#include "neurons/input/BackgroundActivityCalculators.h"
+#include "algorithm/BarnesHutInternal/BarnesHut.h"
+#include "algorithm/BarnesHutInternal/BarnesHutBase.h"
+#include "algorithm/BarnesHutInternal/BarnesHutCell.h"
+#include "algorithm/Internal/ExchangingAlgorithm.h"
+#include "neurons/CalciumCalculator.h"
+#include "neurons/input/BackgroundActivityCalculators.h"
+#include "neurons/input/Stimulus.h"
+#include "neurons/input/SynapticInputCalculator.h"
+#include "neurons/input/SynapticInputCalculators.h"
+#include "neurons/models/AEIFModel.h"
+#include "neurons/models/FitzHughNagumoModel.h"
+#include "neurons/models/IzhikevichModel.h"
+#include "neurons/models/NeuronModel.h"
+#include "neurons/models/PoissonModel.h"
+#include "neurons/models/SynapticElements.h"
+#include "neurons/Neurons.h"
+#include "structure/Partition.h"
+#include "util/Utility.h"
+#include "util/ranges/Functional.hpp"
+
+#include "adapter/neurons/NeuronTypesAdapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
 #include "adapter/mpi/MpiAdapter.h"
 #include "adapter/mpi/MpiRankAdapter.h"
 #include "adapter/network_graph/NetworkGraphAdapter.h"
 #include "adapter/neuron_id/NeuronIdAdapter.h"
 #include "adapter/neurons/NeuronTypesAdapter.h"
 #include "adapter/random/RandomAdapter.h"
-#include "algorithm/BarnesHutInternal/BarnesHut.h"
-#include "algorithm/BarnesHutInternal/BarnesHutBase.h"
-#include "algorithm/BarnesHutInternal/BarnesHutCell.h"
-#include "algorithm/Internal/ExchangingAlgorithm.h"
-#include "adapter/mpi/MpiRankAdapter.h"
-#include "adapter/neuron_id/NeuronIdAdapter.h"
-#include "neurons/CalciumCalculator.h"
-#include "neurons/input/BackgroundActivityCalculators.h"
-#include "neurons/input/Stimulus.h"
-#include "neurons/input/SynapticInputCalculator.h"
-#include "neurons/input/SynapticInputCalculators.h"
-#include "neurons/models/NeuronModels.h"
-#include "neurons/models/SynapticElements.h"
-#include "adapter/neurons/NeuronTypesAdapter.h"
-#include "neurons/Neurons.h"
 #include "adapter/random/RandomAdapter.h"
-#include "structure/Partition.h"
-#include "util/Utility.h"
-#include "util/ranges/Functional.hpp"
-
-#include <span>
-#include <vector>
 
 #include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/algorithm/contains.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/map.hpp>
 #include <range/v3/view/generate_n.hpp>
+
+#include <span>
+#include <vector>
 
 TEST_F(NeuronsTest, testNeuronsConstructor) {
     auto partition = std::make_shared<Partition>(1, MPIRank::root_rank());
@@ -684,4 +694,29 @@ TEST_F(NeuronsTest, testDisableNeuronsWithRanksAndOnlyOneDisabledNeuron) {
     }
 
     NetworkGraphAdapter::check_validity_of_network_graphs(network_graphs, signal_types, num_neurons);
+}
+
+std::tuple<std::shared_ptr<Neurons>, std::shared_ptr<NetworkGraph>> NeuronsTest::create_neurons_object(std::shared_ptr<Partition>& partition, MPIRank rank) {
+    auto model = std::make_unique<models::PoissonModel>(models::PoissonModel::default_h,
+        std::make_unique<LinearSynapticInputCalculator>(SynapticInputCalculator::default_conductance, std::make_unique<FiredStatusCommunicationMap>(1)),
+        std::make_unique<NullBackgroundActivityCalculator>(),
+        std::make_unique<Stimulus>(),
+        models::PoissonModel::default_x_0,
+        models::PoissonModel::default_tau_x,
+        models::PoissonModel::default_refractory_period);
+    auto calcium = std::make_unique<CalciumCalculator>();
+    calcium->set_initial_calcium_calculator([](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
+    calcium->set_target_calcium_calculator([](MPIRank /*mpi_rank*/, NeuronID::value_type /*neuron_id*/) { return 0.0; });
+    auto network_graph = std::make_shared<NetworkGraph>(rank);
+    auto dends_ex = std::make_shared<SynapticElements>(ElementType::Dendrite, 0.2);
+    auto dends_in = std::make_shared<SynapticElements>(ElementType::Dendrite, 0.2);
+    auto axs = std::make_shared<SynapticElements>(ElementType::Axon, 0.2);
+
+    auto sdf = std::make_unique<RandomSynapseDeletionFinder>();
+    sdf->set_axons(axs);
+    sdf->set_dendrites_ex(dends_ex);
+    sdf->set_dendrites_in(dends_in);
+
+    auto neurons = std::make_shared<Neurons>(partition, std::move(model), std::move(calcium), network_graph, std::move(axs), std::move(dends_ex), std::move(dends_in), std::move(sdf));
+    return { neurons, network_graph };
 }

@@ -8,7 +8,7 @@
  *
  */
 
-#include "NeuronModels.h"
+#include "AEIFModel.h"
 
 #include "calculations/NeuronModelCalculations.h"
 #include "neurons/NeuronsExtraInfo.h"

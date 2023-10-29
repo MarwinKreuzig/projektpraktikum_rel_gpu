@@ -37,7 +37,7 @@ target_sources(
         neurons/models/AEIFModel.cpp
         neurons/models/FitzHughNagumoModel.cpp
         neurons/models/IzhikevichModel.cpp
-        neurons/models/NeuronModels.cpp
+        neurons/models/NeuronModel.cpp
         neurons/models/PoissonModel.cpp
         neurons/models/SynapticElements.cpp
         neurons/CalciumCalculator.cpp

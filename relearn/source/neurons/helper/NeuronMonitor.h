@@ -13,7 +13,7 @@
 #include "Types.h"
 #include "neurons/CalciumCalculator.h"
 #include "neurons/Neurons.h"
-#include "neurons/models/NeuronModels.h"
+#include "neurons/models/NeuronModel.h"
 
 #include <memory>
 #include <vector>

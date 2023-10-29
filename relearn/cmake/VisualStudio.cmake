@@ -132,9 +132,13 @@ if (WIN32) # Lib
     list(APPEND relearn_lib_additional_files "neurons/input/SynapticInputCalculators.h")
 
     # models
+    list(APPEND relearn_lib_additional_files "neurons/models/AEIFModel.h")
+    list(APPEND relearn_lib_additional_files "neurons/models/FitzHughNagumoModel.h")
     list(APPEND relearn_lib_additional_files "neurons/models/GrowthrateCalculator.h")
+    list(APPEND relearn_lib_additional_files "neurons/models/IzhikevichModel.h")
     list(APPEND relearn_lib_additional_files "neurons/models/ModelParameter.h")
-    list(APPEND relearn_lib_additional_files "neurons/models/NeuronModels.h")
+    list(APPEND relearn_lib_additional_files "neurons/models/NeuronModel.h")
+    list(APPEND relearn_lib_additional_files "neurons/models/PoissonModel.h")
     list(APPEND relearn_lib_additional_files "neurons/models/SynapticElements.h")
 
     # shared

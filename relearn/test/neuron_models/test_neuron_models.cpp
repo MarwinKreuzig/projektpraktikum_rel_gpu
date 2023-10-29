@@ -4,7 +4,7 @@
 //
 // #include "neurons/Neurons.h"
 // #include "enums/UpdateStatus.h"
-// #include "neurons/models/NeuronModels.h"
+// #include "neurons/models/NeuronModel.h"
 //
 // #include "neurons/NetworkGraph.h"
 //

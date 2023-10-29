@@ -8,7 +8,7 @@
  *
  */
 
-#include "NeuronModels.h"
+#include "PoissonModel.h"
 
 #include "calculations/NeuronModelCalculations.h"
 #include "gpu/Interface.h"

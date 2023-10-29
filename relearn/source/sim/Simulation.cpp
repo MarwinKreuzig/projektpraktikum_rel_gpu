@@ -21,7 +21,7 @@
 #include "neurons/helper/AreaMonitor.h"
 #include "neurons/helper/NeuronMonitor.h"
 #include "neurons/helper/SynapseDeletionFinder.h"
-#include "neurons/models/NeuronModels.h"
+#include "neurons/models/NeuronModel.h"
 #include "sim/NeuronToSubdomainAssignment.h"
 #include "structure/Octree.h"
 #include "structure/Partition.h"

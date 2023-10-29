@@ -13,7 +13,7 @@
 #include "Config.h"
 #include "Types.h"
 #include "algorithm/Algorithm.h"
-#include "models/NeuronModels.h"
+#include "models/NeuronModel.h"
 #include "models/SynapticElements.h"
 #include "mpi/CommunicationMap.h"
 #include "neurons/CalciumCalculator.h"

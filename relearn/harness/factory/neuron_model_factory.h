@@ -10,7 +10,11 @@
  *
  */
 
-#include "neurons/models/NeuronModels.h"
+#include "neurons/models/AEIFModel.h"
+#include "neurons/models/FitzHughNagumoModel.h"
+#include "neurons/models/IzhikevichModel.h"
+#include "neurons/models/NeuronModel.h"
+#include "neurons/models/PoissonModel.h"
 
 #include <memory>
 
