@@ -23,10 +23,20 @@ In ./graph/ is a tool that analyzes the generated networks with respect to diffe
 - Logging is done with [spdlog](https://github.com/gabime/spdlog)
 - Tests are written with [GoogleTest](https://github.com/google/googletest)
 
-## Tested module combination
+## Tested module combination for CPU-Version
 
 * cmake/3.26.1
 * gcc/11.2.0
 * mpich/3.4.2
 * boost/1.77.0
 * openucx/1.11.2
+
+## Tested module combination for CUDA-Version
+
+* cmake/3.26.1
+* gcc/11.2.0
+* mpich/3.4.2
+* boost/1.77.0
+* openucx/1.11.2
+* module load cuda/11.8
+* module load gdb/13.2
