@@ -38,5 +38,5 @@ In ./graph/ is a tool that analyzes the generated networks with respect to diffe
 * mpich/3.4.2
 * boost/1.77.0
 * openucx/1.11.2
-* module load cuda/11.8
-* module load gdb/13.2
+* cuda/11.8
+* gdb/13.2
