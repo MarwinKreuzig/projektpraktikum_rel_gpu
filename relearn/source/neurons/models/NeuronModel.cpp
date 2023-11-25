@@ -14,7 +14,7 @@
 #include "neurons/models/NeuronModel.h"
 #include "neurons/models/PoissonModel.h"
 
-#include "gpu/Interface.h"
+#include "cuda/gpu/Interface.h"
 #include "neurons/NetworkGraph.h"
 #include "util/Random.h"
 #include "util/NeuronID.h"

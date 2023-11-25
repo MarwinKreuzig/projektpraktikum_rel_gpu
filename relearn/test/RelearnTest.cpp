@@ -11,7 +11,7 @@
 #include "RelearnTest.hpp"
 
 #include "algorithm/Cells.h"
-#include "gpu/CudaHelper.h"
+#include "cuda/gpu/CudaHelper.h"
 #include "io/LogFiles.h"
 
 #include "mpi/MPIWrapper.h"

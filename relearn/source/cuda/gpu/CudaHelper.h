@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gpu/Macros.h"
+#include "Macros.h"
 
 #include <span>
 #include "Types.h"

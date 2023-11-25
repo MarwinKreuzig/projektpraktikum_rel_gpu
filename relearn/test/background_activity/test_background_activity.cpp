@@ -14,7 +14,7 @@
 #include "adapter/neuron_id/NeuronIdAdapter.h"
 #include "adapter/simulation/SimulationAdapter.h"
 #include "enums/UpdateStatus.h"
-#include "gpu/CudaHelper.h"
+#include "cuda/gpu/CudaHelper.h"
 #include "neurons/input/BackgroundActivityCalculator.h"
 #include "neurons/input/BackgroundActivityCalculators.h"
 #include "util/NeuronID.h"
