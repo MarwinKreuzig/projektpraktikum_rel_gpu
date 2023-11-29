@@ -11,7 +11,7 @@
 #include "IzhikevichModel.h"
 
 #include "calculations/NeuronModelCalculations.h"
-#include "cuda/gpu/Interface.h"
+#include "gpu/utils/Interface.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "util/NeuronID.h"
 

@@ -14,7 +14,7 @@
 #include "neurons/models/NeuronModel.h"
 #include "neurons/models/PoissonModel.h"
 
-#include "cuda/gpu/Interface.h"
+#include "gpu/utils/Interface.h"
 #include "neurons/NetworkGraph.h"
 #include "util/Random.h"
 #include "util/NeuronID.h"
@@ -111,5 +111,5 @@ std::vector<ModelParameter> NeuronModel::get_parameter() {
 }
 
 void NeuronModel::set_fired_gpu(const NeuronID neuron_id, const FiredStatus new_value) {
-    RelearnException::fail("No gpu support");
+    RelearnException::fail("No utils support");
 }

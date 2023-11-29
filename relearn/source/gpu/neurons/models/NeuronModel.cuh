@@ -4,12 +4,12 @@
 
 #include "Commons.cuh"
 #include "background/BackgroundActivity.cuh"
-#include "gpu/GpuTypes.h"
-#include "gpu/Interface.h"
-#include "NeuronsExtraInfos.cuh"
+#include "cuda/gpu/GpuTypes.h"
+#include "cuda/gpu/Interface.h"
+#include "cuda/NeuronsExtraInfos.cuh"
 
-#include "CudaArray.cuh"
-#include "CudaVector.cuh"
+#include "cuda/CudaArray.cuh"
+#include "cuda/CudaVector.cuh"
 
 #include <numeric>
 
@@ -120,7 +120,7 @@ public:
 
     /**
      * Sets the NeuronsExtraInfos
-     * @param _extra_infos Pointer to the NeuronsExtraInfos instance on the gpu
+     * @param _extra_infos Pointer to the NeuronsExtraInfos instance on the utils
      */
     __device__ void set_extra_infos(neurons::NeuronsExtraInfos* _extra_infos) {
         extra_infos = _extra_infos;
@@ -135,7 +135,7 @@ public:
 
 /**
  * The kernel to update the activity of the neuron model
- * @param Pointer to the neuron model on the gpu
+ * @param Pointer to the neuron model on the utils
  * @param step The current step
  */
 __global__ void update_activity_kernel(NeuronModel* neuron_model, RelearnGPUTypes::step_type step) {

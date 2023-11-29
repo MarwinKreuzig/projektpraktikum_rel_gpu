@@ -11,21 +11,19 @@
  */
 
 #include "Types.h"
-#include "cuda/gpu/CudaHelper.h"
-#include "cuda/gpu/Interface.h"
+#include "gpu/utils/CudaHelper.h"
+#include "gpu/utils/Interface.h"
 #include "mpi/CommunicationMap.h"
 #include "enums/FiredStatus.h"
 #include "enums/UpdateStatus.h"
 #include "neurons/input/BackgroundActivityCalculator.h"
 #include "neurons/input/Stimulus.h"
 #include "neurons/input/SynapticInputCalculator.h"
-#include "enums/UpdateStatus.h"
 #include "neurons/input/BackgroundActivityCalculator.h"
 #include "neurons/models/ModelParameter.h"
 #include "util/MemoryFootprint.h"
 #include "util/RelearnException.h"
 #include "util/NeuronID.h"
-#include "Types.h"
 #include "util/Utility.h"
 
 #include <algorithm>
@@ -444,7 +442,7 @@ protected:
 
     virtual void update_activity_benchmark() {
         if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
+            RelearnException::fail("No utils support");
         } else {
             update_activity_cpu();
         }

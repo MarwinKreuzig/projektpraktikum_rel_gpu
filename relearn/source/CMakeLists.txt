@@ -12,7 +12,7 @@ target_sources(
         algorithm/FMMInternal/FastMultipoleMethodInverted.cpp
         algorithm/NaiveInternal/Naive.cpp
 
-        cuda/Interface.cpp
+        gpu/utils/Interface.cpp
 
 
         # io
