@@ -10,7 +10,7 @@
  *
  */
 
-#include "gpu/Macros.h"
+#include "../../gpu/utils/Macros.h"
 
 /**
  * An instance of this enum signals if a neuron should be updated or not.

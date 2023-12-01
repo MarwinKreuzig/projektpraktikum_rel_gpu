@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Commons.cuh"
+#include "../Commons.cuh"
 
 namespace gpu::Vector {
 template <typename T>

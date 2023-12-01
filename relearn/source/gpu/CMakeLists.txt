@@ -15,7 +15,7 @@ if (CUDA_FOUND)
     target_sources(
             relearn_gpu
             PRIVATE
-            models/NeuronModels.cu)
+            neurons/models/NeuronModels.cu)
 
     #set_target_properties(relearn_gpu PROPERTIES CUDA_ARCHITECTURES 61)
 

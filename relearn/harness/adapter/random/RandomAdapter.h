@@ -10,7 +10,7 @@
  *
  */
 
-#include "gpu/Macros.h"
+#include "../../../source/gpu/utils/Macros.h"
 
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/uniform_int_distribution.hpp>

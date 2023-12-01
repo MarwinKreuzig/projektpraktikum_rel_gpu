@@ -2,7 +2,7 @@
 
 #include "../harness/adapter/random/RandomAdapter.h"
 
-#include "CudaArray.cuh"
+#include "../../source/gpu/structure/CudaArray.cuh"
 #include "RelearnGPUException.h"
 
 /*

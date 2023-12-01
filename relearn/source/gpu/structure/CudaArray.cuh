@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Commons.cuh"
-#include "RelearnGPUException.h"
+#include "../Commons.cuh"
+#include "../RelearnGPUException.h"
 
 #include <iostream>
 #include <vector>

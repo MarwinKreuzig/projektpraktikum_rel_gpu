@@ -1,5 +1,5 @@
-option(ENABLE_CUDA "Enable cuda" OFF)
-set(CUDA_FOUND OFF)
+option(ENABLE_CUDA "Enable cuda" ON)
+set(CUDA_FOUND ON)
 if (ENABLE_CUDA)
     check_language(CUDA)
     if (CMAKE_CUDA_COMPILER)

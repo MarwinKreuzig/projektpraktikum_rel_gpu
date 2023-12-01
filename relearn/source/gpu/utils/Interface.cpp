@@ -5,6 +5,6 @@
     { }
 #define CUDA_PTR_DEFINITION \
     { return 0; }
-#include "gpu/Interface.h"
+#include "Interface.h"
 
 #endif

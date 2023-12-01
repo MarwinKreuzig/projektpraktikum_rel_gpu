@@ -1,10 +1,10 @@
 #pragma once
 
-#include "gpu/Interface.h"
-#include "Commons.cuh"
-#include "Random.cuh"
+#include "../../utils/Interface.h"
+#include "../../Commons.cuh"
+#include "../../utils/Random.cuh"
 
-#include "CudaArray.cuh"
+#include "../../structure/CudaArray.cuh"
 
 #include <memory.h>
 #include <vector>

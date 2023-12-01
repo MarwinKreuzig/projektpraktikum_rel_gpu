@@ -12,8 +12,8 @@
 
 #include "neurons/input/BackgroundActivityCalculator.h"
 
-#include "gpu/CudaHelper.h"
-#include "gpu/Interface.h"
+#include "../../gpu/utils/CudaHelper.h"
+#include "../../gpu/utils/Interface.h"
 #include "io/BackgroundActivityIO.h"
 #include "io/InteractiveNeuronIO.h"
 #include "util/MemoryFootprint.h"
