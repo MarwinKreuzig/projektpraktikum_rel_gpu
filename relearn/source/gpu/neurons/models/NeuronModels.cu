@@ -1,4 +1,4 @@
-#include "models/PoissonModel.cuh"
-#include "models/IzhikevichModel.cuh"
-#include "models/AEIFModel.cuh"
-#include "models/FitzHughNagumoModel.cuh"
+#include "PoissonModel.cuh"
+#include "IzhikevichModel.cuh"
+#include "AEIFModel.cuh"
+#include "FitzHughNagumoModel.cuh"

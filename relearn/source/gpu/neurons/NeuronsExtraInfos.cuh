@@ -2,8 +2,8 @@
 
 #include "../Commons.cuh"
 #include "enums/UpdateStatus.h"
-#include "gpu/GpuTypes.h"
-#include "gpu/Interface.h"
+#include "../utils/GpuTypes.h"
+#include "../utils/Interface.h"
 #include "../structure/CudaArray.cuh"
 #include "../structure/CudaVector.cuh"
 
@@ -14,7 +14,7 @@ namespace gpu::neurons {
 
 class NeuronsExtraInfos {
     /**
-     * Class representing NeuronsExtraInfos on the utils. Contains the disable flags and number of local neurons
+     * Class representing NeuronsExtraInfos on the gpu. Contains the disable flags and number of local neurons
      */
 
 public:
@@ -33,7 +33,7 @@ public:
 
 class NeuronsExtraInfosHandleImpl : public NeuronsExtraInfosHandle {
     /**
-     * Implementation of the handle for the cpu that controls the utils object
+     * Implementation of the handle for the cpu that controls the gpu object
      */
 public:
     NeuronsExtraInfosHandleImpl(void* _dev_ptr)
@@ -88,7 +88,7 @@ public:
 
 private:
     /**
-     * Pointer to the NeuronsExtraInfos instance on the utils
+     * Pointer to the NeuronsExtraInfos instance on the gpu
      */
     void* device_ptr;
 

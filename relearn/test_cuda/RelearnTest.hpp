@@ -10,7 +10,7 @@
  *
  */
 
-#include "gpu/Macros.h"
+#include "../source/gpu/utils/Macros.h"
 
 #include <cmath>
 #include <filesystem>

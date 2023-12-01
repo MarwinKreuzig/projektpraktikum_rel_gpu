@@ -1,17 +1,17 @@
 #pragma once
 
-#include "models/NeuronModel.cuh"
+#include "NeuronModel.cuh"
 
-#include "gpu/Interface.h"
+#include "../../utils/Interface.h"
 
-#include "NeuronsExtraInfos.cuh"
-#include "Commons.cuh"
-#include "models/NeuronModel.cuh"
-#include "Random.cuh"
+#include "../NeuronsExtraInfos.cuh"
+#include "../../Commons.cuh"
+#include "NeuronModel.cuh"
+#include "../../utils/Random.cuh"
 
-#include "calculations/NeuronModelCalculations.h"
+#include "../../../shared/calculations/NeuronModelCalculations.h"
 
-#include "enums/FiredStatus.h"
+#include "../../../shared/enums/FiredStatus.h"
 
 namespace gpu::models {
 

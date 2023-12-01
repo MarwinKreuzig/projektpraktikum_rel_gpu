@@ -1,15 +1,15 @@
 #pragma once
 
-#include "enums/FiredStatus.h"
+#include "../../../shared/enums/FiredStatus.h"
 
-#include "Commons.cuh"
-#include "background/BackgroundActivity.cuh"
-#include "cuda/gpu/GpuTypes.h"
-#include "cuda/gpu/Interface.h"
-#include "cuda/NeuronsExtraInfos.cuh"
+#include "../../Commons.cuh"
+#include "../input/BackgroundActivity.cuh"
+#include "../../utils/GpuTypes.h"
+#include "../../utils/Interface.h"
+#include "../NeuronsExtraInfos.cuh"
 
-#include "cuda/CudaArray.cuh"
-#include "cuda/CudaVector.cuh"
+#include "../../structure/CudaArray.cuh"
+#include "../../structure/CudaVector.cuh"
 
 #include <numeric>
 
@@ -120,7 +120,7 @@ public:
 
     /**
      * Sets the NeuronsExtraInfos
-     * @param _extra_infos Pointer to the NeuronsExtraInfos instance on the utils
+     * @param _extra_infos Pointer to the NeuronsExtraInfos instance on the gpu
      */
     __device__ void set_extra_infos(neurons::NeuronsExtraInfos* _extra_infos) {
         extra_infos = _extra_infos;
@@ -135,7 +135,7 @@ public:
 
 /**
  * The kernel to update the activity of the neuron model
- * @param Pointer to the neuron model on the utils
+ * @param Pointer to the neuron model on the gpu
  * @param step The current step
  */
 __global__ void update_activity_kernel(NeuronModel* neuron_model, RelearnGPUTypes::step_type step) {

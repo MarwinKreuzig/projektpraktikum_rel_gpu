@@ -10,7 +10,7 @@
  *
  */
 
-#include "gpu/utils/Macros.h"
+#include "../../gpu/utils/Macros.h"
 
 /**
  * An instance of this enum classifies the synaptic elements of a neuron.

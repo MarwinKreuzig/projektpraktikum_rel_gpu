@@ -10,9 +10,9 @@
  *
  */
 
-#include "RelearnTest.hpp"
+#include "../RelearnTest.hpp"
 
-#include "CudaVector.cuh"
+#include "../../source/gpu/structure/CudaVector.cuh"
 
 class CudaTest : public RelearnGPUTest {
 };

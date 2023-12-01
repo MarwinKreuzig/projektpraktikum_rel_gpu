@@ -1,10 +1,10 @@
 #pragma once
 
-#include "cuda/gpu/Interface.h"
-#include "cuda/Commons.cuh"
-#include "cuda/Random.cuh"
+#include "../../utils/Interface.h"
+#include "../../Commons.cuh"
+#include "../../utils/Random.cuh"
 
-#include "cuda/CudaArray.cuh"
+#include "../../structure/CudaArray.cuh"
 
 #include <memory.h>
 #include <vector>
@@ -13,7 +13,7 @@ namespace gpu::background {
 
 class BackgroundActivity {
     /**
-     * BackgroundActivityCalculator on the utils
+     * BackgroundActivityCalculator on the gpu
      */
 
 public:
@@ -53,7 +53,7 @@ public:
 
     /**
      * Sets the NeuronsExtraInfos
-     * @param _extra_infos Pointer to the NeuronsExtraInfos instance on the utils
+     * @param _extra_infos Pointer to the NeuronsExtraInfos instance on the gpu
      */
     __device__ void set_extra_infos(gpu::neurons::NeuronsExtraInfos* _extra_infos) {
         extra_infos = _extra_infos;
@@ -61,7 +61,7 @@ public:
 
     /**
      * Returns the NeuronsExtraInfos
-     * @return Pointer to the NeuronsExtraInfos instance on the utils
+     * @return Pointer to the NeuronsExtraInfos instance on the gpu
      */
     __device__ gpu::neurons::NeuronsExtraInfos* get_extra_infos() {
         RelearnGPUException::device_check(extra_infos != nullptr, "BackgroundActivity::get_extra_infos: Pointer is null");

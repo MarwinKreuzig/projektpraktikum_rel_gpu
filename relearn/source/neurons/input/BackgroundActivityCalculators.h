@@ -12,8 +12,8 @@
 
 #include "neurons/input/BackgroundActivityCalculator.h"
 
-#include "gpu/utils/CudaHelper.h"
-#include "gpu/utils/Interface.h"
+#include "../../gpu/utils/CudaHelper.h"
+#include "../../gpu/utils/Interface.h"
 #include "io/BackgroundActivityIO.h"
 #include "io/InteractiveNeuronIO.h"
 #include "util/MemoryFootprint.h"
@@ -448,7 +448,7 @@ public:
         }
 
         if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No utils support");
+            RelearnException::fail("No gpu support");
         }
     }
 
@@ -568,7 +568,7 @@ protected:
 
     void init_gpu(const number_neurons_type number_neurons) override {
         BackgroundActivityCalculator::init_gpu(number_neurons);
-        RelearnException::fail("No utils support");
+        RelearnException::fail("No gpu support");
     }
 
 private:
