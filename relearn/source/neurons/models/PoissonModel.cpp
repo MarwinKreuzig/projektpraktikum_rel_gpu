@@ -11,7 +11,7 @@
 #include "PoissonModel.h"
 
 #include "calculations/NeuronModelCalculations.h"
-#include "gpu/Interface.h"
+#include "../../gpu/utils/Interface.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "util/Random.h"
 

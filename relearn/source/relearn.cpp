@@ -12,7 +12,7 @@
 #include "Types.h"
 #include "algorithm/Algorithms.h"
 #include "algorithm/Kernel/Kernel.h"
-#include "gpu/CudaHelper.h"
+#include "gpu/utils/CudaHelper.h"
 #include "io/parser/MonitorParser.h"
 #include "io/CalciumIO.h"
 #include "io/InteractiveNeuronIO.h"

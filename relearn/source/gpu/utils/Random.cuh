@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Commons.cuh"
-#include "NeuronsExtraInfos.cuh"
+#include "../Commons.cuh"
+#include "../neurons/NeuronsExtraInfos.cuh"
 
 #include "cuda.h"
 #include "curand.h"

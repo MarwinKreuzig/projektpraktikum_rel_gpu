@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Commons.cuh"
+#include "../Commons.cuh"
 #include "enums/UpdateStatus.h"
-#include "gpu/GpuTypes.h"
-#include "gpu/Interface.h"
-#include "CudaArray.cuh"
-#include "CudaVector.cuh"
+#include "../utils/GpuTypes.h"
+#include "../utils/Interface.h"
+#include "../structure/CudaArray.cuh"
+#include "../structure/CudaVector.cuh"
 
 #include <iostream>
 #include <cuda.h>

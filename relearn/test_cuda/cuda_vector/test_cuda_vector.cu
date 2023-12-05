@@ -2,13 +2,13 @@
 
 #include "../harness/adapter/random/RandomAdapter.h"
 
-#include "CudaArray.cuh"
+#include "../../source/gpu/structure/CudaArray.cuh"
 #include "RelearnGPUException.h"
 
 /*
 namespace test_variables {
-__device__ gpu::Vector::CudaArray<double> test_array_a;
-gpu::Vector::CudaArrayDeviceHandle<double> handle_test_array_a = CudaArrayFromDeviceSymbol(test_array_a);
+__device__ utils::Vector::CudaArray<double> test_array_a;
+utils::Vector::CudaArrayDeviceHandle<double> handle_test_array_a = CudaArrayFromDeviceSymbol(test_array_a);
 };
 
 TEST_F(CudaTest, deviceVariableTest) {

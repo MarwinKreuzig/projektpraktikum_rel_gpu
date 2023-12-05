@@ -1,15 +1,15 @@
 #pragma once
 
-#include "enums/FiredStatus.h"
+#include "../../../shared/enums/FiredStatus.h"
 
-#include "Commons.cuh"
-#include "background/BackgroundActivity.cuh"
-#include "gpu/GpuTypes.h"
-#include "gpu/Interface.h"
-#include "NeuronsExtraInfos.cuh"
+#include "../../Commons.cuh"
+#include "../input/BackgroundActivity.cuh"
+#include "../../utils/GpuTypes.h"
+#include "../../utils/Interface.h"
+#include "../NeuronsExtraInfos.cuh"
 
-#include "CudaArray.cuh"
-#include "CudaVector.cuh"
+#include "../../structure/CudaArray.cuh"
+#include "../../structure/CudaVector.cuh"
 
 #include <numeric>
 

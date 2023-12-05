@@ -1,5 +1,18 @@
 if (CUDA_FOUND)
-    add_library(relearn_gpu STATIC)
+    add_library(relearn_gpu STATIC
+            neurons/input/BackgroundActivity.cuh
+            neurons/input/BackgroundActivity.cuh
+            neurons/models/AEIFModel.cuh
+            neurons/models/FitzHughNagumoModel.cuh
+            neurons/models/IzhikevichModel.cuh
+            neurons/models/NeuronModel.cuh
+            neurons/models/PoissonModel.cuh
+            structure/CudaArray.cuh
+            structure/CudaVector.cuh
+            neurons/NeuronsExtraInfos.cuh
+            utils/Random.cuh
+            RelearnGPUException.h
+            Commons.cuh)
 
     set(CMAKE_CUDA_STANDARD 17)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
@@ -15,7 +28,7 @@ if (CUDA_FOUND)
     target_sources(
             relearn_gpu
             PRIVATE
-            models/NeuronModels.cu)
+            neurons/models/NeuronModels.cu)
 
     #set_target_properties(relearn_gpu PROPERTIES CUDA_ARCHITECTURES 61)
 

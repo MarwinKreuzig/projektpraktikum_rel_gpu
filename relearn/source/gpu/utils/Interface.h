@@ -1,8 +1,8 @@
 #pragma once
 
-#include "gpu/Macros.h"
-#include "gpu/GpuTypes.h"
-#include "enums/FiredStatus.h"
+#include "Macros.h"
+#include "GpuTypes.h"
+#include "../../shared/enums/FiredStatus.h"
 
 #include <memory>
 #include <vector>

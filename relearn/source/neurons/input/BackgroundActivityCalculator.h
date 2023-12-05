@@ -11,8 +11,8 @@
  */
 
 #include "Types.h"
-#include "gpu/CudaHelper.h"
-#include "gpu/Interface.h"
+#include "../../gpu/utils/CudaHelper.h"
+#include "../../gpu/utils/Interface.h"
 #include "neurons/NeuronsExtraInfo.h"
 #include "enums/UpdateStatus.h"
 #include "neurons/models/ModelParameter.h"

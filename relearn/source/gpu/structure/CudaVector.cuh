@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Commons.cuh"
+#include "../Commons.cuh"
 
 namespace gpu::Vector {
 template <typename T>
 class CudaVector {
     /**
-     * Simple cuda implementation of a vector. Can only be accessed from the gpu
+     * Simple utils implementation of a vector. Can only be accessed from the utils
      */
 public:
     /**

@@ -11,8 +11,8 @@
  */
 
 #include "Types.h"
-#include "gpu/CudaHelper.h"
-#include "gpu/Interface.h"
+#include "../../gpu/utils/CudaHelper.h"
+#include "../../gpu/utils/Interface.h"
 #include "mpi/CommunicationMap.h"
 #include "enums/FiredStatus.h"
 #include "enums/UpdateStatus.h"

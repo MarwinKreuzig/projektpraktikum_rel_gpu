@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Commons.cuh"
-#include "RelearnGPUException.h"
+#include "../Commons.cuh"
+#include "../RelearnGPUException.h"
 
 #include <iostream>
 #include <vector>
@@ -10,7 +10,7 @@ namespace gpu::Vector {
 template <typename T>
 struct CudaArray {
     /**
-     * Vector on gpu that can only be accessed element wise. All other methods are managed by the cpu
+     * Vector on utils that can only be accessed element wise. All other methods are managed by the cpu
      */
     T* data = nullptr;
     size_t size = 0;
@@ -33,7 +33,7 @@ public:
     }
 
     /**
-     * @param struct_device_pointer Pointer to a CudaArray instance on the gpu
+     * @param struct_device_pointer Pointer to a CudaArray instance on the utils
      */
     CudaArrayDeviceHandle(CudaArray<T>* struct_device_ptr)
         : struct_dev_ptr((void*)struct_device_ptr) {
