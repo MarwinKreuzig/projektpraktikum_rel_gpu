@@ -8,7 +8,7 @@
 class CudaHelper {
 public:
     /**
-     * Enable/Disable cuda support. Default is enabled when compiled wth cuda
+     * Enable/Disable utils support. Default is enabled when compiled with utils
      * @param enable Enable
      */
     static void set_use_cuda(bool enable) {
@@ -16,7 +16,7 @@ public:
     }
 
     /**
-     * @return True if the code shall be executed with cuda
+     * @return True if the code shall be executed with utils
      */
     static bool is_cuda_available() {
         return RELEARN_CUDA_FOUND && CudaHelper::use_cuda;

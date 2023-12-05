@@ -12,7 +12,7 @@
 #define HOST_COMPILER
 #endif
 
-// Macro that enable execution of a function on gpu and devivr
+// Macro that enable execution of a function on utils and devivr
 #if __CUDACC__
 #define GPU_AND_HOST __device__ __host__
 #else

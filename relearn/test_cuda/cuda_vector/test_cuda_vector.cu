@@ -7,8 +7,8 @@
 
 /*
 namespace test_variables {
-__device__ gpu::Vector::CudaArray<double> test_array_a;
-gpu::Vector::CudaArrayDeviceHandle<double> handle_test_array_a = CudaArrayFromDeviceSymbol(test_array_a);
+__device__ utils::Vector::CudaArray<double> test_array_a;
+utils::Vector::CudaArrayDeviceHandle<double> handle_test_array_a = CudaArrayFromDeviceSymbol(test_array_a);
 };
 
 TEST_F(CudaTest, deviceVariableTest) {
