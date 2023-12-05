@@ -9,7 +9,8 @@
 #SBATCH --time=1440
 #SBATCH --cpus-per-task=12
 #SBATCH --account=project02279
+#SBATCH --gres=gpu
 
-cd ../relearn/cmake-build-debug/bin/
+cd ../relearn/build/bin/
 
-./relearn_benchmarks
+./relearn -s 100 -n 100 -a barnes-hut

@@ -240,3 +240,11 @@ namespace gpu::models::fitz_hugh_nagumo {
  */
 std::shared_ptr<NeuronModelHandle> construct_gpu(std::shared_ptr<gpu::background::BackgroundHandle> background_handle, const unsigned int _h, double _a, double _b, double _phi, double _init_w, double _init_x) CUDA_PTR_DEFINITION
 };
+
+namespace gpu::octree {
+    class OctreeHandle {
+    public:
+
+};
+
+
