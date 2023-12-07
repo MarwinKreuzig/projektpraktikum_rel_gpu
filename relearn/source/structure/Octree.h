@@ -21,6 +21,8 @@
 #include "util/Stack.h"
 #include "util/Timers.h"
 #include "util/Vec3.h"
+#include "gpu/utils/Interface.h"
+#include "gpu/utils/CudaHelper.h"
 
 #include <climits>
 #include <cstdint>
@@ -341,6 +343,25 @@ public:
         Octree::record_memory_footprint(footprint);
     }
 
+    /**
+     * @brief Constructs the Octree on the GPU. Should only be called after all nodes have been inserted.
+     * @param num_neurons Number of neurons on MPI Process
+     */
+    void construct_on_GPU(const RelearnTypes::number_neurons_type num_neurons) {
+        
+        RelearnTypes::number_neurons_type num_virtual_neurons = 0;
+        // Find out how many virtual neurons there are, maybe already do this while inserting
+
+        if (CudaHelper::is_cuda_available()) {
+            gpu_handle = gpu::algorithm::createOctree(num_neurons, num_virtual_neurons);
+        }
+
+        gpu::algorithm::OctreeCPUCopy octreeCPUCopy(num_neurons, num_virtual_neurons);
+        // copy octree into structure
+
+        gpu_handle->copy_to_GPU(std::move(octreeCPUCopy));
+    }
+
 protected:
     /**
      * Print a visualization of this tree to a stringstream
@@ -545,6 +566,8 @@ protected:
             }
         }
     }
+
+    std::shared_ptr<gpu::algorithm::OctreeHandle> gpu_handle{};
 
 private:
     // Root of the tree

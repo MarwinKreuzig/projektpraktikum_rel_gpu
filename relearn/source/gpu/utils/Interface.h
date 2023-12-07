@@ -3,6 +3,7 @@
 #include "Macros.h"
 #include "GpuTypes.h"
 #include "../../shared/enums/FiredStatus.h"
+#include "../structure/OctreeStructure.h"
 
 #include <memory>
 #include <vector>
@@ -20,6 +21,15 @@
 #define CUDA_DEFINITION ;
 #define CUDA_PTR_DEFINITION CUDA_DEFINITION
 #endif
+
+namespace gpu::algorithm {
+    class OctreeHandle {
+
+        virtual void copy_to_GPU(OctreeCPUCopy&& octreeCPUCopy) = 0;
+    };
+
+    std::unique_ptr<OctreeHandle> createOctree(const RelearnGPUTypes::number_neurons_type number_neurons, RelearnGPUTypes::number_neurons_type number_virtual_neurons) CUDA_PTR_DEFINITION
+};
 
 namespace gpu::neurons {
 class NeuronsExtraInfosHandle {
