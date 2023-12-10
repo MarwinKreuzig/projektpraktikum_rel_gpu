@@ -12,7 +12,8 @@ if (CUDA_FOUND)
             neurons/NeuronsExtraInfos.cuh
             utils/Random.cuh
             RelearnGPUException.h
-            Commons.cuh)
+            Commons.cuh
+            octree/Octree.cuh)
 
     set(CMAKE_CUDA_STANDARD 17)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)

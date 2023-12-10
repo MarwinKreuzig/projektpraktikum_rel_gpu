@@ -349,17 +349,70 @@ public:
      */
     void construct_on_GPU(const RelearnTypes::number_neurons_type num_neurons) {
         
+        // Find some kind of upper limit to approximate it for the reserves
         RelearnTypes::number_neurons_type num_virtual_neurons = 0;
-        // Find out how many virtual neurons there are, maybe already do this while inserting
+
+        gpu::algorithm::OctreeCPUCopy octreeCPUCopy(num_neurons, num_virtual_neurons);
+
+        // Traverse Tree (VERY WORK IN PROGRESS)
+        std::stack<const OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
+        octree_nodes.push(&root);
+
+        while (!octree_nodes.empty()) {
+            const auto current_node = octree_nodes.top();
+            octree_nodes.pop();
+
+            if (current_node->get_cell().get_neuron_id().is_virtual()) {
+                num_virtual_neurons++;
+
+                const auto& childs = current_node->get_children();
+                for (auto i = 0; i < 8; i++) {
+                    const auto child = childs[i];
+                    if (child != nullptr) {
+                        octree_nodes.push(child);
+                    }
+                    else {
+                        
+                    }
+                }
+            }
+            else {
+                NeuronID neuron_ID = current_node->get_cell_neuron_id();
+                octreeCPUCopy.neuron_ids.push_back(neuron_ID);
+
+                octreeCPUCopy.minimum_cell_position.push_back(std::get<0>(current_node->get_size()));
+                octreeCPUCopy.maximum_cell_position.push_back(std::get<1>(current_node->get_size()));
+
+                // Currently assumes that either dendrites are both true or axons are both true
+                if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
+                    octreeCPUCopy.position_excitatory_element.push_back(current_node->get_excitatory_dendrites_position().value());
+                    octreeCPUCopy.position_inhibitory_element.push_back(current_node->get_inhibitory_dendrites_position().value());
+                }
+                else {
+
+                }
+            }
+
+            if (current_node->is_parent()) {
+                const auto& childs = current_node->get_children();
+                for (auto i = 0; i < 8; i++) {
+                    const auto child = childs[i];
+                    if (child != nullptr) {
+                        octree_nodes.push(child);
+                    }
+                }
+            }
+        }
+
 
         if (CudaHelper::is_cuda_available()) {
             gpu_handle = gpu::algorithm::createOctree(num_neurons, num_virtual_neurons);
+            gpu_handle->copy_to_GPU(std::move(octreeCPUCopy));
         }
 
-        gpu::algorithm::OctreeCPUCopy octreeCPUCopy(num_neurons, num_virtual_neurons);
-        // copy octree into structure
+        //gpu::algorithm::OctreeCPUCopy octreeCPUCopy(num_neurons, num_virtual_neurons);
 
-        gpu_handle->copy_to_GPU(std::move(octreeCPUCopy));
+        // copy octree into structure
     }
 
 protected:
