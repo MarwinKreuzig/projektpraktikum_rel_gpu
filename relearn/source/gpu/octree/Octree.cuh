@@ -141,6 +141,8 @@ namespace gpu::algorithm {
 
         void copy_to_GPU(OctreeCPUCopy&& octreeCPUCopy) {
             // copy the structure into GPU memory and save the device pointers in octree_dev_ptrs
+            // the virtual data might have to be flipped in order to adhere to the requirements in the paper
+            // The fact that we basically depth first searched inserted the nodes and neurons into the arrays might be useful later, since it is now already basically ordered
         }
 
     private:

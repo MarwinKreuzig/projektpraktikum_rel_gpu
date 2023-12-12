@@ -1,22 +1,29 @@
 #pragma once
 
 #include <vector>
+#include <array>
 #include "../../util/Vec3.h"
 
+// Using Vec3d causes an include error here, but potentially we dont even want to use Vec3d, since its data alignment might not fit to the Cuda vector types
+// A better option would be something like glm::vec3, or another aligned custom vector type TODO
 namespace gpu::algorithm {
     struct OctreeCPUCopy {
         
+        // We need the neuron-nodes to be allocated after depth first traversal for efficient prefix traversal
+        // But we need the virtual neurons to be sorted in breadth-first way, in order to make the tree update phase more efficient
+
         std::vector<uint64_t> neuron_ids;
 
-        std::vector<uint64_t> child_index_1;
+        /*std::vector<uint64_t> child_index_1;
         std::vector<uint64_t> child_index_2;
         std::vector<uint64_t> child_index_3;
         std::vector<uint64_t> child_index_4;
         std::vector<uint64_t> child_index_5;
         std::vector<uint64_t> child_index_6;
         std::vector<uint64_t> child_index_7;
-        std::vector<uint64_t> child_index_8;
-        //std::vector<uint64_t> child_indices;
+        std::vector<uint64_t> child_index_8;*/
+        std::array<std::vector<uint64_t>, 8> child_indices;
+        // Not sure if this or std::vector<std::array<uint64_t, 8>> would maybe be faster, I can kinda see points for both sides. Will have to test. Mark TODO in case performance bad
 
         /*std::vector<double> minimum_position_x;
         std::vector<double> minimum_position_y;
@@ -99,15 +106,22 @@ namespace gpu::algorithm {
 
             neuron_ids.reserve(number_neurons);
 
-            child_index_1.reserve(number_virtual_neurons);
+            /*child_index_1.reserve(number_virtual_neurons);
             child_index_2.reserve(number_virtual_neurons);
             child_index_3.reserve(number_virtual_neurons);
             child_index_4.reserve(number_virtual_neurons);
             child_index_5.reserve(number_virtual_neurons);
             child_index_6.reserve(number_virtual_neurons);
             child_index_7.reserve(number_virtual_neurons);
-            child_index_8.reserve(number_virtual_neurons);
-            //child_indices.reserve(number_virtual_neurons * 8);
+            child_index_8.reserve(number_virtual_neurons);*/
+            child_indices[0].reserve(number_virtual_neurons);
+            child_indices[1].reserve(number_virtual_neurons);
+            child_indices[2].reserve(number_virtual_neurons);
+            child_indices[3].reserve(number_virtual_neurons);
+            child_indices[4].reserve(number_virtual_neurons);
+            child_indices[5].reserve(number_virtual_neurons);
+            child_indices[6].reserve(number_virtual_neurons);
+            child_indices[7].reserve(number_virtual_neurons);
 
             /*minimum_position_x.reserve(number_virtual_neurons + number_neurons);
             minimum_position_y.reserve(number_virtual_neurons + number_neurons);

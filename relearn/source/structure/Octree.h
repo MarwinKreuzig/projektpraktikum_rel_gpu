@@ -354,12 +354,15 @@ public:
 
         gpu::algorithm::OctreeCPUCopy octreeCPUCopy(num_neurons, num_virtual_neurons);
 
-        // Traverse Tree (VERY WORK IN PROGRESS)
-        std::stack<const OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
-        octree_nodes.push(&root);
+        // Traverse Tree (VERY WORK IN PROGRESS) TODO
+        // We need the level in order to sort the virtual neurons correctly
+        // The current traversal is depth first, which is good for the neuron-nodes, but bad for the virtual_nodes, since we need the them breadth-first
+        // The idea is probably to insert sort already during construction, we can also use the found index for the first index for the others as well, since they will be the same
+        std::stack<std::pair<const OctreeNode<AdditionalCellAttributes>*, size_t>> octree_nodes{};
+        octree_nodes.push(&root, 0);
 
         while (!octree_nodes.empty()) {
-            const auto current_node = octree_nodes.top();
+            const auto [current_node, level] = octree_nodes.top();
             octree_nodes.pop();
 
             if (current_node->get_cell().get_neuron_id().is_virtual()) {
@@ -369,7 +372,9 @@ public:
                 for (auto i = 0; i < 8; i++) {
                     const auto child = childs[i];
                     if (child != nullptr) {
-                        octree_nodes.push(child);
+                        octree_nodes.push(child, level + 1);
+
+
                     }
                     else {
                         
@@ -385,21 +390,16 @@ public:
 
                 // Currently assumes that either dendrites are both true or axons are both true
                 if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
-                    octreeCPUCopy.position_excitatory_element.push_back(current_node->get_excitatory_dendrites_position().value());
-                    octreeCPUCopy.position_inhibitory_element.push_back(current_node->get_inhibitory_dendrites_position().value());
+                    octreeCPUCopy.position_excitatory_element.push_back(current_node->get_cell().get_excitatory_dendrites_position().value());
+                    octreeCPUCopy.position_inhibitory_element.push_back(current_node->get_cell().get_inhibitory_dendrites_position().value());
+                    octreeCPUCopy.num_free_elements_excitatory.push_back(current_node->get_cell().get_number_excitatory_dendrites());
+                    octreeCPUCopy.num_free_elements_inhibitory.push_back(current_node->get_cell().get_number_inhibitory_dendrites());
                 }
                 else {
-
-                }
-            }
-
-            if (current_node->is_parent()) {
-                const auto& childs = current_node->get_children();
-                for (auto i = 0; i < 8; i++) {
-                    const auto child = childs[i];
-                    if (child != nullptr) {
-                        octree_nodes.push(child);
-                    }
+                    octreeCPUCopy.position_excitatory_element.push_back(current_node->get_cell().get_excitatory_axons_position().value());
+                    octreeCPUCopy.position_inhibitory_element.push_back(current_node->get_cell().get_inhibitory_axons_position().value());
+                    octreeCPUCopy.num_free_elements_excitatory.push_back(current_node->get_cell().get_number_excitatory_axons());
+                    octreeCPUCopy.num_free_elements_inhibitory.push_back(current_node->get_cell().get_number_inhibitory_axons());
                 }
             }
         }
@@ -409,10 +409,6 @@ public:
             gpu_handle = gpu::algorithm::createOctree(num_neurons, num_virtual_neurons);
             gpu_handle->copy_to_GPU(std::move(octreeCPUCopy));
         }
-
-        //gpu::algorithm::OctreeCPUCopy octreeCPUCopy(num_neurons, num_virtual_neurons);
-
-        // copy octree into structure
     }
 
 protected:
