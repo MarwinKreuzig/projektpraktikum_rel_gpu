@@ -355,9 +355,20 @@ public:
         gpu::algorithm::OctreeCPUCopy octreeCPUCopy(num_neurons, num_virtual_neurons);
 
         // Traverse Tree (VERY WORK IN PROGRESS) TODO
-        // We need the level in order to sort the virtual neurons correctly
         // The current traversal is depth first, which is good for the neuron-nodes, but bad for the virtual_nodes, since we need the them breadth-first
-        // The idea is probably to insert sort already during construction, we can also use the found index for the first index for the others as well, since they will be the same
+
+        // The way we want to sort is to have higher level nodes first and lower level nodes last, with the root node at the very back (important for memory access pattern during tree update)
+        // The problem is, since we want to sort the virtual nodes, the child_indices would be constantly invalidated through the moving of the elements while sorting
+        // One possible solution could be to make the stack elements 3-tuples, with the last one being the parent index
+        // In order to get the the number of additional inserted virtual nodes from the time the parent index was assigned in the stack, we might have to actually make it a 4-tuple, with the number of current virtual neurons as the fourth element, and gain the newly inserted ones as the difference
+        // When a virtual node is inserted into the correct position of its arrays (it is of importance that a node is inserted as the last element of its level,
+        // we can also reuse the found index for one array for alle the other as well) we do the following:
+        // 1. We update all child indices of nodes two levels higher than the current node by one (two levels, since the ones one level higher will have the current level nodes as children, which were not moved)
+        // 2. The parent index will have to updated by the number of additional inserted virtual nodes from the time the parent index was assigned in the stack
+        // 3. The inserted index of the current node is added to the child indices of the parent and the num_children of the parent is updated by one
+
+        // This should in theory guarantee that everything will be correct. Inserting into a vector like that might be slow, watch runtime
+        // At the end, all child indices will have to be updated by num_neurons, in order to reflect the actual index
         std::stack<std::pair<const OctreeNode<AdditionalCellAttributes>*, size_t>> octree_nodes{};
         octree_nodes.push(&root, 0);
 
@@ -369,12 +380,15 @@ public:
                 num_virtual_neurons++;
 
                 const auto& childs = current_node->get_children();
+                int childCount = 0;
                 for (auto i = 0; i < 8; i++) {
                     const auto child = childs[i];
                     if (child != nullptr) {
                         octree_nodes.push(child, level + 1);
+                        
+                        octreeCPUCopy.child_indices[childCount]
 
-
+                        childCount++;
                     }
                     else {
                         

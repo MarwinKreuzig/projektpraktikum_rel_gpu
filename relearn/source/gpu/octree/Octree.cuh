@@ -29,6 +29,8 @@ namespace gpu::algorithm {
         uint64_t* child_index_8;*/
         uint64_t* child_indices;
 
+        unsigned int* num_children;
+
         // maybe this can be cuda vectors, depends on if access stays coalesced
         /*double* minimum_position_x;
         double* minimum_position_y;
@@ -81,6 +83,10 @@ namespace gpu::algorithm {
             child_index_8 = (uint64_t*)cuda_malloc(number_virtual_neurons * sizeof(uint64_t));*/
             child_indices = (uint64_t*)cuda_malloc(number_virtual_neurons * sizeof(uint64_t) * 8);
 
+            // we need this, since we can't use -1 to indicate that there is no child there
+            num_children = (unsigned int*)cuda_malloc(number_virtual_neurons * sizeof(unsigned int));
+
+
             /*minimum_position_x = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
             minimum_position_y = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
             minimum_position_z = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
@@ -120,6 +126,7 @@ namespace gpu::algorithm {
 
             cudaFree(neuron_ids);
             cudaFree(child_indices);
+            cudaFree(num_children);
             cudaFree(minimum_cell_position);
             cudaFree(maximum_cell_position);
             cudaFree(position_excitatory_element);

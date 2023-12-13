@@ -23,7 +23,8 @@ namespace gpu::algorithm {
         std::vector<uint64_t> child_index_7;
         std::vector<uint64_t> child_index_8;*/
         std::array<std::vector<uint64_t>, 8> child_indices;
-        // Not sure if this or std::vector<std::array<uint64_t, 8>> would maybe be faster, I can kinda see points for both sides. Will have to test. Mark TODO in case performance bad
+        
+        std::vector<unsigned int> num_children;
 
         /*std::vector<double> minimum_position_x;
         std::vector<double> minimum_position_y;
@@ -122,6 +123,8 @@ namespace gpu::algorithm {
             child_indices[5].reserve(number_virtual_neurons);
             child_indices[6].reserve(number_virtual_neurons);
             child_indices[7].reserve(number_virtual_neurons);
+
+            num_children.reserve(number_virtual_neurons);
 
             /*minimum_position_x.reserve(number_virtual_neurons + number_neurons);
             minimum_position_y.reserve(number_virtual_neurons + number_neurons);
