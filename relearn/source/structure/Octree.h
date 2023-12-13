@@ -349,14 +349,15 @@ public:
      */
     void construct_on_GPU(const RelearnTypes::number_neurons_type num_neurons) {
         
-        // Find some kind of upper limit to approximate it for the reserves
+        // Kann auch im ersten Depth first pass herausgefunden werden
         RelearnTypes::number_neurons_type num_virtual_neurons = 0;
 
         gpu::algorithm::OctreeCPUCopy octreeCPUCopy(num_neurons, num_virtual_neurons);
 
         // Traverse Tree (VERY WORK IN PROGRESS) TODO
         // The current traversal is depth first, which is good for the neuron-nodes, but bad for the virtual_nodes, since we need the them breadth-first
-
+        
+        // OLD
         // The way we want to sort is to have higher level nodes first and lower level nodes last, with the root node at the very back (important for memory access pattern during tree update)
         // The problem is, since we want to sort the virtual nodes, the child_indices would be constantly invalidated through the moving of the elements while sorting
         // One possible solution could be to make the stack elements 3-tuples, with the last one being the parent index
@@ -366,8 +367,11 @@ public:
         // 1. We update all child indices of nodes two levels higher than the current node by one (two levels, since the ones one level higher will have the current level nodes as children, which were not moved)
         // 2. The parent index will have to updated by the number of additional inserted virtual nodes from the time the parent index was assigned in the stack
         // 3. The inserted index of the current node is added to the child indices of the parent and the num_children of the parent is updated by one
-
         // This should in theory guarantee that everything will be correct. Inserting into a vector like that might be slow, watch runtime
+        
+        // NEW
+        // Marwins Idee
+        
         // At the end, all child indices will have to be updated by num_neurons, in order to reflect the actual index
         std::stack<std::pair<const OctreeNode<AdditionalCellAttributes>*, size_t>> octree_nodes{};
         octree_nodes.push(&root, 0);
@@ -386,7 +390,6 @@ public:
                     if (child != nullptr) {
                         octree_nodes.push(child, level + 1);
                         
-                        octreeCPUCopy.child_indices[childCount]
 
                         childCount++;
                     }

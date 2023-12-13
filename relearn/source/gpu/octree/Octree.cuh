@@ -13,110 +13,43 @@
 namespace gpu::algorithm {
 
     // Do it like this: indexes are always in the combined range with neurons and virtual neurons with neurons in the front
-    // when trying to access child_indices, num_neurons has to be subtracted from the index. Also, in order to indicate that there
-    // is no child at a certain place in the child_indices array, we can use num_neurons + num_virtual_neurons to indicate that
-    // or we dont allocate the 0 index and use 0 as the indication (negative numbers can not be used really, since int64_t would be too small probably)
+    // when trying to access child_indices, num_neurons has to be subtracted from the index.
     struct Octree {
         uint64_t* neuron_ids;
 
-        /*uint64_t* child_index_1;
-        uint64_t* child_index_2;
-        uint64_t* child_index_3;
-        uint64_t* child_index_4;
-        uint64_t* child_index_5;
-        uint64_t* child_index_6;
-        uint64_t* child_index_7;
-        uint64_t* child_index_8;*/
         uint64_t* child_indices;
 
+        // we need this, since we can't use -1 to indicate that there is no child there
         unsigned int* num_children;
 
-        // maybe this can be cuda vectors, depends on if access stays coalesced
-        /*double* minimum_position_x;
-        double* minimum_position_y;
-        double* minimum_position_z;*/
         double3* minimum_cell_position;
-        /*double* maximum_position_x;
-        double* maximum_position_y;
-        double* maximum_position_z;*/
         double3* maximum_cell_position;
 
-        // maybe this can be cuda vectors, depends on if access stays coalesced
-        /*double* position_x_excitatory_dendrite;
-        double* position_y_excitatory_dendrite;
-        double* position_z_excitatory_dendrite;*/
         double3* position_excitatory_element;
-
-        /*double* position_x_inhibitory_dendrite;
-        double* position_y_inhibitory_dendrite;
-        double* position_z_inhibitory_dendrite;*/
         double3* position_inhibitory_element;
-
-        /*double* position_x_excitatory_axon;
-        double* position_y_excitatory_axon;
-        double* position_z_excitatory_axon;
-
-        double* position_x_inhibitory_axon;
-        double* position_y_inhibitory_axon;
-        double* position_z_inhibitory_axon;*/
 
         // depending on if barnes hut or inverse barnes hut will be done, these are either dendrites or axons
         unsigned int* num_free_elements_excitatory;
         unsigned int* num_free_elements_inhibitory;
 
-        /*unsigned int* num_free_elements_excitatory_dendrite;
-        unsigned int* num_free_elements_inhibitory_dendrite;
-        unsigned int* num_free_elements_excitatory_axon;
-        unsigned int* num_free_elements_inhibitory_axon;*/
-
+        /**
+        * @brief Allocates the necessary memory to hold all the data that is needed for the Octree on the GPU
+        * @param number_neurons Number of neurons, influences how much memory will be allocated on the GPU
+        * @param number_virtual_neurons Number of virtual neurons, influences how much memory will be allocated on the GPU
+        */
         Octree(const RelearnGPUTypes::number_neurons_type number_neurons, RelearnGPUTypes::number_neurons_type number_virtual_neurons) {
             
             neuron_ids = (uint64_t*)cuda_malloc(number_neurons * sizeof(uint64_t));
 
-            /*child_index_1 = (uint64_t*)cuda_malloc(number_virtual_neurons * sizeof(uint64_t));
-            child_index_2 = (uint64_t*)cuda_malloc(number_virtual_neurons * sizeof(uint64_t));
-            child_index_3 = (uint64_t*)cuda_malloc(number_virtual_neurons * sizeof(uint64_t));
-            child_index_4 = (uint64_t*)cuda_malloc(number_virtual_neurons * sizeof(uint64_t));
-            child_index_5 = (uint64_t*)cuda_malloc(number_virtual_neurons * sizeof(uint64_t));
-            child_index_6 = (uint64_t*)cuda_malloc(number_virtual_neurons * sizeof(uint64_t));
-            child_index_7 = (uint64_t*)cuda_malloc(number_virtual_neurons * sizeof(uint64_t));
-            child_index_8 = (uint64_t*)cuda_malloc(number_virtual_neurons * sizeof(uint64_t));*/
             child_indices = (uint64_t*)cuda_malloc(number_virtual_neurons * sizeof(uint64_t) * 8);
 
-            // we need this, since we can't use -1 to indicate that there is no child there
             num_children = (unsigned int*)cuda_malloc(number_virtual_neurons * sizeof(unsigned int));
-
-
-            /*minimum_position_x = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
-            minimum_position_y = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
-            minimum_position_z = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
-            maximum_position_x = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
-            maximum_position_y = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
-            maximum_position_z = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));*/
 
             minimum_cell_position = (double3*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double3));
             maximum_cell_position = (double3*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double3));
 
-            /*position_x_excitatory_dendrite = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
-            position_y_excitatory_dendrite = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
-            position_z_excitatory_dendrite = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
-            position_x_inhibitory_dendrite = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
-            position_y_inhibitory_dendrite = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
-            position_z_inhibitory_dendrite = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
-            position_x_excitatory_axon = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
-            position_y_excitatory_axon = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
-            position_z_excitatory_axon = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
-            position_x_inhibitory_axon = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
-            position_y_inhibitory_axon = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));
-            position_z_inhibitory_axon = (double*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double));*/
-
             position_excitatory_element = (double3*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double3));
             position_inhibitory_element = (double3*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double3));
-
-            /*num_free_elements_excitatory_dendrite = (unsigned int*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(unsigned int));
-            num_free_elements_inhibitory_dendrite = (unsigned int*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(unsigned int));
-            num_free_elements_excitatory_axon = (unsigned int*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(unsigned int));
-            num_free_elements_inhibitory_axon = (unsigned int*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(unsigned int));*/
 
             num_free_elements_excitatory = (unsigned int*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(unsigned int));
             num_free_elements_inhibitory = (unsigned int*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(unsigned int));
@@ -138,6 +71,12 @@ namespace gpu::algorithm {
 
     class OctreeHandleImpl : public OctreeHandle {
     public:
+
+        /**
+        * @brief Allocates the necessary memory for the octree on the GPU and saves the device pointers to this memory
+        * @param number_neurons Number of neurons, influences how much memory will be allocated on the GPU
+        * @param number_virtual_neurons Number of virtual neurons, influences how much memory will be allocated on the GPU
+        */
         OctreeHandleImpl(const RelearnGPUTypes::number_neurons_type number_neurons, const RelearnGPUTypes::number_neurons_type number_virtual_neurons) {
             octree_dev_ptrs = new Octree(number_neurons, number_virtual_neurons);
         }
@@ -146,17 +85,55 @@ namespace gpu::algorithm {
             delete octree_dev_ptrs;
         }
 
+        /**
+        * @brief Copies the GPU data structure version of the octree, which was constructed on the CPU, to the GPU
+        * @param octreeCPUCopy Struct which holds the octree data to be copied on to the GPU
+        */
         void copy_to_GPU(OctreeCPUCopy&& octreeCPUCopy) {
-            // copy the structure into GPU memory and save the device pointers in octree_dev_ptrs
-            // the virtual data might have to be flipped in order to adhere to the requirements in the paper
-            // The fact that we basically depth first searched inserted the nodes and neurons into the arrays might be useful later, since it is now already basically ordered
+            // the virtual data might have to be flipped in order to adhere to the requirements in the paper, depending on how marvin parses it
+
+            cuda_memcpy_to_device((void*)octree_dev_ptrs->neuron_ids, (void*)octreeCPUCopy.neuron_ids.data(), sizeof(uint64_t), octreeCPUCopy.neuron_ids.size());
+
+            cuda_memcpy_to_device((void*)octree_dev_ptrs->child_indices, (void*)octreeCPUCopy.child_indices[0].data(), sizeof(uint64_t), octreeCPUCopy.child_indices[0].size());
+            cuda_memcpy_to_device((void*)(octree_dev_ptrs->child_indices + octreeCPUCopy.child_indices[0].size()), (void*)octreeCPUCopy.child_indices[1].data(), sizeof(uint64_t), octreeCPUCopy.child_indices[1].size());
+            cuda_memcpy_to_device((void*)(octree_dev_ptrs->child_indices + octreeCPUCopy.child_indices[1].size()), (void*)octreeCPUCopy.child_indices[2].data(), sizeof(uint64_t), octreeCPUCopy.child_indices[2].size());
+            cuda_memcpy_to_device((void*)(octree_dev_ptrs->child_indices + octreeCPUCopy.child_indices[2].size()), (void*)octreeCPUCopy.child_indices[3].data(), sizeof(uint64_t), octreeCPUCopy.child_indices[3].size());
+            cuda_memcpy_to_device((void*)(octree_dev_ptrs->child_indices + octreeCPUCopy.child_indices[3].size()), (void*)octreeCPUCopy.child_indices[4].data(), sizeof(uint64_t), octreeCPUCopy.child_indices[4].size());
+            cuda_memcpy_to_device((void*)(octree_dev_ptrs->child_indices + octreeCPUCopy.child_indices[4].size()), (void*)octreeCPUCopy.child_indices[5].data(), sizeof(uint64_t), octreeCPUCopy.child_indices[5].size());
+            cuda_memcpy_to_device((void*)(octree_dev_ptrs->child_indices + octreeCPUCopy.child_indices[5].size()), (void*)octreeCPUCopy.child_indices[6].data(), sizeof(uint64_t), octreeCPUCopy.child_indices[6].size());
+            cuda_memcpy_to_device((void*)(octree_dev_ptrs->child_indices + octreeCPUCopy.child_indices[6].size()), (void*)octreeCPUCopy.child_indices[7].data(), sizeof(uint64_t), octreeCPUCopy.child_indices[7].size());
+
+            cuda_memcpy_to_device((void*)octree_dev_ptrs->num_children, (void*)octreeCPUCopy.num_children.data(), sizeof(unsigned int), octreeCPUCopy.num_children.size());
+
+            cuda_memcpy_to_device((void*)octree_dev_ptrs->minimum_cell_position, (void*)octreeCPUCopy.minimum_cell_position.data(), sizeof(double3), octreeCPUCopy.minimum_cell_position.size());
+            cuda_memcpy_to_device((void*)(octree_dev_ptrs->minimum_cell_position + octreeCPUCopy.minimum_cell_position.size()), (void*)octreeCPUCopy.minimum_cell_position_virtual.data(), sizeof(double3), octreeCPUCopy.minimum_cell_position_virtual.size());
+
+            cuda_memcpy_to_device((void*)octree_dev_ptrs->maximum_cell_position, (void*)octreeCPUCopy.maximum_cell_position.data(), sizeof(double3), octreeCPUCopy.maximum_cell_position.size());
+            cuda_memcpy_to_device((void*)(octree_dev_ptrs->maximum_cell_position + octreeCPUCopy.maximum_cell_position.size()), (void*)octreeCPUCopy.maximum_cell_position_virtual.data(), sizeof(double3), octreeCPUCopy.maximum_cell_position_virtual.size());
+
+            cuda_memcpy_to_device((void*)octree_dev_ptrs->position_excitatory_element, (void*)octreeCPUCopy.position_excitatory_element.data(), sizeof(double3), octreeCPUCopy.position_excitatory_element.size());
+            cuda_memcpy_to_device((void*)(octree_dev_ptrs->position_excitatory_element + octreeCPUCopy.position_excitatory_element.size()), (void*)octreeCPUCopy.position_excitatory_element_virtual.data(), sizeof(double3), octreeCPUCopy.position_excitatory_element_virtual.size());
+
+            cuda_memcpy_to_device((void*)octree_dev_ptrs->position_inhibitory_element, (void*)octreeCPUCopy.position_inhibitory_element.data(), sizeof(double3), octreeCPUCopy.position_inhibitory_element.size());
+            cuda_memcpy_to_device((void*)(octree_dev_ptrs->position_inhibitory_element + octreeCPUCopy.position_inhibitory_element.size()), (void*)octreeCPUCopy.position_inhibitory_element_virtual.data(), sizeof(double3), octreeCPUCopy.position_inhibitory_element_virtual.size());
+
+            cuda_memcpy_to_device((void*)octree_dev_ptrs->num_free_elements_excitatory, (void*)octreeCPUCopy.num_free_elements_excitatory.data(), sizeof(unsigned int), octreeCPUCopy.num_free_elements_excitatory.size());
+            cuda_memcpy_to_device((void*)(octree_dev_ptrs->num_free_elements_excitatory + octreeCPUCopy.num_free_elements_excitatory.size()), (void*)octreeCPUCopy.num_free_elements_excitatory_virtual.data(), sizeof(unsigned int), octreeCPUCopy.num_free_elements_excitatory_virtual.size());
+
+            cuda_memcpy_to_device((void*)octree_dev_ptrs->num_free_elements_inhibitory, (void*)octreeCPUCopy.num_free_elements_inhibitory.data(), sizeof(unsigned int), octreeCPUCopy.num_free_elements_inhibitory.size());
+            cuda_memcpy_to_device((void*)(octree_dev_ptrs->num_free_elements_inhibitory + octreeCPUCopy.num_free_elements_inhibitory.size()), (void*)octreeCPUCopy.num_free_elements_inhibitory_virtual.data(), sizeof(unsigned int), octreeCPUCopy.num_free_elements_inhibitory_virtual.size());
         }
 
     private:
         Octree* octree_dev_ptrs;
     };
 
-    std::unique_ptr<OctreeHandle> createOctree(const RelearnGPUTypes::number_neurons_type number_neurons, const RelearnGPUTypes::number_neurons_type number_virtual_neurons) {
+    /**
+    * @brief Returns a shared pointer to a newly created handle to the Octree on the GPU
+    * @param number_neurons Number of neurons, influences how much memory will be allocated on the GPU
+    * @param number_virtual_neurons Number of virtual neurons, influences how much memory will be allocated on the GPU
+    */
+    std::shared_ptr<OctreeHandle> createOctree(const RelearnGPUTypes::number_neurons_type number_neurons, const RelearnGPUTypes::number_neurons_type number_virtual_neurons) {
         return std::make_shared<OctreeHandleImpl>(number_neurons, number_virtual_neurons);
     }
 };
