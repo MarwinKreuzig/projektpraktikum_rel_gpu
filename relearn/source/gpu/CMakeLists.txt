@@ -12,12 +12,14 @@ if (CUDA_FOUND)
             neurons/NeuronsExtraInfos.cuh
             utils/Random.cuh
             RelearnGPUException.h
-            Commons.cuh)
+            Commons.cuh
+            octree/Octree.cuh
+            structure/OctreeStructure.h)
 
     set(CMAKE_CUDA_STANDARD 17)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
-    target_include_directories(relearn_gpu PRIVATE ../shared)
+    target_include_directories(relearn_gpu PRIVATE ../shared ../)
 
     target_compile_features(relearn_gpu PRIVATE cxx_std_17 cuda_std_17)
 
