@@ -12,7 +12,8 @@
 
 #include "../RelearnTest.hpp"
 
-#include "../../source/gpu/structure/CudaVector.cuh"
+#include "../../source/gpu/structure/Octree.cuh"
+#include "../../source/gpu/structure/OctreeStructure.h"
 
 class CudaVectorTest : public RelearnGPUTest {
 };

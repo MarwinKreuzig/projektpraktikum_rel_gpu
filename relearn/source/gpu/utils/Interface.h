@@ -254,7 +254,7 @@ std::shared_ptr<NeuronModelHandle> construct_gpu(std::shared_ptr<gpu::background
 namespace gpu::octree {
     class OctreeHandle {
     public:
-
+    };
 };
 
 
