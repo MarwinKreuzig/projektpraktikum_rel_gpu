@@ -31,6 +31,7 @@
 #include <sstream>
 #include <utility>
 #include <vector>
+#include <stack>
 
 #include <range/v3/functional/indirect.hpp>
 #include <range/v3/functional/not_fn.hpp>
@@ -64,12 +65,8 @@ public:
         RelearnException::check(min_y <= max_y, "Octree::Octree: The y component of the simulation box minimum was larger than that of the maximum");
         RelearnException::check(min_z <= max_z, "Octree::Octree: The z component of the simulation box minimum was larger than that of the maximum");
 
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            simulation_box_minimum = min;
-            simulation_box_maximum = max;
-        }
+        simulation_box_minimum = min;
+        simulation_box_maximum = max;
     }
 
     virtual ~Octree() = default;
@@ -85,11 +82,7 @@ public:
      * @return The minimum position in the Octree
      */
     [[nodiscard]] const box_size_type& get_simulation_box_minimum() const noexcept {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            return simulation_box_minimum;
-        }
+        return simulation_box_minimum;
     }
 
     /**
@@ -97,11 +90,7 @@ public:
      * @return The maximum position in the Octree
      */
     [[nodiscard]] const box_size_type& get_simulation_box_maximum() const noexcept {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            return simulation_box_maximum;
-        }
+        return simulation_box_maximum;
     }
 
     /**
@@ -109,11 +98,7 @@ public:
      * @return The level at which the branch nodes (that are exchanged via MPI) are
      */
     [[nodiscard]] std::uint16_t get_level_of_branch_nodes() const noexcept {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            return level_of_branch_nodes;
-        }
+        return level_of_branch_nodes;
     }
 
     /**
@@ -146,17 +131,13 @@ public:
      * @param file_path The file where the visualization will be stored
      */
     void print_to_file(const std::filesystem::path& file_path) const {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            std::ofstream out_stream{ file_path };
-            RelearnException::check(out_stream.good() && !out_stream.bad(), "Octree::print_to_file: Unable to open stream for {}", file_path.string());
-            std::stringstream ss;
-            print(ss);
-            out_stream << ss.rdbuf();
-            out_stream.flush();
-            out_stream.close();
-        }
+        std::ofstream out_stream{ file_path };
+        RelearnException::check(out_stream.good() && !out_stream.bad(), "Octree::print_to_file: Unable to open stream for {}", file_path.string());
+        std::stringstream ss;
+        print(ss);
+        out_stream << ss.rdbuf();
+        out_stream.flush();
+        out_stream.close();
     }
 
     /**
@@ -164,12 +145,8 @@ public:
      * @param footprint Where to store the current footprint
      */
     virtual void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            const auto my_footprint = sizeof(*this);
-            footprint->emplace("Octree", my_footprint);
-        }
+        const auto my_footprint = sizeof(*this);
+        footprint->emplace("Octree", my_footprint);
     }
 
 protected:
@@ -213,11 +190,7 @@ public:
      * @return The root of the Octree. Ownership is not transferred
      */
     [[nodiscard]] const OctreeNode<AdditionalCellAttributes>* get_root() const noexcept {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            return &root;
-        }
+        return &root;
     }
 
     /**
@@ -225,11 +198,7 @@ public:
      * @return The root of the Octree. Ownership is not transferred
      */
     [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_root() noexcept {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            return &root;
-        }
+        return &root;
     }
 
     /**
@@ -237,11 +206,7 @@ public:
      * @return The number of branch nodes (that are exchanged via MPI)
      */
     [[nodiscard]] size_t get_num_local_trees() const noexcept override {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            return branch_nodes.size();
-        }
+        return branch_nodes.size();
     }
 
     /**
@@ -249,13 +214,9 @@ public:
      * @return All local branch nodes
      */
     [[nodiscard]] std::vector<const OctreeNode<AdditionalCellAttributes>*> get_local_branch_nodes() const {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            return branch_nodes
-                   | ranges::views::filter(ranges::indirect(&OctreeNode<AdditionalCellAttributes>::is_local))
-                   | ranges::to_vector;
-        }
+        return branch_nodes
+                | ranges::views::filter(ranges::indirect(&OctreeNode<AdditionalCellAttributes>::is_local))
+                | ranges::to_vector;
     }
 
     /**
@@ -263,13 +224,9 @@ public:
      * @return All local branch nodes
      */
     [[nodiscard]] std::vector<OctreeNode<AdditionalCellAttributes>*> get_local_branch_nodes() {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            return branch_nodes
-                   | ranges::views::filter(ranges::indirect(&OctreeNode<AdditionalCellAttributes>::is_local))
-                   | ranges::to_vector;
-        }
+        return branch_nodes
+                | ranges::views::filter(ranges::indirect(&OctreeNode<AdditionalCellAttributes>::is_local))
+                | ranges::to_vector;
     }
 
     /**
@@ -323,13 +280,11 @@ public:
      * @brief Synchronizes the octree with all MPI ranks
      */
     void synchronize_tree() {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            return branch_nodes
-                   | ranges::views::filter(ranges::indirect(&OctreeNode<AdditionalCellAttributes>::is_local))
-                   | ranges::to_vector;
-        }
+        // Update my local trees bottom-up
+        update_local_trees();
+
+        // Exchange the local trees
+        synchronize_local_trees();
     }
 
     /**
@@ -338,11 +293,7 @@ public:
      * @return All leaf nodes
      */
     [[nodiscard]] const std::vector<OctreeNode<AdditionalCellAttributes>*>& get_leaf_nodes() const noexcept {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            return all_leaf_nodes;
-        }
+        return all_leaf_nodes;
     }
 
     /**
@@ -352,12 +303,8 @@ public:
      * @return The requested branch node
      */
     [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_branch_node_pointer(size_t index) {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            RelearnException::check(index < branch_nodes.size(), "OctreeImplementation::get_branch_node_pointer(): index ({}) is larger than or equal to the number of branch nodes ({}).", index, branch_nodes.size());
-            return branch_nodes[index];
-        }
+        RelearnException::check(index < branch_nodes.size(), "OctreeImplementation::get_branch_node_pointer(): index ({}) is larger than or equal to the number of branch nodes ({}).", index, branch_nodes.size());
+        return branch_nodes[index];
     }
 
     /**
@@ -368,22 +315,18 @@ public:
      *      neuron_id is uninitialized, or OctreeNode::insert throws a RelearnException
      */
     void insert(const box_size_type& position, const NeuronID& neuron_id) override {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            const auto& [min_x, min_y, min_z] = get_simulation_box_minimum();
-            const auto& [max_x, max_y, max_z] = get_simulation_box_maximum();
-            const auto& [pos_x, pos_y, pos_z] = position;
+        const auto& [min_x, min_y, min_z] = get_simulation_box_minimum();
+        const auto& [max_x, max_y, max_z] = get_simulation_box_maximum();
+        const auto& [pos_x, pos_y, pos_z] = position;
 
-            RelearnException::check(min_x <= pos_x && pos_x <= max_x, "Octree::insert: x was not in range: {} vs [{}, {}]", pos_x, min_x, max_x);
-            RelearnException::check(min_y <= pos_y && pos_y <= max_y, "Octree::insert: y was not in range: {} vs [{}, {}]", pos_y, min_y, max_y);
-            RelearnException::check(min_z <= pos_z && pos_z <= max_z, "Octree::insert: z was not in range: {} vs [{}, {}]", pos_z, min_z, max_z);
+        RelearnException::check(min_x <= pos_x && pos_x <= max_x, "Octree::insert: x was not in range: {} vs [{}, {}]", pos_x, min_x, max_x);
+        RelearnException::check(min_y <= pos_y && pos_y <= max_y, "Octree::insert: y was not in range: {} vs [{}, {}]", pos_y, min_y, max_y);
+        RelearnException::check(min_z <= pos_z && pos_z <= max_z, "Octree::insert: z was not in range: {} vs [{}, {}]", pos_z, min_z, max_z);
 
-            RelearnException::check(neuron_id.is_initialized(), "Octree::insert: neuron_id {} was uninitialized", neuron_id);
+        RelearnException::check(neuron_id.is_initialized(), "Octree::insert: neuron_id {} was uninitialized", neuron_id);
 
-            auto* res = root.insert(position, neuron_id);
-            RelearnException::check(res != nullptr, "Octree::insert: res was nullptr");
-        }
+        auto* res = root.insert(position, neuron_id);
+        RelearnException::check(res != nullptr, "Octree::insert: res was nullptr");
     }
 
     /**
@@ -391,19 +334,15 @@ public:
      * @param footprint Where to store the current footprint
      */
     void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            const auto my_footprint = sizeof(*this) - sizeof(Octree)
+        const auto my_footprint = sizeof(*this) - sizeof(Octree)
                                       + branch_nodes.capacity() * sizeof(OctreeNode<AdditionalCellAttributes>*)
                                       + all_leaf_nodes.capacity() * sizeof(OctreeNode<AdditionalCellAttributes>*);
-            footprint->emplace("OctreeImplementation", my_footprint);
+        footprint->emplace("OctreeImplementation", my_footprint);
 
-            const auto octree_node_footprint = MemoryHolder<AdditionalCellAttributes>::get_size() * sizeof(OctreeNode<AdditionalCellAttributes>);
-            footprint->emplace("OctreeNode", octree_node_footprint);
+        const auto octree_node_footprint = MemoryHolder<AdditionalCellAttributes>::get_size() * sizeof(OctreeNode<AdditionalCellAttributes>);
+        footprint->emplace("OctreeNode", octree_node_footprint);
 
-            Octree::record_memory_footprint(footprint);
-        }
+        Octree::record_memory_footprint(footprint);
     }
 
     /**
@@ -463,21 +402,22 @@ public:
             }
             else {
                 NeuronID neuron_ID = current_node->get_cell_neuron_id();
-                octreeCPUCopy.neuron_ids.push_back(neuron_ID);
+                octreeCPUCopy.neuron_ids.push_back(neuron_ID.get_neuron_id());
 
-                octreeCPUCopy.minimum_cell_position.push_back(std::get<0>(current_node->get_size()));
-                octreeCPUCopy.maximum_cell_position.push_back(std::get<1>(current_node->get_size()));
+                octreeCPUCopy.minimum_cell_position.push_back(gpu::Vec3d(std::get<0>(current_node->get_size()).get(0), std::get<0>(current_node->get_size()).get(1), std::get<0>(current_node->get_size()).get(2)));
+                octreeCPUCopy.maximum_cell_position.push_back(gpu::Vec3d(std::get<1>(current_node->get_size()).get(0), std::get<1>(current_node->get_size()).get(1), std::get<1>(current_node->get_size()).get(2)));
 
                 // Currently assumes that either dendrites are both true or axons are both true
                 if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
-                    octreeCPUCopy.position_excitatory_element.push_back(current_node->get_cell().get_excitatory_dendrites_position().value());
-                    octreeCPUCopy.position_inhibitory_element.push_back(current_node->get_cell().get_inhibitory_dendrites_position().value());
+                    octreeCPUCopy.position_excitatory_element.push_back(gpu::Vec3d(current_node->get_cell().get_excitatory_dendrites_position().value().get(0), current_node->get_cell().get_excitatory_dendrites_position().value().get(1), current_node->get_cell().get_excitatory_dendrites_position().value().get(2)));
+                    // etc bei den nächsten auch, hier auskommentiert wegen compilierung
+                    //octreeCPUCopy.position_inhibitory_element.push_back(current_node->get_cell().get_inhibitory_dendrites_position().value());
                     octreeCPUCopy.num_free_elements_excitatory.push_back(current_node->get_cell().get_number_excitatory_dendrites());
                     octreeCPUCopy.num_free_elements_inhibitory.push_back(current_node->get_cell().get_number_inhibitory_dendrites());
                 }
                 else {
-                    octreeCPUCopy.position_excitatory_element.push_back(current_node->get_cell().get_excitatory_axons_position().value());
-                    octreeCPUCopy.position_inhibitory_element.push_back(current_node->get_cell().get_inhibitory_axons_position().value());
+                    //octreeCPUCopy.position_excitatory_element.push_back(current_node->get_cell().get_excitatory_axons_position().value());
+                    //octreeCPUCopy.position_inhibitory_element.push_back(current_node->get_cell().get_inhibitory_axons_position().value());
                     octreeCPUCopy.num_free_elements_excitatory.push_back(current_node->get_cell().get_number_excitatory_axons());
                     octreeCPUCopy.num_free_elements_inhibitory.push_back(current_node->get_cell().get_number_inhibitory_axons());
                 }
@@ -497,88 +437,80 @@ protected:
      * @param ss stringstream
      */
     void print(std::stringstream& ss) const override {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            ss << root.to_string() << "\n";
-            root.printSubtree(ss, "");
-            ss << "\n";
-        }
+        ss << root.to_string() << "\n";
+        root.printSubtree(ss, "");
+        ss << "\n";
     }
 
     /**
      * @brief Constructs the upper portion of the tree, i.e., all nodes at depths [0, level_of_branch_nodes].
      */
     void construct_global_tree_part() {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            const auto level_of_branch_nodes = get_level_of_branch_nodes();
-            const auto num_cells_per_dimension = 1ULL << level_of_branch_nodes; // (2^level_of_branch_nodes)
+        const auto level_of_branch_nodes = get_level_of_branch_nodes();
+        const auto num_cells_per_dimension = 1ULL << level_of_branch_nodes; // (2^level_of_branch_nodes)
 
-            std::vector<box_size_type> branch_nodes_positions{};
-            branch_nodes_positions.reserve(num_cells_per_dimension * num_cells_per_dimension * num_cells_per_dimension);
+        std::vector<box_size_type> branch_nodes_positions{};
+        branch_nodes_positions.reserve(num_cells_per_dimension * num_cells_per_dimension * num_cells_per_dimension);
 
-            const auto& xyz_min = get_simulation_box_minimum();
-            const auto& xyz_max = get_simulation_box_maximum();
+        const auto& xyz_min = get_simulation_box_minimum();
+        const auto& xyz_max = get_simulation_box_maximum();
 
-            const auto& [x_min, y_min, z_min] = xyz_min;
-            const auto& [x_max, y_max, z_max] = xyz_max;
+        const auto& [x_min, y_min, z_min] = xyz_min;
+        const auto& [x_max, y_max, z_max] = xyz_max;
 
-            const auto box_x = (x_max - x_min) / num_cells_per_dimension;
-            const auto box_y = (y_max - y_min) / num_cells_per_dimension;
-            const auto box_z = (z_max - z_min) / num_cells_per_dimension;
+        const auto box_x = (x_max - x_min) / num_cells_per_dimension;
+        const auto box_y = (y_max - y_min) / num_cells_per_dimension;
+        const auto box_z = (z_max - z_min) / num_cells_per_dimension;
 
-            const auto half_x = box_x / 2.0;
-            const auto half_y = box_y / 2.0;
-            const auto half_z = box_z / 2.0;
+        const auto half_x = box_x / 2.0;
+        const auto half_y = box_y / 2.0;
+        const auto half_z = box_z / 2.0;
 
-            for (auto z_it = 0; z_it < num_cells_per_dimension; z_it++) {
-                for (auto y_it = 0; y_it < num_cells_per_dimension; y_it++) {
-                    for (auto x_it = 0; x_it < num_cells_per_dimension; x_it++) {
-                        const auto x = x_it * box_x + half_x + x_min;
-                        const auto y = y_it * box_y + half_y + y_min;
-                        const auto z = z_it * box_z + half_z + z_min;
-                        branch_nodes_positions.emplace_back(x, y, z);
-                    }
+        for (auto z_it = 0; z_it < num_cells_per_dimension; z_it++) {
+            for (auto y_it = 0; y_it < num_cells_per_dimension; y_it++) {
+                for (auto x_it = 0; x_it < num_cells_per_dimension; x_it++) {
+                    const auto x = x_it * box_x + half_x + x_min;
+                    const auto y = y_it * box_y + half_y + y_min;
+                    const auto z = z_it * box_z + half_z + z_min;
+                    branch_nodes_positions.emplace_back(x, y, z);
                 }
             }
+        }
 
-            root.set_cell_size(xyz_min, xyz_max);
-            root.set_cell_neuron_id(NeuronID::virtual_id());
-            root.set_cell_neuron_position(branch_nodes_positions[0]);
-            root.set_rank(MPIWrapper::get_my_rank());
-            root.set_level(0);
+        root.set_cell_size(xyz_min, xyz_max);
+        root.set_cell_neuron_id(NeuronID::virtual_id());
+        root.set_cell_neuron_position(branch_nodes_positions[0]);
+        root.set_rank(MPIWrapper::get_my_rank());
+        root.set_level(0);
 
-            for (auto pos_it = 1; pos_it < branch_nodes_positions.size(); pos_it++) {
-                auto* ptr = root.insert(branch_nodes_positions[pos_it], NeuronID::virtual_id());
+        for (auto pos_it = 1; pos_it < branch_nodes_positions.size(); pos_it++) {
+            auto* ptr = root.insert(branch_nodes_positions[pos_it], NeuronID::virtual_id());
+        }
+
+        SpaceFillingCurve<Morton> space_curve{ static_cast<uint8_t>(level_of_branch_nodes) };
+
+        Stack<std::pair<OctreeNode<AdditionalCellAttributes>*, Vec3s>> stack{ Constants::number_oct * level_of_branch_nodes };
+        stack.emplace_back(&root, Vec3s{ 0, 0, 0 });
+
+        while (!stack.empty()) {
+            const auto [ptr, index3d] = stack.pop_back();
+
+            if (!ptr->is_parent()) {
+                const auto index1d = space_curve.map_3d_to_1d(index3d);
+                branch_nodes[index1d] = ptr;
+                continue;
             }
 
-            SpaceFillingCurve<Morton> space_curve{ static_cast<uint8_t>(level_of_branch_nodes) };
+            for (size_t id = 0; id < Constants::number_oct; id++) {
+                auto child_node = ptr->get_child(id);
 
-            Stack<std::pair<OctreeNode<AdditionalCellAttributes>*, Vec3s>> stack{ Constants::number_oct * level_of_branch_nodes };
-            stack.emplace_back(&root, Vec3s{ 0, 0, 0 });
+                const auto larger_x = ((id & 1ULL) == 0) ? 0ULL : 1ULL;
+                const auto larger_y = ((id & 2ULL) == 0) ? 0ULL : 1ULL;
+                const auto larger_z = ((id & 4ULL) == 0) ? 0ULL : 1ULL;
 
-            while (!stack.empty()) {
-                const auto [ptr, index3d] = stack.pop_back();
-
-                if (!ptr->is_parent()) {
-                    const auto index1d = space_curve.map_3d_to_1d(index3d);
-                    branch_nodes[index1d] = ptr;
-                    continue;
-                }
-
-                for (size_t id = 0; id < Constants::number_oct; id++) {
-                    auto child_node = ptr->get_child(id);
-
-                    const auto larger_x = ((id & 1ULL) == 0) ? 0ULL : 1ULL;
-                    const auto larger_y = ((id & 2ULL) == 0) ? 0ULL : 1ULL;
-                    const auto larger_z = ((id & 4ULL) == 0) ? 0ULL : 1ULL;
-
-                    const Vec3s offset{ larger_x, larger_y, larger_z };
-                    const Vec3s pos = (index3d * 2) + offset;
-                    stack.emplace_back(child_node, pos);
-                }
+                const Vec3s offset{ larger_x, larger_y, larger_z };
+                const Vec3s pos = (index3d * 2) + offset;
+                stack.emplace_back(child_node, pos);
             }
         }
     }
@@ -588,67 +520,59 @@ protected:
      * @exception Throws a RelearnException if the functor throws
      */
     void update_local_trees() {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            Timers::start(TimerRegion::UPDATE_LOCAL_TREES);
+        Timers::start(TimerRegion::UPDATE_LOCAL_TREES);
 
-            const auto update_tree = [this](auto* local_tree) {
-                update_tree_parallel(local_tree);
-            };
+        const auto update_tree = [this](auto* local_tree) {
+            update_tree_parallel(local_tree);
+        };
 
-            ranges::for_each(branch_nodes | ranges::views::filter(ranges::indirect(&OctreeNode<AdditionalCellAttributes>::is_local)), update_tree);
+        ranges::for_each(branch_nodes | ranges::views::filter(ranges::indirect(&OctreeNode<AdditionalCellAttributes>::is_local)), update_tree);
 
-            Timers::stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
-        }
+        Timers::stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
     }
 
     /**
      * @brief Synchronizes all (locally) updated branch nodes with all other MPI ranks
      */
     void synchronize_local_trees() {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            Timers::start(TimerRegion::EXCHANGE_BRANCH_NODES);
-            const auto number_branch_nodes = branch_nodes.size();
+        Timers::start(TimerRegion::EXCHANGE_BRANCH_NODES);
+        const auto number_branch_nodes = branch_nodes.size();
 
-            // Copy local trees' root nodes to correct positions in receive buffer
-            auto exchange_branch_nodes = branch_nodes | ranges::views::indirect | ranges::to_vector;
+        // Copy local trees' root nodes to correct positions in receive buffer
+        auto exchange_branch_nodes = branch_nodes | ranges::views::indirect | ranges::to_vector;
 
-            // All-gather in-place branch nodes from every rank
-            const auto number_local_branch_nodes = number_branch_nodes / MPIWrapper::get_number_ranks();
-            RelearnException::check(number_local_branch_nodes < static_cast<size_t>(std::numeric_limits<int>::max()),
+        // All-gather in-place branch nodes from every rank
+        const auto number_local_branch_nodes = number_branch_nodes / MPIWrapper::get_number_ranks();
+        RelearnException::check(number_local_branch_nodes < static_cast<size_t>(std::numeric_limits<int>::max()),
                                     "OctreeImplementation::synchronize_local_trees: Too many branch nodes: {}", number_local_branch_nodes);
-            MPIWrapper::all_gather_inline(std::span{ exchange_branch_nodes.data(), number_local_branch_nodes });
+        MPIWrapper::all_gather_inline(std::span{ exchange_branch_nodes.data(), number_local_branch_nodes });
 
-            Timers::stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
+        Timers::stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
 
-            Timers::start(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
-            for (size_t i = 0; i < number_branch_nodes; i++) {
-                auto& received_node = exchange_branch_nodes[i];
-                if (received_node.is_parent()) {
-                    /*
-                     * This part exists for the location-aware Barnes-Hut algorithm.
-                     * If the branch node is a leaf, it uses the leaf-case without problems.
-                     * Otherwise, we need to store the index of the branch node so that we
-                     * can later send it around.
-                     */
-                    // received_node.set_cell_neuron_id(NeuronID::virtual_id(i));
-                }
-
-                *branch_nodes[i] = exchange_branch_nodes[i];
+        Timers::start(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
+        for (size_t i = 0; i < number_branch_nodes; i++) {
+            auto& received_node = exchange_branch_nodes[i];
+            if (received_node.is_parent()) {
+                /*
+                * This part exists for the location-aware Barnes-Hut algorithm.
+                * If the branch node is a leaf, it uses the leaf-case without problems.
+                * Otherwise, we need to store the index of the branch node so that we
+                * can later send it around.
+                */
+                // received_node.set_cell_neuron_id(NeuronID::virtual_id(i));
             }
-            Timers::stop_and_add(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
 
-            Timers::start(TimerRegion::UPDATE_GLOBAL_TREE);
-            if (const auto level_of_branch_nodes = get_level_of_branch_nodes(); level_of_branch_nodes > 0) {
-                // Only update whenever there are other branches to update
-                // The nodes at level_of_branch_nodes are already updated (by other MPI ranks)
-                update_tree_parallel(&root, level_of_branch_nodes - 1);
-            }
-            Timers::stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
+            *branch_nodes[i] = exchange_branch_nodes[i];
         }
+        Timers::stop_and_add(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
+
+        Timers::start(TimerRegion::UPDATE_GLOBAL_TREE);
+        if (const auto level_of_branch_nodes = get_level_of_branch_nodes(); level_of_branch_nodes > 0) {
+            // Only update whenever there are other branches to update
+            // The nodes at level_of_branch_nodes are already updated (by other MPI ranks)
+            update_tree_parallel(&root, level_of_branch_nodes - 1);
+        }
+        Timers::stop_and_add(TimerRegion::UPDATE_GLOBAL_TREE);
     }
 
     /**
@@ -660,58 +584,54 @@ protected:
      * @exception Throws a RelearnException if local_tree_root is nullptr or if max_depth is smaller than the depth of local_tree_root
      */
     void update_tree_parallel(OctreeNode<AdditionalCellAttributes>* local_tree_root, const std::uint16_t max_depth = std::numeric_limits<std::uint16_t>::max()) {
-        if (CudaHelper::is_cuda_available()) {
-            RelearnException::fail("No gpu support");
-        } else {
-            RelearnException::check(local_tree_root != nullptr, "OctreeImplementation::update_tree_parallel: local_tree_root was nullptr");
-            RelearnException::check(local_tree_root->get_level() <= max_depth, "OctreeImplementation::update_tree_parallel: The root had a larger depth than max_depth.");
+        RelearnException::check(local_tree_root != nullptr, "OctreeImplementation::update_tree_parallel: local_tree_root was nullptr");
+        RelearnException::check(local_tree_root->get_level() <= max_depth, "OctreeImplementation::update_tree_parallel: The root had a larger depth than max_depth.");
 
-            if (const auto update_height = max_depth - local_tree_root->get_level(); update_height < 3) {
-                // If the update concerns less than 3 levels, update serially
-                OctreeNodeUpdater<AdditionalCellAttributes>::update_tree(local_tree_root, max_depth);
-                return;
+        if (const auto update_height = max_depth - local_tree_root->get_level(); update_height < 3) {
+            // If the update concerns less than 3 levels, update serially
+            OctreeNodeUpdater<AdditionalCellAttributes>::update_tree(local_tree_root, max_depth);
+            return;
+        }
+
+        // Gather all subtrees two levels down from the current node, update the induced trees in parallel, and then update the upper portion serially
+
+        constexpr auto maximum_number_subtrees = 64;
+        std::vector<OctreeNode<AdditionalCellAttributes>*> subtrees{};
+        subtrees.reserve(maximum_number_subtrees);
+
+        constexpr auto maximum_number_nodes = 64 + 8 + 1;
+        Stack<OctreeNode<AdditionalCellAttributes>*> tree_upper_part{ maximum_number_nodes };
+        tree_upper_part.emplace_back(local_tree_root);
+
+        for (const auto& root_child : local_tree_root->get_children()) {
+            if (root_child == nullptr) {
+                continue;
             }
 
-            // Gather all subtrees two levels down from the current node, update the induced trees in parallel, and then update the upper portion serially
+            tree_upper_part.emplace_back(root_child);
 
-            constexpr auto maximum_number_subtrees = 64;
-            std::vector<OctreeNode<AdditionalCellAttributes>*> subtrees{};
-            subtrees.reserve(maximum_number_subtrees);
-
-            constexpr auto maximum_number_nodes = 64 + 8 + 1;
-            Stack<OctreeNode<AdditionalCellAttributes>*> tree_upper_part{ maximum_number_nodes };
-            tree_upper_part.emplace_back(local_tree_root);
-
-            for (const auto& root_child : local_tree_root->get_children()) {
-                if (root_child == nullptr) {
+            for (const auto& root_child_child : root_child->get_children()) {
+                if (root_child_child == nullptr) {
                     continue;
                 }
 
-                tree_upper_part.emplace_back(root_child);
-
-                for (const auto& root_child_child : root_child->get_children()) {
-                    if (root_child_child == nullptr) {
-                        continue;
-                    }
-
-                    tree_upper_part.emplace_back(root_child_child);
-                    subtrees.emplace_back(root_child_child);
-                }
+                tree_upper_part.emplace_back(root_child_child);
+                subtrees.emplace_back(root_child_child);
             }
+        }
 
 #pragma omp parallel for shared(subtrees, max_depth) default(none)
-            for (auto i = 0; i < subtrees.size(); i++) {
-                auto* local_tree_root = subtrees[i];
-                OctreeNodeUpdater<AdditionalCellAttributes>::update_tree(local_tree_root, max_depth);
-            }
+        for (auto i = 0; i < subtrees.size(); i++) {
+            auto* local_tree_root = subtrees[i];
+            OctreeNodeUpdater<AdditionalCellAttributes>::update_tree(local_tree_root, max_depth);
+        }
 
-            while (!tree_upper_part.empty()) {
-                auto* node = tree_upper_part.top();
-                tree_upper_part.pop();
+        while (!tree_upper_part.empty()) {
+            auto* node = tree_upper_part.top();
+            tree_upper_part.pop();
 
-                if (node->is_parent()) {
-                    OctreeNodeUpdater<AdditionalCellAttributes>::update_node(node);
-                }
+            if (node->is_parent()) {
+                OctreeNodeUpdater<AdditionalCellAttributes>::update_node(node);
             }
         }
     }

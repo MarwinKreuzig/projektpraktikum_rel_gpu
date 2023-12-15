@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <array>
-#include "../../util/Vec3.h"
+#include "VectorTypes.h"
 // Including this causes include errors of propagated includes. Not really sure what to do to fix this.
 
 namespace gpu::algorithm {
@@ -17,16 +17,16 @@ namespace gpu::algorithm {
         
         std::vector<unsigned int> num_children;
 
-        std::vector<Vec3d> minimum_cell_position;
-        std::vector<Vec3d> minimum_cell_position_virtual;
+        std::vector<gpu::Vec3d> minimum_cell_position;
+        std::vector<gpu::Vec3d> minimum_cell_position_virtual;
 
-        std::vector<Vec3d> maximum_cell_position;
-        std::vector<Vec3d> maximum_cell_position_virtual;
+        std::vector<gpu::Vec3d> maximum_cell_position;
+        std::vector<gpu::Vec3d> maximum_cell_position_virtual;
 
-        std::vector<Vec3d> position_excitatory_element;
-        std::vector<Vec3d> position_excitatory_element_virtual;
-        std::vector<Vec3d> position_inhibitory_element;
-        std::vector<Vec3d> position_inhibitory_element_virtual;
+        std::vector<gpu::Vec3d> position_excitatory_element;
+        std::vector<gpu::Vec3d> position_excitatory_element_virtual;
+        std::vector<gpu::Vec3d> position_inhibitory_element;
+        std::vector<gpu::Vec3d> position_inhibitory_element_virtual;
 
         std::vector<unsigned int> num_free_elements_excitatory;
         std::vector<unsigned int> num_free_elements_excitatory_virtual;
