@@ -13,7 +13,7 @@
 #include "../RelearnTest.hpp"
 
 #include "../../source/gpu/structure/Octree.cuh"
-#include "../../source/gpu/structure/OctreeStructure.h"
 
+template <typename AdditionalCellAttributes>
 class CudaVectorTest : public RelearnGPUTest {
 };
