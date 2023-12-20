@@ -22,12 +22,14 @@ if (CUDA_FOUND)
 
     add_executable(relearn_tests_cuda ${SRC_TST} RelearnTest.cpp)
     target_include_directories(relearn_tests_cuda PRIVATE ../source/shared)
+    target_include_directories(relearn_tests_cuda PRIVATE ../source)
     target_sources(
             relearn_tests_cuda
             PRIVATE ${CMAKE_BINARY_DIR}/test_get_relearn_path.cpp
             RelearnTest.cpp
 
             cuda_vector/test_cuda_vector.cu
+	    cuda_octree/test_cuda_octree.cu
             # for visual studio
             ${relearn_tests_cuda_additional_files})
 

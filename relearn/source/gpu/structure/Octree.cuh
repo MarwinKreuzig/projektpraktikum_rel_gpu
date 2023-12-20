@@ -1,9 +1,8 @@
 #pragma once
 
 #include "Commons.cuh"
-#include "gpu/GpuTypes.h"
-#include "gpu/Interface.h"
-#include "NeuronsExtraInfos.cuh"
+#include "utils/GpuTypes.h"
+#include "utils/Interface.h"
 
 #include "CudaArray.cuh"
 #include "CudaVector.cuh"
