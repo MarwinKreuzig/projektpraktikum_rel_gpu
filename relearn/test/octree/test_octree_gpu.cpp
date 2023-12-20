@@ -1,16 +1,40 @@
-#include "cuda_octree/test_cuda_octree.cuh"
+#include "test_octree_gpu.h"
 
-#include "../harness/adapter/random/RandomAdapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/neurons/NeuronsAdapter.h"
+#include "adapter/octree/OctreeAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
+#include "adapter/mpi/MpiRankAdapter.h"
+#include "adapter/neuron_id/NeuronIdAdapter.h"
+#include "adapter/neurons/NeuronsAdapter.h"
+#include "adapter/octree/OctreeAdapter.h"
+#include "adapter/simulation/SimulationAdapter.h"
 
-#include "../../source/gpu/structure/Octree.cuh"
-#include "../../source/gpu/structure/OctreeStructure.h"
-#include "RelearnGPUException.h"
-#include "../../source/structure/Octree.h"
+#include "algorithm/Algorithms.h"
+#include "algorithm/Cells.h"
+#include "neurons/models/SynapticElements.h"
+#include "structure/Cell.h"
+#include "structure/Octree.h"
+#include "structure/Partition.h"
+#include "util/RelearnException.h"
+#include "util/Vec3.h"
+#include "util/ranges/Functional.hpp"
+
+#include <algorithm>
+#include <map>
+#include <numeric>
+#include <random>
+#include <stack>
+#include <tuple>
+#include <vector>
+
+#include <range/v3/algorithm/sort.hpp>
+#include <range/v3/view/map.hpp>
 
 using test_types = ::testing::Types<BarnesHutCell, BarnesHutInvertedCell>;
-TYPED_TEST_SUITE(CudaOctreeTest, test_types);
+TYPED_TEST_SUITE(OctreeTestGpu, test_types);
 
-TYPED_TEST(CudaOctreeTest, OctreeConstructAndCopyTest) {
+TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
     using AdditionalCellAttributes = TypeParam;
 
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
@@ -39,12 +63,13 @@ TYPED_TEST(CudaOctreeTest, OctreeConstructAndCopyTest) {
     octree_nodes_cpu.push(root);
 
     std::stack<uint64_t> octree_nodes_gpu{};
-    // assumes root is in the last index
-    octree_nodes_gpu.push(all_leaf_nodes.size() + gpu_handle->get_number_virtual_neurons() - 1);
 
     size_t num_neurons = neurons_to_place.size();
 
-    while (!octree_nodes.empty()) {
+    // assumes root is in the last index
+    octree_nodes_gpu.push(num_neurons + gpu_handle->get_number_virtual_neurons() - 1);
+
+    while (!octree_nodes_cpu.empty()) {
         const auto current_node_cpu = octree_nodes_cpu.top();
         octree_nodes_cpu.pop();
 

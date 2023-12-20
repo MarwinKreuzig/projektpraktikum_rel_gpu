@@ -11,6 +11,8 @@ namespace gpu {
         Vec3(T x, T y, T z)
             : x(x), y(y), z(z)
         {}
+
+        Vec3() {}
     };
 
     using Vec3d = Vec3<double>;

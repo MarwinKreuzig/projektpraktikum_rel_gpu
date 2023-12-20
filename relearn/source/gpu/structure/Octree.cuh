@@ -7,7 +7,7 @@
 #include "CudaArray.cuh"
 #include "CudaVector.cuh"
 
-#include <numeric>
+//#include <numeric>
 
 namespace gpu::algorithm {
 
@@ -90,7 +90,7 @@ namespace gpu::algorithm {
         * @brief Returns the number of virtual neuronss on the octree on the GPU
         * @return The number of virtual neurons on the tree
         */
-        [[nodiscard]] RelearnGPUTypes::number_neurons_type get_number_virtual_neurons() {
+        [[nodiscard]] RelearnGPUTypes::number_neurons_type get_number_virtual_neurons() const {
             return number_virtual_neurons;
         }
 
@@ -141,8 +141,8 @@ namespace gpu::algorithm {
             cuda_memcpy_to_host((void*)octree_dev_ptrs->neuron_ids, (void*)(&neuron_ids[0]), sizeof(uint64_t), number_neurons);
             octreeCPUCopy.neuron_ids.insert(octreeCPUCopy.neuron_ids.end(), &neuron_ids[0], &neuron_ids[number_neurons]);
 
-            std::array<std::vector<uint64_t>, 8> child_indices;
-            uint64_t child_indices[8 * num_children];
+            //std::array<std::vector<uint64_t>, 8> child_indices;
+            uint64_t child_indices[8 * number_virtual_neurons];
             cuda_memcpy_to_host((void*)octree_dev_ptrs->child_indices, (void*)(&child_indices[0]), sizeof(uint64_t), 8 * number_virtual_neurons);
             octreeCPUCopy.child_indices[0].insert(octreeCPUCopy.child_indices[0].end(), &child_indices[0], &child_indices[number_virtual_neurons]);
             octreeCPUCopy.child_indices[1].insert(octreeCPUCopy.child_indices[1].end(), &child_indices[number_virtual_neurons], &child_indices[number_virtual_neurons * 2]);

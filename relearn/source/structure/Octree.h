@@ -420,7 +420,7 @@ public:
         level_indices.push_back(0);
 
         std::stack<std::pair<const OctreeNode<AdditionalCellAttributes> *, size_t>> octree_nodes{};
-        octree_nodes.push(&root, 0);
+        octree_nodes.emplace(&root, 0);
 
         while (!octree_nodes.empty()) {
             const auto [current_node, level] = octree_nodes.top();
@@ -439,7 +439,7 @@ public:
                 for (auto i = 0; i < 8; i++) {
                     const auto child = children[i];
                     if (child != nullptr) {
-                        octree_nodes.push(child, level + 1);
+                        octree_nodes.emplace(child, level + 1);
                         childCount++;
                     }
                 }
@@ -455,12 +455,12 @@ public:
         octreeCPUCopy.num_free_elements_inhibitory_virtual.resize(num_virtual_neurons);
         octreeCPUCopy.num_children.resize(num_virtual_neurons);
 
-        octree_nodes = std::stack<std::tuple<const OctreeNode<AdditionalCellAttributes> *, size_t, size_t>>{};
-        octree_nodes.push(&root, 0, 0);
+        std::stack<std::tuple<const OctreeNode<AdditionalCellAttributes> *, size_t, size_t>> octree_nodes_second_pass{};
+        octree_nodes_second_pass.emplace(&root, 0, 0);
 
-        while (!octree_nodes.empty()) {
-            const auto [current_node, level, parent_index] = octree_nodes.top();
-            octree_nodes.pop();
+        while (!octree_nodes_second_pass.empty()) {
+            const auto [current_node, level, parent_index] = octree_nodes_second_pass.top();
+            octree_nodes_second_pass.pop();
 
             if (current_node->get_cell().get_neuron_id().is_virtual()) {
                 const auto index = level_indices[level];
@@ -471,15 +471,15 @@ public:
                 // Currently assumes that either dendrites are both true or axons are both true
                 if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
                     // TODO: This needs to be identical to leaf node copying
-                    octreeCPUCopy.position_excitatory_element_virtual[index] = current_node->get_cell().get_excitatory_dendrites_position().value();
+                    //octreeCPUCopy.position_excitatory_element_virtual[index] = current_node->get_cell().get_excitatory_dendrites_position().value();
                     // octreeCPUCopy.position_inhibitory_element_virtual[index] = current_node->get_cell().get_inhibitory_dendrites_position().value();
-                    octreeCPUCopy.num_free_elements_excitatory_virtual[index] = current_node->get_cell().get_number_excitatory_dendrites();
-                    octreeCPUCopy.num_free_elements_inhibitory_virtual[index] = current_node->get_cell().get_number_inhibitory_dendrites();
+                    //octreeCPUCopy.num_free_elements_excitatory_virtual[index] = current_node->get_cell().get_number_excitatory_dendrites();
+                    //octreeCPUCopy.num_free_elements_inhibitory_virtual[index] = current_node->get_cell().get_number_inhibitory_dendrites();
                 } else {
                     // octreeCPUCopy.position_excitatory_element_virtual[index] = current_node->get_cell().get_excitatory_axons_position().value();
                     // octreeCPUCopy.position_inhibitory_element_virtual[index] = current_node->get_cell().get_inhibitory_axons_position().value();
-                    octreeCPUCopy.num_free_elements_excitatory_virtual[index] = current_node->get_cell().get_number_excitatory_axons();
-                    octreeCPUCopy.num_free_elements_inhibitory_virtual[index] = current_node->get_cell().get_number_inhibitory_axons();
+                    //octreeCPUCopy.num_free_elements_excitatory_virtual[index] = current_node->get_cell().get_number_excitatory_axons();
+                    //octreeCPUCopy.num_free_elements_inhibitory_virtual[index] = current_node->get_cell().get_number_inhibitory_axons();
                 }
 
                 const auto &children = current_node->get_children();
@@ -487,7 +487,7 @@ public:
                 for (auto i = 0; i < 8; i++) {
                     const auto child = children[i];
                     if (child != nullptr) {
-                        octree_nodes.push(child, level + 1, index);
+                        octree_nodes_second_pass.emplace(child, level + 1, index);
                         childCount++;
                     }
                 }
@@ -499,32 +499,32 @@ public:
                     octreeCPUCopy.child_indices[parent_index].push_back(octreeCPUCopy.neuron_ids.size() - 1);
                 }
 
-                octreeCPUCopy.minimum_cell_position.push_back(gpu::Vec3d(std::get<0>(current_node->get_size()).get(0),
-                                                                         std::get<0>(current_node->get_size()).get(1),
-                                                                         std::get<0>(current_node->get_size()).get(2)));
-                octreeCPUCopy.maximum_cell_position.push_back(gpu::Vec3d(std::get<1>(current_node->get_size()).get(0),
-                                                                         std::get<1>(current_node->get_size()).get(1),
-                                                                         std::get<1>(current_node->get_size()).get(2)));
+                octreeCPUCopy.minimum_cell_position.push_back(gpu::Vec3d(std::get<0>(current_node->get_size()).get_x(),
+                                                                         std::get<0>(current_node->get_size()).get_y(),
+                                                                         std::get<0>(current_node->get_size()).get_z()));
+                octreeCPUCopy.maximum_cell_position.push_back(gpu::Vec3d(std::get<1>(current_node->get_size()).get_x(),
+                                                                         std::get<1>(current_node->get_size()).get_y(),
+                                                                         std::get<1>(current_node->get_size()).get_z()));
 
                 // Currently assumes that either dendrites are both true or axons are both true
                 if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
                     octreeCPUCopy.position_excitatory_element.push_back(
-                            gpu::Vec3d(current_node->get_cell().get_excitatory_dendrites_position().value().get(0),
-                                       current_node->get_cell().get_excitatory_dendrites_position().value().get(1),
-                                       current_node->get_cell().get_excitatory_dendrites_position().value().get(2)));
+                            gpu::Vec3d(current_node->get_cell().get_position_for(ElementType::Dendrite, SignalType::Excitatory).value().get_x(),
+                                       current_node->get_cell().get_position_for(ElementType::Dendrite, SignalType::Excitatory).value().get_y(),
+                                       current_node->get_cell().get_position_for(ElementType::Dendrite, SignalType::Excitatory).value().get_z()));
                     // etc bei den nächsten auch, hier auskommentiert wegen compilierung
                     //octreeCPUCopy.position_inhibitory_element.push_back(current_node->get_cell().get_inhibitory_dendrites_position().value());
-                    octreeCPUCopy.num_free_elements_excitatory.push_back(
-                            current_node->get_cell().get_number_excitatory_dendrites());
-                    octreeCPUCopy.num_free_elements_inhibitory.push_back(
-                            current_node->get_cell().get_number_inhibitory_dendrites());
+                    //octreeCPUCopy.num_free_elements_excitatory.push_back(
+                           // current_node->get_cell().get_number_excitatory_dendrites());
+                    //octreeCPUCopy.num_free_elements_inhibitory.push_back(
+                           // current_node->get_cell().get_number_inhibitory_dendrites());
                 } else {
                     //octreeCPUCopy.position_excitatory_element.push_back(current_node->get_cell().get_excitatory_axons_position().value());
                     //octreeCPUCopy.position_inhibitory_element.push_back(current_node->get_cell().get_inhibitory_axons_position().value());
-                    octreeCPUCopy.num_free_elements_excitatory.push_back(
-                            current_node->get_cell().get_number_excitatory_axons());
-                    octreeCPUCopy.num_free_elements_inhibitory.push_back(
-                            current_node->get_cell().get_number_inhibitory_axons());
+                   // octreeCPUCopy.num_free_elements_excitatory.push_back(
+                          //  current_node->get_cell().get_number_excitatory_axons());
+                    //octreeCPUCopy.num_free_elements_inhibitory.push_back(
+                        //    current_node->get_cell().get_number_inhibitory_axons());
                 }
             }
         }

@@ -12,8 +12,6 @@
 
 #include "../RelearnTest.hpp"
 
-#include "../../source/gpu/structure/Octree.cuh"
-
 template <typename AdditionalCellAttributes>
-class CudaVectorTest : public RelearnGPUTest {
+class OctreeTestGpu : public RelearnMemoryTest {
 };
