@@ -32,7 +32,7 @@ namespace gpu::algorithm {
         virtual void copy_to_CPU(OctreeCPUCopy& octreeCPUCopy) = 0;
     };
 
-    std::shared_ptr<OctreeHandle> createOctree(const RelearnGPUTypes::number_neurons_type number_neurons, RelearnGPUTypes::number_neurons_type number_virtual_neurons) CUDA_PTR_DEFINITION
+    std::shared_ptr<OctreeHandle> createOctree(RelearnGPUTypes::number_neurons_type number_neurons, RelearnGPUTypes::number_neurons_type number_virtual_neurons) CUDA_PTR_DEFINITION
 };
 
 namespace gpu::neurons {

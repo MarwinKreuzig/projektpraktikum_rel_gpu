@@ -158,6 +158,7 @@ target_sources(
 
 if (CUDA_FOUND)
         target_sources(relearn_tests PRIVATE octree/test_octree_gpu.cpp)
+        target_link_libraries(relearn_tests PUBLIC relearn_gpu)
 endif ()
 
 target_include_directories(relearn_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

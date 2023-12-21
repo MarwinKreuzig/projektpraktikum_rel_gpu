@@ -218,7 +218,7 @@ namespace gpu::algorithm {
     * @param number_neurons Number of neurons, influences how much memory will be allocated on the GPU
     * @param number_virtual_neurons Number of virtual neurons, influences how much memory will be allocated on the GPU
     */
-    std::shared_ptr<OctreeHandle> createOctree(const RelearnGPUTypes::number_neurons_type number_neurons, const RelearnGPUTypes::number_neurons_type number_virtual_neurons) {
+    std::shared_ptr<OctreeHandle> createOctree(RelearnGPUTypes::number_neurons_type number_neurons, RelearnGPUTypes::number_neurons_type number_virtual_neurons) {
         return std::make_shared<OctreeHandleImpl>(number_neurons, number_virtual_neurons);
     }
 };
