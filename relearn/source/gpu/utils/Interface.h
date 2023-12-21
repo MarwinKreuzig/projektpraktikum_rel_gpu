@@ -25,14 +25,14 @@
 namespace gpu::algorithm {
     class OctreeHandle {
     public:
-        virtual void copy_to_GPU(OctreeCPUCopy&& octreeCPUCopy) = 0;
+        virtual void copy_to_gpu(OctreeCPUCopy&& octree_cpu_copy) = 0;
 
         [[nodiscard]] virtual RelearnGPUTypes::number_neurons_type get_number_virtual_neurons() const = 0;
 
-        virtual void copy_to_CPU(OctreeCPUCopy& octreeCPUCopy) = 0;
+        virtual void copy_to_cpu(OctreeCPUCopy& octree_cpu_copy) = 0;
     };
 
-    std::shared_ptr<OctreeHandle> createOctree(RelearnGPUTypes::number_neurons_type number_neurons, RelearnGPUTypes::number_neurons_type number_virtual_neurons) CUDA_PTR_DEFINITION
+    std::shared_ptr<OctreeHandle> create_octree(RelearnGPUTypes::number_neurons_type number_neurons, RelearnGPUTypes::number_neurons_type number_virtual_neurons) CUDA_PTR_DEFINITION
 };
 
 namespace gpu::neurons {
