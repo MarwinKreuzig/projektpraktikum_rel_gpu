@@ -380,6 +380,154 @@ public:
         Octree::record_memory_footprint(footprint);
     }
 
+
+    /**
+     * @brief Constructs the Octree on the GPU. Should only be called after all nodes have been inserted.
+     * @param num_neurons Number of neurons on MPI Process
+     */
+    [[nodiscard]] gpu::algorithm::OctreeCPUCopy octree_to_OctreeCPUCopy(const RelearnTypes::number_neurons_type num_neurons) {
+
+        // Kann auch im ersten Depth first pass herausgefunden werden
+        RelearnTypes::number_neurons_type num_virtual_neurons = 0;
+
+        gpu::algorithm::OctreeCPUCopy octree_cpu_copy(num_neurons, num_virtual_neurons);
+
+        // Traverse Tree (VERY WORK IN PROGRESS) TODO
+        // The current traversal is depth first, which is good for the neuron-nodes, but bad for the virtual_nodes, since we need the them breadth-first
+
+        // OLD
+        // The way we want to sort is to have higher level nodes first and lower level nodes last, with the root node at the very back (important for memory access pattern during tree update)
+        // The problem is, since we want to sort the virtual nodes, the child_indices would be constantly invalidated through the moving of the elements while sorting
+        // One possible solution could be to make the stack elements 3-tuples, with the last one being the parent index
+        // In order to get the the number of additional inserted virtual nodes from the time the parent index was assigned in the stack, we might have to actually make it a 4-tuple, with the number of current virtual neurons as the fourth element, and gain the newly inserted ones as the difference
+        // When a virtual node is inserted into the correct position of its arrays (it is of importance that a node is inserted as the last element of its level,
+        // we can also reuse the found index for one array for alle the other as well) we do the following:
+        // 1. We update all child indices of nodes two levels higher than the current node by one (two levels, since the ones one level higher will have the current level nodes as children, which were not moved)
+        // 2. The parent index will have to updated by the number of additional inserted virtual nodes from the time the parent index was assigned in the stack
+        // 3. The inserted index of the current node is added to the child indices of the parent and the num_children of the parent is updated by one
+        // This should in theory guarantee that everything will be correct. Inserting into a vector like that might be slow, watch runtime
+
+        // NEW
+        // Marwins Idee
+        // The virtual nodes are supposed to be in breadth-first-order. This means that all nodes of a level are
+        // consecutive in the array. By determining the range of indices for every level in a first depth-first pass, it
+        // is possible to copy all nodes to the right index immediately in a second pass, no reordering necessary.
+
+        // Every element in the vector is the index of the next node of the level corresponding to index of the element.
+        // So, to determine the index of a node in the octree copy, you take level_indices[<node_level>]
+        // The vector is filled in the first pass, after which it contains all the start indices for the first node of
+        // every level.
+        std::vector<size_t> level_indices{};
+        level_indices.push_back(0);
+
+        std::stack<std::pair<const OctreeNode<AdditionalCellAttributes> *, size_t>> octree_nodes{};
+        octree_nodes.emplace(&root, 0);
+
+        while (!octree_nodes.empty()) {
+            const auto [current_node, level] = octree_nodes.top();
+            octree_nodes.pop();
+
+            if (current_node->get_cell().get_neuron_id().is_virtual()) {
+                num_virtual_neurons++;
+
+                while (level_indices.size() <= level + 1) {
+                    level_indices.push_back(level_indices.back());
+                }
+                level_indices[level + 1] += 1;
+
+                const auto &children = current_node->get_children();
+                int child_count = 0;
+                for (auto i = 0; i < 8; i++) {
+                    const auto child = children[i];
+                    if (child != nullptr) {
+                        octree_nodes.emplace(child, level + 1);
+                        child_count++;
+                    }
+                }
+            }
+        }
+
+
+
+        std::stack<std::tuple<const OctreeNode<AdditionalCellAttributes> *, size_t, size_t>> octree_nodes_second_pass{};
+        octree_nodes_second_pass.emplace(&root, 0, 0);
+
+        while (!octree_nodes_second_pass.empty()) {
+            const auto [current_node, level, parent_index] = octree_nodes_second_pass.top();
+            octree_nodes_second_pass.pop();
+
+            if (current_node->get_cell().get_neuron_id().is_virtual()) {
+                const auto index = level_indices[level];
+                level_indices[level] += 1;
+                if (parent_index != 0) {
+                    octree_cpu_copy.child_indices[parent_index].push_back(index);
+                }
+                // Currently assumes that either dendrites are both true or axons are both true
+                if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
+                    // TODO: This needs to be identical to leaf node copying
+                    //octree_cpu_copy.position_excitatory_element_virtual[index] = current_node->get_cell().get_excitatory_dendrites_position().value();
+                    // octree_cpu_copy.position_inhibitory_element_virtual[index] = current_node->get_cell().get_inhibitory_dendrites_position().value();
+                    //octree_cpu_copy.num_free_elements_excitatory_virtual[index] = current_node->get_cell().get_number_excitatory_dendrites();
+                    //octree_cpu_copy.num_free_elements_inhibitory_virtual[index] = current_node->get_cell().get_number_inhibitory_dendrites();
+                } else {
+                    // octree_cpu_copy.position_excitatory_element_virtual[index] = current_node->get_cell().get_excitatory_axons_position().value();
+                    // octree_cpu_copy.position_inhibitory_element_virtual[index] = current_node->get_cell().get_inhibitory_axons_position().value();
+                    //octree_cpu_copy.num_free_elements_excitatory_virtual[index] = current_node->get_cell().get_number_excitatory_axons();
+                    //octree_cpu_copy.num_free_elements_inhibitory_virtual[index] = current_node->get_cell().get_number_inhibitory_axons();
+                }
+
+                const auto &children = current_node->get_children();
+                int child_count = 0;
+                for (auto i = 0; i < 8; i++) {
+                    const auto child = children[i];
+                    if (child != nullptr) {
+                        octree_nodes_second_pass.emplace(child, level + 1, index);
+                        child_count++;
+                    }
+                }
+                octree_cpu_copy.num_children[index] = child_count;
+            } else {
+                NeuronID neuron_ID = current_node->get_cell_neuron_id();
+                octree_cpu_copy.neuron_ids.push_back(neuron_ID.get_neuron_id());
+                if (parent_index != 0) {
+                    octree_cpu_copy.child_indices[parent_index].push_back(octree_cpu_copy.neuron_ids.size() - 1);
+                }
+
+                octree_cpu_copy.minimum_cell_position.push_back(gpu::Vec3d(std::get<0>(current_node->get_size()).get_x(),
+                                                                           std::get<0>(current_node->get_size()).get_y(),
+                                                                           std::get<0>(current_node->get_size()).get_z()));
+                octree_cpu_copy.maximum_cell_position.push_back(gpu::Vec3d(std::get<1>(current_node->get_size()).get_x(),
+                                                                           std::get<1>(current_node->get_size()).get_y(),
+                                                                           std::get<1>(current_node->get_size()).get_z()));
+
+                // Currently assumes that either dendrites are both true or axons are both true
+                if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
+                    octree_cpu_copy.position_excitatory_element.push_back(
+                            gpu::Vec3d(current_node->get_cell().get_position_for(ElementType::Dendrite, SignalType::Excitatory).value().get_x(),
+                                       current_node->get_cell().get_position_for(ElementType::Dendrite, SignalType::Excitatory).value().get_y(),
+                                       current_node->get_cell().get_position_for(ElementType::Dendrite, SignalType::Excitatory).value().get_z()));
+                    // etc bei den nächsten auch, hier auskommentiert wegen compilierung
+                    //octree_cpu_copy.position_inhibitory_element.push_back(current_node->get_cell().get_inhibitory_dendrites_position().value());
+                    //octree_cpu_copy.num_free_elements_excitatory.push_back(
+                    // current_node->get_cell().get_number_excitatory_dendrites());
+                    //octree_cpu_copy.num_free_elements_inhibitory.push_back(
+                    // current_node->get_cell().get_number_inhibitory_dendrites());
+                } else {
+                    //octree_cpu_copy.position_excitatory_element.push_back(current_node->get_cell().get_excitatory_axons_position().value());
+                    //octree_cpu_copy.position_inhibitory_element.push_back(current_node->get_cell().get_inhibitory_axons_position().value());
+                    // octree_cpu_copy.num_free_elements_excitatory.push_back(
+                    //  current_node->get_cell().get_number_excitatory_axons());
+                    //octree_cpu_copy.num_free_elements_inhibitory.push_back(
+                    //    current_node->get_cell().get_number_inhibitory_axons());
+                }
+            }
+        }
+
+        return octree_cpu_copy;
+    }
+
+
+
     /**
      * @brief Constructs the Octree on the GPU. Should only be called after all nodes have been inserted.
      * @param num_neurons Number of neurons on MPI Process
@@ -417,11 +565,11 @@ public:
         // The vector is filled in the first pass, after which it contains all the start indices for the first node of
         // every level.
         std::vector<size_t> level_indices{};
+        level_indices.push_back(0);
 
         std::stack<std::pair<const OctreeNode<AdditionalCellAttributes> *, size_t>> octree_nodes{};
         octree_nodes.emplace(&root, 0);
 
-        // first, we find the number of nodes per level in the tree
         while (!octree_nodes.empty()) {
             const auto [current_node, level] = octree_nodes.top();
             octree_nodes.pop();
@@ -429,10 +577,10 @@ public:
             if (current_node->get_cell().get_neuron_id().is_virtual()) {
                 num_virtual_neurons++;
 
-                while (level_indices.size() <= level) {
-                    level_indices.push_back(0);
+                while (level_indices.size() <= level + 1) {
+                    level_indices.push_back(level_indices.back());
                 }
-                level_indices[level] += 1;
+                level_indices[level + 1] += 1;
 
                 const auto &children = current_node->get_children();
                 int child_count = 0;
@@ -445,24 +593,8 @@ public:
                 }
             }
         }
-        // then, we use the number of nodes per level to set the indices in level indices
-        size_t nodes_above = 0;
-        for (auto & level_index : level_indices) {
-            auto nodes_this_level = level_index;
-            level_index = nodes_above;
-            nodes_above += nodes_this_level;
-        }
 
-        octree_cpu_copy.minimum_cell_position_virtual.resize(num_virtual_neurons);
-        octree_cpu_copy.maximum_cell_position_virtual.resize(num_virtual_neurons);
-        octree_cpu_copy.position_excitatory_element_virtual.resize(num_virtual_neurons);
-        octree_cpu_copy.position_inhibitory_element_virtual.resize(num_virtual_neurons);
-        octree_cpu_copy.num_free_elements_excitatory_virtual.resize(num_virtual_neurons);
-        octree_cpu_copy.num_free_elements_inhibitory_virtual.resize(num_virtual_neurons);
-        octree_cpu_copy.num_children.resize(num_virtual_neurons);
-        for (auto & child_indices : octree_cpu_copy.child_indices) {
-            child_indices.resize(num_virtual_neurons);
-        }
+
 
         std::stack<std::tuple<const OctreeNode<AdditionalCellAttributes> *, size_t, size_t>> octree_nodes_second_pass{};
         octree_nodes_second_pass.emplace(&root, 0, 0);
@@ -475,13 +607,7 @@ public:
                 const auto index = level_indices[level];
                 level_indices[level] += 1;
                 if (parent_index != 0) {
-                    // look for an unassigned space in the children array
-                    for (auto & child_indices : octree_cpu_copy.child_indices) {
-                        if (child_indices[parent_index] == 0) {
-                            child_indices[parent_index] = index;
-                            break;
-                        }
-                    }
+                    octree_cpu_copy.child_indices[parent_index].push_back(index);
                 }
                 // Currently assumes that either dendrites are both true or axons are both true
                 if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
