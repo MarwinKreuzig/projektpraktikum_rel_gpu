@@ -40,6 +40,7 @@
 #include <range/v3/view/filter.hpp>
 #include <stack>
 
+
 class Partition;
 
 /**
@@ -467,6 +468,10 @@ public:
         std::stack<std::tuple<const OctreeNode<AdditionalCellAttributes> *, size_t, size_t>> octree_nodes_second_pass{};
         octree_nodes_second_pass.emplace(&root, 0, 0);
 
+	const auto convert_vec_to_gpu = [](const Vec3d cpu_vec) -> gpu::Vec3d {
+	    return gpu::Vec3d { cpu_vec.get_x(), cpu_vec.get_y(), cpu_vec.get_z() };
+	};
+
         while (!octree_nodes_second_pass.empty()) {
             const auto [current_node, level, parent_index] = octree_nodes_second_pass.top();
             octree_nodes_second_pass.pop();
@@ -483,19 +488,19 @@ public:
                         }
                     }
                 }
+		// Copy the neuron
                 // Currently assumes that either dendrites are both true or axons are both true
+		ElementType element_type;
                 if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
-                    // TODO: This needs to be identical to leaf node copying
-                    //octree_cpu_copy.position_excitatory_element_virtual[index] = current_node->get_cell().get_excitatory_dendrites_position().value();
-                    // octree_cpu_copy.position_inhibitory_element_virtual[index] = current_node->get_cell().get_inhibitory_dendrites_position().value();
-                    //octree_cpu_copy.num_free_elements_excitatory_virtual[index] = current_node->get_cell().get_number_excitatory_dendrites();
-                    //octree_cpu_copy.num_free_elements_inhibitory_virtual[index] = current_node->get_cell().get_number_inhibitory_dendrites();
+		    element_type = ElementType::Dendrite;
                 } else {
-                    // octree_cpu_copy.position_excitatory_element_virtual[index] = current_node->get_cell().get_excitatory_axons_position().value();
-                    // octree_cpu_copy.position_inhibitory_element_virtual[index] = current_node->get_cell().get_inhibitory_axons_position().value();
-                    //octree_cpu_copy.num_free_elements_excitatory_virtual[index] = current_node->get_cell().get_number_excitatory_axons();
-                    //octree_cpu_copy.num_free_elements_inhibitory_virtual[index] = current_node->get_cell().get_number_inhibitory_axons();
+		    element_type = ElementType::Axon;
                 }
+		auto current_cell = current_node->get_cell();
+                octree_cpu_copy.position_excitatory_element_virtual[index] = convert_vec_to_gpu(current_cell.get_position_for(element_type, SignalType::Excitatory).value());
+		octree_cpu_copy.position_inhibitory_element_virtual[index] = convert_vec_to_gpu(current_cell.get_position_for(element_type, SignalType::Inhibitory).value());
+                octree_cpu_copy.num_free_elements_excitatory_virtual[index] = current_cell.get_number_elements_for(element_type, SignalType::Excitatory);
+	        octree_cpu_copy.num_free_elements_inhibitory_virtual[index] = current_cell.get_number_elements_for(element_type, SignalType::Inhibitory);
 
                 const auto &children = current_node->get_children();
                 int child_count = 0;
@@ -511,7 +516,13 @@ public:
                 NeuronID neuron_ID = current_node->get_cell_neuron_id();
                 octree_cpu_copy.neuron_ids.push_back(neuron_ID.get_neuron_id());
                 if (parent_index != 0) {
-                    octree_cpu_copy.child_indices[parent_index].push_back(octree_cpu_copy.neuron_ids.size() - 1);
+                    // look for an unassigned space in the children array
+                    for (auto & child_indices : octree_cpu_copy.child_indices) {
+                        if (child_indices[parent_index] == 0) {
+                            child_indices[parent_index] = octree_cpu_copy.neuron_ids.size() - 1;
+                            break;
+                        }
+                    }
                 }
 
                 octree_cpu_copy.minimum_cell_position.push_back(gpu::Vec3d(std::get<0>(current_node->get_size()).get_x(),
@@ -521,26 +532,17 @@ public:
                                                                          std::get<1>(current_node->get_size()).get_y(),
                                                                          std::get<1>(current_node->get_size()).get_z()));
 
-                // Currently assumes that either dendrites are both true or axons are both true
+		ElementType element_type;
                 if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
-                    octree_cpu_copy.position_excitatory_element.push_back(
-                            gpu::Vec3d(current_node->get_cell().get_position_for(ElementType::Dendrite, SignalType::Excitatory).value().get_x(),
-                                       current_node->get_cell().get_position_for(ElementType::Dendrite, SignalType::Excitatory).value().get_y(),
-                                       current_node->get_cell().get_position_for(ElementType::Dendrite, SignalType::Excitatory).value().get_z()));
-                    // etc bei den nächsten auch, hier auskommentiert wegen compilierung
-                    //octree_cpu_copy.position_inhibitory_element.push_back(current_node->get_cell().get_inhibitory_dendrites_position().value());
-                    //octree_cpu_copy.num_free_elements_excitatory.push_back(
-                           // current_node->get_cell().get_number_excitatory_dendrites());
-                    //octree_cpu_copy.num_free_elements_inhibitory.push_back(
-                           // current_node->get_cell().get_number_inhibitory_dendrites());
+		    element_type = ElementType::Dendrite;
                 } else {
-                    //octree_cpu_copy.position_excitatory_element.push_back(current_node->get_cell().get_excitatory_axons_position().value());
-                    //octree_cpu_copy.position_inhibitory_element.push_back(current_node->get_cell().get_inhibitory_axons_position().value());
-                   // octree_cpu_copy.num_free_elements_excitatory.push_back(
-                          //  current_node->get_cell().get_number_excitatory_axons());
-                    //octree_cpu_copy.num_free_elements_inhibitory.push_back(
-                        //    current_node->get_cell().get_number_inhibitory_axons());
+		    element_type = ElementType::Axon;
                 }
+		auto current_cell = current_node->get_cell();
+                octree_cpu_copy.position_excitatory_element.push_back(convert_vec_to_gpu(current_cell.get_position_for(element_type, SignalType::Excitatory).value()));
+		octree_cpu_copy.position_inhibitory_element.push_back(convert_vec_to_gpu(current_cell.get_position_for(element_type, SignalType::Inhibitory).value()));
+                octree_cpu_copy.num_free_elements_excitatory.push_back(current_cell.get_number_elements_for(element_type, SignalType::Excitatory));
+	        octree_cpu_copy.num_free_elements_inhibitory.push_back(current_cell.get_number_elements_for(element_type, SignalType::Inhibitory));
             }
         }
 
@@ -887,3 +889,4 @@ private:
     std::vector<OctreeNode<AdditionalCellAttributes> *> branch_nodes{};
     std::vector<OctreeNode<AdditionalCellAttributes> *> all_leaf_nodes{};
 };
+
