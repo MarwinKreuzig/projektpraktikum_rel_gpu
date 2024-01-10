@@ -385,7 +385,7 @@ public:
      * @brief Constructs the Octree on the GPU. Should only be called after all nodes have been inserted.
      * @param num_neurons Number of neurons on MPI Process
      */
-    void construct_on_gpu(const RelearnTypes::number_neurons_type num_neurons) {
+    [[nodiscard]] gpu::algorithm::OctreeCPUCopy octree_to_octree_cpu_copy(const RelearnTypes::number_neurons_type num_neurons) {
 
         // Kann auch im ersten Depth first pass herausgefunden werden
         RelearnTypes::number_neurons_type num_virtual_neurons = 0;
@@ -418,11 +418,11 @@ public:
         // The vector is filled in the first pass, after which it contains all the start indices for the first node of
         // every level.
         std::vector<size_t> level_indices{};
+        level_indices.push_back(0);
 
         std::stack<std::pair<const OctreeNode<AdditionalCellAttributes> *, size_t>> octree_nodes{};
         octree_nodes.emplace(&root, 0);
 
-        // first, we find the number of nodes per level in the tree
         while (!octree_nodes.empty()) {
             const auto [current_node, level] = octree_nodes.top();
             octree_nodes.pop();
@@ -430,10 +430,10 @@ public:
             if (current_node->get_cell().get_neuron_id().is_virtual()) {
                 num_virtual_neurons++;
 
-                while (level_indices.size() <= level) {
-                    level_indices.push_back(0);
+                while (level_indices.size() <= level + 1) {
+                    level_indices.push_back(level_indices.back());
                 }
-                level_indices[level] += 1;
+                level_indices[level + 1] += 1;
 
                 const auto &children = current_node->get_children();
                 int child_count = 0;
@@ -446,24 +446,8 @@ public:
                 }
             }
         }
-        // then, we use the number of nodes per level to set the indices in level indices
-        size_t nodes_above = 0;
-        for (auto & level_index : level_indices) {
-            auto nodes_this_level = level_index;
-            level_index = nodes_above;
-            nodes_above += nodes_this_level;
-        }
 
-        octree_cpu_copy.minimum_cell_position_virtual.resize(num_virtual_neurons);
-        octree_cpu_copy.maximum_cell_position_virtual.resize(num_virtual_neurons);
-        octree_cpu_copy.position_excitatory_element_virtual.resize(num_virtual_neurons);
-        octree_cpu_copy.position_inhibitory_element_virtual.resize(num_virtual_neurons);
-        octree_cpu_copy.num_free_elements_excitatory_virtual.resize(num_virtual_neurons);
-        octree_cpu_copy.num_free_elements_inhibitory_virtual.resize(num_virtual_neurons);
-        octree_cpu_copy.num_children.resize(num_virtual_neurons);
-        for (auto & child_indices : octree_cpu_copy.child_indices) {
-            child_indices.resize(num_virtual_neurons);
-        }
+
 
         std::stack<std::tuple<const OctreeNode<AdditionalCellAttributes> *, size_t, size_t>> octree_nodes_second_pass{};
         octree_nodes_second_pass.emplace(&root, 0, 0);
@@ -480,13 +464,7 @@ public:
                 const auto index = level_indices[level];
                 level_indices[level] += 1;
                 if (parent_index != 0) {
-                    // look for an unassigned space in the children array
-                    for (auto & child_indices : octree_cpu_copy.child_indices) {
-                        if (child_indices[parent_index] == 0) {
-                            child_indices[parent_index] = index;
-                            break;
-                        }
-                    }
+                    octree_cpu_copy.child_indices[parent_index].push_back(index);
                 }
 		// Copy the neuron
                 // Currently assumes that either dendrites are both true or axons are both true
@@ -546,6 +524,12 @@ public:
             }
         }
 
+	return octree_cpu_copy;
+    }
+
+    void construct_on_gpu(const RelearnTypes::number_neurons_type num_neurons) {
+	auto octree_cpu_copy = octree_to_octree_cpu_copy(num_neurons);
+	const auto num_virtual_neurons = octree_cpu_copy.minimum_cell_position_virtual.size();
         if (CudaHelper::is_cuda_available()) {
             gpu_handle = gpu::algorithm::create_octree(num_neurons, num_virtual_neurons);
             gpu_handle->copy_to_gpu(std::move(octree_cpu_copy));

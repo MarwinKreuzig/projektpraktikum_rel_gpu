@@ -13,6 +13,14 @@ namespace gpu {
         {}
 
         Vec3() {}
+
+        bool operator!=(const Vec3& rhs) const {
+            return (x != rhs.x) || (y != rhs.y) || (z != rhs.z);
+        }
+
+        bool operator==(const Vec3& rhs) const {
+            return (x == rhs.x) && (y == rhs.y) && (z == rhs.z);
+        }
     };
 
     using Vec3d = Vec3<double>;
