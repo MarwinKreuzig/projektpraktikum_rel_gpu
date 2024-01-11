@@ -34,7 +34,7 @@
 using test_types = ::testing::Types<BarnesHutCell, BarnesHutInvertedCell>;
 TYPED_TEST_SUITE(OctreeTestGpu, test_types);
 
-bool areVectorsEqual(const std::vector<gpu::Vec3d>& v1, const std::vector<gpu::Vec3d>& v2) {
+bool compare_vec(const std::vector<gpu::Vec3d>& v1, const std::vector<gpu::Vec3d>& v2) {
     if (v1.size() != v2.size()) {
         return false;
     }
@@ -48,7 +48,11 @@ bool areVectorsEqual(const std::vector<gpu::Vec3d>& v1, const std::vector<gpu::V
     return true;
 }
 
-TYPED_TEST(OctreeTestGpu, OctreeNodeOrderTest) {
+const auto convert_vec_to_gpu = [](const Vec3d cpu_vec) -> gpu::Vec3d {
+    return gpu::Vec3d { cpu_vec.get_x(), cpu_vec.get_y(), cpu_vec.get_z() };
+};
+
+TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
 
     using AdditionalCellAttributes = TypeParam;
     using box_size_type = RelearnTypes::box_size_type;
@@ -90,73 +94,126 @@ octree.insert(box_size_type(4, 6, 7 ) , NeuronID{false, 9} ); //hinten links obe
 
 OctreeCPUCopy octree_cpu_copy(num_neurons_gpu(10), num_neurons_gpu(3));
 
+std::vector<OctreeNode<AdditionalCellAttributes>*> nodes = {
+        octree.get_root()->get_child(0),
+        octree.get_root()->get_child(1)->get_child(0),
+        octree.get_root()->get_child(1)->get_child(1),
+        octree.get_root()->get_child(2),
+        octree.get_root()->get_child(3),
+        octree.get_root()->get_child(4)->get_child(0),
+        octree.get_root()->get_child(4)->get_child(1),
+        octree.get_root()->get_child(5),
+        octree.get_root()->get_child(6),
+        octree.get_root()->get_child(7),
+        octree.get_root()->get_child(1),
+        octree.get_root()->get_child(4),
+        octree.get_root()};
+
+auto leaf1 = octree.get_root()->get_child(0);
+auto leaf2 = octree.get_root()->get_child(1)->get_child(0);
+auto leaf3 = octree.get_root()->get_child(1)->get_child(1);
+auto leaf4 = octree.get_root()->get_child(2);
+auto leaf5 = octree.get_root()->get_child(3);
+auto leaf6 = octree.get_root()->get_child(4)->get_child(0);
+auto leaf7 = octree.get_root()->get_child(4)->get_child(1);
+auto leaf8 = octree.get_root()->get_child(5);
+auto leaf9 = octree.get_root()->get_child(6);
+auto leaf10 = octree.get_root()->get_child(7);
+
+auto branch1 = octree.get_root()->get_child(1);
+auto branch2 = octree.get_root()->get_child(4);
+
+auto root = octree.get_root();
+
+
 for (int i = 0; i < 8; ++i) {
-    octree_cpu_copy.child_indices[i].resize(13);
+    octree_cpu_copy.child_indices[i].resize(3);
 }
-octree_cpu_copy.num_children.resize(13);
-octree_cpu_copy.minimum_cell_position.resize(13);
-octree_cpu_copy.minimum_cell_position_virtual.resize(13);
-octree_cpu_copy.maximum_cell_position.resize(13);
-octree_cpu_copy.maximum_cell_position_virtual.resize(13);
-octree_cpu_copy.position_excitatory_element.resize(13);
-octree_cpu_copy.position_excitatory_element_virtual.resize(13);
-octree_cpu_copy.position_inhibitory_element.resize(13);
-octree_cpu_copy.position_inhibitory_element_virtual.resize(13);
+octree_cpu_copy.num_children.resize(3);
+
+
 octree_cpu_copy.num_free_elements_excitatory.resize(13);
 octree_cpu_copy.num_free_elements_excitatory_virtual.resize(13);
 octree_cpu_copy.num_free_elements_inhibitory.resize(13);
 octree_cpu_copy.num_free_elements_inhibitory_virtual.resize(13);
 
 
-octree_cpu_copy.neuron_ids.push_back(octree.get_root()->get_child(0)->get_cell_neuron_id().get_neuron_id());
-octree_cpu_copy.neuron_ids.push_back(octree.get_root()->get_child(1)->get_child(0)->get_cell_neuron_id().get_neuron_id());
-octree_cpu_copy.neuron_ids.push_back(octree.get_root()->get_child(1)->get_child(1)->get_cell_neuron_id().get_neuron_id());
-octree_cpu_copy.neuron_ids.push_back(octree.get_root()->get_child(2)->get_cell_neuron_id().get_neuron_id());
-octree_cpu_copy.neuron_ids.push_back(octree.get_root()->get_child(3)->get_cell_neuron_id().get_neuron_id());
-octree_cpu_copy.neuron_ids.push_back(octree.get_root()->get_child(4)->get_child(0)->get_cell_neuron_id().get_neuron_id());
-octree_cpu_copy.neuron_ids.push_back(octree.get_root()->get_child(4)->get_child(1)->get_cell_neuron_id().get_neuron_id());
-octree_cpu_copy.neuron_ids.push_back(octree.get_root()->get_child(5)->get_cell_neuron_id().get_neuron_id());
-octree_cpu_copy.neuron_ids.push_back(octree.get_root()->get_child(6)->get_cell_neuron_id().get_neuron_id());
-octree_cpu_copy.neuron_ids.push_back(octree.get_root()->get_child(7)->get_cell_neuron_id().get_neuron_id());
-octree_cpu_copy.neuron_ids.push_back(octree.get_root()->get_child(1)->get_cell_neuron_id().get_neuron_id());
-octree_cpu_copy.neuron_ids.push_back(octree.get_root()->get_child(4)->get_cell_neuron_id().get_neuron_id());
-octree_cpu_copy.neuron_ids.push_back(octree.get_root()->get_cell_neuron_id().get_neuron_id());
+for (int i = 0; i < nodes.size(); ++i) {
 
-octree_cpu_copy.child_indices[0].insert(octree_cpu_copy.child_indices[0].begin() + 10, 1);
-octree_cpu_copy.child_indices[1].insert(octree_cpu_copy.child_indices[0].begin() + 10, 2);
+    ElementType element_type;
+    if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
+        element_type = ElementType::Dendrite;
+    }
+    else {
+        element_type = ElementType::Axon;
+    }
 
-octree_cpu_copy.child_indices[0].insert(octree_cpu_copy.child_indices[0].begin() + 11, 5);
-octree_cpu_copy.child_indices[1].insert(octree_cpu_copy.child_indices[0].begin() + 11, 6);
+    octree_cpu_copy.neuron_ids.push_back(nodes[i]->get_cell_neuron_id().get_neuron_id());
 
-octree_cpu_copy.child_indices[0].insert(octree_cpu_copy.child_indices[0].begin() + 12, 0);
-octree_cpu_copy.child_indices[1].insert(octree_cpu_copy.child_indices[0].begin() + 12, 10);
-octree_cpu_copy.child_indices[2].insert(octree_cpu_copy.child_indices[0].begin() + 12, 3);
-octree_cpu_copy.child_indices[3].insert(octree_cpu_copy.child_indices[0].begin() + 12, 4);
-octree_cpu_copy.child_indices[4].insert(octree_cpu_copy.child_indices[0].begin() + 12, 11);
-octree_cpu_copy.child_indices[5].insert(octree_cpu_copy.child_indices[0].begin() + 12, 7);
-octree_cpu_copy.child_indices[6].insert(octree_cpu_copy.child_indices[0].begin() + 12, 8);
-octree_cpu_copy.child_indices[7].insert(octree_cpu_copy.child_indices[0].begin() + 12, 9);
+    if(nodes[i]->get_cell_neuron_id().is_virtual()) {
+        octree_cpu_copy.minimum_cell_position_virtual.push_back(gpu::Vec3d(
+                std::get<0>(nodes[i]->get_size()).get_x(),
+                std::get<0>(nodes[i]->get_size()).get_y(),
+                std::get<0>(nodes[i]->get_size()).get_z()));
+        octree_cpu_copy.maximum_cell_position_virtual.push_back(gpu::Vec3d(
+                std::get<1>(nodes[i]->get_size()).get_x(),
+                std::get<1>(nodes[i]->get_size()).get_y(),
+                std::get<1>(nodes[i]->get_size()).get_z()));
 
-octree_cpu_copy.num_children.insert(octree_cpu_copy.num_children.begin(), 0);
-octree_cpu_copy.num_children.insert(octree_cpu_copy.num_children.begin() + 1, 0);
-octree_cpu_copy.num_children.insert(octree_cpu_copy.num_children.begin() + 2, 0);
-octree_cpu_copy.num_children.insert(octree_cpu_copy.num_children.begin() + 3, 0);
-octree_cpu_copy.num_children.insert(octree_cpu_copy.num_children.begin() + 4, 0);
-octree_cpu_copy.num_children.insert(octree_cpu_copy.num_children.begin() + 5, 0);
-octree_cpu_copy.num_children.insert(octree_cpu_copy.num_children.begin() + 6, 0);
-octree_cpu_copy.num_children.insert(octree_cpu_copy.num_children.begin() + 7, 0);
-octree_cpu_copy.num_children.insert(octree_cpu_copy.num_children.begin() + 8, 0);
-octree_cpu_copy.num_children.insert(octree_cpu_copy.num_children.begin() + 9, 0);
-octree_cpu_copy.num_children.insert(octree_cpu_copy.num_children.begin() + 10, 2);
-octree_cpu_copy.num_children.insert(octree_cpu_copy.num_children.begin() + 11, 2);
-octree_cpu_copy.num_children.insert(octree_cpu_copy.num_children.begin() + 12, 8);
+        octree_cpu_copy.position_excitatory_element_virtual.push_back(
+                convert_vec_to_gpu(nodes[i]->get_cell().get_position_for(element_type, SignalType::Excitatory).value()));
+        octree_cpu_copy.position_inhibitory_element_virtual.push_back(
+                convert_vec_to_gpu(nodes[i]->get_cell().get_position_for(element_type, SignalType::Inhibitory).value()));
 
+        octree_cpu_copy.num_free_elements_excitatory_virtual.push_back(
+                nodes[i]->get_cell().get_number_elements_for(element_type, SignalType::Excitatory));
+        octree_cpu_copy.num_free_elements_inhibitory_virtual.push_back(
+                nodes[i]->get_cell().get_number_elements_for(element_type, SignalType::Inhibitory));
+    }
+    else   {
+        octree_cpu_copy.minimum_cell_position.push_back(gpu::Vec3d(
+                std::get<0>(nodes[i]->get_size()).get_x(),
+                std::get<0>(nodes[i]->get_size()).get_y(),
+                std::get<0>(nodes[i]->get_size()).get_z()));
+        octree_cpu_copy.maximum_cell_position.push_back(gpu::Vec3d(
+                std::get<1>(nodes[i]->get_size()).get_x(),
+                std::get<1>(nodes[i]->get_size()).get_y(),
+                std::get<1>(nodes[i]->get_size()).get_z()));
 
+        octree_cpu_copy.position_excitatory_element.push_back(
+                convert_vec_to_gpu(nodes[i]->get_cell().get_position_for(element_type, SignalType::Excitatory).value()));
+        octree_cpu_copy.position_inhibitory_element.push_back(
+                convert_vec_to_gpu(nodes[i]->get_cell().get_position_for(element_type, SignalType::Inhibitory).value()));
+
+        octree_cpu_copy.num_free_elements_excitatory.push_back(
+                nodes[i]->get_cell().get_number_elements_for(element_type, SignalType::Excitatory));
+        octree_cpu_copy.num_free_elements_inhibitory.push_back(
+                nodes[i]->get_cell().get_number_elements_for(element_type, SignalType::Inhibitory));
+    }
+}
+
+octree_cpu_copy.child_indices[0][0] = 1;
+octree_cpu_copy.child_indices[1][0] = 2;
+
+octree_cpu_copy.child_indices[0][1] = 5;
+octree_cpu_copy.child_indices[1][1] = 6;
+
+octree_cpu_copy.child_indices[0][2] = 0;
+octree_cpu_copy.child_indices[1][2] = 10;
+octree_cpu_copy.child_indices[2][2] = 3;
+octree_cpu_copy.child_indices[3][2] = 4;
+octree_cpu_copy.child_indices[4][2] = 11;
+octree_cpu_copy.child_indices[5][2] = 7;
+octree_cpu_copy.child_indices[6][2] = 8;
+octree_cpu_copy.child_indices[7][2] = 9;
+
+octree_cpu_copy.num_children[0] = 2;
+octree_cpu_copy.num_children[1] = 2;
+octree_cpu_copy.num_children[2] = 8;
 
 
 auto result = octree.octree_to_octree_cpu_copy(num_neurons(10));
 auto expected = octree_cpu_copy;
-
 
 
 ASSERT_EQ(result.neuron_ids, expected.neuron_ids);
@@ -167,17 +224,17 @@ ASSERT_EQ(result.child_indices[i], expected.child_indices[i]);
 
 ASSERT_EQ(result.num_children, expected.num_children);
 
-ASSERT_TRUE(areVectorsEqual(result.minimum_cell_position, expected.minimum_cell_position));
-ASSERT_TRUE(areVectorsEqual(result.minimum_cell_position_virtual, expected.minimum_cell_position_virtual));
+ASSERT_TRUE(compare_vec(result.minimum_cell_position, expected.minimum_cell_position));
+ASSERT_TRUE(compare_vec(result.minimum_cell_position_virtual, expected.minimum_cell_position_virtual));
 
-ASSERT_TRUE(areVectorsEqual(result.maximum_cell_position, expected.maximum_cell_position));
-ASSERT_TRUE(areVectorsEqual(result.maximum_cell_position_virtual, expected.maximum_cell_position_virtual));
+ASSERT_TRUE(compare_vec(result.maximum_cell_position, expected.maximum_cell_position));
+ASSERT_TRUE(compare_vec(result.maximum_cell_position_virtual, expected.maximum_cell_position_virtual));
 
-ASSERT_TRUE(areVectorsEqual(result.position_excitatory_element, expected.position_excitatory_element));
-ASSERT_TRUE(areVectorsEqual(result.position_excitatory_element_virtual, expected.position_excitatory_element_virtual));
+ASSERT_TRUE(compare_vec(result.position_excitatory_element, expected.position_excitatory_element));
+ASSERT_TRUE(compare_vec(result.position_excitatory_element_virtual, expected.position_excitatory_element_virtual));
 
-ASSERT_TRUE(areVectorsEqual(result.position_inhibitory_element, expected.position_inhibitory_element));
-ASSERT_TRUE(areVectorsEqual(result.position_inhibitory_element_virtual, expected.position_inhibitory_element_virtual));
+ASSERT_TRUE(compare_vec(result.position_inhibitory_element, expected.position_inhibitory_element));
+ASSERT_TRUE(compare_vec(result.position_inhibitory_element_virtual, expected.position_inhibitory_element_virtual));
 
 ASSERT_EQ(result.num_free_elements_excitatory, expected.num_free_elements_excitatory);
 ASSERT_EQ(result.num_free_elements_excitatory_virtual, expected.num_free_elements_excitatory_virtual);
@@ -210,6 +267,7 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
     const std::shared_ptr<gpu::algorithm::OctreeHandle> gpu_handle = octree.get_gpu_handle();
     gpu::algorithm::OctreeCPUCopy octree_cpu_copy(neurons_to_place.size(), gpu_handle->get_number_virtual_neurons());
     gpu_handle->copy_to_cpu(octree_cpu_copy);
+
 
     auto* root = octree.get_root();
     std::stack<const OctreeNode<AdditionalCellAttributes>*> octree_nodes_cpu{};
