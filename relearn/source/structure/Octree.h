@@ -485,7 +485,7 @@ public:
 		
 		// add the current node to its parent's children, skipping the root node
                 if (level != 0) {
-		    octree_cpu_copy.child_indices[octree_cpu_copy.num_children[parent_index]][parent_index] = index;
+		    octree_cpu_copy.child_indices[octree_cpu_copy.num_children[parent_index]][parent_index] = index + num_neurons;
 		    octree_cpu_copy.num_children[parent_index] += 1;
                 }
 
