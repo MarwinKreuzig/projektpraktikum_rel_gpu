@@ -489,8 +489,8 @@ public:
 		    octree_cpu_copy.num_children[parent_index] += 1;
                 }
 
-		octree_cpu_copy.minimum_cell_position_virtual[index] = convert_to_gpu(std::get<0>(current_node->get_size()));
-		octree_cpu_copy.maximum_cell_position_virtual[index] = convert_to_gpu(std::get<1>(current_node->get_size()));
+		octree_cpu_copy.minimum_cell_position_virtual[index] = convert_vec_to_gpu(std::get<0>(current_node->get_size()));
+		octree_cpu_copy.maximum_cell_position_virtual[index] = convert_vec_to_gpu(std::get<1>(current_node->get_size()));
 
 		// Copy the neuron
                 // Currently assumes that either dendrites are both true or axons are both true
@@ -524,8 +524,8 @@ public:
 		octree_cpu_copy.child_indices[octree_cpu_copy.num_children[parent_index]][parent_index] = index;
 		octree_cpu_copy.num_children[parent_index] += 1;
 
-		octree_cpu_copy.minimum_cell_position.push_back(convert_to_gpu(std::get<0>(current_node->get_size())));
-		octree_cpu_copy.maximum_cell_position.push_back(convert_to_gpu(std::get<1>(current_node->get_size())));
+		octree_cpu_copy.minimum_cell_position.push_back(convert_vec_to_gpu(std::get<0>(current_node->get_size())));
+		octree_cpu_copy.maximum_cell_position.push_back(convert_vec_to_gpu(std::get<1>(current_node->get_size())));
 
 		ElementType element_type;
                 if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
