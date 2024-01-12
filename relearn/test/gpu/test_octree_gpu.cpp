@@ -43,6 +43,12 @@ const auto convert_vec_to_gpu = [](const Vec3d cpu_vec) -> gpu::Vec3d {
     return gpu::Vec3d { cpu_vec.get_x(), cpu_vec.get_y(), cpu_vec.get_z() };
 };
 
+const auto assert_vec = [](const Vec3d vec1, const Vec3d vec2) {
+    ASSERT_DOUBLE_EQ(vec1.get_x(), vec2.get_x());
+    ASSERT_DOUBLE_EQ(vec1.get_y(), vec2.get_y());
+    ASSERT_DOUBLE_EQ(vec1.get_z(), vec2.get_z());
+};
+
 
 
 TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
@@ -69,8 +75,8 @@ using num_neurons = RelearnTypes::number_neurons_type;
 //    |--(4, 1)
 //    |--(9, 1)
 //    |--(6, 1)
-//
-//
+
+
 OctreeImplementation<TypeParam> octree({0, 0, 0 }, {10, 10, 10 }, 1);
 
 octree.insert(box_size_type(6, 0, 0 ) , NeuronID{false, 0} ); //vorne rechts unten
@@ -172,19 +178,30 @@ for (int i = 0; i < 8; ++i) {
     octree_cpu_copy.child_indices[i].resize(3);
 }
 
-octree_cpu_copy.child_indices[0][1] = 1;
-octree_cpu_copy.child_indices[0][2] = 5;
 
-octree_cpu_copy.child_indices[5][1] = 2;
-octree_cpu_copy.child_indices[5][2] = 6;
+//                                                          X0
+//    |--(5, 1)                  ___________________________|____________________________
+//    |--(X, 0)                  |      |       |       |       |       |       |       |
+//        |--(0, 1)              5      X2      8       7       X1      4       9       6
+//        |--(1, 1)                     |                       |
+//    |--(8, 1)                        / \                     / \
+//    |--(7, 1)                       0   1                   2   3
+
+
+octree_cpu_copy.child_indices[0][2] = 7;
+octree_cpu_copy.child_indices[1][2] = 8;
+
+octree_cpu_copy.child_indices[0][1] = 3;
+octree_cpu_copy.child_indices[1][1] = 4;
+
 
 octree_cpu_copy.child_indices[0][0] = 0;
-octree_cpu_copy.child_indices[1][0] = 10;
-octree_cpu_copy.child_indices[2][0] = 3;
-octree_cpu_copy.child_indices[3][0] = 4;
-octree_cpu_copy.child_indices[4][0] = 11;
-octree_cpu_copy.child_indices[5][0] = 7;
-octree_cpu_copy.child_indices[6][0] = 8;
+octree_cpu_copy.child_indices[1][0] = 1;
+octree_cpu_copy.child_indices[2][0] = 2;
+octree_cpu_copy.child_indices[3][0] = 11;
+octree_cpu_copy.child_indices[4][0] = 5;
+octree_cpu_copy.child_indices[5][0] = 6;
+octree_cpu_copy.child_indices[6][0] = 12;
 octree_cpu_copy.child_indices[7][0] = 9;
 
 
@@ -209,17 +226,17 @@ for(size_t i = 0; i < expected.child_indices.size(); ++i) {
 }
 
 for(int i = 0; i < expected.minimum_cell_position.size(); i++)  {
-    ASSERT_EQ(convert_to_vec3(result.minimum_cell_position[i]), convert_to_vec3(expected.minimum_cell_position[i])) << "An Index: " << i;
-    ASSERT_EQ(convert_to_vec3(result.maximum_cell_position[i]), convert_to_vec3(expected.maximum_cell_position[i])) << "An Index: " << i;
-    ASSERT_EQ(convert_to_vec3(result.position_excitatory_element[i]), convert_to_vec3(expected.position_excitatory_element[i])) << "An Index: " << i;
-    ASSERT_EQ(convert_to_vec3(result.position_inhibitory_element[i]), convert_to_vec3(expected.position_inhibitory_element[i])) << "An Index: " << i;
+    assert_vec(convert_to_vec3(result.minimum_cell_position[i]), convert_to_vec3(expected.minimum_cell_position[i]));
+    assert_vec(convert_to_vec3(result.maximum_cell_position[i]), convert_to_vec3(expected.maximum_cell_position[i]));
+    assert_vec(convert_to_vec3(result.position_excitatory_element[i]), convert_to_vec3(expected.position_excitatory_element[i]));
+    assert_vec(convert_to_vec3(result.position_inhibitory_element[i]), convert_to_vec3(expected.position_inhibitory_element[i]));
 }
 
 for(int i = 0; i < expected.minimum_cell_position_virtual.size(); i++)  {
-    ASSERT_EQ(convert_to_vec3(result.minimum_cell_position_virtual[i]), convert_to_vec3(expected.minimum_cell_position_virtual[i])) << "An Index: " << i;
-    ASSERT_EQ(convert_to_vec3(result.maximum_cell_position_virtual[i]), convert_to_vec3(expected.maximum_cell_position_virtual[i])) << "An Index: " << i;
-    ASSERT_EQ(convert_to_vec3(result.position_excitatory_element_virtual[i]), convert_to_vec3(expected.position_excitatory_element_virtual[i])) << "An Index: " << i;
-    ASSERT_EQ(convert_to_vec3(result.position_inhibitory_element_virtual[i]), convert_to_vec3(expected.position_inhibitory_element_virtual[i])) << "An Index: " << i;
+    assert_vec(convert_to_vec3(result.minimum_cell_position_virtual[i]), convert_to_vec3(expected.minimum_cell_position_virtual[i]));
+    assert_vec(convert_to_vec3(result.maximum_cell_position_virtual[i]), convert_to_vec3(expected.maximum_cell_position_virtual[i]));
+    assert_vec(convert_to_vec3(result.position_excitatory_element_virtual[i]), convert_to_vec3(expected.position_excitatory_element_virtual[i]));
+    assert_vec(convert_to_vec3(result.position_inhibitory_element_virtual[i]), convert_to_vec3(expected.position_inhibitory_element_virtual[i]));
 }
 
 
