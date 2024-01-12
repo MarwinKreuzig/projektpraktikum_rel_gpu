@@ -481,7 +481,7 @@ public:
             if (current_node->get_cell().get_neuron_id().is_virtual()) {
                 const auto index = level_indices[level];
                 level_indices[level] += 1;
-                if (index != 0) {
+                if (level != 0) {
 		    // look for an unassigned space in the children array
 		    for (auto & child_indices : octree_cpu_copy.child_indices) {
 	                if (child_indices[parent_index] == 0) {
@@ -518,15 +518,13 @@ public:
                 NeuronID neuron_ID = current_node->get_cell_neuron_id();
                 octree_cpu_copy.neuron_ids.push_back(neuron_ID.get_neuron_id());
 		const auto index = octree_cpu_copy.neuron_ids.size() - 1;
-                if (index != 0) {
-                    // look for an unassigned space in the children array
-                    for (auto & child_indices : octree_cpu_copy.child_indices) {
-                        if (child_indices[parent_index] == 0) {
-                            child_indices[parent_index] = index;
-                            break;
-                        }
-                    }
-                }
+	        // look for an unassigned space in the children array
+	        for (auto & child_indices : octree_cpu_copy.child_indices) {
+		    if (child_indices[parent_index] == 0) {
+		        child_indices[parent_index] = index;
+		        break;
+		    }
+	        }
 
                 octree_cpu_copy.minimum_cell_position.push_back(gpu::Vec3d(std::get<0>(current_node->get_size()).get_x(),
                                                                          std::get<0>(current_node->get_size()).get_y(),
