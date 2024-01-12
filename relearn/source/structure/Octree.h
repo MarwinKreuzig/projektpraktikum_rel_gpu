@@ -467,6 +467,7 @@ public:
 	    child_indices.resize(num_virtual_neurons);
 	}
 
+	// stack of node, level, parent index
         std::stack<std::tuple<const OctreeNode<AdditionalCellAttributes> *, size_t, size_t>> octree_nodes_second_pass{};
         octree_nodes_second_pass.emplace(&root, 0, 0);
 
@@ -481,15 +482,13 @@ public:
             if (current_node->get_cell().get_neuron_id().is_virtual()) {
                 const auto index = level_indices[level];
                 level_indices[level] += 1;
+		
+		// add the current node to its parent's children, skipping the root node
                 if (level != 0) {
-		    // look for an unassigned space in the children array
-		    for (auto & child_indices : octree_cpu_copy.child_indices) {
-	                if (child_indices[parent_index] == 0) {
-			    child_indices[parent_index] = index;
-			    break;
-			}
-		    }
+		    octree_cpu_copy.child_indices[octree_cpu_copy.num_children[parent_index]][parent_index] = index;
+		    octree_cpu_copy.num_children[parent_index] += 1;
                 }
+
 		// Copy the neuron
                 // Currently assumes that either dendrites are both true or axons are both true
 		ElementType element_type;
@@ -513,18 +512,14 @@ public:
                         child_count++;
                     }
                 }
-                octree_cpu_copy.num_children[index] = child_count;
             } else {
                 NeuronID neuron_ID = current_node->get_cell_neuron_id();
                 octree_cpu_copy.neuron_ids.push_back(neuron_ID.get_neuron_id());
 		const auto index = octree_cpu_copy.neuron_ids.size() - 1;
-	        // look for an unassigned space in the children array
-	        for (auto & child_indices : octree_cpu_copy.child_indices) {
-		    if (child_indices[parent_index] == 0) {
-		        child_indices[parent_index] = index;
-		        break;
-		    }
-	        }
+
+		// add the current node to its parent's children
+		octree_cpu_copy.child_indices[octree_cpu_copy.num_children[index]][parent_index] = index;
+		octree_cpu_copy.num_children[index] += 1;
 
                 octree_cpu_copy.minimum_cell_position.push_back(gpu::Vec3d(std::get<0>(current_node->get_size()).get_x(),
                                                                          std::get<0>(current_node->get_size()).get_y(),
