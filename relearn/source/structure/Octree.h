@@ -481,7 +481,7 @@ public:
             if (current_node->get_cell().get_neuron_id().is_virtual()) {
                 const auto index = level_indices[level];
                 level_indices[level] += 1;
-                if (parent_index != 0) {
+                if (index != 0) {
 		    // look for an unassigned space in the children array
 		    for (auto & child_indices : octree_cpu_copy.child_indices) {
 	                if (child_indices[parent_index] == 0) {
@@ -517,11 +517,12 @@ public:
             } else {
                 NeuronID neuron_ID = current_node->get_cell_neuron_id();
                 octree_cpu_copy.neuron_ids.push_back(neuron_ID.get_neuron_id());
-                if (parent_index != 0) {
+		const auto index = octree_cpu_copy.neuron_ids.size() - 1;
+                if (index != 0) {
                     // look for an unassigned space in the children array
                     for (auto & child_indices : octree_cpu_copy.child_indices) {
                         if (child_indices[parent_index] == 0) {
-                            child_indices[parent_index] = octree_cpu_copy.neuron_ids.size() - 1;
+                            child_indices[parent_index] = index;
                             break;
                         }
                     }
