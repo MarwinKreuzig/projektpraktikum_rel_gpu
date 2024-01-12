@@ -519,7 +519,7 @@ public:
 
 		// add the current node to its parent's children
 		octree_cpu_copy.child_indices[octree_cpu_copy.num_children[parent_index]][parent_index] = index;
-		octree_cpu_copy.num_children[index] += 1;
+		octree_cpu_copy.num_children[parent_index] += 1;
 
                 octree_cpu_copy.minimum_cell_position.push_back(gpu::Vec3d(std::get<0>(current_node->get_size()).get_x(),
                                                                          std::get<0>(current_node->get_size()).get_y(),
