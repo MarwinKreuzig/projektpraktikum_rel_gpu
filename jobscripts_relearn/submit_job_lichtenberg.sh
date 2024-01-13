@@ -1,16 +1,16 @@
 #!/bin/bash
-
 #SBATCH -J relearn_benchmark
-#SBATCH -e ./stderr.relearn.%j.txt
-#SBATCH -o ./stdout.relearn.%j.txt
+#SBATCH -e /work/home/fk15toda/BP/Relearn_new/BP-RELeARN-GPU/jobscripts_relearn/stderr.relearn.%j.txt
+#SBATCH -o /work/home/fk15toda/BP/Relearn_new/BP-RELeARN-GPU/jobscripts_relearn/stdout.relearn.%j.txt
 #SBATCH -C avx512
 #SBATCH -n 1
+#SBATCH -c 1
 #SBATCH --mem-per-cpu=1024
-#SBATCH --time=1440
-#SBATCH --cpus-per-task=12
-#SBATCH --account=project02279
+#SBATCH -t 00:05:00
+#SBATCH -A project02279
 #SBATCH --gres=gpu
 
-cd ../relearn/build/bin/
+cd /work/home/fk15toda/BP/Relearn_new/BP-RELeARN-GPU/relearn/build/bin
 
-./relearn -s 100 -n 100 -a barnes-hut
+./relearn_tests
+

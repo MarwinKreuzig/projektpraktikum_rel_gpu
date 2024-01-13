@@ -7,18 +7,17 @@
 #include "CudaArray.cuh"
 #include "CudaVector.cuh"
 
-//#include <numeric>
-
 namespace gpu::algorithm {
 
     // Do it like this: indexes are always in the combined range with neurons and virtual neurons with neurons in the front
     // when trying to access child_indices, num_neurons has to be subtracted from the index.
+    // TODO BRIEF, add the above comment to brief
     struct Octree {
         uint64_t* neuron_ids;
 
         uint64_t* child_indices;
 
-        // we need this, since we can't use -1 to indicate that there is no child there
+        // we need this, since we can't use -1 to indicate an invalid child_indices entry
         unsigned int* num_children;
 
         double3* minimum_cell_position;
@@ -86,13 +85,4 @@ namespace gpu::algorithm {
         RelearnGPUTypes::number_neurons_type number_neurons;
         RelearnGPUTypes::number_neurons_type number_virtual_neurons;
     };
-
-    /**
-    * @brief Returns a shared pointer to a newly created handle to the Octree on the GPU
-    * @param number_neurons Number of neurons, influences how much memory will be allocated on the GPU
-    * @param number_virtual_neurons Number of virtual neurons, influences how much memory will be allocated on the GPU
-    */
-    std::shared_ptr<OctreeHandle> create_octree(RelearnGPUTypes::number_neurons_type number_neurons, RelearnGPUTypes::number_neurons_type number_virtual_neurons) {
-        return std::make_shared<OctreeHandleImpl>(number_neurons, number_virtual_neurons);
-    }
 };

@@ -387,31 +387,11 @@ public:
      */
     [[nodiscard]] gpu::algorithm::OctreeCPUCopy octree_to_octree_cpu_copy(const RelearnTypes::number_neurons_type num_neurons) {
 
-        // Kann auch im ersten Depth first pass herausgefunden werden
-        RelearnTypes::number_neurons_type num_virtual_neurons = 0;
-
-        gpu::algorithm::OctreeCPUCopy octree_cpu_copy(num_neurons, num_virtual_neurons);
-
-        // Traverse Tree (VERY WORK IN PROGRESS) TODO
-        // The current traversal is depth first, which is good for the neuron-nodes, but bad for the virtual_nodes, since we need the them breadth-first
-
-        // OLD
-        // The way we want to sort is to have higher level nodes first and lower level nodes last, with the root node at the very back (important for memory access pattern during tree update)
-        // The problem is, since we want to sort the virtual nodes, the child_indices would be constantly invalidated through the moving of the elements while sorting
-        // One possible solution could be to make the stack elements 3-tuples, with the last one being the parent index
-        // In order to get the the number of additional inserted virtual nodes from the time the parent index was assigned in the stack, we might have to actually make it a 4-tuple, with the number of current virtual neurons as the fourth element, and gain the newly inserted ones as the difference
-        // When a virtual node is inserted into the correct position of its arrays (it is of importance that a node is inserted as the last element of its level,
-        // we can also reuse the found index for one array for alle the other as well) we do the following:
-        // 1. We update all child indices of nodes two levels higher than the current node by one (two levels, since the ones one level higher will have the current level nodes as children, which were not moved)
-        // 2. The parent index will have to updated by the number of additional inserted virtual nodes from the time the parent index was assigned in the stack
-        // 3. The inserted index of the current node is added to the child indices of the parent and the num_children of the parent is updated by one
-        // This should in theory guarantee that everything will be correct. Inserting into a vector like that might be slow, watch runtime
-
-        // NEW
-        // Marwins Idee
         // The virtual nodes are supposed to be in breadth-first-order. This means that all nodes of a level are
         // consecutive in the array. By determining the range of indices for every level in a first depth-first pass, it
-        // is possible to copy all nodes to the right index immediately in a second pass, no reordering necessary.
+        // is possible to copy all nodes to the right index immediately in a second pass.
+        
+        RelearnTypes::number_neurons_type num_virtual_neurons = 0;
 
         // Every element in the vector is the index of the next node of the level corresponding to index of the element.
         // So, to determine the index of a node in the octree copy, you take level_indices[<node_level>]
@@ -423,7 +403,7 @@ public:
         std::stack<std::pair<const OctreeNode<AdditionalCellAttributes> *, size_t>> octree_nodes{};
         octree_nodes.emplace(&root, 0);
 
-	// first, we find the number of nodes per level in the tree
+	    // first, we find the number of nodes per level in the tree
         while (!octree_nodes.empty()) {
             const auto [current_node, level] = octree_nodes.top();
             octree_nodes.pop();
@@ -448,63 +428,58 @@ public:
             }
         }
 
-	// then, we use the number of nodes er level to set the indices in level_indices
-	size_t nodes_above = 0;
-	for (auto & level_index : level_indices) {
-	    auto nodes_this_level = level_index;
-	    level_index = nodes_above;
-	    nodes_above += nodes_this_level;
-	}
+        gpu::algorithm::OctreeCPUCopy octree_cpu_copy(num_neurons, num_virtual_neurons);
 
-	octree_cpu_copy.minimum_cell_position_virtual.resize(num_virtual_neurons);
-	octree_cpu_copy.maximum_cell_position_virtual.resize(num_virtual_neurons);
-	octree_cpu_copy.position_excitatory_element_virtual.resize(num_virtual_neurons);
-	octree_cpu_copy.position_inhibitory_element_virtual.resize(num_virtual_neurons);
-	octree_cpu_copy.num_free_elements_excitatory_virtual.resize(num_virtual_neurons);
-	octree_cpu_copy.num_free_elements_inhibitory_virtual.resize(num_virtual_neurons);
-	octree_cpu_copy.num_children.resize(num_virtual_neurons);
-	for (auto & child_indices : octree_cpu_copy.child_indices) {
-	    child_indices.resize(num_virtual_neurons);
-	}
+        // then, we use the number of nodes per level to set the indices in level_indices
+        size_t nodes_below = 0;
+        for (int i = level_indices.size() - 1; i >= 0; i--) {
+            auto nodes_this_level = level_indices[i];
+            level_indices[i] = nodes_below;
+            nodes_below += nodes_this_level;
+        }
 
-	// stack of node, level, parent index
+	    // stack of node, level, parent index
         std::stack<std::tuple<const OctreeNode<AdditionalCellAttributes> *, size_t, size_t>> octree_nodes_second_pass{};
         octree_nodes_second_pass.emplace(&root, 0, 0);
 
-	const auto convert_vec_to_gpu = [](const Vec3d cpu_vec) -> gpu::Vec3d {
-	    return gpu::Vec3d { cpu_vec.get_x(), cpu_vec.get_y(), cpu_vec.get_z() };
-	};
+	    const auto convert_vec_to_gpu = [](const Vec3d cpu_vec) -> gpu::Vec3d {
+	        return gpu::Vec3d { cpu_vec.get_x(), cpu_vec.get_y(), cpu_vec.get_z() };
+	    };
 
+        RelearnGPUTypes::number_neurons_type current_leaf_node_index = 0;
         while (!octree_nodes_second_pass.empty()) {
             const auto [current_node, level, parent_index] = octree_nodes_second_pass.top();
             octree_nodes_second_pass.pop();
 
+            // TODO the if and else share some common code sections, might be able to do this with more reuse
             if (current_node->get_cell().get_neuron_id().is_virtual()) {
                 const auto index = level_indices[level];
                 level_indices[level] += 1;
 		
-		// add the current node to its parent's children, skipping the root node
+		        // add the current node to its parent's children, skipping the root node
                 if (level != 0) {
-		    octree_cpu_copy.child_indices[octree_cpu_copy.num_children[parent_index]][parent_index] = index + num_neurons;
-		    octree_cpu_copy.num_children[parent_index] += 1;
+                    //std::cout << "WHERE INSERTED: " << octree_cpu_copy.num_children[parent_index] * num_virtual_neurons + parent_index << " CURRENT VIRTUAL: " << current_leaf_node_index << std::endl;
+		            octree_cpu_copy.child_indices[octree_cpu_copy.num_children[parent_index] * num_virtual_neurons + parent_index] = index + num_neurons;
+		            octree_cpu_copy.num_children[parent_index] += 1;
                 }
 
-		octree_cpu_copy.minimum_cell_position_virtual[index] = convert_vec_to_gpu(std::get<0>(current_node->get_size()));
-		octree_cpu_copy.maximum_cell_position_virtual[index] = convert_vec_to_gpu(std::get<1>(current_node->get_size()));
+                octree_cpu_copy.minimum_cell_position[num_neurons + index] = convert_vec_to_gpu(std::get<0>(current_node->get_size()));
+                octree_cpu_copy.maximum_cell_position[num_neurons + index] = convert_vec_to_gpu(std::get<1>(current_node->get_size()));
 
-		// Copy the neuron
-                // Currently assumes that either dendrites are both true or axons are both true
-		ElementType element_type;
+		        // Copy the neuron
+                // Currently assumes that either dendrites are both true or axons are both true (BarnesHut and inverse BarnesHut)
+		        ElementType element_type;
                 if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
-		    element_type = ElementType::Dendrite;
+		            element_type = ElementType::Dendrite;
                 } else {
-		    element_type = ElementType::Axon;
+		            element_type = ElementType::Axon;
                 }
-		auto current_cell = current_node->get_cell();
-                octree_cpu_copy.position_excitatory_element_virtual[index] = convert_vec_to_gpu(current_cell.get_position_for(element_type, SignalType::Excitatory).value());
-		octree_cpu_copy.position_inhibitory_element_virtual[index] = convert_vec_to_gpu(current_cell.get_position_for(element_type, SignalType::Inhibitory).value());
-                octree_cpu_copy.num_free_elements_excitatory_virtual[index] = current_cell.get_number_elements_for(element_type, SignalType::Excitatory);
-	        octree_cpu_copy.num_free_elements_inhibitory_virtual[index] = current_cell.get_number_elements_for(element_type, SignalType::Inhibitory);
+
+		        auto current_cell = current_node->get_cell();
+                octree_cpu_copy.position_excitatory_element[num_neurons + index] = convert_vec_to_gpu(current_cell.get_position_for(element_type, SignalType::Excitatory).value());
+		        octree_cpu_copy.position_inhibitory_element[num_neurons + index] = convert_vec_to_gpu(current_cell.get_position_for(element_type, SignalType::Inhibitory).value());
+                octree_cpu_copy.num_free_elements_excitatory[num_neurons + index] = current_cell.get_number_elements_for(element_type, SignalType::Excitatory);
+	            octree_cpu_copy.num_free_elements_inhibitory[num_neurons + index] = current_cell.get_number_elements_for(element_type, SignalType::Inhibitory);
 
                 const auto &children = current_node->get_children();
                 int child_count = 0;
@@ -517,156 +492,118 @@ public:
                 }
             } else {
                 NeuronID neuron_ID = current_node->get_cell_neuron_id();
-                octree_cpu_copy.neuron_ids.push_back(neuron_ID.get_neuron_id());
-		const auto index = octree_cpu_copy.neuron_ids.size() - 1;
+                octree_cpu_copy.neuron_ids[current_leaf_node_index] = neuron_ID.get_neuron_id();
 
-		// add the current node to its parent's children
-		octree_cpu_copy.child_indices[octree_cpu_copy.num_children[parent_index]][parent_index] = index;
-		octree_cpu_copy.num_children[parent_index] += 1;
+		        // add the current node to its parent's children
+                //std::cout << "WHERE INSERTED: " << octree_cpu_copy.num_children[parent_index] * num_virtual_neurons + parent_index << " CURRENT LEAF: " << current_leaf_node_index << std::endl;
+		        octree_cpu_copy.child_indices[octree_cpu_copy.num_children[parent_index] * num_virtual_neurons + parent_index] = current_leaf_node_index;
+		        octree_cpu_copy.num_children[parent_index] += 1;
 
-		octree_cpu_copy.minimum_cell_position.push_back(convert_vec_to_gpu(std::get<0>(current_node->get_size())));
-		octree_cpu_copy.maximum_cell_position.push_back(convert_vec_to_gpu(std::get<1>(current_node->get_size())));
+                octree_cpu_copy.minimum_cell_position[current_leaf_node_index] = convert_vec_to_gpu(std::get<0>(current_node->get_size()));
+                octree_cpu_copy.maximum_cell_position[current_leaf_node_index] = convert_vec_to_gpu(std::get<1>(current_node->get_size()));
 
-		ElementType element_type;
+                // Currently assumes that either dendrites are both true or axons are both true (BarnesHut and inverse BarnesHut)
+		        ElementType element_type;
                 if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
-		    element_type = ElementType::Dendrite;
+		            element_type = ElementType::Dendrite;
                 } else {
-		    element_type = ElementType::Axon;
+		            element_type = ElementType::Axon;
                 }
-		auto current_cell = current_node->get_cell();
-                octree_cpu_copy.position_excitatory_element.push_back(convert_vec_to_gpu(current_cell.get_position_for(element_type, SignalType::Excitatory).value()));
-		octree_cpu_copy.position_inhibitory_element.push_back(convert_vec_to_gpu(current_cell.get_position_for(element_type, SignalType::Inhibitory).value()));
-                octree_cpu_copy.num_free_elements_excitatory.push_back(current_cell.get_number_elements_for(element_type, SignalType::Excitatory));
-	        octree_cpu_copy.num_free_elements_inhibitory.push_back(current_cell.get_number_elements_for(element_type, SignalType::Inhibitory));
+
+		        auto current_cell = current_node->get_cell();
+                octree_cpu_copy.position_excitatory_element[current_leaf_node_index] = convert_vec_to_gpu(current_cell.get_position_for(element_type, SignalType::Excitatory).value());
+		        octree_cpu_copy.position_inhibitory_element[current_leaf_node_index] = convert_vec_to_gpu(current_cell.get_position_for(element_type, SignalType::Inhibitory).value());
+                octree_cpu_copy.num_free_elements_excitatory[current_leaf_node_index] = current_cell.get_number_elements_for(element_type, SignalType::Excitatory);
+	            octree_cpu_copy.num_free_elements_inhibitory[current_leaf_node_index] = current_cell.get_number_elements_for(element_type, SignalType::Inhibitory);
+
+                current_leaf_node_index++;
             }
         }
 
-	return octree_cpu_copy;
+	    return octree_cpu_copy;
     }
 
+    // TODO BRIEF
     void construct_on_gpu(const RelearnTypes::number_neurons_type num_neurons) {
-	auto octree_cpu_copy = octree_to_octree_cpu_copy(num_neurons);
-	const auto num_virtual_neurons = octree_cpu_copy.minimum_cell_position_virtual.size();
-        if (CudaHelper::is_cuda_available()) {
-            gpu_handle = gpu::algorithm::create_octree(num_neurons, num_virtual_neurons);
-            gpu_handle->copy_to_gpu(std::move(octree_cpu_copy));
-        }
+        if (!CudaHelper::is_cuda_available())
+            RelearnException::fail("Octree::construct_on_gpu: Cuda is not available");
+
+        auto octree_cpu_copy = octree_to_octree_cpu_copy(num_neurons);
+        const auto num_virtual_neurons = octree_cpu_copy.num_children.size();
+        gpu_handle = gpu::algorithm::create_octree(num_neurons, num_virtual_neurons);
+        gpu_handle->copy_to_gpu(std::move(octree_cpu_copy));
     }
 
     /**
      * @brief Overwrites the current cpu octree with the one stored on the gpu
-     * @exception Throws a RelearnException if the two octrees differ in their structure
+     * @exception Throws a RelearnException if the two octrees differ in their structure or if Cuda is not available
      */
     void overwrite_cpu_tree_with_gpu() {
-        if (CudaHelper::is_cuda_available()) {
+        if (!CudaHelper::is_cuda_available())
+            RelearnException::fail("Octree::overwrite_cpu_tree_with_gpu: Cuda is not available");
 
-            gpu::algorithm::OctreeCPUCopy octree_cpu_copy(all_leaf_nodes.size(),
-                                                        gpu_handle->get_number_virtual_neurons());
+        gpu::algorithm::OctreeCPUCopy octree_cpu_copy(all_leaf_nodes.size(), gpu_handle->get_number_virtual_neurons());
+        gpu_handle->copy_to_cpu(octree_cpu_copy);
 
-            gpu_handle->copy_to_cpu(octree_cpu_copy);
+        std::stack<const OctreeNode<AdditionalCellAttributes> *> octree_nodes_cpu{};
+        octree_nodes_cpu.push(&root);
 
-            std::stack<const OctreeNode<AdditionalCellAttributes> *> octree_nodes_cpu{};
-            octree_nodes_cpu.push(&root);
+        std::stack<uint64_t> octree_nodes_gpu{};
+        size_t num_neurons = all_leaf_nodes.size();
+        // assumes root is in the last index
+        octree_nodes_gpu.push(num_neurons + gpu_handle->get_number_virtual_neurons() - 1);
+        
+        while (!octree_nodes_cpu.empty()) {
+            const auto current_node_cpu = octree_nodes_cpu.top();
+            octree_nodes_cpu.pop();
 
-            std::stack<uint64_t> octree_nodes_gpu{};
-            // assumes root is in the last index
-            octree_nodes_gpu.push(all_leaf_nodes.size() + gpu_handle->get_number_virtual_neurons() - 1);
+            auto current_node_gpu = octree_nodes_gpu.top();
+            octree_nodes_gpu.pop();
 
-            size_t num_neurons = all_leaf_nodes.size();
+            ElementType elem_type;
+            if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite)
+                elem_type = ElementType::Dendrite;
+            else
+                elem_type = ElementType::Axon;
 
-            while (!octree_nodes_cpu.empty()) {
-                const auto current_node_cpu = octree_nodes_cpu.top();
-                octree_nodes_cpu.pop();
-
-                auto current_node_gpu = octree_nodes_gpu.top();
-                octree_nodes_gpu.pop();
-
-                ElementType elem_type;
-                if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite)
-                    elem_type = ElementType::Dendrite;
-                else
-                    elem_type = ElementType::Axon;
-
-                if (current_node_cpu->get_cell().get_neuron_id().is_virtual() && current_node_gpu >= num_neurons) {
-                    // set all the stuff in the current_node_cpu to the stuff in the current_node_gpu, remember that virtual nodes indices need to have num_neurons subtracted from them
-
-                    gpu::Vec3d pos_ex_elem_virt = octree_cpu_copy.position_excitatory_element_virtual.at(
-                            current_node_gpu - num_neurons);
-                    current_node_cpu->get_cell().set_position_for(elem_type, SignalType::Excitatory,
-                                                                  std::make_optional<Vec3d>(
-                                                                          Vec3d(pos_ex_elem_virt.x, pos_ex_elem_virt.y,
-                                                                                pos_ex_elem_virt.z)));
-
-                    gpu::Vec3d pos_in_elem_virt = octree_cpu_copy.position_inhibitory_element_virtual.at(
-                            current_node_gpu - num_neurons);
-                    current_node_cpu->get_cell().set_position_for(elem_type, SignalType::Inhibitory,
-                                                                  std::make_optional<Vec3d>(
-                                                                          Vec3d(pos_in_elem_virt.x, pos_in_elem_virt.y,
-                                                                                pos_in_elem_virt.z)));
-
-                    RelearnTypes::counter_type num_ex_elem_virt = octree_cpu_copy.num_free_elements_excitatory_virtual.at(
-                            current_node_gpu - num_neurons);
-                    current_node_cpu->get_cell().set_number_elements_for(elem_type, SignalType::Excitatory,
-                                                                         num_ex_elem_virt);
-
-                    RelearnTypes::counter_type num_in_elem_virt = octree_cpu_copy.num_free_elements_inhibitory_virtual.at(
-                            current_node_gpu - num_neurons);
-                    current_node_cpu->get_cell().set_number_elements_for(elem_type, SignalType::Inhibitory,
-                                                                         num_in_elem_virt);
-                } else if (!current_node_cpu->get_cell().get_neuron_id().is_virtual() &&
-                           !current_node_gpu >= num_neurons) {
-                    // set all the stuff in the current_node_cpu to the stuff in the current_node_gpu
-
-                    gpu::Vec3d pos_ex_elem = octree_cpu_copy.position_excitatory_element.at(current_node_gpu);
-                    current_node_cpu->get_cell().set_position_for(elem_type, SignalType::Excitatory,
-                                                                  std::make_optional<Vec3d>(
-                                                                          Vec3d(pos_ex_elem.x, pos_ex_elem.y,
-                                                                                pos_ex_elem.z)));
-
-                    gpu::Vec3d pos_in_elem = octree_cpu_copy.position_inhibitory_element.at(current_node_gpu);
-                    current_node_cpu->get_cell().set_position_for(elem_type, SignalType::Inhibitory,
-                                                                  std::make_optional<Vec3d>(
-                                                                          Vec3d(pos_in_elem.x, pos_in_elem.y,
-                                                                                pos_in_elem.z)));
-
-                    RelearnTypes::counter_type num_ex_elem = octree_cpu_copy.num_free_elements_excitatory.at(
-                            current_node_gpu);
-                    current_node_cpu->get_cell().set_number_elements_for(elem_type, SignalType::Excitatory,
-                                                                         num_ex_elem);
-
-                    RelearnTypes::counter_type num_in_elem = octree_cpu_copy.num_free_elements_inhibitory.at(
-                            current_node_gpu);
-                    current_node_cpu->get_cell().set_number_elements_for(elem_type, SignalType::Inhibitory,
-                                                                         num_in_elem);
-                } else {
-                    RelearnException::fail("Octree::overwrite_cpu_tree_with_gpu: GPU and CPU Octree structure differs");
-                }
-
-                // This assumes that nodes on the gpu are in the same order as on the cpu
-                if (current_node_cpu->is_parent() && current_node_gpu >= num_neurons) {
-                    const auto &childs_cpu = current_node_cpu->get_children();
-                    int children_processed = 0;
-                    for (auto i = 0; i < 8; i++) {
-                        const auto child = childs_cpu[i];
-                        if (child != nullptr) {
-                            octree_nodes_cpu.push(child);
-                            octree_nodes_gpu.push(
-                                    octree_cpu_copy.child_indices[children_processed].at(current_node_gpu - num_neurons));
-
-                            children_processed++;
-                        }
-                    }
-
-                    if (children_processed != octree_cpu_copy.num_children.at(current_node_gpu - num_neurons)) {
-                        RelearnException::fail(
-                                "Octree::overwrite_cpu_tree_with_gpu: GPU and CPU Octree structure differs");
-                    }
-                }
-            }
-
-            if (!octree_nodes_gpu.empty())
+            bool cpu_node_is_virtual = current_node_cpu->get_cell().get_neuron_id().is_virtual();
+            bool gpu_node_is_virtual = current_node_gpu >= num_neurons;
+            if (cpu_node_is_virtual != gpu_node_is_virtual)
                 RelearnException::fail("Octree::overwrite_cpu_tree_with_gpu: GPU and CPU Octree structure differs");
+
+            gpu::Vec3d pos_ex_elem = octree_cpu_copy.position_excitatory_element.at(current_node_gpu);
+            current_node_cpu->get_cell().set_position_for(elem_type, SignalType::Excitatory, std::make_optional<Vec3d>(Vec3d(pos_ex_elem.x, pos_ex_elem.y, pos_ex_elem.z)));
+
+            gpu::Vec3d pos_in_elem = octree_cpu_copy.position_inhibitory_element.at(current_node_gpu);
+            current_node_cpu->get_cell().set_position_for(elem_type, SignalType::Inhibitory, std::make_optional<Vec3d>(Vec3d(pos_in_elem.x, pos_in_elem.y, pos_in_elem.z)));
+
+            RelearnTypes::counter_type num_ex_elem = octree_cpu_copy.num_free_elements_excitatory.at(current_node_gpu);
+            current_node_cpu->get_cell().set_number_elements_for(elem_type, SignalType::Excitatory, num_ex_elem);
+
+            RelearnTypes::counter_type num_in_elem = octree_cpu_copy.num_free_elements_inhibitory.at(current_node_gpu);
+            current_node_cpu->get_cell().set_number_elements_for(elem_type, SignalType::Inhibitory, num_in_elem);
+            
+            // The order of the children should in theory be correct here
+            if (current_node_cpu->is_parent() && current_node_gpu >= num_neurons) {
+                const auto &children_cpu = current_node_cpu->get_children();
+                int children_processed = 0;
+                for (auto i = 0; i < 8; i++) {
+                    const auto child = children_cpu[7 - i];
+                    if (child != nullptr) {
+                        octree_nodes_cpu.push(child);
+                        octree_nodes_gpu.push(octree_cpu_copy.child_indices[children_processed * gpu_handle->get_number_virtual_neurons() + current_node_gpu - num_neurons]);
+
+                        children_processed++;
+                    }
+                }
+
+                if (children_processed != octree_cpu_copy.num_children.at(current_node_gpu - num_neurons)) 
+                    RelearnException::fail("Octree::overwrite_cpu_tree_with_gpu: GPU and CPU Octree structure differs");
+            }
         }
+
+        if (!octree_nodes_gpu.empty())
+            RelearnException::fail("Octree::overwrite_cpu_tree_with_gpu: GPU and CPU Octree structure differs");
     }
 
 protected:
