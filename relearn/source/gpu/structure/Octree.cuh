@@ -75,6 +75,7 @@ namespace gpu::algorithm {
         ~OctreeHandleImpl();
 
         [[nodiscard]] RelearnGPUTypes::number_neurons_type get_number_virtual_neurons() const;
+        [[nodiscard]] RelearnGPUTypes::number_neurons_type get_number_neurons() const;
 
         void copy_to_gpu(OctreeCPUCopy&& octree_cpu_copy);
         void copy_to_cpu(OctreeCPUCopy& octree_cpu_copy);

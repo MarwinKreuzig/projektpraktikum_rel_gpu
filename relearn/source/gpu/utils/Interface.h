@@ -28,6 +28,7 @@ namespace gpu::algorithm {
         virtual void copy_to_gpu(OctreeCPUCopy&& octree_cpu_copy) = 0;
 
         [[nodiscard]] virtual RelearnGPUTypes::number_neurons_type get_number_virtual_neurons() const = 0;
+        [[nodiscard]] virtual RelearnGPUTypes::number_neurons_type get_number_neurons() const = 0;
 
         virtual void copy_to_cpu(OctreeCPUCopy& octree_cpu_copy) = 0;
     };

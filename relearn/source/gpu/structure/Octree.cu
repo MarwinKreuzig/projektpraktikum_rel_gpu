@@ -25,6 +25,11 @@ namespace gpu::algorithm {
         return number_virtual_neurons;
     }
 
+    // TODO BRIEF
+    [[nodiscard]] RelearnGPUTypes::number_neurons_type OctreeHandleImpl::get_number_neurons() const {
+        return number_neurons;
+    }
+
     /**
     * @brief Copies the GPU data structure version of the octree, which was constructed on the CPU, to the GPU
     * @param octree_cpu_copy Struct which holds the octree data to be copied on to the GPU

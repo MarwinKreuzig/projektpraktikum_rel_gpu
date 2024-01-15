@@ -542,26 +542,27 @@ public:
         if (!CudaHelper::is_cuda_available())
             RelearnException::fail("Octree::overwrite_cpu_tree_with_gpu: Cuda is not available");
 
-        gpu::algorithm::OctreeCPUCopy octree_cpu_copy(all_leaf_nodes.size(), gpu_handle->get_number_virtual_neurons());
+        size_t num_neurons = gpu_handle->get_number_neurons();
+        gpu::algorithm::OctreeCPUCopy octree_cpu_copy(num_neurons, gpu_handle->get_number_virtual_neurons());
         gpu_handle->copy_to_cpu(octree_cpu_copy);
 
-        std::stack<const OctreeNode<AdditionalCellAttributes> *> octree_nodes_cpu{};
+        std::stack<OctreeNode<AdditionalCellAttributes> *> octree_nodes_cpu{};
         octree_nodes_cpu.push(&root);
 
         std::stack<uint64_t> octree_nodes_gpu{};
-        size_t num_neurons = all_leaf_nodes.size();
+        
         // assumes root is in the last index
         octree_nodes_gpu.push(num_neurons + gpu_handle->get_number_virtual_neurons() - 1);
         
         while (!octree_nodes_cpu.empty()) {
-            const auto current_node_cpu = octree_nodes_cpu.top();
+            auto current_node_cpu = octree_nodes_cpu.top();
             octree_nodes_cpu.pop();
 
             auto current_node_gpu = octree_nodes_gpu.top();
             octree_nodes_gpu.pop();
 
             ElementType elem_type;
-            if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite)
+            if constexpr (Cell<AdditionalCellAttributes>::has_excitatory_dendrite)
                 elem_type = ElementType::Dendrite;
             else
                 elem_type = ElementType::Axon;
@@ -572,16 +573,16 @@ public:
                 RelearnException::fail("Octree::overwrite_cpu_tree_with_gpu: GPU and CPU Octree structure differs");
 
             gpu::Vec3d pos_ex_elem = octree_cpu_copy.position_excitatory_element.at(current_node_gpu);
-            current_node_cpu->get_cell().set_position_for(elem_type, SignalType::Excitatory, std::make_optional<Vec3d>(Vec3d(pos_ex_elem.x, pos_ex_elem.y, pos_ex_elem.z)));
+            current_node_cpu->set_cell_position_for(elem_type, SignalType::Excitatory, std::make_optional<Vec3d>(Vec3d(pos_ex_elem.x, pos_ex_elem.y, pos_ex_elem.z)));
 
             gpu::Vec3d pos_in_elem = octree_cpu_copy.position_inhibitory_element.at(current_node_gpu);
-            current_node_cpu->get_cell().set_position_for(elem_type, SignalType::Inhibitory, std::make_optional<Vec3d>(Vec3d(pos_in_elem.x, pos_in_elem.y, pos_in_elem.z)));
+            current_node_cpu->set_cell_position_for(elem_type, SignalType::Inhibitory, std::make_optional<Vec3d>(Vec3d(pos_in_elem.x, pos_in_elem.y, pos_in_elem.z)));
 
             RelearnTypes::counter_type num_ex_elem = octree_cpu_copy.num_free_elements_excitatory.at(current_node_gpu);
-            current_node_cpu->get_cell().set_number_elements_for(elem_type, SignalType::Excitatory, num_ex_elem);
+            current_node_cpu->set_cell_number_elements_for(elem_type, SignalType::Excitatory, num_ex_elem);
 
             RelearnTypes::counter_type num_in_elem = octree_cpu_copy.num_free_elements_inhibitory.at(current_node_gpu);
-            current_node_cpu->get_cell().set_number_elements_for(elem_type, SignalType::Inhibitory, num_in_elem);
+            current_node_cpu->set_cell_number_elements_for(elem_type, SignalType::Inhibitory, num_in_elem);
             
             // The order of the children should in theory be correct here
             if (current_node_cpu->is_parent() && current_node_gpu >= num_neurons) {

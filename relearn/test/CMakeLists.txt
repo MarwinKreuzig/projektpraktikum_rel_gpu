@@ -59,101 +59,101 @@ target_sources(
         relearn_tests
         PRIVATE ${CMAKE_BINARY_DIR}/test_get_relearn_path.cpp
         RelearnTest.cpp
-#
-#        background_activity/test_background_activity.cpp
-#
-#        barnes_hut/test_barnes_hut.cpp
-#        barnes_hut/test_barnes_hut_base.cpp
-#        barnes_hut/test_barnes_hut_base_inverted.cpp
-#        barnes_hut/test_barnes_hut_inverted.cpp
-#
-#        calcium_calculator/test_calcium_calculator.cpp
-#
-#        cell/test_cell.cpp
-#
-#        connector/test_connector.cpp
-#
-#        event/test_event.cpp
-#
-#        fast_multipole_method/test_fast_multipole_method.cpp
-#
-#        helper/test_distant_neuron_request.cpp
-#        helper/test_rank_neuron_id.cpp
-#        helper/test_synapse_creation_request.cpp
-#        helper/test_synapse_deletion_request.cpp
-#
-#        interval/test_interval.cpp
-#
-#        kernel/test_kernel.cpp
-#        kernel/test_kernel_gamma.cpp
-#        kernel/test_kernel_gaussian.cpp
-#        kernel/test_kernel_linear.cpp
-#        kernel/test_kernel_weibull.cpp
-#
-#        local_area_translator/test_local_area_translator.cpp
-#
-#		memory_footprint/test_memory_footprint.cpp
-#        memory_holder/test_memory_holder.cpp
-#
-#        misc/test_misc.cpp
-#
-#        mpi/test_mpi_rank.cpp
-#
-#        network_graph/test_network_graph.cpp
-#
-#        neuron_assignment/test_neuron_assignment.cpp
-#
-#        neuron_extra_info/test_neuron_extra_info.cpp
-#
-#        neuron_io/test_neuron_io.cpp
-#        neuron_io/test_background_activity_io.cpp
-#
-#        neuron_models/test_neuron_models.cpp
-#
-#        neurons/test_neurons.cpp
-#
-#        neurons/test_neurons.cpp
-#
-#        neuron_id/test_neuron_id.cpp
-#
-#        octree/test_octree.cpp
-#
-#        octree_node/test_octree_node.cpp
-#
-#        parser/test_interval_parser.cpp
-#        parser/test_monitor_parser.cpp
-#        parser/test_neuronid_parser.cpp
-#        parser/test_step_parser.cpp
-#
-#        partition/test_partition.cpp
-#
-#        probability_picker/test_probability_picker.cpp
-#
-#        random/test_random.cpp
-#
-#        relearn_exception/test_relearn_exception.cpp
-#
-#        semi_stable_vector/test_semi_stable_vector.cpp
-#
-#        space_filling_curve/test_space_filling_curve.cpp
-#
-#        stack/test_stack.cpp
-#
-#        statistical_measure/test_statistical_measure.cpp
-#
-#        stimulus/test_stimulus.cpp
-#
-#        string_util/test_string_util.cpp
-#
-#        synaptic_elements/test_synaptic_elements.cpp
-#
-#        synaptic_input/test_synaptic_input.cpp
-#
-#        timers/test_timers.cpp
-#
-#        vec3/test_vec3.cpp
 
-        # for visual studio
+        background_activity/test_background_activity.cpp
+
+        barnes_hut/test_barnes_hut.cpp
+        barnes_hut/test_barnes_hut_base.cpp
+        barnes_hut/test_barnes_hut_base_inverted.cpp
+        barnes_hut/test_barnes_hut_inverted.cpp
+
+        calcium_calculator/test_calcium_calculator.cpp
+
+        cell/test_cell.cpp
+
+        connector/test_connector.cpp
+
+        event/test_event.cpp
+
+        fast_multipole_method/test_fast_multipole_method.cpp
+
+        helper/test_distant_neuron_request.cpp
+        helper/test_rank_neuron_id.cpp
+        helper/test_synapse_creation_request.cpp
+        helper/test_synapse_deletion_request.cpp
+
+        interval/test_interval.cpp
+
+        kernel/test_kernel.cpp
+        kernel/test_kernel_gamma.cpp
+        kernel/test_kernel_gaussian.cpp
+        kernel/test_kernel_linear.cpp
+        kernel/test_kernel_weibull.cpp
+
+        local_area_translator/test_local_area_translator.cpp
+
+		memory_footprint/test_memory_footprint.cpp
+        memory_holder/test_memory_holder.cpp
+
+        misc/test_misc.cpp
+
+        mpi/test_mpi_rank.cpp
+
+        network_graph/test_network_graph.cpp
+
+        neuron_assignment/test_neuron_assignment.cpp
+
+        neuron_extra_info/test_neuron_extra_info.cpp
+
+        neuron_io/test_neuron_io.cpp
+        neuron_io/test_background_activity_io.cpp
+
+        neuron_models/test_neuron_models.cpp
+
+        neurons/test_neurons.cpp
+
+        neurons/test_neurons.cpp
+
+        neuron_id/test_neuron_id.cpp
+
+        octree/test_octree.cpp
+
+        octree_node/test_octree_node.cpp
+
+        parser/test_interval_parser.cpp
+        parser/test_monitor_parser.cpp
+        parser/test_neuronid_parser.cpp
+        parser/test_step_parser.cpp
+
+        partition/test_partition.cpp
+
+        probability_picker/test_probability_picker.cpp
+
+        random/test_random.cpp
+
+        relearn_exception/test_relearn_exception.cpp
+
+        semi_stable_vector/test_semi_stable_vector.cpp
+
+        space_filling_curve/test_space_filling_curve.cpp
+
+        stack/test_stack.cpp
+
+        statistical_measure/test_statistical_measure.cpp
+
+        stimulus/test_stimulus.cpp
+
+        string_util/test_string_util.cpp
+
+        synaptic_elements/test_synaptic_elements.cpp
+
+        synaptic_input/test_synaptic_input.cpp
+
+        timers/test_timers.cpp
+
+        vec3/test_vec3.cpp
+        
+       # for visual studio
         ${relearn_tests_additional_files})
 
 if (CUDA_FOUND)
