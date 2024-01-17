@@ -451,29 +451,30 @@ public:
             const auto [current_node, level, parent_index] = octree_nodes_second_pass.top();
             octree_nodes_second_pass.pop();
 
+
+            // Currently assumes that either dendrites are both true or axons are both true (BarnesHut and inverse BarnesHut)
+            ElementType element_type;
+            if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
+                element_type = ElementType::Dendrite;
+            } else {
+                element_type = ElementType::Axon;
+            }
+
+
+
             // TODO the if and else share some common code sections, might be able to do this with more reuse
             if (current_node->get_cell().get_neuron_id().is_virtual()) {
                 const auto index = level_indices[level];
                 level_indices[level] += 1;
-		
+
 		        // add the current node to its parent's children, skipping the root node
                 if (level != 0) {
-                    //std::cout << "WHERE INSERTED: " << octree_cpu_copy.num_children[parent_index] * num_virtual_neurons + parent_index << " CURRENT VIRTUAL: " << current_leaf_node_index << std::endl;
 		            octree_cpu_copy.child_indices[octree_cpu_copy.num_children[parent_index] * num_virtual_neurons + parent_index] = index + num_neurons;
 		            octree_cpu_copy.num_children[parent_index] += 1;
                 }
 
                 octree_cpu_copy.minimum_cell_position[num_neurons + index] = convert_vec_to_gpu(std::get<0>(current_node->get_size()));
                 octree_cpu_copy.maximum_cell_position[num_neurons + index] = convert_vec_to_gpu(std::get<1>(current_node->get_size()));
-
-		        // Copy the neuron
-                // Currently assumes that either dendrites are both true or axons are both true (BarnesHut and inverse BarnesHut)
-		        ElementType element_type;
-                if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
-		            element_type = ElementType::Dendrite;
-                } else {
-		            element_type = ElementType::Axon;
-                }
 
 		        auto current_cell = current_node->get_cell();
                 octree_cpu_copy.position_excitatory_element[num_neurons + index] = convert_vec_to_gpu(current_cell.get_position_for(element_type, SignalType::Excitatory).value());
@@ -502,14 +503,6 @@ public:
                 octree_cpu_copy.minimum_cell_position[current_leaf_node_index] = convert_vec_to_gpu(std::get<0>(current_node->get_size()));
                 octree_cpu_copy.maximum_cell_position[current_leaf_node_index] = convert_vec_to_gpu(std::get<1>(current_node->get_size()));
 
-                // Currently assumes that either dendrites are both true or axons are both true (BarnesHut and inverse BarnesHut)
-		        ElementType element_type;
-                if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
-		            element_type = ElementType::Dendrite;
-                } else {
-		            element_type = ElementType::Axon;
-                }
-
 		        auto current_cell = current_node->get_cell();
                 octree_cpu_copy.position_excitatory_element[current_leaf_node_index] = convert_vec_to_gpu(current_cell.get_position_for(element_type, SignalType::Excitatory).value());
 		        octree_cpu_copy.position_inhibitory_element[current_leaf_node_index] = convert_vec_to_gpu(current_cell.get_position_for(element_type, SignalType::Inhibitory).value());
@@ -523,7 +516,10 @@ public:
 	    return octree_cpu_copy;
     }
 
-    // TODO BRIEF
+    /**
+    * @brief Constructs a OctreeCpuCopy and copys it to the gpu.
+    * @param num_neurons number of leaf nodes
+    */
     void construct_on_gpu(const RelearnTypes::number_neurons_type num_neurons) {
         if (!CudaHelper::is_cuda_available())
             RelearnException::fail("Octree::construct_on_gpu: Cuda is not available");

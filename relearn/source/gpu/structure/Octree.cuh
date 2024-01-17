@@ -9,9 +9,10 @@
 
 namespace gpu::algorithm {
 
-    // Do it like this: indexes are always in the combined range with neurons and virtual neurons with neurons in the front
-    // when trying to access child_indices, num_neurons has to be subtracted from the index.
-    // TODO BRIEF, add the above comment to brief
+    /**
+    * @brief Represents an GPU Octree data structure. Indexes are always in the combined range with neurons and virtual neurons with neurons in the front
+    * when trying to access child_indices, num_neurons has to be subtracted from the index.
+    */
     struct Octree {
         uint64_t* neuron_ids;
 

@@ -6,9 +6,8 @@
 
 namespace gpu::algorithm {
 
-    /* TODO BRIEF
-    *
-    *
+    /**
+    * @brief Represents an Octree data structure for copying CPU octree to GPU.
     */
     struct OctreeCPUCopy {
         

@@ -18,14 +18,17 @@ namespace gpu::algorithm {
     }
 
     /**
-    * @brief Returns the number of virtual neuronss on the octree on the GPU
+    * @brief Returns the number of virtual neurons in the octree on the GPU
     * @return The number of virtual neurons on the tree
     */
     [[nodiscard]] RelearnGPUTypes::number_neurons_type OctreeHandleImpl::get_number_virtual_neurons() const {
         return number_virtual_neurons;
     }
 
-    // TODO BRIEF
+    /**
+    * @brief Returns the number of neurons in the octree on the GPU
+    * @return The number of neurons on the tree
+    */
     [[nodiscard]] RelearnGPUTypes::number_neurons_type OctreeHandleImpl::get_number_neurons() const {
         return number_neurons;
     }
@@ -52,7 +55,10 @@ namespace gpu::algorithm {
         cuda_memcpy_to_device((void*)octree_dev_ptrs->num_free_elements_inhibitory, (void*)octree_cpu_copy.num_free_elements_inhibitory.data(), sizeof(unsigned int), octree_cpu_copy.num_free_elements_inhibitory.size());
     }
 
-    // TODO BRIEF
+    /**
+    * @brief Copies the GPU data structure version of the octree to the CPU
+    * @param octree_cpu_copy Struct which holds the octree data to be copied on to the CPU
+    */
     void OctreeHandleImpl::copy_to_cpu(OctreeCPUCopy& octree_cpu_copy) {
 
         cuda_memcpy_to_host((void*)octree_dev_ptrs->neuron_ids, (void*)(octree_cpu_copy.neuron_ids.data()), sizeof(uint64_t), number_neurons);
