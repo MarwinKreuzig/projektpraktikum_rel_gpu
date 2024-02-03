@@ -39,23 +39,6 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
     using num_neurons_gpu = RelearnGPUTypes::number_neurons_type;
     using num_neurons = RelearnTypes::number_neurons_type;
 
-    // ================== FIRST TEST-CASE ==============================
-    //
-    //    Octree (Neuron ID, is_leaf()); X = virtual
-    //    (X, 0)                                                X
-    //    |--(5, 1)                  ___________________________|____________________________
-    //    |--(X, 0)                  |      |       |       |       |       |       |       |
-    //        |--(0, 1)              5      X       8       7       X       4       9       6
-    //        |--(1, 1)                     |                       |
-    //    |--(8, 1)                        / \                     / \
-    //    |--(7, 1)                       0   1                   2   3
-    //    |--(X, 0)
-    //        |--(2, 1)
-    //        |--(3, 1)
-    //    |--(4, 1)
-    //    |--(9, 1)
-    //    |--(6, 1)
-
     const int num_virtual_neurons = 3;
     const int num_leafs = 10;
 
@@ -138,8 +121,6 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
         octree_cpu_copy.position_inhibitory_element[index] = convert_vec_to_gpu(nodes[i]->get_cell().get_position_for(element_type_inhibitory, SignalType::Inhibitory).value());
         octree_cpu_copy.num_free_elements_excitatory[index] = nodes[i]->get_cell().get_number_elements_for(element_type_excitatory, SignalType::Excitatory);
         octree_cpu_copy.num_free_elements_inhibitory[index] = nodes[i]->get_cell().get_number_elements_for(element_type_inhibitory, SignalType::Inhibitory);
-
-
     }
 
 
