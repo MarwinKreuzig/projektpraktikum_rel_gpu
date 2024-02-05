@@ -113,10 +113,21 @@ public:
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         const auto num_elements = host_data.size();
         if (num_elements > struct_copy.max_size) {
-            resize(num_elements, 0);
+            resize(num_elements);
         }
         cuda_memcpy_to_device(struct_copy.data, (void*)host_data.data(), sizeof(T), num_elements);
         struct_copy.size = num_elements;
+        update_struct_copy_to_device();
+    }
+
+    void copy_to_device_at(const std::vector<T>& host_data, size_t offset) {
+        RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
+        const auto furthest_element = offset + host_data.size();
+        if (furthest_element > struct_copy.max_size) {
+            resize(furthest_element);
+            struct_copy.size = furthest_element;
+        }
+        cuda_memcpy_to_device(struct_copy.data + offset, (void*)host_data.data(), sizeof(T), host_data.size());
         update_struct_copy_to_device();
     }
 
@@ -129,7 +140,7 @@ public:
     void copy_to_device(const T* host_data, size_t num_elements) {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         if (num_elements > struct_copy.max_size) {
-            resize(num_elements, 0);
+            resize(num_elements);
         }
         cuda_memcpy_to_device(struct_copy.data, (void*)host_data, sizeof(T), num_elements);
         struct_copy.size = num_elements;

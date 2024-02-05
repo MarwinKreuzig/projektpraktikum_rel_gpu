@@ -10,5 +10,8 @@
 #SBATCH -A project02279
 #SBATCH --gres=gpu
 
+cd ../relearn/build/bin
+
 ./relearn_tests
 
+./relearn_tests_cuda

@@ -3,88 +3,101 @@
 #include "Commons.cuh"
 #include "utils/GpuTypes.h"
 #include "utils/Interface.h"
+#include "../../shared/enums/ElementType.h"
 
 #include "CudaArray.cuh"
 #include "CudaVector.cuh"
 
 namespace gpu::algorithm {
-
-    /**
-    * @brief Represents an GPU Octree data structure. Indexes are always in the combined range with neurons and virtual neurons with neurons in the front
-    * when trying to access child_indices, num_neurons has to be subtracted from the index.
-    */
     struct Octree {
-        uint64_t* neuron_ids;
+        /**
+        * Represents a GPU Octree data structure. Indexes are always in the combined range with neurons and virtual neurons with neurons in the front
+        * when trying to access child_indices, num_neurons has to be subtracted from the index.
+        */
 
-        uint64_t* child_indices;
+        gpu::Vector::CudaArray<uint64_t> neuron_ids;
+
+        gpu::Vector::CudaArray<uint64_t> child_indices;
 
         // we need this, since we can't use -1 to indicate an invalid child_indices entry
-        unsigned int* num_children;
+        gpu::Vector::CudaArray<unsigned int> num_children;
 
-        double3* minimum_cell_position;
-        double3* maximum_cell_position;
+        gpu::Vector::CudaArray<double3> minimum_cell_position;
+        gpu::Vector::CudaArray<double3> maximum_cell_position;
 
-        double3* position_excitatory_element;
-        double3* position_inhibitory_element;
+        gpu::Vector::CudaArray<double3> position_excitatory_element;
+        gpu::Vector::CudaArray<double3> position_inhibitory_element;
 
         // depending on if barnes hut or inverse barnes hut will be done, these are either dendrites or axons
-        unsigned int* num_free_elements_excitatory;
-        unsigned int* num_free_elements_inhibitory;
+        gpu::Vector::CudaArray<unsigned int> num_free_elements_excitatory;
+        gpu::Vector::CudaArray<unsigned int> num_free_elements_inhibitory;
 
-        /**
-        * @brief Allocates the necessary memory to hold all the data that is needed for the Octree on the GPU
-        * @param number_neurons Number of neurons, influences how much memory will be allocated on the GPU
-        * @param number_virtual_neurons Number of virtual neurons, influences how much memory will be allocated on the GPU
-        */
-        Octree(const RelearnGPUTypes::number_neurons_type number_neurons, RelearnGPUTypes::number_neurons_type number_virtual_neurons) {
+        uint64_t number_neurons;
+        uint64_t number_virtual_neurons;
 
-            neuron_ids = (uint64_t*)cuda_malloc(number_neurons * sizeof(uint64_t));
+        ElementType stored_element_type;
 
-            child_indices = (uint64_t*)cuda_malloc(number_virtual_neurons * sizeof(uint64_t) * 8);
+        // TODO implement
+        __device__ void update_tree() {
 
-            num_children = (unsigned int*)cuda_malloc(number_virtual_neurons * sizeof(unsigned int));
-
-            minimum_cell_position = (double3*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double3));
-            maximum_cell_position = (double3*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double3));
-
-            position_excitatory_element = (double3*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double3));
-            position_inhibitory_element = (double3*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(double3));
-
-            num_free_elements_excitatory = (unsigned int*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(unsigned int));
-            num_free_elements_inhibitory = (unsigned int*)cuda_malloc((number_virtual_neurons + number_neurons) * sizeof(unsigned int));
-        }
-
-        ~Octree() {
-
-            cudaFree(neuron_ids);
-            cudaFree(child_indices);
-            cudaFree(num_children);
-            cudaFree(minimum_cell_position);
-            cudaFree(maximum_cell_position);
-            cudaFree(position_excitatory_element);
-            cudaFree(position_inhibitory_element);
-            cudaFree(num_free_elements_excitatory);
-            cudaFree(num_free_elements_inhibitory);
         }
     };
 
     class OctreeHandleImpl : public OctreeHandle {
     public:
 
-        OctreeHandleImpl(const RelearnGPUTypes::number_neurons_type number_neurons, const RelearnGPUTypes::number_neurons_type number_virtual_neurons);
+        OctreeHandleImpl(Octree* dev_ptr, 
+        const RelearnGPUTypes::number_neurons_type number_neurons, 
+        const RelearnGPUTypes::number_neurons_type number_virtual_neurons,
+        ElementType stored_element_type);
 
         ~OctreeHandleImpl();
 
-        [[nodiscard]] RelearnGPUTypes::number_neurons_type get_number_virtual_neurons() const;
-        [[nodiscard]] RelearnGPUTypes::number_neurons_type get_number_neurons() const;
+        void _init(ElementType stored_element_type);
 
-        void copy_to_gpu(OctreeCPUCopy&& octree_cpu_copy);
-        void copy_to_cpu(OctreeCPUCopy& octree_cpu_copy);
+        [[nodiscard]] RelearnGPUTypes::number_neurons_type get_number_virtual_neurons() const override;
+        [[nodiscard]] RelearnGPUTypes::number_neurons_type get_number_neurons() const override;
+
+        void copy_to_gpu(OctreeCPUCopy&& octree_cpu_copy) override;
+        void copy_to_cpu(OctreeCPUCopy& octree_cpu_copy) override;
+
+        void update_tree() override;
+
+        void update_leaf_nodes(std::vector<gpu::Vec3d> position_excitatory_element,
+                               std::vector<gpu::Vec3d> position_inhibitory_element,
+                               std::vector<unsigned int> num_free_elements_excitatory,
+                               std::vector<unsigned int> num_free_elements_inhibitory) override;
+
+        [[nodiscard]] void* get_device_pointer() override;
+
+        // TODO once plasticity is on the GPU, this serves no purpose and can be deleted
+        [[nodiscard]] std::vector<uint64_t> get_neuron_ids() override;
 
     private:
-        Octree* octree_dev_ptrs;
+        Octree* octree_dev_ptr;
 
-        RelearnGPUTypes::number_neurons_type number_neurons;
-        RelearnGPUTypes::number_neurons_type number_virtual_neurons;
+        gpu::Vector::CudaArrayDeviceHandle<uint64_t> handle_neuron_ids;
+
+        gpu::Vector::CudaArrayDeviceHandle<uint64_t> handle_child_indices;
+
+        gpu::Vector::CudaArrayDeviceHandle<unsigned int> handle_num_children;
+
+        gpu::Vector::CudaArrayDeviceHandle<double3> handle_minimum_cell_position;
+        gpu::Vector::CudaArrayDeviceHandle<double3> handle_maximum_cell_position;
+
+        gpu::Vector::CudaArrayDeviceHandle<double3> handle_position_excitatory_element;
+        gpu::Vector::CudaArrayDeviceHandle<double3> handle_position_inhibitory_element;
+
+        gpu::Vector::CudaArrayDeviceHandle<unsigned int> handle_num_free_elements_excitatory;
+        gpu::Vector::CudaArrayDeviceHandle<unsigned int> handle_num_free_elements_inhibitory;
+
+        ElementType* handle_stored_element_type;
+
+        size_t number_neurons;
+        size_t* handle_number_neurons;
+        size_t number_virtual_neurons;
+        size_t* handle_number_virtual_neurons;
     };
+
+    __global__ void update_tree_kernel(Octree* octree);
 };

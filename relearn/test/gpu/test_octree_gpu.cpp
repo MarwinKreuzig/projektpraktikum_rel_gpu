@@ -30,7 +30,6 @@ const auto assert_vec = [](const Vec3d vec1, const Vec3d vec2) {
 };
 
 
-// This needs to be indented
 TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
 
     using AdditionalCellAttributes = TypeParam;
@@ -39,7 +38,25 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
     using num_neurons_gpu = RelearnGPUTypes::number_neurons_type;
     using num_neurons = RelearnTypes::number_neurons_type;
 
-    const int num_virtual_neurons = 3;
+    // ================== FIRST TEST-CASE ==============================
+    //
+    //    Octree (Neuron ID, is_leaf()); X = virtual
+    //    (X, 0)                                                X
+    //    |--(5, 1)                  ___________________________|____________________________
+    //    |--(X, 0)                  |      |       |       |       |       |       |       |
+    //        |--(0, 1)              5      X       8       7       X       4       9       6
+    //        |--(1, 1)                     |                       |
+    //    |--(8, 1)                        / \                     / \
+    //    |--(7, 1)                       0   1                   2   3
+    //    |--(X, 0)
+    //        |--(2, 1)
+    //        |--(3, 1)
+    //    |--(4, 1)
+    //    |--(9, 1)
+    //    |--(6, 1)
+
+
+    num_neurons_gpu num_virtual_neurons = 3;
     const int num_leafs = 10;
 
     OctreeImplementation<TypeParam> octree({0, 0, 0 }, {10, 10, 10 }, 1);
@@ -95,18 +112,14 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
             element_type_inhibitory = ElementType::Axon;
         }
 
-
         int index = 0;
 
-        if(!nodes[i]->get_cell_neuron_id().is_virtual()) {
+        if (!nodes[i]->get_cell_neuron_id().is_virtual()) {
             octree_cpu_copy.neuron_ids[current_leaf_node_num] = nodes[i]->get_cell_neuron_id().get_neuron_id();
-
             index = current_leaf_node_num++;
         } else {
             index = num_leafs + current_virtual_neuron_num++;
         }
-
-
 
         octree_cpu_copy.minimum_cell_position[index] = gpu::Vec3d(
                 std::get<0>(nodes[i]->get_size()).get_x(),
@@ -123,6 +136,13 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
         octree_cpu_copy.num_free_elements_inhibitory[index] = nodes[i]->get_cell().get_number_elements_for(element_type_inhibitory, SignalType::Inhibitory);
     }
 
+    //                                                          X0
+    //    |--(5, 1)                  ___________________________|____________________________
+    //    |--(X, 0)                  |      |       |       |       |       |       |       |
+    //        |--(0, 1)              5      X2      8       7       X1      4       9       6
+    //        |--(1, 1)                     |                       |
+    //    |--(8, 1)                        / \                     / \
+    //    |--(7, 1)                       0   1                   2   3
 
     octree_cpu_copy.child_indices[0 * num_virtual_neurons + 1] = 7;
     octree_cpu_copy.child_indices[1 * num_virtual_neurons + 1] = 8;
@@ -143,7 +163,7 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
     octree_cpu_copy.num_children[1] = 2;
     octree_cpu_copy.num_children[2] = 8;
 
-    auto result = octree.octree_to_octree_cpu_copy(num_neurons(10));
+    auto result = octree.octree_to_octree_cpu_copy(num_leafs);
     auto expected = octree_cpu_copy;
 
     ASSERT_EQ(result.neuron_ids, expected.neuron_ids);
@@ -180,11 +200,18 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
         octree.insert(position, id);
     }
 
+    octree.initializes_leaf_nodes(neurons_to_place.size());
+
     octree.construct_on_gpu(neurons_to_place.size());
 
     const std::shared_ptr<gpu::algorithm::OctreeHandle> gpu_handle = octree.get_gpu_handle();
     gpu::algorithm::OctreeCPUCopy octree_cpu_copy(neurons_to_place.size(), gpu_handle->get_number_virtual_neurons());
     gpu_handle->copy_to_cpu(octree_cpu_copy);
+
+    ASSERT_EQ(octree_cpu_copy.neuron_ids.size(), octree.get_leaf_nodes().size());
+    for (int i = 0; i < octree_cpu_copy.neuron_ids.size(); i++) {
+        ASSERT_EQ(octree_cpu_copy.neuron_ids[i], octree.get_leaf_nodes()[octree_cpu_copy.neuron_ids[i]]->get_cell_neuron_id().get_neuron_id());
+    }
 
     octree.overwrite_cpu_tree_with_gpu();
 

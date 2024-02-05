@@ -4,6 +4,7 @@
 #include "GpuTypes.h"
 #include "../../shared/enums/FiredStatus.h"
 #include "../structure/OctreeStructure.h"
+#include "../../shared/enums/ElementType.h"
 
 #include <memory>
 #include <vector>
@@ -31,9 +32,21 @@ namespace gpu::algorithm {
         [[nodiscard]] virtual RelearnGPUTypes::number_neurons_type get_number_neurons() const = 0;
 
         virtual void copy_to_cpu(OctreeCPUCopy& octree_cpu_copy) = 0;
+
+        virtual void update_tree() = 0;
+
+        virtual void update_leaf_nodes(std::vector<gpu::Vec3d> position_excitatory_element,
+                               std::vector<gpu::Vec3d> position_inhibitory_element,
+                               std::vector<unsigned int> num_free_elements_excitatory,
+                               std::vector<unsigned int> num_free_elements_inhibitory) = 0;
+
+        [[nodiscard]] virtual void* get_device_pointer() = 0;
+
+        // TODO once plasticity is on the GPU, this serves no purpose and can be deleted
+        [[nodiscard]] virtual std::vector<uint64_t> get_neuron_ids() = 0;
     };
 
-    std::shared_ptr<OctreeHandle> create_octree(RelearnGPUTypes::number_neurons_type number_neurons, RelearnGPUTypes::number_neurons_type number_virtual_neurons) CUDA_PTR_DEFINITION
+    std::shared_ptr<OctreeHandle> create_octree(RelearnGPUTypes::number_neurons_type number_neurons, RelearnGPUTypes::number_neurons_type number_virtual_neurons, ElementType stored_element_type) CUDA_PTR_DEFINITION
 };
 
 namespace gpu::neurons {
