@@ -26,6 +26,7 @@ add_executable(
         benchmark_kernel.cpp
         benchmark_network_graph.cpp
         benchmark_neuron_model.cpp
+        benchmark_octree_gpu.cpp
         # for visual studio
         ${relearn_benchmark_additional_files})
 
