@@ -13,34 +13,8 @@
 #include "main.h"
 #include "gpu/Octree.cuh"
 
-static void BM_octree_copy_100(benchmark::State& state) {
+static void BM_octree_copy(benchmark::State& state) {
+    const auto number_neurons = state.range(0);
 
-}
-
-static void BM_octree_copy_1000(benchmark::State& state) {
-
-}
-
-static void BM_octree_copy_10000(benchmark::State& state) {
-
-}
-
-static void BM_octree_copy_100000(benchmark::State& state) {
-
-}
-
-static void BM_octree_copy_1000000(benchmark::State& state) {
-
-}
-
-static void BM_octree_copy_10000000(benchmark::State& state) {
-
-}
-
-static void BM_octree_copy_100000000(benchmark::State& state) {
-
-}
-
-static void BM_octree_copy_1000000000(benchmark::State& state) {
 
 }
