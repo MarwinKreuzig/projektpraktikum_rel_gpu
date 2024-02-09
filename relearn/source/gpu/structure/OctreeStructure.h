@@ -6,11 +6,10 @@
 
 namespace gpu::algorithm {
 
-    /**
-    * @brief Represents an Octree data structure for copying CPU octree to GPU.
-    */
     struct OctreeCPUCopy {
-        
+        /**
+        * @brief Represents an Octree data structure for copying CPU octree to GPU.
+        */
         // We need the neuron-nodes to be allocated after depth first traversal for efficient prefix traversal
         // But we need the virtual neurons to be sorted in breadth-first way, in order to make the tree update phase more efficient
 

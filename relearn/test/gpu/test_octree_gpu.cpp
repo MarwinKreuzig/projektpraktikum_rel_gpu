@@ -14,16 +14,16 @@
 using test_types = ::testing::Types<BarnesHutCell, BarnesHutInvertedCell>;
 TYPED_TEST_SUITE(OctreeTestGpu, test_types);
 
-const auto convert_to_vec3(const gpu::Vec3d gpu_vec) {
+const auto convert_gpu_vec_to_vec(const gpu::Vec3d gpu_vec) {
     return Vec3(gpu_vec.x, gpu_vec.y, gpu_vec.z);
 }
 
 
-const auto convert_vec_to_gpu = [](const Vec3d cpu_vec) -> gpu::Vec3d {
+const auto convert_vec_to_gpu_vec = [](const Vec3d cpu_vec) -> gpu::Vec3d {
     return gpu::Vec3d { cpu_vec.get_x(), cpu_vec.get_y(), cpu_vec.get_z() };
 };
 
-const auto assert_vec = [](const Vec3d vec1, const Vec3d vec2) {
+const auto assert_eq_vec = [](const Vec3d vec1, const Vec3d vec2) {
     ASSERT_DOUBLE_EQ(vec1.get_x(), vec2.get_x());
     ASSERT_DOUBLE_EQ(vec1.get_y(), vec2.get_y());
     ASSERT_DOUBLE_EQ(vec1.get_z(), vec2.get_z());
@@ -34,7 +34,6 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
 
     using AdditionalCellAttributes = TypeParam;
     using box_size_type = RelearnTypes::box_size_type;
-    using OctreeCPUCopy = gpu::algorithm::OctreeCPUCopy;
     using num_neurons_gpu = RelearnGPUTypes::number_neurons_type;
     using num_neurons = RelearnTypes::number_neurons_type;
 
@@ -57,7 +56,7 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
 
 
     num_neurons_gpu num_virtual_neurons = 3;
-    const int num_leafs = 10;
+    num_neurons_gpu num_leafs = 10;
 
     OctreeImplementation<TypeParam> octree({0, 0, 0 }, {10, 10, 10 }, 1);
 
@@ -73,7 +72,7 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
     octree.insert(box_size_type(4, 6, 7 ) , NeuronID{false, 9} ); //hinten links oben
 
 
-    OctreeCPUCopy octree_cpu_copy(num_leafs, num_virtual_neurons);
+    gpu::algorithm::OctreeCPUCopy expected(num_leafs, num_virtual_neurons);
 
     std::vector<OctreeNode<AdditionalCellAttributes>*> nodes = {
             octree.get_root()->get_child(7),
@@ -91,49 +90,35 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
             octree.get_root()
     };
 
+    element_type = ElementType::Dendrite;
 
     int current_leaf_node_num = 0;
     int current_virtual_neuron_num = 0;
     for (int i = 0; i < nodes.size(); ++i) {
 
-        ElementType element_type_excitatory;
-        if (nodes[i]->has_excitatory_dendrite) {
-            element_type_excitatory = ElementType::Dendrite;
-        }
-        else {
-            element_type_excitatory = ElementType::Axon;
-        }
-
-        ElementType element_type_inhibitory;
-        if (nodes[i]->has_inhibitory_dendrite) {
-            element_type_inhibitory = ElementType::Dendrite;
-        }
-        else {
-            element_type_inhibitory = ElementType::Axon;
-        }
 
         int index = 0;
 
         if (!nodes[i]->get_cell_neuron_id().is_virtual()) {
-            octree_cpu_copy.neuron_ids[current_leaf_node_num] = nodes[i]->get_cell_neuron_id().get_neuron_id();
+            expected.neuron_ids[current_leaf_node_num] = nodes[i]->get_cell_neuron_id().get_neuron_id();
             index = current_leaf_node_num++;
         } else {
             index = num_leafs + current_virtual_neuron_num++;
         }
 
-        octree_cpu_copy.minimum_cell_position[index] = gpu::Vec3d(
+        expected.minimum_cell_position[index] = gpu::Vec3d(
                 std::get<0>(nodes[i]->get_size()).get_x(),
                 std::get<0>(nodes[i]->get_size()).get_y(),
                 std::get<0>(nodes[i]->get_size()).get_z());
-        octree_cpu_copy.maximum_cell_position[index] = gpu::Vec3d(
+        expected.maximum_cell_position[index] = gpu::Vec3d(
                 std::get<1>(nodes[i]->get_size()).get_x(),
                 std::get<1>(nodes[i]->get_size()).get_y(),
                 std::get<1>(nodes[i]->get_size()).get_z());
 
-        octree_cpu_copy.position_excitatory_element[index] = convert_vec_to_gpu(nodes[i]->get_cell().get_position_for(element_type_excitatory, SignalType::Excitatory).value());
-        octree_cpu_copy.position_inhibitory_element[index] = convert_vec_to_gpu(nodes[i]->get_cell().get_position_for(element_type_inhibitory, SignalType::Inhibitory).value());
-        octree_cpu_copy.num_free_elements_excitatory[index] = nodes[i]->get_cell().get_number_elements_for(element_type_excitatory, SignalType::Excitatory);
-        octree_cpu_copy.num_free_elements_inhibitory[index] = nodes[i]->get_cell().get_number_elements_for(element_type_inhibitory, SignalType::Inhibitory);
+        expected.position_excitatory_element[index] = convert_vec_to_gpu_vec(nodes[i]->get_cell().get_position_for(element_type, SignalType::Excitatory).value());
+        expected.position_inhibitory_element[index] = convert_vec_to_gpu_vec(nodes[i]->get_cell().get_position_for(element_type, SignalType::Inhibitory).value());
+        expected.num_free_elements_excitatory[index] = nodes[i]->get_cell().get_number_elements_for(element_type, SignalType::Excitatory);
+        expected.num_free_elements_inhibitory[index] = nodes[i]->get_cell().get_number_elements_for(element_type, SignalType::Inhibitory);
     }
 
     //                                                          X0
@@ -144,27 +129,26 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
     //    |--(8, 1)                        / \                     / \
     //    |--(7, 1)                       0   1                   2   3
 
-    octree_cpu_copy.child_indices[0 * num_virtual_neurons + 1] = 7;
-    octree_cpu_copy.child_indices[1 * num_virtual_neurons + 1] = 8;
+    expected.child_indices[0 * num_virtual_neurons + 1] = 7;
+    expected.child_indices[1 * num_virtual_neurons + 1] = 8;
 
-    octree_cpu_copy.child_indices[0 * num_virtual_neurons + 0] = 3;
-    octree_cpu_copy.child_indices[1 * num_virtual_neurons + 0] = 4;
+    expected.child_indices[0 * num_virtual_neurons + 0] = 3;
+    expected.child_indices[1 * num_virtual_neurons + 0] = 4;
 
-    octree_cpu_copy.child_indices[0 * num_virtual_neurons + 2] = 0;
-    octree_cpu_copy.child_indices[1 * num_virtual_neurons + 2] = 1;
-    octree_cpu_copy.child_indices[2 * num_virtual_neurons + 2] = 2;
-    octree_cpu_copy.child_indices[3 * num_virtual_neurons + 2] = 10;
-    octree_cpu_copy.child_indices[4 * num_virtual_neurons + 2] = 5;
-    octree_cpu_copy.child_indices[5 * num_virtual_neurons + 2] = 6;
-    octree_cpu_copy.child_indices[6 * num_virtual_neurons + 2] = 11;
-    octree_cpu_copy.child_indices[7 * num_virtual_neurons + 2] = 9;
+    expected.child_indices[0 * num_virtual_neurons + 2] = 0;
+    expected.child_indices[1 * num_virtual_neurons + 2] = 1;
+    expected.child_indices[2 * num_virtual_neurons + 2] = 2;
+    expected.child_indices[3 * num_virtual_neurons + 2] = 10;
+    expected.child_indices[4 * num_virtual_neurons + 2] = 5;
+    expected.child_indices[5 * num_virtual_neurons + 2] = 6;
+    expected.child_indices[6 * num_virtual_neurons + 2] = 11;
+    expected.child_indices[7 * num_virtual_neurons + 2] = 9;
 
-    octree_cpu_copy.num_children[0] = 2;
-    octree_cpu_copy.num_children[1] = 2;
-    octree_cpu_copy.num_children[2] = 8;
+    expected.num_children[0] = 2;
+    expected.num_children[1] = 2;
+    expected.num_children[2] = 8;
 
     auto result = octree.octree_to_octree_cpu_copy(num_leafs);
-    auto expected = octree_cpu_copy;
 
     ASSERT_EQ(result.neuron_ids, expected.neuron_ids);
     ASSERT_EQ(result.num_children, expected.num_children);
@@ -172,10 +156,10 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
     ASSERT_EQ(result.child_indices, expected.child_indices);
 
     for(int i = 0; i < expected.minimum_cell_position.size(); i++)  {
-        assert_vec(convert_to_vec3(result.minimum_cell_position[i]), convert_to_vec3(expected.minimum_cell_position[i]));
-        assert_vec(convert_to_vec3(result.maximum_cell_position[i]), convert_to_vec3(expected.maximum_cell_position[i]));
-        assert_vec(convert_to_vec3(result.position_excitatory_element[i]), convert_to_vec3(expected.position_excitatory_element[i]));
-        assert_vec(convert_to_vec3(result.position_inhibitory_element[i]), convert_to_vec3(expected.position_inhibitory_element[i]));
+        assert_eq_vec(convert_gpu_vec_to_vec(result.minimum_cell_position[i]), convert_gpu_vec_to_vec(expected.minimum_cell_position[i]));
+        assert_eq_vec(convert_gpu_vec_to_vec(result.maximum_cell_position[i]), convert_gpu_vec_to_vec(expected.maximum_cell_position[i]));
+        assert_eq_vec(convert_gpu_vec_to_vec(result.position_excitatory_element[i]), convert_gpu_vec_to_vec(expected.position_excitatory_element[i]));
+        assert_eq_vec(convert_gpu_vec_to_vec(result.position_inhibitory_element[i]), convert_gpu_vec_to_vec(expected.position_inhibitory_element[i]));
     }
 
     ASSERT_EQ(result.num_free_elements_excitatory, expected.num_free_elements_excitatory);
