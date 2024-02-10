@@ -133,8 +133,10 @@ public:
      */
     virtual void initializes_leaf_nodes(RelearnTypes::number_neurons_type num_neurons) = 0;
 
-    // TODO BRIEF
-    // This should be called after new neurons are insterted during simulation after the leaf nodes have been updated in neurons.create_neurons()
+    /**
+    * @brief Updates the octree structure on the gpu. This method should only be called after new neurons are insterted during simulation after the leaf
+    * nodes have been updated in neurons.create_neurons()
+    */
     virtual void update_gpu_octree_structure() = 0;
 
     /**
@@ -548,8 +550,9 @@ public:
         gpu_handle->copy_to_gpu(std::move(octree_cpu_copy));
     }
 
-    // TODO BRIEF
-    // This should be called after new neurons are insterted during simulation after the leaf nodes have been updated in neurons.create_neurons()
+    /**
+    * @brief Updates the octree structure on the gpu. This method should only be called after new neurons are insterted during simulation after the leaf nodes have been updated in neurons.create_neurons()
+    */
     void update_gpu_octree_structure() override {
         if (!gpu_handle) {
             RelearnException::fail("Octree::construct_on_gpu: GPU Handle was not created yet");
