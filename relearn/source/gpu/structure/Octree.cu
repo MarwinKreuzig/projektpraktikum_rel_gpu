@@ -12,6 +12,10 @@ namespace gpu::algorithm {
         _init(stored_element_type);
     }
 
+    /**
+    * @brief Allocates the necessary memory for the octree on the GPU and saves the device pointers to this memory
+    * @param stored_element_type Type of elements that will be stored (Axon or Dendrite)
+    */
     void OctreeHandleImpl::_init(ElementType stored_element_type) {
         void* neuron_ids_ptr = execute_and_copy<void*>([=] __device__(Octree* octree) { return (void*)&octree->neuron_ids; }, octree_dev_ptr);
         handle_neuron_ids = gpu::Vector::CudaArrayDeviceHandle<uint64_t>(neuron_ids_ptr);
@@ -62,6 +66,9 @@ namespace gpu::algorithm {
         cuda_memcpy_to_device((void*)handle_stored_element_type, (void*)&stored_element_type, sizeof(ElementType), 1);
     }
 
+    /**
+    * @brief This is an empty Deconstructor for OctreeHandleImpl
+    */
     OctreeHandleImpl::~OctreeHandleImpl() {}
 
     /**
@@ -148,14 +155,24 @@ namespace gpu::algorithm {
         handle_num_free_elements_inhibitory.copy_to_host(octree_cpu_copy.num_free_elements_inhibitory);
     }
 
+    /**
+    * @brief Getter for octree_dev_ptr
+    * @return octree_dev_ptr
+    */
     [[nodiscard]] void* OctreeHandleImpl::get_device_pointer() {
         return octree_dev_ptr;
     }
 
+    /**
+    * @brief Calls the update_tree_kernel (WILL BE CHANGED IN BARNES HUT US)
+    */
     void OctreeHandleImpl::update_tree() {
         update_tree_kernel<<<1,1>>>(octree_dev_ptr);
     }
 
+    /**
+    * @brief Updates the octree leaf nodes (WILL BE CHANGED IN BARNES HUT US)
+    */
     void OctreeHandleImpl::update_leaf_nodes(std::vector<gpu::Vec3d> position_excitatory_element,
                                std::vector<gpu::Vec3d> position_inhibitory_element,
                                std::vector<unsigned int> num_free_elements_excitatory,
@@ -176,6 +193,10 @@ namespace gpu::algorithm {
         handle_num_free_elements_inhibitory.copy_to_device_at(num_free_elements_inhibitory, 0);
     }
 
+    /**
+    * @brief Getter for Neuron IDs
+    * @return Neuron IDs
+    */
     [[nodiscard]] std::vector<uint64_t> OctreeHandleImpl::get_neuron_ids() {
         std::vector<uint64_t> host_neuron_ids;
         handle_neuron_ids.copy_to_host(host_neuron_ids);
@@ -197,6 +218,9 @@ namespace gpu::algorithm {
         return std::move(a);
     }
 
+    /**
+    * @brief Updates the virtual neurons of the octree (WILL BE CHANGED IN BARNES HUT US)
+    */
     __global__ void update_tree_kernel(Octree* octree) {
         octree->update_tree();
     }

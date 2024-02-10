@@ -14,22 +14,34 @@
 using test_types = ::testing::Types<BarnesHutCell, BarnesHutInvertedCell>;
 TYPED_TEST_SUITE(OctreeTestGpu, test_types);
 
+/**
+* @brief converts a gpu::Vec3 to an util::Vec3
+* @return converted util::Vec3
+*/
 const auto convert_gpu_vec_to_vec(const gpu::Vec3d gpu_vec) {
     return Vec3(gpu_vec.x, gpu_vec.y, gpu_vec.z);
 }
 
-
+/**
+* @brief converts an util::Vec3 to a gpu::Vec3
+* @return converted gpu::Vec3
+*/
 const auto convert_vec_to_gpu_vec = [](const Vec3d cpu_vec) -> gpu::Vec3d {
     return gpu::Vec3d { cpu_vec.get_x(), cpu_vec.get_y(), cpu_vec.get_z() };
 };
 
+/**
+* @brief applies ASSERT_DOUBLE_EQ() to all elements of a gpu::Vec3
+*/
 const auto assert_eq_vec = [](const Vec3d vec1, const Vec3d vec2) {
     ASSERT_DOUBLE_EQ(vec1.get_x(), vec2.get_x());
     ASSERT_DOUBLE_EQ(vec1.get_y(), vec2.get_y());
     ASSERT_DOUBLE_EQ(vec1.get_z(), vec2.get_z());
 };
 
-
+/**
+* @brief tests the octree.octree_to_octree_cpu_copy() function using a handcrafted example
+*/
 TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
 
     using AdditionalCellAttributes = TypeParam;
@@ -166,6 +178,9 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
     ASSERT_EQ(result.num_free_elements_inhibitory, expected.num_free_elements_inhibitory);
 }
 
+/**
+* @brief tests the parsing, copying and back-copying of the octree to the gpu using a random octree
+*/
 TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
     using AdditionalCellAttributes = TypeParam;
 
