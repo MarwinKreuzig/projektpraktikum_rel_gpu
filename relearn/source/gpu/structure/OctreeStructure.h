@@ -28,6 +28,11 @@ namespace gpu::algorithm {
         std::vector<unsigned int> num_free_elements_excitatory;
         std::vector<unsigned int> num_free_elements_inhibitory;
 
+        /**
+        * @brief Constructor of OctreeCPUCopy that resizes every attribute to the correct size according to number neurons and number virtual neurons
+        * @number_neurons Number of neurons (leaf nodes)
+        * @number_virtual_neurons Number of virtual neurons (branch nodes)
+        */
         OctreeCPUCopy(const RelearnGPUTypes::number_neurons_type number_neurons, RelearnGPUTypes::number_neurons_type number_virtual_neurons) {
 
             neuron_ids.resize(number_neurons, 0);

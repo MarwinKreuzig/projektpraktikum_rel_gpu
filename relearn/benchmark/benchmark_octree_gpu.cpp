@@ -16,6 +16,10 @@
 #include "harness/neurons/NeuronsAdapter.h"
 #include "gpu/Octree.cuh"
 
+
+/**
+ * @brief Tests the overhead of parsing and copying the cpu octree for the gpu
+ */
 static void BM_octree_copy(benchmark::State& state) {
     state.PauseTiming();
 

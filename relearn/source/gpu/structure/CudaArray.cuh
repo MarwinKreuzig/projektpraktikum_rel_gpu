@@ -28,11 +28,15 @@ class CudaArrayDeviceHandle {
      */
 
 public:
+    /**
+    * @brief Creates a CudaArrayDeviceHandle with an empty struct_dev_ptr
+    */
     CudaArrayDeviceHandle() {
         struct_dev_ptr = nullptr;
     }
 
     /**
+     * @brief Creates a CudaArrayDeviceHandle with struct_device_pointer as struct_dev_ptr
      * @param struct_device_pointer Pointer to a CudaArray instance on the utils
      */
     CudaArrayDeviceHandle(CudaArray<T>* struct_device_ptr)
@@ -43,12 +47,19 @@ public:
         : struct_dev_ptr(struct_device_ptr) {
     }
 
+    /**
+     * @brief This Deconstructor frees memory ff struct_dev_ptr != nullptr
+     */
     ~CudaArrayDeviceHandle() {
         if (usable()) {
             free();
         }
     }
 
+    /**
+     * @brief Resizes the CudaArray
+     * @param new_size New size of the CudaArray
+     */
     void resize(size_t new_size) {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         if (new_size > get_size()) {
@@ -60,6 +71,11 @@ public:
         }
     }
 
+    /**
+     * @brief Resizes the CudaArray and changes its type
+     * @param new_size New size of the CudaArray
+     * @param value New type of the CudaArray
+     */
     void resize(size_t new_size, T value) {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         if (new_size > get_size()) {
@@ -73,17 +89,33 @@ public:
         }
     }
 
+    /**
+     * @brief Sets num_indices indices from indices to value
+     * @param indices The starting index (inclusive) within the vector to set
+     * @param num_indices Number of indices to set
+     * @param value New value for specified indices
+     */
     void set(const size_t* indices, size_t num_indices, T value) {
         RelearnGPUException::check(num_indices > 0, "CudaVector::set: Num indices is 0");
         cuda_set_for_indices(struct_copy.data, indices, num_indices, struct_copy.size, value);
     }
 
+    /**
+     * @brief Fills an empty CudaArray with value
+     * @param value New value for all indices
+     */
     void fill(T value) {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         RelearnGPUException::check(!is_empty(), "CudaVector::fill: Cannot fill an empty vector");
         set_array(struct_copy.data, struct_copy.size, value);
     }
 
+    /**
+     * @brief Sets num_indices indices from indices to value
+     * @param begin The starting index (inclusive) within the vector to fill
+     * @param end The ending index (exclusive) within the vector to fill
+     * @param value The value to fill the specified range with
+     */
     void fill(size_t begin, size_t end, T value) {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         RelearnGPUException::check(!is_empty(), "CudaVector::fill: Cannot fill an empty vector");
@@ -94,6 +126,9 @@ public:
         set_array(struct_copy.data, size, value);
     }
 
+    /**
+     * @brief Prints the content of the array in the console
+     */
     void print_content() {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         std::vector<T> cpy;
@@ -104,11 +139,19 @@ public:
         }
     }
 
+    /**
+     * @brief Reserves n indices
+     * @param n Number of indices to reserve
+     */
     void reserve(size_t n) {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         RelearnGPUException::fail("TODO");
     }
 
+    /**
+     * @brief Copys data from host to a CudaVector
+     * @param host_data Data from the host-side
+     */
     void copy_to_device(const std::vector<T>& host_data) {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         const auto num_elements = host_data.size();
@@ -120,6 +163,11 @@ public:
         update_struct_copy_to_device();
     }
 
+    /**
+     * @brief Copys data from host to a CudaVector with an offset
+     * @param host_data Data from the host-side
+     * @param offset Offset within a CudaVector
+     */
     void copy_to_device_at(const std::vector<T>& host_data, size_t offset) {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         const auto furthest_element = offset + host_data.size();
@@ -131,12 +179,21 @@ public:
         update_struct_copy_to_device();
     }
 
+    /**
+     * @brief Copys data from gpu to host
+     * @param host_data Destination of data transfer
+     */
     void copy_to_host(std::vector<T>& host_data) {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         host_data.resize(struct_copy.size);
         cuda_memcpy_to_host(struct_copy.data, host_data.data(), sizeof(T), struct_copy.size);
     }
 
+    /**
+     * @brief Copys num_elements from host to gpu
+     * @param host_data Data from the host
+     * @param num_elements Number of elements to copy
+     */
     void copy_to_device(const T* host_data, size_t num_elements) {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         if (num_elements > struct_copy.max_size) {
@@ -147,12 +204,20 @@ public:
         update_struct_copy_to_device();
     }
 
+    /**
+     * @brief Copys num_elements from gpu to host
+     * @param host_data Destination of data transfer
+     * @param num_elements Number of elements to copy
+     */
     void copy_to_host(T* host_data, size_t num_elements) {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         // host_data.resize(struct_copy.size);
         cuda_memcpy_to_host(struct_copy.data, host_data, sizeof(T), struct_copy.size);
     }
 
+    /**
+     * @brief Frees the memory allocated for the contents of a CudaVector
+     */
     void free_contents() {
         RelearnGPUException::check(struct_copy.data != nullptr, "CudaVector::free_contents: No contents to be freed");
         cudaFree(struct_copy.data);
@@ -162,6 +227,9 @@ public:
         update_struct_copy_to_device();
     }
 
+    /**
+     * @brief Frees the memory allocated for a CudaVector
+     */
     void free() {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         if (struct_copy.data != nullptr) {
@@ -170,6 +238,9 @@ public:
         struct_dev_ptr = nullptr;
     }
 
+    /**
+     * @brief Minimizing memory usage by deleting empty indices
+     */
     void minimize_memory_usage() {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         if (get_max_size() == get_size()) {
@@ -180,39 +251,71 @@ public:
         resize_copy(new_dev_ptr, get_size());
     }
 
+    /**
+     * @brief Checks if the handle contains a valid pointer to a CudaArray
+     * @return Is struct_dev_ptr valid
+     */
     bool usable() const {
         return struct_dev_ptr != nullptr;
     }
 
+    /**
+     * @brief Returns actual size of CudaArray
+     * @return CudaArray size
+     */
     size_t get_size() const {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         return struct_copy.size;
     }
 
+    /**
+     * @brief Returns the maximum size of CudaArray
+     * @return CudaArray maximum size
+     */
     size_t get_max_size() const {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         return struct_copy.max_size;
     }
 
+    /**
+     * @brief Returns raw data of CudaArray
+     * @return Raw CudaArray data
+     */
     T* data() const {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         return struct_copy.data;
     }
 
+    /**
+     * @brief Checks if CudaArray is empty
+     * @return Is CudaArray empty
+     */
     bool is_empty() const {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         return struct_copy.data == nullptr;
     }
 
 private:
+
+    /**
+     * @brief Updates the host struct_dev_ptr
+     */
     void update_struct_copy_from_device() {
         cuda_memcpy_to_host(struct_dev_ptr, &struct_copy, sizeof(CudaArray<T>), 1);
     }
 
+    /**
+     * @brief Updates the gpu CudaArray
+     */
     void update_struct_copy_to_device() {
         cuda_memcpy_to_device(struct_dev_ptr, &struct_copy, sizeof(CudaArray<T>), 1);
     }
 
+    /**
+     * @brief Resizes CudaArray on gpu and copies data to cpu
+     * @param new_dev_ptr Destination of copy
+     * @param new_size New size of CudaArray
+     */
     void resize_copy(void* new_dev_ptr, size_t new_size) {
         if (struct_copy.data != nullptr) {
             const auto s = struct_copy.size < new_size ? struct_copy.size : new_size;

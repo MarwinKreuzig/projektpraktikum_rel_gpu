@@ -46,6 +46,12 @@ namespace gpu::algorithm {
         [[nodiscard]] virtual std::vector<uint64_t> get_neuron_ids() = 0;
     };
 
+    /**
+    * @brief Returns a shared pointer to a newly created handle to the Octree on the GPU
+    * @param number_neurons Number of neurons, influences how much memory will be allocated on the GPU
+    * @param number_virtual_neurons Number of virtual neurons, influences how much memory will be allocated on the GPU
+    * @param stored_element_type Type of elements (Axon or Dendrites)
+    */
     std::shared_ptr<OctreeHandle> create_octree(RelearnGPUTypes::number_neurons_type number_neurons, RelearnGPUTypes::number_neurons_type number_virtual_neurons, ElementType stored_element_type) CUDA_PTR_DEFINITION
 };
 
