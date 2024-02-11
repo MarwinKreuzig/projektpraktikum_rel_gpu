@@ -402,7 +402,7 @@ public:
         // The virtual nodes are supposed to be in breadth-first-order. This means that all nodes of a level are
         // consecutive in the array. By determining the range of indices for every level in a first depth-first pass, it
         // is possible to copy all nodes to the right index immediately in a second pass.
-        
+
         RelearnTypes::number_neurons_type num_virtual_neurons = 0;
 
         // Every element in the vector is the index of the next node of the level corresponding to index of the element.
@@ -583,7 +583,7 @@ public:
         octree_nodes_cpu.push(&root);
 
         std::stack<uint64_t> octree_nodes_gpu{};
-        
+
         // assumes root is in the last index
         octree_nodes_gpu.push(num_neurons + gpu_handle->get_number_virtual_neurons() - 1);
         
@@ -616,7 +616,7 @@ public:
 
             RelearnTypes::counter_type num_in_elem = octree_cpu_copy.num_free_elements_inhibitory.at(current_node_gpu);
             current_node_cpu->set_cell_number_elements_for(elem_type, SignalType::Inhibitory, num_in_elem);
-            
+
             // The order of the children should in theory be correct here
             if (current_node_cpu->is_parent() && current_node_gpu >= num_neurons) {
                 const auto &children_cpu = current_node_cpu->get_children();
