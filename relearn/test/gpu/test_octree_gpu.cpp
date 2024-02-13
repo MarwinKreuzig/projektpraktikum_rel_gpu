@@ -100,7 +100,7 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
         octree.get_root()
     };
 
-    element_type = ElementType::Dendrite;
+    auto element_type = ElementType::Dendrite;
 
     int current_leaf_node_num = 0;
     int current_virtual_neuron_num = 0;
