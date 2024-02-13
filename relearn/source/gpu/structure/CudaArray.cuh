@@ -29,8 +29,8 @@ class CudaArrayDeviceHandle {
 
 public:
     /**
-    * @brief Creates a CudaArrayDeviceHandle with an empty struct_dev_ptr
-    */
+     * @brief Creates a CudaArrayDeviceHandle with an empty struct_dev_ptr
+     */
     CudaArrayDeviceHandle() {
         struct_dev_ptr = nullptr;
     }
@@ -190,7 +190,7 @@ public:
     }
 
     /**
-     * @brief Copys num_elements from host to gpu
+     * @brief Copies num_elements from host to gpu
      * @param host_data Data from the host
      * @param num_elements Number of elements to copy
      */
@@ -296,7 +296,6 @@ public:
     }
 
 private:
-
     /**
      * @brief Updates the host struct_dev_ptr
      */

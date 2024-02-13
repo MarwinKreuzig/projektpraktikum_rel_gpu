@@ -93,10 +93,10 @@ TEST_F(FMMTest, testExtractElement) {
     std::vector<OctreeNode<FastMultipoleMethodCell>> memory_holder(number_pointers);
 
     const std::vector<OctreeNode<FastMultipoleMethodCell>*> pointers = ranges::views::concat(
-                                                                            memory_holder | ranges::views::transform([](auto& Val) { return &Val; }),
-                                                                            ranges::views::repeat_n(
-                                                                                static_cast<OctreeNode<FastMultipoleMethodCell>*>(nullptr),
-                                                                                number_nullptrs))
+                                                                           memory_holder | ranges::views::transform([](auto& Val) { return &Val; }),
+                                                                           ranges::views::repeat_n(
+                                                                               static_cast<OctreeNode<FastMultipoleMethodCell>*>(nullptr),
+                                                                               number_nullptrs))
         | ranges::to_vector | actions::shuffle(mt);
 
     std::vector<OctreeNode<FastMultipoleMethodCell>*> received_pointers{};

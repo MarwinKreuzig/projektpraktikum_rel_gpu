@@ -389,7 +389,8 @@ public:
     }
 
     /**
-     * @brief Constructs the Octree on the GPU. Should only be called after all nodes have been inserted.
+     * @pre Should only be called after all nodes have been inserted.
+     * @brief Constructs the Octree on the GPU.
      * @param num_neurons Number of neurons on MPI Process
      */
     [[nodiscard]] gpu::algorithm::OctreeCPUCopy octree_to_octree_cpu_copy(const RelearnTypes::number_neurons_type num_neurons) {

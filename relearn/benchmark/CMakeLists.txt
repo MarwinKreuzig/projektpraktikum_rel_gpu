@@ -28,7 +28,14 @@ add_executable(
         benchmark_neuron_model.cpp
         benchmark_octree_gpu.cpp
         # for visual studio
+
+        # fehlen noch libaries
         ${relearn_benchmark_additional_files})
+
+if (CUDA_FOUND)
+    target_sources(relearn_benchmarks PRIVATE benchmark_octree_gpu.cpp)
+    target_link_libraries(relearn_benchmarks PUBLIC relearn_benchmarks)
+endif ()
 
 target_link_libraries(relearn_benchmarks PRIVATE project_options
         project_libraries)

@@ -15,24 +15,24 @@ using test_types = ::testing::Types<BarnesHutCell, BarnesHutInvertedCell>;
 TYPED_TEST_SUITE(OctreeTestGpu, test_types);
 
 /**
-* @brief converts a gpu::Vec3 to an util::Vec3
-* @return converted util::Vec3
-*/
+ * @brief converts a gpu::Vec3 to an util::Vec3
+ * @return converted util::Vec3
+ */
 const auto convert_gpu_vec_to_vec(const gpu::Vec3d gpu_vec) {
     return Vec3(gpu_vec.x, gpu_vec.y, gpu_vec.z);
 }
 
 /**
-* @brief converts an util::Vec3 to a gpu::Vec3
-* @return converted gpu::Vec3
-*/
+ * @brief converts an util::Vec3 to a gpu::Vec3
+ * @return converted gpu::Vec3
+ */
 const auto convert_vec_to_gpu_vec = [](const Vec3d cpu_vec) -> gpu::Vec3d {
-    return gpu::Vec3d { cpu_vec.get_x(), cpu_vec.get_y(), cpu_vec.get_z() };
+    return gpu::Vec3d{ cpu_vec.get_x(), cpu_vec.get_y(), cpu_vec.get_z() };
 };
 
 /**
-* @brief applies ASSERT_DOUBLE_EQ() to all elements of a gpu::Vec3
-*/
+ * @brief applies ASSERT_DOUBLE_EQ() to all elements of a gpu::Vec3
+ */
 const auto assert_eq_vec = [](const Vec3d vec1, const Vec3d vec2) {
     ASSERT_DOUBLE_EQ(vec1.get_x(), vec2.get_x());
     ASSERT_DOUBLE_EQ(vec1.get_y(), vec2.get_y());
@@ -40,8 +40,8 @@ const auto assert_eq_vec = [](const Vec3d vec1, const Vec3d vec2) {
 };
 
 /**
-* @brief tests the octree.octree_to_octree_cpu_copy() function using a handcrafted example
-*/
+ * @brief tests the octree.octree_to_octree_cpu_copy() function using a handcrafted example
+ */
 TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
 
     using AdditionalCellAttributes = TypeParam;
@@ -66,40 +66,38 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
     //    |--(9, 1)
     //    |--(6, 1)
 
-
     num_neurons_gpu num_virtual_neurons = 3;
     num_neurons_gpu num_leafs = 10;
 
-    OctreeImplementation<TypeParam> octree({0, 0, 0 }, {10, 10, 10 }, 1);
+    OctreeImplementation<TypeParam> octree({ 0, 0, 0 }, { 10, 10, 10 }, 1);
 
-    octree.insert(box_size_type(6, 0, 0 ) , NeuronID{false, 0} ); //vorne rechts unten
-    octree.insert(box_size_type(9, 0, 4 ) , NeuronID{false, 1} ); //vorne rechts unten
-    octree.insert(box_size_type(0, 0, 6 ) , NeuronID{false, 2} ); //vorne links oben
-    octree.insert(box_size_type(4, 0, 9 ) , NeuronID{false, 3} ); //vorne links oben
-    octree.insert(box_size_type(4, 0, 4 ) , NeuronID{false, 5} ); //vorne links unten
-    octree.insert(box_size_type(9, 0, 9 ) , NeuronID{false, 4} ); //vorne rechts oben
-    octree.insert(box_size_type(9, 6, 9 ) , NeuronID{false, 6} ); //hinten rechts oben
-    octree.insert(box_size_type(9, 6, 4 ) , NeuronID{false, 7} ); //hinten rechts unten
-    octree.insert(box_size_type(4, 6, 4 ) , NeuronID{false, 8} ); //hinten links unten
-    octree.insert(box_size_type(4, 6, 7 ) , NeuronID{false, 9} ); //hinten links oben
-
+    octree.insert(box_size_type(6, 0, 0), NeuronID{ false, 0 }); // vorne rechts unten
+    octree.insert(box_size_type(9, 0, 4), NeuronID{ false, 1 }); // vorne rechts unten
+    octree.insert(box_size_type(0, 0, 6), NeuronID{ false, 2 }); // vorne links oben
+    octree.insert(box_size_type(4, 0, 9), NeuronID{ false, 3 }); // vorne links oben
+    octree.insert(box_size_type(4, 0, 4), NeuronID{ false, 5 }); // vorne links unten
+    octree.insert(box_size_type(9, 0, 9), NeuronID{ false, 4 }); // vorne rechts oben
+    octree.insert(box_size_type(9, 6, 9), NeuronID{ false, 6 }); // hinten rechts oben
+    octree.insert(box_size_type(9, 6, 4), NeuronID{ false, 7 }); // hinten rechts unten
+    octree.insert(box_size_type(4, 6, 4), NeuronID{ false, 8 }); // hinten links unten
+    octree.insert(box_size_type(4, 6, 7), NeuronID{ false, 9 }); // hinten links oben
 
     gpu::algorithm::OctreeCPUCopy expected(num_leafs, num_virtual_neurons);
 
     std::vector<OctreeNode<AdditionalCellAttributes>*> nodes = {
-            octree.get_root()->get_child(7),
-            octree.get_root()->get_child(6),
-            octree.get_root()->get_child(5),
-            octree.get_root()->get_child(4)->get_child(5),
-            octree.get_root()->get_child(4)->get_child(0),
-            octree.get_root()->get_child(3),
-            octree.get_root()->get_child(2),
-            octree.get_root()->get_child(1)->get_child(5),
-            octree.get_root()->get_child(1)->get_child(0),
-            octree.get_root()->get_child(0),
-            octree.get_root()->get_child(4),
-            octree.get_root()->get_child(1),
-            octree.get_root()
+        octree.get_root()->get_child(7),
+        octree.get_root()->get_child(6),
+        octree.get_root()->get_child(5),
+        octree.get_root()->get_child(4)->get_child(5),
+        octree.get_root()->get_child(4)->get_child(0),
+        octree.get_root()->get_child(3),
+        octree.get_root()->get_child(2),
+        octree.get_root()->get_child(1)->get_child(5),
+        octree.get_root()->get_child(1)->get_child(0),
+        octree.get_root()->get_child(0),
+        octree.get_root()->get_child(4),
+        octree.get_root()->get_child(1),
+        octree.get_root()
     };
 
     element_type = ElementType::Dendrite;
@@ -107,7 +105,6 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
     int current_leaf_node_num = 0;
     int current_virtual_neuron_num = 0;
     for (int i = 0; i < nodes.size(); ++i) {
-
 
         int index = 0;
 
@@ -119,13 +116,13 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
         }
 
         expected.minimum_cell_position[index] = gpu::Vec3d(
-                std::get<0>(nodes[i]->get_size()).get_x(),
-                std::get<0>(nodes[i]->get_size()).get_y(),
-                std::get<0>(nodes[i]->get_size()).get_z());
+            std::get<0>(nodes[i]->get_size()).get_x(),
+            std::get<0>(nodes[i]->get_size()).get_y(),
+            std::get<0>(nodes[i]->get_size()).get_z());
         expected.maximum_cell_position[index] = gpu::Vec3d(
-                std::get<1>(nodes[i]->get_size()).get_x(),
-                std::get<1>(nodes[i]->get_size()).get_y(),
-                std::get<1>(nodes[i]->get_size()).get_z());
+            std::get<1>(nodes[i]->get_size()).get_x(),
+            std::get<1>(nodes[i]->get_size()).get_y(),
+            std::get<1>(nodes[i]->get_size()).get_z());
 
         expected.position_excitatory_element[index] = convert_vec_to_gpu_vec(nodes[i]->get_cell().get_position_for(element_type, SignalType::Excitatory).value());
         expected.position_inhibitory_element[index] = convert_vec_to_gpu_vec(nodes[i]->get_cell().get_position_for(element_type, SignalType::Inhibitory).value());
@@ -167,7 +164,7 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
 
     ASSERT_EQ(result.child_indices, expected.child_indices);
 
-    for(int i = 0; i < expected.minimum_cell_position.size(); i++)  {
+    for (int i = 0; i < expected.minimum_cell_position.size(); i++) {
         assert_eq_vec(convert_gpu_vec_to_vec(result.minimum_cell_position[i]), convert_gpu_vec_to_vec(expected.minimum_cell_position[i]));
         assert_eq_vec(convert_gpu_vec_to_vec(result.maximum_cell_position[i]), convert_gpu_vec_to_vec(expected.maximum_cell_position[i]));
         assert_eq_vec(convert_gpu_vec_to_vec(result.position_excitatory_element[i]), convert_gpu_vec_to_vec(expected.position_excitatory_element[i]));
@@ -179,8 +176,8 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
 }
 
 /**
-* @brief tests the parsing, copying and back-copying of the octree to the gpu using a random octree
-*/
+ * @brief tests the parsing, copying and back-copying of the octree to the gpu using a random octree
+ */
 TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
     using AdditionalCellAttributes = TypeParam;
 
@@ -215,7 +212,7 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
     octree.overwrite_cpu_tree_with_gpu();
 
     auto* root = octree.get_root();
-    std::stack<const OctreeNode<AdditionalCellAttributes> *> octree_nodes_cpu{};
+    std::stack<const OctreeNode<AdditionalCellAttributes>*> octree_nodes_cpu{};
     octree_nodes_cpu.push(root);
 
     std::stack<uint64_t> octree_nodes_gpu{};
@@ -223,7 +220,7 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
 
     // assumes root is in the last index
     octree_nodes_gpu.push(num_neurons + gpu_handle->get_number_virtual_neurons() - 1);
-        
+
     size_t correct_counts = 0;
     while (!octree_nodes_cpu.empty()) {
         const auto current_node_cpu = octree_nodes_cpu.top();
@@ -256,10 +253,10 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
         ASSERT_EQ(num_in_elem, current_node_cpu->get_cell().get_number_elements_for(elem_type, SignalType::Inhibitory));
 
         correct_counts++;
-            
+
         // The order of the children should in theory be correct here
         if (current_node_cpu->is_parent() && current_node_gpu >= num_neurons) {
-            const auto &children_cpu = current_node_cpu->get_children();
+            const auto& children_cpu = current_node_cpu->get_children();
             int children_processed = 0;
             for (auto i = 0; i < 8; i++) {
                 const auto child = children_cpu[7 - i];
@@ -271,7 +268,7 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
                 }
             }
 
-            if (children_processed != octree_cpu_copy.num_children.at(current_node_gpu - num_neurons)) 
+            if (children_processed != octree_cpu_copy.num_children.at(current_node_gpu - num_neurons))
                 RelearnException::fail("Octree::overwrite_cpu_tree_with_gpu: GPU and CPU Octree structure differs");
         }
     }

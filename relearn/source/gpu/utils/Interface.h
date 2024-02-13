@@ -24,35 +24,36 @@
 #endif
 
 namespace gpu::algorithm {
-    class OctreeHandle {
-    public:
-        virtual void copy_to_gpu(OctreeCPUCopy&& octree_cpu_copy) = 0;
+class OctreeHandle {
+public:
+    virtual void copy_to_gpu(OctreeCPUCopy&& octree_cpu_copy) = 0;
 
-        [[nodiscard]] virtual RelearnGPUTypes::number_neurons_type get_number_virtual_neurons() const = 0;
-        [[nodiscard]] virtual RelearnGPUTypes::number_neurons_type get_number_neurons() const = 0;
+    [[nodiscard]] virtual RelearnGPUTypes::number_neurons_type get_number_virtual_neurons() const = 0;
+    [[nodiscard]] virtual RelearnGPUTypes::number_neurons_type get_number_neurons() const = 0;
 
-        virtual void copy_to_cpu(OctreeCPUCopy& octree_cpu_copy) = 0;
+    virtual void copy_to_cpu(OctreeCPUCopy& octree_cpu_copy) = 0;
 
-        virtual void update_tree() = 0;
+    virtual void update_tree() = 0;
 
-        virtual void update_leaf_nodes(std::vector<gpu::Vec3d> position_excitatory_element,
-                               std::vector<gpu::Vec3d> position_inhibitory_element,
-                               std::vector<unsigned int> num_free_elements_excitatory,
-                               std::vector<unsigned int> num_free_elements_inhibitory) = 0;
+    virtual void update_leaf_nodes(std::vector<gpu::Vec3d> position_excitatory_element,
+        std::vector<gpu::Vec3d> position_inhibitory_element,
+        std::vector<unsigned int> num_free_elements_excitatory,
+        std::vector<unsigned int> num_free_elements_inhibitory)
+        = 0;
 
-        [[nodiscard]] virtual void* get_device_pointer() = 0;
+    [[nodiscard]] virtual void* get_device_pointer() = 0;
 
-        // TODO once plasticity is on the GPU, this serves no purpose and can be deleted
-        [[nodiscard]] virtual std::vector<uint64_t> get_neuron_ids() = 0;
-    };
+    // TODO once plasticity is on the GPU, this serves no purpose and can be deleted
+    [[nodiscard]] virtual std::vector<uint64_t> get_neuron_ids() = 0;
+};
 
-    /**
-    * @brief Returns a shared pointer to a newly created handle to the Octree on the GPU
-    * @param number_neurons Number of neurons, influences how much memory will be allocated on the GPU
-    * @param number_virtual_neurons Number of virtual neurons, influences how much memory will be allocated on the GPU
-    * @param stored_element_type Type of elements (Axon or Dendrites)
-    */
-    std::shared_ptr<OctreeHandle> create_octree(RelearnGPUTypes::number_neurons_type number_neurons, RelearnGPUTypes::number_neurons_type number_virtual_neurons, ElementType stored_element_type) CUDA_PTR_DEFINITION
+/**
+ * @brief Returns a shared pointer to a newly created handle to the Octree on the GPU
+ * @param number_neurons Number of neurons, influences how much memory will be allocated on the GPU
+ * @param number_virtual_neurons Number of virtual neurons, influences how much memory will be allocated on the GPU
+ * @param stored_element_type Type of elements (Axon or Dendrites)
+ */
+std::shared_ptr<OctreeHandle> create_octree(RelearnGPUTypes::number_neurons_type number_neurons, RelearnGPUTypes::number_neurons_type number_virtual_neurons, ElementType stored_element_type) CUDA_PTR_DEFINITION
 };
 
 namespace gpu::neurons {
@@ -274,5 +275,3 @@ namespace gpu::models::fitz_hugh_nagumo {
  */
 std::shared_ptr<NeuronModelHandle> construct_gpu(std::shared_ptr<gpu::background::BackgroundHandle> background_handle, const unsigned int _h, double _a, double _b, double _phi, double _init_w, double _init_x) CUDA_PTR_DEFINITION
 };
-
-

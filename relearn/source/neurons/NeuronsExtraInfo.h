@@ -277,7 +277,7 @@ public:
     const std::vector<std::pair<RankNeuronId, RelearnTypes::plastic_synapse_weight>>& get_deletions_log(const NeuronID& neuron_id) const {
         return deletions_log[neuron_id.get_neuron_id()];
     }
-        
+
     /**
      * @brief Records the memory footprint of the current object
      * @param footprint Where to store the current footprint

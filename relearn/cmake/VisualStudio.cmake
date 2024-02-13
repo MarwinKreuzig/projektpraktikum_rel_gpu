@@ -184,7 +184,7 @@ if (WIN32) # Lib
     list(APPEND relearn_lib_additional_files "util/MemoryHolder.h")
     list(APPEND relearn_lib_additional_files "util/MPIRank.h")
     list(APPEND relearn_lib_additional_files "util/NeuronID.h")
-    list(APPEND relearn_lib_additional_files "util/ProbabilityPicker.h")
+    list(APPEND relearn_lib_additional_files "util/ProbabilityPicker.h")`
     list(APPEND relearn_lib_additional_files "util/Random.h")
     list(APPEND relearn_lib_additional_files "util/RelearnException.h")
     list(APPEND relearn_lib_additional_files "util/SemiStableVector.h")
