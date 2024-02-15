@@ -14,4 +14,5 @@
 
 #include "util/NeuronID.h"
 
-class NeuronIDTest : public RelearnTest { };
+class NeuronIDTest : public RelearnTest {
+};

@@ -14,60 +14,82 @@
 
 #include <string>
 
-TEST_F(RelearnExceptionTest, testFail) {
-    RelearnException::hide_messages = false;
+TEST_F(RelearnExceptionTest, testFail
+) {
+RelearnException::hide_messages = false;
 
-    const std::string message = "sadflhbcn\nkow97430921*:)�\" $SDMFSL ";
-    ASSERT_THROW(RelearnException::fail(message), RelearnException);
+const std::string message = "sadflhbcn\nkow97430921*:)�\" $SDMFSL ";
+ASSERT_THROW(RelearnException::fail(message), RelearnException
+);
 
-    try {
-        RelearnException::fail(message);
-    } catch (const RelearnException& ex) {
-        const auto& reason = ex.what();
-        ASSERT_EQ(message, reason);
-    }
-
-    RelearnException::hide_messages = true;
+try {
+RelearnException::fail(message);
+} catch (
+const RelearnException &ex
+) {
+const auto &reason = ex.what();
+ASSERT_EQ(message, reason
+);
 }
 
-TEST_F(RelearnExceptionTest, testCheck) {
-    RelearnException::hide_messages = false;
-
-    const std::string message = "sadflhbcn\nkow97430921*:)�\" $SDMFSL ";
-
-    ASSERT_NO_THROW(RelearnException::check(true, message));
-    ASSERT_THROW(RelearnException::check(false, message), RelearnException);
-
-    try {
-        RelearnException::check(false, message);
-    } catch (const RelearnException& ex) {
-        const auto& reason = ex.what();
-        ASSERT_EQ(message, reason);
-    }
-
-    RelearnException::hide_messages = true;
+RelearnException::hide_messages = true;
 }
 
-TEST_F(RelearnExceptionTest, testFormatting) {
-    RelearnException::hide_messages = false;
+TEST_F(RelearnExceptionTest, testCheck
+) {
+RelearnException::hide_messages = false;
 
-    const std::string message = "This is the first value: {} and this the second: {}\n";
-    const std::string expected_message = "This is the first value: 123456 and this the second: false\n";
+const std::string message = "sadflhbcn\nkow97430921*:)�\" $SDMFSL ";
 
-    try {
-        RelearnException::fail(message, 123456, false);
-    } catch (const RelearnException& ex) {
-        const auto& reason = ex.what();
-        ASSERT_EQ(expected_message, reason);
-    }
+ASSERT_NO_THROW(RelearnException::check(true, message)
+);
+ASSERT_THROW(RelearnException::check(false, message), RelearnException
+);
 
-    RelearnException::hide_messages = true;
+try {
+RelearnException::check(false, message);
+} catch (
+const RelearnException &ex
+) {
+const auto &reason = ex.what();
+ASSERT_EQ(message, reason
+);
 }
 
-TEST_F(RelearnExceptionTest, testFormattingWrongNumberArguments) {
-    ASSERT_ANY_THROW(RelearnException::fail("{}"));
-    ASSERT_ANY_THROW(RelearnException::fail("{} {}", 2));
-    ASSERT_ANY_THROW(RelearnException::fail("{}", 4.2, false));
-    ASSERT_ANY_THROW(RelearnException::fail("{}", "Hallo", 32));
-    ASSERT_ANY_THROW(RelearnException::fail("{} {} {}"));
+RelearnException::hide_messages = true;
+}
+
+TEST_F(RelearnExceptionTest, testFormatting
+) {
+RelearnException::hide_messages = false;
+
+const std::string message = "This is the first value: {} and this the second: {}\n";
+const std::string expected_message = "This is the first value: 123456 and this the second: false\n";
+
+try {
+RelearnException::fail(message,
+123456, false);
+} catch (
+const RelearnException &ex
+) {
+const auto &reason = ex.what();
+ASSERT_EQ(expected_message, reason
+);
+}
+
+RelearnException::hide_messages = true;
+}
+
+TEST_F(RelearnExceptionTest, testFormattingWrongNumberArguments
+) {
+ASSERT_ANY_THROW(RelearnException::fail("{}")
+);
+ASSERT_ANY_THROW(RelearnException::fail("{} {}", 2)
+);
+ASSERT_ANY_THROW(RelearnException::fail("{}", 4.2, false)
+);
+ASSERT_ANY_THROW(RelearnException::fail("{}", "Hallo", 32)
+);
+ASSERT_ANY_THROW(RelearnException::fail("{} {} {}")
+);
 }

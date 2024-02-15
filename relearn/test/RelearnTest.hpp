@@ -45,8 +45,8 @@ protected:
         return static_cast<size_t>(new_val);
     }
 
-    template <typename T>
-    std::vector<std::decay_t<T>> vectorify_span(const std::span<T> span) {
+    template<typename T>
+    std::vector <std::decay_t<T>> vectorify_span(const std::span <T> span) {
         return span | ranges::to_vector;
     }
 

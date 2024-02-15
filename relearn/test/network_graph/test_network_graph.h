@@ -20,13 +20,13 @@ class NetworkGraph;
 
 class NetworkGraphTest : public RelearnTest {
 protected:
-    template <typename T, typename synapse_weight>
-    void erase_empty(std::map<T, synapse_weight>& edges) {
-        std::erase_if(edges, [](const auto& val) { return val.second == 0; });
+    template<typename T, typename synapse_weight>
+    void erase_empty(std::map <T, synapse_weight> &edges) {
+        std::erase_if(edges, [](const auto &val) { return val.second == 0; });
     }
 
-    template <typename T, typename synapse_weight>
-    void erase_empties(std::map<T, std::map<T, synapse_weight>>& edges) {
+    template<typename T, typename synapse_weight>
+    void erase_empties(std::map <T, std::map<T, synapse_weight>> &edges) {
         for (auto iterator = edges.begin(); iterator != edges.end();) {
             erase_empty<T>(iterator->second);
 
@@ -38,19 +38,19 @@ protected:
         }
     }
 
-    void assert_local_plastic_empty(const NetworkGraph& network_graph);
+    void assert_local_plastic_empty(const NetworkGraph &network_graph);
 
-    void assert_distant_plastic_empty(const NetworkGraph& network_graph);
+    void assert_distant_plastic_empty(const NetworkGraph &network_graph);
 
-    void assert_plastic_empty(const NetworkGraph& network_graph);
+    void assert_plastic_empty(const NetworkGraph &network_graph);
 
-    void assert_local_static_empty(const NetworkGraph& network_graph);
+    void assert_local_static_empty(const NetworkGraph &network_graph);
 
-    void assert_distant_static_empty(const NetworkGraph& network_graph);
+    void assert_distant_static_empty(const NetworkGraph &network_graph);
 
-    void assert_static_empty(const NetworkGraph& network_graph);
+    void assert_static_empty(const NetworkGraph &network_graph);
 
-    void assert_plastic_size(const NetworkGraph& network_graph, RelearnTypes::number_neurons_type);
+    void assert_plastic_size(const NetworkGraph &network_graph, RelearnTypes::number_neurons_type);
 
-    void assert_static_size(const NetworkGraph& network_graph, RelearnTypes::number_neurons_type);
+    void assert_static_size(const NetworkGraph &network_graph, RelearnTypes::number_neurons_type);
 };
