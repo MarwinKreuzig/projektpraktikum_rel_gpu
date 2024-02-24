@@ -1,5 +1,5 @@
 /*
-* This file is part of the RELeARN software developed at Technical University Darmstadt
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
  * Copyright (c) 2020, Technical University of Darmstadt, Germany
  *
@@ -13,7 +13,6 @@
 #include "harness/adapter/simulation/SimulationAdapter.h"
 #include "harness/adapter/neurons/NeuronsAdapter.h"
 #include "gpu/Octree.cuh"
-
 
 /**
  * @brief Tests the overhead of parsing and copying the cpu octree to the gpu

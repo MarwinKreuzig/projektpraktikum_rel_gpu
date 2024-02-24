@@ -34,7 +34,7 @@ add_executable(
 
 if (CUDA_FOUND)
     target_sources(relearn_benchmarks PRIVATE benchmark_octree_gpu.cpp)
-    target_link_libraries(relearn_benchmarks PUBLIC relearn_benchmarks)
+    target_link_libraries(relearn_benchmarks PUBLIC relearn_gpu)
 endif ()
 
 target_link_libraries(relearn_benchmarks PRIVATE project_options

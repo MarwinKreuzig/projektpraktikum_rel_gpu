@@ -97,7 +97,7 @@ public:
     void update_tree() override;
 
     /**
-     * @brief Updates the octree leaf nodes (WILL BE CHANGED IN BARNES HUT US)
+     * @brief Updates the octree leaf nodes (TODO WILL BE CHANGED IN BARNES HUT US)
      */
     void update_leaf_nodes(std::vector<gpu::Vec3d> position_excitatory_element,
         std::vector<gpu::Vec3d> position_inhibitory_element,
@@ -144,7 +144,7 @@ private:
 };
 
 /**
- * @brief Updates the virtual neurons of the octree (WILL BE CHANGED IN BARNES HUT US)
+ * @brief Updates the virtual neurons of the octree (TODO WILL BE CHANGED IN BARNES HUT US)
  */
 __global__ void update_tree_kernel(Octree* octree);
 };

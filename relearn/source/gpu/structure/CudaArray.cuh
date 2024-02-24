@@ -48,7 +48,7 @@ public:
     }
 
     /**
-     * @brief This Deconstructor frees memory ff struct_dev_ptr != nullptr
+     * @brief This Deconstructor frees memory if struct_dev_ptr != nullptr
      */
     ~CudaArrayDeviceHandle() {
         if (usable()) {
