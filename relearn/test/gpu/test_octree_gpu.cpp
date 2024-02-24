@@ -192,6 +192,8 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
 TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
     using AdditionalCellAttributes = TypeParam;
 
+    //================ Creation of Octree that will be converted =======================
+
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
     const auto level_of_branch_nodes = SimulationAdapter::get_small_refinement_level(this->mt);
 
@@ -209,16 +211,34 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
 
     octree.initializes_leaf_nodes(neurons_to_place.size());
 
+    //=================================================================================
+
+
+
+    //================ Creation of Octree on gpu  =====================================
+
     octree.construct_on_gpu(neurons_to_place.size());
 
     const std::shared_ptr<gpu::algorithm::OctreeHandle> gpu_handle = octree.get_gpu_handle();
     gpu::algorithm::OctreeCPUCopy octree_cpu_copy(neurons_to_place.size(), gpu_handle->get_number_virtual_neurons());
     gpu_handle->copy_to_cpu(octree_cpu_copy);
 
+    //=================================================================================
+
+
+
+    //================ Compare leaf node sizes and Neuron ID's   ======================
+
     ASSERT_EQ(octree_cpu_copy.neuron_ids.size(),octree.get_leaf_nodes().size());
     for (int i = 0; i < octree_cpu_copy.neuron_ids.size(); i++) {
         ASSERT_EQ(octree_cpu_copy.neuron_ids[i], octree.get_leaf_nodes()[octree_cpu_copy.neuron_ids[i]]->get_cell_neuron_id().get_neuron_id());
     }
+
+    //=================================================================================
+
+
+
+    //======== Update CPU Octree and compare with initial CPU Octree   ================
 
     octree.overwrite_cpu_tree_with_gpu();
 
@@ -281,13 +301,14 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
                 }
             }
 
-            if (children_processed != octree_cpu_copy.num_children.at(current_node_gpu - num_neurons))
+            if (children_processed != octree_cpu_copy.num_children.at(current_node_gpu - num_neurons))  {
                 RelearnException::fail("Octree::overwrite_cpu_tree_with_gpu: GPU and CPU Octree structure differs");
+            }
         }
     }
 
-    if (!octree_nodes_gpu.
-         empty()
-    )
+    if (!octree_nodes_gpu.empty())  {
         RelearnException::fail("Octree::overwrite_cpu_tree_with_gpu: GPU and CPU Octree structure differs");
+    }
+
 }
