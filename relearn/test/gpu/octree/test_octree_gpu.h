@@ -10,7 +10,7 @@
  *
  */
 
-#include "../RelearnTest.hpp"
+#include "../../RelearnTest.hpp"
 
 template<typename AdditionalCellAttributes>
 class OctreeTestGpu : public RelearnMemoryTest {
