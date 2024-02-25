@@ -158,6 +158,7 @@ target_sources(
 
 if (CUDA_FOUND)
     target_sources(relearn_tests PRIVATE gpu/octree/test_octree_gpu.cpp)
+    target_sources(relearn_tests PRIVATE gpu/vec3/test_vec3_gpu.cpp)
     target_link_libraries(relearn_tests PUBLIC relearn_gpu)
 endif ()
 

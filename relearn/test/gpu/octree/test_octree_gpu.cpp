@@ -117,10 +117,11 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
             octree.get_root()
         };
 
-    auto element_type = ElementType::Dendrite;
 
     int current_leaf_node_num = 0;
     int current_virtual_neuron_num = 0;
+    ElementType element_type;
+
     for (int i = 0; i < nodes.size(); ++i) {
         int index = 0;
 
@@ -130,6 +131,14 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
         } else {
             index = num_leafs + current_virtual_neuron_num++;
         }
+
+        if (nodes[i]->has_excitatory_dendrite) {
+            element_type = ElementType::Dendrite;
+        }
+        else {
+            element_type = ElementType::Axon;
+        }
+
 
         expected.minimum_cell_position[index] = gpu::Vec3d(std::get<0>(nodes[i]->get_size()).get_x(), std::get<0>(nodes[i]->get_size()).get_y(), std::get<0>(nodes[i]->get_size()).get_z());
         expected.maximum_cell_position[index] = gpu::Vec3d(std::get<1>(nodes[i]->get_size()).get_x(), std::get<1>(nodes[i]->get_size()).get_y(), std::get<1>(nodes[i]->get_size()).get_z());
@@ -171,9 +180,9 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
 
     //================ Comparison of result and expected OctreeCPUCopy ================
 
-    ASSERT_EQ(result.neuron_ids,expected.neuron_ids);
-    ASSERT_EQ(result.num_children,expected.num_children);
-    ASSERT_EQ(result.child_indices,expected.child_indices);
+    ASSERT_EQ(result.neuron_ids, expected.neuron_ids);
+    ASSERT_EQ(result.num_children, expected.num_children);
+    ASSERT_EQ(result.child_indices, expected.child_indices);
 
     for (int i = 0; i < expected.minimum_cell_position.size(); i++) {
         assert_eq_vec(convert_gpu_vec_to_vec(result.minimum_cell_position[i]), convert_gpu_vec_to_vec(expected.minimum_cell_position[i]));

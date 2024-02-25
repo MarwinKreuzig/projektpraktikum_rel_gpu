@@ -13,7 +13,10 @@ struct Vec3 {
         , y(y)
         , z(z) { }
 
-    Vec3() { }
+    Vec3()
+        : x(0)
+        , y(0)
+        , z(0) { }
 
     bool operator!=(const Vec3& rhs) const {
         return (x != rhs.x) || (y != rhs.y) || (z != rhs.z);
