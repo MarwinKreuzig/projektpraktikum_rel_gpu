@@ -17,7 +17,7 @@ struct OctreeCPUCopy {
 
     std::vector<uint64_t> child_indices;
 
-    std::vector<unsigned int> num_children;
+    std::vector<uint8_t> num_children;
 
     std::vector<gpu::Vec3d> minimum_cell_position;
     std::vector<gpu::Vec3d> maximum_cell_position;

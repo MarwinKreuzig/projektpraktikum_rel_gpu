@@ -495,6 +495,7 @@ public:
      * @param element_type The requested elements' type
      * @param signal_type The requested elements' signal type
      * @param num_elements The number of free elements
+     * @exception Throws a RelearnException if the requested type is not in this cell
      */
     constexpr void set_cell_number_elements_for(const ElementType element_type, const SignalType signal_type, const counter_type num_elements) {
         cell.set_number_elements_for(element_type, signal_type, num_elements);
@@ -537,6 +538,7 @@ public:
      * @param element_type The requested elements' type
      * @param signal_type The requested elements' signal type
      * @param virtual_position The position of the free elements
+     * @exception Throws a RelearnException if the requested type is not in this cell
      */
     constexpr void set_cell_position_for(const ElementType element_type, const SignalType signal_type, const std::optional<position_type>& opt_position) {
         cell.set_position_for(element_type, signal_type, opt_position);

@@ -96,7 +96,6 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
 
     //=================================================================================
 
-
     //================ Creation of expected OctreeCPUCopy =============================
     gpu::algorithm::OctreeCPUCopy expected(num_leafs, num_virtual_neurons);
 
@@ -117,7 +116,6 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
             octree.get_root()
         };
 
-
     int current_leaf_node_num = 0;
     int current_virtual_neuron_num = 0;
     ElementType element_type;
@@ -134,11 +132,9 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
 
         if (nodes[i]->has_excitatory_dendrite) {
             element_type = ElementType::Dendrite;
-        }
-        else {
+        } else {
             element_type = ElementType::Axon;
         }
-
 
         expected.minimum_cell_position[index] = gpu::Vec3d(std::get<0>(nodes[i]->get_size()).get_x(), std::get<0>(nodes[i]->get_size()).get_y(), std::get<0>(nodes[i]->get_size()).get_z());
         expected.maximum_cell_position[index] = gpu::Vec3d(std::get<1>(nodes[i]->get_size()).get_x(), std::get<1>(nodes[i]->get_size()).get_y(), std::get<1>(nodes[i]->get_size()).get_z());
@@ -170,13 +166,11 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
 
     //=================================================================================
 
-
     //================ Actual result of octree_to_octree_cpu_copy() ===================
 
     auto result = octree.octree_to_octree_cpu_copy(num_leafs);
 
     //=================================================================================
-
 
     //================ Comparison of result and expected OctreeCPUCopy ================
 
@@ -222,30 +216,23 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
 
     //=================================================================================
 
-
-
     //================ Creation of Octree on gpu  =====================================
 
     octree.construct_on_gpu(neurons_to_place.size());
 
     const std::shared_ptr<gpu::algorithm::OctreeHandle> gpu_handle = octree.get_gpu_handle();
-    gpu::algorithm::OctreeCPUCopy octree_cpu_copy(neurons_to_place.size(), gpu_handle->get_number_virtual_neurons());
-    gpu_handle->copy_to_cpu(octree_cpu_copy);
+    auto octree_cpu_copy = gpu_handle->copy_to_host(neurons_to_place.size(), gpu_handle->get_number_virtual_neurons());
 
     //=================================================================================
 
-
-
     //================ Compare leaf node sizes and Neuron ID's   ======================
 
-    ASSERT_EQ(octree_cpu_copy.neuron_ids.size(),octree.get_leaf_nodes().size());
+    ASSERT_EQ(octree_cpu_copy.neuron_ids.size(), octree.get_leaf_nodes().size());
     for (int i = 0; i < octree_cpu_copy.neuron_ids.size(); i++) {
         ASSERT_EQ(octree_cpu_copy.neuron_ids[i], octree.get_leaf_nodes()[octree_cpu_copy.neuron_ids[i]]->get_cell_neuron_id().get_neuron_id());
     }
 
     //=================================================================================
-
-
 
     //======== Update CPU Octree and compare with initial CPU Octree   ================
 
@@ -270,10 +257,9 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
         octree_nodes_gpu.pop();
 
         ElementType elem_type;
-        if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite)    {
+        if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
             elem_type = ElementType::Dendrite;
-        }
-        else {
+        } else {
             elem_type = ElementType::Axon;
         }
 
@@ -284,7 +270,7 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
         }
 
         gpu::Vec3d pos_ex_elem = octree_cpu_copy.position_excitatory_element.at(current_node_gpu);
-        ASSERT_EQ(Vec3d(pos_ex_elem.x, pos_ex_elem.y, pos_ex_elem.z), current_node_cpu->get_cell().get_position_for(elem_type, SignalType::Excitatory).value())<< " Correct nodes before fail:" << correct_counts;
+        ASSERT_EQ(Vec3d(pos_ex_elem.x, pos_ex_elem.y, pos_ex_elem.z), current_node_cpu->get_cell().get_position_for(elem_type, SignalType::Excitatory).value()) << " Correct nodes before fail:" << correct_counts;
 
         gpu::Vec3d pos_in_elem = octree_cpu_copy.position_inhibitory_element.at(current_node_gpu);
         ASSERT_EQ(Vec3d(pos_in_elem.x, pos_in_elem.y, pos_in_elem.z), current_node_cpu->get_cell().get_position_for(elem_type, SignalType::Inhibitory).value());
@@ -310,14 +296,13 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
                 }
             }
 
-            if (children_processed != octree_cpu_copy.num_children.at(current_node_gpu - num_neurons))  {
+            if (children_processed != octree_cpu_copy.num_children.at(current_node_gpu - num_neurons)) {
                 RelearnException::fail("Octree::overwrite_cpu_tree_with_gpu: GPU and CPU Octree structure differs");
             }
         }
     }
 
-    if (!octree_nodes_gpu.empty())  {
+    if (!octree_nodes_gpu.empty()) {
         RelearnException::fail("Octree::overwrite_cpu_tree_with_gpu: GPU and CPU Octree structure differs");
     }
-
 }

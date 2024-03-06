@@ -1,16 +1,22 @@
 #include "Octree.cuh"
 
 namespace gpu::algorithm {
+/*converts a gpu::Vec3 to an util::Vec3*/
+double3 convert_to_cpu(const gpu::Vec3d& vec) {
+    return make_double3(vec.x, vec.y, vec.z);
+}
 
 OctreeHandleImpl::OctreeHandleImpl(Octree* dev_ptr, const RelearnGPUTypes::number_neurons_type number_neurons, const RelearnGPUTypes::number_neurons_type number_virtual_neurons, ElementType stored_element_type)
     : number_neurons(number_neurons)
     , number_virtual_neurons(number_virtual_neurons)
     , octree_dev_ptr(dev_ptr) {
+    // can't use device lambdas in a constructor, so we move all of them into the _init method
     _init(stored_element_type);
 }
 
 void OctreeHandleImpl::_init(ElementType stored_element_type) {
-    void* neuron_ids_ptr = execute_and_copy<void*>([=] __device__(Octree * octree) { return (void*)&octree->neuron_ids; }, octree_dev_ptr);
+    void* neuron_ids_ptr
+        = execute_and_copy<void*>([=] __device__(Octree * octree) { return (void*)&octree->neuron_ids; }, octree_dev_ptr);
     handle_neuron_ids = gpu::Vector::CudaArrayDeviceHandle<uint64_t>(neuron_ids_ptr);
     handle_neuron_ids.resize(number_neurons);
 
@@ -69,14 +75,7 @@ OctreeHandleImpl::~OctreeHandleImpl() { }
     return number_neurons;
 }
 
-void OctreeHandleImpl::copy_to_gpu(OctreeCPUCopy&& octree_cpu_copy) {
-    /**
-     * @brief converts a gpu::Vec3 to an util::Vec3
-     */
-    auto convert = [](const gpu::Vec3d& vec) -> double3 {
-        return make_double3(vec.x, vec.y, vec.z);
-    };
-
+void OctreeHandleImpl::copy_to_device(OctreeCPUCopy&& octree_cpu_copy) {
     std::vector<double3> pos_gpu(octree_cpu_copy.minimum_cell_position.size());
 
     handle_neuron_ids.copy_to_device(octree_cpu_copy.neuron_ids);
@@ -85,14 +84,14 @@ void OctreeHandleImpl::copy_to_gpu(OctreeCPUCopy&& octree_cpu_copy) {
 
     handle_num_children.copy_to_device(octree_cpu_copy.num_children);
 
-    std::transform(octree_cpu_copy.minimum_cell_position.begin(), octree_cpu_copy.minimum_cell_position.end(), pos_gpu.begin(), convert);
+    std::transform(octree_cpu_copy.minimum_cell_position.begin(), octree_cpu_copy.minimum_cell_position.end(), pos_gpu.begin(), convert_to_cpu);
     handle_minimum_cell_position.copy_to_device(pos_gpu);
-    std::transform(octree_cpu_copy.maximum_cell_position.begin(), octree_cpu_copy.maximum_cell_position.end(), pos_gpu.begin(), convert);
+    std::transform(octree_cpu_copy.maximum_cell_position.begin(), octree_cpu_copy.maximum_cell_position.end(), pos_gpu.begin(), convert_to_cpu);
     handle_maximum_cell_position.copy_to_device(pos_gpu);
 
-    std::transform(octree_cpu_copy.position_excitatory_element.begin(), octree_cpu_copy.position_excitatory_element.end(), pos_gpu.begin(), convert);
+    std::transform(octree_cpu_copy.position_excitatory_element.begin(), octree_cpu_copy.position_excitatory_element.end(), pos_gpu.begin(), convert_to_cpu);
     handle_position_excitatory_element.copy_to_device(pos_gpu);
-    std::transform(octree_cpu_copy.position_inhibitory_element.begin(), octree_cpu_copy.position_inhibitory_element.end(), pos_gpu.begin(), convert);
+    std::transform(octree_cpu_copy.position_inhibitory_element.begin(), octree_cpu_copy.position_inhibitory_element.end(), pos_gpu.begin(), convert_to_cpu);
     handle_position_inhibitory_element.copy_to_device(pos_gpu);
 
     handle_num_free_elements_excitatory.copy_to_device(octree_cpu_copy.num_free_elements_excitatory);
@@ -105,10 +104,17 @@ void OctreeHandleImpl::copy_to_gpu(OctreeCPUCopy&& octree_cpu_copy) {
     cuda_memcpy_to_device((void*)handle_number_virtual_neurons, (void*)&number_virtual_neurons, sizeof(size_t), 1);
 }
 
-void OctreeHandleImpl::copy_to_cpu(OctreeCPUCopy& octree_cpu_copy) {
+OctreeCPUCopy OctreeHandleImpl::copy_to_host(
+    const RelearnGPUTypes::number_neurons_type num_neurons,
+    const RelearnGPUTypes::number_neurons_type num_virtual_neurons) {
+    /**
+     * @brief converts an util::Vec3 to a gpu::Vec3
+     */
     auto convert = [](const double3& vec) -> gpu::Vec3d {
         return gpu::Vec3d(vec.x, vec.y, vec.z);
     };
+
+    OctreeCPUCopy octree_cpu_copy(num_neurons, num_virtual_neurons);
 
     std::vector<double3> pos_gpu(octree_cpu_copy.minimum_cell_position.size());
 
@@ -130,6 +136,8 @@ void OctreeHandleImpl::copy_to_cpu(OctreeCPUCopy& octree_cpu_copy) {
 
     handle_num_free_elements_excitatory.copy_to_host(octree_cpu_copy.num_free_elements_excitatory);
     handle_num_free_elements_inhibitory.copy_to_host(octree_cpu_copy.num_free_elements_inhibitory);
+
+    return octree_cpu_copy;
 }
 
 [[nodiscard]] void* OctreeHandleImpl::get_device_pointer() {
@@ -145,15 +153,11 @@ void OctreeHandleImpl::update_leaf_nodes(std::vector<gpu::Vec3d> position_excita
     std::vector<unsigned int> num_free_elements_excitatory,
     std::vector<unsigned int> num_free_elements_inhibitory) {
 
-    auto convert = [](const gpu::Vec3d& vec) -> double3 {
-        return make_double3(vec.x, vec.y, vec.z);
-    };
-
     std::vector<double3> pos_gpu(position_excitatory_element.size());
 
-    std::transform(position_excitatory_element.begin(), position_excitatory_element.end(), pos_gpu.begin(), convert);
+    std::transform(position_excitatory_element.begin(), position_excitatory_element.end(), pos_gpu.begin(), convert_to_cpu);
     handle_position_excitatory_element.copy_to_device_at(pos_gpu, 0);
-    std::transform(position_inhibitory_element.begin(), position_inhibitory_element.end(), pos_gpu.begin(), convert);
+    std::transform(position_inhibitory_element.begin(), position_inhibitory_element.end(), pos_gpu.begin(), convert_to_cpu);
     handle_position_inhibitory_element.copy_to_device_at(pos_gpu, 0);
 
     handle_num_free_elements_excitatory.copy_to_device_at(num_free_elements_excitatory, 0);

@@ -1,27 +1,31 @@
 #pragma once
 
-#include "Commons.cuh"
+#include <vector>
+
+#include "cuda.h"
 #include "utils/GpuTypes.h"
 #include "utils/Interface.h"
 #include "../../shared/enums/ElementType.h"
 
 #include "CudaArray.cuh"
-#include "CudaVector.cuh"
 
 namespace gpu::algorithm {
 struct Octree {
     /**
-     * This class represents a GPU-based Octree data structure storing attributes of neurons. It utilizes
-     * gpu::Vector::CudaArray to efficiently manage these attributes on the GPU. Unique to this implementation,
-     * indexing combines virtual and actual neurons, placing actual neurons at the beginning of the range. When
-     * accessing child indices, remember to subtract the total number of actual neurons to account for this ordering.
+     * This struct represents a GPU-based Octree data structure storing attributes of neurons. It utilizes
+     * gpu::Vector::CudaArray to efficiently manage these attributes on the GPU using the struct-of-arrays pattern.
+     * That means that each attribute of a neuron is stored in a seperate array. A single neuron is therefore
+     * defined by an index into each array.
+     * Unique to this implementation, indexing combines virtual and actual neurons, placing actual neurons at the
+     * beginning of the range. When accessing child indices, remember to subtract the total number of actual neurons
+     * to account for this ordering.
      */
     gpu::Vector::CudaArray<uint64_t> neuron_ids;
 
     gpu::Vector::CudaArray<uint64_t> child_indices;
 
     // we need this, since we can't use -1 to indicate an invalid child_indices entry
-    gpu::Vector::CudaArray<unsigned int> num_children;
+    gpu::Vector::CudaArray<uint8_t> num_children;
 
     gpu::Vector::CudaArray<double3> minimum_cell_position;
     gpu::Vector::CudaArray<double3> maximum_cell_position;
@@ -47,8 +51,9 @@ class OctreeHandleImpl : public OctreeHandle {
 public:
     /**
      * @brief Allocates the necessary memory for the octree on the GPU and saves the device pointers to this memory
-     * @param number_neurons Number of neurons, influences how much memory will be allocated on the GPU
-     * @param number_virtual_neurons Number of virtual neurons, influences how much memory will be allocated on the GPU
+     * @param dev_ptr A pointer to an allocated Octree instance. Its members do not need to be allocated.
+     * @param number_neurons Number of neurons, determines how much memory will be allocated on the GPU
+     * @param number_virtual_neurons Number of virtual neurons, determines how much memory will be allocated on the GPU
      * @paramm stored_element_type Type of elements that will be stored (Axon or Dendrite)
      */
     OctreeHandleImpl(Octree* dev_ptr,
@@ -68,7 +73,7 @@ public:
     void _init(ElementType stored_element_type);
 
     /**
-     * @brief Returns the number of virtual neurons on the octree on the GPU
+     * @brief Returns the number of virtual neurons in the octree on the GPU
      * @return The number of virtual neurons in the tree
      */
     [[nodiscard]] RelearnGPUTypes::number_neurons_type get_number_virtual_neurons() const override;
@@ -83,13 +88,15 @@ public:
      * @brief Copies the GPU data structure version of the octree, which was constructed on the CPU, to the GPU
      * @param octree_cpu_copy Struct which holds the octree data to be copied to the GPU
      */
-    void copy_to_gpu(OctreeCPUCopy&& octree_cpu_copy) override;
+    void copy_to_device(OctreeCPUCopy&& octree_cpu_copy) override;
 
     /**
      * @brief Copies the GPU data structure version of the octree to the CPU
      * @param octree_cpu_copy Struct which holds the octree data to be copied to the CPU
      */
-    void copy_to_cpu(OctreeCPUCopy& octree_cpu_copy) override;
+    OctreeCPUCopy copy_to_host(
+        const RelearnGPUTypes::number_neurons_type num_neurons,
+        const RelearnGPUTypes::number_neurons_type num_virtual_neurons) override;
 
     /**
      * @brief Calls the update_tree_kernel (WILL BE CHANGED IN BARNES HUT US)

@@ -22,7 +22,6 @@
 
 #include "gpu/utils/GpuTypes.h"
 
-
 /**
  * @brief Tests the overhead of parsing and copying the cpu octree to the gpu
  */
@@ -49,18 +48,13 @@ static void BM_octree_copy(benchmark::State& state) {
 
     octree.construct_on_gpu(neurons_to_place.size());
     const std::shared_ptr<gpu::algorithm::OctreeHandle> gpu_handle = octree.get_gpu_handle();
-    gpu::algorithm::OctreeCPUCopy octree_cpu_copy(neurons_to_place.size(),
-                                                  gpu_handle->get_number_virtual_neurons());
-    gpu_handle->copy_to_cpu(octree_cpu_copy);
+    auto octree_cpu_copy = gpu_handle->copy_to_host(neurons_to_place.size(), gpu_handle->get_number_virtual_neurons());
 
-//    for (auto _ : state) {
-//        octree.construct_on_gpu(neurons_to_place.size());
-//        const std::shared_ptr<gpu::algorithm::OctreeHandle> gpu_handle = octree.get_gpu_handle();
-//        gpu::algorithm::OctreeCPUCopy octree_cpu_copy(neurons_to_place.size(),
-//                                                      gpu_handle->get_number_virtual_neurons());
-//        gpu_handle->copy_to_cpu(octree_cpu_copy);
-//    }
-
+    //    for (auto _ : state) {
+    //        octree.construct_on_gpu(neurons_to_place.size());
+    //        const std::shared_ptr<gpu::algorithm::OctreeHandle> gpu_handle = octree.get_gpu_handle();
+    //        auto octree_cpu_copy = gpu_handle->copy_to_host(neurons_to_place.size(), gpu_handle->get_number_virtual_neurons());
+    //    }
 }
 
- BENCHMARK(BM_octree_copy)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons, 1000 })->Iterations(static_few_iterations);
+BENCHMARK(BM_octree_copy)->Unit(benchmark::kMillisecond)->Args({ static_number_neurons, 1000 })->Iterations(static_few_iterations);

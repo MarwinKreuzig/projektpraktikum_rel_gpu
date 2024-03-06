@@ -133,7 +133,7 @@ public:
     virtual void initializes_leaf_nodes(RelearnTypes::number_neurons_type num_neurons) = 0;
 
     /**
-     * @brief Updates the octree structure on the gpu. This method should only be called after new neurons are insterted during simulation after the leaf
+     * @brief Updates the octree structure on the gpu. This method should only be called after new neurons are inserted during simulation after the leaf
      * nodes have been updated in neurons.create_neurons()
      */
     virtual void update_gpu_octree_structure() = 0;
@@ -390,10 +390,15 @@ public:
 
     /**
      * @pre Should only be called after all nodes have been inserted.
-     * @brief Constructs the Octree on the GPU.
+     * @brief Constructs the octree in a format that allows easy copying to the gpu.
      * @param num_neurons Number of neurons on MPI Process
      */
     [[nodiscard]] gpu::algorithm::OctreeCPUCopy octree_to_octree_cpu_copy(const RelearnTypes::number_neurons_type num_neurons) {
+        // OctreeCPUCopy has the same format as gpu::algorithm::Octree (struct-of-arrays), so we need to convert the octree
+        // to the right format. Each attribute of the nodes is stored in a seperate array, in the same order, so a node is
+        // identified by its index into the arrays. Only virtual neurons have children, so num_neurons needs to be subtracted
+        // from the indices before accessing num_children and child_indices.
+        // In the other arrays, virtual and real neurons are both stored, first all real neurons then all virtual ones.
 
         // The virtual nodes are supposed to be in breadth-first-order. This means that all nodes of a level are
         // consecutive in the array. By determining the range of indices for every level in a first depth-first pass, it
@@ -447,7 +452,7 @@ public:
 
         // actually add all the nodes to the octree
 
-        // stack of node, level, parent index
+        // stack of (node, level, parent index)
         std::stack<std::tuple<const OctreeNode<AdditionalCellAttributes>*, size_t, size_t>> octree_nodes_second_pass{};
         octree_nodes_second_pass.emplace(&root, 0, 0);
 
@@ -541,7 +546,7 @@ public:
             element_type = ElementType::Axon;
         }
         gpu_handle = gpu::algorithm::create_octree(num_neurons, num_virtual_neurons, element_type);
-        gpu_handle->copy_to_gpu(std::move(octree_cpu_copy));
+        gpu_handle->copy_to_device(std::move(octree_cpu_copy));
     }
 
     /**
@@ -557,7 +562,7 @@ public:
         }
 
         auto octree_cpu_copy = octree_to_octree_cpu_copy(all_leaf_nodes.size());
-        gpu_handle->copy_to_gpu(std::move(octree_cpu_copy));
+        gpu_handle->copy_to_device(std::move(octree_cpu_copy));
     }
 
     /**
@@ -570,8 +575,7 @@ public:
         }
 
         size_t num_neurons = gpu_handle->get_number_neurons();
-        gpu::algorithm::OctreeCPUCopy octree_cpu_copy(num_neurons, gpu_handle->get_number_virtual_neurons());
-        gpu_handle->copy_to_cpu(octree_cpu_copy);
+        auto octree_cpu_copy = gpu_handle->copy_to_host(num_neurons, gpu_handle->get_number_virtual_neurons());
 
         std::stack<OctreeNode<AdditionalCellAttributes>*> octree_nodes_cpu{};
         octree_nodes_cpu.push(&root);
@@ -611,7 +615,6 @@ public:
             RelearnTypes::counter_type num_in_elem = octree_cpu_copy.num_free_elements_inhibitory.at(current_node_gpu);
             current_node_cpu->set_cell_number_elements_for(elem_type, SignalType::Inhibitory, num_in_elem);
 
-            // The order of the children should in theory be correct here
             if (current_node_cpu->is_parent() && current_node_gpu >= num_neurons) {
                 const auto& children_cpu = current_node_cpu->get_children();
                 int children_processed = 0;

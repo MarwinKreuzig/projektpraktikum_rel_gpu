@@ -3,7 +3,7 @@
 #include "Macros.h"
 #include "GpuTypes.h"
 #include "../../shared/enums/FiredStatus.h"
-#include "../structure/OctreeStructure.h"
+#include "../structure/OctreeCPUCopy.h"
 #include "../../shared/enums/ElementType.h"
 
 #include <memory>
@@ -26,12 +26,15 @@
 namespace gpu::algorithm {
 class OctreeHandle {
 public:
-    virtual void copy_to_gpu(OctreeCPUCopy&& octree_cpu_copy) = 0;
+    virtual void copy_to_device(OctreeCPUCopy&& octree_cpu_copy) = 0;
 
     [[nodiscard]] virtual RelearnGPUTypes::number_neurons_type get_number_virtual_neurons() const = 0;
     [[nodiscard]] virtual RelearnGPUTypes::number_neurons_type get_number_neurons() const = 0;
 
-    virtual void copy_to_cpu(OctreeCPUCopy& octree_cpu_copy) = 0;
+    virtual OctreeCPUCopy copy_to_host(
+        const RelearnGPUTypes::number_neurons_type number_neurons,
+        const RelearnGPUTypes::number_neurons_type number_virtual_neurons)
+        = 0;
 
     virtual void update_tree() = 0;
 

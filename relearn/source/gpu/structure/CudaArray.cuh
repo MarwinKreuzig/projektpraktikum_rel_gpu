@@ -25,6 +25,8 @@ template <typename T>
 class CudaArrayDeviceHandle {
     /**
      * A handle to control a CudaArray from the cpu
+     * Internally, it keeps a pointer to a CudaArray allocated on the GPU, called the struct_dev_ptr, as
+     * well as a copy in regular memory called the struct_copy.
      */
 
 public:
@@ -37,7 +39,7 @@ public:
 
     /**
      * @brief Creates a CudaArrayDeviceHandle with struct_device_pointer as struct_dev_ptr
-     * @param struct_device_pointer Pointer to a CudaArray instance on the utils
+     * @param struct_device_pointer Pointer to an allocated CudaArray instance
      */
     CudaArrayDeviceHandle(CudaArray<T>* struct_device_ptr)
         : struct_dev_ptr((void*)struct_device_ptr) {
@@ -72,7 +74,7 @@ public:
     }
 
     /**
-     * @brief Resizes the CudaArray and changes its type
+     * @brief Resizes the CudaArray and sets all indices to value
      * @param new_size New size of the CudaArray
      * @param value New type of the CudaArray
      */
@@ -111,9 +113,9 @@ public:
     }
 
     /**
-     * @brief Sets num_indices indices from indices to value
-     * @param begin The starting index (inclusive) within the vector to fill
-     * @param end The ending index (exclusive) within the vector to fill
+     * @brief Sets the indices from begin to end with value
+     * @param begin The starting index (inclusive) within the array to fill
+     * @param end The ending index (exclusive) within the array to fill
      * @param value The value to fill the specified range with
      */
     void fill(size_t begin, size_t end, T value) {
@@ -149,7 +151,7 @@ public:
     }
 
     /**
-     * @brief Copys data from host to a CudaVector
+     * @brief Copys data from host to a CudaVector, overwriting the current data.
      * @param host_data Data from the host-side
      */
     void copy_to_device(const std::vector<T>& host_data) {
@@ -164,16 +166,16 @@ public:
     }
 
     /**
-     * @brief Copys data from host to a CudaVector with an offset
+     * @brief Copys data from host to a CudaVector with an offset. host_data will be copied to the indices offset to offset + host_data.size()
      * @param host_data Data from the host-side
      * @param offset Offset within a CudaVector
      */
     void copy_to_device_at(const std::vector<T>& host_data, size_t offset) {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
-        const auto furthest_element = offset + host_data.size();
-        if (furthest_element > struct_copy.max_size) {
-            resize(furthest_element);
-            struct_copy.size = furthest_element;
+        const auto furthest_element_pos = offset + host_data.size();
+        if (furthest_element_pos > struct_copy.max_size) {
+            resize(furthest_element_pos);
+            struct_copy.size = furthest_element_pos;
         }
         cuda_memcpy_to_device(struct_copy.data + offset, (void*)host_data.data(), sizeof(T), host_data.size());
         update_struct_copy_to_device();
