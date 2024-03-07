@@ -131,7 +131,7 @@ private:
 
     gpu::Vector::CudaArrayDeviceHandle<uint64_t> handle_child_indices;
 
-    gpu::Vector::CudaArrayDeviceHandle<unsigned int> handle_num_children;
+    gpu::Vector::CudaArrayDeviceHandle<uint8_t> handle_num_children;
 
     gpu::Vector::CudaArrayDeviceHandle<double3> handle_minimum_cell_position;
     gpu::Vector::CudaArrayDeviceHandle<double3> handle_maximum_cell_position;

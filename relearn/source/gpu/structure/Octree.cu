@@ -25,7 +25,7 @@ void OctreeHandleImpl::_init(ElementType stored_element_type) {
     handle_child_indices.resize(number_virtual_neurons * 8);
 
     void* num_children_ptr = execute_and_copy<void*>([=] __device__(Octree * octree) { return (void*)&octree->num_children; }, octree_dev_ptr);
-    handle_num_children = gpu::Vector::CudaArrayDeviceHandle<unsigned int>(num_children_ptr);
+    handle_num_children = gpu::Vector::CudaArrayDeviceHandle<uint8_t>(num_children_ptr);
     handle_num_children.resize(number_virtual_neurons);
 
     void* minimum_cell_position_ptr = execute_and_copy<void*>([=] __device__(Octree * octree) { return (void*)&octree->minimum_cell_position; }, octree_dev_ptr);
