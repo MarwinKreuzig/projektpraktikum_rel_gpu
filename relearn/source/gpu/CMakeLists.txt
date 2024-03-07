@@ -14,7 +14,7 @@ if (CUDA_FOUND)
             RelearnGPUException.h
             Commons.cuh
             structure/Octree.cuh
-            structure/OctreeStructure.h)
+            structure/OctreeCPUCopy.h)
 
     set(CMAKE_CUDA_STANDARD 17)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
