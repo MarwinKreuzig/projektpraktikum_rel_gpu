@@ -28,9 +28,9 @@ double RelearnTest::eps = 0.001;
 bool RelearnTest::use_predetermined_seed = false;
 unsigned int RelearnTest::predetermined_seed = 2818124801;
 
-std::vector <OctreeNode<BarnesHutCell>> holder_bh_cells{};
-std::vector <OctreeNode<BarnesHutInvertedCell>> holder_bhi_cells{};
-std::vector <OctreeNode<FastMultipoleMethodCell>> holder_fmm_cells{};
+std::vector<OctreeNode<BarnesHutCell>> holder_bh_cells{};
+std::vector<OctreeNode<BarnesHutInvertedCell>> holder_bhi_cells{};
+std::vector<OctreeNode<FastMultipoleMethodCell>> holder_fmm_cells{};
 
 RelearnTest::RelearnTest() {
 }
@@ -58,7 +58,7 @@ void RelearnTest::SetUp() {
 
 void RelearnTest::TearDown() {
     // Remove tmp files
-    for (auto const &entry: std::filesystem::recursive_directory_iterator("./")) {
+    for (auto const& entry : std::filesystem::recursive_directory_iterator("./")) {
         if (std::filesystem::is_regular_file(entry) && entry.path().extension() == ".tmp") {
             std::filesystem::remove(entry);
             std::cerr << "REMOVED " << entry.path() << std::endl;
@@ -77,7 +77,7 @@ RelearnMemoryTest::RelearnMemoryTest() {
 RelearnMemoryTest::~RelearnMemoryTest() {
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     MPIWrapper::init(1, argv);
     ::testing::InitGoogleTest(&argc, argv);
 

@@ -12,6 +12,6 @@
 
 #include "RelearnTest.hpp"
 
-template<typename AdditionalCellAttributes>
+template <typename AdditionalCellAttributes>
 class MemoryHolderTest : public RelearnMemoryTest {
 };

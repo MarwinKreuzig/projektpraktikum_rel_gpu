@@ -21,6 +21,5 @@
 #include <numeric>
 #include <sstream>
 
-TEST_F(SynapseDeletionFinderTest, testRandom
-) {
+TEST_F(SynapseDeletionFinderTest, testRandom) {
 }

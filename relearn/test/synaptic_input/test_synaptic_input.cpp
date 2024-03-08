@@ -29,33 +29,32 @@
 #include <range/v3/numeric/accumulate.hpp>
 #include <range/v3/view/filter.hpp>
 
-void test_input_equality(const std::unique_ptr <SynapticInputCalculator> &input_calculator) {
+void test_input_equality(const std::unique_ptr<SynapticInputCalculator>& input_calculator) {
     const auto number_neurons = input_calculator->get_number_neurons();
-    const auto &inputs = input_calculator->get_synaptic_input();
+    const auto& inputs = input_calculator->get_synaptic_input();
 
     ASSERT_EQ(inputs.size(), number_neurons);
 
     for (size_t neuron_id = 0; neuron_id < number_neurons; neuron_id++) {
-        const NeuronID id{neuron_id};
+        const NeuronID id{ neuron_id };
 
         const auto input = input_calculator->get_synaptic_input(id);
         ASSERT_EQ(inputs[neuron_id], input);
     }
 }
 
-void test_input_exceptions(const std::unique_ptr <SynapticInputCalculator> &input_calculator) {
+void test_input_exceptions(const std::unique_ptr<SynapticInputCalculator>& input_calculator) {
     const auto number_neurons = input_calculator->get_number_neurons();
 
     for (size_t it = 0; it < number_neurons + 100; it++) {
-        const NeuronID id{it + number_neurons};
+        const NeuronID id{ it + number_neurons };
         ASSERT_THROW(
-        const auto input = input_calculator->get_synaptic_input(id), RelearnException);
+            const auto input = input_calculator->get_synaptic_input(id), RelearnException);
     }
 }
 
-void
-test_constructor_clone(const std::unique_ptr <SynapticInputCalculator> &input_calculator, const double expected_value,
-                       const auto new_value) {
+void test_constructor_clone(const std::unique_ptr<SynapticInputCalculator>& input_calculator, const double expected_value,
+    const auto new_value) {
     const auto original_value = input_calculator->get_synapse_conductance();
     ASSERT_EQ(original_value, expected_value);
 
@@ -65,7 +64,7 @@ test_constructor_clone(const std::unique_ptr <SynapticInputCalculator> &input_ca
     ASSERT_EQ(cloned_value, expected_value);
 
     auto parameter = input_calculator->get_parameter()[0];
-    auto cast_parameter = std::get < Parameter < double >> (parameter);
+    auto cast_parameter = std::get<Parameter<double>>(parameter);
 
     ASSERT_EQ(cast_parameter.value(), expected_value);
 
@@ -78,9 +77,8 @@ test_constructor_clone(const std::unique_ptr <SynapticInputCalculator> &input_ca
     ASSERT_EQ(SynapticInputCalculator::max_conductance, cast_parameter.max());
 }
 
-void
-test_init_create(const std::unique_ptr <SynapticInputCalculator> &input_calculator, const size_t number_init_neurons,
-                 const size_t number_create_neurons) {
+void test_init_create(const std::unique_ptr<SynapticInputCalculator>& input_calculator, const size_t number_init_neurons,
+    const size_t number_create_neurons) {
     ASSERT_EQ(input_calculator->get_number_neurons(), 0);
     ASSERT_TRUE(input_calculator->get_synaptic_input().empty());
 
@@ -102,7 +100,7 @@ test_init_create(const std::unique_ptr <SynapticInputCalculator> &input_calculat
     test_input_exceptions(input_calculator);
 
     for (size_t neuron_id = 0; neuron_id < number_init_neurons; neuron_id++) {
-        const NeuronID id{neuron_id};
+        const NeuronID id{ neuron_id };
 
         const auto input = input_calculator->get_synaptic_input(id);
         ASSERT_EQ(input, 0.0);
@@ -122,7 +120,7 @@ test_init_create(const std::unique_ptr <SynapticInputCalculator> &input_calculat
     test_input_exceptions(input_calculator);
 
     for (size_t neuron_id = 0; neuron_id < number_init_neurons + number_create_neurons; neuron_id++) {
-        const NeuronID id{neuron_id};
+        const NeuronID id{ neuron_id };
 
         const auto input = input_calculator->get_synaptic_input(id);
         ASSERT_EQ(input, 0.0);
@@ -135,563 +133,471 @@ test_init_create(const std::unique_ptr <SynapticInputCalculator> &input_calculat
     ASSERT_TRUE(second_clone->get_synaptic_input().empty());
 }
 
-TEST_F(SynapticInputTest, testLinearSynapticInputConstruct
-) {
-const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
-const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
+TEST_F(SynapticInputTest, testLinearSynapticInputConstruct) {
+    const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
 
-const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
-                                                                         SynapticInputCalculator::max_conductance, mt);
+    const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
+        SynapticInputCalculator::max_conductance, mt);
 
-auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
-std::unique_ptr <SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(
+    auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(
         random_conductance, std::move(fired_status_communicator));
-ASSERT_EQ(input_calculator
-->
+    ASSERT_EQ(input_calculator
+                  ->
 
-get_synapse_conductance(), random_conductance
+              get_synapse_conductance(),
+        random_conductance
 
-);
+    );
 
-const auto new_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
-                                                                      SynapticInputCalculator::max_conductance, mt);
-test_constructor_clone(input_calculator, random_conductance, new_conductance
-);
+    const auto new_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
+        SynapticInputCalculator::max_conductance, mt);
+    test_constructor_clone(input_calculator, random_conductance, new_conductance);
 
-test_init_create(input_calculator, number_neurons_init, number_neurons_create
-);
+    test_init_create(input_calculator, number_neurons_init, number_neurons_create);
 }
 
-TEST_F(SynapticInputTest, testLinearSynapticInputUpdateEmptyGraph
-) {
-const auto random_conductance = RandomAdapter::get_random_double<double>(
+TEST_F(SynapticInputTest, testLinearSynapticInputUpdateEmptyGraph) {
+    const auto random_conductance = RandomAdapter::get_random_double<double>(
         SynapticInputCalculator::min_conductance,
         SynapticInputCalculator::max_conductance, mt);
-const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
 
-auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
-std::unique_ptr <SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(
+    auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(
         random_conductance, std::move(fired_status_communicator));
-input_calculator->
-init(number_neurons);
+    input_calculator->init(number_neurons);
 
-auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
-network_graph->
-init(number_neurons);
+    auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
+    network_graph->init(number_neurons);
 
-std::vector <FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
-std::vector <UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
+    std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
+    std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
 
-auto extra_info = std::make_shared<NeuronsExtraInfo>();
-extra_info->
-init(number_neurons);
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
 
-input_calculator->
-set_extra_infos(extra_info);
-input_calculator->
-set_network_graph(network_graph);
+    input_calculator->set_extra_infos(extra_info);
+    input_calculator->set_network_graph(network_graph);
 
-input_calculator->update_input(0, fired_status);
+    input_calculator->update_input(0, fired_status);
 
-for (
-const auto &value
-: input_calculator->
+    for (
+        const auto& value : input_calculator->
 
-get_synaptic_input()
+                            get_synaptic_input()
 
-) {
-ASSERT_EQ(0.0, value);
+    ) {
+        ASSERT_EQ(0.0, value);
+    }
+
+    test_input_equality(input_calculator);
 }
 
-test_input_equality(input_calculator);
-}
+TEST_F(SynapticInputTest, testLinearSynapticInputUpdate) {
+    const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
+        SynapticInputCalculator::max_conductance, mt);
 
-TEST_F(SynapticInputTest, testLinearSynapticInputUpdate
-) {
-const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
-                                                                         SynapticInputCalculator::max_conductance, mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto num_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
 
-const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
-const auto num_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
-
-auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
-std::unique_ptr <SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(
+    auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LinearSynapticInputCalculator>(
         random_conductance, std::move(fired_status_communicator));
-input_calculator->
-init(number_neurons);
+    input_calculator->init(number_neurons);
 
-auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
-network_graph->
-init(number_neurons);
+    auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
+    network_graph->init(number_neurons);
 
-std::vector <FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
-std::vector <UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
+    std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
+    std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
 
-auto extra_info = std::make_shared<NeuronsExtraInfo>();
-extra_info->
-init(number_neurons);
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
 
-input_calculator->
-set_extra_infos(extra_info);
-input_calculator->
-set_network_graph(network_graph);
+    input_calculator->set_extra_infos(extra_info);
+    input_calculator->set_network_graph(network_graph);
 
-for (
-size_t synapse_id = 0;
-synapse_id<num_synapses;
-synapse_id++) {
-const auto weight = std::abs(NetworkGraphAdapter::get_random_plastic_synapse_weight(mt));
-const auto source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
-const auto target_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+    for (
+        size_t synapse_id = 0;
+        synapse_id < num_synapses;
+        synapse_id++) {
+        const auto weight = std::abs(NetworkGraphAdapter::get_random_plastic_synapse_weight(mt));
+        const auto source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto target_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
-network_graph->
-add_synapse(PlasticLocalSynapse(target_id, source_id, weight)
-);
+        network_graph->add_synapse(PlasticLocalSynapse(target_id, source_id, weight));
+    }
+
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
+        if (
+            RandomAdapter::get_random_bool(mt)) {
+            update_status[neuron_id] = UpdateStatus::Disabled;
+            extra_info->set_disabled_neurons(std::vector{ NeuronID{ neuron_id } });
+        }
+        if (
+            RandomAdapter::get_random_bool(mt)) {
+            fired_status[neuron_id] = FiredStatus::Fired;
+        }
+    }
+
+    const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
+
+    input_calculator->update_input(step, fired_status);
+
+    const auto& inputs = input_calculator->get_synaptic_input();
+
+    for (
+        size_t neuron_id = 0;
+        neuron_id < number_neurons;
+        neuron_id++) {
+        if (update_status[neuron_id] == UpdateStatus::Disabled) {
+            ASSERT_EQ(inputs[neuron_id],
+                0.0);
+            continue;
+        }
+
+        const auto id_not_inactive = [&fired_status](const auto& other_id) {
+            return fired_status[other_id.get_neuron_id().get_neuron_id()] != FiredStatus::Inactive;
+        };
+
+        const auto edges = NetworkGraphAdapter::get_all_plastic_in_edges(*network_graph, MPIRank::root_rank(),
+            NeuronID(neuron_id));
+        const auto total_input = ranges::accumulate(
+                                     edges
+                                         | ranges::views::filter(id_not_inactive, element<0>)
+                                         | ranges::views::transform(element<1>),
+                                     0.0)
+            * random_conductance;
+
+        ASSERT_EQ(total_input, inputs[neuron_id]);
+    }
+
+    test_input_equality(input_calculator);
 }
 
-for (
-const auto neuron_id
-:
-NeuronID::range_id(number_neurons)
-) {
-if (
-RandomAdapter::get_random_bool(mt)
-) {
-update_status[neuron_id] =
-UpdateStatus::Disabled;
-extra_info->
-set_disabled_neurons(std::vector{NeuronID{neuron_id}}
-);
-}
-if (
-RandomAdapter::get_random_bool(mt)
-) {
-fired_status[neuron_id] =
-FiredStatus::Fired;
-}
-}
+TEST_F(SynapticInputTest, testLogarithmicSynapticInputConstruct) {
+    const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
+        SynapticInputCalculator::max_conductance, mt);
+    const auto random_scale = RandomAdapter::get_random_double<double>(LogarithmicSynapticInputCalculator::min_scaling,
+        LogarithmicSynapticInputCalculator::max_scaling, mt);
 
-const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
+    const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
 
-input_calculator->
-update_input(step, fired_status
-);
-
-const auto &inputs = input_calculator->get_synaptic_input();
-
-for (
-size_t neuron_id = 0;
-neuron_id<number_neurons;
-neuron_id++) {
-if (update_status[neuron_id] == UpdateStatus::Disabled) {
-ASSERT_EQ(inputs[neuron_id],
-0.0);
-continue;
-}
-
-const auto id_not_inactive = [&fired_status](const auto &other_id) {
-    return fired_status[other_id.get_neuron_id().get_neuron_id()] != FiredStatus::Inactive;
-};
-
-const auto edges = NetworkGraphAdapter::get_all_plastic_in_edges(*network_graph, MPIRank::root_rank(),
-                                                                 NeuronID(neuron_id));
-const auto total_input = ranges::accumulate(
-        edges
-        | ranges::views::filter(id_not_inactive, element < 0 > )
-        | ranges::views::transform(element < 1 > ),
-        0.0)
-                         * random_conductance;
-
-ASSERT_EQ(total_input, inputs[neuron_id]
-);
-}
-
-test_input_equality(input_calculator);
-}
-
-TEST_F(SynapticInputTest, testLogarithmicSynapticInputConstruct
-) {
-const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
-                                                                         SynapticInputCalculator::max_conductance, mt);
-const auto random_scale = RandomAdapter::get_random_double<double>(LogarithmicSynapticInputCalculator::min_scaling,
-                                                                   LogarithmicSynapticInputCalculator::max_scaling, mt);
-
-const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
-const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
-
-auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
-std::unique_ptr <SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(
+    auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(
         random_conductance, random_scale, std::move(fired_status_communicator));
-ASSERT_EQ(input_calculator
-->
+    ASSERT_EQ(input_calculator
+                  ->
 
-get_synapse_conductance(), random_conductance
+              get_synapse_conductance(),
+        random_conductance
 
-);
+    );
 
-const auto new_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
-                                                                      SynapticInputCalculator::max_conductance, mt);
-test_constructor_clone(input_calculator, random_conductance, new_conductance
-);
+    const auto new_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
+        SynapticInputCalculator::max_conductance, mt);
+    test_constructor_clone(input_calculator, random_conductance, new_conductance);
 
-test_init_create(input_calculator, number_neurons_init, number_neurons_create
-);
+    test_init_create(input_calculator, number_neurons_init, number_neurons_create);
 }
 
-TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdateEmptyGraph
-) {
-const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
-                                                                         SynapticInputCalculator::max_conductance, mt);
-const auto random_scale = RandomAdapter::get_random_double<double>(LogarithmicSynapticInputCalculator::min_scaling,
-                                                                   LogarithmicSynapticInputCalculator::max_scaling, mt);
+TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdateEmptyGraph) {
+    const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
+        SynapticInputCalculator::max_conductance, mt);
+    const auto random_scale = RandomAdapter::get_random_double<double>(LogarithmicSynapticInputCalculator::min_scaling,
+        LogarithmicSynapticInputCalculator::max_scaling, mt);
 
-const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
 
-auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
-std::unique_ptr <SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(
+    auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(
         random_conductance, random_scale, std::move(fired_status_communicator));
-input_calculator->
-init(number_neurons_init);
+    input_calculator->init(number_neurons_init);
 
-auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
-network_graph->
-init(number_neurons_init);
+    auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
+    network_graph->init(number_neurons_init);
 
-auto extra_info = std::make_shared<NeuronsExtraInfo>();
-extra_info->
-init(number_neurons_init);
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons_init);
 
-input_calculator->
-set_extra_infos(extra_info);
-input_calculator->
-set_network_graph(network_graph);
+    input_calculator->set_extra_infos(extra_info);
+    input_calculator->set_network_graph(network_graph);
 
-std::vector <FiredStatus> fired_status(number_neurons_init, FiredStatus::Inactive);
+    std::vector<FiredStatus> fired_status(number_neurons_init, FiredStatus::Inactive);
 
-input_calculator->update_input(0, fired_status);
+    input_calculator->update_input(0, fired_status);
 
-for (
-const auto &value
-: input_calculator->
+    for (
+        const auto& value : input_calculator->
 
-get_synaptic_input()
+                            get_synaptic_input()
 
-) {
-ASSERT_EQ(0.0, value);
+    ) {
+        ASSERT_EQ(0.0, value);
+    }
+
+    test_input_equality(input_calculator);
 }
 
-test_input_equality(input_calculator);
-}
+TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate) {
+    const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
+        SynapticInputCalculator::max_conductance, mt);
+    const auto random_scale = RandomAdapter::get_random_double<double>(LogarithmicSynapticInputCalculator::min_scaling,
+        LogarithmicSynapticInputCalculator::max_scaling, mt);
 
-TEST_F(SynapticInputTest, testLogarithmicSynapticInputUpdate
-) {
-const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
-                                                                         SynapticInputCalculator::max_conductance, mt);
-const auto random_scale = RandomAdapter::get_random_double<double>(LogarithmicSynapticInputCalculator::min_scaling,
-                                                                   LogarithmicSynapticInputCalculator::max_scaling, mt);
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto num_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
 
-const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
-const auto num_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
-
-auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
-std::unique_ptr <SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(
+    auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<LogarithmicSynapticInputCalculator>(
         random_conductance, random_scale, std::move(fired_status_communicator));
-input_calculator->
-init(number_neurons);
+    input_calculator->init(number_neurons);
 
-auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
-network_graph->
-init(number_neurons);
+    auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
+    network_graph->init(number_neurons);
 
-auto extra_info = std::make_shared<NeuronsExtraInfo>();
-extra_info->
-init(number_neurons);
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
 
-input_calculator->
-set_extra_infos(extra_info);
-input_calculator->
-set_network_graph(network_graph);
+    input_calculator->set_extra_infos(extra_info);
+    input_calculator->set_network_graph(network_graph);
 
-std::vector <FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
-std::vector <UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
+    std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
+    std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
 
-for (
-size_t synapse_id = 0;
-synapse_id<num_synapses;
-synapse_id++) {
-const auto weight = std::abs(NetworkGraphAdapter::get_random_plastic_synapse_weight(mt));
-const auto source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
-const auto target_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+    for (
+        size_t synapse_id = 0;
+        synapse_id < num_synapses;
+        synapse_id++) {
+        const auto weight = std::abs(NetworkGraphAdapter::get_random_plastic_synapse_weight(mt));
+        const auto source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto target_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
-network_graph->
-add_synapse(PlasticLocalSynapse(target_id, source_id, weight)
-);
+        network_graph->add_synapse(PlasticLocalSynapse(target_id, source_id, weight));
+    }
+
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
+        if (
+            RandomAdapter::get_random_bool(mt)) {
+            update_status[neuron_id] = UpdateStatus::Disabled;
+            extra_info->set_disabled_neurons(std::vector{ NeuronID{ neuron_id } });
+        }
+        if (
+            RandomAdapter::get_random_bool(mt)) {
+            fired_status[neuron_id] = FiredStatus::Fired;
+        }
+    }
+
+    const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
+
+    input_calculator->update_input(step, fired_status);
+
+    const auto& inputs = input_calculator->get_synaptic_input();
+
+    for (
+        const auto neuron_id :
+        NeuronID::range(number_neurons)) {
+        if (update_status[neuron_id.
+
+                          get_neuron_id()
+
+        ] == UpdateStatus::Disabled) {
+            ASSERT_EQ(inputs[neuron_id.get_neuron_id()],
+                0.0);
+            continue;
+        }
+
+        auto total_input = 0.0;
+
+        for (const auto& [other_id, weight] :
+            NetworkGraphAdapter::get_all_plastic_in_edges(*network_graph, MPIRank::root_rank(), neuron_id)) {
+            if (fired_status[other_id.
+
+                             get_neuron_id()
+
+                                 .
+
+                             get_neuron_id()
+
+            ] == FiredStatus::Inactive) {
+                continue;
+            }
+
+            total_input += (weight * random_conductance);
+        }
+
+        const auto scaled_input = random_scale * std::log10(total_input + 1.0);
+
+        ASSERT_NEAR(scaled_input, inputs[neuron_id.get_neuron_id()], eps);
+    }
+
+    test_input_equality(input_calculator);
 }
 
-for (
-const auto neuron_id
-:
-NeuronID::range_id(number_neurons)
-) {
-if (
-RandomAdapter::get_random_bool(mt)
-) {
-update_status[neuron_id] =
-UpdateStatus::Disabled;
-extra_info->
-set_disabled_neurons(std::vector{NeuronID{neuron_id}}
-);
-}
-if (
-RandomAdapter::get_random_bool(mt)
-) {
-fired_status[neuron_id] =
-FiredStatus::Fired;
-}
-}
-
-const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
-
-input_calculator->
-update_input(step, fired_status
-);
-
-const auto &inputs = input_calculator->get_synaptic_input();
-
-for (
-const auto neuron_id
-:
-NeuronID::range(number_neurons)
-) {
-if (update_status[neuron_id.
-
-get_neuron_id()
-
-] == UpdateStatus::Disabled) {
-ASSERT_EQ(inputs[neuron_id.get_neuron_id()],
-0.0);
-continue;
-}
-
-auto total_input = 0.0;
-
-for (const auto &[other_id, weight] :
-NetworkGraphAdapter::get_all_plastic_in_edges(*network_graph, MPIRank::root_rank(), neuron_id
-)) {
-if (fired_status[other_id.
-
-get_neuron_id()
-
-.
-
-get_neuron_id()
-
-] == FiredStatus::Inactive) {
-continue;
-}
-
-total_input += (
-weight *random_conductance
-);
-}
-
-const auto scaled_input = random_scale * std::log10(total_input + 1.0);
-
-ASSERT_NEAR(scaled_input, inputs[neuron_id.get_neuron_id()], eps
-);
-}
-
-test_input_equality(input_calculator);
-}
-
-TEST_F(SynapticInputTest, testHyptanSynapticInputConstruct
-) {
-const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
-                                                                         SynapticInputCalculator::max_conductance, mt);
-const auto random_scale = RandomAdapter::get_random_double<double>(
+TEST_F(SynapticInputTest, testHyptanSynapticInputConstruct) {
+    const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
+        SynapticInputCalculator::max_conductance, mt);
+    const auto random_scale = RandomAdapter::get_random_double<double>(
         HyperbolicTangentSynapticInputCalculator::min_scaling, HyperbolicTangentSynapticInputCalculator::max_scaling,
         mt);
 
-const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
-const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
-auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
-std::unique_ptr <SynapticInputCalculator> input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(
+    const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_create = NeuronIdAdapter::get_random_number_neurons(mt);
+    auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(
         random_conductance, random_scale, std::move(fired_status_communicator));
-ASSERT_EQ(input_calculator
-->
+    ASSERT_EQ(input_calculator
+                  ->
 
-get_synapse_conductance(), random_conductance
+              get_synapse_conductance(),
+        random_conductance
 
-);
+    );
 
-const auto new_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
-                                                                      SynapticInputCalculator::max_conductance, mt);
-test_constructor_clone(input_calculator, random_conductance, new_conductance
-);
+    const auto new_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
+        SynapticInputCalculator::max_conductance, mt);
+    test_constructor_clone(input_calculator, random_conductance, new_conductance);
 
-test_init_create(input_calculator, number_neurons_init, number_neurons_create
-);
+    test_init_create(input_calculator, number_neurons_init, number_neurons_create);
 }
 
-TEST_F(SynapticInputTest, testHyptanSynapticInputUpdateEmptyGraph
-) {
-const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
-                                                                         SynapticInputCalculator::max_conductance, mt);
-const auto random_scale = RandomAdapter::get_random_double<double>(LogarithmicSynapticInputCalculator::min_scaling,
-                                                                   LogarithmicSynapticInputCalculator::max_scaling, mt);
+TEST_F(SynapticInputTest, testHyptanSynapticInputUpdateEmptyGraph) {
+    const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
+        SynapticInputCalculator::max_conductance, mt);
+    const auto random_scale = RandomAdapter::get_random_double<double>(LogarithmicSynapticInputCalculator::min_scaling,
+        LogarithmicSynapticInputCalculator::max_scaling, mt);
 
-const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto number_neurons_init = NeuronIdAdapter::get_random_number_neurons(mt);
 
-auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
-std::unique_ptr <SynapticInputCalculator> input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(
+    auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(
         random_conductance, random_scale, std::move(fired_status_communicator));
-input_calculator->
-init(number_neurons_init);
+    input_calculator->init(number_neurons_init);
 
-auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
-network_graph->
-init(number_neurons_init);
+    auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
+    network_graph->init(number_neurons_init);
 
-auto extra_info = std::make_shared<NeuronsExtraInfo>();
-extra_info->
-init(number_neurons_init);
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons_init);
 
-input_calculator->
-set_extra_infos(extra_info);
-input_calculator->
-set_network_graph(network_graph);
+    input_calculator->set_extra_infos(extra_info);
+    input_calculator->set_network_graph(network_graph);
 
-std::vector <FiredStatus> fired_status(number_neurons_init, FiredStatus::Inactive);
-std::vector <UpdateStatus> update_status(number_neurons_init, UpdateStatus::Enabled);
+    std::vector<FiredStatus> fired_status(number_neurons_init, FiredStatus::Inactive);
+    std::vector<UpdateStatus> update_status(number_neurons_init, UpdateStatus::Enabled);
 
-input_calculator->update_input(0, fired_status);
+    input_calculator->update_input(0, fired_status);
 
-for (
-const auto &value
-: input_calculator->
+    for (
+        const auto& value : input_calculator->
 
-get_synaptic_input()
+                            get_synaptic_input()
 
-) {
-ASSERT_EQ(0.0, value);
+    ) {
+        ASSERT_EQ(0.0, value);
+    }
+
+    test_input_equality(input_calculator);
 }
 
-test_input_equality(input_calculator);
-}
-
-TEST_F(SynapticInputTest, testHyptanSynapticInputUpdate
-) {
-const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
-                                                                         SynapticInputCalculator::max_conductance, mt);
-const auto random_scale = RandomAdapter::get_random_double<double>(
+TEST_F(SynapticInputTest, testHyptanSynapticInputUpdate) {
+    const auto random_conductance = RandomAdapter::get_random_double<double>(SynapticInputCalculator::min_conductance,
+        SynapticInputCalculator::max_conductance, mt);
+    const auto random_scale = RandomAdapter::get_random_double<double>(
         HyperbolicTangentSynapticInputCalculator::min_scaling, HyperbolicTangentSynapticInputCalculator::max_scaling,
         mt);
 
-const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
-const auto num_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
+    const auto number_neurons = NeuronIdAdapter::get_random_number_neurons(mt);
+    const auto num_synapses = NetworkGraphAdapter::get_random_number_synapses(mt) + number_neurons;
 
-auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
-std::unique_ptr <SynapticInputCalculator> input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(
+    auto fired_status_communicator = std::make_unique<FiredStatusCommunicationMap>(1, 1);
+    std::unique_ptr<SynapticInputCalculator> input_calculator = std::make_unique<HyperbolicTangentSynapticInputCalculator>(
         random_conductance, random_scale, std::move(fired_status_communicator));
-input_calculator->
-init(number_neurons);
+    input_calculator->init(number_neurons);
 
-auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
-network_graph->
-init(number_neurons);
+    auto network_graph = std::make_shared<NetworkGraph>(MPIRank::root_rank());
+    network_graph->init(number_neurons);
 
-auto extra_info = std::make_shared<NeuronsExtraInfo>();
-extra_info->
-init(number_neurons);
+    auto extra_info = std::make_shared<NeuronsExtraInfo>();
+    extra_info->init(number_neurons);
 
-input_calculator->
-set_extra_infos(extra_info);
-input_calculator->
-set_network_graph(network_graph);
+    input_calculator->set_extra_infos(extra_info);
+    input_calculator->set_network_graph(network_graph);
 
-std::vector <FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
-std::vector <UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
+    std::vector<FiredStatus> fired_status(number_neurons, FiredStatus::Inactive);
+    std::vector<UpdateStatus> update_status(number_neurons, UpdateStatus::Enabled);
 
-for (
-size_t synapse_id = 0;
-synapse_id<num_synapses;
-synapse_id++) {
-const auto weight = std::abs(NetworkGraphAdapter::get_random_plastic_synapse_weight(mt));
-const auto source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
-const auto target_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+    for (
+        size_t synapse_id = 0;
+        synapse_id < num_synapses;
+        synapse_id++) {
+        const auto weight = std::abs(NetworkGraphAdapter::get_random_plastic_synapse_weight(mt));
+        const auto source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
+        const auto target_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
-network_graph->
-add_synapse(PlasticLocalSynapse(target_id, source_id, weight)
-);
-}
+        network_graph->add_synapse(PlasticLocalSynapse(target_id, source_id, weight));
+    }
 
-for (
-const auto neuron_id
-:
-NeuronID::range_id(number_neurons)
-) {
-if (
-RandomAdapter::get_random_bool(mt)
-) {
-update_status[neuron_id] =
-UpdateStatus::Disabled;
-extra_info->
-set_disabled_neurons(std::vector{NeuronID{neuron_id}}
-);
-}
-if (
-RandomAdapter::get_random_bool(mt)
-) {
-fired_status[neuron_id] =
-FiredStatus::Fired;
-}
-}
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
+        if (
+            RandomAdapter::get_random_bool(mt)) {
+            update_status[neuron_id] = UpdateStatus::Disabled;
+            extra_info->set_disabled_neurons(std::vector{ NeuronID{ neuron_id } });
+        }
+        if (
+            RandomAdapter::get_random_bool(mt)) {
+            fired_status[neuron_id] = FiredStatus::Fired;
+        }
+    }
 
-const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
+    const auto step = RandomAdapter::get_random_integer<RelearnTypes::step_type>(0, 1000000, mt);
 
-input_calculator->
-update_input(step, fired_status
-);
+    input_calculator->update_input(step, fired_status);
 
-const auto &inputs = input_calculator->get_synaptic_input();
+    const auto& inputs = input_calculator->get_synaptic_input();
 
-for (
-size_t neuron_id = 0;
-neuron_id<number_neurons;
-neuron_id++) {
-if (update_status[neuron_id] == UpdateStatus::Disabled) {
-ASSERT_EQ(inputs[neuron_id],
-0.0);
-continue;
-}
+    for (
+        size_t neuron_id = 0;
+        neuron_id < number_neurons;
+        neuron_id++) {
+        if (update_status[neuron_id] == UpdateStatus::Disabled) {
+            ASSERT_EQ(inputs[neuron_id],
+                0.0);
+            continue;
+        }
 
-auto total_input = 0.0;
+        auto total_input = 0.0;
 
-for (const auto &[other_id, weight] :
-NetworkGraphAdapter::get_all_plastic_in_edges(*network_graph, MPIRank::root_rank(), NeuronID(neuron_id)
-)) {
-if (fired_status[other_id.
+        for (const auto& [other_id, weight] :
+            NetworkGraphAdapter::get_all_plastic_in_edges(*network_graph, MPIRank::root_rank(), NeuronID(neuron_id))) {
+            if (fired_status[other_id.
 
-get_neuron_id()
+                             get_neuron_id()
 
-.
+                                 .
 
-get_neuron_id()
+                             get_neuron_id()
 
-] == FiredStatus::Inactive) {
-continue;
-}
+            ] == FiredStatus::Inactive) {
+                continue;
+            }
 
-total_input += (
-weight *random_conductance
-);
-}
+            total_input += (weight * random_conductance);
+        }
 
-const auto scaled_input = random_scale * std::tanh(total_input);
+        const auto scaled_input = random_scale * std::tanh(total_input);
 
-ASSERT_NEAR(scaled_input, inputs[neuron_id], eps
-);
-}
+        ASSERT_NEAR(scaled_input, inputs[neuron_id], eps);
+    }
 
-test_input_equality(input_calculator);
+    test_input_equality(input_calculator);
 }

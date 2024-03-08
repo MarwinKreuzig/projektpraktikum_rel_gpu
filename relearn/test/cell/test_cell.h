@@ -14,51 +14,51 @@
 
 class CellTest : public RelearnTest {
 protected:
-    template<typename AdditionalCellAttributes>
+    template <typename AdditionalCellAttributes>
     void test_cell_size();
 
-    template<typename AdditionalCellAttributes>
+    template <typename AdditionalCellAttributes>
     void test_cell_dendrites_position();
 
-    template<typename AdditionalCellAttributes>
+    template <typename AdditionalCellAttributes>
     void test_cell_dendrites_position_exception();
 
-    template<typename AdditionalCellAttributes>
+    template <typename AdditionalCellAttributes>
     void test_cell_set_number_dendrites();
 
-    template<typename AdditionalCellAttributes>
+    template <typename AdditionalCellAttributes>
     void test_cell_dendrites_position_combined();
 
-    template<typename AdditionalCellAttributes>
+    template <typename AdditionalCellAttributes>
     void test_cell_axons_position();
 
-    template<typename AdditionalCellAttributes>
+    template <typename AdditionalCellAttributes>
     void test_cell_axons_position_exception();
 
-    template<typename AdditionalCellAttributes>
+    template <typename AdditionalCellAttributes>
     void test_cell_set_number_axons();
 
-    template<typename AdditionalCellAttributes>
+    template <typename AdditionalCellAttributes>
     void test_cell_axons_position_combined();
 
-    template<typename AdditionalCellAttributes>
+    template <typename AdditionalCellAttributes>
     void test_cell_set_neuron_id();
 
-    template<typename AdditionalCellAttributes>
+    template <typename AdditionalCellAttributes>
     void test_cell_octants();
 
-    template<typename AdditionalCellAttributes>
+    template <typename AdditionalCellAttributes>
     void test_cell_octants_exception();
 
-    template<typename AdditionalCellAttributes>
+    template <typename AdditionalCellAttributes>
     void test_cell_octants_size();
 
-    template<typename VirtualPlasticityElement>
+    template <typename VirtualPlasticityElement>
     void test_vpe_number_elements();
 
-    template<typename VirtualPlasticityElement>
+    template <typename VirtualPlasticityElement>
     void test_vpe_position();
 
-    template<typename VirtualPlasticityElement>
+    template <typename VirtualPlasticityElement>
     void test_vpe_mixed();
 };

@@ -31,18 +31,18 @@ protected:
         const auto end = RandomAdapter::get_random_integer<int_type>(min, max, mt);
         const auto frequency = RandomAdapter::get_random_integer<int_type>(min, max, mt);
 
-        return Interval{std::min(begin, end), std::max(begin, end), frequency};
+        return Interval{ std::min(begin, end), std::max(begin, end), frequency };
     }
 
-    std::string codify_interval(const Interval &interval) {
+    std::string codify_interval(const Interval& interval) {
         std::stringstream ss{};
         ss << interval.begin << '-' << interval.end << ':' << interval.frequency;
         return ss.str();
     }
 
-    std::pair <Interval, std::string> generate_random_interval_description() {
+    std::pair<Interval, std::string> generate_random_interval_description() {
         auto interval = generate_random_interval();
         auto description = codify_interval(interval);
-        return {std::move(interval), std::move(description)};
+        return { std::move(interval), std::move(description) };
     }
 };
