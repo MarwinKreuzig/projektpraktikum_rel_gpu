@@ -12,8 +12,9 @@ target_sources(
         algorithm/FMMInternal/FastMultipoleMethodInverted.cpp
         algorithm/NaiveInternal/Naive.cpp
 
+        # gpu
         gpu/utils/Interface.cpp
-
+        gpu/utils/CudaHelper.cpp
 
         # io
         io/CalciumIO.cpp
