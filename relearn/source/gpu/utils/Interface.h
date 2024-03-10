@@ -25,27 +25,62 @@
 
 namespace gpu::algorithm {
 class OctreeHandle {
+    /**
+     * Virtual class that is the equivalent of its host class. Call the virtual methods from the corresponding cpu methods.
+     * This class can only be created with the create_octree() function.
+     */
 public:
+    /**
+     * @brief Copies the GPU data structure version of the octree, which was constructed on the CPU, to the GPU
+     * @param octree_cpu_copy Struct which holds the octree data to be copied to the GPU
+     */
     virtual void copy_to_device(OctreeCPUCopy&& octree_cpu_copy) = 0;
 
+    /**
+     * @brief Returns the number of virtual neurons in the octree on the GPU
+     * @return The number of virtual neurons in the tree
+     */
     [[nodiscard]] virtual RelearnGPUTypes::number_neurons_type get_number_virtual_neurons() const = 0;
+    /**
+     * @brief Returns the number of neurons in the octree on the GPU
+     * @return The number of neurons in the tree
+     */
     [[nodiscard]] virtual RelearnGPUTypes::number_neurons_type get_number_neurons() const = 0;
 
+    /**
+     * @brief Copies the GPU data structure version of the octree to the CPU
+     * @param number_neurons The number of leaf nodes
+     * @param number_virtual_neurons The number of virtual neurons
+     */
     virtual OctreeCPUCopy copy_to_host(
         const RelearnGPUTypes::number_neurons_type number_neurons,
         const RelearnGPUTypes::number_neurons_type number_virtual_neurons)
         = 0;
 
+    /**
+     * @brief Calls the kernel that updates the octree
+     */
     virtual void update_tree() = 0;
 
+    /**
+     * @brief Updates the octree leaf nodes
+     */
     virtual void update_leaf_nodes(std::vector<gpu::Vec3d> position_excitatory_element,
         std::vector<gpu::Vec3d> position_inhibitory_element,
         std::vector<unsigned int> num_free_elements_excitatory,
         std::vector<unsigned int> num_free_elements_inhibitory)
         = 0;
 
+    /**
+     * @brief Getter for octree_dev_ptr
+     * @return octree_dev_ptr
+     */
     [[nodiscard]] virtual void* get_device_pointer() = 0;
 
+    /**
+     * @brief Getter for Neuron IDs
+     * @return Neuron IDs
+     */
     // TODO once plasticity is on the GPU, this serves no purpose and can be deleted
     [[nodiscard]] virtual std::vector<uint64_t> get_neuron_ids() = 0;
 };

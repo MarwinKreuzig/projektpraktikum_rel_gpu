@@ -169,6 +169,10 @@ public:
     }
 
 protected:
+    /**
+     * Print a visualization of this tree to a stringstream
+     * @param ss stringstream
+     */
     virtual void print(std::stringstream& ss) const = 0;
 
 private:
@@ -394,10 +398,10 @@ public:
      * @param num_neurons Number of neurons on MPI Process
      */
     [[nodiscard]] gpu::algorithm::OctreeCPUCopy octree_to_octree_cpu_copy(const RelearnTypes::number_neurons_type num_neurons) {
-        // OctreeCPUCopy has the same format as gpu::algorithm::Octree (struct-of-arrays), so we need to convert the octree
-        // to the right format. Each attribute of the nodes is stored in a seperate array, in the same order, so a node is
-        // identified by its index into the arrays. Only virtual neurons have children, so num_neurons needs to be subtracted
-        // from the indices before accessing num_children and child_indices.
+        // OctreeCPUCopy has the same format as gpu::algorithm::Octree (struct-of-arrays) to make copying it as easy as 
+        // possible, so we need to convert the octree to the right format. Each attribute of the nodes is stored in a seperate 
+        // array, in the same order, so a node is identified by its index into the arrays. Only virtual neurons have children, 
+        // so num_neurons needs to be subtracted from the indices before accessing num_children and child_indices.
         // In the other arrays, virtual and real neurons are both stored, first all real neurons then all virtual ones.
 
         // The virtual nodes are supposed to be in breadth-first-order. This means that all nodes of a level are
@@ -550,7 +554,8 @@ public:
     }
 
     /**
-     * @brief Updates the octree structure on the gpu. This method should only be called after new neurons are insterted during simulation after the leaf nodes have been updated in neurons.create_neurons()
+     * @brief Updates the octree structure on the gpu. This method should only be called after new neurons are inserted during simulation after the leaf nodes have been updated in neurons.create_neurons()
+     * @exception Throws a RelearnException if the gpu handle was not created yet or the leaf nodes were not initialized yet
      */
     void update_gpu_octree_structure() override {
         if (!gpu_handle) {
