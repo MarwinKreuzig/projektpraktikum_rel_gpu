@@ -92,7 +92,8 @@ public:
 
     /**
      * @brief Copies the GPU data structure version of the octree to the CPU
-     * @param octree_cpu_copy Struct which holds the octree data to be copied to the CPU
+     * @param number_neurons The number of leaf nodes
+     * @param number_virtual_neurons The number of virtual neurons
      */
     OctreeCPUCopy copy_to_host(
         const RelearnGPUTypes::number_neurons_type num_neurons,

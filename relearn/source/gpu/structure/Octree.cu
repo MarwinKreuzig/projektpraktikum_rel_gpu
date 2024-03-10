@@ -110,7 +110,7 @@ OctreeCPUCopy OctreeHandleImpl::copy_to_host(
     /**
      * @brief converts an util::Vec3 to a gpu::Vec3
      */
-    auto convert = [](const double3& vec) -> gpu::Vec3d {
+    auto convert_to_gpu = [](const double3& vec) -> gpu::Vec3d {
         return gpu::Vec3d(vec.x, vec.y, vec.z);
     };
 
@@ -125,14 +125,14 @@ OctreeCPUCopy OctreeHandleImpl::copy_to_host(
     handle_num_children.copy_to_host(octree_cpu_copy.num_children);
 
     handle_minimum_cell_position.copy_to_host(pos_gpu);
-    std::transform(pos_gpu.begin(), pos_gpu.end(), octree_cpu_copy.minimum_cell_position.begin(), convert);
+    std::transform(pos_gpu.begin(), pos_gpu.end(), octree_cpu_copy.minimum_cell_position.begin(), convert_to_gpu);
     handle_maximum_cell_position.copy_to_host(pos_gpu);
-    std::transform(pos_gpu.begin(), pos_gpu.end(), octree_cpu_copy.maximum_cell_position.begin(), convert);
+    std::transform(pos_gpu.begin(), pos_gpu.end(), octree_cpu_copy.maximum_cell_position.begin(), convert_to_gpu);
 
     handle_position_excitatory_element.copy_to_host(pos_gpu);
-    std::transform(pos_gpu.begin(), pos_gpu.end(), octree_cpu_copy.position_excitatory_element.begin(), convert);
+    std::transform(pos_gpu.begin(), pos_gpu.end(), octree_cpu_copy.position_excitatory_element.begin(), convert_to_gpu);
     handle_position_inhibitory_element.copy_to_host(pos_gpu);
-    std::transform(pos_gpu.begin(), pos_gpu.end(), octree_cpu_copy.position_inhibitory_element.begin(), convert);
+    std::transform(pos_gpu.begin(), pos_gpu.end(), octree_cpu_copy.position_inhibitory_element.begin(), convert_to_gpu);
 
     handle_num_free_elements_excitatory.copy_to_host(octree_cpu_copy.num_free_elements_excitatory);
     handle_num_free_elements_inhibitory.copy_to_host(octree_cpu_copy.num_free_elements_inhibitory);

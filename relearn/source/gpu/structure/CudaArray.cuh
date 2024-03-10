@@ -142,15 +142,6 @@ public:
     }
 
     /**
-     * @brief Reserves n indices
-     * @param n Number of indices to reserve
-     */
-    void reserve(size_t n) {
-        RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
-        RelearnGPUException::fail("TODO");
-    }
-
-    /**
      * @brief Copys data from host to a CudaVector, overwriting the current data.
      * @param host_data Data from the host-side
      */
@@ -313,7 +304,7 @@ private:
     }
 
     /**
-     * @brief Resizes CudaArray on gpu and copies data to cpu
+     * @brief Resizes CudaArray on gpu and updates struct_copy on the cpu
      * @param new_dev_ptr Destination of copy
      * @param new_size New size of CudaArray
      */
