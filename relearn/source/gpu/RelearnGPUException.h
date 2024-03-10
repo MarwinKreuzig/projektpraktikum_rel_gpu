@@ -11,9 +11,7 @@
  */
 
 #include "Config.h"
-
 #include <cuda.h>
-
 #include <iostream>
 
 #include <exception>
@@ -39,9 +37,7 @@ public:
      * @brief Returns the cause of the exception, i.e., the stored message
      * @return A constant char pointer to the content of the message
      */
-    [[nodiscard]] const char* what() const noexcept override {
-        return message.c_str();
-    }
+    [[nodiscard]] const char* what() const noexcept override;
 
     /**
      * @brief Checks the condition and in case of false, logs the message and throws an RelearnException
@@ -112,15 +108,9 @@ private:
      * @brief Constructs an instance with the associated message
      * @param mes The message of the exception
      */
-    explicit RelearnGPUException(std::string mes)
-        : message(std::move(mes)) {
-    }
+    explicit RelearnGPUException(std::string mes);
 
-    static void log_message(const std::string& message) {
-
-        std::cerr << message << std::flush;
-        fflush(stderr);
-    }
+    static void log_message(const std::string& message);
 
     template <typename... Args>
     static std::string string_format(const std::string& format, Args... args) {
