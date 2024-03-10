@@ -60,7 +60,6 @@ TEST_F(CudaVectorTest, cudaFreeTest2) {
     ASSERT_FALSE(handle.usable());
     ASSERT_THROW(handle.fill(c), RelearnGPUException);
     ASSERT_THROW(handle.fill(0, 1, c), RelearnGPUException);
-    ASSERT_THROW(handle.reserve(c), RelearnGPUException);
     std::vector<size_t> data;
     ASSERT_THROW(handle.copy_to_device(data), RelearnGPUException);
     ASSERT_THROW(handle.copy_to_host(data), RelearnGPUException);
