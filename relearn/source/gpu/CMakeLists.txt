@@ -1,16 +1,15 @@
 if (CUDA_FOUND)
     add_library(relearn_gpu STATIC
-            neurons/input/BackgroundActivity.cuh
-            neurons/input/BackgroundActivity.cuh
-            neurons/models/AEIFModel.cuh
-            neurons/models/FitzHughNagumoModel.cuh
-            neurons/models/IzhikevichModel.cuh
-            neurons/models/NeuronModel.cuh
-            neurons/models/PoissonModel.cuh
+#            neurons/input/BackgroundActivity.cuh
+#            neurons/models/AEIFModel.cuh
+#            neurons/models/FitzHughNagumoModel.cuh
+#            neurons/models/IzhikevichModel.cuh
+#            neurons/models/NeuronModel.cuh
+#            neurons/models/PoissonModel.cuh
             structure/CudaArray.cuh
             structure/CudaVector.cuh
-            neurons/NeuronsExtraInfos.cuh
-            utils/Random.cuh
+#            neurons/NeuronsExtraInfos.cuh
+#            utils/Random.cuh
             RelearnGPUException.h
             Commons.cuh)
 
@@ -28,7 +27,14 @@ if (CUDA_FOUND)
     target_sources(
             relearn_gpu
             PRIVATE
-            neurons/models/NeuronModels.cu)
+            neurons/models/NeuronModels.cu
+            neurons/input/BackgroundActivity.cu
+            neurons/models/AEIFModel.cu
+            neurons/models/FitzHughNagumoModel.cu
+            neurons/models/IzhikevichModel.cu
+            neurons/models/PoissonModel.cu
+            neurons/NeuronsExtraInfos.cu
+            utils/Random.cu)
 
     #set_target_properties(relearn_gpu PROPERTIES CUDA_ARCHITECTURES 61)
 

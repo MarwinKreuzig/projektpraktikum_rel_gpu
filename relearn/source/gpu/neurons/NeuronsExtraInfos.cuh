@@ -26,7 +26,7 @@ public:
     /**
      * @return Return the number of local neurons
      */
-    inline __device__ size_t get_number_local_neurons() {
+    inline __device__ size_t get_number_local_neurons(){
         return number_local_neurons_device;
     }
 };
@@ -36,55 +36,21 @@ class NeuronsExtraInfosHandleImpl : public NeuronsExtraInfosHandle {
      * Implementation of the handle for the cpu that controls the gpu object
      */
 public:
-    NeuronsExtraInfosHandleImpl(void* _dev_ptr)
-        : device_ptr(_dev_ptr) {
-        _init();
-    }
+    NeuronsExtraInfosHandleImpl(void* _dev_ptr);
 
-    void _init() {
-        void* disable_flags_ptr = execute_and_copy<void*>([=] __device__(NeuronsExtraInfos * extra_infos) { return (void*)&extra_infos->disable_flags; }, (neurons::NeuronsExtraInfos*)device_ptr);
-        handle_disable_flags = gpu::Vector::CudaArrayDeviceHandle<UpdateStatus>(disable_flags_ptr);
-    }
+    void _init();
 
-    void* get_device_pointer() {
-        return device_ptr;
-    }
+    void* get_device_pointer();
 
-    void disable_neurons(const std::vector<RelearnGPUTypes::neuron_id_type>& neuron_ids) override {
-        const auto num_disabled_neurons = neuron_ids.size();
-        if (num_disabled_neurons == 0) {
-            return;
-        }
-        handle_disable_flags.set(neuron_ids.data(), num_disabled_neurons, UpdateStatus::Disabled);
-    }
+    void disable_neurons(const std::vector<RelearnGPUTypes::neuron_id_type>& neuron_ids) override;
 
-    void enable_neurons(const std::vector<RelearnGPUTypes::neuron_id_type>& neuron_ids) override {
-        const auto num_enabled_neurons = neuron_ids.size();
-        if (num_enabled_neurons == 0) {
-            return;
-        }
-        handle_disable_flags.set(neuron_ids.data(), num_enabled_neurons, UpdateStatus::Enabled);
-    }
+    void enable_neurons(const std::vector<RelearnGPUTypes::neuron_id_type>& neuron_ids) override;
 
-    void init(const RelearnGPUTypes::number_neurons_type _num_neurons) override {
-        handle_disable_flags.resize(_num_neurons, UpdateStatus::Enabled);
-        num_neurons = _num_neurons;
-        set_num_neurons(_num_neurons);
-    }
+    void init(const RelearnGPUTypes::number_neurons_type _num_neurons) override;
 
-    void set_num_neurons(size_t _num_neurons) {
-        num_neurons = _num_neurons;
-        void* ptr = execute_and_copy<void*>([=] __device__(NeuronsExtraInfos * extra_infos) { return (void*)&extra_infos->number_local_neurons_device; }, (neurons::NeuronsExtraInfos*)device_ptr);
-        cuda_memcpy_to_device(ptr, &num_neurons, sizeof(size_t), 1);
-    }
+    void set_num_neurons(size_t _num_neurons);
 
-    void create_neurons(size_t creation_count) {
-        const auto old_size = num_neurons;
-        const auto new_size = old_size + creation_count;
-        num_neurons = new_size;
-        handle_disable_flags.resize(new_size, UpdateStatus::Enabled);
-        set_num_neurons(num_neurons);
-    }
+    void create_neurons(size_t creation_count);
 
 private:
     /**
@@ -97,14 +63,6 @@ private:
     gpu::Vector::CudaArrayDeviceHandle<UpdateStatus> handle_disable_flags;
 };
 
-std::unique_ptr<NeuronsExtraInfosHandle> create() {
-    void* extra_infos_dev_ptr = init_class_on_device<NeuronsExtraInfos>();
-
-    cudaDeviceSynchronize();
-    gpu_check_last_error();
-
-    auto a = std::make_unique<NeuronsExtraInfosHandleImpl>(extra_infos_dev_ptr);
-    return std::move(a);
-}
+std::unique_ptr<NeuronsExtraInfosHandle> create();
 
 };
