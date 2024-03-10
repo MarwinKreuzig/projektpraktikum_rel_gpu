@@ -20,17 +20,22 @@ set_target_properties(benchmark PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES
 add_executable(
         relearn_benchmarks
         main.cpp
-        benchmark_background.cpp
-        benchmark_calcium.cpp
-        benchmark_input_calculator.cpp
-        benchmark_kernel.cpp
-        benchmark_network_graph.cpp
-        benchmark_neuron_model.cpp
-        benchmark_octree_gpu.cpp
+#        benchmark_background.cpp
+#        benchmark_calcium.cpp
+#        benchmark_input_calculator.cpp
+#        benchmark_kernel.cpp
+#        benchmark_network_graph.cpp
+#        benchmark_neuron_model.cpp
+
         # for visual studio
 
         # fehlen noch libaries
         ${relearn_benchmark_additional_files})
+
+#if (CUDA_FOUND)
+#    target_sources(relearn_benchmarks PRIVATE benchmark_octree_gpu.cpp)
+#    target_link_libraries(relearn_benchmarks PUBLIC relearn_gpu)
+#endif ()
 
 target_link_libraries(relearn_benchmarks PRIVATE project_options
         project_libraries)

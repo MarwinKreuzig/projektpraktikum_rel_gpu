@@ -16,28 +16,18 @@
 using test_types = ::testing::Types<BarnesHutCell, BarnesHutInvertedCell>;
 TYPED_TEST_SUITE(OctreeTestGpu, test_types);
 
-/**
- * @brief converts a gpu::Vec3 to an util::Vec3
- * @param gpu::Vec3 to convert
- * @return converted util::Vec3
- */
+
 const auto convert_gpu_vec_to_vec(const gpu::Vec3d gpu_vec) {
     return Vec3(gpu_vec.x, gpu_vec.y, gpu_vec.z);
 }
 
-/**
- * @brief converts an util::Vec3 to a gpu::Vec3
- * @param util::Vec3 to convert
- * @return converted gpu::Vec3
- */
-const auto convert_vec_to_gpu_vec = [](const Vec3d cpu_vec) -> gpu::Vec3d {
-    return gpu::Vec3d{ cpu_vec.get_x(), cpu_vec.get_y(), cpu_vec.get_z() };
+
+const auto convert_vec_to_gpu_vec(const Vec3d cpu_vec)  {
+    return gpu::Vec3d{ cpu_vec.get_x(), cpu_vec.get_y(), cpu_vec.get_z()};
 };
 
-/**
- * @brief applies ASSERT_DOUBLE_EQ() to all elements of a gpu::Vec3
- */
-const auto assert_eq_vec = [](const Vec3d vec1, const Vec3d vec2) {
+
+const auto assert_eq_vec(const Vec3d vec1, const Vec3d vec2)    {
     ASSERT_DOUBLE_EQ(vec1.get_x(), vec2.get_x());
     ASSERT_DOUBLE_EQ(vec1.get_y(), vec2.get_y());
     ASSERT_DOUBLE_EQ(vec1.get_z(), vec2.get_z());
@@ -93,8 +83,6 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
     octree.insert(box_size_type(9, 6, 4), NeuronID{ false, 7 }); // right, back, bottom
     octree.insert(box_size_type(4, 6, 4), NeuronID{ false, 8 }); // left, back, bottom
     octree.insert(box_size_type(4, 6, 7), NeuronID{ false, 9 }); // left, back, top
-
-    //=================================================================================
 
     //================ Creation of expected OctreeCPUCopy =============================
     gpu::algorithm::OctreeCPUCopy expected(num_leafs, num_virtual_neurons);
@@ -164,13 +152,9 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
     expected.num_children[1] = 2;
     expected.num_children[2] = 8;
 
-    //=================================================================================
-
     //================ Actual result of octree_to_octree_cpu_copy() ===================
 
     auto result = octree.octree_to_octree_cpu_copy(num_leafs);
-
-    //=================================================================================
 
     //================ Comparison of result and expected OctreeCPUCopy ================
 
@@ -214,7 +198,6 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
 
     octree.initializes_leaf_nodes(neurons_to_place.size());
 
-    //=================================================================================
 
     //================ Creation of Octree on gpu  =====================================
 
@@ -223,16 +206,12 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
     const std::shared_ptr<gpu::algorithm::OctreeHandle> gpu_handle = octree.get_gpu_handle();
     auto octree_cpu_copy = gpu_handle->copy_to_host(neurons_to_place.size(), gpu_handle->get_number_virtual_neurons());
 
-    //=================================================================================
-
     //================ Compare leaf node sizes and Neuron ID's   ======================
 
     ASSERT_EQ(octree_cpu_copy.neuron_ids.size(), octree.get_leaf_nodes().size());
     for (int i = 0; i < octree_cpu_copy.neuron_ids.size(); i++) {
         ASSERT_EQ(octree_cpu_copy.neuron_ids[i], octree.get_leaf_nodes()[octree_cpu_copy.neuron_ids[i]]->get_cell_neuron_id().get_neuron_id());
     }
-
-    //=================================================================================
 
     //======== Update CPU Octree and compare with initial CPU Octree   ================
 
