@@ -17,30 +17,48 @@
 #include "neurons/helper/RankNeuronId.h"
 
 TEST_F(RankNeuronIdTest, testNeuronRankIdValid) {
-    for (auto i = 0; i < 1000; i++) {
+    for (
+        auto i = 0;
+        i < 1000; i++) {
         const auto rank = MPIRankAdapter::get_random_mpi_rank(mt);
         const auto id = NeuronIdAdapter::get_random_neuron_id(mt);
 
         const RankNeuronId rni{ rank, NeuronID{ id } };
 
-        ASSERT_EQ(rni.get_neuron_id(), NeuronID{ id });
-        ASSERT_TRUE(rni.get_rank() == rank);
+        ASSERT_EQ(rni
+                      .
+
+                  get_neuron_id(),
+            NeuronID{ id }
+
+        );
+        ASSERT_TRUE(rni
+                        .
+
+                    get_rank()
+
+            == rank);
     }
 }
 
 TEST_F(RankNeuronIdTest, testNeuronRankIdInvalidId) {
-    for (auto i = 0; i < 1000; i++) {
+    for (
+        auto i = 0;
+        i < 1000; i++) {
         const auto rank = MPIRankAdapter::get_random_mpi_rank(mt);
 
         RankNeuronId rni(rank, NeuronID::uninitialized_id());
 
         ASSERT_NO_THROW(auto tmp = rni.get_rank());
+
         ASSERT_THROW(auto tmp = rni.get_neuron_id(), RelearnException);
     }
 }
 
 TEST_F(RankNeuronIdTest, testNeuronRankIdEquality) {
-    for (auto i = 0; i < 1000; i++) {
+    for (
+        auto i = 0;
+        i < 1000; i++) {
         const auto rank_1 = MPIRankAdapter::get_random_mpi_rank(mt);
         const auto id_1 = NeuronIdAdapter::get_random_neuron_id(mt);
 

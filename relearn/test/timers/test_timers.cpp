@@ -22,7 +22,12 @@ TEST_F(TimersTest, testReset) {
     Timers::reset_elapsed(region);
 
     const auto elapsed = Timers::get_elapsed(region);
-    ASSERT_EQ(elapsed.count(), 0);
+    ASSERT_EQ(elapsed
+                  .
+
+              count(),
+
+        0);
 }
 
 TEST_F(TimersTest, testStartStop) {
@@ -36,7 +41,12 @@ TEST_F(TimersTest, testStartStop) {
     Timers::stop(region);
 
     const auto elapsed = Timers::get_elapsed(region);
-    ASSERT_EQ(elapsed.count(), 0);
+    ASSERT_EQ(elapsed
+                  .
+
+              count(),
+
+        0);
 }
 
 TEST_F(TimersTest, testMultipleStartStop) {
@@ -47,20 +57,34 @@ TEST_F(TimersTest, testMultipleStartStop) {
 
     const auto outer_iterations = RandomAdapter::get_random_integer<unsigned int>(2, 10, mt);
 
-    for (auto outer = 0U; outer < outer_iterations; outer++) {
+    for (
+        auto outer = 0U;
+        outer < outer_iterations;
+        outer++) {
         const auto start_iterations = RandomAdapter::get_random_integer<unsigned int>(2, 10, mt);
-        for (auto start = 0U; start < start_iterations; start++) {
+        for (
+            auto start = 0U;
+            start < start_iterations;
+            start++) {
             Timers::start(region);
         }
 
         const auto end_iterations = RandomAdapter::get_random_integer<unsigned int>(2, 10, mt);
-        for (auto end = 0U; end < end_iterations; end++) {
+        for (
+            auto end = 0U;
+            end < end_iterations;
+            end++) {
             Timers::stop(region);
         }
     }
 
     const auto elapsed = Timers::get_elapsed(region);
-    ASSERT_EQ(elapsed.count(), 0);
+    ASSERT_EQ(elapsed
+                  .
+
+              count(),
+
+        0);
 }
 
 TEST_F(TimersTest, testResetZero) {
@@ -77,7 +101,12 @@ TEST_F(TimersTest, testResetZero) {
     Timers::reset_elapsed(region);
 
     const auto elapsed = Timers::get_elapsed(region);
-    ASSERT_EQ(elapsed.count(), 0);
+    ASSERT_EQ(elapsed
+                  .
+
+              count(),
+
+        0);
 }
 
 TEST_F(TimersTest, testResetZero2) {
@@ -93,7 +122,12 @@ TEST_F(TimersTest, testResetZero2) {
     Timers::reset_elapsed(region);
 
     const auto elapsed = Timers::get_elapsed(region);
-    ASSERT_EQ(elapsed.count(), 0);
+    ASSERT_EQ(elapsed
+                  .
+
+              count(),
+
+        0);
 }
 
 TEST_F(TimersTest, testAdd) {
@@ -108,7 +142,12 @@ TEST_F(TimersTest, testAdd) {
     Timers::add_start_stop_diff_to_elapsed(region);
 
     const auto elapsed = Timers::get_elapsed(region);
-    ASSERT_GE(elapsed.count(), 10000);
+    ASSERT_GE(elapsed
+                  .
+
+              count(),
+
+        10000);
 
     std::this_thread::sleep_for(10000ns);
     const auto elapsed_again = Timers::get_elapsed(region);
@@ -126,7 +165,12 @@ TEST_F(TimersTest, testAdd2) {
     Timers::stop_and_add(region);
 
     const auto elapsed = Timers::get_elapsed(region);
-    ASSERT_GE(elapsed.count(), 10000);
+    ASSERT_GE(elapsed
+                  .
+
+              count(),
+
+        10000);
 
     std::this_thread::sleep_for(10000ns);
     const auto elapsed_again = Timers::get_elapsed(region);
@@ -155,10 +199,20 @@ TEST_F(TimersTest, testNonInterference) {
     Timers::stop_and_add(first_region);
 
     const auto elapsed_0 = Timers::get_elapsed(first_region);
-    ASSERT_GE(elapsed_0.count(), 10000);
+    ASSERT_GE(elapsed_0
+                  .
+
+              count(),
+
+        10000);
 
     const auto elapsed_1 = Timers::get_elapsed(second_region);
-    ASSERT_EQ(elapsed_1.count(), 0);
+    ASSERT_EQ(elapsed_1
+                  .
+
+              count(),
+
+        0);
 
     Timers::reset_elapsed(second_region);
 

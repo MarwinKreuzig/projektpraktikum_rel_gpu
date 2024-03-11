@@ -24,14 +24,28 @@ TEST_F(BarnesHutInvertedTest, testBarnesHutInvertedGetterSetter) {
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(mt);
     auto octree = std::make_shared<OctreeImplementation<additional_cell_attributes>>(min, max, 0);
 
-    ASSERT_NO_THROW(BarnesHutInverted algorithm(octree););
+    ASSERT_NO_THROW(BarnesHutInverted
+                        algorithm(octree););
 
     BarnesHutInverted algorithm(octree);
 
-    ASSERT_EQ(algorithm.get_acceptance_criterion(), Constants::bh_default_theta);
+    ASSERT_EQ(algorithm
+                  .
+
+              get_acceptance_criterion(),
+        Constants::bh_default_theta
+
+    );
 
     const auto random_acceptance_criterion = RandomAdapter::get_random_double<double>(0.0, Constants::bh_max_theta, mt);
 
-    ASSERT_NO_THROW(algorithm.set_acceptance_criterion(random_acceptance_criterion));
-    ASSERT_EQ(algorithm.get_acceptance_criterion(), random_acceptance_criterion);
+    ASSERT_NO_THROW(algorithm
+                        .set_acceptance_criterion(random_acceptance_criterion));
+    ASSERT_EQ(algorithm
+                  .
+
+              get_acceptance_criterion(),
+        random_acceptance_criterion
+
+    );
 }

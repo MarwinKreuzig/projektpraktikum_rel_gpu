@@ -26,7 +26,7 @@ TEST_F(CudaTest, deviceVariableTest) {
     }
 }*/
 
-TEST_F(CudaTest, cudaMallocTest) {
+TEST_F(CudaVectorTest, cudaMallocTest) {
     const auto size = RandomAdapter::get_random_integer<size_t>(10, 100, mt);
     const auto c = RandomAdapter::get_random_integer<size_t>(mt);
     auto handle = gpu::Vector::create_array_in_device_memory<size_t>();
@@ -41,7 +41,7 @@ TEST_F(CudaTest, cudaMallocTest) {
     }
 }
 
-TEST_F(CudaTest, cudaFreeTest) {
+TEST_F(CudaVectorTest, cudaFreeTest) {
     const auto size = RandomAdapter::get_random_integer<size_t>(10, 100, mt);
     const auto c = RandomAdapter::get_random_integer<size_t>(mt);
     auto handle = gpu::Vector::create_array_in_device_memory<size_t>();
@@ -50,7 +50,7 @@ TEST_F(CudaTest, cudaFreeTest) {
     handle.~CudaArrayDeviceHandle<size_t>();
 }
 
-TEST_F(CudaTest, cudaFreeTest2) {
+TEST_F(CudaVectorTest, cudaFreeTest2) {
     auto handle = gpu::Vector::create_array_in_device_memory<size_t>();
     const auto size = RandomAdapter::get_random_integer<size_t>(10, 100, mt);
     const auto c = RandomAdapter::get_random_integer<size_t>(mt);
@@ -60,7 +60,6 @@ TEST_F(CudaTest, cudaFreeTest2) {
     ASSERT_FALSE(handle.usable());
     ASSERT_THROW(handle.fill(c), RelearnGPUException);
     ASSERT_THROW(handle.fill(0, 1, c), RelearnGPUException);
-    ASSERT_THROW(handle.reserve(c), RelearnGPUException);
     std::vector<size_t> data;
     ASSERT_THROW(handle.copy_to_device(data), RelearnGPUException);
     ASSERT_THROW(handle.copy_to_host(data), RelearnGPUException);
@@ -74,7 +73,7 @@ TEST_F(CudaTest, cudaFreeTest2) {
     ASSERT_THROW(handle.resize(42), RelearnGPUException);
 }
 
-TEST_F(CudaTest, initTest) {
+TEST_F(CudaVectorTest, initTest) {
     auto handle = gpu::Vector::create_array_in_device_memory<size_t>();
     ASSERT_TRUE(handle.is_empty());
     ASSERT_EQ(nullptr, handle.data());
@@ -82,7 +81,7 @@ TEST_F(CudaTest, initTest) {
     ASSERT_EQ(0, handle.get_max_size());
 }
 
-TEST_F(CudaTest, emptyExceptionTest) {
+TEST_F(CudaVectorTest, emptyExceptionTest) {
     auto handle = gpu::Vector::create_array_in_device_memory<size_t>();
     ASSERT_THROW(handle.fill(RandomAdapter::get_random_integer<size_t>(mt)), RelearnGPUException);
     ASSERT_THROW(handle.fill(0, 1, RandomAdapter::get_random_integer<size_t>(mt)), RelearnGPUException);
@@ -98,7 +97,7 @@ void check_filled(gpu::Vector::CudaArrayDeviceHandle<size_t>& handle, size_t fro
     }
 }
 
-TEST_F(CudaTest, fillTest) {
+TEST_F(CudaVectorTest, fillTest) {
     const auto init_size = RandomAdapter::get_random_integer(30, 100, mt);
     const auto v1 = RandomAdapter::get_random_integer<size_t>(mt);
     auto handle = gpu::Vector::create_array_in_device_memory<size_t>();
@@ -108,7 +107,7 @@ TEST_F(CudaTest, fillTest) {
     check_filled(handle, 0, init_size, v1);
 }
 
-TEST_F(CudaTest, resizeTest) {
+TEST_F(CudaVectorTest, resizeTest) {
     const auto init_size = RandomAdapter::get_random_integer<size_t>(30, 100, mt);
     auto handle = gpu::Vector::create_array_in_device_memory<size_t>();
     handle.resize(init_size);

@@ -11,6 +11,12 @@
 #include "main.h"
 
 #include "mpi/MPIWrapper.h"
+#include "mpi/MPINoWrapper.h"
+#include "algorithm/Cells.h"
+#include "structure/OctreeNode.h"
+#include "util/MemoryHolder.h"
+
+std::vector<OctreeNode<BarnesHutCell>> holder_bh_cells{};
 
 int main(int argc, char** argv) {
     MPIWrapper::init(argc, argv);
@@ -18,6 +24,12 @@ int main(int argc, char** argv) {
     ::benchmark::Initialize(&argc, argv);
     if (::benchmark::ReportUnrecognizedArguments(argc, argv))
         return 1;
+
+
+    holder_bh_cells.resize(1024 * 1024 * 4);
+    MemoryHolder<BarnesHutCell>::init(holder_bh_cells);
+
+
     ::benchmark::RunSpecifiedBenchmarks();
     ::benchmark::Shutdown();
     return 0;

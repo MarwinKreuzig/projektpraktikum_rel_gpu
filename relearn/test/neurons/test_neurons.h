@@ -17,10 +17,13 @@
 #include <utility>
 
 class Neurons;
+
 class NetworkGraph;
+
 class Partition;
 
 class NeuronsTest : public RelearnTest {
 protected:
-    static std::tuple<std::shared_ptr<Neurons>, std::shared_ptr<NetworkGraph>> create_neurons_object(std::shared_ptr<Partition>& partition, MPIRank rank);
+    static std::tuple<std::shared_ptr<Neurons>, std::shared_ptr<NetworkGraph>>
+    create_neurons_object(std::shared_ptr<Partition>& partition, MPIRank rank);
 };

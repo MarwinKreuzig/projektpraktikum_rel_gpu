@@ -33,16 +33,29 @@
 #include <vector>
 
 TEST_F(FMMTest, testMultiIndexGetNumberOfIndices) {
-    ASSERT_EQ(MultiIndex::get_number_of_indices(), Constants::p3);
+    ASSERT_EQ(MultiIndex::get_number_of_indices(), Constants::p3
+
+    );
 }
 
 TEST_F(FMMTest, testMultIndexGetIndices) {
     std::vector<Vec3u> expected_indices{};
-    expected_indices.reserve(MultiIndex::get_number_of_indices());
+    expected_indices.
 
-    for (auto x = 0U; x < Constants::p; x++) {
-        for (auto y = 0U; y < Constants::p; y++) {
-            for (auto z = 0U; z < Constants::p; z++) {
+        reserve(MultiIndex::get_number_of_indices());
+
+    for (
+        auto x = 0U;
+        x < Constants::p;
+        x++) {
+        for (
+            auto y = 0U;
+            y < Constants::p;
+            y++) {
+            for (
+                auto z = 0U;
+                z < Constants::p;
+                z++) {
                 expected_indices.emplace_back(x, y, z);
             }
         }
@@ -92,17 +105,21 @@ TEST_F(FMMTest, testExtractElement) {
 
     std::vector<OctreeNode<FastMultipoleMethodCell>> memory_holder(number_pointers);
 
-    const std::vector<OctreeNode<FastMultipoleMethodCell>*> pointers = ranges::views::concat(
-                                                                            memory_holder | ranges::views::transform([](auto& Val) { return &Val; }),
-                                                                            ranges::views::repeat_n(
-                                                                                static_cast<OctreeNode<FastMultipoleMethodCell>*>(nullptr),
-                                                                                number_nullptrs))
+    const std::vector<OctreeNode<FastMultipoleMethodCell>*>
+        pointers = ranges::views::concat(
+                       memory_holder | ranges::views::transform([](auto& Val) { return &Val; }),
+                       ranges::views::repeat_n(
+                           static_cast<OctreeNode<FastMultipoleMethodCell>*>(nullptr),
+                           number_nullptrs))
         | ranges::to_vector | actions::shuffle(mt);
 
     std::vector<OctreeNode<FastMultipoleMethodCell>*> received_pointers{};
     received_pointers.reserve(number_pointers);
 
-    for (auto pointer_index = 0; pointer_index < number_pointers; pointer_index++) {
+    for (
+        auto pointer_index = 0;
+        pointer_index < number_pointers;
+        pointer_index++) {
         auto* ptr = FastMultipoleMethodBase::extract_element(pointers, pointer_index);
         ASSERT_NE(ptr, nullptr);
 
@@ -111,11 +128,17 @@ TEST_F(FMMTest, testExtractElement) {
 
     ranges::sort(received_pointers);
 
-    for (auto i = 0; i < number_pointers; i++) {
+    for (
+        auto i = 0;
+        i < number_pointers;
+        i++) {
         ASSERT_EQ(received_pointers[i], &memory_holder[i]);
     }
 
-    for (auto pointer_index = number_pointers; pointer_index < number_pointers + number_nullptrs + number_neurons_out_of_scope; pointer_index++) {
+    for (
+        auto pointer_index = number_pointers;
+        pointer_index < number_pointers + number_nullptrs + number_neurons_out_of_scope;
+        pointer_index++) {
         auto* ptr = FastMultipoleMethodBase::extract_element(pointers, pointer_index);
         ASSERT_EQ(ptr, nullptr);
     }
@@ -132,23 +155,59 @@ TEST_F(FMMTest, testCheckCalculationRequirementsException) {
     node.set_level(0);
     node.set_rank(my_rank);
     node.set_cell_size(min, max);
-    node.set_cell_neuron_id(NeuronID::virtual_id());
+    node.
+
+        set_cell_neuron_id(NeuronID::virtual_id());
+
     node.set_cell_neuron_position(own_position);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(nullptr, nullptr, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(nullptr, nullptr, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(nullptr, nullptr, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(nullptr, nullptr, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(nullptr, nullptr, ElementType::Axon,
+                     SignalType::Excitatory),
+        RelearnException);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(&node, nullptr, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(&node, nullptr, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(&node, nullptr, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(&node, nullptr, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(nullptr, nullptr, ElementType::Axon,
+                     SignalType::Inhibitory),
+        RelearnException);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(nullptr, &node, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(nullptr, &node, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(nullptr, &node, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(nullptr, &node, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(nullptr, nullptr, ElementType::Dendrite,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(nullptr, nullptr, ElementType::Dendrite,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(&node, nullptr, ElementType::Axon,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(&node, nullptr, ElementType::Axon,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(&node, nullptr, ElementType::Dendrite,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(&node, nullptr, ElementType::Dendrite,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(nullptr, &node, ElementType::Axon,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(nullptr, &node, ElementType::Axon,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(nullptr, &node, ElementType::Dendrite,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::check_calculation_requirements(nullptr, &node, ElementType::Dendrite,
+                     SignalType::Inhibitory),
+        RelearnException);
 }
 
 TEST_F(FMMTest, testCheckCalculationRequirementsLeaf) {
@@ -253,23 +312,59 @@ TEST_F(FMMTest, testDirectGaussException) {
     node.set_level(0);
     node.set_rank(my_rank);
     node.set_cell_size(min, max);
-    node.set_cell_neuron_id(NeuronID::virtual_id());
+    node.
+
+        set_cell_neuron_id(NeuronID::virtual_id());
+
     node.set_cell_neuron_position(own_position);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(nullptr, nullptr, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(nullptr, nullptr, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(nullptr, nullptr, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(nullptr, nullptr, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(nullptr, nullptr, ElementType::Axon,
+                     SignalType::Excitatory),
+        RelearnException);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(&node, nullptr, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(&node, nullptr, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(&node, nullptr, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(&node, nullptr, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(nullptr, nullptr, ElementType::Axon,
+                     SignalType::Inhibitory),
+        RelearnException);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(nullptr, &node, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(nullptr, &node, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(nullptr, &node, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(nullptr, &node, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(nullptr, nullptr, ElementType::Dendrite,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(nullptr, nullptr, ElementType::Dendrite,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(&node, nullptr, ElementType::Axon,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(&node, nullptr, ElementType::Axon,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(&node, nullptr, ElementType::Dendrite,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(&node, nullptr, ElementType::Dendrite,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(nullptr, &node, ElementType::Axon,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(nullptr, &node, ElementType::Axon,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(nullptr, &node, ElementType::Dendrite,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_direct_gauss(nullptr, &node, ElementType::Dendrite,
+                     SignalType::Inhibitory),
+        RelearnException);
 }
 
 TEST_F(FMMTest, testDirectGauss) {
@@ -299,7 +394,8 @@ TEST_F(FMMTest, testDirectGauss) {
                     continue;
                 }
 
-                const auto attraction = FastMultipoleMethodBase::kernel(source_leaf->get_cell().get_position_for(get_other_element_type(e), s).value(),
+                const auto attraction = FastMultipoleMethodBase::kernel(
+                    source_leaf->get_cell().get_position_for(get_other_element_type(e), s).value(),
                     target_leaf->get_cell().get_position_for(e, s).value(), GaussianDistributionKernel::get_sigma());
 
                 sum += attraction * product;
@@ -325,18 +421,43 @@ TEST_F(FMMTest, testHermiteCoefficientsException) {
     node.set_level(0);
     node.set_rank(my_rank);
     node.set_cell_size(min, max);
-    node.set_cell_neuron_id(NeuronID::virtual_id());
+    node.
+
+        set_cell_neuron_id(NeuronID::virtual_id());
+
     node.set_cell_neuron_position(own_position);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(nullptr, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(nullptr, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(nullptr, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(nullptr, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(nullptr, ElementType::Axon,
+                     SignalType::Excitatory),
+        RelearnException);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&node, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&node, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&node, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&node, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(nullptr, ElementType::Axon,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(nullptr, ElementType::Dendrite,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(nullptr, ElementType::Dendrite,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(
+        auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&node, ElementType::Axon, SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(
+        auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&node, ElementType::Axon, SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&node, ElementType::Dendrite,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&node, ElementType::Dendrite,
+                     SignalType::Inhibitory),
+        RelearnException);
 }
 
 TEST_F(FMMTest, testHermiteCoefficientsException2) {
@@ -345,17 +466,44 @@ TEST_F(FMMTest, testHermiteCoefficientsException2) {
 
     auto no_axon_tree = OctreeAdapter::get_tree_no_axons<FastMultipoleMethodCell>(number_neurons, min, max, mt);
     auto no_dendrite_tree = OctreeAdapter::get_tree_no_dendrites<FastMultipoleMethodCell>(number_neurons, min, max, mt);
-    auto no_synaptic_elements_tree = OctreeAdapter::get_tree_no_synaptic_elements<FastMultipoleMethodCell>(number_neurons, min, max, mt);
+    auto no_synaptic_elements_tree = OctreeAdapter::get_tree_no_synaptic_elements<FastMultipoleMethodCell>(number_neurons,
+        min, max, mt);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&no_axon_tree, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&no_axon_tree, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&no_dendrite_tree, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&no_dendrite_tree, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&no_axon_tree, ElementType::Axon,
+                     SignalType::Excitatory),
+        RelearnException);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&no_synaptic_elements_tree, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&no_synaptic_elements_tree, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&no_synaptic_elements_tree, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&no_synaptic_elements_tree, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&no_axon_tree, ElementType::Axon,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&no_dendrite_tree, ElementType::Dendrite,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&no_dendrite_tree, ElementType::Dendrite,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(
+        auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&no_synaptic_elements_tree, ElementType::Axon,
+            SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(
+        auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&no_synaptic_elements_tree, ElementType::Axon,
+            SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(
+        auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&no_synaptic_elements_tree, ElementType::Dendrite,
+            SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(
+        auto val = FastMultipoleMethodBase::calc_hermite_coefficients(&no_synaptic_elements_tree, ElementType::Dendrite,
+            SignalType::Inhibitory),
+        RelearnException);
 }
 
 TEST_F(FMMTest, testHermiteCoefficientsForm) {
@@ -364,20 +512,48 @@ TEST_F(FMMTest, testHermiteCoefficientsForm) {
 
     auto tree = OctreeAdapter::get_standard_tree<FastMultipoleMethodCell>(number_neurons, min, max, mt);
 
-    const auto coefficients_a_e = FastMultipoleMethodBase::calc_hermite_coefficients(&tree, ElementType::Axon, SignalType::Excitatory);
-    ASSERT_EQ(coefficients_a_e.size(), Constants::p3);
+    const auto coefficients_a_e = FastMultipoleMethodBase::calc_hermite_coefficients(&tree, ElementType::Axon,
+        SignalType::Excitatory);
+    ASSERT_EQ(coefficients_a_e
+                  .
+
+              size(),
+        Constants::p3
+
+    );
     ASSERT_TRUE(ranges::any_of(coefficients_a_e, not_equal_to(0.0)));
 
-    const auto coefficients_a_i = FastMultipoleMethodBase::calc_hermite_coefficients(&tree, ElementType::Axon, SignalType::Inhibitory);
-    ASSERT_EQ(coefficients_a_i.size(), Constants::p3);
+    const auto coefficients_a_i = FastMultipoleMethodBase::calc_hermite_coefficients(&tree, ElementType::Axon,
+        SignalType::Inhibitory);
+    ASSERT_EQ(coefficients_a_i
+                  .
+
+              size(),
+        Constants::p3
+
+    );
     ASSERT_TRUE(ranges::any_of(coefficients_a_i, not_equal_to(0.0)));
 
-    const auto coefficients_d_e = FastMultipoleMethodBase::calc_hermite_coefficients(&tree, ElementType::Dendrite, SignalType::Excitatory);
-    ASSERT_EQ(coefficients_d_e.size(), Constants::p3);
+    const auto coefficients_d_e = FastMultipoleMethodBase::calc_hermite_coefficients(&tree, ElementType::Dendrite,
+        SignalType::Excitatory);
+    ASSERT_EQ(coefficients_d_e
+                  .
+
+              size(),
+        Constants::p3
+
+    );
     ASSERT_TRUE(ranges::any_of(coefficients_d_e, not_equal_to(0.0)));
 
-    const auto coefficients_d_i = FastMultipoleMethodBase::calc_hermite_coefficients(&tree, ElementType::Dendrite, SignalType::Inhibitory);
-    ASSERT_EQ(coefficients_d_i.size(), Constants::p3);
+    const auto coefficients_d_i = FastMultipoleMethodBase::calc_hermite_coefficients(&tree, ElementType::Dendrite,
+        SignalType::Inhibitory);
+    ASSERT_EQ(coefficients_d_i
+                  .
+
+              size(),
+        Constants::p3
+
+    );
     ASSERT_TRUE(ranges::any_of(coefficients_d_i, not_equal_to(0.0)));
 }
 
@@ -394,18 +570,45 @@ TEST_F(FMMTest, testTaylorCoefficientsException) {
     node.set_level(0);
     node.set_rank(my_rank);
     node.set_cell_size(min, max);
-    node.set_cell_neuron_id(NeuronID::virtual_id());
+    node.
+
+        set_cell_neuron_id(NeuronID::virtual_id());
+
     node.set_cell_neuron_position(own_position);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_taylor_coefficients(nullptr, other_position, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_taylor_coefficients(nullptr, other_position, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_taylor_coefficients(nullptr, other_position, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_taylor_coefficients(nullptr, other_position, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_taylor_coefficients(nullptr, other_position, ElementType::Axon,
+                     SignalType::Excitatory),
+        RelearnException);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_taylor_coefficients(&node, other_position, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_taylor_coefficients(&node, other_position, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_taylor_coefficients(&node, other_position, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_taylor_coefficients(&node, other_position, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_taylor_coefficients(nullptr, other_position, ElementType::Axon,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(
+        auto val = FastMultipoleMethodBase::calc_taylor_coefficients(nullptr, other_position, ElementType::Dendrite,
+            SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(
+        auto val = FastMultipoleMethodBase::calc_taylor_coefficients(nullptr, other_position, ElementType::Dendrite,
+            SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_taylor_coefficients(&node, other_position, ElementType::Axon,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_taylor_coefficients(&node, other_position, ElementType::Axon,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_taylor_coefficients(&node, other_position, ElementType::Dendrite,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_taylor_coefficients(&node, other_position, ElementType::Dendrite,
+                     SignalType::Inhibitory),
+        RelearnException);
 }
 
 TEST_F(FMMTest, testTaylorCoefficientsZero) {
@@ -417,19 +620,36 @@ TEST_F(FMMTest, testTaylorCoefficientsZero) {
 
     auto no_axon_tree = OctreeAdapter::get_tree_no_axons<FastMultipoleMethodCell>(number_neurons, min, max, mt);
     auto no_dendrite_tree = OctreeAdapter::get_tree_no_dendrites<FastMultipoleMethodCell>(number_neurons, min, max, mt);
-    auto no_synaptic_elements_tree = OctreeAdapter::get_tree_no_synaptic_elements<FastMultipoleMethodCell>(number_neurons, min, max, mt);
+    auto no_synaptic_elements_tree = OctreeAdapter::get_tree_no_synaptic_elements<FastMultipoleMethodCell>(number_neurons,
+        min, max, mt);
 
     std::vector<double> coefficients(Constants::p3, 0.0);
 
-    ASSERT_EQ(FastMultipoleMethodBase::calc_taylor_coefficients(&no_axon_tree, other_position, ElementType::Axon, SignalType::Excitatory), coefficients);
-    ASSERT_EQ(FastMultipoleMethodBase::calc_taylor_coefficients(&no_axon_tree, other_position, ElementType::Axon, SignalType::Inhibitory), coefficients);
-    ASSERT_EQ(FastMultipoleMethodBase::calc_taylor_coefficients(&no_dendrite_tree, other_position, ElementType::Dendrite, SignalType::Excitatory), coefficients);
-    ASSERT_EQ(FastMultipoleMethodBase::calc_taylor_coefficients(&no_dendrite_tree, other_position, ElementType::Dendrite, SignalType::Inhibitory), coefficients);
+    ASSERT_EQ(FastMultipoleMethodBase::calc_taylor_coefficients(&no_axon_tree, other_position, ElementType::Axon,
+                  SignalType::Excitatory),
+        coefficients);
+    ASSERT_EQ(FastMultipoleMethodBase::calc_taylor_coefficients(&no_axon_tree, other_position, ElementType::Axon,
+                  SignalType::Inhibitory),
+        coefficients);
+    ASSERT_EQ(FastMultipoleMethodBase::calc_taylor_coefficients(&no_dendrite_tree, other_position, ElementType::Dendrite,
+                  SignalType::Excitatory),
+        coefficients);
+    ASSERT_EQ(FastMultipoleMethodBase::calc_taylor_coefficients(&no_dendrite_tree, other_position, ElementType::Dendrite,
+                  SignalType::Inhibitory),
+        coefficients);
 
-    ASSERT_EQ(FastMultipoleMethodBase::calc_taylor_coefficients(&no_synaptic_elements_tree, other_position, ElementType::Axon, SignalType::Excitatory), coefficients);
-    ASSERT_EQ(FastMultipoleMethodBase::calc_taylor_coefficients(&no_synaptic_elements_tree, other_position, ElementType::Axon, SignalType::Inhibitory), coefficients);
-    ASSERT_EQ(FastMultipoleMethodBase::calc_taylor_coefficients(&no_synaptic_elements_tree, other_position, ElementType::Dendrite, SignalType::Excitatory), coefficients);
-    ASSERT_EQ(FastMultipoleMethodBase::calc_taylor_coefficients(&no_synaptic_elements_tree, other_position, ElementType::Dendrite, SignalType::Inhibitory), coefficients);
+    ASSERT_EQ(FastMultipoleMethodBase::calc_taylor_coefficients(&no_synaptic_elements_tree, other_position,
+                  ElementType::Axon, SignalType::Excitatory),
+        coefficients);
+    ASSERT_EQ(FastMultipoleMethodBase::calc_taylor_coefficients(&no_synaptic_elements_tree, other_position,
+                  ElementType::Axon, SignalType::Inhibitory),
+        coefficients);
+    ASSERT_EQ(FastMultipoleMethodBase::calc_taylor_coefficients(&no_synaptic_elements_tree, other_position,
+                  ElementType::Dendrite, SignalType::Excitatory),
+        coefficients);
+    ASSERT_EQ(FastMultipoleMethodBase::calc_taylor_coefficients(&no_synaptic_elements_tree, other_position,
+                  ElementType::Dendrite, SignalType::Inhibitory),
+        coefficients);
 }
 
 TEST_F(FMMTest, testTaylorCoefficientsForm) {
@@ -441,20 +661,52 @@ TEST_F(FMMTest, testTaylorCoefficientsForm) {
 
     auto tree = OctreeAdapter::get_standard_tree<FastMultipoleMethodCell>(number_neurons, min, max, mt);
 
-    const auto coefficients_a_e = FastMultipoleMethodBase::calc_taylor_coefficients(&tree, other_position, ElementType::Axon, SignalType::Excitatory);
-    ASSERT_EQ(coefficients_a_e.size(), Constants::p3);
+    const auto coefficients_a_e = FastMultipoleMethodBase::calc_taylor_coefficients(&tree, other_position,
+        ElementType::Axon,
+        SignalType::Excitatory);
+    ASSERT_EQ(coefficients_a_e
+                  .
+
+              size(),
+        Constants::p3
+
+    );
     ASSERT_TRUE(ranges::any_of(coefficients_a_e, not_equal_to(0.0)));
 
-    const auto coefficients_a_i = FastMultipoleMethodBase::calc_taylor_coefficients(&tree, other_position, ElementType::Axon, SignalType::Inhibitory);
-    ASSERT_EQ(coefficients_a_i.size(), Constants::p3);
+    const auto coefficients_a_i = FastMultipoleMethodBase::calc_taylor_coefficients(&tree, other_position,
+        ElementType::Axon,
+        SignalType::Inhibitory);
+    ASSERT_EQ(coefficients_a_i
+                  .
+
+              size(),
+        Constants::p3
+
+    );
     ASSERT_TRUE(ranges::any_of(coefficients_a_i, not_equal_to(0.0)));
 
-    const auto coefficients_d_e = FastMultipoleMethodBase::calc_taylor_coefficients(&tree, other_position, ElementType::Dendrite, SignalType::Excitatory);
-    ASSERT_EQ(coefficients_d_e.size(), Constants::p3);
+    const auto coefficients_d_e = FastMultipoleMethodBase::calc_taylor_coefficients(&tree, other_position,
+        ElementType::Dendrite,
+        SignalType::Excitatory);
+    ASSERT_EQ(coefficients_d_e
+                  .
+
+              size(),
+        Constants::p3
+
+    );
     ASSERT_TRUE(ranges::any_of(coefficients_d_e, not_equal_to(0.0)));
 
-    const auto coefficients_d_i = FastMultipoleMethodBase::calc_taylor_coefficients(&tree, other_position, ElementType::Dendrite, SignalType::Inhibitory);
-    ASSERT_EQ(coefficients_d_i.size(), Constants::p3);
+    const auto coefficients_d_i = FastMultipoleMethodBase::calc_taylor_coefficients(&tree, other_position,
+        ElementType::Dendrite,
+        SignalType::Inhibitory);
+    ASSERT_EQ(coefficients_d_i
+                  .
+
+              size(),
+        Constants::p3
+
+    );
     ASSERT_TRUE(ranges::any_of(coefficients_d_i, not_equal_to(0.0)));
 }
 
@@ -468,43 +720,112 @@ TEST_F(FMMTest, testCalcHermiteException) {
     node.set_level(0);
     node.set_rank(my_rank);
     node.set_cell_size(min, max);
-    node.set_cell_neuron_id(NeuronID::virtual_id());
+    node.
+
+        set_cell_neuron_id(NeuronID::virtual_id());
+
     node.set_cell_neuron_position(own_position);
 
     std::vector<double> coefficients(Constants::p3, 0.0);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(nullptr, nullptr, coefficients, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(nullptr, nullptr, coefficients, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(nullptr, nullptr, coefficients, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(nullptr, nullptr, coefficients, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(nullptr, nullptr, coefficients, ElementType::Axon,
+                     SignalType::Excitatory),
+        RelearnException);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&node, nullptr, coefficients, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&node, nullptr, coefficients, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&node, nullptr, coefficients, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&node, nullptr, coefficients, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(nullptr, nullptr, coefficients, ElementType::Axon,
+                     SignalType::Inhibitory),
+        RelearnException);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(nullptr, &node, coefficients, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(nullptr, &node, coefficients, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(nullptr, &node, coefficients, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(nullptr, &node, coefficients, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(nullptr, nullptr, coefficients, ElementType::Dendrite,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(nullptr, nullptr, coefficients, ElementType::Dendrite,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&node, nullptr, coefficients, ElementType::Axon,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&node, nullptr, coefficients, ElementType::Axon,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&node, nullptr, coefficients, ElementType::Dendrite,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&node, nullptr, coefficients, ElementType::Dendrite,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(nullptr, &node, coefficients, ElementType::Axon,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(nullptr, &node, coefficients, ElementType::Axon,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(nullptr, &node, coefficients, ElementType::Dendrite,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(nullptr, &node, coefficients, ElementType::Dendrite,
+                     SignalType::Inhibitory),
+        RelearnException);
 
     auto source_tree = OctreeAdapter::get_standard_tree<FastMultipoleMethodCell>(30, min, max, this->mt);
     auto target_tree = OctreeAdapter::get_standard_tree<FastMultipoleMethodCell>(40, min, max, this->mt);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &target_tree, {}, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &target_tree, {}, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &target_tree, {}, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &target_tree, {}, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &target_tree, {}, ElementType::Axon,
+                     SignalType::Excitatory),
+        RelearnException);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &target_tree, std::vector{ 1.0, 2.9 }, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &target_tree, std::vector{ 1.0, 2.9 }, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &target_tree, std::vector{ 1.0, 2.9 }, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &target_tree, std::vector{ 1.0, 2.9 }, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &target_tree, {}, ElementType::Axon,
+                     SignalType::Inhibitory),
+        RelearnException);
 
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &node, coefficients, ElementType::Axon, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &node, coefficients, ElementType::Axon, SignalType::Inhibitory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &node, coefficients, ElementType::Dendrite, SignalType::Excitatory), RelearnException);
-    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &node, coefficients, ElementType::Dendrite, SignalType::Inhibitory), RelearnException);
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &target_tree, {}, ElementType::Dendrite,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &target_tree, {}, ElementType::Dendrite,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &target_tree, std::vector{ 1.0, 2.9 },
+                     ElementType::Axon, SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &target_tree, std::vector{ 1.0, 2.9 },
+                     ElementType::Axon, SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &target_tree, std::vector{ 1.0, 2.9 },
+                     ElementType::Dendrite, SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &target_tree, std::vector{ 1.0, 2.9 },
+                     ElementType::Dendrite, SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &node, coefficients, ElementType::Axon,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &node, coefficients, ElementType::Axon,
+                     SignalType::Inhibitory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &node, coefficients, ElementType::Dendrite,
+                     SignalType::Excitatory),
+        RelearnException);
+
+    ASSERT_THROW(auto val = FastMultipoleMethodBase::calc_hermite(&source_tree, &node, coefficients, ElementType::Dendrite,
+                     SignalType::Inhibitory),
+        RelearnException);
 }
 
 TEST_F(FMMTest, testCalcTaylorException) {

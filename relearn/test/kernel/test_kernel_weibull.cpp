@@ -29,8 +29,13 @@ TEST_F(ProbabilityKernelTest, testWeibullSetterGetter) {
     WeibullDistributionKernel::set_k(WeibullDistributionKernel::default_k);
     WeibullDistributionKernel::set_b(WeibullDistributionKernel::default_b);
 
-    ASSERT_EQ(WeibullDistributionKernel::get_k(), WeibullDistributionKernel::default_k);
-    ASSERT_EQ(WeibullDistributionKernel::get_b(), WeibullDistributionKernel::default_b);
+    ASSERT_EQ(WeibullDistributionKernel::get_k(), WeibullDistributionKernel::default_k
+
+    );
+
+    ASSERT_EQ(WeibullDistributionKernel::get_b(), WeibullDistributionKernel::default_b
+
+    );
 
     const auto k = KernelAdapter::get_random_weibull_k(mt);
     const auto b = KernelAdapter::get_random_weibull_b(mt);
@@ -38,8 +43,13 @@ TEST_F(ProbabilityKernelTest, testWeibullSetterGetter) {
     WeibullDistributionKernel::set_k(k);
     WeibullDistributionKernel::set_b(b);
 
-    ASSERT_EQ(WeibullDistributionKernel::get_k(), k);
-    ASSERT_EQ(WeibullDistributionKernel::get_b(), b);
+    ASSERT_EQ(WeibullDistributionKernel::get_k(), k
+
+    );
+
+    ASSERT_EQ(WeibullDistributionKernel::get_b(), b
+
+    );
 }
 
 TEST_F(ProbabilityKernelTest, testWeibullSetterGetterException) {
@@ -54,8 +64,13 @@ TEST_F(ProbabilityKernelTest, testWeibullSetterGetterException) {
     ASSERT_THROW(WeibullDistributionKernel::set_b(0.0), RelearnException);
     ASSERT_THROW(WeibullDistributionKernel::set_b(-b), RelearnException);
 
-    ASSERT_EQ(WeibullDistributionKernel::get_k(), k);
-    ASSERT_EQ(WeibullDistributionKernel::get_b(), b);
+    ASSERT_EQ(WeibullDistributionKernel::get_k(), k
+
+    );
+
+    ASSERT_EQ(WeibullDistributionKernel::get_b(), b
+
+    );
 }
 
 TEST_F(ProbabilityKernelTest, testWeibullNoFreeElements) {
@@ -71,9 +86,11 @@ TEST_F(ProbabilityKernelTest, testWeibullNoFreeElements) {
     const auto& source_position = SimulationAdapter::get_random_position(mt);
     const auto& target_position = SimulationAdapter::get_random_position(mt);
 
-    const auto attractiveness = WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, 0);
+    const auto attractiveness = WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position,
+        target_position, 0);
 
-    ASSERT_EQ(attractiveness, 0.0);
+    ASSERT_EQ(attractiveness,
+        0.0);
 }
 
 TEST_F(ProbabilityKernelTest, testWeibullLinearElements) {
@@ -89,10 +106,15 @@ TEST_F(ProbabilityKernelTest, testWeibullLinearElements) {
     const auto& source_position = SimulationAdapter::get_random_position(mt);
     const auto& target_position = SimulationAdapter::get_random_position(mt);
 
-    const auto attractiveness_one = WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, 1);
+    const auto attractiveness_one = WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position,
+        target_position, 1);
 
-    for (auto number_free_elements = 0U; number_free_elements < 10000U; number_free_elements++) {
-        const auto attractiveness = WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, number_free_elements);
+    for (
+        auto number_free_elements = 0U;
+        number_free_elements < 10000U; number_free_elements++) {
+        const auto attractiveness = WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position,
+            target_position,
+            number_free_elements);
 
         const auto expected_attractiveness = attractiveness_one * number_free_elements;
         ASSERT_NEAR(attractiveness, expected_attractiveness, eps);
@@ -122,7 +144,8 @@ TEST_F(ProbabilityKernelTest, testWeibullPrecalculatedValues) {
         WeibullDistributionKernel::set_k(k);
         WeibullDistributionKernel::set_b(b);
 
-        const auto attractiveness = WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, 1);
+        const auto attractiveness = WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position,
+            target_position, 1);
         ASSERT_NEAR(attractiveness, expected, eps);
     }
 }
@@ -148,12 +171,18 @@ TEST_F(KernelTest, testWeibullKernelIntegration) {
 
     const auto& number_vacant_excitatory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
     const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-    const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-    const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15,
+        mt);
+    const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15,
+        mt);
 
     OctreeNode<FastMultipoleMethodCell> node{};
     node.set_cell_neuron_id(neuron_id_1);
-    node.set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
+    node.
+
+        set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position()
+
+        );
 
     node.set_cell_excitatory_axons_position(target_excitatory_axon_position);
     node.set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
@@ -163,15 +192,27 @@ TEST_F(KernelTest, testWeibullKernelIntegration) {
     node.set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
     node.set_cell_number_dendrites(number_vacant_excitatory_dendrites, number_vacant_inhibitory_dendrites);
 
-    const auto attr_exc_axons = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Axon, SignalType::Excitatory);
-    const auto attr_inh_axons = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Axon, SignalType::Inhibitory);
-    const auto attr_exc_dendrites = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Dendrite, SignalType::Excitatory);
-    const auto attr_inh_dendrites = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Dendrite, SignalType::Inhibitory);
+    const auto attr_exc_axons = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect(
+        { MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Axon, SignalType::Excitatory);
+    const auto attr_inh_axons = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect(
+        { MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Axon, SignalType::Inhibitory);
+    const auto attr_exc_dendrites = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect(
+        { MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Dendrite, SignalType::Excitatory);
+    const auto attr_inh_dendrites = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect(
+        { MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Dendrite, SignalType::Inhibitory);
 
-    const auto golden_attr_exc_axons = WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position, target_excitatory_axon_position, number_vacant_excitatory_axons);
-    const auto golden_attr_inh_axons = WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position, target_inhibitory_axon_position, number_vacant_inhibitory_axons);
-    const auto golden_attr_exc_dendrites = WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position, target_excitatory_dendrite_position, number_vacant_excitatory_dendrites);
-    const auto golden_attr_inh_dendrites = WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position, target_inhibitory_dendrite_position, number_vacant_inhibitory_dendrites);
+    const auto golden_attr_exc_axons = WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position,
+        target_excitatory_axon_position,
+        number_vacant_excitatory_axons);
+    const auto golden_attr_inh_axons = WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position,
+        target_inhibitory_axon_position,
+        number_vacant_inhibitory_axons);
+    const auto golden_attr_exc_dendrites = WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position,
+        target_excitatory_dendrite_position,
+        number_vacant_excitatory_dendrites);
+    const auto golden_attr_inh_dendrites = WeibullDistributionKernel::calculate_attractiveness_to_connect(source_position,
+        target_inhibitory_dendrite_position,
+        number_vacant_inhibitory_dendrites);
 
     ASSERT_EQ(attr_exc_axons, golden_attr_exc_axons);
     ASSERT_EQ(attr_inh_axons, golden_attr_inh_axons);

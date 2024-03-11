@@ -14,5 +14,5 @@
 
 #include "../../source/gpu/structure/CudaVector.cuh"
 
-class CudaTest : public RelearnGPUTest {
+class CudaVectorTest : public RelearnGPUTest {
 };

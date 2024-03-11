@@ -22,7 +22,8 @@ TEST_F(RelearnExceptionTest, testFail) {
 
     try {
         RelearnException::fail(message);
-    } catch (const RelearnException& ex) {
+    } catch (
+        const RelearnException& ex) {
         const auto& reason = ex.what();
         ASSERT_EQ(message, reason);
     }
@@ -40,7 +41,8 @@ TEST_F(RelearnExceptionTest, testCheck) {
 
     try {
         RelearnException::check(false, message);
-    } catch (const RelearnException& ex) {
+    } catch (
+        const RelearnException& ex) {
         const auto& reason = ex.what();
         ASSERT_EQ(message, reason);
     }
@@ -55,8 +57,10 @@ TEST_F(RelearnExceptionTest, testFormatting) {
     const std::string expected_message = "This is the first value: 123456 and this the second: false\n";
 
     try {
-        RelearnException::fail(message, 123456, false);
-    } catch (const RelearnException& ex) {
+        RelearnException::fail(message,
+            123456, false);
+    } catch (
+        const RelearnException& ex) {
         const auto& reason = ex.what();
         ASSERT_EQ(expected_message, reason);
     }

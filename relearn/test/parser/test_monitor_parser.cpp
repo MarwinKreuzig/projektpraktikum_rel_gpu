@@ -62,8 +62,13 @@ TEST_F(MonitorParserTest, testParseIds) {
     std::stringstream ss{};
     ss << "0:1";
 
-    for (const auto& rni : rank_neuron_ids) {
-        if (rni.get_rank() != my_rank) {
+    for (
+        const auto& rni : rank_neuron_ids) {
+        if (rni.
+
+            get_rank()
+
+            != my_rank) {
             ss << ';' << RankNeuronIdAdapter::codify_rank_neuron_id(rni);
             continue;
         }
@@ -71,19 +76,36 @@ TEST_F(MonitorParserTest, testParseIds) {
         const auto use_default = RandomAdapter::get_random_bool(mt);
 
         if (use_default) {
-            ss << ";-1:" << rni.get_neuron_id().get_neuron_id() + 1;
+            ss << ";-1:" << rni.
+
+                            get_neuron_id()
+
+                                .
+
+                            get_neuron_id()
+
+                    + 1;
         } else {
             ss << ';' << RankNeuronIdAdapter::codify_rank_neuron_id(rni);
         }
     }
 
-    auto translator = std::make_shared<LocalAreaTranslator>(std::vector<RelearnTypes::area_name>({ "random" }), std::vector<RelearnTypes::area_id>({ 0 }));
+    auto translator = std::make_shared<LocalAreaTranslator>(std::vector<RelearnTypes::area_name>({ "random" }),
+        std::vector<RelearnTypes::area_id>({ 0 }));
 
     const auto& parsed_ids = MonitorParser::parse_my_ids(ss.str(), my_rank, translator);
 
-    ASSERT_EQ(parsed_ids.size(), my_number_neurons);
+    ASSERT_EQ(parsed_ids
+                  .
 
-    for (const auto neuron_id : NeuronID::range_id(my_number_neurons)) {
+              size(),
+        my_number_neurons
+
+    );
+
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(my_number_neurons)) {
         ASSERT_EQ(parsed_ids[neuron_id], NeuronID(neuron_id));
     }
 }
@@ -101,12 +123,30 @@ TEST_F(MonitorParserTest, testParseAreas) {
     const auto& parsed_ids = MonitorParser::parse_my_ids(str, MPIRank{ 0 }, translator);
 
     const auto num_neurons_in_areas = translator->get_number_neurons_in_area(0) + translator->get_number_neurons_in_area(1);
-    ASSERT_EQ(parsed_ids.size(), num_neurons_in_areas);
+    ASSERT_EQ(parsed_ids
+                  .
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+              size(),
+        num_neurons_in_areas
+
+    );
+
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         const auto it = std::find(parsed_ids.begin(), parsed_ids.end(), NeuronID{ neuron_id });
 
-        ASSERT_TRUE(area_ids[neuron_id] == 2 && it == parsed_ids.end() || area_ids[neuron_id] != 2 && it != parsed_ids.end());
+        ASSERT_TRUE(area_ids[neuron_id]
+                    == 2
+                && it == parsed_ids.
+
+                         end()
+
+            || area_ids[neuron_id] != 2 && it != parsed_ids.
+
+                                                 end()
+
+        );
     }
 }
 
@@ -116,7 +156,10 @@ TEST_F(MonitorParserTest, testParseAreasRegex) {
 
     std::vector<RelearnTypes::area_name> area_names = NeuronAssignmentAdapter::get_random_area_names(10, mt);
     const auto random_areas = area_names.size();
-    for (auto i = 0; i < num_regex_areas; i++) {
+    for (
+        auto i = 0;
+        i < num_regex_areas;
+        i++) {
         area_names.push_back("REG" + RandomAdapter::get_random_string(RandomAdapter::get_random_integer(1, 20, mt), mt) + "EX");
     }
 
@@ -125,18 +168,43 @@ TEST_F(MonitorParserTest, testParseAreasRegex) {
     auto translator = std::make_shared<LocalAreaTranslator>(area_names, area_ids);
 
     auto regex_neurons = 0;
-    for (auto area_id = random_areas; area_id < area_names.size(); area_id++) {
+    for (
+        auto area_id = random_areas;
+        area_id < area_names.
+
+                  size();
+
+        area_id++) {
         regex_neurons += translator->get_number_neurons_in_area(area_id);
     }
 
     std::string str = "REG.+EX";
     const auto& parsed_ids = MonitorParser::parse_my_ids(str, MPIRank{ 0 }, translator);
 
-    ASSERT_EQ(parsed_ids.size(), regex_neurons);
+    ASSERT_EQ(parsed_ids
+                  .
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+              size(),
+        regex_neurons
+
+    );
+
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         const auto it = std::find(parsed_ids.begin(), parsed_ids.end(), NeuronID{ neuron_id });
 
-        ASSERT_TRUE(area_ids[neuron_id] < random_areas && it == parsed_ids.end() || area_ids[neuron_id] >= random_areas && it != parsed_ids.end());
+        ASSERT_TRUE(area_ids[neuron_id]
+                    < random_areas
+                && it
+                    == parsed_ids.
+
+                       end()
+
+            || area_ids[neuron_id] >= random_areas && it != parsed_ids.
+
+                                                            end()
+
+        );
     }
 }
