@@ -31,7 +31,9 @@ if (CUDA_FOUND)
             relearn_gpu
             PRIVATE
             neurons/models/NeuronModels.cu
-            structure/Octree.cu)
+            structure/Octree.cu
+            # for visual studio
+            ${relearn_gpu_additional_files})
 
     #set_target_properties(relearn_gpu PROPERTIES CUDA_ARCHITECTURES 61)
 
