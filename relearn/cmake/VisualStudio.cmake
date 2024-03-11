@@ -1,4 +1,5 @@
 set(relearn_benchmark_additional_files "" CACHE INTERNAL "")
+set(relearn_gpu_additional_files "" CACHE INTERNAL "")
 set(relearn_harness_additional_files "" CACHE INTERNAL "")
 set(relearn_lib_additional_files "" CACHE INTERNAL "")
 set(relearn_tests_additional_files "" CACHE INTERNAL "")
@@ -7,6 +8,28 @@ set(relearn_tests_cuda_additional_files "" CACHE INTERNAL "")
 if (WIN32) # Benchmark
     list(APPEND relearn_benchmark_additional_files "main.h")
     list(APPEND relearn_benchmark_additional_files "AdapterNeuronModel.h")
+endif ()
+
+if (WIN32) # GPU
+    list(APPEND relearn_gpu_additional_files "gpu/RelearnGPUException.h")
+    list(APPEND relearn_gpu_additional_files "gpu/Commons.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/neurons/NeuronsExtraInfos.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/neurons/input/BackgroundActivity.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/neurons/models/AEIFModel.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/neurons/models/FitzHughNagumoModel.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/neurons/models/IzhikevichModel.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/neurons/models/NeuronModel.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/neurons/models/PoissonModel.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/structure/CudaVector.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/structure/CudaArray.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/structure/Octree.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/structure/OctreeCPUCopy.h")
+    list(APPEND relearn_gpu_additional_files "gpu/structure/VectorTypes.h")
+    list(APPEND relearn_gpu_additional_files "gpu/utils/CudaHelper.h")
+    list(APPEND relearn_gpu_additional_files "gpu/utils/GpuTypes.h")
+    list(APPEND relearn_gpu_additional_files "gpu/utils/Interface.h")
+    list(APPEND relearn_gpu_additional_files "gpu/utils/Macros.h")
+    list(APPEND relearn_gpu_additional_files "gpu/utils/Random.cuh")
 endif ()
 
 if (WIN32) # Harness
@@ -246,4 +269,11 @@ if (WIN32) # Tests
     list(APPEND relearn_tests_additional_files "neuron_id/test_neuron_id.h")
     list(APPEND relearn_tests_additional_files "timers/test_timers.h")
     list(APPEND relearn_tests_additional_files "vec3/test_vec3.h")
+
+    list(APPEND relearn_tests_additional_files "gpu/octree/test_octree_gpu.h")
+    list(APPEND relearn_tests_additional_files "gpu/vec3/test_vec3_gpu.h")
+endif ()
+
+if (WIN32) # Cuda Tests
+    list(APPEND relearn_tests_cuda_additional_files "cuda_vector/test_cuda_vector.cuh")
 endif ()

@@ -45,10 +45,14 @@ TEST_F(KernelTest, testCalculateAttractivenessSameNode) {
 
     OctreeNode<BarnesHutCell> node{};
     node.set_cell_neuron_id(neuron_id);
-    node.set_rank(MPIRank::root_rank());
+    node.
 
-    const auto attractiveness = Kernel<BarnesHutCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id }, position, &node, element_type, signal_type);
-    ASSERT_EQ(attractiveness, 0.0);
+        set_rank(MPIRank::root_rank());
+
+    const auto attractiveness = Kernel<BarnesHutCell>::calculate_attractiveness_to_connect(
+        { MPIRank::root_rank(), neuron_id }, position, &node, element_type, signal_type);
+    ASSERT_EQ(attractiveness,
+        0.0);
 }
 
 TEST_F(KernelTest, testCalculateAttractivenessException) {
@@ -59,12 +63,18 @@ TEST_F(KernelTest, testCalculateAttractivenessException) {
 
     const auto& number_vacant_excitatory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
     const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-    const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-    const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15,
+        mt);
+    const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15,
+        mt);
 
     OctreeNode<FastMultipoleMethodCell> node{};
     node.set_cell_neuron_id(neuron_id_1);
-    node.set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
+    node.
+
+        set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position()
+
+        );
 
     node.set_cell_excitatory_axons_position({});
     node.set_cell_inhibitory_axons_position({});
@@ -77,10 +87,36 @@ TEST_F(KernelTest, testCalculateAttractivenessException) {
     const auto& debug_kernel_string = KernelAdapter::set_random_kernel<FastMultipoleMethodCell>(mt);
 
     using type = Kernel<FastMultipoleMethodCell>;
-    ASSERT_THROW(const auto attr_exc_axons = type::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Axon, SignalType::Excitatory);, RelearnException);
-    ASSERT_THROW(const auto attr_inh_axons = type::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Axon, SignalType::Inhibitory);, RelearnException);
-    ASSERT_THROW(const auto attr_exc_dendrites = type::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Dendrite, SignalType::Excitatory);, RelearnException);
-    ASSERT_THROW(const auto attr_inh_dendrites = type::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Dendrite, SignalType::Inhibitory);, RelearnException);
+
+    ASSERT_THROW(const auto attr_exc_axons = type::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 },
+                     source_position, &node,
+                     ElementType::Axon,
+                     SignalType::Excitatory);
+
+                 , RelearnException);
+
+    ASSERT_THROW(const auto attr_inh_axons = type::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 },
+                     source_position, &node,
+                     ElementType::Axon,
+                     SignalType::Inhibitory);
+
+                 , RelearnException);
+
+    ASSERT_THROW(
+        const auto attr_exc_dendrites = type::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 },
+            source_position, &node,
+            ElementType::Dendrite,
+            SignalType::Excitatory);
+
+        , RelearnException);
+
+    ASSERT_THROW(
+        const auto attr_inh_dendrites = type::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 },
+            source_position, &node,
+            ElementType::Dendrite,
+            SignalType::Inhibitory);
+
+        , RelearnException);
 }
 
 TEST_F(KernelTest, testCreateProbabilityIntervalEmptyVector) {
@@ -96,8 +132,13 @@ TEST_F(KernelTest, testCreateProbabilityIntervalEmptyVector) {
     const auto& [sum, attrs] = Kernel<FastMultipoleMethodCell>::create_probability_interval(
         { MPIRank::root_rank(), neuron_id }, position, {}, element_type, signal_type);
 
-    ASSERT_EQ(sum, 0.0);
-    ASSERT_EQ(0, attrs.size());
+    ASSERT_EQ(sum,
+        0.0);
+    ASSERT_EQ(0, attrs.
+
+                 size()
+
+    );
 }
 
 TEST_F(KernelTest, testCreateProbabilityIntervalAutapseVector) {
@@ -111,22 +152,37 @@ TEST_F(KernelTest, testCreateProbabilityIntervalAutapseVector) {
     const auto number_nodes = NeuronIdAdapter::get_random_number_neurons(mt);
 
     std::vector<OctreeNode<FastMultipoleMethodCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodCell>{} };
-    std::vector<OctreeNode<FastMultipoleMethodCell>*> node_pointers{ number_nodes, nullptr };
+    std::vector<OctreeNode<FastMultipoleMethodCell>*> node_pointers{
+        number_nodes, nullptr
+    };
 
-    for (const auto i : ranges::views::indices(number_nodes)) {
+    for (
+        const auto i :
+        ranges::views::indices(number_nodes)) {
         nodes[i].set_cell_neuron_id(neuron_id);
-        nodes[i].set_rank(MPIRank::root_rank());
-        nodes[i].set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
+        nodes[i].
+
+            set_rank(MPIRank::root_rank());
+
+        nodes[i].
+
+            set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position()
+
+            );
 
         const auto& target_excitatory_axon_position = SimulationAdapter::get_random_position(mt);
         const auto& target_inhibitory_axon_position = SimulationAdapter::get_random_position(mt);
         const auto& target_excitatory_dendrite_position = SimulationAdapter::get_random_position(mt);
         const auto& target_inhibitory_dendrite_position = SimulationAdapter::get_random_position(mt);
 
-        const auto& number_vacant_excitatory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_inhibitory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_excitatory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_inhibitory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_excitatory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_inhibitory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_excitatory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_inhibitory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
 
         nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
         nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
@@ -144,8 +200,13 @@ TEST_F(KernelTest, testCreateProbabilityIntervalAutapseVector) {
     const auto& [sum, attrs] = Kernel<FastMultipoleMethodCell>::create_probability_interval(
         { MPIRank::root_rank(), neuron_id }, position, node_pointers, element_type, signal_type);
 
-    ASSERT_EQ(sum, 0.0);
-    ASSERT_EQ(0, attrs.size());
+    ASSERT_EQ(sum,
+        0.0);
+    ASSERT_EQ(0, attrs.
+
+                 size()
+
+    );
 }
 
 TEST_F(KernelTest, testCreateProbabilityIntervalVectorException) {
@@ -159,21 +220,33 @@ TEST_F(KernelTest, testCreateProbabilityIntervalVectorException) {
     const auto number_nodes = NeuronIdAdapter::get_random_number_neurons(mt);
 
     std::vector<OctreeNode<FastMultipoleMethodCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodCell>{} };
-    std::vector<OctreeNode<FastMultipoleMethodCell>*> node_pointers{ number_nodes, nullptr };
+    std::vector<OctreeNode<FastMultipoleMethodCell>*> node_pointers{
+        number_nodes, nullptr
+    };
 
-    for (const auto i : ranges::views::indices(number_nodes)) {
+    for (
+        const auto i :
+        ranges::views::indices(number_nodes)) {
         nodes[i].set_cell_neuron_id(NeuronIdAdapter::get_random_neuron_id(1000, 1000, mt));
-        nodes[i].set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
+        nodes[i].
+
+            set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position()
+
+            );
 
         const auto& target_excitatory_axon_position = SimulationAdapter::get_random_position(mt);
         const auto& target_inhibitory_axon_position = SimulationAdapter::get_random_position(mt);
         const auto& target_excitatory_dendrite_position = SimulationAdapter::get_random_position(mt);
         const auto& target_inhibitory_dendrite_position = SimulationAdapter::get_random_position(mt);
 
-        const auto& number_vacant_excitatory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_inhibitory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_excitatory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_inhibitory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_excitatory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_inhibitory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_excitatory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_inhibitory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
 
         nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
         nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
@@ -193,7 +266,11 @@ TEST_F(KernelTest, testCreateProbabilityIntervalVectorException) {
 
     using TT = Kernel<FastMultipoleMethodCell>;
 
-    ASSERT_THROW(const auto& val = TT::create_probability_interval({ MPIRank::root_rank(), neuron_id }, position, node_pointers, element_type, signal_type);, RelearnException);
+    ASSERT_THROW(
+        const auto& val = TT::create_probability_interval({ MPIRank::root_rank(), neuron_id }, position, node_pointers,
+            element_type, signal_type);
+
+        , RelearnException);
 }
 
 TEST_F(KernelTest, testCreateProbabilityIntervalRandomVector) {
@@ -207,11 +284,19 @@ TEST_F(KernelTest, testCreateProbabilityIntervalRandomVector) {
     const auto number_nodes = NeuronIdAdapter::get_random_number_neurons(mt);
 
     std::vector<OctreeNode<FastMultipoleMethodCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodCell>{} };
-    std::vector<OctreeNode<FastMultipoleMethodCell>*> node_pointers{ number_nodes, nullptr };
+    std::vector<OctreeNode<FastMultipoleMethodCell>*> node_pointers{
+        number_nodes, nullptr
+    };
 
-    for (const auto i : ranges::views::indices(number_nodes)) {
+    for (
+        const auto i :
+        ranges::views::indices(number_nodes)) {
         nodes[i].set_cell_neuron_id(NeuronIdAdapter::get_random_neuron_id(1000, 1000, mt));
-        nodes[i].set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
+        nodes[i].
+
+            set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position()
+
+            );
         nodes[i].set_rank(MPIRank(0));
 
         const auto& target_excitatory_axon_position = SimulationAdapter::get_random_position(mt);
@@ -219,10 +304,14 @@ TEST_F(KernelTest, testCreateProbabilityIntervalRandomVector) {
         const auto& target_excitatory_dendrite_position = SimulationAdapter::get_random_position(mt);
         const auto& target_inhibitory_dendrite_position = SimulationAdapter::get_random_position(mt);
 
-        const auto& number_vacant_excitatory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_inhibitory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_excitatory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_inhibitory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_excitatory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_inhibitory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_excitatory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_inhibitory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
 
         nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
         nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
@@ -239,8 +328,11 @@ TEST_F(KernelTest, testCreateProbabilityIntervalRandomVector) {
 
     auto total_attractiveness = 0.0;
     std::vector<double> attractivenesses{};
-    for (const auto i : ranges::views::indices(number_nodes)) {
-        const auto attr = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id }, position, &nodes[i], element_type, signal_type);
+    for (
+        const auto i :
+        ranges::views::indices(number_nodes)) {
+        const auto attr = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect(
+            { MPIRank::root_rank(), neuron_id }, position, &nodes[i], element_type, signal_type);
 
         attractivenesses.emplace_back(attr);
         total_attractiveness += attr;
@@ -251,9 +343,26 @@ TEST_F(KernelTest, testCreateProbabilityIntervalRandomVector) {
 
     if (total_attractiveness > 0.0) {
         ASSERT_NEAR(sum, total_attractiveness, eps);
-        ASSERT_EQ(attractivenesses.size(), attrs.size());
+        ASSERT_EQ(attractivenesses
+                      .
 
-        for (const auto i : ranges::views::indices(attrs.size())) {
+                  size(),
+            attrs
+
+                .
+
+            size()
+
+        );
+
+        for (
+            const auto i :
+            ranges::views::indices(attrs
+                                       .
+
+                                   size()
+
+                    )) {
             ASSERT_NEAR(attrs[i], attractivenesses[i], eps);
         }
     }
@@ -270,11 +379,19 @@ TEST_F(KernelTest, testCreateProbabilityIntervalEdgeCase) {
     const auto number_nodes = NeuronIdAdapter::get_random_number_neurons(mt);
 
     std::vector<OctreeNode<FastMultipoleMethodCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodCell>{} };
-    std::vector<OctreeNode<FastMultipoleMethodCell>*> node_pointers{ number_nodes, nullptr };
+    std::vector<OctreeNode<FastMultipoleMethodCell>*> node_pointers{
+        number_nodes, nullptr
+    };
 
-    for (const auto i : ranges::views::indices(number_nodes)) {
+    for (
+        const auto i :
+        ranges::views::indices(number_nodes)) {
         nodes[i].set_cell_neuron_id(NeuronIdAdapter::get_random_neuron_id(1000, 1000, mt));
-        nodes[i].set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
+        nodes[i].
+
+            set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position()
+
+            );
         nodes[i].set_rank(MPIRank(0));
 
         const auto& target_excitatory_axon_position = SimulationAdapter::get_random_position(mt);
@@ -282,10 +399,14 @@ TEST_F(KernelTest, testCreateProbabilityIntervalEdgeCase) {
         const auto& target_excitatory_dendrite_position = SimulationAdapter::get_random_position(mt);
         const auto& target_inhibitory_dendrite_position = SimulationAdapter::get_random_position(mt);
 
-        const auto& number_vacant_excitatory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_inhibitory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_excitatory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_inhibitory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_excitatory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_inhibitory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_excitatory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_inhibitory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
 
         nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
         nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
@@ -302,8 +423,11 @@ TEST_F(KernelTest, testCreateProbabilityIntervalEdgeCase) {
 
     auto total_attractiveness = 0.0;
     std::vector<double> attractivenesses{};
-    for (const auto i : ranges::views::indices(number_nodes)) {
-        const auto attr = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id }, position, &nodes[i], element_type, signal_type);
+    for (
+        const auto i :
+        ranges::views::indices(number_nodes)) {
+        const auto attr = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect(
+            { MPIRank::root_rank(), neuron_id }, position, &nodes[i], element_type, signal_type);
 
         attractivenesses.emplace_back(attr);
         total_attractiveness += attr;
@@ -319,7 +443,9 @@ TEST_F(KernelTest, testCreateProbabilityIntervalEdgeCase) {
 
     attractivenesses.resize(0);
 
-    for (const auto i : ranges::views::indices(number_nodes)) {
+    for (
+        const auto i :
+        ranges::views::indices(number_nodes)) {
         const auto number_values = nodes[i].get_cell().get_number_elements_for(element_type, signal_type);
         if (number_values == 0) {
             attractivenesses.emplace_back(0);
@@ -334,9 +460,25 @@ TEST_F(KernelTest, testCreateProbabilityIntervalEdgeCase) {
     }
 
     ASSERT_NEAR(sum, total_attractiveness, eps);
-    ASSERT_EQ(attractivenesses.size(), attrs.size());
+    ASSERT_EQ(attractivenesses
+                  .
 
-    for (auto i = 0; i < attrs.size(); i++) {
+              size(),
+        attrs
+
+            .
+
+        size()
+
+    );
+
+    for (
+        auto i = 0;
+        i < attrs.
+
+            size();
+
+        i++) {
         ASSERT_NEAR(attrs[i], attractivenesses[i], eps);
     }
 }
@@ -351,7 +493,8 @@ TEST_F(KernelTest, testPickTargetEmpty2) {
 
     const auto& debug_kernel_string = KernelAdapter::set_random_kernel<BarnesHutCell>(mt);
 
-    auto* result = Kernel<BarnesHutCell>::pick_target({ MPIRank::root_rank(), neuron_id }, position, {}, element_type, signal_type);
+    auto* result = Kernel<BarnesHutCell>::pick_target({ MPIRank::root_rank(), neuron_id }, position, {}, element_type,
+        signal_type);
 
     ASSERT_EQ(result, nullptr);
 }
@@ -366,21 +509,33 @@ TEST_F(KernelTest, testPickTargetException) {
     const auto signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
     std::vector<OctreeNode<FastMultipoleMethodCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodCell>{} };
-    std::vector<OctreeNode<FastMultipoleMethodCell>*> node_pointers{ number_nodes, nullptr };
+    std::vector<OctreeNode<FastMultipoleMethodCell>*> node_pointers{
+        number_nodes, nullptr
+    };
 
-    for (const auto i : ranges::views::indices(number_nodes)) {
+    for (
+        const auto i :
+        ranges::views::indices(number_nodes)) {
         nodes[i].set_cell_neuron_id(NeuronIdAdapter::get_random_neuron_id(1000, 1000, mt));
-        nodes[i].set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
+        nodes[i].
+
+            set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position()
+
+            );
 
         const auto& target_excitatory_axon_position = SimulationAdapter::get_random_position(mt);
         const auto& target_inhibitory_axon_position = SimulationAdapter::get_random_position(mt);
         const auto& target_excitatory_dendrite_position = SimulationAdapter::get_random_position(mt);
         const auto& target_inhibitory_dendrite_position = SimulationAdapter::get_random_position(mt);
 
-        const auto& number_vacant_excitatory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_inhibitory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_excitatory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_inhibitory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_excitatory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_inhibitory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_excitatory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_inhibitory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
 
         nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
         nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
@@ -399,7 +554,11 @@ TEST_F(KernelTest, testPickTargetException) {
     const auto& debug_kernel_string = KernelAdapter::set_random_kernel<FastMultipoleMethodCell>(mt);
 
     using TT = Kernel<FastMultipoleMethodCell>;
-    ASSERT_THROW(auto* result = TT::pick_target({ MPIRank::root_rank(), neuron_id }, position, node_pointers, element_type, signal_type);, RelearnException);
+
+    ASSERT_THROW(auto* result = TT::pick_target({ MPIRank::root_rank(), neuron_id }, position, node_pointers, element_type,
+                     signal_type);
+
+                 , RelearnException);
 }
 
 TEST_F(KernelTest, testPickTargetRandom2) {
@@ -412,21 +571,33 @@ TEST_F(KernelTest, testPickTargetRandom2) {
     const auto signal_type = NeuronTypesAdapter::get_random_signal_type(mt);
 
     std::vector<OctreeNode<FastMultipoleMethodCell>> nodes{ number_nodes, OctreeNode<FastMultipoleMethodCell>{} };
-    std::vector<OctreeNode<FastMultipoleMethodCell>*> node_pointers{ number_nodes, nullptr };
+    std::vector<OctreeNode<FastMultipoleMethodCell>*> node_pointers{
+        number_nodes, nullptr
+    };
 
-    for (const auto i : ranges::views::indices(number_nodes)) {
+    for (
+        const auto i :
+        ranges::views::indices(number_nodes)) {
         nodes[i].set_cell_neuron_id(NeuronIdAdapter::get_random_neuron_id(1000, 1000, mt));
-        nodes[i].set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
+        nodes[i].
+
+            set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position()
+
+            );
 
         const auto& target_excitatory_axon_position = SimulationAdapter::get_random_position(mt);
         const auto& target_inhibitory_axon_position = SimulationAdapter::get_random_position(mt);
         const auto& target_excitatory_dendrite_position = SimulationAdapter::get_random_position(mt);
         const auto& target_inhibitory_dendrite_position = SimulationAdapter::get_random_position(mt);
 
-        const auto& number_vacant_excitatory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_inhibitory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_excitatory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
-        const auto& number_vacant_inhibitory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+        const auto& number_vacant_excitatory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_inhibitory_axons = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_excitatory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
+        const auto& number_vacant_inhibitory_dendrites = RandomAdapter::RandomAdapter::get_random_integer<RelearnTypes::counter_type>(
+            0, 15, mt);
 
         nodes[i].set_cell_excitatory_axons_position(target_excitatory_axon_position);
         nodes[i].set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
@@ -441,14 +612,19 @@ TEST_F(KernelTest, testPickTargetRandom2) {
 
     const auto& debug_kernel_string = KernelAdapter::set_random_kernel<FastMultipoleMethodCell>(mt);
 
-    for (const auto i : ranges::views::indices(number_nodes)) {
+    for (
+        const auto i :
+        ranges::views::indices(number_nodes)) {
         auto* result = Kernel<FastMultipoleMethodCell>::
             pick_target({ MPIRank::root_rank(), neuron_id }, position, node_pointers, element_type, signal_type);
 
         if (result == nullptr) {
-            for (auto* ptr : node_pointers) {
-                const auto attraction = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id }, position, ptr, element_type, signal_type);
-                ASSERT_EQ(attraction, 0.0);
+            for (
+                auto* ptr : node_pointers) {
+                const auto attraction = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect(
+                    { MPIRank::root_rank(), neuron_id }, position, ptr, element_type, signal_type);
+                ASSERT_EQ(attraction,
+                    0.0);
             }
 
             continue;

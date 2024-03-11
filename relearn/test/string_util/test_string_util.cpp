@@ -16,7 +16,10 @@
 
 TEST_F(StringUtilTest, testFormatException) {
     auto random_int = RandomAdapter::get_random_integer<int>(1, 999, mt);
-    ASSERT_THROW(auto val = StringUtil::format_int_with_leading_zeros(random_int, 0);, RelearnException);
+
+    ASSERT_THROW(auto val = StringUtil::format_int_with_leading_zeros(random_int, 0);
+
+                 , RelearnException);
 }
 
 TEST_F(StringUtilTest, testFormatFill) {
@@ -187,7 +190,12 @@ TEST_F(StringUtilTest, testStringSplitEmpty) {
     const std::string original = "";
     const auto& split = StringUtil::split_string(original, 'k');
 
-    ASSERT_TRUE(split.empty());
+    ASSERT_TRUE(split
+                    .
+
+                empty()
+
+    );
 }
 
 TEST_F(StringUtilTest, testStringSplitNoDelim) {
@@ -195,8 +203,14 @@ TEST_F(StringUtilTest, testStringSplitNoDelim) {
 
     const auto& split = StringUtil::split_string(original, 'x');
 
-    ASSERT_EQ(split.size(), 1);
-    ASSERT_EQ(split[0], "gukztqns2moa,y.l#sdp+cawö34i3zc\"!$%)=&&%\"\"!°");
+    ASSERT_EQ(split
+                  .
+
+              size(),
+
+        1);
+    ASSERT_EQ(split[0],
+        "gukztqns2moa,y.l#sdp+cawö34i3zc\"!$%)=&&%\"\"!°");
 }
 
 TEST_F(StringUtilTest, testStringSplitOneDelim) {
@@ -204,8 +218,14 @@ TEST_F(StringUtilTest, testStringSplitOneDelim) {
 
     const auto& split = StringUtil::split_string(original, '0');
 
-    ASSERT_EQ(split.size(), 1);
-    ASSERT_EQ(split[0], "");
+    ASSERT_EQ(split
+                  .
+
+              size(),
+
+        1);
+    ASSERT_EQ(split[0],
+        "");
 }
 
 TEST_F(StringUtilTest, testStringSplit) {
@@ -213,14 +233,28 @@ TEST_F(StringUtilTest, testStringSplit) {
 
     const auto& split = StringUtil::split_string(original, ';');
 
-    ASSERT_EQ(split.size(), 9);
-    ASSERT_EQ(split[0], "");
-    ASSERT_EQ(split[1], "hfke");
-    ASSERT_EQ(split[2], "kg83");
-    ASSERT_EQ(split[3], "");
-    ASSERT_EQ(split[4], "058372");
-    ASSERT_EQ(split[5], "058372");
-    ASSERT_EQ(split[6], "4sfsaf ");
-    ASSERT_EQ(split[7], "iousahfu-+30o3q");
-    ASSERT_EQ(split[8], "021u3zhrns");
+    ASSERT_EQ(split
+                  .
+
+              size(),
+
+        9);
+    ASSERT_EQ(split[0],
+        "");
+    ASSERT_EQ(split[1],
+        "hfke");
+    ASSERT_EQ(split[2],
+        "kg83");
+    ASSERT_EQ(split[3],
+        "");
+    ASSERT_EQ(split[4],
+        "058372");
+    ASSERT_EQ(split[5],
+        "058372");
+    ASSERT_EQ(split[6],
+        "4sfsaf ");
+    ASSERT_EQ(split[7],
+        "iousahfu-+30o3q");
+    ASSERT_EQ(split[8],
+        "021u3zhrns");
 }

@@ -18,9 +18,21 @@
 TEST_F(Vec3Test, testVectorEmptyConstructor) {
     const Vec3<double> v{};
 
-    ASSERT_EQ(0.0, v.get_x());
-    ASSERT_EQ(0.0, v.get_y());
-    ASSERT_EQ(0.0, v.get_z());
+    ASSERT_EQ(0.0, v.
+
+                   get_x()
+
+    );
+    ASSERT_EQ(0.0, v.
+
+                   get_y()
+
+    );
+    ASSERT_EQ(0.0, v.
+
+                   get_z()
+
+    );
 }
 
 TEST_F(Vec3Test, testVectorSameValueConstructor) {
@@ -31,9 +43,32 @@ TEST_F(Vec3Test, testVectorSameValueConstructor) {
     std::stringstream ss{};
     ss << val;
 
-    ASSERT_EQ(val, v.get_x()) << ss.str();
-    ASSERT_EQ(val, v.get_y()) << ss.str();
-    ASSERT_EQ(val, v.get_z()) << ss.str();
+    ASSERT_EQ(val, v.
+
+                   get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(val, v.
+
+                   get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(val, v.
+
+                   get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorThreeValuesConstructor) {
@@ -46,9 +81,32 @@ TEST_F(Vec3Test, testVectorThreeValuesConstructor) {
     std::stringstream ss{};
     ss << x << ' ' << y << ' ' << z;
 
-    ASSERT_EQ(x, v.get_x()) << ss.str();
-    ASSERT_EQ(y, v.get_y()) << ss.str();
-    ASSERT_EQ(z, v.get_z()) << ss.str();
+    ASSERT_EQ(x, v.
+
+                 get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y, v.
+
+                 get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z, v.
+
+                 get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorStructuredBinding) {
@@ -63,21 +121,40 @@ TEST_F(Vec3Test, testVectorStructuredBinding) {
 
     const auto& [x2, y2, z2] = v;
 
-    ASSERT_EQ(x, x2) << ss.str();
+    ASSERT_EQ(x, x2) << ss.
+
+                        str();
+
     ASSERT_EQ(y, y2);
     ASSERT_EQ(z, z2);
 
     auto& [x3, y3, z3] = v;
 
-    ASSERT_EQ(x, x3) << ss.str();
-    ASSERT_EQ(y, y3) << ss.str();
-    ASSERT_EQ(z, z3) << ss.str();
+    ASSERT_EQ(x, x3) << ss.
+
+                        str();
+
+    ASSERT_EQ(y, y3) << ss.
+
+                        str();
+
+    ASSERT_EQ(z, z3) << ss.
+
+                        str();
 
     auto [x4, y4, z4] = v;
 
-    ASSERT_EQ(x, x4) << ss.str();
-    ASSERT_EQ(y, y4) << ss.str();
-    ASSERT_EQ(z, z4) << ss.str();
+    ASSERT_EQ(x, x4) << ss.
+
+                        str();
+
+    ASSERT_EQ(y, y4) << ss.
+
+                        str();
+
+    ASSERT_EQ(z, z4) << ss.
+
+                        str();
 
     const auto new_x = SimulationAdapter::get_random_position_element(mt);
     const auto new_y = SimulationAdapter::get_random_position_element(mt);
@@ -89,9 +166,32 @@ TEST_F(Vec3Test, testVectorStructuredBinding) {
     y3 = new_y;
     z3 = new_z;
 
-    ASSERT_EQ(new_x, v.get_x()) << ss.str();
-    ASSERT_EQ(new_y, v.get_y()) << ss.str();
-    ASSERT_EQ(new_z, v.get_z()) << ss.str();
+    ASSERT_EQ(new_x, v.
+
+                     get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(new_y, v.
+
+                     get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(new_z, v.
+
+                     get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorCopyConstructor) {
@@ -106,9 +206,32 @@ TEST_F(Vec3Test, testVectorCopyConstructor) {
 
     const Vec3<double> w = v;
 
-    ASSERT_EQ(x, w.get_x()) << ss.str();
-    ASSERT_EQ(y, w.get_y()) << ss.str();
-    ASSERT_EQ(z, w.get_z()) << ss.str();
+    ASSERT_EQ(x, w.
+
+                 get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y, w.
+
+                 get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z, w.
+
+                 get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorCopyAssignment) {
@@ -124,9 +247,32 @@ TEST_F(Vec3Test, testVectorCopyAssignment) {
     Vec3<double> w{ x + 1.0, y + 1.0, z + 1.0 };
     w = v;
 
-    ASSERT_EQ(x, w.get_x()) << ss.str();
-    ASSERT_EQ(y, w.get_y()) << ss.str();
-    ASSERT_EQ(z, w.get_z()) << ss.str();
+    ASSERT_EQ(x, w.
+
+                 get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y, w.
+
+                 get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z, w.
+
+                 get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorMoveConstructor) {
@@ -141,9 +287,32 @@ TEST_F(Vec3Test, testVectorMoveConstructor) {
 
     const Vec3<double> w = std::move(v);
 
-    ASSERT_EQ(x, w.get_x()) << ss.str();
-    ASSERT_EQ(y, w.get_y()) << ss.str();
-    ASSERT_EQ(z, w.get_z()) << ss.str();
+    ASSERT_EQ(x, w.
+
+                 get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y, w.
+
+                 get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z, w.
+
+                 get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorMoveAssignment) {
@@ -159,9 +328,32 @@ TEST_F(Vec3Test, testVectorMoveAssignment) {
     Vec3<double> w{ x + 1.0, y + 1.0, z + 1.0 };
     w = std::move(v);
 
-    ASSERT_EQ(x, w.get_x()) << ss.str();
-    ASSERT_EQ(y, w.get_y()) << ss.str();
-    ASSERT_EQ(z, w.get_z()) << ss.str();
+    ASSERT_EQ(x, w.
+
+                 get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y, w.
+
+                 get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z, w.
+
+                 get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorSetComponents) {
@@ -183,9 +375,32 @@ TEST_F(Vec3Test, testVectorSetComponents) {
     v.set_y(y2);
     v.set_z(z2);
 
-    ASSERT_EQ(x2, v.get_x()) << ss.str();
-    ASSERT_EQ(y2, v.get_y()) << ss.str();
-    ASSERT_EQ(z2, v.get_z()) << ss.str();
+    ASSERT_EQ(x2, v.
+
+                  get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y2, v.
+
+                  get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z2, v.
+
+                  get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorOperatorPlusVector) {
@@ -201,17 +416,92 @@ TEST_F(Vec3Test, testVectorOperatorPlusVector) {
 
     const auto sum = v + w;
 
-    ASSERT_EQ(x1, v.get_x()) << ss.str();
-    ASSERT_EQ(y1, v.get_y()) << ss.str();
-    ASSERT_EQ(z1, v.get_z()) << ss.str();
+    ASSERT_EQ(x1, v.
 
-    ASSERT_EQ(x2, w.get_x()) << ss.str();
-    ASSERT_EQ(y2, w.get_y()) << ss.str();
-    ASSERT_EQ(z2, w.get_z()) << ss.str();
+                  get_x()
 
-    ASSERT_EQ(x1 + x2, sum.get_x()) << ss.str();
-    ASSERT_EQ(y1 + y2, sum.get_y()) << ss.str();
-    ASSERT_EQ(z1 + z2, sum.get_z()) << ss.str();
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1, v.
+
+                  get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1, v.
+
+                  get_z()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(x2, w.
+
+                  get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y2, w.
+
+                  get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z2, w.
+
+                  get_z()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(x1
+            + x2,
+        sum.
+
+        get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1
+            + y2,
+        sum.
+
+        get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1
+            + z2,
+        sum.
+
+        get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorOperatorMinusVector) {
@@ -227,17 +517,92 @@ TEST_F(Vec3Test, testVectorOperatorMinusVector) {
 
     const auto diff = v - w;
 
-    ASSERT_EQ(x1, v.get_x()) << ss.str();
-    ASSERT_EQ(y1, v.get_y()) << ss.str();
-    ASSERT_EQ(z1, v.get_z()) << ss.str();
+    ASSERT_EQ(x1, v.
 
-    ASSERT_EQ(x2, w.get_x()) << ss.str();
-    ASSERT_EQ(y2, w.get_y()) << ss.str();
-    ASSERT_EQ(z2, w.get_z()) << ss.str();
+                  get_x()
 
-    ASSERT_EQ(x1 - x2, diff.get_x()) << ss.str();
-    ASSERT_EQ(y1 - y2, diff.get_y()) << ss.str();
-    ASSERT_EQ(z1 - z2, diff.get_z()) << ss.str();
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1, v.
+
+                  get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1, v.
+
+                  get_z()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(x2, w.
+
+                  get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y2, w.
+
+                  get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z2, w.
+
+                  get_z()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(x1
+            - x2,
+        diff.
+
+        get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1
+            - y2,
+        diff.
+
+        get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1
+            - z2,
+        diff.
+
+        get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorOperatorPlusScalar) {
@@ -252,13 +617,65 @@ TEST_F(Vec3Test, testVectorOperatorPlusScalar) {
 
     const auto sum = v + scalar;
 
-    ASSERT_EQ(x1, v.get_x()) << ss.str();
-    ASSERT_EQ(y1, v.get_y()) << ss.str();
-    ASSERT_EQ(z1, v.get_z()) << ss.str();
+    ASSERT_EQ(x1, v.
 
-    ASSERT_EQ(x1 + scalar, sum.get_x()) << ss.str();
-    ASSERT_EQ(y1 + scalar, sum.get_y()) << ss.str();
-    ASSERT_EQ(z1 + scalar, sum.get_z()) << ss.str();
+                  get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1, v.
+
+                  get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1, v.
+
+                  get_z()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(x1
+            + scalar,
+        sum.
+
+        get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1
+            + scalar,
+        sum.
+
+        get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1
+            + scalar,
+        sum.
+
+        get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorOperatorMinusScalar) {
@@ -273,13 +690,65 @@ TEST_F(Vec3Test, testVectorOperatorMinusScalar) {
 
     const auto sum = v - scalar;
 
-    ASSERT_EQ(x1, v.get_x()) << ss.str();
-    ASSERT_EQ(y1, v.get_y()) << ss.str();
-    ASSERT_EQ(z1, v.get_z()) << ss.str();
+    ASSERT_EQ(x1, v.
 
-    ASSERT_EQ(x1 - scalar, sum.get_x()) << ss.str();
-    ASSERT_EQ(y1 - scalar, sum.get_y()) << ss.str();
-    ASSERT_EQ(z1 - scalar, sum.get_z()) << ss.str();
+                  get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1, v.
+
+                  get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1, v.
+
+                  get_z()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(x1
+            - scalar,
+        sum.
+
+        get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1
+            - scalar,
+        sum.
+
+        get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1
+            - scalar,
+        sum.
+
+        get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorOperatorMultiplyScalar) {
@@ -294,13 +763,65 @@ TEST_F(Vec3Test, testVectorOperatorMultiplyScalar) {
 
     const auto prod = v * scalar;
 
-    ASSERT_EQ(x1, v.get_x()) << ss.str();
-    ASSERT_EQ(y1, v.get_y()) << ss.str();
-    ASSERT_EQ(z1, v.get_z()) << ss.str();
+    ASSERT_EQ(x1, v.
 
-    ASSERT_EQ(x1 * scalar, prod.get_x()) << ss.str();
-    ASSERT_EQ(y1 * scalar, prod.get_y()) << ss.str();
-    ASSERT_EQ(z1 * scalar, prod.get_z()) << ss.str();
+                  get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1, v.
+
+                  get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1, v.
+
+                  get_z()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(x1
+            * scalar,
+        prod.
+
+        get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1
+            * scalar,
+        prod.
+
+        get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1
+            * scalar,
+        prod.
+
+        get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorOperatorDivideScalar) {
@@ -318,13 +839,65 @@ TEST_F(Vec3Test, testVectorOperatorDivideScalar) {
 
     const auto prod = v / scalar;
 
-    ASSERT_EQ(x1, v.get_x()) << ss.str();
-    ASSERT_EQ(y1, v.get_y()) << ss.str();
-    ASSERT_EQ(z1, v.get_z()) << ss.str();
+    ASSERT_EQ(x1, v.
 
-    ASSERT_EQ(x1 / scalar, prod.get_x()) << ss.str();
-    ASSERT_EQ(y1 / scalar, prod.get_y()) << ss.str();
-    ASSERT_EQ(z1 / scalar, prod.get_z()) << ss.str();
+                  get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1, v.
+
+                  get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1, v.
+
+                  get_z()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(x1
+            / scalar,
+        prod.
+
+        get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1
+            / scalar,
+        prod.
+
+        get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1
+            / scalar,
+        prod.
+
+        get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorOperatorPlusAssignVector) {
@@ -340,9 +913,38 @@ TEST_F(Vec3Test, testVectorOperatorPlusAssignVector) {
 
     v += w;
 
-    ASSERT_EQ(x1 + x2, v.get_x()) << ss.str();
-    ASSERT_EQ(y1 + y2, v.get_y()) << ss.str();
-    ASSERT_EQ(z1 + z2, v.get_z()) << ss.str();
+    ASSERT_EQ(x1
+            + x2,
+        v.
+
+        get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1
+            + y2,
+        v.
+
+        get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1
+            + z2,
+        v.
+
+        get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorOperatorPlusAssignScalar) {
@@ -357,9 +959,38 @@ TEST_F(Vec3Test, testVectorOperatorPlusAssignScalar) {
 
     v += scalar;
 
-    ASSERT_EQ(x1 + scalar, v.get_x()) << ss.str();
-    ASSERT_EQ(y1 + scalar, v.get_y()) << ss.str();
-    ASSERT_EQ(z1 + scalar, v.get_z()) << ss.str();
+    ASSERT_EQ(x1
+            + scalar,
+        v.
+
+        get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1
+            + scalar,
+        v.
+
+        get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1
+            + scalar,
+        v.
+
+        get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorOperatorMinusAssignVector) {
@@ -375,9 +1006,38 @@ TEST_F(Vec3Test, testVectorOperatorMinusAssignVector) {
 
     v -= w;
 
-    ASSERT_EQ(x1 - x2, v.get_x()) << ss.str();
-    ASSERT_EQ(y1 - y2, v.get_y()) << ss.str();
-    ASSERT_EQ(z1 - z2, v.get_z()) << ss.str();
+    ASSERT_EQ(x1
+            - x2,
+        v.
+
+        get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1
+            - y2,
+        v.
+
+        get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1
+            - z2,
+        v.
+
+        get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorOperatorMinusAssignScalar) {
@@ -392,9 +1052,38 @@ TEST_F(Vec3Test, testVectorOperatorMinusAssignScalar) {
 
     v -= scalar;
 
-    ASSERT_EQ(x1 - scalar, v.get_x()) << ss.str();
-    ASSERT_EQ(y1 - scalar, v.get_y()) << ss.str();
-    ASSERT_EQ(z1 - scalar, v.get_z()) << ss.str();
+    ASSERT_EQ(x1
+            - scalar,
+        v.
+
+        get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1
+            - scalar,
+        v.
+
+        get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1
+            - scalar,
+        v.
+
+        get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorOperatorMultiplyAssignScalar) {
@@ -409,9 +1098,38 @@ TEST_F(Vec3Test, testVectorOperatorMultiplyAssignScalar) {
 
     v *= scalar;
 
-    ASSERT_EQ(x1 * scalar, v.get_x()) << ss.str();
-    ASSERT_EQ(y1 * scalar, v.get_y()) << ss.str();
-    ASSERT_EQ(z1 * scalar, v.get_z()) << ss.str();
+    ASSERT_EQ(x1
+            * scalar,
+        v.
+
+        get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1
+            * scalar,
+        v.
+
+        get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1
+            * scalar,
+        v.
+
+        get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorOperatorDivideAssignScalar) {
@@ -429,9 +1147,38 @@ TEST_F(Vec3Test, testVectorOperatorDivideAssignScalar) {
 
     v /= scalar;
 
-    ASSERT_EQ(x1 / scalar, v.get_x()) << ss.str();
-    ASSERT_EQ(y1 / scalar, v.get_y()) << ss.str();
-    ASSERT_EQ(z1 / scalar, v.get_z()) << ss.str();
+    ASSERT_EQ(x1
+            / scalar,
+        v.
+
+        get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y1
+            / scalar,
+        v.
+
+        get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z1
+            / scalar,
+        v.
+
+        get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorVolume) {
@@ -443,11 +1190,41 @@ TEST_F(Vec3Test, testVectorVolume) {
 
     const auto volume = x * y * z;
 
-    ASSERT_EQ(volume, v.get_volume()) << ss.str();
+    ASSERT_EQ(volume, v.
 
-    ASSERT_EQ(x, v.get_x()) << ss.str();
-    ASSERT_EQ(y, v.get_y()) << ss.str();
-    ASSERT_EQ(z, v.get_z()) << ss.str();
+                      get_volume()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(x, v.
+
+                 get_x()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(y, v.
+
+                 get_y()
+
+            )
+        << ss.
+
+           str();
+
+    ASSERT_EQ(z, v.
+
+                 get_z()
+
+            )
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorEqual) {
@@ -463,7 +1240,10 @@ TEST_F(Vec3Test, testVectorEqual) {
 
     const auto is_equal = v_1 == v_2;
 
-    ASSERT_TRUE(is_equal) << ss.str();
+    ASSERT_TRUE(is_equal)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorUnequal) {
@@ -487,11 +1267,30 @@ TEST_F(Vec3Test, testVectorUnequal) {
     const auto is_equal_5 = v_1 == v_5;
     const auto is_equal_6 = v_1 == v_6;
 
-    ASSERT_FALSE(is_equal_2) << ss.str();
-    ASSERT_FALSE(is_equal_3) << ss.str();
-    ASSERT_FALSE(is_equal_4) << ss.str();
-    ASSERT_FALSE(is_equal_5) << ss.str();
-    ASSERT_FALSE(is_equal_6) << ss.str();
+    ASSERT_FALSE(is_equal_2)
+        << ss.
+
+           str();
+
+    ASSERT_FALSE(is_equal_3)
+        << ss.
+
+           str();
+
+    ASSERT_FALSE(is_equal_4)
+        << ss.
+
+           str();
+
+    ASSERT_FALSE(is_equal_5)
+        << ss.
+
+           str();
+
+    ASSERT_FALSE(is_equal_6)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorComponentwiseMinMax) {
@@ -522,13 +1321,19 @@ TEST_F(Vec3Test, testVectorComponentwiseMinMax) {
 
     v_1.calculate_componentwise_maximum(v_2);
     const auto is_equal_max = v_1 == v_max;
-    ASSERT_TRUE(is_equal_max) << ss.str();
+    ASSERT_TRUE(is_equal_max)
+        << ss.
+
+           str();
 
     v_1 = Vec3<double>(x1, y1, z1);
 
     v_1.calculate_componentwise_minimum(v_2);
     const auto is_equal_min = v_1 == v_min;
-    ASSERT_TRUE(is_equal_min) << ss.str();
+    ASSERT_TRUE(is_equal_min)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorMinMax) {
@@ -546,14 +1351,20 @@ TEST_F(Vec3Test, testVectorMinMax) {
 
     const auto is_equal_max = is_there_max && is_bound_max;
 
-    ASSERT_TRUE(is_equal_max) << ss.str();
+    ASSERT_TRUE(is_equal_max)
+        << ss.
+
+           str();
 
     const auto is_there_min = (x == min) || (y == min) || (z == min);
     const auto is_bound_min = (x >= min) || (y >= min) || (z >= min);
 
     const auto is_equal_min = is_there_min && is_bound_min;
 
-    ASSERT_TRUE(is_equal_min) << ss.str();
+    ASSERT_TRUE(is_equal_min)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorComponentwiseFloor) {
@@ -579,7 +1390,10 @@ TEST_F(Vec3Test, testVectorComponentwiseFloor) {
 
     const auto is_equal = v_size_t == v_floored;
 
-    ASSERT_TRUE(is_equal) << ss.str();
+    ASSERT_TRUE(is_equal)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorComponentwiseFloorExceptionX) {
@@ -593,7 +1407,13 @@ TEST_F(Vec3Test, testVectorComponentwiseFloorExceptionX) {
     ss << x << ' ' << y << ' ' << z;
 
     const Vec3<double> v{ x, y, z };
-    ASSERT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException) << ss.str();
+    ASSERT_THROW(Vec3<size_t>
+                     v_floored
+        = v.floor_componentwise(),
+        RelearnException)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorComponentwiseFloorExceptionY) {
@@ -607,7 +1427,13 @@ TEST_F(Vec3Test, testVectorComponentwiseFloorExceptionY) {
     ss << x << ' ' << y << ' ' << z;
 
     const Vec3<double> v{ x, y, z };
-    ASSERT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException) << ss.str();
+    ASSERT_THROW(Vec3<size_t>
+                     v_floored
+        = v.floor_componentwise(),
+        RelearnException)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorComponentwiseFloorExceptionZ) {
@@ -621,7 +1447,13 @@ TEST_F(Vec3Test, testVectorComponentwiseFloorExceptionZ) {
     ss << x << ' ' << y << ' ' << z;
 
     const Vec3<double> v{ x, y, z };
-    ASSERT_THROW(Vec3<size_t> v_floored = v.floor_componentwise(), RelearnException) << ss.str();
+    ASSERT_THROW(Vec3<size_t>
+                     v_floored
+        = v.floor_componentwise(),
+        RelearnException)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorFactorial) {
@@ -688,7 +1520,9 @@ TEST_F(Vec3Test, testVectorNorm) {
     const auto sum = x_p + y_p + z_p;
     const auto p_norm = pow(sum, 1.0 / p);
 
-    ASSERT_NEAR(v_normed, p_norm, eps) << ss.str();
+    ASSERT_NEAR(v_normed, p_norm, eps) << ss.
+
+                                          str();
 }
 
 TEST_F(Vec3Test, testVectorNorm1) {
@@ -709,7 +1543,9 @@ TEST_F(Vec3Test, testVectorNorm1) {
 
     const auto sum = xx + yy + zz;
 
-    ASSERT_NEAR(v_normed, sum, eps) << ss.str();
+    ASSERT_NEAR(v_normed, sum, eps) << ss.
+
+                                       str();
 }
 
 TEST_F(Vec3Test, testVectorNorm2) {
@@ -732,8 +1568,13 @@ TEST_F(Vec3Test, testVectorNorm2) {
     const auto sum = xx + yy + zz;
     const auto root = sqrt(sum);
 
-    ASSERT_NEAR(v_normed, root, eps) << ss.str();
-    ASSERT_NEAR(v_normed_squared, sum, eps) << ss.str();
+    ASSERT_NEAR(v_normed, root, eps) << ss.
+
+                                        str();
+
+    ASSERT_NEAR(v_normed_squared, sum, eps) << ss.
+
+                                               str();
 }
 
 TEST_F(Vec3Test, testVectorNormException) {
@@ -749,7 +1590,11 @@ TEST_F(Vec3Test, testVectorNormException) {
 
     const Vec3<double> v{ x, y, z };
 
-    ASSERT_THROW(auto v_normed = v.calculate_p_norm(p), RelearnException) << ss.str();
+    ASSERT_THROW(auto v_normed = v.calculate_p_norm(p), RelearnException)
+
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorRound) {
@@ -787,13 +1632,32 @@ TEST_F(Vec3Test, testVectorRound) {
     const auto y_rounded_div_rounded = round(y_rounded_div);
     const auto z_rounded_div_rounded = round(z_rounded_div);
 
-    ASSERT_TRUE(x_in_expected) << ss.str();
-    ASSERT_TRUE(y_in_expected) << ss.str();
-    ASSERT_TRUE(z_in_expected) << ss.str();
+    ASSERT_TRUE(x_in_expected)
+        << ss.
 
-    ASSERT_NEAR(x_rounded_div, x_rounded_div_rounded, eps) << ss.str();
-    ASSERT_NEAR(y_rounded_div, y_rounded_div_rounded, eps) << ss.str();
-    ASSERT_NEAR(z_rounded_div, z_rounded_div_rounded, eps) << ss.str();
+           str();
+
+    ASSERT_TRUE(y_in_expected)
+        << ss.
+
+           str();
+
+    ASSERT_TRUE(z_in_expected)
+        << ss.
+
+           str();
+
+    ASSERT_NEAR(x_rounded_div, x_rounded_div_rounded, eps) << ss.
+
+                                                              str();
+
+    ASSERT_NEAR(y_rounded_div, y_rounded_div_rounded, eps) << ss.
+
+                                                              str();
+
+    ASSERT_NEAR(z_rounded_div, z_rounded_div_rounded, eps) << ss.
+
+                                                              str();
 }
 
 TEST_F(Vec3Test, testVectorOrderEqual) {
@@ -808,7 +1672,10 @@ TEST_F(Vec3Test, testVectorOrderEqual) {
     const Vec3<double> v_2{ x, y, z };
 
     const auto is_smaller = v_1 < v_2;
-    ASSERT_FALSE(is_smaller) << ss.str();
+    ASSERT_FALSE(is_smaller)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorOrderSmallerX) {
@@ -826,10 +1693,16 @@ TEST_F(Vec3Test, testVectorOrderSmallerX) {
     const Vec3<double> v_2{ x + offset, y, z };
 
     const auto is_smaller_1_2 = v_1 < v_2;
-    ASSERT_TRUE(is_smaller_1_2) << ss.str();
+    ASSERT_TRUE(is_smaller_1_2)
+        << ss.
+
+           str();
 
     const auto is_smaller_2_1 = v_2 < v_1;
-    ASSERT_FALSE(is_smaller_2_1) << ss.str();
+    ASSERT_FALSE(is_smaller_2_1)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorOrderSmallerY) {
@@ -847,10 +1720,16 @@ TEST_F(Vec3Test, testVectorOrderSmallerY) {
     const Vec3<double> v_2{ x, y + offset, z };
 
     const auto is_smaller_1_2 = v_1 < v_2;
-    ASSERT_TRUE(is_smaller_1_2) << ss.str();
+    ASSERT_TRUE(is_smaller_1_2)
+        << ss.
+
+           str();
 
     const auto is_smaller_2_1 = v_2 < v_1;
-    ASSERT_FALSE(is_smaller_2_1) << ss.str();
+    ASSERT_FALSE(is_smaller_2_1)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorOrderSmallerZ) {
@@ -868,10 +1747,16 @@ TEST_F(Vec3Test, testVectorOrderSmallerZ) {
     const Vec3<double> v_2{ x, y, z + offset };
 
     const auto is_smaller_1_2 = v_1 < v_2;
-    ASSERT_TRUE(is_smaller_1_2) << ss.str();
+    ASSERT_TRUE(is_smaller_1_2)
+        << ss.
+
+           str();
 
     const auto is_smaller_2_1 = v_2 < v_1;
-    ASSERT_FALSE(is_smaller_2_1) << ss.str();
+    ASSERT_FALSE(is_smaller_2_1)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorOrder) {
@@ -902,10 +1787,18 @@ TEST_F(Vec3Test, testVectorOrder) {
     const auto connected = is_smaller_1_2 || is_smaller_2_1;
 
     if (connected) {
-        ASSERT_FALSE(is_smaller_1_2 && is_smaller_2_1) << ss.str();
+        ASSERT_FALSE(is_smaller_1_2
+            && is_smaller_2_1)
+            << ss.
+
+               str();
+
     } else {
         const auto is_equal = v_1 == v_2;
-        ASSERT_TRUE(is_equal) << ss.str();
+        ASSERT_TRUE(is_equal)
+            << ss.
+
+               str();
     }
 }
 
@@ -926,7 +1819,10 @@ TEST_F(Vec3Test, testVectorCast) {
     const Vec3<size_t> v_size_t{ x_size_t, y_size_t, z_size_t };
 
     const auto is_equal = v_casted == v_size_t;
-    ASSERT_TRUE(is_equal) << ss.str();
+    ASSERT_TRUE(is_equal)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorInBoxNoThrow) {
@@ -945,7 +1841,9 @@ TEST_F(Vec3Test, testVectorInBoxNoThrow) {
     const Vec3<double> v{ x1, y1, z1 };
     const Vec3<double> w{ x2, y2, z2 };
 
-    ASSERT_NO_THROW(std::ignore = w.check_in_box(v, v)) << ss.str();
+    ASSERT_NO_THROW(std::ignore = w.check_in_box(v, v)) << ss.
+
+                                                           str();
 }
 
 TEST_F(Vec3Test, testVectorInBoxTrue) {
@@ -979,7 +1877,10 @@ TEST_F(Vec3Test, testVectorInBoxTrue) {
     const Vec3<double> v{ x3, y3, z3 };
 
     const auto is_in_box = v.check_in_box(v_min, v_max);
-    ASSERT_TRUE(is_in_box) << ss.str();
+    ASSERT_TRUE(is_in_box)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorInBoxFalseXlarge) {
@@ -1013,7 +1914,10 @@ TEST_F(Vec3Test, testVectorInBoxFalseXlarge) {
     const Vec3<double> v{ x3, y3, z3 };
 
     const auto is_in_box = v.check_in_box(v_min, v_max);
-    ASSERT_FALSE(is_in_box) << ss.str();
+    ASSERT_FALSE(is_in_box)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorInBoxFalseYlarge) {
@@ -1047,7 +1951,10 @@ TEST_F(Vec3Test, testVectorInBoxFalseYlarge) {
     const Vec3<double> v{ x3, y3, z3 };
 
     const auto is_in_box = v.check_in_box(v_min, v_max);
-    ASSERT_FALSE(is_in_box) << ss.str();
+    ASSERT_FALSE(is_in_box)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorInBoxFalseZlarge) {
@@ -1081,7 +1988,10 @@ TEST_F(Vec3Test, testVectorInBoxFalseZlarge) {
     const Vec3<double> v{ x3, y3, z3 };
 
     const auto is_in_box = v.check_in_box(v_min, v_max);
-    ASSERT_FALSE(is_in_box) << ss.str();
+    ASSERT_FALSE(is_in_box)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorInBoxFalseXsmall) {
@@ -1115,7 +2025,10 @@ TEST_F(Vec3Test, testVectorInBoxFalseXsmall) {
     const Vec3<double> v{ x3, y3, z3 };
 
     const auto is_in_box = v.check_in_box(v_min, v_max);
-    ASSERT_FALSE(is_in_box) << ss.str();
+    ASSERT_FALSE(is_in_box)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorInBoxFalseYsmall) {
@@ -1149,7 +2062,10 @@ TEST_F(Vec3Test, testVectorInBoxFalseYsmall) {
     const Vec3<double> v{ x3, y3, z3 };
 
     const auto is_in_box = v.check_in_box(v_min, v_max);
-    ASSERT_FALSE(is_in_box) << ss.str();
+    ASSERT_FALSE(is_in_box)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorInBoxFalseZsmall) {
@@ -1183,7 +2099,10 @@ TEST_F(Vec3Test, testVectorInBoxFalseZsmall) {
     const Vec3<double> v{ x3, y3, z3 };
 
     const auto is_in_box = v.check_in_box(v_min, v_max);
-    ASSERT_FALSE(is_in_box) << ss.str();
+    ASSERT_FALSE(is_in_box)
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorInBoxExceptionX) {
@@ -1216,7 +2135,11 @@ TEST_F(Vec3Test, testVectorInBoxExceptionX) {
 
     const Vec3<double> v{ x3, y3, z3 };
 
-    ASSERT_THROW(const auto is_in_box = v.check_in_box(v_min, v_max), RelearnException) << ss.str();
+    ASSERT_THROW(const auto is_in_box = v.check_in_box(v_min, v_max), RelearnException)
+
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorInBoxExceptionY) {
@@ -1249,7 +2172,11 @@ TEST_F(Vec3Test, testVectorInBoxExceptionY) {
 
     const Vec3<double> v{ x3, y3, z3 };
 
-    ASSERT_THROW(const auto is_in_box = v.check_in_box(v_min, v_max), RelearnException) << ss.str();
+    ASSERT_THROW(const auto is_in_box = v.check_in_box(v_min, v_max), RelearnException)
+
+        << ss.
+
+           str();
 }
 
 TEST_F(Vec3Test, testVectorInBoxExceptionZ) {
@@ -1282,5 +2209,9 @@ TEST_F(Vec3Test, testVectorInBoxExceptionZ) {
 
     const Vec3<double> v{ x3, y3, z3 };
 
-    ASSERT_THROW(const auto is_in_box = v.check_in_box(v_min, v_max), RelearnException) << ss.str();
+    ASSERT_THROW(const auto is_in_box = v.check_in_box(v_min, v_max), RelearnException)
+
+        << ss.
+
+           str();
 }

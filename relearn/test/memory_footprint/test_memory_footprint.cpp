@@ -17,8 +17,20 @@
 #include <vector>
 
 TEST_F(MemoryFootprintTest, testInsert) {
-    if (MPIWrapper::get_number_ranks() != 1) {
-        if (MPIWrapper::get_my_rank() == MPIRank::root_rank()) {
+    if (
+
+        MPIWrapper::get_number_ranks()
+
+        != 1) {
+        if (
+
+            MPIWrapper::get_my_rank()
+
+            ==
+
+            MPIRank::root_rank()
+
+        ) {
             std::cerr << "Test only works with 1 MPI ranks.\n";
         }
 
@@ -31,8 +43,20 @@ TEST_F(MemoryFootprintTest, testInsert) {
 }
 
 TEST_F(MemoryFootprintTest, testInsertTypes) {
-    if (MPIWrapper::get_number_ranks() != 1) {
-        if (MPIWrapper::get_my_rank() == MPIRank::root_rank()) {
+    if (
+
+        MPIWrapper::get_number_ranks()
+
+        != 1) {
+        if (
+
+            MPIWrapper::get_my_rank()
+
+            ==
+
+            MPIRank::root_rank()
+
+        ) {
             std::cerr << "Test only works with 1 MPI ranks.\n";
         }
 
@@ -61,15 +85,31 @@ TEST_F(MemoryFootprintTest, testInsertTypes) {
 
     MemoryFootprint mf{ 5 };
     mf.emplace("Hello", 100);
-    mf.emplace(mem, 200);
-    mf.emplace(const_mem, 300);
-    mf.emplace(std::string("Moveable string"), 400);
-    mf.emplace(constant_string, 500);
+    mf.emplace(mem,
+        200);
+    mf.emplace(const_mem,
+        300);
+    mf.emplace(std::string("Moveable string"),
+        400);
+    mf.emplace(constant_string,
+        500);
 }
 
 TEST_F(MemoryFootprintTest, testRetrieveTypes) {
-    if (MPIWrapper::get_number_ranks() != 1) {
-        if (MPIWrapper::get_my_rank() == MPIRank::root_rank()) {
+    if (
+
+        MPIWrapper::get_number_ranks()
+
+        != 1) {
+        if (
+
+            MPIWrapper::get_my_rank()
+
+            ==
+
+            MPIRank::root_rank()
+
+        ) {
             std::cerr << "Test only works with 1 MPI ranks.\n";
         }
 
@@ -98,31 +138,67 @@ TEST_F(MemoryFootprintTest, testRetrieveTypes) {
 
     MemoryFootprint mf{ 5 };
     mf.emplace("Hello", 100);
-    mf.emplace(mem, 200);
-    mf.emplace(const_mem, 300);
-    mf.emplace(std::string("Moveable string"), 400);
-    mf.emplace(constant_string, 500);
+    mf.emplace(mem,
+        200);
+    mf.emplace(const_mem,
+        300);
+    mf.emplace(std::string("Moveable string"),
+        400);
+    mf.emplace(constant_string,
+        500);
 
     const auto& dict = mf.get_descriptions();
 
-    ASSERT_EQ(dict.size(), 5);
+    ASSERT_EQ(dict
+                  .
 
-    ASSERT_TRUE(dict.contains("char"));
-    ASSERT_TRUE(dict.contains("const"));
-    ASSERT_TRUE(dict.contains("Constant string"));
-    ASSERT_TRUE(dict.contains("Moveable string"));
-    ASSERT_TRUE(dict.contains("Hello"));
+              size(),
 
-    ASSERT_EQ(dict.at("Hello"), 100);
-    ASSERT_EQ(dict.at("char"), 200);
-    ASSERT_EQ(dict.at("const"), 300);
-    ASSERT_EQ(dict.at("Moveable string"), 400);
-    ASSERT_EQ(dict.at("Constant string"), 500);
+        5);
+
+    ASSERT_TRUE(dict
+                    .contains("char"));
+    ASSERT_TRUE(dict
+                    .contains("const"));
+    ASSERT_TRUE(dict
+                    .contains("Constant string"));
+    ASSERT_TRUE(dict
+                    .contains("Moveable string"));
+    ASSERT_TRUE(dict
+                    .contains("Hello"));
+
+    ASSERT_EQ(dict
+                  .at("Hello"),
+        100);
+    ASSERT_EQ(dict
+                  .at("char"),
+        200);
+    ASSERT_EQ(dict
+                  .at("const"),
+        300);
+    ASSERT_EQ(dict
+                  .at("Moveable string"),
+        400);
+    ASSERT_EQ(dict
+                  .at("Constant string"),
+        500);
 }
 
 TEST_F(MemoryFootprintTest, testRetrieve) {
-    if (MPIWrapper::get_number_ranks() != 1) {
-        if (MPIWrapper::get_my_rank() == MPIRank::root_rank()) {
+    if (
+
+        MPIWrapper::get_number_ranks()
+
+        != 1) {
+        if (
+
+            MPIWrapper::get_my_rank()
+
+            ==
+
+            MPIRank::root_rank()
+
+        ) {
             std::cerr << "Test only works with 1 MPI ranks.\n";
         }
 
@@ -141,21 +217,54 @@ TEST_F(MemoryFootprintTest, testRetrieve) {
 
     const auto& dict = mf.get_descriptions();
 
-    ASSERT_EQ(dict.size(), 8);
+    ASSERT_EQ(dict
+                  .
 
-    ASSERT_EQ(dict.at("Hello 1"), 4);
-    ASSERT_EQ(dict.at("Hello 2"), 4);
-    ASSERT_EQ(dict.at("Hello 3"), 4);
-    ASSERT_EQ(dict.at("Hello 4"), 4);
-    ASSERT_EQ(dict.at("Hello 5"), 4);
-    ASSERT_EQ(dict.at("Hello 6"), 4);
-    ASSERT_EQ(dict.at("Hello 7"), 4);
-    ASSERT_EQ(dict.at("Hello 8"), 4);
+              size(),
+
+        8);
+
+    ASSERT_EQ(dict
+                  .at("Hello 1"),
+        4);
+    ASSERT_EQ(dict
+                  .at("Hello 2"),
+        4);
+    ASSERT_EQ(dict
+                  .at("Hello 3"),
+        4);
+    ASSERT_EQ(dict
+                  .at("Hello 4"),
+        4);
+    ASSERT_EQ(dict
+                  .at("Hello 5"),
+        4);
+    ASSERT_EQ(dict
+                  .at("Hello 6"),
+        4);
+    ASSERT_EQ(dict
+                  .at("Hello 7"),
+        4);
+    ASSERT_EQ(dict
+                  .at("Hello 8"),
+        4);
 }
 
 TEST_F(MemoryFootprintTest, testOverwrite) {
-    if (MPIWrapper::get_number_ranks() != 1) {
-        if (MPIWrapper::get_my_rank() == MPIRank::root_rank()) {
+    if (
+
+        MPIWrapper::get_number_ranks()
+
+        != 1) {
+        if (
+
+            MPIWrapper::get_my_rank()
+
+            ==
+
+            MPIRank::root_rank()
+
+        ) {
             std::cerr << "Test only works with 1 MPI ranks.\n";
         }
 
@@ -183,14 +292,35 @@ TEST_F(MemoryFootprintTest, testOverwrite) {
 
     const auto& dict = mf.get_descriptions();
 
-    ASSERT_EQ(dict.size(), 8);
+    ASSERT_EQ(dict
+                  .
 
-    ASSERT_EQ(dict.at("Hello 1"), 4);
-    ASSERT_EQ(dict.at("Hello 2"), 4);
-    ASSERT_EQ(dict.at("Hello 3"), 4);
-    ASSERT_EQ(dict.at("Hello 4"), 4);
-    ASSERT_EQ(dict.at("Hello 5"), 4);
-    ASSERT_EQ(dict.at("Hello 6"), 4);
-    ASSERT_EQ(dict.at("Hello 7"), 4);
-    ASSERT_EQ(dict.at("Hello 8"), 4);
+              size(),
+
+        8);
+
+    ASSERT_EQ(dict
+                  .at("Hello 1"),
+        4);
+    ASSERT_EQ(dict
+                  .at("Hello 2"),
+        4);
+    ASSERT_EQ(dict
+                  .at("Hello 3"),
+        4);
+    ASSERT_EQ(dict
+                  .at("Hello 4"),
+        4);
+    ASSERT_EQ(dict
+                  .at("Hello 5"),
+        4);
+    ASSERT_EQ(dict
+                  .at("Hello 6"),
+        4);
+    ASSERT_EQ(dict
+                  .at("Hello 7"),
+        4);
+    ASSERT_EQ(dict
+                  .at("Hello 8"),
+        4);
 }

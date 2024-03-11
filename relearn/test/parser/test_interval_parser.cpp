@@ -20,19 +20,35 @@ TEST_F(IntervalParserTest, testParseInterval) {
 
     const auto& opt_interval = IntervalParser::parse_interval(description);
 
-    ASSERT_TRUE(opt_interval.has_value());
+    ASSERT_TRUE(opt_interval
+                    .
+
+                has_value()
+
+    );
 
     const auto& interval = opt_interval.value();
 
-    ASSERT_EQ(golden_interval.begin, interval.begin);
-    ASSERT_EQ(golden_interval.end, interval.end);
-    ASSERT_EQ(golden_interval.frequency, interval.frequency);
+    ASSERT_EQ(golden_interval
+                  .begin,
+        interval.begin);
+    ASSERT_EQ(golden_interval
+                  .end,
+        interval.end);
+    ASSERT_EQ(golden_interval
+                  .frequency,
+        interval.frequency);
 }
 
 TEST_F(IntervalParserTest, testParseIntervalFail1) {
     const auto& opt_interval = IntervalParser::parse_interval({});
 
-    ASSERT_FALSE(opt_interval.has_value());
+    ASSERT_FALSE(opt_interval
+                     .
+
+                 has_value()
+
+    );
 }
 
 TEST_F(IntervalParserTest, testParseIntervalFail2) {
@@ -51,7 +67,12 @@ TEST_F(IntervalParserTest, testParseIntervalFail2) {
 
     const auto& opt_interval = IntervalParser::parse_interval(description);
 
-    ASSERT_FALSE(opt_interval.has_value());
+    ASSERT_FALSE(opt_interval
+                     .
+
+                 has_value()
+
+    );
 }
 
 TEST_F(IntervalParserTest, testParseIntervalFail3) {
@@ -70,7 +91,12 @@ TEST_F(IntervalParserTest, testParseIntervalFail3) {
 
     const auto& opt_interval = IntervalParser::parse_interval(description);
 
-    ASSERT_FALSE(opt_interval.has_value());
+    ASSERT_FALSE(opt_interval
+                     .
+
+                 has_value()
+
+    );
 }
 
 TEST_F(IntervalParserTest, testParseIntervalFail4) {
@@ -90,7 +116,12 @@ TEST_F(IntervalParserTest, testParseIntervalFail4) {
 
     const auto& opt_interval = IntervalParser::parse_interval(description);
 
-    ASSERT_FALSE(opt_interval.has_value());
+    ASSERT_FALSE(opt_interval
+                     .
+
+                 has_value()
+
+    );
 }
 
 TEST_F(IntervalParserTest, testParseIntervalFail5) {
@@ -110,7 +141,12 @@ TEST_F(IntervalParserTest, testParseIntervalFail5) {
 
     const auto& opt_interval = IntervalParser::parse_interval(description);
 
-    ASSERT_FALSE(opt_interval.has_value());
+    ASSERT_FALSE(opt_interval
+                     .
+
+                 has_value()
+
+    );
 }
 
 TEST_F(IntervalParserTest, testParseIntervalFail6) {
@@ -130,14 +166,21 @@ TEST_F(IntervalParserTest, testParseIntervalFail6) {
 
     const auto& opt_interval = IntervalParser::parse_interval(description);
 
-    ASSERT_FALSE(opt_interval.has_value());
+    ASSERT_FALSE(opt_interval
+                     .
+
+                 has_value()
+
+    );
 }
 
 TEST_F(IntervalParserTest, testParseIntervals1) {
     std::vector<Interval> golden_intervals{};
     std::stringstream ss{};
 
-    for (auto i = 0; i < 10; i++) {
+    for (
+        auto i = 0;
+        i < 10; i++) {
         const auto& [interval, description] = IntervalAdapter::generate_random_interval_description(mt);
         golden_intervals.emplace_back(interval);
         ss << description;
@@ -149,7 +192,9 @@ TEST_F(IntervalParserTest, testParseIntervals1) {
 
     const auto& intervals = IntervalParser::parse_description_as_intervals(ss.str());
 
-    for (auto i = 0; i < 10; i++) {
+    for (
+        auto i = 0;
+        i < 10; i++) {
         ASSERT_EQ(golden_intervals[i], intervals[i]);
     }
 }
@@ -158,7 +203,9 @@ TEST_F(IntervalParserTest, testParseInterval2) {
     std::vector<Interval> golden_intervals{};
     std::stringstream ss{};
 
-    for (auto i = 0; i < 10; i++) {
+    for (
+        auto i = 0;
+        i < 10; i++) {
         const auto& [interval, description] = IntervalAdapter::generate_random_interval_description(mt);
         golden_intervals.emplace_back(interval);
         ss << description;
@@ -168,24 +215,41 @@ TEST_F(IntervalParserTest, testParseInterval2) {
 
     const auto& intervals = IntervalParser::parse_description_as_intervals(ss.str());
 
-    ASSERT_EQ(intervals.size(), 10);
+    ASSERT_EQ(intervals
+                  .
+
+              size(),
+
+        10);
 }
 
 TEST_F(IntervalParserTest, testParseIntervalsFail1) {
     const auto& intervals = IntervalParser::parse_description_as_intervals({});
-    ASSERT_TRUE(intervals.empty());
+    ASSERT_TRUE(intervals
+                    .
+
+                empty()
+
+    );
 }
 
 TEST_F(IntervalParserTest, testParseIntervalsFail2) {
     const auto& intervals = IntervalParser::parse_description_as_intervals("sgahkllkrduf,'�.;f�lsa�df::SAfd--dfasdjf45");
-    ASSERT_TRUE(intervals.empty());
+    ASSERT_TRUE(intervals
+                    .
+
+                empty()
+
+    );
 }
 
 TEST_F(IntervalParserTest, testParseIntervalsFail3) {
     std::vector<Interval> golden_intervals{};
     std::stringstream ss{};
 
-    for (auto i = 0; i < 10; i++) {
+    for (
+        auto i = 0;
+        i < 10; i++) {
         const auto& [interval, description] = IntervalAdapter::generate_random_interval_description(mt);
         golden_intervals.emplace_back(interval);
         ss << description;
@@ -197,14 +261,21 @@ TEST_F(IntervalParserTest, testParseIntervalsFail3) {
 
     const auto& intervals = IntervalParser::parse_description_as_intervals(ss.str());
 
-    ASSERT_TRUE(intervals.empty());
+    ASSERT_TRUE(intervals
+                    .
+
+                empty()
+
+    );
 }
 
 TEST_F(IntervalParserTest, testParseIntervalsFail4) {
     std::vector<Interval> golden_intervals{};
     std::stringstream ss{};
 
-    for (auto i = 0; i < 10; i++) {
+    for (
+        auto i = 0;
+        i < 10; i++) {
         const auto& [interval, description] = IntervalAdapter::generate_random_interval_description(mt);
         golden_intervals.emplace_back(interval);
         ss << description;
@@ -216,14 +287,21 @@ TEST_F(IntervalParserTest, testParseIntervalsFail4) {
 
     const auto& intervals = IntervalParser::parse_description_as_intervals(ss.str());
 
-    ASSERT_TRUE(intervals.empty());
+    ASSERT_TRUE(intervals
+                    .
+
+                empty()
+
+    );
 }
 
 TEST_F(IntervalParserTest, testParseIntervalsFail5) {
     std::vector<Interval> golden_intervals{};
     std::stringstream ss{};
 
-    for (auto i = 0; i < 10; i++) {
+    for (
+        auto i = 0;
+        i < 10; i++) {
         const auto& [interval, description] = IntervalAdapter::generate_random_interval_description(mt);
         golden_intervals.emplace_back(interval);
         ss << description;
@@ -235,5 +313,10 @@ TEST_F(IntervalParserTest, testParseIntervalsFail5) {
 
     const auto& intervals = IntervalParser::parse_description_as_intervals(ss.str());
 
-    ASSERT_EQ(intervals.size(), 10);
+    ASSERT_EQ(intervals
+                  .
+
+              size(),
+
+        10);
 }

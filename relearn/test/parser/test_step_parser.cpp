@@ -22,13 +22,17 @@ TEST_F(StepParserTest, testGenerateFunction1) {
 
     auto function = StepParser::generate_step_check_function(std::vector<Interval>{});
 
-    for (RelearnTypes::step_type step = 0; step < 10000; step++) {
+    for (
+        RelearnTypes::step_type step = 0;
+        step < 10000; step++) {
         const auto result_1 = function(step);
-        ASSERT_FALSE(result_1) << step;
+        ASSERT_FALSE(result_1)
+            << step;
 
         const auto random_step = RandomAdapter::get_random_integer<int_type>(min, max, mt);
         const auto result_2 = function(random_step);
-        ASSERT_FALSE(result_2) << random_step;
+        ASSERT_FALSE(result_2)
+            << random_step;
     }
 }
 
@@ -42,13 +46,17 @@ TEST_F(StepParserTest, testGenerateFunction2) {
 
     auto function = StepParser::generate_step_check_function({ i });
 
-    for (RelearnTypes::step_type step = 0; step < 10000; step++) {
+    for (
+        RelearnTypes::step_type step = 0;
+        step < 10000; step++) {
         const auto result_1 = function(step);
-        ASSERT_TRUE(result_1) << step;
+        ASSERT_TRUE(result_1)
+            << step;
 
         const auto random_step = RandomAdapter::get_random_integer<int_type>(min, max, mt);
         const auto result_2 = function(random_step);
-        ASSERT_TRUE(result_2) << random_step;
+        ASSERT_TRUE(result_2)
+            << random_step;
     }
 }
 
@@ -65,7 +73,9 @@ TEST_F(StepParserTest, testGenerateFunction3) {
 
     auto function = StepParser::generate_step_check_function({ i1, i2, i3, i4 });
 
-    for (RelearnTypes::step_type step = 0; step < 20000; step++) {
+    for (
+        RelearnTypes::step_type step = 0;
+        step < 20000; step++) {
         const auto result_1 = function(step);
         ASSERT_EQ(result_1, (step <= 10000 && step % 10 == 0)) << step;
 
@@ -91,16 +101,22 @@ TEST_F(StepParserTest, testGenerateFunction4) {
     Interval i5{ std::min(begin, end), std::max(begin, end), 11 };
 
     std::stringstream ss{};
-    ss << codify_interval(i1) << ';';
-    ss << codify_interval(i2) << ';';
-    ss << codify_interval(i3) << ';';
-    ss << codify_interval(i4) << ';';
+    ss << codify_interval(i1)
+       << ';';
+    ss << codify_interval(i2)
+       << ';';
+    ss << codify_interval(i3)
+       << ';';
+    ss << codify_interval(i4)
+       << ';';
     ss << codify_interval(i5);
 
     auto function_1 = StepParser::generate_step_check_function({ i1, i2, i3, i4, i5 });
     auto function_2 = StepParser::generate_step_check_function(ss.str());
 
-    for (RelearnTypes::step_type step = 0; step < 90000; step++) {
+    for (
+        RelearnTypes::step_type step = 0;
+        step < 90000; step++) {
         const auto result_1 = function_1(step);
         const auto result_2 = function_2(step);
         ASSERT_EQ(result_1, result_2) << step;
@@ -123,12 +139,21 @@ TEST_F(StepParserTest, testGenerateFunction5) {
     Interval i5{ std::min(begin, end), std::max(begin, end), 11 };
 
     std::stringstream ss{};
-    ss << codify_interval(i1) << ';';
-    ss << codify_interval(i2) << ';';
-    ss << codify_interval(i3) << ';';
-    ss << codify_interval(i4) << ';';
+    ss << codify_interval(i1)
+       << ';';
+    ss << codify_interval(i2)
+       << ';';
+    ss << codify_interval(i3)
+       << ';';
+    ss << codify_interval(i4)
+       << ';';
     ss << codify_interval(i5);
 
     auto function_1 = StepParser::generate_step_check_function({ i1, i2, i3, i4, i5 });
-    ASSERT_FALSE(function_1.operator bool());
+    ASSERT_FALSE(function_1
+                     .
+
+                     operator bool()
+
+    );
 }

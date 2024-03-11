@@ -22,6 +22,8 @@ if (CUDA_FOUND)
 
     add_executable(relearn_tests_cuda ${SRC_TST} RelearnTest.cpp)
     target_include_directories(relearn_tests_cuda PRIVATE ../source/shared)
+    target_include_directories(relearn_tests_cuda PRIVATE ../source)
+    target_link_libraries(relearn_tests_cuda PRIVATE relearn_harness)
     target_sources(
             relearn_tests_cuda
             PRIVATE ${CMAKE_BINARY_DIR}/test_get_relearn_path.cpp

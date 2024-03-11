@@ -52,25 +52,59 @@ TYPED_TEST(OctreeTest, testConstructor) {
 
     OctreeImplementation<TypeParam> octree(min, max, level_of_branch_nodes);
 
-    ASSERT_EQ(octree.get_level_of_branch_nodes(), level_of_branch_nodes);
-    ASSERT_EQ(octree.get_simulation_box_minimum(), min);
-    ASSERT_EQ(octree.get_simulation_box_maximum(), max);
+    ASSERT_EQ(octree
+                  .
+
+              get_level_of_branch_nodes(),
+        level_of_branch_nodes
+
+    );
+    ASSERT_EQ(octree
+                  .
+
+              get_simulation_box_minimum(),
+        min
+
+    );
+    ASSERT_EQ(octree
+                  .
+
+              get_simulation_box_maximum(),
+        max
+
+    );
 
     const auto virtual_neurons = OctreeAdapter::extract_virtual_neurons(octree.get_root());
 
     std::map<size_t, size_t> level_to_count{};
 
-    for (const auto& id : virtual_neurons | ranges::views::values) {
+    for (
+        const auto& id : virtual_neurons | ranges::views::values) {
         level_to_count[id]++;
     }
 
-    ASSERT_EQ(level_to_count.size(), level_of_branch_nodes + 1);
+    ASSERT_EQ(level_to_count
+                  .
 
-    for (auto level = 0U; level <= level_of_branch_nodes; level++) {
+              size(),
+        level_of_branch_nodes
+
+            + 1);
+
+    for (
+        auto level = 0U;
+        level <= level_of_branch_nodes;
+        level++) {
         const auto expected_elements = std::pow(8U, level);
 
         if (level == level_of_branch_nodes) {
-            ASSERT_EQ(octree.get_num_local_trees(), expected_elements);
+            ASSERT_EQ(octree
+                          .
+
+                      get_num_local_trees(),
+                expected_elements
+
+            );
         }
 
         ASSERT_EQ(level_to_count[level], expected_elements);
@@ -83,7 +117,9 @@ TYPED_TEST(OctreeTest, testConstructorExceptions) {
     const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(this->mt);
     const auto level_of_branch_nodes = SimulationAdapter::get_small_refinement_level(this->mt);
 
-    ASSERT_THROW(OctreeImplementation<TypeParam> octree(max, min, level_of_branch_nodes), RelearnException);
+    ASSERT_THROW(OctreeImplementation<TypeParam>
+                     octree(max, min, level_of_branch_nodes),
+        RelearnException);
 }
 
 TYPED_TEST(OctreeTest, testInsertNeurons) {
@@ -97,20 +133,40 @@ TYPED_TEST(OctreeTest, testInsertNeurons) {
     size_t number_neurons = NeuronIdAdapter::get_random_number_neurons(this->mt);
     size_t num_additional_ids = NeuronIdAdapter::get_random_number_neurons(this->mt);
 
-    std::vector<std::pair<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
+    std::vector<std::pair<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max,
+        number_neurons,
+        number_neurons + num_additional_ids,
+        this->mt);
 
     for (const auto& [position, id] : neurons_to_place) {
         octree.insert(position, id);
     }
 
-    std::vector<std::pair<Vec3d, NeuronID>> placed_neurons = OctreeAdapter::template extract_neurons_tree<TypeParam>(octree);
+    std::vector<std::pair<Vec3d, NeuronID>> placed_neurons = OctreeAdapter::template extract_neurons_tree<TypeParam>(
+        octree);
 
-    ASSERT_EQ(neurons_to_place.size(), placed_neurons.size());
+    ASSERT_EQ(neurons_to_place
+                  .
+
+              size(),
+        placed_neurons
+
+            .
+
+        size()
+
+    );
 
     ranges::sort(neurons_to_place, std::greater{}, element<1>);
     ranges::sort(placed_neurons, std::greater{}, element<1>);
 
-    for (auto i = 0; i < neurons_to_place.size(); i++) {
+    for (
+        auto i = 0;
+        i < neurons_to_place.
+
+            size();
+
+        i++) {
         const auto& expected_neuron = neurons_to_place[i];
         const auto& found_neuron = placed_neurons[i];
 
@@ -129,7 +185,10 @@ TYPED_TEST(OctreeTest, testInsertNeuronsExceptions) {
     size_t number_neurons = NeuronIdAdapter::get_random_number_neurons(this->mt);
     size_t num_additional_ids = NeuronIdAdapter::get_random_number_neurons(this->mt);
 
-    std::vector<std::pair<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
+    std::vector<std::pair<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max,
+        number_neurons,
+        number_neurons + num_additional_ids,
+        this->mt);
 
     const auto number_ranks = MPIRankAdapter::get_random_number_ranks(this->mt);
 
@@ -144,15 +203,29 @@ TYPED_TEST(OctreeTest, testInsertNeuronsExceptions) {
         const Vec3d pos_invalid_y_min = min - Vec3d{ 0, 1, 0 };
         const Vec3d pos_invalid_z_min = min - Vec3d{ 0, 0, 1 };
 
-        ASSERT_THROW(octree.insert(position, NeuronID::uninitialized_id()), RelearnException);
+        ASSERT_THROW(octree
+                         .insert(position, NeuronID::uninitialized_id()),
+            RelearnException);
 
-        ASSERT_THROW(octree.insert(pos_invalid_x_max, id), RelearnException);
-        ASSERT_THROW(octree.insert(pos_invalid_y_max, id), RelearnException);
-        ASSERT_THROW(octree.insert(pos_invalid_z_max, id), RelearnException);
+        ASSERT_THROW(octree
+                         .insert(pos_invalid_x_max, id),
+            RelearnException);
+        ASSERT_THROW(octree
+                         .insert(pos_invalid_y_max, id),
+            RelearnException);
+        ASSERT_THROW(octree
+                         .insert(pos_invalid_z_max, id),
+            RelearnException);
 
-        ASSERT_THROW(octree.insert(pos_invalid_x_min, id), RelearnException);
-        ASSERT_THROW(octree.insert(pos_invalid_y_min, id), RelearnException);
-        ASSERT_THROW(octree.insert(pos_invalid_z_min, id), RelearnException);
+        ASSERT_THROW(octree
+                         .insert(pos_invalid_x_min, id),
+            RelearnException);
+        ASSERT_THROW(octree
+                         .insert(pos_invalid_y_min, id),
+            RelearnException);
+        ASSERT_THROW(octree
+                         .insert(pos_invalid_z_min, id),
+            RelearnException);
     }
 }
 
@@ -167,7 +240,10 @@ TYPED_TEST(OctreeTest, testStructure) {
     size_t number_neurons = NeuronIdAdapter::get_random_number_neurons(this->mt);
     size_t num_additional_ids = NeuronIdAdapter::get_random_number_neurons(this->mt);
 
-    std::vector<std::pair<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
+    std::vector<std::pair<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max,
+        number_neurons,
+        number_neurons + num_additional_ids,
+        this->mt);
 
     const auto my_rank = MPIWrapper::get_my_rank();
     for (const auto& [position, id] : neurons_to_place) {
@@ -179,18 +255,40 @@ TYPED_TEST(OctreeTest, testStructure) {
     std::stack<std::pair<OctreeNode<AdditionalCellAttributes>*, size_t>> octree_nodes{};
     octree_nodes.emplace(root, size_t(0));
 
-    while (!octree_nodes.empty()) {
+    while (!octree_nodes.
+
+            empty()
+
+    ) {
         const auto [current_node, level] = octree_nodes.top();
 
-        octree_nodes.pop();
-        ASSERT_EQ(level, current_node->get_level());
-        ASSERT_TRUE(current_node->get_mpi_rank() == my_rank);
+        octree_nodes.
 
-        if (current_node->is_parent()) {
+            pop();
+
+        ASSERT_EQ(level, current_node->
+
+                         get_level()
+
+        );
+        ASSERT_TRUE(current_node
+                        ->
+
+                    get_mpi_rank()
+
+            == my_rank);
+
+        if (current_node->
+
+            is_parent()
+
+        ) {
             const auto& childs = current_node->get_children();
             auto one_child_exists = false;
 
-            for (auto i = 0; i < 8; i++) {
+            for (
+                auto i = 0;
+                i < 8; i++) {
                 const auto child = childs[i];
                 if (child != nullptr) {
                     octree_nodes.emplace(child, level + 1);
@@ -209,7 +307,12 @@ TYPED_TEST(OctreeTest, testStructure) {
             const auto& cell = current_node->get_cell();
             const auto& opt_position = cell.get_neuron_position();
 
-            ASSERT_TRUE(opt_position.has_value());
+            ASSERT_TRUE(opt_position
+                            .
+
+                        has_value()
+
+            );
 
             const auto& position = opt_position.value();
 
@@ -217,17 +320,81 @@ TYPED_TEST(OctreeTest, testStructure) {
             const auto& cell_min = std::get<0>(cell_size);
             const auto& cell_max = std::get<1>(cell_size);
 
-            ASSERT_LE(cell_min.get_x(), position.get_x());
-            ASSERT_LE(cell_min.get_y(), position.get_y());
-            ASSERT_LE(cell_min.get_z(), position.get_z());
+            ASSERT_LE(cell_min
+                          .
 
-            ASSERT_LE(position.get_x(), cell_max.get_x());
-            ASSERT_LE(position.get_y(), cell_max.get_y());
-            ASSERT_LE(position.get_z(), cell_max.get_z());
+                      get_x(),
+                position
+
+                    .
+
+                get_x()
+
+            );
+            ASSERT_LE(cell_min
+                          .
+
+                      get_y(),
+                position
+
+                    .
+
+                get_y()
+
+            );
+            ASSERT_LE(cell_min
+                          .
+
+                      get_z(),
+                position
+
+                    .
+
+                get_z()
+
+            );
+
+            ASSERT_LE(position
+                          .
+
+                      get_x(),
+                cell_max
+
+                    .
+
+                get_x()
+
+            );
+            ASSERT_LE(position
+                          .
+
+                      get_y(),
+                cell_max
+
+                    .
+
+                get_y()
+
+            );
+            ASSERT_LE(position
+                          .
+
+                      get_z(),
+                cell_max
+
+                    .
+
+                get_z()
+
+            );
 
             const auto neuron_id = cell.get_neuron_id();
 
-            if (!neuron_id.is_initialized()) {
+            if (!neuron_id.
+
+                 is_initialized()
+
+            ) {
                 ASSERT_LE(neuron_id, NeuronID{ number_neurons + num_additional_ids });
             }
         }
@@ -245,7 +412,10 @@ TYPED_TEST(OctreeTest, testMemoryStructure) {
     size_t number_neurons = NeuronIdAdapter::get_random_number_neurons(this->mt);
     size_t num_additional_ids = NeuronIdAdapter::get_random_number_neurons(this->mt);
 
-    std::vector<std::pair<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, this->mt);
+    std::vector<std::pair<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max,
+        number_neurons,
+        number_neurons + num_additional_ids,
+        this->mt);
 
     for (const auto& [position, id] : neurons_to_place) {
         octree.insert(position, id);
@@ -255,11 +425,21 @@ TYPED_TEST(OctreeTest, testMemoryStructure) {
 
     std::stack<OctreeNode<AdditionalCellAttributes>*> octree_nodes{};
 
-    while (!octree_nodes.empty()) {
-        const auto* current_node = octree_nodes.top();
-        octree_nodes.pop();
+    while (!octree_nodes.
 
-        if (current_node->is_leaf()) {
+            empty()
+
+    ) {
+        const auto* current_node = octree_nodes.top();
+        octree_nodes.
+
+            pop();
+
+        if (current_node->
+
+            is_leaf()
+
+        ) {
             continue;
         }
 
@@ -268,7 +448,9 @@ TYPED_TEST(OctreeTest, testMemoryStructure) {
         OctreeNode<AdditionalCellAttributes>* child_pointer = nullptr;
         int child_id = -1;
 
-        for (auto i = 0; i < 8; i++) {
+        for (
+            auto i = 0;
+            i < 8; i++) {
             const auto child = children[i];
             if (child == nullptr) {
                 continue;

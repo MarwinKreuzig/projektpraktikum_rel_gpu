@@ -5,7 +5,9 @@ if (CUDA_FOUND)
             structure/CudaArray.cuh
             structure/CudaVector.cuh
             RelearnGPUException.h
-            Commons.cuh)
+            Commons.cuh
+            structure/Octree.cuh
+            structure/OctreeCPUCopy.h)
 
     set(CMAKE_CUDA_STANDARD 17)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
@@ -21,6 +23,7 @@ if (CUDA_FOUND)
     target_sources(
             relearn_gpu
             PRIVATE
+            structure/Octree.cu
             neurons/models/NeuronModel.cu
             neurons/input/BackgroundActivity.cu
             neurons/models/AEIFModel.cu
@@ -29,7 +32,9 @@ if (CUDA_FOUND)
             neurons/models/PoissonModel.cu
             neurons/NeuronsExtraInfos.cu
             utils/Random.cu
-            RelearnGPUException.cu)
+            RelearnGPUException.cu
+            # for visual studio
+            ${relearn_gpu_additional_files})
 
     #set_target_properties(relearn_gpu PROPERTIES CUDA_ARCHITECTURES 61)
 

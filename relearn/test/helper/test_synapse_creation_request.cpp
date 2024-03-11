@@ -23,8 +23,18 @@ TEST_F(SynapseCreationTest, testDefaultConstructor) {
     const auto& source_neuron_id = scr.get_source();
     const auto& signal_type = scr.get_signal_type();
 
-    ASSERT_FALSE(target_neuron_id.is_initialized());
-    ASSERT_FALSE(source_neuron_id.is_initialized());
+    ASSERT_FALSE(target_neuron_id
+                     .
+
+                 is_initialized()
+
+    );
+    ASSERT_FALSE(source_neuron_id
+                     .
+
+                 is_initialized()
+
+    );
 
     ASSERT_EQ(signal_type, SignalType{});
 }
@@ -51,17 +61,51 @@ TEST_F(SynapseCreationTest, testConstructorException) {
 
     const auto& dummy_neuron_id = NeuronIdAdapter::get_random_neuron_id(mt);
 
-    ASSERT_THROW(SynapseCreationRequest scr(NeuronID::virtual_id(), dummy_neuron_id, golden_signal_type), RelearnException);
-    ASSERT_THROW(SynapseCreationRequest scr(NeuronID::uninitialized_id(), dummy_neuron_id, golden_signal_type), RelearnException);
+    ASSERT_THROW(SynapseCreationRequest
 
-    ASSERT_THROW(SynapseCreationRequest scr(dummy_neuron_id, NeuronID::virtual_id(), golden_signal_type), RelearnException);
-    ASSERT_THROW(SynapseCreationRequest scr(dummy_neuron_id, NeuronID::uninitialized_id(), golden_signal_type), RelearnException);
+                     scr(NeuronID::virtual_id(), dummy_neuron_id, golden_signal_type
 
-    ASSERT_THROW(SynapseCreationRequest scr(NeuronID::virtual_id(), NeuronID::virtual_id(), golden_signal_type), RelearnException);
-    ASSERT_THROW(SynapseCreationRequest scr(NeuronID::virtual_id(), NeuronID::uninitialized_id(), golden_signal_type), RelearnException);
+                         ),
+        RelearnException);
+    ASSERT_THROW(SynapseCreationRequest
 
-    ASSERT_THROW(SynapseCreationRequest scr(NeuronID::uninitialized_id(), NeuronID::virtual_id(), golden_signal_type), RelearnException);
-    ASSERT_THROW(SynapseCreationRequest scr(NeuronID::uninitialized_id(), NeuronID::uninitialized_id(), golden_signal_type), RelearnException);
+                     scr(NeuronID::uninitialized_id(), dummy_neuron_id, golden_signal_type
+
+                         ),
+        RelearnException);
+
+    ASSERT_THROW(SynapseCreationRequest
+                     scr(dummy_neuron_id, NeuronID::virtual_id(), golden_signal_type),
+        RelearnException);
+    ASSERT_THROW(SynapseCreationRequest
+                     scr(dummy_neuron_id, NeuronID::uninitialized_id(), golden_signal_type),
+        RelearnException);
+
+    ASSERT_THROW(SynapseCreationRequest
+
+                     scr(NeuronID::virtual_id(), NeuronID::virtual_id(), golden_signal_type
+
+                         ),
+        RelearnException);
+    ASSERT_THROW(SynapseCreationRequest
+
+                     scr(NeuronID::virtual_id(), NeuronID::uninitialized_id(), golden_signal_type
+
+                         ),
+        RelearnException);
+
+    ASSERT_THROW(SynapseCreationRequest
+
+                     scr(NeuronID::uninitialized_id(), NeuronID::virtual_id(), golden_signal_type
+
+                         ),
+        RelearnException);
+    ASSERT_THROW(SynapseCreationRequest
+
+                     scr(NeuronID::uninitialized_id(), NeuronID::uninitialized_id(), golden_signal_type
+
+                         ),
+        RelearnException);
 }
 
 TEST_F(SynapseCreationTest, testStructuredBinding) {

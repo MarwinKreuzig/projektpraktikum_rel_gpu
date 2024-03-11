@@ -25,26 +25,46 @@ TEST_F(EventTest, testEventPhasePrint) {
         ASSERT_EQ(str[0], expected);
     };
 
-    test(EventPhase::DurationBegin, 'B');
-    test(EventPhase::DurationEnd, 'E');
-    test(EventPhase::Complete, 'X');
-    test(EventPhase::Counter, 'C');
-    test(EventPhase::AsyncNestableStart, 'b');
-    test(EventPhase::AsyncNestableInstant, 'n');
-    test(EventPhase::AsyncNestableEnd, 'e');
-    test(EventPhase::FlowStart, 's');
-    test(EventPhase::FlowStep, 't');
-    test(EventPhase::FlowEnd, 'f');
-    test(EventPhase::ObjectCreated, 'N');
-    test(EventPhase::ObjectSnapshot, 'O');
-    test(EventPhase::ObjectDestroyed, 'D');
-    test(EventPhase::Metadata, 'M');
-    test(EventPhase::MemoryDumpGlobal, 'V');
-    test(EventPhase::MemoryDumpProcess, 'v');
-    test(EventPhase::Mark, 'R');
-    test(EventPhase::ClockSync, 'c');
-    test(EventPhase::ContextBegin, '(');
-    test(EventPhase::ContextEnd, ')');
+    test(EventPhase::DurationBegin,
+        'B');
+    test(EventPhase::DurationEnd,
+        'E');
+    test(EventPhase::Complete,
+        'X');
+    test(EventPhase::Counter,
+        'C');
+    test(EventPhase::AsyncNestableStart,
+        'b');
+    test(EventPhase::AsyncNestableInstant,
+        'n');
+    test(EventPhase::AsyncNestableEnd,
+        'e');
+    test(EventPhase::FlowStart,
+        's');
+    test(EventPhase::FlowStep,
+        't');
+    test(EventPhase::FlowEnd,
+        'f');
+    test(EventPhase::ObjectCreated,
+        'N');
+    test(EventPhase::ObjectSnapshot,
+        'O');
+    test(EventPhase::ObjectDestroyed,
+        'D');
+    test(EventPhase::Metadata,
+        'M');
+    test(EventPhase::MemoryDumpGlobal,
+        'V');
+    test(EventPhase::MemoryDumpProcess,
+        'v');
+    test(EventPhase::Mark,
+        'R');
+    test(EventPhase::ClockSync,
+        'c');
+    test(EventPhase::ContextBegin,
+        '(');
+    test(EventPhase::ContextEnd,
+        ')');
 }
 
 TEST_F(EventTest, testInstantEventScopePrint) {
@@ -58,9 +78,12 @@ TEST_F(EventTest, testInstantEventScopePrint) {
         ASSERT_EQ(str[0], expected);
     };
 
-    test(InstantEventScope::Global, 'g');
-    test(InstantEventScope::Process, 'p');
-    test(InstantEventScope::Thread, 't');
+    test(InstantEventScope::Global,
+        'g');
+    test(InstantEventScope::Process,
+        'p');
+    test(InstantEventScope::Thread,
+        't');
 }
 
 TEST_F(EventTest, testDurationBeginPrint) {
@@ -92,7 +115,9 @@ TEST_F(EventTest, testDurationBeginArgumentsPrint) {
 TEST_F(EventTest, testDurationBeginCategoriesPrint) {
     constexpr static auto expected_output = "{\"name\": \"this-name-123\", \"ph\": \"B\", \"pid\": 65, \"tid\": 135, \"ts\": 1236.05, \"cat\": \"async,sync\"}";
 
-    const auto event_trace = Event::create_duration_begin_event("this-name-123", { EventCategory::async, EventCategory::sync }, 1236.05, 65, 135, {});
+    const auto event_trace = Event::create_duration_begin_event("this-name-123",
+        { EventCategory::async, EventCategory::sync }, 1236.05, 65,
+        135, {});
 
     std::stringstream ss{};
     ss << event_trace;
@@ -105,7 +130,9 @@ TEST_F(EventTest, testDurationBeginCategoriesPrint) {
 TEST_F(EventTest, testDurationBeginCategoriesArgumentsPrint) {
     constexpr static auto expected_output = "{\"name\": \"this-name-123\", \"ph\": \"B\", \"pid\": 65, \"tid\": 135, \"ts\": 1236.05, \"cat\": \"async,sync\", \"args\": {\"arg1\": val1, \"arg3\": val3}}";
 
-    const auto event_trace = Event::create_duration_begin_event("this-name-123", { EventCategory::sync, EventCategory::async }, 1236.05, 65, 135, { { "arg1", "val1" }, { "arg3", "val3" } });
+    const auto event_trace = Event::create_duration_begin_event("this-name-123",
+        { EventCategory::sync, EventCategory::async }, 1236.05, 65,
+        135, { { "arg1", "val1" }, { "arg3", "val3" } });
 
     std::stringstream ss{};
     ss << event_trace;
@@ -170,7 +197,9 @@ TEST_F(EventTest, testCounterArgumentsPrint) {
 TEST_F(EventTest, testCounterCategoriesArgumentsPrint) {
     constexpr static auto expected_output = "{\"name\": \"that-name-123\", \"ph\": \"C\", \"pid\": 12, \"tid\": 0, \"ts\": 165, \"cat\": \"async,calculation,mpi\", \"args\": {\"arg1\": val1, \"arg3\": val3}}";
 
-    const auto event_trace = Event::create_counter_event("that-name-123", { EventCategory::async, EventCategory::calculation, EventCategory::mpi }, 165, 12, 0, { { "arg1", "val1" }, { "arg3", "val3" } });
+    const auto event_trace = Event::create_counter_event("that-name-123", { EventCategory::async, EventCategory::calculation, EventCategory::mpi }, 165, 12, 0,
+        { { "arg1", "val1" },
+            { "arg3", "val3" } });
 
     std::stringstream ss{};
     ss << event_trace;
@@ -183,7 +212,8 @@ TEST_F(EventTest, testCounterCategoriesArgumentsPrint) {
 TEST_F(EventTest, testInstantGlobalPrint) {
     constexpr static auto expected_output = "{\"name\": \"instant-753-name\", \"ph\": \"i\", \"pid\": 111, \"tid\": 56654, \"ts\": 999, \"s\": \"g\"}";
 
-    const auto event_trace = Event::create_instant_event("instant-753-name", {}, InstantEventScope::Global, 999, 111, 56654, {});
+    const auto event_trace = Event::create_instant_event("instant-753-name", {}, InstantEventScope::Global, 999, 111, 56654,
+        {});
 
     std::stringstream ss{};
     ss << event_trace;
@@ -196,7 +226,8 @@ TEST_F(EventTest, testInstantGlobalPrint) {
 TEST_F(EventTest, testInstantProcessPrint) {
     constexpr static auto expected_output = "{\"name\": \"instant-7532-name\", \"ph\": \"i\", \"pid\": 1112, \"tid\": 562654, \"ts\": 9992, \"s\": \"p\"}";
 
-    const auto event_trace = Event::create_instant_event("instant-7532-name", {}, InstantEventScope::Process, 9992, 1112, 562654, {});
+    const auto event_trace = Event::create_instant_event("instant-7532-name", {}, InstantEventScope::Process, 9992, 1112,
+        562654, {});
 
     std::stringstream ss{};
     ss << event_trace;
@@ -209,7 +240,8 @@ TEST_F(EventTest, testInstantProcessPrint) {
 TEST_F(EventTest, testInstantThreadPrint) {
     constexpr static auto expected_output = "{\"name\": \"instant-7853-name\", \"ph\": \"i\", \"pid\": 8111, \"tid\": 856654, \"ts\": 8999, \"s\": \"t\"}";
 
-    const auto event_trace = Event::create_instant_event("instant-7853-name", {}, InstantEventScope::Thread, 8999, 8111, 856654, {});
+    const auto event_trace = Event::create_instant_event("instant-7853-name", {}, InstantEventScope::Thread, 8999, 8111,
+        856654, {});
 
     std::stringstream ss{};
     ss << event_trace;
@@ -222,7 +254,9 @@ TEST_F(EventTest, testInstantThreadPrint) {
 TEST_F(EventTest, testInstantGlobalArgumentsPrint) {
     constexpr static auto expected_output = "{\"name\": \"instant-753-name\", \"ph\": \"i\", \"pid\": 111, \"tid\": 56654, \"ts\": 999, \"s\": \"g\", \"args\": {\"arg1\": val1, \"arg3\": val3}}";
 
-    const auto event_trace = Event::create_instant_event("instant-753-name", {}, InstantEventScope::Global, 999, 111, 56654, { { "arg1", "val1" }, { "arg3", "val3" } });
+    const auto event_trace = Event::create_instant_event("instant-753-name", {}, InstantEventScope::Global, 999, 111, 56654,
+        { { "arg1", "val1" },
+            { "arg3", "val3" } });
 
     std::stringstream ss{};
     ss << event_trace;
@@ -235,7 +269,8 @@ TEST_F(EventTest, testInstantGlobalArgumentsPrint) {
 TEST_F(EventTest, testInstantProcessArgumentsPrint) {
     constexpr static auto expected_output = "{\"name\": \"instant-7532-name\", \"ph\": \"i\", \"pid\": 1112, \"tid\": 562654, \"ts\": 9992, \"s\": \"p\", \"args\": {\"arg1\": val1, \"arg3\": val3}}";
 
-    const auto event_trace = Event::create_instant_event("instant-7532-name", {}, InstantEventScope::Process, 9992, 1112, 562654, { { "arg1", "val1" }, { "arg3", "val3" } });
+    const auto event_trace = Event::create_instant_event("instant-7532-name", {}, InstantEventScope::Process, 9992, 1112,
+        562654, { { "arg1", "val1" }, { "arg3", "val3" } });
 
     std::stringstream ss{};
     ss << event_trace;
@@ -248,7 +283,8 @@ TEST_F(EventTest, testInstantProcessArgumentsPrint) {
 TEST_F(EventTest, testInstantThreadArgumentsPrint) {
     constexpr static auto expected_output = "{\"name\": \"instant-7853-name\", \"ph\": \"i\", \"pid\": 8111, \"tid\": 856654, \"ts\": 8999, \"s\": \"t\", \"args\": {\"arg1\": val1, \"arg3\": val3}}";
 
-    const auto event_trace = Event::create_instant_event("instant-7853-name", {}, InstantEventScope::Thread, 8999, 8111, 856654, { { "arg1", "val1" }, { "arg3", "val3" } });
+    const auto event_trace = Event::create_instant_event("instant-7853-name", {}, InstantEventScope::Thread, 8999, 8111,
+        856654, { { "arg1", "val1" }, { "arg3", "val3" } });
 
     std::stringstream ss{};
     ss << event_trace;
@@ -274,7 +310,9 @@ TEST_F(EventTest, testCompletionPrint) {
 TEST_F(EventTest, testCompletionArgumentsPrint) {
     constexpr static auto expected_output = "{\"name\": \"9119-completion-name\", \"ph\": \"X\", \"pid\": 3333, \"tid\": 5555, \"ts\": 7777.7777, \"dur\": 9630.0369, \"args\": {\"arg1\": val1, \"arg3\": val3}}";
 
-    const auto event_trace = Event::create_complete_event("9119-completion-name", {}, 9630.0369, 7777.7777, 3333, 5555, { { "arg1", "val1" }, { "arg3", "val3" } });
+    const auto event_trace = Event::create_complete_event("9119-completion-name", {}, 9630.0369, 7777.7777, 3333, 5555,
+        { { "arg1", "val1" },
+            { "arg3", "val3" } });
 
     std::stringstream ss{};
     ss << event_trace;

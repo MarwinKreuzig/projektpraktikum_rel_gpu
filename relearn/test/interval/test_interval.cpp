@@ -29,9 +29,15 @@ TEST_F(IntervalTest, testConstruction) {
 
     Interval i{ begin, end, frequency };
 
-    ASSERT_EQ(i.begin, begin);
-    ASSERT_EQ(i.end, end);
-    ASSERT_EQ(i.frequency, frequency);
+    ASSERT_EQ(i
+                  .begin,
+        begin);
+    ASSERT_EQ(i
+                  .end,
+        end);
+    ASSERT_EQ(i
+                  .frequency,
+        frequency);
 }
 
 TEST_F(IntervalTest, testHitsStep) {
@@ -49,12 +55,19 @@ TEST_F(IntervalTest, testHitsStep) {
 
     Interval i{ begin, end, frequency };
 
-    for (int_type step = begin; step != end; step++) {
+    for (
+        int_type step = begin;
+        step != end;
+        step++) {
         const auto diff = step - begin;
         if (diff % frequency == 0) {
-            ASSERT_TRUE(i.hits_step(step)) << begin << '-' << end << ':' << frequency << '\t' << step;
+            ASSERT_TRUE(i
+                            .hits_step(step))
+                << begin << '-' << end << ':' << frequency << '\t' << step;
         } else {
-            ASSERT_FALSE(i.hits_step(step)) << begin << '-' << end << ':' << frequency << '\t' << step;
+            ASSERT_FALSE(i
+                             .hits_step(step))
+                << begin << '-' << end << ':' << frequency << '\t' << step;
         }
     }
 }
@@ -103,39 +116,59 @@ TEST_F(IntervalTest, testIntersection) {
     Interval i1{ 10, 20, 1 };
     Interval i2{ 30, 40, 1 };
 
-    ASSERT_FALSE(i1.check_for_intersection(i2));
-    ASSERT_FALSE(i2.check_for_intersection(i1));
+    ASSERT_FALSE(i1
+                     .check_for_intersection(i2));
+    ASSERT_FALSE(i2
+                     .check_for_intersection(i1));
 
     Interval i3{ 100, 200, 4 };
     Interval i4{ 200, 300, 6 };
 
-    ASSERT_TRUE(i3.check_for_intersection(i4));
-    ASSERT_TRUE(i4.check_for_intersection(i3));
+    ASSERT_TRUE(i3
+                    .check_for_intersection(i4));
+    ASSERT_TRUE(i4
+                    .check_for_intersection(i3));
 
     Interval i5{ 1000, 10000, 5 };
     Interval i6{ 4000, 5000, 3 };
 
-    ASSERT_TRUE(i5.check_for_intersection(i6));
-    ASSERT_TRUE(i6.check_for_intersection(i5));
+    ASSERT_TRUE(i5
+                    .check_for_intersection(i6));
+    ASSERT_TRUE(i6
+                    .check_for_intersection(i5));
 
     Interval i7{ 2000, 3000, 70 };
     Interval i8{ 2500, 3500, 80 };
 
-    ASSERT_TRUE(i7.check_for_intersection(i8));
-    ASSERT_TRUE(i8.check_for_intersection(i7));
+    ASSERT_TRUE(i7
+                    .check_for_intersection(i8));
+    ASSERT_TRUE(i8
+                    .check_for_intersection(i7));
 }
 
 TEST_F(IntervalTest, testIntersecions) {
     std::vector<Interval> intervals{};
 
-    intervals.emplace_back(IntervalAdapter::generate_random_interval(mt));
-    intervals.emplace_back(IntervalAdapter::generate_random_interval(mt));
-    intervals.emplace_back(IntervalAdapter::generate_random_interval(mt));
+    intervals.
+
+        emplace_back(IntervalAdapter::generate_random_interval(mt));
+
+    intervals.
+
+        emplace_back(IntervalAdapter::generate_random_interval(mt));
+
+    intervals.
+
+        emplace_back(IntervalAdapter::generate_random_interval(mt));
 
     auto golden_intersect = false;
 
-    for (auto i = 0; i < 3; i++) {
-        for (auto j = 0; j < 3; j++) {
+    for (
+        auto i = 0;
+        i < 3; i++) {
+        for (
+            auto j = 0;
+            j < 3; j++) {
             if (i == j) {
                 continue;
             }

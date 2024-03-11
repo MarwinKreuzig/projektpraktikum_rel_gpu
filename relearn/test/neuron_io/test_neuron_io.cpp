@@ -45,22 +45,78 @@ TEST_F(IOTest, testNeuronIOWriteComponentwiseSizeExceptions) {
 
     std::filesystem::path path{ "./neurons.tmp" };
 
-    ASSERT_THROW(NeuronIO::write_neurons_componentwise(correct_ids, correct_position, std::make_shared<LocalAreaTranslator>(correct_area_names, correct_area_ids), faulty_signal_types, path), RelearnException);
-    ASSERT_THROW(NeuronIO::write_neurons_componentwise(correct_ids, correct_position, std::make_shared<LocalAreaTranslator>(correct_area_names, faulty_area_ids), correct_signal_types, path), RelearnException);
-    ASSERT_THROW(NeuronIO::write_neurons_componentwise(correct_ids, faulty_position, std::make_shared<LocalAreaTranslator>(correct_area_names, correct_area_ids), correct_signal_types, path), RelearnException);
-    ASSERT_THROW(NeuronIO::write_neurons_componentwise(faulty_ids, correct_position, std::make_shared<LocalAreaTranslator>(correct_area_names, correct_area_ids), correct_signal_types, path), RelearnException);
+    ASSERT_THROW(NeuronIO::write_neurons_componentwise(correct_ids, correct_position,
+                     std::make_shared<LocalAreaTranslator>(correct_area_names,
+                         correct_area_ids),
+                     faulty_signal_types, path),
+        RelearnException);
+    ASSERT_THROW(NeuronIO::write_neurons_componentwise(correct_ids, correct_position,
+                     std::make_shared<LocalAreaTranslator>(correct_area_names,
+                         faulty_area_ids),
+                     correct_signal_types, path),
+        RelearnException);
+    ASSERT_THROW(NeuronIO::write_neurons_componentwise(correct_ids, faulty_position,
+                     std::make_shared<LocalAreaTranslator>(correct_area_names,
+                         correct_area_ids),
+                     correct_signal_types, path),
+        RelearnException);
+    ASSERT_THROW(NeuronIO::write_neurons_componentwise(faulty_ids, correct_position,
+                     std::make_shared<LocalAreaTranslator>(correct_area_names,
+                         correct_area_ids),
+                     correct_signal_types, path),
+        RelearnException);
 
-    ASSERT_THROW(NeuronIO::write_neurons_componentwise(correct_ids, correct_position, std::make_shared<LocalAreaTranslator>(correct_area_names, faulty_area_ids), faulty_signal_types, path), RelearnException);
-    ASSERT_THROW(NeuronIO::write_neurons_componentwise(correct_ids, faulty_position, std::make_shared<LocalAreaTranslator>(correct_area_names, correct_area_ids), faulty_signal_types, path), RelearnException);
-    ASSERT_THROW(NeuronIO::write_neurons_componentwise(faulty_ids, correct_position, std::make_shared<LocalAreaTranslator>(correct_area_names, correct_area_ids), faulty_signal_types, path), RelearnException);
-    ASSERT_THROW(NeuronIO::write_neurons_componentwise(correct_ids, faulty_position, std::make_shared<LocalAreaTranslator>(correct_area_names, faulty_area_ids), correct_signal_types, path), RelearnException);
-    ASSERT_THROW(NeuronIO::write_neurons_componentwise(faulty_ids, correct_position, std::make_shared<LocalAreaTranslator>(correct_area_names, faulty_area_ids), correct_signal_types, path), RelearnException);
-    ASSERT_THROW(NeuronIO::write_neurons_componentwise(faulty_ids, faulty_position, std::make_shared<LocalAreaTranslator>(correct_area_names, correct_area_ids), correct_signal_types, path), RelearnException);
+    ASSERT_THROW(NeuronIO::write_neurons_componentwise(correct_ids, correct_position,
+                     std::make_shared<LocalAreaTranslator>(correct_area_names,
+                         faulty_area_ids),
+                     faulty_signal_types, path),
+        RelearnException);
+    ASSERT_THROW(NeuronIO::write_neurons_componentwise(correct_ids, faulty_position,
+                     std::make_shared<LocalAreaTranslator>(correct_area_names,
+                         correct_area_ids),
+                     faulty_signal_types, path),
+        RelearnException);
+    ASSERT_THROW(NeuronIO::write_neurons_componentwise(faulty_ids, correct_position,
+                     std::make_shared<LocalAreaTranslator>(correct_area_names,
+                         correct_area_ids),
+                     faulty_signal_types, path),
+        RelearnException);
+    ASSERT_THROW(NeuronIO::write_neurons_componentwise(correct_ids, faulty_position,
+                     std::make_shared<LocalAreaTranslator>(correct_area_names,
+                         faulty_area_ids),
+                     correct_signal_types, path),
+        RelearnException);
+    ASSERT_THROW(NeuronIO::write_neurons_componentwise(faulty_ids, correct_position,
+                     std::make_shared<LocalAreaTranslator>(correct_area_names,
+                         faulty_area_ids),
+                     correct_signal_types, path),
+        RelearnException);
+    ASSERT_THROW(NeuronIO::write_neurons_componentwise(faulty_ids, faulty_position,
+                     std::make_shared<LocalAreaTranslator>(correct_area_names,
+                         correct_area_ids),
+                     correct_signal_types, path),
+        RelearnException);
 
-    ASSERT_THROW(NeuronIO::write_neurons_componentwise(faulty_ids, faulty_position, std::make_shared<LocalAreaTranslator>(correct_area_names, faulty_area_ids), correct_signal_types, path), RelearnException);
-    ASSERT_THROW(NeuronIO::write_neurons_componentwise(faulty_ids, faulty_position, std::make_shared<LocalAreaTranslator>(correct_area_names, correct_area_ids), faulty_signal_types, path), RelearnException);
-    ASSERT_THROW(NeuronIO::write_neurons_componentwise(faulty_ids, correct_position, std::make_shared<LocalAreaTranslator>(correct_area_names, faulty_area_ids), faulty_signal_types, path), RelearnException);
-    ASSERT_THROW(NeuronIO::write_neurons_componentwise(correct_ids, faulty_position, std::make_shared<LocalAreaTranslator>(correct_area_names, faulty_area_ids), faulty_signal_types, path), RelearnException);
+    ASSERT_THROW(NeuronIO::write_neurons_componentwise(faulty_ids, faulty_position,
+                     std::make_shared<LocalAreaTranslator>(correct_area_names,
+                         faulty_area_ids),
+                     correct_signal_types, path),
+        RelearnException);
+    ASSERT_THROW(NeuronIO::write_neurons_componentwise(faulty_ids, faulty_position,
+                     std::make_shared<LocalAreaTranslator>(correct_area_names,
+                         correct_area_ids),
+                     faulty_signal_types, path),
+        RelearnException);
+    ASSERT_THROW(NeuronIO::write_neurons_componentwise(faulty_ids, correct_position,
+                     std::make_shared<LocalAreaTranslator>(correct_area_names,
+                         faulty_area_ids),
+                     faulty_signal_types, path),
+        RelearnException);
+    ASSERT_THROW(NeuronIO::write_neurons_componentwise(correct_ids, faulty_position,
+                     std::make_shared<LocalAreaTranslator>(correct_area_names,
+                         faulty_area_ids),
+                     faulty_signal_types, path),
+        RelearnException);
 }
 
 TEST_F(IOTest, testNeuronIOWriteComponentwiseFileNotFound) {
@@ -72,12 +128,19 @@ TEST_F(IOTest, testNeuronIOWriteComponentwiseFileNotFound) {
     auto preliminary_area_ids = std::vector<RelearnTypes::area_id>{};
     auto preliminary_signal_types = std::vector<SignalType>{};
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_ids.emplace_back(false, neuron_id);
-        preliminary_position.emplace_back(SimulationAdapter::get_random_position(mt));
+        preliminary_position.
+
+            emplace_back(SimulationAdapter::get_random_position(mt));
+
         preliminary_area_names.emplace_back("area_" + std::to_string(neuron_id));
         preliminary_area_ids.emplace_back(neuron_id);
-        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        preliminary_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     shuffle(preliminary_area_names, rng);
@@ -85,7 +148,11 @@ TEST_F(IOTest, testNeuronIOWriteComponentwiseFileNotFound) {
 
     std::filesystem::path path{ "" };
 
-    ASSERT_THROW(NeuronIO::write_neurons_componentwise(preliminary_ids, preliminary_position, std::make_shared<LocalAreaTranslator>(preliminary_area_names, preliminary_area_ids), preliminary_signal_types, path), RelearnException);
+    ASSERT_THROW(NeuronIO::write_neurons_componentwise(preliminary_ids, preliminary_position,
+                     std::make_shared<LocalAreaTranslator>(preliminary_area_names,
+                         preliminary_area_ids),
+                     preliminary_signal_types, path),
+        RelearnException);
 }
 
 TEST_F(IOTest, testNeuronIOWriteComponentwise) {
@@ -97,12 +164,19 @@ TEST_F(IOTest, testNeuronIOWriteComponentwise) {
     auto preliminary_area_ids = std::vector<RelearnTypes::area_id>{};
     auto preliminary_signal_types = std::vector<SignalType>{};
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_ids.emplace_back(false, neuron_id);
-        preliminary_position.emplace_back(SimulationAdapter::get_random_position(mt));
+        preliminary_position.
+
+            emplace_back(SimulationAdapter::get_random_position(mt));
+
         preliminary_area_names.emplace_back("area_" + std::to_string(neuron_id));
         preliminary_area_ids.emplace_back(neuron_id);
-        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        preliminary_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     shuffle(preliminary_area_names, rng);
@@ -110,7 +184,10 @@ TEST_F(IOTest, testNeuronIOWriteComponentwise) {
 
     std::filesystem::path path{ "./neurons.tmp" };
 
-    ASSERT_NO_THROW(NeuronIO::write_neurons_componentwise(preliminary_ids, preliminary_position, std::make_shared<LocalAreaTranslator>(preliminary_area_names, preliminary_area_ids), preliminary_signal_types, path));
+    ASSERT_NO_THROW(NeuronIO::write_neurons_componentwise(preliminary_ids, preliminary_position,
+        std::make_shared<LocalAreaTranslator>(preliminary_area_names,
+            preliminary_area_ids),
+        preliminary_signal_types, path));
 }
 
 TEST_F(IOTest, testNeuronIOReadComponentwise) {
@@ -125,12 +202,16 @@ TEST_F(IOTest, testNeuronIOReadComponentwise) {
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
     const auto& max_pos = SimulationAdapter::get_maximum_position();
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_ids.emplace_back(false, neuron_id);
         preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(neuron_id));
         preliminary_area_ids.emplace_back(neuron_id);
-        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        preliminary_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     shuffle(preliminary_area_names, rng);
@@ -143,16 +224,29 @@ TEST_F(IOTest, testNeuronIOReadComponentwise) {
     const auto& [read_ids, read_positions, read_area_ids, read_area_names, read_signal_types, additional_infos]
         = NeuronIO::read_neurons_componentwise(path);
 
-    const auto& preliminary_full_area_names = NeuronAssignmentAdapter::get_neuron_id_vs_area_name(preliminary_area_ids, preliminary_area_names);
+    const auto& preliminary_full_area_names = NeuronAssignmentAdapter::get_neuron_id_vs_area_name(preliminary_area_ids,
+        preliminary_area_names);
     const auto& read_full_area_names = NeuronAssignmentAdapter::get_neuron_id_vs_area_name(read_area_ids, read_area_names);
     ASSERT_EQ(preliminary_full_area_names, read_full_area_names);
 
     ASSERT_EQ(preliminary_ids, read_ids);
     ASSERT_EQ(preliminary_signal_types, read_signal_types);
 
-    ASSERT_EQ(preliminary_position.size(), read_positions.size());
+    ASSERT_EQ(preliminary_position
+                  .
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+              size(),
+        read_positions
+
+            .
+
+        size()
+
+    );
+
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         const auto& diff = preliminary_position[neuron_id] - read_positions[neuron_id];
         const auto norm = diff.calculate_2_norm();
 
@@ -170,7 +264,8 @@ TEST_F(IOTest, testNeuronIOReadComponentwise) {
     RelearnTypes::position_type minimum(std::numeric_limits<RelearnTypes::position_type::value_type>::max());
     RelearnTypes::position_type maximum(std::numeric_limits<RelearnTypes::position_type::value_type>::min());
 
-    for (const auto& position : read_positions) {
+    for (
+        const auto& position : read_positions) {
         minimum.calculate_componentwise_minimum(position);
         maximum.calculate_componentwise_maximum(position);
     }
@@ -181,6 +276,7 @@ TEST_F(IOTest, testNeuronIOReadComponentwise) {
 
 TEST_F(IOTest, testNeuronIOReadComponentwiseFileNotFound) {
     std::filesystem::path path{ "" };
+
     ASSERT_THROW(const auto& val = NeuronIO::read_neurons_componentwise(path), RelearnException);
 }
 
@@ -196,12 +292,16 @@ TEST_F(IOTest, testNeuronIOReadComponentwiseIDException) {
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
     const auto& max_pos = SimulationAdapter::get_maximum_position();
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_ids.emplace_back(false, neuron_id);
         preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(neuron_id));
         preliminary_area_ids.emplace_back(neuron_id);
-        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        preliminary_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     shuffle(preliminary_area_names, rng);
@@ -220,7 +320,9 @@ TEST_F(IOTest, testNeuronIOReadComponentwiseIDException) {
 
     NeuronIO::write_neurons_componentwise(preliminary_ids, preliminary_position, std::make_shared<LocalAreaTranslator>(preliminary_area_names, preliminary_area_ids), preliminary_signal_types, path);
 
-    ASSERT_THROW(const auto& val = NeuronIO::read_neurons_componentwise(path);, RelearnException);
+    ASSERT_THROW(const auto& val = NeuronIO::read_neurons_componentwise(path);
+
+                 , RelearnException);
 }
 
 TEST_F(IOTest, testNeuronIOReadComponentwisePositionXException) {
@@ -235,12 +337,16 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionXException) {
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
     const auto& max_pos = SimulationAdapter::get_maximum_position();
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_ids.emplace_back(false, neuron_id);
         preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(neuron_id));
         preliminary_area_ids.emplace_back(neuron_id);
-        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        preliminary_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     shuffle(preliminary_area_names, rng);
@@ -248,11 +354,18 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionXException) {
 
     const auto idx1 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 1, mt);
 
-    preliminary_position[idx1].set_x(-preliminary_position[idx1].get_x());
+    preliminary_position[idx1].set_x(-preliminary_position[idx1].
+
+                                      get_x()
+
+    );
 
     std::filesystem::path path{ "./neurons.tmp" };
     NeuronIO::write_neurons_componentwise(preliminary_ids, preliminary_position, std::make_shared<LocalAreaTranslator>(preliminary_area_names, preliminary_area_ids), preliminary_signal_types, path);
-    ASSERT_THROW(const auto& val = NeuronIO::read_neurons_componentwise(path);, RelearnException);
+
+    ASSERT_THROW(const auto& val = NeuronIO::read_neurons_componentwise(path);
+
+                 , RelearnException);
 }
 
 TEST_F(IOTest, testNeuronIOReadComponentwisePositionYException) {
@@ -267,12 +380,16 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionYException) {
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
     const auto& max_pos = SimulationAdapter::get_maximum_position();
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_ids.emplace_back(false, neuron_id);
         preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(neuron_id));
         preliminary_area_ids.emplace_back(neuron_id);
-        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        preliminary_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     shuffle(preliminary_area_names, rng);
@@ -280,11 +397,18 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionYException) {
 
     const auto idx1 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 1, mt);
 
-    preliminary_position[idx1].set_y(-preliminary_position[idx1].get_y());
+    preliminary_position[idx1].set_y(-preliminary_position[idx1].
+
+                                      get_y()
+
+    );
 
     std::filesystem::path path{ "./neurons.tmp" };
     NeuronIO::write_neurons_componentwise(preliminary_ids, preliminary_position, std::make_shared<LocalAreaTranslator>(preliminary_area_names, preliminary_area_ids), preliminary_signal_types, path);
-    ASSERT_THROW(const auto& val = NeuronIO::read_neurons_componentwise(path);, RelearnException);
+
+    ASSERT_THROW(const auto& val = NeuronIO::read_neurons_componentwise(path);
+
+                 , RelearnException);
 }
 
 TEST_F(IOTest, testNeuronIOReadComponentwisePositionZException) {
@@ -299,12 +423,16 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionZException) {
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
     const auto& max_pos = SimulationAdapter::get_maximum_position();
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_ids.emplace_back(false, neuron_id);
         preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(neuron_id));
         preliminary_area_ids.emplace_back(neuron_id);
-        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        preliminary_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     shuffle(preliminary_area_names, rng);
@@ -312,11 +440,18 @@ TEST_F(IOTest, testNeuronIOReadComponentwisePositionZException) {
 
     const auto idx1 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 1, mt);
 
-    preliminary_position[idx1].set_z(-preliminary_position[idx1].get_z());
+    preliminary_position[idx1].set_z(-preliminary_position[idx1].
+
+                                      get_z()
+
+    );
 
     std::filesystem::path path{ "./neurons.tmp" };
     NeuronIO::write_neurons_componentwise(preliminary_ids, preliminary_position, std::make_shared<LocalAreaTranslator>(preliminary_area_names, preliminary_area_ids), preliminary_signal_types, path);
-    ASSERT_THROW(const auto& val = NeuronIO::read_neurons_componentwise(path);, RelearnException);
+
+    ASSERT_THROW(const auto& val = NeuronIO::read_neurons_componentwise(path);
+
+                 , RelearnException);
 }
 
 TEST_F(IOTest, testNeuronIOWrite1) {
@@ -330,11 +465,19 @@ TEST_F(IOTest, testNeuronIOWrite1) {
 
     auto preliminary_neurons = std::vector<LoadedNeuron>{};
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_ids.emplace_back(false, neuron_id);
-        preliminary_position.emplace_back(SimulationAdapter::get_random_position(mt));
+        preliminary_position.
+
+            emplace_back(SimulationAdapter::get_random_position(mt));
+
         preliminary_area_ids.emplace_back(neuron_id);
-        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        preliminary_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+
         preliminary_area_names.emplace_back("area_" + std::to_string(neuron_id));
 
         preliminary_neurons.emplace_back(preliminary_position[neuron_id], preliminary_ids[neuron_id], preliminary_signal_types[neuron_id], preliminary_area_ids[neuron_id]);
@@ -344,7 +487,9 @@ TEST_F(IOTest, testNeuronIOWrite1) {
 
     std::filesystem::path path{ "./neurons.tmp" };
 
-    ASSERT_NO_THROW(NeuronIO::write_neurons(preliminary_neurons, path, std::make_shared<LocalAreaTranslator>(preliminary_area_names, preliminary_area_ids)));
+    ASSERT_NO_THROW(NeuronIO::write_neurons(preliminary_neurons, path,
+        std::make_shared<LocalAreaTranslator>(preliminary_area_names,
+            preliminary_area_ids)));
 }
 
 TEST_F(IOTest, testNeuronIOWrite2) {
@@ -361,12 +506,16 @@ TEST_F(IOTest, testNeuronIOWrite2) {
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
     const auto& max_pos = SimulationAdapter::get_maximum_position();
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_ids.emplace_back(false, neuron_id);
         preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_ids.emplace_back(neuron_id);
         preliminary_area_names.emplace_back("area_" + std::to_string(neuron_id));
-        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        preliminary_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
 
         preliminary_neurons.emplace_back(preliminary_position[neuron_id], preliminary_ids[neuron_id], preliminary_signal_types[neuron_id], preliminary_area_ids[neuron_id]);
     }
@@ -375,21 +524,36 @@ TEST_F(IOTest, testNeuronIOWrite2) {
     shuffle(preliminary_area_names, rng);
     std::filesystem::path path{ "./neurons.tmp" };
 
-    ASSERT_NO_THROW(NeuronIO::write_neurons(preliminary_neurons, path, std::make_shared<LocalAreaTranslator>(preliminary_area_names, preliminary_area_ids)));
+    ASSERT_NO_THROW(NeuronIO::write_neurons(preliminary_neurons, path,
+        std::make_shared<LocalAreaTranslator>(preliminary_area_names,
+            preliminary_area_ids)));
 
     const auto& [read_ids, read_positions, read_area_ids, read_area_names, read_signal_types, additional_infos]
         = NeuronIO::read_neurons_componentwise(path);
 
-    const auto& preliminary_full_area_names = NeuronAssignmentAdapter::get_neuron_id_vs_area_name(preliminary_area_ids, preliminary_area_names);
+    const auto& preliminary_full_area_names = NeuronAssignmentAdapter::get_neuron_id_vs_area_name(preliminary_area_ids,
+        preliminary_area_names);
     const auto& read_full_area_names = NeuronAssignmentAdapter::get_neuron_id_vs_area_name(read_area_ids, read_area_names);
     ASSERT_EQ(preliminary_full_area_names, read_full_area_names);
 
     ASSERT_EQ(preliminary_ids, read_ids);
     ASSERT_EQ(preliminary_signal_types, read_signal_types);
 
-    ASSERT_EQ(preliminary_position.size(), read_positions.size());
+    ASSERT_EQ(preliminary_position
+                  .
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+              size(),
+        read_positions
+
+            .
+
+        size()
+
+    );
+
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         const auto& diff = preliminary_position[neuron_id] - read_positions[neuron_id];
         const auto norm = diff.calculate_2_norm();
 
@@ -407,7 +571,8 @@ TEST_F(IOTest, testNeuronIOWrite2) {
     RelearnTypes::position_type minimum(std::numeric_limits<RelearnTypes::position_type::value_type>::max());
     RelearnTypes::position_type maximum(std::numeric_limits<RelearnTypes::position_type::value_type>::min());
 
-    for (const auto& position : read_positions) {
+    for (
+        const auto& position : read_positions) {
         minimum.calculate_componentwise_minimum(position);
         maximum.calculate_componentwise_maximum(position);
     }
@@ -427,12 +592,19 @@ TEST_F(IOTest, testNeuronIOWriteFileNotFound) {
 
     auto preliminary_neurons = std::vector<LoadedNeuron>{};
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_ids.emplace_back(false, neuron_id);
-        preliminary_position.emplace_back(SimulationAdapter::get_random_position(mt));
+        preliminary_position.
+
+            emplace_back(SimulationAdapter::get_random_position(mt));
+
         preliminary_area_ids.emplace_back(neuron_id);
         preliminary_area_names.emplace_back("area_" + std::to_string(neuron_id));
-        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        preliminary_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
 
         preliminary_neurons.emplace_back(preliminary_position[neuron_id], preliminary_ids[neuron_id], preliminary_signal_types[neuron_id], preliminary_area_ids[neuron_id]);
     }
@@ -442,7 +614,10 @@ TEST_F(IOTest, testNeuronIOWriteFileNotFound) {
 
     std::filesystem::path path{ "" };
 
-    ASSERT_THROW(NeuronIO::write_neurons(preliminary_neurons, path, std::make_shared<LocalAreaTranslator>(preliminary_area_names, preliminary_area_ids)), RelearnException);
+    ASSERT_THROW(NeuronIO::write_neurons(preliminary_neurons, path,
+                     std::make_shared<LocalAreaTranslator>(preliminary_area_names,
+                         preliminary_area_ids)),
+        RelearnException);
 }
 
 TEST_F(IOTest, testNeuronIORead) {
@@ -455,7 +630,9 @@ TEST_F(IOTest, testNeuronIORead) {
     std::vector<RelearnTypes::area_name> area_names{};
     std::vector<RelearnTypes::area_id> area_ids{};
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_neurons.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt), NeuronID{ false, neuron_id }, NeuronTypesAdapter::get_random_signal_type(mt), neuron_id);
         area_names.emplace_back("area_" + std::to_string(neuron_id));
         area_ids.emplace_back(neuron_id);
@@ -465,12 +642,23 @@ TEST_F(IOTest, testNeuronIORead) {
 
     std::filesystem::path path{ "./neurons.tmp" };
 
-    ASSERT_NO_THROW(NeuronIO::write_neurons(preliminary_neurons, path, std::make_shared<LocalAreaTranslator>(area_names, area_ids)));
+    ASSERT_NO_THROW(NeuronIO::write_neurons(preliminary_neurons, path,
+        std::make_shared<LocalAreaTranslator>(area_names, area_ids)));
 
     const auto& [read_neurons, area_id_to_area_name, additional_infos, _]
         = NeuronIO::read_neurons(path);
 
-    ASSERT_EQ(read_neurons.size(), preliminary_neurons.size());
+    ASSERT_EQ(read_neurons
+                  .
+
+              size(),
+        preliminary_neurons
+
+            .
+
+        size()
+
+    );
 
     RelearnTypes::position_type minimum(std::numeric_limits<RelearnTypes::position_type::value_type>::max());
     RelearnTypes::position_type maximum(std::numeric_limits<RelearnTypes::position_type::value_type>::min());
@@ -478,7 +666,9 @@ TEST_F(IOTest, testNeuronIORead) {
     auto number_excitatory = 0;
     auto number_inhibitory = 0;
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         const auto& preliminary_neuron = preliminary_neurons[neuron_id];
         const auto& read_neuron = read_neurons[neuron_id];
 
@@ -487,12 +677,20 @@ TEST_F(IOTest, testNeuronIORead) {
 
         ASSERT_NEAR(0.0, norm, eps);
 
-        ASSERT_EQ(read_neuron.id, preliminary_neuron.id);
-        ASSERT_EQ(read_neuron.signal_type, preliminary_neuron.signal_type);
-        ASSERT_EQ(read_neuron.area_id, preliminary_neuron.area_id);
+        ASSERT_EQ(read_neuron
+                      .id,
+            preliminary_neuron.id);
+        ASSERT_EQ(read_neuron
+                      .signal_type,
+            preliminary_neuron.signal_type);
+        ASSERT_EQ(read_neuron
+                      .area_id,
+            preliminary_neuron.area_id);
 
-        minimum.calculate_componentwise_minimum(read_neuron.pos);
-        maximum.calculate_componentwise_maximum(read_neuron.pos);
+        minimum.calculate_componentwise_minimum(read_neuron
+                                                    .pos);
+        maximum.calculate_componentwise_maximum(read_neuron
+                                                    .pos);
 
         if (read_neuron.signal_type == SignalType::Excitatory) {
             number_excitatory++;
@@ -512,6 +710,7 @@ TEST_F(IOTest, testNeuronIORead) {
 
 TEST_F(IOTest, testNeuronIOReadFileNotFound) {
     std::filesystem::path path{ "" };
+
     ASSERT_THROW(const auto& val = NeuronIO::read_neurons_componentwise(path), RelearnException);
 }
 
@@ -527,12 +726,16 @@ TEST_F(IOTest, testNeuronIOReadIDException) {
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
     const auto& max_pos = SimulationAdapter::get_maximum_position();
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_ids.emplace_back(false, neuron_id);
         preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(neuron_id));
         preliminary_area_ids.emplace_back(neuron_id);
-        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        preliminary_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     shuffle(preliminary_area_names, rng);
@@ -551,7 +754,9 @@ TEST_F(IOTest, testNeuronIOReadIDException) {
 
     NeuronIO::write_neurons_componentwise(preliminary_ids, preliminary_position, std::make_shared<LocalAreaTranslator>(preliminary_area_names, preliminary_area_ids), preliminary_signal_types, path);
 
-    ASSERT_THROW(const auto& val = NeuronIO::read_neurons(path);, RelearnException);
+    ASSERT_THROW(const auto& val = NeuronIO::read_neurons(path);
+
+                 , RelearnException);
 }
 
 TEST_F(IOTest, testNeuronIOReadPositionXException) {
@@ -566,12 +771,16 @@ TEST_F(IOTest, testNeuronIOReadPositionXException) {
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
     const auto& max_pos = SimulationAdapter::get_maximum_position();
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_ids.emplace_back(false, neuron_id);
         preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(neuron_id));
         preliminary_area_ids.emplace_back(neuron_id);
-        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        preliminary_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     shuffle(preliminary_area_names, rng);
@@ -579,11 +788,18 @@ TEST_F(IOTest, testNeuronIOReadPositionXException) {
 
     const auto idx1 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 1, mt);
 
-    preliminary_position[idx1].set_x(-preliminary_position[idx1].get_x());
+    preliminary_position[idx1].set_x(-preliminary_position[idx1].
+
+                                      get_x()
+
+    );
 
     std::filesystem::path path{ "./neurons.tmp" };
     NeuronIO::write_neurons_componentwise(preliminary_ids, preliminary_position, std::make_shared<LocalAreaTranslator>(preliminary_area_names, preliminary_area_ids), preliminary_signal_types, path);
-    ASSERT_THROW(const auto& val = NeuronIO::read_neurons(path);, RelearnException);
+
+    ASSERT_THROW(const auto& val = NeuronIO::read_neurons(path);
+
+                 , RelearnException);
 }
 
 TEST_F(IOTest, testNeuronIOReadPositionYException) {
@@ -598,12 +814,16 @@ TEST_F(IOTest, testNeuronIOReadPositionYException) {
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
     const auto& max_pos = SimulationAdapter::get_maximum_position();
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_ids.emplace_back(false, neuron_id);
         preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(neuron_id));
         preliminary_area_ids.emplace_back(neuron_id);
-        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        preliminary_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     shuffle(preliminary_area_names, rng);
@@ -611,11 +831,18 @@ TEST_F(IOTest, testNeuronIOReadPositionYException) {
 
     const auto idx1 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 1, mt);
 
-    preliminary_position[idx1].set_y(-preliminary_position[idx1].get_y());
+    preliminary_position[idx1].set_y(-preliminary_position[idx1].
+
+                                      get_y()
+
+    );
 
     std::filesystem::path path{ "./neurons.tmp" };
     NeuronIO::write_neurons_componentwise(preliminary_ids, preliminary_position, std::make_shared<LocalAreaTranslator>(preliminary_area_names, preliminary_area_ids), preliminary_signal_types, path);
-    ASSERT_THROW(const auto& val = NeuronIO::read_neurons(path);, RelearnException);
+
+    ASSERT_THROW(const auto& val = NeuronIO::read_neurons(path);
+
+                 , RelearnException);
 }
 
 TEST_F(IOTest, testNeuronIOReadPositionZException) {
@@ -630,12 +857,16 @@ TEST_F(IOTest, testNeuronIOReadPositionZException) {
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
     const auto& max_pos = SimulationAdapter::get_maximum_position();
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_ids.emplace_back(false, neuron_id);
         preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(neuron_id));
         preliminary_area_ids.emplace_back(neuron_id);
-        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        preliminary_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     shuffle(preliminary_area_names, rng);
@@ -643,11 +874,18 @@ TEST_F(IOTest, testNeuronIOReadPositionZException) {
 
     const auto idx1 = RandomAdapter::get_random_integer<size_t>(0, number_neurons - 1, mt);
 
-    preliminary_position[idx1].set_z(-preliminary_position[idx1].get_z());
+    preliminary_position[idx1].set_z(-preliminary_position[idx1].
+
+                                      get_z()
+
+    );
 
     std::filesystem::path path{ "./neurons.tmp" };
     NeuronIO::write_neurons_componentwise(preliminary_ids, preliminary_position, std::make_shared<LocalAreaTranslator>(preliminary_area_names, preliminary_area_ids), preliminary_signal_types, path);
-    ASSERT_THROW(const auto& val = NeuronIO::read_neurons(path);, RelearnException);
+
+    ASSERT_THROW(const auto& val = NeuronIO::read_neurons(path);
+
+                 , RelearnException);
 }
 
 TEST_F(IOTest, testNeuronIOReadIDs) {
@@ -662,12 +900,16 @@ TEST_F(IOTest, testNeuronIOReadIDs) {
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
     const auto& max_pos = SimulationAdapter::get_maximum_position();
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_ids.emplace_back(false, neuron_id);
         preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(neuron_id));
         preliminary_area_ids.emplace_back(neuron_id);
-        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        preliminary_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
 
     std::filesystem::path path{ "./neurons.tmp" };
@@ -680,7 +922,9 @@ TEST_F(IOTest, testNeuronIOReadIDs) {
 }
 
 TEST_F(IOTest, testNeuronIOReadIDsEmpty1) {
-    const auto number_neurons = RandomAdapter::get_random_integer<NeuronID::value_type>(2, NeuronIdAdapter::upper_bound_num_neurons, mt);
+    const auto number_neurons = RandomAdapter::get_random_integer<NeuronID::value_type>(2,
+        NeuronIdAdapter::upper_bound_num_neurons,
+        mt);
 
     auto preliminary_ids = std::vector<NeuronID>{};
     auto preliminary_position = std::vector<RelearnTypes::position_type>{};
@@ -691,12 +935,16 @@ TEST_F(IOTest, testNeuronIOReadIDsEmpty1) {
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
     const auto& max_pos = SimulationAdapter::get_maximum_position();
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_ids.emplace_back(false, neuron_id);
         preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(neuron_id));
         preliminary_area_ids.emplace_back(neuron_id);
-        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        preliminary_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     shuffle(preliminary_area_names, rng);
@@ -716,7 +964,12 @@ TEST_F(IOTest, testNeuronIOReadIDsEmpty1) {
     NeuronIO::write_neurons_componentwise(preliminary_ids, preliminary_position, std::make_shared<LocalAreaTranslator>(preliminary_area_names, preliminary_area_ids), preliminary_signal_types, path);
 
     const auto& ids = NeuronIO::read_neuron_ids(path);
-    ASSERT_FALSE(ids.has_value());
+    ASSERT_FALSE(ids
+                     .
+
+                 has_value()
+
+    );
 }
 
 TEST_F(IOTest, testNeuronIOReadIDsEmpty2) {
@@ -731,12 +984,16 @@ TEST_F(IOTest, testNeuronIOReadIDsEmpty2) {
     const auto& min_pos = RelearnTypes::position_type{ 0.0, 0.0, 0.0 };
     const auto& max_pos = SimulationAdapter::get_maximum_position();
 
-    for (const auto neuron_id : NeuronID::range_id(number_neurons)) {
+    for (
+        const auto neuron_id :
+        NeuronID::range_id(number_neurons)) {
         preliminary_ids.emplace_back(false, neuron_id);
         preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
         preliminary_area_names.emplace_back("area_" + std::to_string(neuron_id));
         preliminary_area_ids.emplace_back(neuron_id);
-        preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        preliminary_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
     auto rng = std::default_random_engine{};
     shuffle(preliminary_area_names, rng);
@@ -746,24 +1003,43 @@ TEST_F(IOTest, testNeuronIOReadIDsEmpty2) {
     preliminary_position.emplace_back(SimulationAdapter::get_random_position_in_box(min_pos, max_pos, mt));
     preliminary_area_names.emplace_back("area_" + std::to_string(number_neurons + 1));
     preliminary_area_ids.emplace_back(number_neurons);
-    preliminary_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+    preliminary_signal_types.
+
+        emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
 
     std::filesystem::path path{ "./neurons.tmp" };
 
-    ASSERT_THROW(NeuronIO::write_neurons_componentwise(preliminary_ids, preliminary_position, std::make_shared<LocalAreaTranslator>(preliminary_area_names, preliminary_area_ids), preliminary_signal_types, path), RelearnException);
+    ASSERT_THROW(NeuronIO::write_neurons_componentwise(preliminary_ids, preliminary_position,
+                     std::make_shared<LocalAreaTranslator>(preliminary_area_names,
+                         preliminary_area_ids),
+                     preliminary_signal_types, path),
+        RelearnException);
     const auto& ids = NeuronIO::read_neuron_ids(path);
-    ASSERT_FALSE(ids.has_value());
+    ASSERT_FALSE(ids
+                     .
+
+                 has_value()
+
+    );
 }
 
 TEST_F(IOTest, testNeuronIOReadIDsFileNotFound) {
     std::filesystem::path path{ "" };
     const auto& ids = NeuronIO::read_neuron_ids(path);
-    ASSERT_FALSE(ids.has_value());
+    ASSERT_FALSE(ids
+                     .
+
+                 has_value()
+
+    );
 }
 
 TEST_F(IOTest, testNeuronIOReadCommentsFileNotFound) {
     std::filesystem::path path{ "" };
-    ASSERT_THROW(const auto& comments = NeuronIO::read_comments(path);, RelearnException);
+
+    ASSERT_THROW(const auto& comments = NeuronIO::read_comments(path);
+
+                 , RelearnException);
 }
 
 TEST_F(IOTest, testNeuronIOReadComments1) {
@@ -776,7 +1052,12 @@ TEST_F(IOTest, testNeuronIOReadComments1) {
 
     const auto& comments = NeuronIO::read_comments(path);
 
-    ASSERT_EQ(comments.size(), 4);
+    ASSERT_EQ(comments
+                  .
+
+              size(),
+
+        4);
     ASSERT_EQ(comments[0], std::string("# 1"));
     ASSERT_EQ(comments[1], std::string("# 2"));
     ASSERT_EQ(comments[2], std::string("# #"));
@@ -793,7 +1074,12 @@ TEST_F(IOTest, testNeuronIOReadComments2) {
 
     const auto& comments = NeuronIO::read_comments(path);
 
-    ASSERT_TRUE(comments.empty());
+    ASSERT_TRUE(comments
+                    .
+
+                empty()
+
+    );
 }
 
 TEST_F(IOTest, testNeuronIOReadComments3) {
@@ -801,7 +1087,9 @@ TEST_F(IOTest, testNeuronIOReadComments3) {
 
     {
         std::ofstream out_file{ path };
-        for (auto i = 0; i < 10; i++) {
+        for (
+            auto i = 0;
+            i < 10; i++) {
             out_file << "# 1\n";
             out_file << "Hallo\n";
         }
@@ -809,12 +1097,18 @@ TEST_F(IOTest, testNeuronIOReadComments3) {
 
     const auto& comments = NeuronIO::read_comments(path);
 
-    ASSERT_EQ(comments.size(), 1);
+    ASSERT_EQ(comments
+                  .
+
+              size(),
+
+        1);
     ASSERT_EQ(comments[0], std::string("# 1"));
 }
 
 TEST_F(IOTest, testReadInSynapsesFileNotFound) {
     std::filesystem::path path{ "" };
+
     ASSERT_THROW(const auto& val = NeuronIO::read_in_synapses(path, 1, MPIRank(1), 2), RelearnException);
 }
 
@@ -833,7 +1127,9 @@ TEST_F(IOTest, testReadInSynapses) {
     std::filesystem::path path{ "./in_network.tmp" };
     std::ofstream ofstream(path);
 
-    for (const auto synapse_id : ranges::views::indices(number_synapses)) {
+    for (
+        const auto synapse_id :
+        ranges::views::indices(number_synapses)) {
         const auto& source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
         const auto& target_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
@@ -860,16 +1156,57 @@ TEST_F(IOTest, testReadInSynapses) {
         }
 
         if (plastic) {
-            ofstream << my_rank.get_rank() << ' ' << (target_id.get_neuron_id() + 1) << '\t'
-                     << source_rank.get_rank() << ' ' << (source_id.get_neuron_id() + 1) << ' ' << plastic_weight << '\t' << flag << '\n';
+            ofstream << my_rank.
+
+                        get_rank()
+
+                     << ' ' << (target_id.
+
+                                get_neuron_id()
+
+                            + 1)
+                     << '\t'
+                     << source_rank.
+
+                        get_rank()
+
+                     << ' ' << (source_id.
+
+                                get_neuron_id()
+
+                            + 1)
+                     << ' ' << plastic_weight << '\t' << flag << '\n';
         } else {
-            ofstream << my_rank.get_rank() << ' ' << (target_id.get_neuron_id() + 1) << '\t'
-                     << source_rank.get_rank() << ' ' << (source_id.get_neuron_id() + 1) << ' ' << static_weight << '\t' << flag << '\n';
+            ofstream << my_rank.
+
+                        get_rank()
+
+                     << ' ' << (target_id.
+
+                                get_neuron_id()
+
+                            + 1)
+                     << '\t'
+                     << source_rank.
+
+                        get_rank()
+
+                     << ' ' << (source_id.
+
+                                get_neuron_id()
+
+                            + 1)
+                     << ' ' << static_weight << '\t' << flag << '\n';
         }
     }
 
-    ofstream.flush();
-    ofstream.close();
+    ofstream.
+
+        flush();
+
+    ofstream.
+
+        close();
 
     auto [synapses_static, synapses_plastic] = NeuronIO::read_in_synapses(path, number_neurons, my_rank, number_ranks);
     auto [read_local_synapses_plastic, read_distant_synapses_plastic] = synapses_plastic;
@@ -885,33 +1222,97 @@ TEST_F(IOTest, testReadInSynapses) {
     std::ranges::sort(read_local_synapses_plastic);
     std::ranges::sort(read_distant_synapses_plastic);
 
-    ASSERT_EQ(preliminary_local_synapses_static.size(), read_local_synapses_static.size());
-    ASSERT_EQ(preliminary_distant_synapses_static.size(), read_distant_synapses_static.size());
-    ASSERT_EQ(preliminary_local_synapses_plastic.size(), read_local_synapses_plastic.size());
-    ASSERT_EQ(preliminary_distant_synapses_plastic.size(), read_distant_synapses_plastic.size());
+    ASSERT_EQ(preliminary_local_synapses_static
+                  .
 
-    for (auto i = 0; i < preliminary_local_synapses_static.size(); i++) {
+              size(),
+        read_local_synapses_static
+
+            .
+
+        size()
+
+    );
+    ASSERT_EQ(preliminary_distant_synapses_static
+                  .
+
+              size(),
+        read_distant_synapses_static
+
+            .
+
+        size()
+
+    );
+    ASSERT_EQ(preliminary_local_synapses_plastic
+                  .
+
+              size(),
+        read_local_synapses_plastic
+
+            .
+
+        size()
+
+    );
+    ASSERT_EQ(preliminary_distant_synapses_plastic
+                  .
+
+              size(),
+        read_distant_synapses_plastic
+
+            .
+
+        size()
+
+    );
+
+    for (
+        auto i = 0;
+        i < preliminary_local_synapses_static.
+
+            size();
+
+        i++) {
         const auto& [p_1, p_2, p_weight] = preliminary_local_synapses_static[i];
         const auto& [r_1, r_2, r_weight] = read_local_synapses_static[i];
 
         ASSERT_NEAR(p_weight, r_weight, eps);
     }
 
-    for (auto i = 0; i < preliminary_distant_synapses_static.size(); i++) {
+    for (
+        auto i = 0;
+        i < preliminary_distant_synapses_static.
+
+            size();
+
+        i++) {
         const auto& [p_1, p_2, p_weight] = preliminary_distant_synapses_static[i];
         const auto& [r_1, r_2, r_weight] = read_distant_synapses_static[i];
 
         ASSERT_NEAR(p_weight, r_weight, eps);
     }
 
-    for (auto i = 0; i < preliminary_local_synapses_plastic.size(); i++) {
+    for (
+        auto i = 0;
+        i < preliminary_local_synapses_plastic.
+
+            size();
+
+        i++) {
         const auto& [p_1, p_2, p_weight] = preliminary_local_synapses_plastic[i];
         const auto& [r_1, r_2, r_weight] = read_local_synapses_plastic[i];
 
         ASSERT_NEAR(p_weight, r_weight, eps);
     }
 
-    for (auto i = 0; i < preliminary_distant_synapses_plastic.size(); i++) {
+    for (
+        auto i = 0;
+        i < preliminary_distant_synapses_plastic.
+
+            size();
+
+        i++) {
         const auto& [p_1, p_2, p_weight] = preliminary_distant_synapses_plastic[i];
         const auto& [r_1, r_2, r_weight] = read_distant_synapses_plastic[i];
 
@@ -921,6 +1322,7 @@ TEST_F(IOTest, testReadInSynapses) {
 
 TEST_F(IOTest, testReadOutSynapsesFileNotFound) {
     std::filesystem::path path{ "" };
+
     ASSERT_THROW(const auto& val = NeuronIO::read_out_synapses(path, 1, MPIRank(1), 2), RelearnException);
 }
 
@@ -939,7 +1341,9 @@ TEST_F(IOTest, testReadOutSynapses) {
     std::filesystem::path path{ "./out_network.tmp" };
     std::ofstream ofstream(path);
 
-    for (const auto synapse_id : ranges::views::indices(number_synapses)) {
+    for (
+        const auto synapse_id :
+        ranges::views::indices(number_synapses)) {
         const auto& source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
         const auto& target_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
@@ -966,18 +1370,60 @@ TEST_F(IOTest, testReadOutSynapses) {
         }
 
         if (plastic) {
-            ofstream << target_rank.get_rank() << ' ' << (target_id.get_neuron_id() + 1) << '\t'
-                     << my_rank.get_rank() << ' ' << (source_id.get_neuron_id() + 1) << ' ' << plastic_weight << '\t' << flag << '\n';
+            ofstream << target_rank.
+
+                        get_rank()
+
+                     << ' ' << (target_id.
+
+                                get_neuron_id()
+
+                            + 1)
+                     << '\t'
+                     << my_rank.
+
+                        get_rank()
+
+                     << ' ' << (source_id.
+
+                                get_neuron_id()
+
+                            + 1)
+                     << ' ' << plastic_weight << '\t' << flag << '\n';
         } else {
-            ofstream << target_rank.get_rank() << ' ' << (target_id.get_neuron_id() + 1) << '\t'
-                     << my_rank.get_rank() << ' ' << (source_id.get_neuron_id() + 1) << ' ' << static_weight << '\t' << flag << '\n';
+            ofstream << target_rank.
+
+                        get_rank()
+
+                     << ' ' << (target_id.
+
+                                get_neuron_id()
+
+                            + 1)
+                     << '\t'
+                     << my_rank.
+
+                        get_rank()
+
+                     << ' ' << (source_id.
+
+                                get_neuron_id()
+
+                            + 1)
+                     << ' ' << static_weight << '\t' << flag << '\n';
         }
     }
 
-    ofstream.flush();
-    ofstream.close();
+    ofstream.
 
-    auto [synapses_static, synapses_plastic] = NeuronIO::read_out_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
+        flush();
+
+    ofstream.
+
+        close();
+
+    auto [synapses_static, synapses_plastic] = NeuronIO::read_out_synapses(path, number_neurons, my_rank,
+        static_cast<int>(number_ranks));
     auto [read_local_synapses_plastic, read_distant_synapses_plastic] = synapses_plastic;
     auto [read_local_synapses_static, read_distant_synapses_static] = synapses_static;
 
@@ -991,33 +1437,97 @@ TEST_F(IOTest, testReadOutSynapses) {
     std::ranges::sort(read_local_synapses_plastic);
     std::ranges::sort(read_distant_synapses_plastic);
 
-    ASSERT_EQ(preliminary_local_synapses_static.size(), read_local_synapses_static.size());
-    ASSERT_EQ(preliminary_distant_synapses_static.size(), read_distant_synapses_static.size());
-    ASSERT_EQ(preliminary_local_synapses_plastic.size(), read_local_synapses_plastic.size());
-    ASSERT_EQ(preliminary_distant_synapses_plastic.size(), read_distant_synapses_plastic.size());
+    ASSERT_EQ(preliminary_local_synapses_static
+                  .
 
-    for (auto i = 0; i < preliminary_local_synapses_static.size(); i++) {
+              size(),
+        read_local_synapses_static
+
+            .
+
+        size()
+
+    );
+    ASSERT_EQ(preliminary_distant_synapses_static
+                  .
+
+              size(),
+        read_distant_synapses_static
+
+            .
+
+        size()
+
+    );
+    ASSERT_EQ(preliminary_local_synapses_plastic
+                  .
+
+              size(),
+        read_local_synapses_plastic
+
+            .
+
+        size()
+
+    );
+    ASSERT_EQ(preliminary_distant_synapses_plastic
+                  .
+
+              size(),
+        read_distant_synapses_plastic
+
+            .
+
+        size()
+
+    );
+
+    for (
+        auto i = 0;
+        i < preliminary_local_synapses_static.
+
+            size();
+
+        i++) {
         const auto& [p_1, p_2, p_weight] = preliminary_local_synapses_static[i];
         const auto& [r_1, r_2, r_weight] = read_local_synapses_static[i];
 
         ASSERT_NEAR(p_weight, r_weight, eps);
     }
 
-    for (auto i = 0; i < preliminary_distant_synapses_static.size(); i++) {
+    for (
+        auto i = 0;
+        i < preliminary_distant_synapses_static.
+
+            size();
+
+        i++) {
         const auto& [p_1, p_2, p_weight] = preliminary_distant_synapses_static[i];
         const auto& [r_1, r_2, r_weight] = read_distant_synapses_static[i];
 
         ASSERT_NEAR(p_weight, r_weight, eps);
     }
 
-    for (auto i = 0; i < preliminary_local_synapses_plastic.size(); i++) {
+    for (
+        auto i = 0;
+        i < preliminary_local_synapses_plastic.
+
+            size();
+
+        i++) {
         const auto& [p_1, p_2, p_weight] = preliminary_local_synapses_plastic[i];
         const auto& [r_1, r_2, r_weight] = read_local_synapses_plastic[i];
 
         ASSERT_NEAR(p_weight, r_weight, eps);
     }
 
-    for (auto i = 0; i < preliminary_distant_synapses_plastic.size(); i++) {
+    for (
+        auto i = 0;
+        i < preliminary_distant_synapses_plastic.
+
+            size();
+
+        i++) {
         const auto& [p_1, p_2, p_weight] = preliminary_distant_synapses_plastic[i];
         const auto& [r_1, r_2, r_weight] = read_distant_synapses_plastic[i];
 
@@ -1027,7 +1537,8 @@ TEST_F(IOTest, testReadOutSynapses) {
 
 TEST_F(IOTest, testWriteInSynapsesFileNotFound) {
     std::filesystem::path path{ "" };
-    ASSERT_THROW(NeuronIO::write_in_synapses({}, {}, {}, {}, MPIRank(0), 0, path);, RelearnException);
+    ASSERT_THROW(NeuronIO::write_in_synapses({}, {}, {}, {}, MPIRank(0), 0, path);
+                 , RelearnException);
 }
 
 TEST_F(IOTest, testWriteInSynapses) {
@@ -1044,7 +1555,9 @@ TEST_F(IOTest, testWriteInSynapses) {
 
     std::filesystem::path path{ "./in_network.tmp" };
 
-    for (const auto synapse_id : ranges::views::indices(number_synapses)) {
+    for (
+        const auto synapse_id :
+        ranges::views::indices(number_synapses)) {
         const auto& source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
         const auto& target_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
@@ -1073,7 +1586,8 @@ TEST_F(IOTest, testWriteInSynapses) {
 
     NeuronIO::write_in_synapses(preliminary_local_synapses_static, preliminary_distant_synapses_static, preliminary_local_synapses_plastic, preliminary_distant_synapses_plastic, my_rank, number_neurons, path);
 
-    auto [synapses_static, synapses_plastic] = NeuronIO::read_in_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [synapses_static, synapses_plastic] = NeuronIO::read_in_synapses(path, number_neurons, my_rank,
+        static_cast<int>(number_ranks));
     auto [read_local_synapses_plastic, read_distant_synapses_plastic] = synapses_plastic;
     auto [read_local_synapses_static, read_distant_synapses_static] = synapses_static;
 
@@ -1087,33 +1601,97 @@ TEST_F(IOTest, testWriteInSynapses) {
     std::ranges::sort(read_local_synapses_plastic);
     std::ranges::sort(read_distant_synapses_plastic);
 
-    ASSERT_EQ(preliminary_local_synapses_static.size(), read_local_synapses_static.size());
-    ASSERT_EQ(preliminary_distant_synapses_static.size(), read_distant_synapses_static.size());
-    ASSERT_EQ(preliminary_local_synapses_plastic.size(), read_local_synapses_plastic.size());
-    ASSERT_EQ(preliminary_distant_synapses_plastic.size(), read_distant_synapses_plastic.size());
+    ASSERT_EQ(preliminary_local_synapses_static
+                  .
 
-    for (auto i = 0; i < preliminary_local_synapses_static.size(); i++) {
+              size(),
+        read_local_synapses_static
+
+            .
+
+        size()
+
+    );
+    ASSERT_EQ(preliminary_distant_synapses_static
+                  .
+
+              size(),
+        read_distant_synapses_static
+
+            .
+
+        size()
+
+    );
+    ASSERT_EQ(preliminary_local_synapses_plastic
+                  .
+
+              size(),
+        read_local_synapses_plastic
+
+            .
+
+        size()
+
+    );
+    ASSERT_EQ(preliminary_distant_synapses_plastic
+                  .
+
+              size(),
+        read_distant_synapses_plastic
+
+            .
+
+        size()
+
+    );
+
+    for (
+        auto i = 0;
+        i < preliminary_local_synapses_static.
+
+            size();
+
+        i++) {
         const auto& [p_1, p_2, p_weight] = preliminary_local_synapses_static[i];
         const auto& [r_1, r_2, r_weight] = read_local_synapses_static[i];
 
         ASSERT_NEAR(p_weight, r_weight, eps);
     }
 
-    for (auto i = 0; i < preliminary_distant_synapses_static.size(); i++) {
+    for (
+        auto i = 0;
+        i < preliminary_distant_synapses_static.
+
+            size();
+
+        i++) {
         const auto& [p_1, p_2, p_weight] = preliminary_distant_synapses_static[i];
         const auto& [r_1, r_2, r_weight] = read_distant_synapses_static[i];
 
         ASSERT_NEAR(p_weight, r_weight, eps);
     }
 
-    for (auto i = 0; i < preliminary_local_synapses_plastic.size(); i++) {
+    for (
+        auto i = 0;
+        i < preliminary_local_synapses_plastic.
+
+            size();
+
+        i++) {
         const auto& [p_1, p_2, p_weight] = preliminary_local_synapses_plastic[i];
         const auto& [r_1, r_2, r_weight] = read_local_synapses_plastic[i];
 
         ASSERT_NEAR(p_weight, r_weight, eps);
     }
 
-    for (auto i = 0; i < preliminary_distant_synapses_plastic.size(); i++) {
+    for (
+        auto i = 0;
+        i < preliminary_distant_synapses_plastic.
+
+            size();
+
+        i++) {
         const auto& [p_1, p_2, p_weight] = preliminary_distant_synapses_plastic[i];
         const auto& [r_1, r_2, r_weight] = read_distant_synapses_plastic[i];
 
@@ -1123,7 +1701,8 @@ TEST_F(IOTest, testWriteInSynapses) {
 
 TEST_F(IOTest, testWriteOutSynapsesFileNotFound) {
     std::filesystem::path path{ "" };
-    ASSERT_THROW(NeuronIO::write_out_synapses({}, {}, {}, {}, MPIRank(0), 0, path);, RelearnException);
+    ASSERT_THROW(NeuronIO::write_out_synapses({}, {}, {}, {}, MPIRank(0), 0, path);
+                 , RelearnException);
 }
 
 TEST_F(IOTest, testWriteOutSynapses) {
@@ -1140,7 +1719,9 @@ TEST_F(IOTest, testWriteOutSynapses) {
 
     std::filesystem::path path{ "./out_network.tmp" };
 
-    for (const auto synapse_id : ranges::views::indices(number_synapses)) {
+    for (
+        const auto synapse_id :
+        ranges::views::indices(number_synapses)) {
         const auto& source_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
         const auto& target_id = NeuronIdAdapter::get_random_neuron_id(number_neurons, mt);
 
@@ -1169,7 +1750,8 @@ TEST_F(IOTest, testWriteOutSynapses) {
 
     NeuronIO::write_out_synapses(preliminary_local_synapses_static, preliminary_distant_synapses_static, preliminary_local_synapses_plastic, preliminary_distant_synapses_plastic, my_rank, number_neurons, path);
 
-    auto [synapses_static, synapses_plastic] = NeuronIO::read_out_synapses(path, number_neurons, my_rank, static_cast<int>(number_ranks));
+    auto [synapses_static, synapses_plastic] = NeuronIO::read_out_synapses(path, number_neurons, my_rank,
+        static_cast<int>(number_ranks));
     auto [read_local_synapses_plastic, read_distant_synapses_plastic] = synapses_plastic;
     auto [read_local_synapses_static, read_distant_synapses_static] = synapses_static;
 
@@ -1183,33 +1765,97 @@ TEST_F(IOTest, testWriteOutSynapses) {
     std::ranges::sort(read_local_synapses_plastic);
     std::ranges::sort(read_distant_synapses_plastic);
 
-    ASSERT_EQ(preliminary_local_synapses_static.size(), read_local_synapses_static.size());
-    ASSERT_EQ(preliminary_distant_synapses_static.size(), read_distant_synapses_static.size());
-    ASSERT_EQ(preliminary_local_synapses_plastic.size(), read_local_synapses_plastic.size());
-    ASSERT_EQ(preliminary_distant_synapses_plastic.size(), read_distant_synapses_plastic.size());
+    ASSERT_EQ(preliminary_local_synapses_static
+                  .
 
-    for (auto i = 0; i < preliminary_local_synapses_static.size(); i++) {
+              size(),
+        read_local_synapses_static
+
+            .
+
+        size()
+
+    );
+    ASSERT_EQ(preliminary_distant_synapses_static
+                  .
+
+              size(),
+        read_distant_synapses_static
+
+            .
+
+        size()
+
+    );
+    ASSERT_EQ(preliminary_local_synapses_plastic
+                  .
+
+              size(),
+        read_local_synapses_plastic
+
+            .
+
+        size()
+
+    );
+    ASSERT_EQ(preliminary_distant_synapses_plastic
+                  .
+
+              size(),
+        read_distant_synapses_plastic
+
+            .
+
+        size()
+
+    );
+
+    for (
+        auto i = 0;
+        i < preliminary_local_synapses_static.
+
+            size();
+
+        i++) {
         const auto& [p_1, p_2, p_weight] = preliminary_local_synapses_static[i];
         const auto& [r_1, r_2, r_weight] = read_local_synapses_static[i];
 
         ASSERT_NEAR(p_weight, r_weight, eps);
     }
 
-    for (auto i = 0; i < preliminary_distant_synapses_static.size(); i++) {
+    for (
+        auto i = 0;
+        i < preliminary_distant_synapses_static.
+
+            size();
+
+        i++) {
         const auto& [p_1, p_2, p_weight] = preliminary_distant_synapses_static[i];
         const auto& [r_1, r_2, r_weight] = read_distant_synapses_static[i];
 
         ASSERT_NEAR(p_weight, r_weight, eps);
     }
 
-    for (auto i = 0; i < preliminary_local_synapses_plastic.size(); i++) {
+    for (
+        auto i = 0;
+        i < preliminary_local_synapses_plastic.
+
+            size();
+
+        i++) {
         const auto& [p_1, p_2, p_weight] = preliminary_local_synapses_plastic[i];
         const auto& [r_1, r_2, r_weight] = read_local_synapses_plastic[i];
 
         ASSERT_NEAR(p_weight, r_weight, eps);
     }
 
-    for (auto i = 0; i < preliminary_distant_synapses_plastic.size(); i++) {
+    for (
+        auto i = 0;
+        i < preliminary_distant_synapses_plastic.
+
+            size();
+
+        i++) {
         const auto& [p_1, p_2, p_weight] = preliminary_distant_synapses_plastic[i];
         const auto& [r_1, r_2, r_weight] = read_distant_synapses_plastic[i];
 
@@ -1230,16 +1876,26 @@ TEST_F(IOTest, additionalPositionInformationTest) {
 
     auto sim_box = SimulationAdapter::get_random_simulation_box_size(mt);
     std::vector<RelearnTypes::bounding_box_type> subdomain_boxes{};
-    for (auto i = 0; i < num_subdomains; i++) {
-        subdomain_boxes.push_back(SimulationAdapter::get_random_simulation_box_size(mt));
+    for (
+        auto i = 0;
+        i < num_subdomains;
+        i++) {
+        subdomain_boxes.
+
+            push_back(SimulationAdapter::get_random_simulation_box_size(mt));
     }
 
-    for (auto i = 0; i < number_neurons; i++) {
+    for (
+        auto i = 0;
+        i < number_neurons;
+        i++) {
         correct_ids.push_back(NeuronID{ i });
         correct_position.emplace_back(SimulationAdapter::get_random_position_in_box(sim_box, mt));
         correct_area_names.emplace_back("area_" + std::to_string(i));
         correct_area_ids.emplace_back(i);
-        correct_signal_types.emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
+        correct_signal_types.
+
+            emplace_back(NeuronTypesAdapter::get_random_signal_type(mt));
     }
 
     auto path = get_relearn_path() / "neurons.tmp";
@@ -1249,8 +1905,14 @@ TEST_F(IOTest, additionalPositionInformationTest) {
     auto comments = NeuronIO::read_comments(path);
     auto infos = NeuronIO::parse_additional_position_information(comments);
 
-    ASSERT_EQ(infos.total_neurons, total_neurons);
-    ASSERT_EQ(infos.local_neurons, number_neurons);
-    ASSERT_TRUE(sim_box.equals_eps(infos.sim_size));
+    ASSERT_EQ(infos
+                  .total_neurons,
+        total_neurons);
+    ASSERT_EQ(infos
+                  .local_neurons,
+        number_neurons);
+    ASSERT_TRUE(sim_box
+                    .equals_eps(infos
+                                    .sim_size));
     ASSERT_EQ(subdomain_boxes, infos.subdomain_sizes);
 }

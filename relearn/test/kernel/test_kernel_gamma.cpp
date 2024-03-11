@@ -31,8 +31,13 @@ TEST_F(ProbabilityKernelTest, testGammaSetterGetter) {
     GammaDistributionKernel::set_k(GammaDistributionKernel::default_k);
     GammaDistributionKernel::set_theta(GammaDistributionKernel::default_theta);
 
-    ASSERT_EQ(GammaDistributionKernel::get_k(), GammaDistributionKernel::default_k);
-    ASSERT_EQ(GammaDistributionKernel::get_theta(), GammaDistributionKernel::default_theta);
+    ASSERT_EQ(GammaDistributionKernel::get_k(), GammaDistributionKernel::default_k
+
+    );
+
+    ASSERT_EQ(GammaDistributionKernel::get_theta(), GammaDistributionKernel::default_theta
+
+    );
 
     const auto k = KernelAdapter::get_random_gamma_k(mt);
     const auto theta = KernelAdapter::get_random_gamma_theta(mt);
@@ -40,8 +45,13 @@ TEST_F(ProbabilityKernelTest, testGammaSetterGetter) {
     GammaDistributionKernel::set_k(k);
     GammaDistributionKernel::set_theta(theta);
 
-    ASSERT_EQ(GammaDistributionKernel::get_k(), k);
-    ASSERT_EQ(GammaDistributionKernel::get_theta(), theta);
+    ASSERT_EQ(GammaDistributionKernel::get_k(), k
+
+    );
+
+    ASSERT_EQ(GammaDistributionKernel::get_theta(), theta
+
+    );
 }
 
 TEST_F(ProbabilityKernelTest, testGammaSetterGetterException) {
@@ -56,8 +66,13 @@ TEST_F(ProbabilityKernelTest, testGammaSetterGetterException) {
     ASSERT_THROW(GammaDistributionKernel::set_theta(0.0), RelearnException);
     ASSERT_THROW(GammaDistributionKernel::set_theta(-theta), RelearnException);
 
-    ASSERT_EQ(GammaDistributionKernel::get_k(), k);
-    ASSERT_EQ(GammaDistributionKernel::get_theta(), theta);
+    ASSERT_EQ(GammaDistributionKernel::get_k(), k
+
+    );
+
+    ASSERT_EQ(GammaDistributionKernel::get_theta(), theta
+
+    );
 }
 
 TEST_F(ProbabilityKernelTest, testGammaNoFreeElements) {
@@ -73,9 +88,11 @@ TEST_F(ProbabilityKernelTest, testGammaNoFreeElements) {
     const auto& source_position = SimulationAdapter::get_random_position(mt);
     const auto& target_position = SimulationAdapter::get_random_position(mt);
 
-    const auto attractiveness = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, 0);
+    const auto attractiveness = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position,
+        target_position, 0);
 
-    ASSERT_EQ(attractiveness, 0.0);
+    ASSERT_EQ(attractiveness,
+        0.0);
 }
 
 TEST_F(ProbabilityKernelTest, testGammaLinearElements) {
@@ -91,10 +108,15 @@ TEST_F(ProbabilityKernelTest, testGammaLinearElements) {
     const auto& source_position = SimulationAdapter::get_random_position(mt);
     const auto& target_position = SimulationAdapter::get_random_position(mt);
 
-    const auto attractiveness_one = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, 1);
+    const auto attractiveness_one = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position,
+        target_position, 1);
 
-    for (auto number_free_elements = 0U; number_free_elements < 10000U; number_free_elements++) {
-        const auto attractiveness = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, number_free_elements);
+    for (
+        auto number_free_elements = 0U;
+        number_free_elements < 10000U; number_free_elements++) {
+        const auto attractiveness = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position,
+            target_position,
+            number_free_elements);
 
         const auto expected_attractiveness = attractiveness_one * number_free_elements;
         ASSERT_NEAR(attractiveness, expected_attractiveness, eps);
@@ -124,7 +146,8 @@ TEST_F(ProbabilityKernelTest, testGammaPrecalculatedValues) {
         GammaDistributionKernel::set_k(k);
         GammaDistributionKernel::set_theta(theta);
 
-        const auto attractiveness = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position, target_position, 1);
+        const auto attractiveness = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position,
+            target_position, 1);
         ASSERT_NEAR(attractiveness, expected, eps);
     }
 }
@@ -152,14 +175,20 @@ TEST_F(KernelTest, testGammaKernelIntegration) {
     ;
     const auto& number_vacant_inhibitory_axons = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
     ;
-    const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_excitatory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15,
+        mt);
     ;
-    const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15, mt);
+    const auto& number_vacant_inhibitory_dendrites = RandomAdapter::get_random_integer<RelearnTypes::counter_type>(0, 15,
+        mt);
     ;
 
     OctreeNode<FastMultipoleMethodCell> node{};
     node.set_cell_neuron_id(neuron_id_1);
-    node.set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position());
+    node.
+
+        set_cell_size(SimulationAdapter::get_minimum_position(), SimulationAdapter::get_maximum_position()
+
+        );
 
     node.set_cell_excitatory_axons_position(target_excitatory_axon_position);
     node.set_cell_inhibitory_axons_position(target_inhibitory_axon_position);
@@ -169,15 +198,27 @@ TEST_F(KernelTest, testGammaKernelIntegration) {
     node.set_cell_number_axons(number_vacant_excitatory_axons, number_vacant_inhibitory_axons);
     node.set_cell_number_dendrites(number_vacant_excitatory_dendrites, number_vacant_inhibitory_dendrites);
 
-    const auto attr_exc_axons = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Axon, SignalType::Excitatory);
-    const auto attr_inh_axons = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Axon, SignalType::Inhibitory);
-    const auto attr_exc_dendrites = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Dendrite, SignalType::Excitatory);
-    const auto attr_inh_dendrites = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect({ MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Dendrite, SignalType::Inhibitory);
+    const auto attr_exc_axons = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect(
+        { MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Axon, SignalType::Excitatory);
+    const auto attr_inh_axons = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect(
+        { MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Axon, SignalType::Inhibitory);
+    const auto attr_exc_dendrites = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect(
+        { MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Dendrite, SignalType::Excitatory);
+    const auto attr_inh_dendrites = Kernel<FastMultipoleMethodCell>::calculate_attractiveness_to_connect(
+        { MPIRank::root_rank(), neuron_id_2 }, source_position, &node, ElementType::Dendrite, SignalType::Inhibitory);
 
-    const auto golden_attr_exc_axons = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position, target_excitatory_axon_position, number_vacant_excitatory_axons);
-    const auto golden_attr_inh_axons = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position, target_inhibitory_axon_position, number_vacant_inhibitory_axons);
-    const auto golden_attr_exc_dendrites = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position, target_excitatory_dendrite_position, number_vacant_excitatory_dendrites);
-    const auto golden_attr_inh_dendrites = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position, target_inhibitory_dendrite_position, number_vacant_inhibitory_dendrites);
+    const auto golden_attr_exc_axons = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position,
+        target_excitatory_axon_position,
+        number_vacant_excitatory_axons);
+    const auto golden_attr_inh_axons = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position,
+        target_inhibitory_axon_position,
+        number_vacant_inhibitory_axons);
+    const auto golden_attr_exc_dendrites = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position,
+        target_excitatory_dendrite_position,
+        number_vacant_excitatory_dendrites);
+    const auto golden_attr_inh_dendrites = GammaDistributionKernel::calculate_attractiveness_to_connect(source_position,
+        target_inhibitory_dendrite_position,
+        number_vacant_inhibitory_dendrites);
 
     ASSERT_EQ(attr_exc_axons, golden_attr_exc_axons);
     ASSERT_EQ(attr_inh_axons, golden_attr_inh_axons);

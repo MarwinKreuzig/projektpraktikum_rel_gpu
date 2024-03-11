@@ -10,9 +10,7 @@
  *
  */
 
-#include "RelearnTest.hpp"
+#include "../../RelearnTest.hpp"
 
-#include "util/NeuronID.h"
-
-class NeuronIDTest : public RelearnTest {
+class Vec3TestGpu : public RelearnTest {
 };

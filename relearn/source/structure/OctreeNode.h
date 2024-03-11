@@ -491,6 +491,17 @@ public:
     }
 
     /**
+     * @brief Sets the number of free elements for the associated type in the associated cell
+     * @param element_type The requested elements' type
+     * @param signal_type The requested elements' signal type
+     * @param num_elements The number of free elements
+     * @exception Throws a RelearnException if the requested type is not in this cell
+     */
+    constexpr void set_cell_number_elements_for(const ElementType element_type, const SignalType signal_type, const counter_type num_elements) {
+        cell.set_number_elements_for(element_type, signal_type, num_elements);
+    }
+
+    /**
      * @brief Sets the optional position for the excitatory dendrites position in the associated cell
      * @param opt_position The optional position, can be empty
      */
@@ -520,6 +531,17 @@ public:
      */
     constexpr void set_cell_inhibitory_axons_position(const std::optional<position_type>& opt_position) {
         cell.set_inhibitory_axons_position(opt_position);
+    }
+
+    /**
+     * @brief Sets the position of the free elements for the associated type for the associated cell
+     * @param element_type The requested elements' type
+     * @param signal_type The requested elements' signal type
+     * @param virtual_position The position of the free elements
+     * @exception Throws a RelearnException if the requested type is not in this cell
+     */
+    constexpr void set_cell_position_for(const ElementType element_type, const SignalType signal_type, const std::optional<position_type>& opt_position) {
+        cell.set_position_for(element_type, signal_type, opt_position);
     }
 
     /**

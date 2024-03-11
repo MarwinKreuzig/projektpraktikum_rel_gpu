@@ -61,20 +61,28 @@ void testSizeConst(const SemiStableVector<T>& ssv, size_t expected_size) {
 
 TEST_F(SemiStableVec3Test, testConstructor) {
     SemiStableVector<double> ssv_1{};
-    testSize(ssv_1, 0);
-    testSizeConst(ssv_1, 0);
+    testSize(ssv_1,
+        0);
+    testSizeConst(ssv_1,
+        0);
 
     SemiStableVector<int> ssv_2{};
-    testSize(ssv_2, 0);
-    testSizeConst(ssv_2, 0);
+    testSize(ssv_2,
+        0);
+    testSizeConst(ssv_2,
+        0);
 
     SemiStableVector<unsigned int> ssv_3{};
-    testSize(ssv_3, 0);
-    testSizeConst(ssv_3, 0);
+    testSize(ssv_3,
+        0);
+    testSizeConst(ssv_3,
+        0);
 
     SemiStableVector<OctreeNode<Cell<BaseCell<true, false, false, true>>>> ssv_4{};
-    testSize(ssv_4, 0);
-    testSizeConst(ssv_4, 0);
+    testSize(ssv_4,
+        0);
+    testSizeConst(ssv_4,
+        0);
 }
 
 TEST_F(SemiStableVec3Test, testPushReference) {
@@ -106,10 +114,14 @@ TEST_F(SemiStableVec3Test, testPushReference) {
     ssv.push_front(val_0);
     ssv.push_back(val_6);
 
-    testSize(ssv, 7);
-    testSizeConst(ssv, 7);
+    testSize(ssv,
+        7);
+    testSizeConst(ssv,
+        7);
 
-    for (auto i = 0; i < 7; i++) {
+    for (
+        auto i = 0;
+        i < 7; i++) {
         const auto& [a1, a2] = ssv[i];
         ASSERT_EQ(a1, i);
         ASSERT_EQ(a2, i * 10);
@@ -143,10 +155,14 @@ TEST_F(SemiStableVec3Test, testPushMove) {
     ssv.push_front({ 0, 0 });
     ssv.push_back({ 6, 60 });
 
-    testSize(ssv, 7);
-    testSizeConst(ssv, 7);
+    testSize(ssv,
+        7);
+    testSizeConst(ssv,
+        7);
 
-    for (auto i = 0; i < 7; i++) {
+    for (
+        auto i = 0;
+        i < 7; i++) {
         const auto& [a1, a2] = ssv[i];
         ASSERT_EQ(a1, i);
         ASSERT_EQ(a2, i * 10);
@@ -180,10 +196,14 @@ TEST_F(SemiStableVec3Test, testEmplace) {
     auto& ref_0 = ssv.emplace_front(0, 0);
     auto& ref_6 = ssv.emplace_back(60, 6);
 
-    testSize(ssv, 7);
-    testSizeConst(ssv, 7);
+    testSize(ssv,
+        7);
+    testSizeConst(ssv,
+        7);
 
-    for (auto i = 0; i < 7; i++) {
+    for (
+        auto i = 0;
+        i < 7; i++) {
         const auto& [a1, a2] = ssv[i];
         ASSERT_EQ(a1, i * 10);
         ASSERT_EQ(a2, i);
@@ -208,87 +228,158 @@ TEST_F(SemiStableVec3Test, testResize) {
     SemiStableVector<double> ssv{};
 
     ssv.resize(20);
-    testSize(ssv, 20);
-    testSizeConst(ssv, 20);
+    testSize(ssv,
+        20);
+    testSizeConst(ssv,
+        20);
 
     ssv.resize(0);
-    testSize(ssv, 0);
-    testSizeConst(ssv, 0);
+    testSize(ssv,
+        0);
+    testSizeConst(ssv,
+        0);
 
     ssv.resize(20, 4.0);
-    testSize(ssv, 20);
-    testSizeConst(ssv, 20);
+    testSize(ssv,
+        20);
+    testSizeConst(ssv,
+        20);
 
-    for (auto i = 0; i < 20; i++) {
-        ASSERT_EQ(ssv[i], 4.0);
+    for (
+        auto i = 0;
+        i < 20; i++) {
+        ASSERT_EQ(ssv[i],
+            4.0);
     }
 
-    ssv.clear();
-    testSize(ssv, 0);
-    testSizeConst(ssv, 0);
+    ssv.
+
+        clear();
+
+    testSize(ssv,
+        0);
+    testSizeConst(ssv,
+        0);
 
     ssv.resize(4, 3.0);
-    testSize(ssv, 4);
-    testSizeConst(ssv, 4);
+    testSize(ssv,
+        4);
+    testSizeConst(ssv,
+        4);
 
     ssv.resize(8, 1.0);
-    testSize(ssv, 8);
-    testSizeConst(ssv, 8);
+    testSize(ssv,
+        8);
+    testSizeConst(ssv,
+        8);
 
-    ASSERT_EQ(ssv[0], 3.0);
-    ASSERT_EQ(ssv[1], 3.0);
-    ASSERT_EQ(ssv[2], 3.0);
-    ASSERT_EQ(ssv[3], 3.0);
-    ASSERT_EQ(ssv[4], 1.0);
-    ASSERT_EQ(ssv[5], 1.0);
-    ASSERT_EQ(ssv[6], 1.0);
-    ASSERT_EQ(ssv[7], 1.0);
+    ASSERT_EQ(ssv[0],
+        3.0);
+    ASSERT_EQ(ssv[1],
+        3.0);
+    ASSERT_EQ(ssv[2],
+        3.0);
+    ASSERT_EQ(ssv[3],
+        3.0);
+    ASSERT_EQ(ssv[4],
+        1.0);
+    ASSERT_EQ(ssv[5],
+        1.0);
+    ASSERT_EQ(ssv[6],
+        1.0);
+    ASSERT_EQ(ssv[7],
+        1.0);
 }
 
 TEST_F(SemiStableVec3Test, testIterators) {
     SemiStableVector<float> ssv{};
 
-    for (auto i = 0; i < iterations; i++) {
-        ssv.push_back(float(i));
+    for (
+        auto i = 0;
+        i < iterations;
+        i++) {
+        ssv.
+
+            push_back(float(i));
     }
 
-    for (auto i = 0; i < iterations; i++) {
-        ASSERT_EQ(ssv[i], float(i));
+    for (
+        auto i = 0;
+        i < iterations;
+        i++) {
+        ASSERT_EQ(ssv[i],
+            float(i));
     }
 
-    for (auto it = ssv.begin(); it != ssv.end(); ++it) {
-        ASSERT_EQ(*it, float(std::distance(ssv.begin(), it)));
+    for (
+        auto it = ssv.begin();
+        it != ssv.
+
+              end();
+
+        ++it) {
+        ASSERT_EQ(*it,
+            float(std::distance(ssv.begin(), it)));
     }
 
-    for (auto it = ssv.cbegin(); it != ssv.cend(); ++it) {
-        ASSERT_EQ(*it, float(std::distance(ssv.cbegin(), it)));
+    for (
+        auto it = ssv.cbegin();
+        it != ssv.
+
+              cend();
+
+        ++it) {
+        ASSERT_EQ(*it,
+            float(std::distance(ssv.cbegin(), it)));
     }
 
     const auto& ref = ssv;
 
-    for (auto it = ref.begin(); it != ref.end(); ++it) {
-        ASSERT_EQ(*it, float(std::distance(ref.begin(), it)));
+    for (
+        auto it = ref.begin();
+        it != ref.
+
+              end();
+
+        ++it) {
+        ASSERT_EQ(*it,
+            float(std::distance(ref.begin(), it)));
     }
 
-    for (auto it = ref.cbegin(); it != ref.cend(); ++it) {
-        ASSERT_EQ(*it, float(std::distance(ref.cbegin(), it)));
+    for (
+        auto it = ref.cbegin();
+        it != ref.
+
+              cend();
+
+        ++it) {
+        ASSERT_EQ(*it,
+            float(std::distance(ref.cbegin(), it)));
     }
 }
 
 TEST_F(SemiStableVec3Test, testPointerStability) {
     using value_type = OctreeNode<Cell<BaseCell<true, false, false, true>>>;
-    constexpr std::size_t bound = 1024 * 1024;
+    constexpr std::size_t
+        bound
+        = 1024 * 1024;
 
     SemiStableVector<value_type> ssv{};
     std::vector<value_type*> ptrs{};
     ptrs.reserve(bound);
 
-    for (std::size_t i = 0; i < bound; i++) {
+    for (
+        std::size_t i = 0;
+        i < bound;
+        i++) {
         auto& ref = ssv.emplace_back();
         ptrs.emplace_back(&ref);
     }
 
-    for (std::size_t i = 0; i < bound; i++) {
+    for (
+        std::size_t i = 0;
+        i < bound;
+        i++) {
         auto& ref = ssv[i];
         ASSERT_EQ(&ref, ptrs[i]);
     }
@@ -296,31 +387,58 @@ TEST_F(SemiStableVec3Test, testPointerStability) {
 
 TEST_F(SemiStableVec3Test, testReferences) {
     SemiStableVector<double> ssv{};
-    for (auto i = 0; i < 1024; i++) {
+    for (
+        auto i = 0;
+        i < 1024; i++) {
         auto& ref = ssv.emplace_back(i);
     }
 
-    for (auto i = 0; i < 1024; i++) {
-        ssv[i] = double(i) * 2.0;
+    for (
+        auto i = 0;
+        i < 1024; i++) {
+        ssv[i] = double(i)
+            * 2.0;
     }
-    testSize(ssv, 1024);
-    testSizeConst(ssv, 1024);
+    testSize(ssv,
+        1024);
+    testSizeConst(ssv,
+        1024);
 
-    for (auto i = 0; i < 1024; i++) {
-        ASSERT_EQ(ssv[i], double(i) * 2.0);
-        ASSERT_EQ(ssv.at(i), double(i) * 2.0);
+    for (
+        auto i = 0;
+        i < 1024; i++) {
+        ASSERT_EQ(ssv[i],
+            double(i)
+                * 2.0);
+        ASSERT_EQ(ssv
+                      .at(i),
+            double(i)
+                * 2.0);
     }
-    testSize(ssv, 1024);
-    testSizeConst(ssv, 1024);
+    testSize(ssv,
+        1024);
+    testSizeConst(ssv,
+        1024);
 
-    for (auto i = 0; i < 1024; i++) {
+    for (
+        auto i = 0;
+        i < 1024; i++) {
         ssv.at(i) = double(i) * 5.0;
     }
 
-    for (auto i = 0; i < 1024; i++) {
-        ASSERT_EQ(ssv[i], double(i) * 5.0);
-        ASSERT_EQ(ssv.at(i), double(i) * 5.0);
+    for (
+        auto i = 0;
+        i < 1024; i++) {
+        ASSERT_EQ(ssv[i],
+            double(i)
+                * 5.0);
+        ASSERT_EQ(ssv
+                      .at(i),
+            double(i)
+                * 5.0);
     }
-    testSize(ssv, 1024);
-    testSizeConst(ssv, 1024);
+    testSize(ssv,
+        1024);
+    testSizeConst(ssv,
+        1024);
 }

@@ -21,6 +21,8 @@
 #include "util/Stack.h"
 #include "util/Timers.h"
 #include "util/Vec3.h"
+#include "gpu/utils/Interface.h"
+#include "gpu/utils/CudaHelper.h"
 
 #include <climits>
 #include <cstdint>
@@ -29,12 +31,14 @@
 #include <sstream>
 #include <utility>
 #include <vector>
+#include <stack>
 
 #include <range/v3/functional/indirect.hpp>
 #include <range/v3/functional/not_fn.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/indirect.hpp>
 #include <range/v3/view/filter.hpp>
+#include <stack>
 
 class Partition;
 
@@ -58,9 +62,12 @@ public:
         const auto& [min_x, min_y, min_z] = min;
         const auto& [max_x, max_y, max_z] = max;
 
-        RelearnException::check(min_x <= max_x, "Octree::Octree: The x component of the simulation box minimum was larger than that of the maximum");
-        RelearnException::check(min_y <= max_y, "Octree::Octree: The y component of the simulation box minimum was larger than that of the maximum");
-        RelearnException::check(min_z <= max_z, "Octree::Octree: The z component of the simulation box minimum was larger than that of the maximum");
+        RelearnException::check(min_x <= max_x,
+            "Octree::Octree: The x component of the simulation box minimum was larger than that of the maximum");
+        RelearnException::check(min_y <= max_y,
+            "Octree::Octree: The y component of the simulation box minimum was larger than that of the maximum");
+        RelearnException::check(min_z <= max_z,
+            "Octree::Octree: The z component of the simulation box minimum was larger than that of the maximum");
 
         simulation_box_minimum = min;
         simulation_box_maximum = max;
@@ -69,9 +76,11 @@ public:
     virtual ~Octree() = default;
 
     Octree(const Octree& other) = delete;
+
     Octree(Octree&& other) = delete;
 
     Octree& operator=(const Octree& other) = delete;
+
     Octree& operator=(Octree&& other) = delete;
 
     /**
@@ -124,12 +133,25 @@ public:
     virtual void initializes_leaf_nodes(RelearnTypes::number_neurons_type num_neurons) = 0;
 
     /**
+     * @brief Updates the octree structure on the gpu. This method should only be called after new neurons are inserted during simulation after the leaf
+     * nodes have been updated in neurons.create_neurons()
+     */
+    virtual void update_gpu_octree_structure() = 0;
+
+    /**
+     * @brief Overwrites the current cpu octree with the one stored on the gpu, should be called before inserting new neurons during simulation
+     * @exception Throws a RelearnException if the two octrees differ in their structure or if Cuda is not available
+     */
+    virtual void overwrite_cpu_tree_with_gpu() = 0;
+
+    /**
      * Print a visualization of this tree to a file
      * @param file_path The file where the visualization will be stored
      */
     void print_to_file(const std::filesystem::path& file_path) const {
         std::ofstream out_stream{ file_path };
-        RelearnException::check(out_stream.good() && !out_stream.bad(), "Octree::print_to_file: Unable to open stream for {}", file_path.string());
+        RelearnException::check(out_stream.good() && !out_stream.bad(),
+            "Octree::print_to_file: Unable to open stream for {}", file_path.string());
         std::stringstream ss;
         print(ss);
         out_stream << ss.rdbuf();
@@ -147,6 +169,10 @@ public:
     }
 
 protected:
+    /**
+     * Print a visualization of this tree to a stringstream
+     * @param ss stringstream
+     */
     virtual void print(std::stringstream& ss) const = 0;
 
 private:
@@ -226,6 +252,17 @@ public:
     }
 
     /**
+     * @brief Get the handle to the GPU version of this class
+     * @return The GPU Handle
+     */
+    [[nodiscard]] const std::shared_ptr<gpu::algorithm::OctreeHandle>& get_gpu_handle() {
+        RelearnException::check(CudaHelper::is_cuda_available(),
+            "OctreeImplementation::get_gpu_handle: GPU not supported");
+        RelearnException::check(gpu_handle != nullptr, "OctreeImplementation::get_gpu_handle: GPU handle not set");
+        return gpu_handle;
+    }
+
+    /**
      * @brief Gathers all leaf nodes and makes them available via get_leaf_nodes
      * @param num_neurons The number of neurons
      */
@@ -240,7 +277,9 @@ public:
 
             if (node->is_leaf()) {
                 const auto neuron_id = node->get_cell_neuron_id();
-                RelearnException::check(neuron_id.get_neuron_id() < leaf_nodes.size(), "Octree::initializes_leaf_nodes: Neuron id was too large for leaf nodes: {}", neuron_id);
+                RelearnException::check(neuron_id.get_neuron_id() < leaf_nodes.size(),
+                    "Octree::initializes_leaf_nodes: Neuron id was too large for leaf nodes: {}",
+                    neuron_id);
 
                 leaf_nodes[neuron_id.get_neuron_id()] = node;
                 continue;
@@ -259,14 +298,20 @@ public:
             }
         }
 
-        RelearnException::check(leaf_nodes.size() == num_neurons, "Octree::initializes_leaf_nodes: Less number of leaf nodes than number of local neurons {} != {}", leaf_nodes.size(), num_neurons);
+        RelearnException::check(leaf_nodes.size() == num_neurons,
+            "Octree::initializes_leaf_nodes: Less number of leaf nodes than number of local neurons {} != {}",
+            leaf_nodes.size(), num_neurons);
 
         for (const auto neuron_id : NeuronID::range(num_neurons)) {
             const auto& node = leaf_nodes[neuron_id.get_neuron_id()];
             RelearnException::check(node != nullptr, "Octree::initializes_leaf_nodes: Leaf node {} is null", neuron_id);
-            RelearnException::check(node->is_leaf(), "Octree::initializes_leaf_nodes: Leaf node {} is not a leaf node", neuron_id);
-            RelearnException::check(node->is_local(), "Octree::initializes_leaf_nodes: Leaf node {} is not local", neuron_id);
-            RelearnException::check(node->get_cell().get_neuron_id() == neuron_id, "Octree::initializes_leaf_nodes: Leaf node {} has wrong neuron id {}", neuron_id, node->get_cell().get_neuron_id());
+            RelearnException::check(node->is_leaf(), "Octree::initializes_leaf_nodes: Leaf node {} is not a leaf node",
+                neuron_id);
+            RelearnException::check(node->is_local(), "Octree::initializes_leaf_nodes: Leaf node {} is not local",
+                neuron_id);
+            RelearnException::check(node->get_cell().get_neuron_id() == neuron_id,
+                "Octree::initializes_leaf_nodes: Leaf node {} has wrong neuron id {}", neuron_id,
+                node->get_cell().get_neuron_id());
         }
 
         all_leaf_nodes = std::move(leaf_nodes);
@@ -299,7 +344,9 @@ public:
      * @return The requested branch node
      */
     [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_branch_node_pointer(size_t index) {
-        RelearnException::check(index < branch_nodes.size(), "OctreeImplementation::get_branch_node_pointer(): index ({}) is larger than or equal to the number of branch nodes ({}).", index, branch_nodes.size());
+        RelearnException::check(index < branch_nodes.size(),
+            "OctreeImplementation::get_branch_node_pointer(): index ({}) is larger than or equal to the number of branch nodes ({}).",
+            index, branch_nodes.size());
         return branch_nodes[index];
     }
 
@@ -315,11 +362,15 @@ public:
         const auto& [max_x, max_y, max_z] = get_simulation_box_maximum();
         const auto& [pos_x, pos_y, pos_z] = position;
 
-        RelearnException::check(min_x <= pos_x && pos_x <= max_x, "Octree::insert: x was not in range: {} vs [{}, {}]", pos_x, min_x, max_x);
-        RelearnException::check(min_y <= pos_y && pos_y <= max_y, "Octree::insert: y was not in range: {} vs [{}, {}]", pos_y, min_y, max_y);
-        RelearnException::check(min_z <= pos_z && pos_z <= max_z, "Octree::insert: z was not in range: {} vs [{}, {}]", pos_z, min_z, max_z);
+        RelearnException::check(min_x <= pos_x && pos_x <= max_x, "Octree::insert: x was not in range: {} vs [{}, {}]",
+            pos_x, min_x, max_x);
+        RelearnException::check(min_y <= pos_y && pos_y <= max_y, "Octree::insert: y was not in range: {} vs [{}, {}]",
+            pos_y, min_y, max_y);
+        RelearnException::check(min_z <= pos_z && pos_z <= max_z, "Octree::insert: z was not in range: {} vs [{}, {}]",
+            pos_z, min_z, max_z);
 
-        RelearnException::check(neuron_id.is_initialized(), "Octree::insert: neuron_id {} was uninitialized", neuron_id);
+        RelearnException::check(neuron_id.is_initialized(), "Octree::insert: neuron_id {} was uninitialized",
+            neuron_id);
 
         auto* res = root.insert(position, neuron_id);
         RelearnException::check(res != nullptr, "Octree::insert: res was nullptr");
@@ -339,6 +390,256 @@ public:
         footprint->emplace("OctreeNode", octree_node_footprint);
 
         Octree::record_memory_footprint(footprint);
+    }
+
+    /**
+     * @pre Should only be called after all nodes have been inserted.
+     * @brief Constructs the octree in a format that allows easy copying to the gpu.
+     * @param num_neurons Number of neurons on MPI Process
+     */
+    [[nodiscard]] gpu::algorithm::OctreeCPUCopy octree_to_octree_cpu_copy(const RelearnTypes::number_neurons_type num_neurons) {
+        // OctreeCPUCopy has the same format as gpu::algorithm::Octree (struct-of-arrays) to make copying it as easy as 
+        // possible, so we need to convert the octree to the right format. Each attribute of the nodes is stored in a seperate 
+        // array, in the same order, so a node is identified by its index into the arrays. Only virtual neurons have children, 
+        // so num_neurons needs to be subtracted from the indices before accessing num_children and child_indices.
+        // In the other arrays, virtual and real neurons are both stored, first all real neurons then all virtual ones.
+
+        // The virtual nodes are supposed to be in breadth-first-order. This means that all nodes of a level are
+        // consecutive in the array. By determining the range of indices for every level in a first depth-first pass, it
+        // is possible to copy all nodes to the right index immediately in a second pass.
+
+        RelearnTypes::number_neurons_type num_virtual_neurons = 0;
+
+        // Every element in the vector is the index of the next node of the level corresponding to index of the element.
+        // So, to determine the index of a node in the octree copy, you use level_indices[<node_level>].
+        // After inserting a node you obviously need to increment level_indices[<node_level>]
+        std::vector<size_t> level_indices{};
+        level_indices.push_back(0);
+
+        std::stack<std::pair<const OctreeNode<AdditionalCellAttributes>*, size_t>> octree_nodes{};
+        octree_nodes.emplace(&root, 0);
+
+        // first, we find the number of nodes per level in the tree
+        while (!octree_nodes.empty()) {
+            const auto [current_node, level] = octree_nodes.top();
+            octree_nodes.pop();
+
+            if (current_node->get_cell().get_neuron_id().is_virtual()) {
+                num_virtual_neurons++;
+
+                while (level_indices.size() <= level) {
+                    level_indices.push_back(0);
+                }
+                level_indices[level] += 1;
+
+                const auto& children = current_node->get_children();
+                int child_count = 0;
+                for (auto i = 0; i < 8; i++) {
+                    const auto child = children[i];
+                    if (child != nullptr) {
+                        octree_nodes.emplace(child, level + 1);
+                        child_count++;
+                    }
+                }
+            }
+        }
+
+        // then, we use the number of nodes per level to set the indices in level_indices
+        size_t nodes_below = 0;
+        for (int i = level_indices.size() - 1; i >= 0; i--) {
+            auto nodes_this_level = level_indices[i];
+            level_indices[i] = nodes_below;
+            nodes_below += nodes_this_level;
+        }
+
+        gpu::algorithm::OctreeCPUCopy octree_cpu_copy(num_neurons, num_virtual_neurons);
+
+        // actually add all the nodes to the octree
+
+        // stack of (node, level, parent index)
+        std::stack<std::tuple<const OctreeNode<AdditionalCellAttributes>*, size_t, size_t>> octree_nodes_second_pass{};
+        octree_nodes_second_pass.emplace(&root, 0, 0);
+
+        // helper function
+        const auto convert_vec_to_gpu = [](const Vec3d cpu_vec) -> gpu::Vec3d {
+            return gpu::Vec3d{ cpu_vec.get_x(), cpu_vec.get_y(), cpu_vec.get_z() };
+        };
+
+        RelearnGPUTypes::number_neurons_type current_leaf_node_index = 0;
+        while (!octree_nodes_second_pass.empty()) {
+            const auto [current_node, level, parent_index] = octree_nodes_second_pass.top();
+            octree_nodes_second_pass.pop();
+
+            ElementType element_type_excitatory;
+            if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
+                element_type_excitatory = ElementType::Dendrite;
+            } else {
+                element_type_excitatory = ElementType::Axon;
+            }
+
+            ElementType element_type_inhibitory;
+            if (Cell<AdditionalCellAttributes>::has_inhibitory_dendrite) {
+                element_type_inhibitory = ElementType::Dendrite;
+            } else {
+                element_type_inhibitory = ElementType::Axon;
+            }
+
+            const auto index = level_indices[level];
+            auto current_index = 0;
+
+            if (current_node->get_cell().get_neuron_id().is_virtual()) {
+                current_index = num_neurons + index;
+                level_indices[level] += 1;
+
+                // add the current node to its parent's children, skipping the root node
+                if (level != 0) {
+                    octree_cpu_copy.child_indices[octree_cpu_copy.num_children[parent_index] * num_virtual_neurons + parent_index] = index + num_neurons;
+                    octree_cpu_copy.num_children[parent_index] += 1;
+                }
+
+                const auto& children = current_node->get_children();
+                int child_count = 0;
+                for (auto i = 0; i < 8; i++) {
+                    const auto child = children[i];
+                    if (child != nullptr) {
+                        octree_nodes_second_pass.emplace(child, level + 1, index);
+                        child_count++;
+                    }
+                }
+            } else {
+                current_index = current_leaf_node_index;
+                current_leaf_node_index++;
+
+                NeuronID neuron_ID = current_node->get_cell_neuron_id();
+                octree_cpu_copy.neuron_ids[current_index] = neuron_ID.get_neuron_id();
+
+                octree_cpu_copy.child_indices[octree_cpu_copy.num_children[parent_index] * num_virtual_neurons + parent_index] = current_index;
+                octree_cpu_copy.num_children[parent_index] += 1;
+            }
+
+            octree_cpu_copy.minimum_cell_position[current_index] = convert_vec_to_gpu(std::get<0>(current_node->get_size()));
+            octree_cpu_copy.maximum_cell_position[current_index] = convert_vec_to_gpu(std::get<1>(current_node->get_size()));
+
+            auto current_cell = current_node->get_cell();
+            octree_cpu_copy.position_excitatory_element[current_index] = convert_vec_to_gpu(current_cell.get_position_for(element_type_excitatory, SignalType::Excitatory).value());
+            octree_cpu_copy.position_inhibitory_element[current_index] = convert_vec_to_gpu(current_cell.get_position_for(element_type_inhibitory, SignalType::Inhibitory).value());
+            octree_cpu_copy.num_free_elements_excitatory[current_index] = current_cell.get_number_elements_for(element_type_excitatory, SignalType::Excitatory);
+            octree_cpu_copy.num_free_elements_inhibitory[current_index] = current_cell.get_number_elements_for(element_type_inhibitory, SignalType::Inhibitory);
+        }
+
+        return octree_cpu_copy;
+    }
+
+    /**
+     * @brief Constructs a OctreeCpuCopy and copys it to the gpu.
+     * @param num_neurons number of leaf nodes
+     */
+    void construct_on_gpu(const RelearnTypes::number_neurons_type num_neurons) {
+        if (!CudaHelper::is_cuda_available()) {
+            RelearnException::fail("Octree::construct_on_gpu: Cuda is not available");
+        }
+
+        auto octree_cpu_copy = octree_to_octree_cpu_copy(num_neurons);
+        const auto num_virtual_neurons = octree_cpu_copy.num_children.size();
+
+        // Currently assumes that either dendrites are both true or axons are both true (BarnesHut and inverse BarnesHut)
+        ElementType element_type;
+        if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
+            element_type = ElementType::Dendrite;
+        } else {
+            element_type = ElementType::Axon;
+        }
+        gpu_handle = gpu::algorithm::create_octree(num_neurons, num_virtual_neurons, element_type);
+        gpu_handle->copy_to_device(std::move(octree_cpu_copy));
+    }
+
+    /**
+     * @brief Updates the octree structure on the gpu. This method should only be called after new neurons are inserted during simulation after the leaf nodes have been updated in neurons.create_neurons()
+     * @exception Throws a RelearnException if the gpu handle was not created yet or the leaf nodes were not initialized yet
+     */
+    void update_gpu_octree_structure() override {
+        if (!gpu_handle) {
+            RelearnException::fail("Octree::construct_on_gpu: GPU Handle was not created yet");
+        }
+
+        if (all_leaf_nodes.empty()) {
+            RelearnException::fail("Octree::construct_on_gpu: Leaf Nodes were not initialized yet");
+        }
+
+        auto octree_cpu_copy = octree_to_octree_cpu_copy(all_leaf_nodes.size());
+        gpu_handle->copy_to_device(std::move(octree_cpu_copy));
+    }
+
+    /**
+     * @brief Overwrites the current cpu octree with the one stored on the gpu, should be called before inserting new neurons during simulation
+     * @exception Throws a RelearnException if the two octrees differ in their structure or if Cuda is not available
+     */
+    void overwrite_cpu_tree_with_gpu() override {
+        if (!gpu_handle) {
+            RelearnException::fail("Octree::overwrite_cpu_tree_with_gpu: GPU Handle was not created yet");
+        }
+
+        size_t num_neurons = gpu_handle->get_number_neurons();
+        auto octree_cpu_copy = gpu_handle->copy_to_host(num_neurons, gpu_handle->get_number_virtual_neurons());
+
+        std::stack<OctreeNode<AdditionalCellAttributes>*> octree_nodes_cpu{};
+        octree_nodes_cpu.push(&root);
+
+        std::stack<uint64_t> octree_nodes_gpu{};
+
+        // assumes root is in the last index
+        octree_nodes_gpu.push(num_neurons + gpu_handle->get_number_virtual_neurons() - 1);
+
+        while (!octree_nodes_cpu.empty()) {
+            auto current_node_cpu = octree_nodes_cpu.top();
+            octree_nodes_cpu.pop();
+
+            auto current_node_gpu = octree_nodes_gpu.top();
+            octree_nodes_gpu.pop();
+
+            ElementType elem_type;
+            if constexpr (Cell<AdditionalCellAttributes>::has_excitatory_dendrite)
+                elem_type = ElementType::Dendrite;
+            else
+                elem_type = ElementType::Axon;
+
+            bool cpu_node_is_virtual = current_node_cpu->get_cell().get_neuron_id().is_virtual();
+            bool gpu_node_is_virtual = current_node_gpu >= num_neurons;
+            if (cpu_node_is_virtual != gpu_node_is_virtual)
+                RelearnException::fail("Octree::overwrite_cpu_tree_with_gpu: GPU and CPU Octree structure differs");
+
+            gpu::Vec3d pos_ex_elem = octree_cpu_copy.position_excitatory_element.at(current_node_gpu);
+            current_node_cpu->set_cell_position_for(elem_type, SignalType::Excitatory, std::make_optional<Vec3d>(Vec3d(pos_ex_elem.x, pos_ex_elem.y, pos_ex_elem.z)));
+
+            gpu::Vec3d pos_in_elem = octree_cpu_copy.position_inhibitory_element.at(current_node_gpu);
+            current_node_cpu->set_cell_position_for(elem_type, SignalType::Inhibitory, std::make_optional<Vec3d>(Vec3d(pos_in_elem.x, pos_in_elem.y, pos_in_elem.z)));
+
+            RelearnTypes::counter_type num_ex_elem = octree_cpu_copy.num_free_elements_excitatory.at(current_node_gpu);
+            current_node_cpu->set_cell_number_elements_for(elem_type, SignalType::Excitatory, num_ex_elem);
+
+            RelearnTypes::counter_type num_in_elem = octree_cpu_copy.num_free_elements_inhibitory.at(current_node_gpu);
+            current_node_cpu->set_cell_number_elements_for(elem_type, SignalType::Inhibitory, num_in_elem);
+
+            if (current_node_cpu->is_parent() && current_node_gpu >= num_neurons) {
+                const auto& children_cpu = current_node_cpu->get_children();
+                int children_processed = 0;
+                for (auto i = 0; i < 8; i++) {
+                    const auto child = children_cpu[7 - i];
+                    if (child != nullptr) {
+                        octree_nodes_cpu.push(child);
+                        octree_nodes_gpu.push(octree_cpu_copy.child_indices[children_processed * gpu_handle->get_number_virtual_neurons() + current_node_gpu - num_neurons]);
+
+                        children_processed++;
+                    }
+                }
+
+                if (children_processed != octree_cpu_copy.num_children.at(current_node_gpu - num_neurons))
+                    RelearnException::fail("Octree::overwrite_cpu_tree_with_gpu: GPU and CPU Octree structure differs");
+            }
+        }
+
+        if (!octree_nodes_gpu.empty())
+            RelearnException::fail("Octree::overwrite_cpu_tree_with_gpu: GPU and CPU Octree structure differs");
     }
 
 protected:
@@ -399,7 +700,9 @@ protected:
 
         SpaceFillingCurve<Morton> space_curve{ static_cast<uint8_t>(level_of_branch_nodes) };
 
-        Stack<std::pair<OctreeNode<AdditionalCellAttributes>*, Vec3s>> stack{ Constants::number_oct * level_of_branch_nodes };
+        Stack<std::pair<OctreeNode<AdditionalCellAttributes>*, Vec3s>> stack{
+            Constants::number_oct * level_of_branch_nodes
+        };
         stack.emplace_back(&root, Vec3s{ 0, 0, 0 });
 
         while (!stack.empty()) {
@@ -436,7 +739,9 @@ protected:
             update_tree_parallel(local_tree);
         };
 
-        ranges::for_each(branch_nodes | ranges::views::filter(ranges::indirect(&OctreeNode<AdditionalCellAttributes>::is_local)), update_tree);
+        ranges::for_each(
+            branch_nodes | ranges::views::filter(ranges::indirect(&OctreeNode<AdditionalCellAttributes>::is_local)),
+            update_tree);
 
         Timers::stop_and_add(TimerRegion::UPDATE_LOCAL_TREES);
     }
@@ -454,7 +759,8 @@ protected:
         // All-gather in-place branch nodes from every rank
         const auto number_local_branch_nodes = number_branch_nodes / MPIWrapper::get_number_ranks();
         RelearnException::check(number_local_branch_nodes < static_cast<size_t>(std::numeric_limits<int>::max()),
-            "OctreeImplementation::synchronize_local_trees: Too many branch nodes: {}", number_local_branch_nodes);
+            "OctreeImplementation::synchronize_local_trees: Too many branch nodes: {}",
+            number_local_branch_nodes);
         MPIWrapper::all_gather_inline(std::span{ exchange_branch_nodes.data(), number_local_branch_nodes });
 
         Timers::stop_and_add(TimerRegion::EXCHANGE_BRANCH_NODES);
@@ -493,9 +799,12 @@ protected:
      * @param max_depth The depth where the updates shall stop
      * @exception Throws a RelearnException if local_tree_root is nullptr or if max_depth is smaller than the depth of local_tree_root
      */
-    void update_tree_parallel(OctreeNode<AdditionalCellAttributes>* local_tree_root, const std::uint16_t max_depth = std::numeric_limits<std::uint16_t>::max()) {
-        RelearnException::check(local_tree_root != nullptr, "OctreeImplementation::update_tree_parallel: local_tree_root was nullptr");
-        RelearnException::check(local_tree_root->get_level() <= max_depth, "OctreeImplementation::update_tree_parallel: The root had a larger depth than max_depth.");
+    void update_tree_parallel(OctreeNode<AdditionalCellAttributes>* local_tree_root,
+        const std::uint16_t max_depth = std::numeric_limits<std::uint16_t>::max()) {
+        RelearnException::check(local_tree_root != nullptr,
+            "OctreeImplementation::update_tree_parallel: local_tree_root was nullptr");
+        RelearnException::check(local_tree_root->get_level() <= max_depth,
+            "OctreeImplementation::update_tree_parallel: The root had a larger depth than max_depth.");
 
         if (const auto update_height = max_depth - local_tree_root->get_level(); update_height < 3) {
             // If the update concerns less than 3 levels, update serially
@@ -545,6 +854,8 @@ protected:
             }
         }
     }
+
+    std::shared_ptr<gpu::algorithm::OctreeHandle> gpu_handle{};
 
 private:
     // Root of the tree
