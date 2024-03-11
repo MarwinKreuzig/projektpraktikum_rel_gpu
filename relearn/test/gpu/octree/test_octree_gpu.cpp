@@ -108,6 +108,7 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
     int current_virtual_neuron_num = 0;
     ElementType element_type;
 
+
     for (int i = 0; i < nodes.size(); ++i) {
         int index = 0;
 
