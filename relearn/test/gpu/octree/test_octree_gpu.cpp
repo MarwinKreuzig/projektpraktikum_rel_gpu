@@ -16,18 +16,15 @@
 using test_types = ::testing::Types<BarnesHutCell, BarnesHutInvertedCell>;
 TYPED_TEST_SUITE(OctreeTestGpu, test_types);
 
-
 const auto convert_gpu_vec_to_vec(const gpu::Vec3d gpu_vec) {
     return Vec3(gpu_vec.x, gpu_vec.y, gpu_vec.z);
 }
 
-
-const auto convert_vec_to_gpu_vec(const Vec3d cpu_vec)  {
-    return gpu::Vec3d{ cpu_vec.get_x(), cpu_vec.get_y(), cpu_vec.get_z()};
+const auto convert_vec_to_gpu_vec(const Vec3d cpu_vec) {
+    return gpu::Vec3d{ cpu_vec.get_x(), cpu_vec.get_y(), cpu_vec.get_z() };
 };
 
-
-const auto assert_eq_vec(const Vec3d vec1, const Vec3d vec2)    {
+const auto assert_eq_vec(const Vec3d vec1, const Vec3d vec2) {
     ASSERT_DOUBLE_EQ(vec1.get_x(), vec2.get_x());
     ASSERT_DOUBLE_EQ(vec1.get_y(), vec2.get_y());
     ASSERT_DOUBLE_EQ(vec1.get_z(), vec2.get_z());
@@ -107,7 +104,6 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
     int current_leaf_node_num = 0;
     int current_virtual_neuron_num = 0;
     ElementType element_type;
-
 
     for (int i = 0; i < nodes.size(); ++i) {
         int index = 0;
@@ -198,7 +194,6 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
     }
 
     octree.initializes_leaf_nodes(neurons_to_place.size());
-
 
     //================ Creation of Octree on gpu  =====================================
 
