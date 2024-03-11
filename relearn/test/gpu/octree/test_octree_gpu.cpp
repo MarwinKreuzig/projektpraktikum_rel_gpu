@@ -128,8 +128,8 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructTest) {
         expected.minimum_cell_position[index] = gpu::Vec3d(std::get<0>(nodes[i]->get_size()).get_x(), std::get<0>(nodes[i]->get_size()).get_y(), std::get<0>(nodes[i]->get_size()).get_z());
         expected.maximum_cell_position[index] = gpu::Vec3d(std::get<1>(nodes[i]->get_size()).get_x(), std::get<1>(nodes[i]->get_size()).get_y(), std::get<1>(nodes[i]->get_size()).get_z());
 
-        expected.position_excitatory_element[index] = convert_vec_to_gpu_vec(nodes[i]->get_cell().get_position_for(element_type, SignalType::Excitatory).value());
-        expected.position_inhibitory_element[index] = convert_vec_to_gpu_vec(nodes[i]->get_cell().get_position_for(element_type, SignalType::Inhibitory).value());
+        expected.position_excitatory_element[index] = convert_vec_to_gpu_vec(nodes[i]->get_cell().get_position_for(element_type, SignalType::Excitatory).value_or(Vec3d(0.0, 0.0, 0.0)));
+        expected.position_inhibitory_element[index] = convert_vec_to_gpu_vec(nodes[i]->get_cell().get_position_for(element_type, SignalType::Inhibitory).value_or(Vec3d(0.0, 0.0, 0.0)));
         expected.num_free_elements_excitatory[index] = nodes[i]->get_cell().get_number_elements_for(element_type, SignalType::Excitatory);
         expected.num_free_elements_inhibitory[index] = nodes[i]->get_cell().get_number_elements_for(element_type, SignalType::Inhibitory);
     }
@@ -250,10 +250,10 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
         }
 
         gpu::Vec3d pos_ex_elem = octree_cpu_copy.position_excitatory_element.at(current_node_gpu);
-        ASSERT_EQ(Vec3d(pos_ex_elem.x, pos_ex_elem.y, pos_ex_elem.z), current_node_cpu->get_cell().get_position_for(elem_type, SignalType::Excitatory).value()) << " Correct nodes before fail:" << correct_counts;
+        ASSERT_EQ(Vec3d(pos_ex_elem.x, pos_ex_elem.y, pos_ex_elem.z), current_node_cpu->get_cell().get_position_for(elem_type, SignalType::Excitatory).value_or(Vec3d(0.0, 0.0, 0.0))) << " Correct nodes before fail:" << correct_counts;
 
         gpu::Vec3d pos_in_elem = octree_cpu_copy.position_inhibitory_element.at(current_node_gpu);
-        ASSERT_EQ(Vec3d(pos_in_elem.x, pos_in_elem.y, pos_in_elem.z), current_node_cpu->get_cell().get_position_for(elem_type, SignalType::Inhibitory).value());
+        ASSERT_EQ(Vec3d(pos_in_elem.x, pos_in_elem.y, pos_in_elem.z), current_node_cpu->get_cell().get_position_for(elem_type, SignalType::Inhibitory).value_or(Vec3d(0.0, 0.0, 0.0)));
 
         RelearnTypes::counter_type num_ex_elem = octree_cpu_copy.num_free_elements_excitatory.at(current_node_gpu);
         ASSERT_EQ(num_ex_elem, current_node_cpu->get_cell().get_number_elements_for(elem_type, SignalType::Excitatory));
