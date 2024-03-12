@@ -2,6 +2,8 @@ if (CUDA_FOUND)
     add_library(relearn_gpu STATIC
             neurons/input/BackgroundActivity.cuh
             neurons/models/NeuronModel.cuh
+            neurons/models/PoissonModel.cuh
+            neurons/models/SynapticElements.cuh
             structure/CudaArray.cuh
             structure/CudaVector.cuh
             RelearnGPUException.h
@@ -33,6 +35,7 @@ if (CUDA_FOUND)
             neurons/NeuronsExtraInfos.cu
             utils/Random.cu
             RelearnGPUException.cu
+            neurons/models/SynapticElements.cu
             # for visual studio
             ${relearn_gpu_additional_files})
 

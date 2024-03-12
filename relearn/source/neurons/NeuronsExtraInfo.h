@@ -163,6 +163,17 @@ public:
         RelearnException::check(!pos.empty(), "NeuronsExtraInformation::set_positions: New positions are empty");
         RelearnException::check(size == pos.size(), "NeuronsExtraInformation::set_positions: Size does not match area names count");
         positions = std::move(pos);
+
+        if (CudaHelper::is_cuda_available()) {
+            auto convert = [](const position_type& vec) -> gpu::Vec3d {
+                return gpu::Vec3d(vec.get_x(), vec.get_y(), vec.get_z());
+            };
+
+            std::vector<gpu::Vec3d> pos_gpu(positions.size());
+            std::transform(positions.begin(), positions.end(), pos_gpu.begin(), convert);
+            
+            gpu_handle->set_positions(pos_gpu);
+        }
     }
 
     /**

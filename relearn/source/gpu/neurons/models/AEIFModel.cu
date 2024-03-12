@@ -43,7 +43,7 @@ namespace gpu::models {
 
         const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
 
-        if (neuron_id >= extra_infos->get_number_local_neurons()) {
+        if (neuron_id >= extra_infos->num_neurons) {
             return;
         }
 
@@ -67,7 +67,7 @@ namespace gpu::models {
 
     __device__ void AEIF::create_neurons(RelearnGPUTypes::number_neurons_type creation_count) {
         NeuronModel::create_neurons(creation_count);
-        const auto new_size = extra_infos->get_number_local_neurons();
+        const auto new_size = extra_infos->num_neurons;
         w.resize(new_size);
     }
 
