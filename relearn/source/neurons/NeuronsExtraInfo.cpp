@@ -48,7 +48,14 @@ void NeuronsExtraInfo::create_neurons(const number_neurons_type creation_count) 
     size = new_size;
 
     if (CudaHelper::is_cuda_available()) {
-        gpu_handle->create_neurons(creation_count);
+        auto convert = [](const position_type& vec) -> gpu::Vec3d {
+            return gpu::Vec3d(vec.get_x(), vec.get_y(), vec.get_z());
+        };
+
+        std::vector<gpu::Vec3d> pos_gpu(positions.size());
+        std::transform(positions.begin(), positions.end(), pos_gpu.begin(), convert);
+
+        gpu_handle->create_neurons(new_size, pos_gpu);
     }
 }
 

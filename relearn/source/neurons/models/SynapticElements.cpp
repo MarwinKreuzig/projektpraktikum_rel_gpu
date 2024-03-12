@@ -35,6 +35,10 @@ void SynapticElements::init(const number_neurons_type number_neurons) {
     connected_elements.resize(size, 0);
     deltas_since_last_update.resize(size, 0.0);
     signal_types.resize(size);
+
+    if (CudaHelper::is_cuda_available()) {
+        gpu_handle->init(number_neurons, grown_elements);
+    }
 }
 
 void SynapticElements::create_neurons(const number_neurons_type creation_count) {
@@ -59,6 +63,10 @@ void SynapticElements::create_neurons(const number_neurons_type creation_count) 
     signal_types.resize(new_size);
 
     size = new_size;
+
+    if (CudaHelper::is_cuda_available()) {
+        gpu_handle->create_neurons(new_size, grown_elements);
+    }
 }
 
 std::pair<unsigned int, std::vector<unsigned int>> SynapticElements::commit_updates() {

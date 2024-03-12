@@ -5,6 +5,7 @@
 #include "../../shared/enums/FiredStatus.h"
 #include "../structure/OctreeCPUCopy.h"
 #include "../../shared/enums/ElementType.h"
+#include "../structure/VectorTypes.h"
 
 #include <memory>
 #include <vector>
@@ -102,34 +103,96 @@ class NeuronsExtraInfosHandle {
      */
 public:
     /**
-     * Save neurons as disabled. Neurons must be enabled beforehand
+     * @brief Save neurons as disabled. Neurons must be enabled beforehand
      * @param neuron_ids Vector with neuron ids that we disable
      */
     virtual void disable_neurons(const std::vector<RelearnGPUTypes::neuron_id_type>& neuron_ids) = 0;
 
     /**
-     * Save neurons as enabled. Neurons must be disabled beforehand
+     * @brief Save neurons as enabled. Neurons must be disabled beforehand
      * @param neuron_ids Vector with neuron ids that we enable
      */
     virtual void enable_neurons(const std::vector<RelearnGPUTypes::neuron_id_type>& neuron_ids) = 0;
 
     /**
-     * Initialize the class when the number of neurons is known
-     * @param Number Number local neurons
+     * @brief Initialize the class when the number of neurons is known
+     * @param number_neurons Number local neurons
      */
     virtual void init(RelearnGPUTypes::number_neurons_type number_neurons) = 0;
 
     /**
-     * Creates new neurons
-     * @param num_created_neuron Number of newly created neurons
+     * @brief Creates new neurons
+     * @param new_size The new number of neurons
+     * @param positions The positions of all neurons, including the new ones
      */
-    virtual void create_neurons(RelearnGPUTypes::number_neurons_type num_created_neurons) = 0;
+    virtual void create_neurons(RelearnGPUTypes::number_neurons_type new_size, const std::vector<gpu::Vec3d>& positions) = 0;
+
+    /**
+     * @brief Overwrites the current positions with the supplied ones
+     * @param pos The new positions, must have the same size as neurons are stored
+     */
+    virtual void set_positions(const std::vector<gpu::Vec3d>& pos) = 0;
+
+    /**
+     * @brief Returns a pointer to the data on the GPU
+     */
+    [[nodiscard]] virtual void* get_device_pointer() = 0;
 };
 
 /**
  * @return Pointer to the class that handles the NeuronExtraInfos on the gpu
  */
 std::unique_ptr<NeuronsExtraInfosHandle> create() CUDA_PTR_DEFINITION
+
+};
+
+namespace gpu::models {
+class SynapticElementsHandle {
+    /**
+     * Virtual class that is the equivalent of its host class. Call the virtual methods from the corresponding cpu methods.
+     * This class can only be created with the create() method.
+     */
+
+public:
+    /**
+     * @brief Copies the initial values from the CPU version of the class
+     * @param number_neurons The number of neurons that should be stored
+     * @param grown_elements The grown elements generated in the cpu version of init()
+     */
+    virtual void init(RelearnGPUTypes::number_neurons_type number_neurons, const std::vector<double>& grown_elements) = 0;
+
+    /**
+     * @brief Copies the on the CPU created neurons on to the GPU
+     * @param new_size The new number of neurons
+     * @param grown_elements All grown elements of all neurons, including the new ones
+     */
+    virtual void create_neurons(const RelearnGPUTypes::number_neurons_type new_size, const std::vector<double>& grown_elements) = 0;
+
+    /**
+     * @brief Returns a pointer to the data on the GPU
+     */
+    [[nodiscard]] virtual void* get_device_pointer() = 0;
+    
+    /**
+     * @brief Updates the counts the grown elements of the specified neuron by the specified delta, should not be called since it skips the commit step
+     * @param neuron_id The local neuron id
+     * @param delta The delta by which the number of elements changes (can be positive and negative)
+     */
+    virtual void update_grown_elements(const RelearnGPUTypes::neuron_id_type neuron_id, const double delta) = 0;
+
+    /**
+     * @brief Updates the connected elements for the specified neuron by the specified delta
+     * @param neuron_id The local neuron id
+     * @param delta The delta by which the number of elements changes (can be positive and negative)
+     */
+    virtual void update_connected_elements(const RelearnGPUTypes::neuron_id_type neuron_id, const int delta) = 0;
+};
+
+/**
+ * @return Pointer to the class that handles the SynapticElements on the gpu
+ */
+std::unique_ptr<SynapticElementsHandle> create_synaptic_elements(const ElementType type) CUDA_PTR_DEFINITION
+
 };
 
 namespace gpu::background {

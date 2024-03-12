@@ -30,6 +30,8 @@ if (CUDA_FOUND)
             RelearnTest.cpp
 
             cuda_vector/test_cuda_vector.cu
+            cuda_synaptic_elements/test_cuda_synaptic_elements.cu
+            cuda_neurons_extra_infos/test_cuda_neurons_extra_infos.cu
             # for visual studio
             ${relearn_tests_cuda_additional_files})
 
