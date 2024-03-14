@@ -17,7 +17,7 @@ AEIFModelGPU::AEIFModelGPU(const unsigned int h, std::unique_ptr<SynapticInputCa
 }
 
 void AEIFModelGPU::update_activity(RelearnGPUTypes::step_type step) {
-    init_aeif_kernel(step, gpu_handle.get(), number_neurons, model_data_handle.get(), C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike, d_T_inverse, tau_w_inverse, C_inverse, scale, h);
+    init_aeif_kernel(step, gpu_handle.get(), get_number_neurons(), model_data_handle.get(), C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike, d_T_inverse, tau_w_inverse, C_inverse, scale, h);
 }
 
 std::string AEIFModelGPU::name() {

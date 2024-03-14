@@ -44,13 +44,16 @@ public:
 
     virtual void init(const RelearnGPUTypes::number_neurons_type number_neurons) override {
         NeuronModel::init(number_neurons);
+        gpu_handle->init(number_neurons);
         model_data_handle->init(number_neurons);
     }
 
     virtual void create_neurons(RelearnGPUTypes::number_neurons_type creation_count) override {
+        auto old_size = get_number_neurons();
+        auto new_size = old_size + creation_count;
         NeuronModel::create_neurons(creation_count);
-        const auto new_size = gpu_handle->get_extra_infos_number_local_neurons();
         model_data_handle->create_neurons(new_size);
+        init_neurons(old_size, new_size);
     }
 
     virtual void update_activity_benchmark() override {

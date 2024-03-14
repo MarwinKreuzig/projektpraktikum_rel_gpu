@@ -174,11 +174,6 @@ public:
      * @return A constant reference to the vector of flags. It is not invalidated by calls to other methods
      */
     [[nodiscard]] virtual std::span<const FiredStatus> get_fired() const noexcept {
-        /*if (CudaHelper::is_cuda_available()) {
-            RelearnException::check(number_local_neurons > 0, "NeuronModels::get_fired: number_local_neurons not set");
-            RelearnException::check(this->gpu_handle != nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
-            return std::span<const FiredStatus>(gpu_handle->get_fired());
-        }*/
         return fired;
     }
 
@@ -314,24 +309,6 @@ public:
      * @param creation_count The number of local neurons that should be added
      */
     virtual void create_neurons(number_neurons_type creation_count) = 0;
-    /*void create_neurons(number_neurons_type creation_count) {
-        const auto old_size = get_number_neurons();
-        const auto new_size = old_size + creation_count;
-        if (CudaHelper::is_cuda_available()) {
-            create_neurons_gpu(creation_count);
-            for (auto& recorder : fired_recorder) {
-                recorder.resize(new_size, 0U);
-            }
-
-            input_calculator->create_neurons(creation_count);
-            background_calculator->create_neurons(creation_count);
-            stimulus_calculator->create_neurons(creation_count);
-            number_local_neurons = creation_count + old_size;
-        } else {
-            create_neurons_cpu(creation_count);
-        }
-        init_neurons(old_size, old_size + creation_count);
-    }*/
 
     /**
      * @brief Returns the name of the current model
@@ -356,20 +333,6 @@ public:
             }
         }
     }
-
-    /*void disable_neurons_gpu(const std::span<const NeuronID> neuron_ids) {
-        const auto ids = CudaHelper::convert_neuron_ids_to_primitives(neuron_ids);
-        RelearnException::check(gpu_handle != nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
-        gpu_handle->disable_neurons(ids);
-
-        for (const auto neuron_id : neuron_ids) {
-            const auto local_neuron_id = neuron_id.get_neuron_id();
-            for (auto& recorder : fired_recorder) {
-                recorder[local_neuron_id] = 0U;
-            }
-        }
-    }*/
-
     /**
      * @brief Performs all required steps to disable all neurons that are specified.
      *      Disables incrementally, i.e., previously disabled neurons are not enabled.
@@ -377,14 +340,7 @@ public:
      * @exception Throws a RelearnException if a specified id is too large
      */
     virtual void enable_neurons(const std::span<const NeuronID> neuron_ids) {
-        // TODO: This was empty in the old version too, check if that's how it's supposed to be.
     }
-
-    /*void enable_neurons_gpu(const std::span<const NeuronID> neuron_ids) {
-        const auto ids = CudaHelper::convert_neuron_ids_to_primitives(neuron_ids);
-        RelearnException::check(gpu_handle != nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
-        gpu_handle->enable_neurons(ids);
-    }*/
 
     /**
      * @brief Sets if a neuron fired for the specified neuron. Does not perform bound-checking
@@ -418,7 +374,6 @@ protected:
     virtual void update_activity(const step_type step) = 0;
 
     virtual void update_activity_benchmark() {
-        // TODO The CPU version doesn't need the step_type and the GPU version fails so this might be accurate or it might not be
         update_activity(0);
     }
 

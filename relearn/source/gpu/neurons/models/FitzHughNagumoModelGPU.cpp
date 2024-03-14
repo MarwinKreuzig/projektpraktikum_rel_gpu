@@ -11,7 +11,7 @@ FitzHughNagumoModelGPU::FitzHughNagumoModelGPU(const unsigned int h, std::unique
 }
 
 void FitzHughNagumoModelGPU::update_activity(RelearnGPUTypes::step_type step) {
-    init_fitzhughnagumo_kernel(step, gpu_handle.get(), number_neurons, model_data_handle.get(), a, b, phi, init_w, init_x, scale, h);
+    init_fitzhughnagumo_kernel(step, gpu_handle.get(), get_number_neurons(), model_data_handle.get(), a, b, phi, init_w, init_x, scale, h);
 }
 
 std::string FitzHughNagumoModelGPU::name() {

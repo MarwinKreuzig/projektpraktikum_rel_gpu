@@ -11,7 +11,7 @@ PoissonModelGPU::PoissonModelGPU(const unsigned int h, std::unique_ptr<SynapticI
 }
 
 void PoissonModelGPU::update_activity(RelearnGPUTypes::step_type step) {
-    init_poisson_kernel(step, gpu_handle.get(), number_neurons, model_data_handle.get(), x_0, tau_x, refractory_period);
+    init_poisson_kernel(step, gpu_handle.get(), get_number_neurons(), model_data_handle.get(), x_0, tau_x, refractory_period);
 }
 
 std::string PoissonModelGPU::name() {

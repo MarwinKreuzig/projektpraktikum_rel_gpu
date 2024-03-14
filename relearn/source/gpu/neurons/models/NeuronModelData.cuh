@@ -43,6 +43,7 @@ public:
     virtual bool get_fired(const RelearnGPUTypes::neuron_id_type neuron_id) override;
     virtual void set_extra_infos(const std::unique_ptr<gpu::neurons::NeuronsExtraInfosHandle>& extra_infos_handle) override;
     virtual RelearnGPUTypes::number_neurons_type get_extra_infos_number_local_neurons() override;
+    virtual void init(RelearnGPUTypes::number_neurons_type number_neurons) override;
 
     virtual std::vector<FiredStatus> get_fired() const noexcept override;
     virtual void* get_device_ptr() override;

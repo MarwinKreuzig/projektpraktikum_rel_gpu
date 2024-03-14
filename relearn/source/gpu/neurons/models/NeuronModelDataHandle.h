@@ -27,6 +27,7 @@ public:
     virtual RelearnGPUTypes::number_neurons_type get_extra_infos_number_local_neurons() = 0;
     virtual std::vector<FiredStatus> get_fired() const noexcept = 0;
     virtual void* get_device_ptr() = 0;
+    virtual void init(RelearnGPUTypes::number_neurons_type number_neurons) = 0;
 };
 
 std::shared_ptr<NeuronModelDataHandle> create_neuron_model_data(std::vector<double>* x, gpu::neurons::NeuronsExtraInfos* extra_infos, unsigned int h, double scale, size_t cur_step, gpu::background::BackgroundHandle* background_calculator, std::vector<double>* stimulus, std::vector<double>* syn_input, std::vector<FiredStatus>* fired);

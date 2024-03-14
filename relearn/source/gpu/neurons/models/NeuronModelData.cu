@@ -107,6 +107,13 @@ void NeuronModelDataHandleImpl::set_extra_infos(const std::unique_ptr<gpu::neuro
     gpu_check_last_error();
 }
 
+void NeuronModelDataHandleImpl::init(RelearnGPUTypes::number_neurons_type number_neurons) {
+    x_handle.resize(number_neurons, 0.0);
+    fired_handle.resize(number_neurons, FiredStatus::Inactive);
+    stimulus_handle.resize(number_neurons);
+    syn_input_handle.resize(number_neurons);
+}
+
 std::vector<FiredStatus> NeuronModelDataHandleImpl::get_fired() const noexcept {
     std::vector<FiredStatus> fired_data;
     fired_handle.copy_to_host(fired_data);

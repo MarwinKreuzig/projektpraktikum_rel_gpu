@@ -15,7 +15,7 @@ IzhikevichModelGPU::IzhikevichModelGPU(const unsigned int h, std::unique_ptr<Syn
     , k3{ _k3 } { }
 
 void IzhikevichModelGPU::update_activity(RelearnGPUTypes::step_type step) {
-    init_izhikevich_kernel(step, gpu_handle.get(), number_neurons, model_data_handle.get(), V_spike, a, b, c, d, k1, k2, k3, scale, h);
+    init_izhikevich_kernel(step, gpu_handle.get(), get_number_neurons(), model_data_handle.get(), V_spike, a, b, c, d, k1, k2, k3, scale, h);
 }
 
 std::string IzhikevichModelGPU::name() {
