@@ -94,30 +94,45 @@ namespace models {
         w_handle.resize(number_neurons, 0);
     }
 
-    void AEIFModelDataHandleImpl::create_neurons(RelearnGPUTypes::number_neurons_type creation_count) { }
+    void AEIFModelDataHandleImpl::create_neurons(RelearnGPUTypes::number_neurons_type number_neurons) {
+        w_handle.resize(number_neurons);
+    }
 
     void AEIFModelDataHandleImpl::init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) {
         gpu_handle->fill_x(start_id, end_id, E_L);
     }
 
-    void FitzHughNagumoModelDataHandleImpl::init(const RelearnGPUTypes::number_neurons_type number_neurons) { }
+    void FitzHughNagumoModelDataHandleImpl::init(const RelearnGPUTypes::number_neurons_type number_neurons) {
+        w_handle.resize(number_neurons, 0);
+    }
 
-    void FitzHughNagumoModelDataHandleImpl::create_neurons(RelearnGPUTypes::number_neurons_type creation_count) { }
+    void FitzHughNagumoModelDataHandleImpl::create_neurons(RelearnGPUTypes::number_neurons_type number_neurons) {
+        w_handle.resize(number_neurons);
+    }
 
-    void FitzHughNagumoModelDataHandleImpl::init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) { }
+    void FitzHughNagumoModelDataHandleImpl::init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) {
+        w_handle.fill(start_id, end_id, init_w);
+        gpu_handle->fill_x(start_id, end_id, init_x);
+    }
 
-    void IzhikevichModelDataHandleImpl::init(const RelearnGPUTypes::number_neurons_type number_neurons) { }
+    void IzhikevichModelDataHandleImpl::init(const RelearnGPUTypes::number_neurons_type number_neurons) {
+        u_handle.resize(number_neurons, 0);
+    }
 
-    void IzhikevichModelDataHandleImpl::create_neurons(RelearnGPUTypes::number_neurons_type creation_count) { }
+    void IzhikevichModelDataHandleImpl::create_neurons(RelearnGPUTypes::number_neurons_type number_neurons) {
+        u_handle.resize(number_neurons);
+    }
 
-    void IzhikevichModelDataHandleImpl::init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) { }
+    void IzhikevichModelDataHandleImpl::init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) {
+        gpu_handle->fill_x(start_id, end_id, c);
+    }
 
     void PoissonModelDataHandleImpl::init(const RelearnGPUTypes::number_neurons_type number_neurons) {
         refractory_time_handle.resize(number_neurons);
     }
 
-    void PoissonModelDataHandleImpl::create_neurons(RelearnGPUTypes::number_neurons_type creation_count) {
-        refractory_time_handle.resize(creation_count);
+    void PoissonModelDataHandleImpl::create_neurons(RelearnGPUTypes::number_neurons_type number_neurons) {
+        refractory_time_handle.resize(number_neurons);
     }
 
     void PoissonModelDataHandleImpl::init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) { }

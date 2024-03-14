@@ -102,6 +102,8 @@ namespace models {
         FitzHughNagumoModelData* device_ptr;
 
         gpu::Vector::CudaArrayDeviceHandle<double> w_handle;
+        double init_w;
+        double init_x;
     };
 
     struct IzhikevichModelData {
@@ -123,6 +125,7 @@ namespace models {
         IzhikevichModelData* device_ptr;
 
         gpu::Vector::CudaArrayDeviceHandle<double> u_handle;
+        double c;
     };
 
     struct PoissonModelData {
