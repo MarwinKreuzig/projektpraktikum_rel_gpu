@@ -205,7 +205,6 @@ public:
     static constexpr double max_k2{ 10.0 };
     static constexpr double max_k3{ 200.0 };
 
-protected:
     virtual void update_activity(const step_type step) override final;
 
     virtual void update_activity_benchmark() override final;

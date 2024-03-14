@@ -216,7 +216,6 @@ public:
     static constexpr double max_b{ 0.3 };
     static constexpr double max_V_spike{ 70.0 };
 
-protected:
     virtual void update_activity(const step_type step) final;
 
     virtual void update_activity_benchmark() final;

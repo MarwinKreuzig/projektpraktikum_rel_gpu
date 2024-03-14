@@ -138,7 +138,6 @@ public:
     static constexpr double init_x{ -1.2 };
     static constexpr double init_w{ -0.6 };
 
-protected:
     void update_activity(const step_type step) final;
 
     void update_activity_benchmark() final;

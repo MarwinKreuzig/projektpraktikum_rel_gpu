@@ -120,7 +120,6 @@ public:
     static constexpr double max_tau_x{ 1000.0 };
     static constexpr unsigned int max_refractory_time{ 1000 };
 
-protected:
     virtual void update_activity(const step_type step) final;
 
     virtual void update_activity_benchmark() final;
