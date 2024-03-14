@@ -83,7 +83,6 @@ public:
         , stimulus_calculator(std::move(stimulus_calculator)) {
     }
 
-
     /**
      * @brief Returns the handle to the NeuronModel on the GPU.
      * @exception Throws a RelearnException if not using CUDA.

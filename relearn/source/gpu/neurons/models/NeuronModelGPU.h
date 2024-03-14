@@ -6,7 +6,7 @@
 #include "NeuronModelDataHandle.h"
 
 namespace gpu {
-  class NeuronModelGPU : public NeuronModel {
+class NeuronModelGPU : public NeuronModel {
     /**
      * @brief Constructs a new instance of type NeuronModelGPU with 0 neurons and default values for all parameters
      */
@@ -56,15 +56,14 @@ namespace gpu {
         RelearnException::fail("No gpu support");
     }
 
-    protected:
-        std::unique_ptr<NeuronModelDataHandle> gpu_handle;
-        RelearnGPUTypes::number_neurons_type number_neurons;
-        models::ModelDataHandle* model_data_handle;
+protected:
+    std::unique_ptr<NeuronModelDataHandle> gpu_handle;
+    RelearnGPUTypes::number_neurons_type number_neurons;
+    models::ModelDataHandle* model_data_handle;
 
     unsigned int h;
     double scale;
 
     size_t cur_step;
-  };
+};
 }
-

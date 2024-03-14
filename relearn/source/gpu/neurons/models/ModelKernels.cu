@@ -9,9 +9,9 @@ __global__ void fitzhughnagumo_model_kernel(RelearnGPUTypes::step_type step, gpu
 
 __global__ void izhikevich_model_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelData* gpu_data_handle, models::IzhikevichModelData* model_data_handle, double V_spike, double a, double b, double c, double d, double k1, double k2, double k3, double scale, unsigned int h);
 
-    __global__ void poisson_model_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelData* gpu_data_handle, models::PoissonModelData* model_data_handle, double x_0, double tau_x, unsigned int refractory_period);
+__global__ void poisson_model_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelData* gpu_data_handle, models::PoissonModelData* model_data_handle, double x_0, double tau_x, unsigned int refractory_period);
 
-    void init_aeif_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelDataHandle* gpu_data_handle, RelearnGPUTypes::number_neurons_type number_neurons, gpu::models::ModelDataHandle* model_data_handle, double C, double g_L, double E_L, double V_T, double d_T, double tau_w, double a, double b, double V_spike, double d_T_inverse, double tau_w_inverse, double C_inverse, double scale, unsigned int h) {
+void init_aeif_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelDataHandle* gpu_data_handle, RelearnGPUTypes::number_neurons_type number_neurons, gpu::models::ModelDataHandle* model_data_handle, double C, double g_L, double E_L, double V_T, double d_T, double tau_w, double a, double b, double V_spike, double d_T_inverse, double tau_w_inverse, double C_inverse, double scale, unsigned int h) {
     const auto num_threads = get_number_threads(aeif_model_kernel, number_neurons);
     const auto num_blocks = get_number_blocks(num_threads, number_neurons);
 
@@ -19,9 +19,9 @@ __global__ void izhikevich_model_kernel(RelearnGPUTypes::step_type step, gpu::Ne
 
     cudaDeviceSynchronize();
     gpu_check_last_error();
-    }
+}
 
-    void init_fitzhughnagumo_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelDataHandle* gpu_data_handle, RelearnGPUTypes::number_neurons_type number_neurons, gpu::models::ModelDataHandle* model_data_handle, double a, double b, double phi, double init_w, double init_x, double scale, unsigned int h) {
+void init_fitzhughnagumo_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelDataHandle* gpu_data_handle, RelearnGPUTypes::number_neurons_type number_neurons, gpu::models::ModelDataHandle* model_data_handle, double a, double b, double phi, double init_w, double init_x, double scale, unsigned int h) {
     const auto num_threads = get_number_threads(fitzhughnagumo_model_kernel, number_neurons);
     const auto num_blocks = get_number_blocks(num_threads, number_neurons);
 
@@ -29,9 +29,9 @@ __global__ void izhikevich_model_kernel(RelearnGPUTypes::step_type step, gpu::Ne
 
     cudaDeviceSynchronize();
     gpu_check_last_error();
-    }
+}
 
-    void init_izhikevich_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelDataHandle* gpu_data_handle, RelearnGPUTypes::number_neurons_type number_neurons, gpu::models::ModelDataHandle* model_data_handle, double V_spike, double a, double b, double c, double d, double k1, double k2, double k3, double scale, unsigned int h) {
+void init_izhikevich_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelDataHandle* gpu_data_handle, RelearnGPUTypes::number_neurons_type number_neurons, gpu::models::ModelDataHandle* model_data_handle, double V_spike, double a, double b, double c, double d, double k1, double k2, double k3, double scale, unsigned int h) {
     const auto num_threads = get_number_threads(izhikevich_model_kernel, number_neurons);
     const auto num_blocks = get_number_blocks(num_threads, number_neurons);
 
@@ -39,7 +39,7 @@ __global__ void izhikevich_model_kernel(RelearnGPUTypes::step_type step, gpu::Ne
 
     cudaDeviceSynchronize();
     gpu_check_last_error();
-    }
+}
 
 void init_poisson_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelDataHandle* gpu_data_handle, RelearnGPUTypes::number_neurons_type number_neurons, gpu::models::ModelDataHandle* model_data_handle, double x_0, double tau_x, unsigned int refractory_period) {
     const auto num_threads = get_number_threads(poisson_model_kernel, number_neurons);
@@ -51,79 +51,79 @@ void init_poisson_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelDataHa
 }
 
 __global__ void aeif_model_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelData* gpu_data_handle, models::AEIFModelData* model_data_handle, RelearnGPUTypes::number_neurons_type number_neurons, double C, double g_L, double E_L, double V_T, double d_T, double tau_w, double a, double b, double V_spike, double d_T_inverse, double tau_w_inverse, double C_inverse, double scale, unsigned int h) {
-        const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
+    const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
 
-        if (neuron_id >= gpu_data_handle->extra_infos->get_number_local_neurons()) {
-            return;
-        }
+    if (neuron_id >= gpu_data_handle->extra_infos->get_number_local_neurons()) {
+        return;
+    }
 
-        if (gpu_data_handle->extra_infos->disable_flags[neuron_id] == UpdateStatus::Disabled) {
-            return;
-        }
-        const auto synaptic_input = gpu_data_handle->get_synaptic_input(step, neuron_id);
-        const auto background_activity = gpu_data_handle->get_background_activity(step, neuron_id);
-        const auto stimulus = gpu_data_handle->get_stimulus(step, neuron_id);
+    if (gpu_data_handle->extra_infos->disable_flags[neuron_id] == UpdateStatus::Disabled) {
+        return;
+    }
+    const auto synaptic_input = gpu_data_handle->get_synaptic_input(step, neuron_id);
+    const auto background_activity = gpu_data_handle->get_background_activity(step, neuron_id);
+    const auto stimulus = gpu_data_handle->get_stimulus(step, neuron_id);
 
-        const auto _x = gpu_data_handle->get_x(neuron_id);
+    const auto _x = gpu_data_handle->get_x(neuron_id);
 
-        const auto _w = model_data_handle->w[neuron_id];
+    const auto _w = model_data_handle->w[neuron_id];
 
-        const auto& [x_val, this_fired, w_val] = Calculations::aeif(_x, synaptic_input, background_activity, stimulus, _w, h, scale, V_spike, g_L, E_L, V_T, d_T, d_T_inverse, a, b, C_inverse, tau_w_inverse);
+    const auto& [x_val, this_fired, w_val] = Calculations::aeif(_x, synaptic_input, background_activity, stimulus, _w, h, scale, V_spike, g_L, E_L, V_T, d_T, d_T_inverse, a, b, C_inverse, tau_w_inverse);
 
-        model_data_handle->w[neuron_id] = w_val;
-        gpu_data_handle->set_x(neuron_id, x_val);
-        gpu_data_handle->set_fired(neuron_id, this_fired);
+    model_data_handle->w[neuron_id] = w_val;
+    gpu_data_handle->set_x(neuron_id, x_val);
+    gpu_data_handle->set_fired(neuron_id, this_fired);
 }
 
 __global__ void fitzhughnagumo_model_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelData* gpu_data_handle, models::FitzHughNagumoModelData* model_data_handle, RelearnGPUTypes::number_neurons_type number_neurons, double a, double b, double phi, double init_w, double init_x, double scale, unsigned int h) {
-        const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
+    const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
 
-        if (neuron_id >= gpu_data_handle->extra_infos->get_number_local_neurons()) {
-            return;
-        }
+    if (neuron_id >= gpu_data_handle->extra_infos->get_number_local_neurons()) {
+        return;
+    }
 
-        if (gpu_data_handle->extra_infos->disable_flags[neuron_id] == UpdateStatus::Disabled) {
-            return;
-        }
-        const auto synaptic_input = gpu_data_handle->get_synaptic_input(step, neuron_id);
-        const auto background_activity = gpu_data_handle->get_background_activity(step, neuron_id);
-        const auto stimulus = gpu_data_handle->get_stimulus(step, neuron_id);
+    if (gpu_data_handle->extra_infos->disable_flags[neuron_id] == UpdateStatus::Disabled) {
+        return;
+    }
+    const auto synaptic_input = gpu_data_handle->get_synaptic_input(step, neuron_id);
+    const auto background_activity = gpu_data_handle->get_background_activity(step, neuron_id);
+    const auto stimulus = gpu_data_handle->get_stimulus(step, neuron_id);
 
-        const auto _x = gpu_data_handle->get_x(neuron_id);
+    const auto _x = gpu_data_handle->get_x(neuron_id);
 
-        const auto _w = model_data_handle->w[neuron_id];
+    const auto _w = model_data_handle->w[neuron_id];
 
-        const auto& [x_val, this_fired, w_val] = Calculations::fitz_hugh_nagumo(_x, synaptic_input, background_activity, stimulus, _w, h, scale, phi, a, b);
+    const auto& [x_val, this_fired, w_val] = Calculations::fitz_hugh_nagumo(_x, synaptic_input, background_activity, stimulus, _w, h, scale, phi, a, b);
 
-        model_data_handle->w[neuron_id] = w_val;
-        gpu_data_handle->set_x(neuron_id, x_val);
-        gpu_data_handle->set_fired(neuron_id, this_fired);
+    model_data_handle->w[neuron_id] = w_val;
+    gpu_data_handle->set_x(neuron_id, x_val);
+    gpu_data_handle->set_fired(neuron_id, this_fired);
 }
 
 __global__ void izhikevich_model_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelData* gpu_data_handle, models::IzhikevichModelData* model_data_handle, double V_spike, double a, double b, double c, double d, double k1, double k2, double k3, double scale, unsigned int h) {
-        const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
+    const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
 
-        if (neuron_id >= gpu_data_handle->extra_infos->get_number_local_neurons()) {
-            return;
-        }
+    if (neuron_id >= gpu_data_handle->extra_infos->get_number_local_neurons()) {
+        return;
+    }
 
-        if (gpu_data_handle->extra_infos->disable_flags[neuron_id] == UpdateStatus::Disabled) {
-            return;
-        }
-        const auto synaptic_input = gpu_data_handle->get_synaptic_input(step, neuron_id);
-        const auto background_activity = gpu_data_handle->get_background_activity(step, neuron_id);
-        const auto stimulus = gpu_data_handle->get_stimulus(step, neuron_id);
-        // bg__[neuron_id] = background_activity;
+    if (gpu_data_handle->extra_infos->disable_flags[neuron_id] == UpdateStatus::Disabled) {
+        return;
+    }
+    const auto synaptic_input = gpu_data_handle->get_synaptic_input(step, neuron_id);
+    const auto background_activity = gpu_data_handle->get_background_activity(step, neuron_id);
+    const auto stimulus = gpu_data_handle->get_stimulus(step, neuron_id);
+    // bg__[neuron_id] = background_activity;
 
-        const auto _x = gpu_data_handle->get_x(neuron_id);
+    const auto _x = gpu_data_handle->get_x(neuron_id);
 
-        const auto _u = model_data_handle->u[neuron_id];
+    const auto _u = model_data_handle->u[neuron_id];
 
-        const auto& [x_val, this_fired, u_val] = Calculations::izhikevich(_x, synaptic_input, background_activity, stimulus, _u, h, scale, V_spike, a, b, c, d, k1, k2, k3);
+    const auto& [x_val, this_fired, u_val] = Calculations::izhikevich(_x, synaptic_input, background_activity, stimulus, _u, h, scale, V_spike, a, b, c, d, k1, k2, k3);
 
-        model_data_handle->u[neuron_id] = u_val;
-        gpu_data_handle->set_x(neuron_id, x_val);
-        gpu_data_handle->set_fired(neuron_id, this_fired);
+    model_data_handle->u[neuron_id] = u_val;
+    gpu_data_handle->set_x(neuron_id, x_val);
+    gpu_data_handle->set_fired(neuron_id, this_fired);
 }
 
 __global__ void poisson_model_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelData* gpu_data_handle, models::PoissonModelData* model_data_handle, double x_0, double tau_x, unsigned int refractory_period) {

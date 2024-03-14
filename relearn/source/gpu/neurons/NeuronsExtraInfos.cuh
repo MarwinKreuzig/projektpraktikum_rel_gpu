@@ -23,7 +23,7 @@ public:
     /**
      * @return Return the number of local neurons
      */
-    inline __device__ size_t get_number_local_neurons(){
+    inline __device__ size_t get_number_local_neurons() {
         return number_local_neurons_device;
     }
 };

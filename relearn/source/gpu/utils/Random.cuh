@@ -4,9 +4,9 @@
 
 namespace gpu::RandomHolder {
 
-    __device__ extern int seed;
+__device__ extern int seed;
 
-    __device__ extern size_t number_neurons;
+__device__ extern size_t number_neurons;
 
 using random_state_type = curandStateXORWOW_t;
 

@@ -62,20 +62,20 @@ private:
 
 namespace models {
     struct AEIFModelData {
-      gpu::Vector::CudaArray<double> w;
+        gpu::Vector::CudaArray<double> w;
     };
 
     class AEIFModelDataHandleImpl : public ModelDataHandle {
-      public:
+    public:
         virtual ~AEIFModelDataHandleImpl() override {
-          cudaFree(device_ptr);
+            cudaFree(device_ptr);
         }
 
         virtual void init(const RelearnGPUTypes::number_neurons_type number_neurons) override;
 
         virtual void create_neurons(RelearnGPUTypes::number_neurons_type creation_count) override;
 
-    virtual void init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) override;
+        virtual void init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) override;
 
         AEIFModelData* device_ptr;
 
@@ -84,20 +84,20 @@ namespace models {
     };
 
     struct FitzHughNagumoModelData {
-      gpu::Vector::CudaArray<double> w;
+        gpu::Vector::CudaArray<double> w;
     };
 
     class FitzHughNagumoModelDataHandleImpl : public ModelDataHandle {
-      public:
-      virtual ~FitzHughNagumoModelDataHandleImpl() override {
-        cudaFree(device_ptr);
-      }
+    public:
+        virtual ~FitzHughNagumoModelDataHandleImpl() override {
+            cudaFree(device_ptr);
+        }
 
         virtual void init(const RelearnGPUTypes::number_neurons_type number_neurons) override;
 
         virtual void create_neurons(RelearnGPUTypes::number_neurons_type creation_count) override;
 
-    virtual void init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) override;
+        virtual void init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) override;
 
         FitzHughNagumoModelData* device_ptr;
 
@@ -105,20 +105,20 @@ namespace models {
     };
 
     struct IzhikevichModelData {
-      gpu::Vector::CudaArray<double> u;
+        gpu::Vector::CudaArray<double> u;
     };
 
     class IzhikevichModelDataHandleImpl : public ModelDataHandle {
-      public:
+    public:
         virtual ~IzhikevichModelDataHandleImpl() override {
-          cudaFree(device_ptr);
+            cudaFree(device_ptr);
         }
 
         virtual void init(const RelearnGPUTypes::number_neurons_type number_neurons) override;
 
         virtual void create_neurons(RelearnGPUTypes::number_neurons_type creation_count) override;
 
-    virtual void init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) override;
+        virtual void init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) override;
 
         IzhikevichModelData* device_ptr;
 
@@ -126,20 +126,20 @@ namespace models {
     };
 
     struct PoissonModelData {
-      gpu::Vector::CudaArray<double> refractory_time;
+        gpu::Vector::CudaArray<double> refractory_time;
     };
 
     class PoissonModelDataHandleImpl : public ModelDataHandle {
-      public:
+    public:
         virtual ~PoissonModelDataHandleImpl() override {
-          cudaFree(device_ptr);
+            cudaFree(device_ptr);
         }
 
         virtual void init(const RelearnGPUTypes::number_neurons_type number_neurons) override;
 
         virtual void create_neurons(RelearnGPUTypes::number_neurons_type creation_count) override;
 
-    virtual void init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) override;
+        virtual void init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) override;
 
         PoissonModelData* device_ptr;
         gpu::Vector::CudaArrayDeviceHandle<double> refractory_time_handle;
