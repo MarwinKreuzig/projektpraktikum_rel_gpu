@@ -361,6 +361,16 @@ public:
     }
 
     /**
+     * @brief Sets if a neuron fired for the all neurons. Does not perform bound-checking
+     * @param new_values True iff a neuron fired in the current simulation step
+     */
+    virtual void set_fired(std::vector<FiredStatus> new_values) {
+        for (size_t i = 0; i < new_values.size(); i++) {
+            set_fired(NeuronID { i }, new_values[i]);
+        }
+    }
+
+    /**
      * @brief Records the memory footprint of the current object
      * @param footprint Where to store the current footprint
      */

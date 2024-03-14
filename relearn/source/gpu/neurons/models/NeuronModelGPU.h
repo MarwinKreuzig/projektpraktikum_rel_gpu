@@ -32,7 +32,7 @@ public:
     virtual void disable_neurons(const std::span<const NeuronID> neuron_ids) override;
 
     virtual void set_fired(const NeuronID neuron_id, const FiredStatus new_value) override;
-    virtual void set_fired(std::vector<FiredStatus> new_values);
+    virtual void set_fired(std::vector<FiredStatus> new_values) override;
 
     virtual bool get_fired(const NeuronID neuron_id) const override;
     virtual std::span<const FiredStatus> get_fired() const noexcept override;
