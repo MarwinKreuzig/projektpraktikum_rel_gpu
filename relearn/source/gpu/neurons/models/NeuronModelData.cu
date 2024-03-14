@@ -102,6 +102,14 @@ namespace models {
         gpu_handle->fill_x(start_id, end_id, E_L);
     }
 
+    double AEIFModelDataHandleImpl::get_secondary_variable(const RelearnGPUTypes::neuron_id_type neuron_id) const {
+        double* result = (double*)malloc(sizeof(double));
+        cuda_memcpy_to_host(result, w_handle.data() + neuron_id, sizeof(double), 1);
+        double host_result = *result;
+        free(result);
+        return host_result;
+    }
+
     void FitzHughNagumoModelDataHandleImpl::init(const RelearnGPUTypes::number_neurons_type number_neurons) {
         w_handle.resize(number_neurons, 0);
     }
@@ -113,6 +121,14 @@ namespace models {
     void FitzHughNagumoModelDataHandleImpl::init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) {
         w_handle.fill(start_id, end_id, init_w);
         gpu_handle->fill_x(start_id, end_id, init_x);
+    }
+
+    double FitzHughNagumoModelDataHandleImpl::get_secondary_variable(const RelearnGPUTypes::neuron_id_type neuron_id) const {
+        double* result = (double*)malloc(sizeof(double));
+        cuda_memcpy_to_host(result, w_handle.data() + neuron_id, sizeof(double), 1);
+        double host_result = *result;
+        free(result);
+        return host_result;
     }
 
     void IzhikevichModelDataHandleImpl::init(const RelearnGPUTypes::number_neurons_type number_neurons) {
@@ -127,6 +143,14 @@ namespace models {
         gpu_handle->fill_x(start_id, end_id, c);
     }
 
+    double IzhikevichModelDataHandleImpl::get_secondary_variable(const RelearnGPUTypes::neuron_id_type neuron_id) const {
+        double* result = (double*)malloc(sizeof(double));
+        cuda_memcpy_to_host(result, u_handle.data() + neuron_id, sizeof(double), 1);
+        double host_result = *result;
+        free(result);
+        return host_result;
+    }
+
     void PoissonModelDataHandleImpl::init(const RelearnGPUTypes::number_neurons_type number_neurons) {
         refractory_time_handle.resize(number_neurons);
     }
@@ -136,5 +160,13 @@ namespace models {
     }
 
     void PoissonModelDataHandleImpl::init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) { }
+
+    double PoissonModelDataHandleImpl::get_secondary_variable(const RelearnGPUTypes::neuron_id_type neuron_id) const {
+        double* result = (double*)malloc(sizeof(double));
+        cuda_memcpy_to_host(result, refractory_time_handle.data() + neuron_id, sizeof(double), 1);
+        double host_result = *result;
+        free(result);
+        return host_result;
+    }
 }
 }

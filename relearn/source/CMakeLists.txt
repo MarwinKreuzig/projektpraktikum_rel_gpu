@@ -15,6 +15,9 @@ target_sources(
         # gpu
         gpu/neurons/models/NeuronModelGPU.cpp
         gpu/neurons/models/PoissonModelGPU.cpp
+        gpu/neurons/models/FitzHughNagumoModelGPU.cpp
+        gpu/neurons/models/AEIFModelGPU.cpp
+        gpu/neurons/models/IzhikevichModelGPU.cpp
         gpu/utils/Interface.cpp
         gpu/utils/CudaHelper.cpp
 

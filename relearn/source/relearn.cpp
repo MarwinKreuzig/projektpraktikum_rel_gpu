@@ -36,6 +36,11 @@
 #include "neurons/models/IzhikevichModel.h"
 #include "neurons/models/NeuronModel.h"
 #include "neurons/models/PoissonModel.h"
+#include "gpu/neurons/models/AEIFModelGPU.h"
+#include "gpu/neurons/models/FitzHughNagumoModelGPU.h"
+#include "gpu/neurons/models/IzhikevichModelGPU.h"
+#include "gpu/neurons/models/NeuronModelGPU.h"
+#include "gpu/neurons/models/PoissonModelGPU.h"
 #include "neurons/models/SynapticElements.h"
 #include "sim/Essentials.h"
 #include "sim/Simulation.h"
@@ -866,27 +871,50 @@ int main(int argc, char** argv) {
 
     auto construct_neuron_model = [&]() -> std::unique_ptr<NeuronModel> {
         if (chosen_neuron_model == NeuronModelEnum::Poisson) {
-            return std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
-                models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refractory_period);
+            if (CudaHelper::is_cuda_available()) {
+                return std::make_unique<gpu::models::PoissonModelGPU>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator), models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refractory_period);
+            } else {
+                return std::make_unique<models::PoissonModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+                    models::PoissonModel::default_x_0, models::PoissonModel::default_tau_x, models::PoissonModel::default_refractory_period);
+            }
         }
 
         if (chosen_neuron_model == NeuronModelEnum::Izhikevich) {
-            return std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
-                models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
-                models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
-                models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
+            if (CudaHelper::is_cuda_available()) {
+                return std::make_unique<gpu::models::IzhikevichModelGPU>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+                    models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
+                    models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
+                    models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
+            } else {
+                return std::make_unique<models::IzhikevichModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+                    models::IzhikevichModel::default_a, models::IzhikevichModel::default_b, models::IzhikevichModel::default_c,
+                    models::IzhikevichModel::default_d, models::IzhikevichModel::default_V_spike, models::IzhikevichModel::default_k1,
+                    models::IzhikevichModel::default_k2, models::IzhikevichModel::default_k3);
+            }
         }
 
         if (chosen_neuron_model == NeuronModelEnum::FitzHughNagumo) {
-            return std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
-                models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
+            if (CudaHelper::is_cuda_available()) {
+                return std::make_unique<gpu::models::FitzHughNagumoModelGPU>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+                    models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
+            } else {
+                return std::make_unique<models::FitzHughNagumoModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+                    models::FitzHughNagumoModel::default_a, models::FitzHughNagumoModel::default_b, models::FitzHughNagumoModel::default_phi);
+            }
         }
 
         RelearnException::check(chosen_neuron_model == NeuronModelEnum::AEIF, "Chose a neuron model that is not implemented");
-        return std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
-            models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
-            models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
-            models::AEIFModel::default_V_spike);
+        if (CudaHelper::is_cuda_available()) {
+            return std::make_unique<gpu::models::AEIFModelGPU>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+                models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
+                models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
+                models::AEIFModel::default_V_spike);
+        } else {
+            return std::make_unique<models::AEIFModel>(h, std::move(input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator),
+                models::AEIFModel::default_C, models::AEIFModel::default_g_L, models::AEIFModel::default_E_L, models::AEIFModel::default_V_T,
+                models::AEIFModel::default_d_T, models::AEIFModel::default_tau_w, models::AEIFModel::default_a, models::AEIFModel::default_b,
+                models::AEIFModel::default_V_spike);
+        }
     };
     auto neuron_model = construct_neuron_model();
 

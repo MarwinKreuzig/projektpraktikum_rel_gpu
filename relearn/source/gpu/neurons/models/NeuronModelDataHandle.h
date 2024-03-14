@@ -31,6 +31,8 @@ namespace models {
         virtual void create_neurons(RelearnGPUTypes::number_neurons_type creation_count) = 0;
 
         virtual void init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) = 0;
+
+        virtual double get_secondary_variable(const RelearnGPUTypes::neuron_id_type neuron_id) const = 0;
     };
 }
 }

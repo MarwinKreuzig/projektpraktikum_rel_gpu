@@ -7,6 +7,7 @@
 
 namespace gpu {
 class NeuronModelGPU : public NeuronModel {
+public:
     /**
      * @brief Constructs a new instance of type NeuronModelGPU with 0 neurons and default values for all parameters
      */
@@ -19,7 +20,7 @@ class NeuronModelGPU : public NeuronModel {
      * @param background_activity_calculator The object that is responsible for calculating the background activity
      * @param stimulus_calculator The object that is responsible for calculating the stimulus
      */
-    NeuronModelGPU(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
+    NeuronModelGPU(std::unique_ptr<models::ModelDataHandle> model_data_handle, const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator);
 
     virtual NeuronModelDataHandle* device_handle() override {
@@ -56,10 +57,15 @@ class NeuronModelGPU : public NeuronModel {
         RelearnException::fail("No gpu support");
     }
 
+    virtual double get_secondary_variable(const NeuronID neuron_id) const override {
+        RelearnException::check(neuron_id.get_neuron_id() < get_number_neurons(), "NeuronModelGPU::get_secondary_variable: id is too large: {}", neuron_id);
+        return model_data_handle->get_secondary_variable(neuron_id.get_neuron_id());
+    }
+
 protected:
     std::unique_ptr<NeuronModelDataHandle> gpu_handle;
     RelearnGPUTypes::number_neurons_type number_neurons;
-    models::ModelDataHandle* model_data_handle;
+    std::unique_ptr<models::ModelDataHandle> model_data_handle;
 
     unsigned int h;
     double scale;

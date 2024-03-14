@@ -1,6 +1,20 @@
 #include "NeuronModelGPU.h"
 
 namespace gpu {
+NeuronModelGPU::NeuronModelGPU(std::unique_ptr<models::ModelDataHandle> model_data_handle_, const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
+    std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator)
+    : model_data_handle{ std::move(model_data_handle_) }
+    , NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator) } { }
+
+std::unique_ptr<NeuronModelDataHandle> gpu_handle;
+RelearnGPUTypes::number_neurons_type number_neurons;
+std::unique_ptr<models::ModelDataHandle> model_data_handle;
+
+unsigned int h;
+double scale;
+
+size_t cur_step;
+
 // This looks sketchy, but the CPU neuron models don't do anything either in these functions
 void NeuronModelGPU::enable_neurons(const std::span<const NeuronID> neuron_ids) { }
 

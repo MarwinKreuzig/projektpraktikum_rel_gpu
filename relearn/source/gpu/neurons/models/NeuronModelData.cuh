@@ -77,6 +77,8 @@ namespace models {
 
         virtual void init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) override;
 
+        virtual double get_secondary_variable(const RelearnGPUTypes::neuron_id_type neuron_id) const override;
+
         AEIFModelData* device_ptr;
 
         gpu::Vector::CudaArrayDeviceHandle<double> w_handle;
@@ -98,6 +100,8 @@ namespace models {
         virtual void create_neurons(RelearnGPUTypes::number_neurons_type creation_count) override;
 
         virtual void init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) override;
+
+        virtual double get_secondary_variable(const RelearnGPUTypes::neuron_id_type neuron_id) const override;
 
         FitzHughNagumoModelData* device_ptr;
 
@@ -122,6 +126,8 @@ namespace models {
 
         virtual void init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) override;
 
+        virtual double get_secondary_variable(const RelearnGPUTypes::neuron_id_type neuron_id) const override;
+
         IzhikevichModelData* device_ptr;
 
         gpu::Vector::CudaArrayDeviceHandle<double> u_handle;
@@ -143,6 +149,8 @@ namespace models {
         virtual void create_neurons(RelearnGPUTypes::number_neurons_type creation_count) override;
 
         virtual void init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) override;
+
+        virtual double get_secondary_variable(const RelearnGPUTypes::neuron_id_type neuron_id) const override;
 
         PoissonModelData* device_ptr;
         gpu::Vector::CudaArrayDeviceHandle<double> refractory_time_handle;
