@@ -14,10 +14,14 @@
 #include "mpi/MPIWrapper.h"
 #include "structure/OctreeNode.h"
 #include "util/MemoryHolder.h"
+#include "gpu/utils/CudaHelper.h"
 
 std::vector<OctreeNode<BarnesHutCell>> holder_bh_cells{};
 
 int main(int argc, char** argv) {
+    // These benchmarks aren't supposed to use the GPU version even if cuda is available.
+    CudaHelper::set_use_cuda(false);
+
     MPIWrapper::init(argc, argv);
 
     ::benchmark::Initialize(&argc, argv);
