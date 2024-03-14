@@ -17,8 +17,8 @@
 #include <range/v3/view/drop.hpp>
 
 void SynapticElements::init(const number_neurons_type number_neurons) {
-    RelearnException::check(size == 0, "SynapticElements::init_cpu: Was already initialized");
-    RelearnException::check(number_neurons > 0, "SynapticElements::init_cpu: Cannot initialize with 0 neurons");
+    RelearnException::check(size == 0, "SynapticElements::init: Was already initialized");
+    RelearnException::check(number_neurons > 0, "SynapticElements::init: Cannot initialize with 0 neurons");
 
     size = number_neurons;
 
@@ -29,7 +29,7 @@ void SynapticElements::init(const number_neurons_type number_neurons) {
     } else if (initial_vacant_elements_lower_bound == initial_vacant_elements_upper_bound) {
         std::ranges::fill(grown_elements, initial_vacant_elements_lower_bound);
     } else {
-        RelearnException::fail("SynapticElements::init_cpu: Should initialize synaptic elements with values between in the wrong order (lower is larger than upper)");
+        RelearnException::fail("SynapticElements::init: Should initialize synaptic elements with values between in the wrong order (lower is larger than upper)");
     }
 
     connected_elements.resize(size, 0);

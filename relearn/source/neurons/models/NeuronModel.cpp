@@ -24,9 +24,9 @@
 #include <range/v3/functional.hpp>
 #include <range/v3/numeric/accumulate.hpp>
 
-void NeuronModel::init_cpu(number_neurons_type number_neurons) {
-    RelearnException::check(number_local_neurons == 0, "NeuronModel::init_cpu: Was already initialized");
-    RelearnException::check(number_neurons > 0, "NeuronModel::init_cpu: Must initialize with more than 0 neurons");
+void NeuronModel::init(number_neurons_type number_neurons) {
+    RelearnException::check(number_local_neurons == 0, "NeuronModel::init: Was already initialized");
+    RelearnException::check(number_neurons > 0, "NeuronModel::init: Must initialize with more than 0 neurons");
 
     number_local_neurons = number_neurons;
 
@@ -41,7 +41,7 @@ void NeuronModel::init_cpu(number_neurons_type number_neurons) {
     stimulus_calculator->init(number_neurons);
 }
 
-void NeuronModel::create_neurons_cpu(number_neurons_type creation_count) {
+void NeuronModel::create_neurons(number_neurons_type creation_count) {
     RelearnException::check(number_local_neurons > 0, "NeuronModel::create_neurons: Was not initialized");
     RelearnException::check(creation_count > 0, "NeuronModel::create_neurons: Must create more than 0 neurons");
 
@@ -108,8 +108,4 @@ std::vector<ModelParameter> NeuronModel::get_parameter() {
     parameters.emplace_back(Parameter<unsigned int>{ "Number integration steps", h, NeuronModel::min_h, NeuronModel::max_h });
 
     return parameters;
-}
-
-void NeuronModel::set_fired_gpu(const NeuronID neuron_id, const FiredStatus new_value) {
-    RelearnException::fail("No gpu support");
 }

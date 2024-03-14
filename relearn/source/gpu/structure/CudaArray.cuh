@@ -176,7 +176,7 @@ public:
      * @brief Copys data from gpu to host
      * @param host_data Destination of data transfer
      */
-    void copy_to_host(std::vector<T>& host_data) {
+    void copy_to_host(std::vector<T>& host_data) const {
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         host_data.resize(struct_copy.size);
         cuda_memcpy_to_host(struct_copy.data, host_data.data(), sizeof(T), struct_copy.size);

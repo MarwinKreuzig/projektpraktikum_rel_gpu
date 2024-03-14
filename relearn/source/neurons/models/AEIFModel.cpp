@@ -70,13 +70,13 @@ AEIFModel::AEIFModel(
     return "AEIFModel";
 }
 
-void AEIFModel::init_cpu(number_neurons_type number_neurons) {
-    NeuronModel::init_cpu(number_neurons);
+void AEIFModel::init(number_neurons_type number_neurons) {
+    NeuronModel::init(number_neurons);
     w.resize(number_neurons);
     init_neurons(0, number_neurons);
 }
 
-void AEIFModel::create_neurons_cpu(const number_neurons_type creation_count) {
+void AEIFModel::create_neurons(const number_neurons_type creation_count) {
     const auto old_size = NeuronModel::get_number_neurons();
     NeuronModel::create_neurons(creation_count);
     w.resize(old_size + creation_count);
@@ -140,7 +140,7 @@ void AEIFModel::update_activity_benchmark() {
     }
 }
 
-void AEIFModel::update_activity_cpu() {
+void AEIFModel::update_activity(const step_type step) {
     const auto number_local_neurons = get_number_neurons();
     const auto disable_flags = get_extra_infos()->get_disable_flags();
 
@@ -174,7 +174,7 @@ void AEIFModel::update_activity_cpu() {
     }
 }
 
-void AEIFModel::init_neurons_cpu(const number_neurons_type start_id, const number_neurons_type end_id) {
+void AEIFModel::init_neurons(const number_neurons_type start_id, const number_neurons_type end_id) {
     for (const auto neuron_id : NeuronID::range(start_id, end_id)) {
         w[neuron_id.get_neuron_id()] = 0.0;
         set_x(neuron_id, E_L);

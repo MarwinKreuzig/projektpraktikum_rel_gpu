@@ -2,6 +2,7 @@ if (CUDA_FOUND)
     add_library(relearn_gpu STATIC
             neurons/input/BackgroundActivity.cuh
             neurons/models/NeuronModel.cuh
+            neurons/models/NeuronModelGPU.h
             structure/CudaArray.cuh
             structure/CudaVector.cuh
             RelearnGPUException.h
@@ -24,12 +25,17 @@ if (CUDA_FOUND)
             relearn_gpu
             PRIVATE
             structure/Octree.cu
+
+            neurons/models/NeuronModelData.cu
+            neurons/models/ModelKernels.cu
+
             neurons/models/NeuronModel.cu
-            neurons/input/BackgroundActivity.cu
             neurons/models/AEIFModel.cu
             neurons/models/FitzHughNagumoModel.cu
             neurons/models/IzhikevichModel.cu
             neurons/models/PoissonModel.cu
+
+            neurons/input/BackgroundActivity.cu
             neurons/NeuronsExtraInfos.cu
             utils/Random.cu
             RelearnGPUException.cu

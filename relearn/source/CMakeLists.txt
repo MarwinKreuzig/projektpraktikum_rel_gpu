@@ -13,6 +13,8 @@ target_sources(
         algorithm/NaiveInternal/Naive.cpp
 
         # gpu
+        gpu/neurons/models/NeuronModelGPU.cpp
+        gpu/neurons/models/PoissonModelGPU.cpp
         gpu/utils/Interface.cpp
         gpu/utils/CudaHelper.cpp
 

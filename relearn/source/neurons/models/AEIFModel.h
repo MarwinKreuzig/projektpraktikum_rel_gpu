@@ -64,14 +64,14 @@ public:
     /**
      * @brief Clones this instance and creates a new AEIFModel with the same parameters and 0 local neurons
      */
-    [[nodiscard]] std::unique_ptr<NeuronModel> clone() const final;
+    [[nodiscard]] virtual std::unique_ptr<NeuronModel> clone() const final;
 
     /**
      * @brief Returns the dampening variable w
      * @exception Throws a RelearnException if neuron_id is too large
      * @return The dampening variable w
      */
-    [[nodiscard]] double get_secondary_variable(const NeuronID neuron_id) const final {
+    [[nodiscard]] virtual double get_secondary_variable(const NeuronID neuron_id) const final {
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < get_number_neurons(), "In AEIFModel::get_secondary_variable, id is too large");
@@ -82,13 +82,13 @@ public:
      * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
      * @return A vector with all adjustable ModelParameter
      */
-    [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
+    [[nodiscard]] virtual std::vector<ModelParameter> get_parameter() final;
 
     /**
      * @brief Returns the name of this model
      * @return The name of this model
      */
-    [[nodiscard]] std::string name() final;
+    [[nodiscard]] virtual std::string name() final;
 
     /**
      * @brief Returns C (The dampening factor for v(t) (membrane capacitance))
@@ -166,13 +166,13 @@ public:
      * @brief Initializes the model to include number_neurons many local neurons.
      * @param number_neurons The number of local neurons to store in this class
      */
-    void init_cpu(number_neurons_type number_neurons) final;
+    virtual void init(number_neurons_type number_neurons) final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
      * @param creation_count The number of local neurons that should be added
      */
-    void create_neurons_cpu(number_neurons_type creation_count) override final;
+    virtual void create_neurons(number_neurons_type creation_count) override final;
 
     /**
      * @brief Records the memory footprint of the current object
@@ -217,11 +217,11 @@ public:
     static constexpr double max_V_spike{ 70.0 };
 
 protected:
-    void update_activity_cpu() final;
+    virtual void update_activity(const step_type step) final;
 
-    void update_activity_benchmark() final;
+    virtual void update_activity_benchmark() final;
 
-    void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) final;
+    virtual void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
 
 private:
     [[nodiscard]] double f(double x) const noexcept;

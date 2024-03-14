@@ -46,14 +46,14 @@ public:
     /**
      * @brief Clones this instance and creates a new PoissonModel with the same parameters and 0 local neurons
      */
-    [[nodiscard]] std::unique_ptr<NeuronModel> clone() const final;
+    [[nodiscard]] virtual std::unique_ptr<NeuronModel> clone() const final;
 
     /**
      * @brief Returns the refractory_time time (The number of steps a neuron doesn't spike after spiking)
      * @exception Throws a RelearnException if neuron_id is too large
      * @return The refractory_time time (The number of steps a neuron doesn't spike after spiking)
      */
-    [[nodiscard]] double get_secondary_variable(const NeuronID neuron_id) const final {
+    [[nodiscard]] virtual double get_secondary_variable(const NeuronID neuron_id) const final {
         const auto local_neuron_id = neuron_id.get_neuron_id();
 
         RelearnException::check(local_neuron_id < get_number_neurons(), "PoissonModel::get_secondary_variable: id is too large: {}", neuron_id);
@@ -64,13 +64,13 @@ public:
      * @brief Returns a vector with all adjustable ModelParameter for this class and NeuronModel
      * @return A vector with all adjustable ModelParameter
      */
-    [[nodiscard]] std::vector<ModelParameter> get_parameter() final;
+    [[nodiscard]] virtual std::vector<ModelParameter> get_parameter() final;
 
     /**
      * @brief Returns the name of this model
      * @return The name of this model
      */
-    [[nodiscard]] std::string name() final;
+    [[nodiscard]] virtual std::string name() final;
 
     /**
      * @brief Returns x_0 (The resting membrane potential)
@@ -121,24 +121,24 @@ public:
     static constexpr unsigned int max_refractory_time{ 1000 };
 
 protected:
-    void update_activity_cpu() final;
+    virtual void update_activity(const step_type step) final;
 
-    void update_activity_benchmark() final;
+    virtual void update_activity_benchmark() final;
 
-    void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) final;
+    virtual void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
 
     /**
      * @brief Initializes the model to include number_neurons many local neurons.
      *      Sets the initial refractory_time counter to 0
      * @param number_neurons The number of local neurons to store in this class
      */
-    void init_cpu(number_neurons_type number_neurons) override final;
+    virtual void init(number_neurons_type number_neurons) override final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
      * @param creation_count The number of local neurons that should be added
      */
-    void create_neurons_cpu(number_neurons_type creation_count) final;
+    virtual void create_neurons(number_neurons_type creation_count) final;
 
 private:
     [[nodiscard]] double iter_x(const double x, const double input) const noexcept {

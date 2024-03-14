@@ -52,17 +52,17 @@ PoissonModel::PoissonModel(
     return "PoissonModel";
 }
 
-void PoissonModel::init_cpu(number_neurons_type number_neurons) {
-    NeuronModel::init_cpu(number_neurons);
+void PoissonModel::init(number_neurons_type number_neurons) {
+    NeuronModel::init(number_neurons);
     refractory_time.resize(number_neurons, 0);
 }
 
-void PoissonModel::init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) {
+void PoissonModel::init_neurons(number_neurons_type start_id, number_neurons_type end_id) {
 }
 
-void PoissonModel::create_neurons_cpu(const number_neurons_type creation_count) {
+void PoissonModel::create_neurons(const number_neurons_type creation_count) {
     const auto old_size = NeuronModel::get_number_neurons();
-    NeuronModel::create_neurons_cpu(creation_count);
+    NeuronModel::create_neurons(creation_count);
     refractory_time.resize(old_size + creation_count, 0);
 }
 
@@ -117,7 +117,7 @@ void PoissonModel::update_activity_benchmark() {
     }
 }
 
-void PoissonModel::update_activity_cpu() {
+void PoissonModel::update_activity(const step_type step) {
     const auto number_local_neurons = get_number_neurons();
     const auto disable_flags = get_extra_infos()->get_disable_flags();
 

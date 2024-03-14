@@ -103,13 +103,13 @@ public:
      * @brief Initializes the model to include number_neurons many local neurons.
      * @param number_neurons The number of local neurons to store in this class
      */
-    void init_cpu(number_neurons_type number_neurons) override final;
+    void init(number_neurons_type number_neurons) override final;
 
     /**
      * @brief Creates new neurons and adds those to the local portion.
      * @param creation_count The number of local neurons that should be added
      */
-    void create_neurons_cpu(number_neurons_type creation_count) override final;
+    void create_neurons(number_neurons_type creation_count) override final;
 
     /**
      * @brief Records the memory footprint of the current object
@@ -139,11 +139,11 @@ public:
     static constexpr double init_w{ -0.6 };
 
 protected:
-    void update_activity_cpu() final;
+    void update_activity(const step_type step) final;
 
     void update_activity_benchmark() final;
 
-    void init_neurons_cpu(number_neurons_type start_id, number_neurons_type end_id) final;
+    void init_neurons(number_neurons_type start_id, number_neurons_type end_id) final;
 
 private:
     [[nodiscard]] static double iter_x(double x, double w, double input) noexcept;
