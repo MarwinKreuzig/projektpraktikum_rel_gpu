@@ -21,6 +21,7 @@ add_executable(
         relearn_benchmarks_cuda
         main.cpp
         benchmark_octree_gpu.cpp
+        benchmark_barnes_hut.cpp
 
         # for visual studio
 
