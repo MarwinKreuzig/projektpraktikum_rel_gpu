@@ -42,9 +42,6 @@ AEIFModel::AEIFModel(
     , a{ a }
     , b{ b }
     , V_spike{ V_spike } {
-    if (CudaHelper::is_cuda_available()) {
-        gpu_handle = gpu::models::aeif::construct_gpu(get_background_activity_calculator()->get_gpu_handle(), h, C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike);
-    }
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> AEIFModel::clone() const {

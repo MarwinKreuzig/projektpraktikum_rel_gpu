@@ -1,7 +1,6 @@
 if (CUDA_FOUND)
     add_library(relearn_gpu STATIC
             neurons/input/BackgroundActivity.cuh
-            neurons/models/NeuronModel.cuh
             neurons/models/NeuronModelGPU.h
             structure/CudaArray.cuh
             structure/CudaVector.cuh
@@ -28,12 +27,6 @@ if (CUDA_FOUND)
 
             neurons/models/NeuronModelData.cu
             neurons/models/ModelKernels.cu
-
-            neurons/models/NeuronModel.cu
-            neurons/models/AEIFModel.cu
-            neurons/models/FitzHughNagumoModel.cu
-            neurons/models/IzhikevichModel.cu
-            neurons/models/PoissonModel.cu
 
             neurons/input/BackgroundActivity.cu
             neurons/NeuronsExtraInfos.cu

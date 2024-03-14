@@ -126,7 +126,6 @@ RelearnGPUTypes::number_neurons_type NeuronModelDataHandleImpl::get_extra_infos_
     return host_result;
 }
 
-
 void* NeuronModelDataHandleImpl::get_device_ptr() {
     return (void*)device_ptr;
 }
