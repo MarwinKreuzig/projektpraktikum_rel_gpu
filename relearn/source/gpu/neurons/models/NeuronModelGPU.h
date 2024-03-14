@@ -68,7 +68,6 @@ public:
     std::shared_ptr<NeuronModelDataHandle> gpu_handle;
 
 protected:
-    RelearnGPUTypes::number_neurons_type number_neurons;
     std::unique_ptr<models::ModelDataHandle> model_data_handle;
 
     unsigned int h;
