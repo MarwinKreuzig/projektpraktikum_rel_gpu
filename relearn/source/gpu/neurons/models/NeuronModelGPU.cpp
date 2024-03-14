@@ -30,7 +30,12 @@ void NeuronModelGPU::enable_neurons(const std::span<const NeuronID> neuron_ids) 
 void NeuronModelGPU::disable_neurons(const std::span<const NeuronID> neuron_ids) { }
 
 void NeuronModelGPU::set_fired(const NeuronID neuron_id, const FiredStatus new_value) {
+    NeuronModel::set_fired(neuron_id, new_value);
     gpu_handle->set_fired(neuron_id.get_neuron_id(), new_value);
+}
+
+void NeuronModelGPU::set_fired(std::vector<FiredStatus> new_values) {
+    gpu_handle->set_fired(&new_values);
 }
 
 bool NeuronModelGPU::get_fired(const NeuronID neuron_id) const {
