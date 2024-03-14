@@ -366,7 +366,7 @@ public:
      */
     virtual void set_fired(std::vector<FiredStatus> new_values) {
         for (size_t i = 0; i < new_values.size(); i++) {
-            set_fired(NeuronID { i }, new_values[i]);
+            set_fired(NeuronID{ i }, new_values[i]);
         }
     }
 

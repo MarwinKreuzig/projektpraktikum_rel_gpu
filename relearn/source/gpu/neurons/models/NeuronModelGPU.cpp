@@ -11,7 +11,7 @@ NeuronModelGPU::NeuronModelGPU(std::unique_ptr<models::ModelDataHandle> model_da
     std::vector<double> stimulus_{};
     std::vector<double> syn_input_{};
     std::vector<FiredStatus> fired_{};
-    
+
     gpu_handle = create_neuron_model_data(&x_, nullptr, h, scale, 0, get_background_activity_calculator()->get_gpu_handle().get(), &stimulus_, &syn_input_, &fired_);
 }
 
