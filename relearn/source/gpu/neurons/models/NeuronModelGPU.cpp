@@ -1,5 +1,7 @@
 #include "NeuronModelGPU.h"
 
+#include <iostream>
+
 namespace gpu {
 NeuronModelGPU::NeuronModelGPU(std::unique_ptr<models::ModelDataHandle> model_data_handle_, const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
     std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator)
@@ -9,7 +11,8 @@ NeuronModelGPU::NeuronModelGPU(std::unique_ptr<models::ModelDataHandle> model_da
     std::vector<double> stimulus_{};
     std::vector<double> syn_input_{};
     std::vector<FiredStatus> fired_{};
-    gpu_handle = create_neuron_model_data(&x_, nullptr, h, scale, 0, background_activity_calculator->get_gpu_handle().get(), &stimulus_, &syn_input_, &fired_);
+    
+    gpu_handle = create_neuron_model_data(&x_, nullptr, h, scale, 0, get_background_activity_calculator()->get_gpu_handle().get(), &stimulus_, &syn_input_, &fired_);
 }
 
 std::unique_ptr<NeuronModelDataHandle> gpu_handle;

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../../utils/GpuTypes.h"
 #include "NeuronModelDataHandle.h"
 
