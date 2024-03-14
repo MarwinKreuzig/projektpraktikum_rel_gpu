@@ -87,7 +87,7 @@ public:
      * @brief Returns the handle to the NeuronModel on the GPU.
      * @exception Throws a RelearnException if not using CUDA.
      */
-    [[nodiscard]] virtual std::shared_ptr<gpu::NeuronModelDataHandle> device_handle() {
+    [[nodiscard]] virtual std::shared_ptr<gpu::NeuronModelDataHandle> get_gpu_handle() {
         RelearnException::fail("not using gpu");
     }
 
@@ -430,28 +430,6 @@ protected:
      */
     virtual void init_neurons(number_neurons_type start_id, number_neurons_type end_id) = 0;
 
-    // GPU
-    void update_activity_gpu(const step_type step) {
-        RelearnException::check(gpu_handle != nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
-
-        gpu_handle->update_activity(step, Util::vectorify_span(get_synaptic_input()), Util::vectorify_span(get_stimulus()));
-    }
-
-    void init_neurons_gpu(number_neurons_type start_id, number_neurons_type end_id) {
-        RelearnException::check(gpu_handle != nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
-        gpu_handle->init_neurons(start_id, end_id);
-    }
-
-    void create_neurons_gpu(number_neurons_type creation_count) {
-        RelearnException::check(gpu_handle != nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
-        gpu_handle->create_neurons(creation_count);
-    }
-
-    void init_gpu(number_neurons_type number_neurons) {
-        RelearnException::check(gpu_handle != nullptr, "NeuronModel::set_extra_infos: GPU handle not set");
-        gpu_handle->init_neuron_model(number_neurons);
-    }
-
     /**
      * @brief Sets the membrane potential for the specified neuron. Does not perform bound-checking
      * @param neuron_id The local neuron id
@@ -493,8 +471,6 @@ protected:
     [[nodiscard]] const std::shared_ptr<NeuronsExtraInfo>& get_extra_infos() const noexcept {
         return extra_infos;
     }
-
-    std::shared_ptr<gpu::models::NeuronModelHandle> gpu_handle{};
 
 private:
     // My local number of neurons

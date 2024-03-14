@@ -23,7 +23,7 @@ public:
     NeuronModelGPU(std::unique_ptr<models::ModelDataHandle> model_data_handle, const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator);
 
-    virtual std::shared_ptr<NeuronModelDataHandle> device_handle() override {
+    virtual std::shared_ptr<NeuronModelDataHandle> get_gpu_handle() override {
         return gpu_handle;
     }
 
@@ -62,8 +62,9 @@ public:
         return model_data_handle->get_secondary_variable(neuron_id.get_neuron_id());
     }
 
-protected:
     std::shared_ptr<NeuronModelDataHandle> gpu_handle;
+
+protected:
     RelearnGPUTypes::number_neurons_type number_neurons;
     std::unique_ptr<models::ModelDataHandle> model_data_handle;
 
