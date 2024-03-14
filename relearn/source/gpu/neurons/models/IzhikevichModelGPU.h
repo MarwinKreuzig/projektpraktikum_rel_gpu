@@ -5,6 +5,7 @@
 namespace gpu::models {
 class IzhikevichModelGPU : public NeuronModelGPU {
 public:
+    IzhikevichModelGPU() = default;
     IzhikevichModelGPU(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator, double a, double b, double c, double d, double V_spike, double k1, double k2, double k3);
     virtual void update_activity(RelearnGPUTypes::step_type step) override;

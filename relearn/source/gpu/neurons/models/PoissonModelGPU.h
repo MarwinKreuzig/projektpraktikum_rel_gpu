@@ -5,6 +5,7 @@
 namespace gpu::models {
 class PoissonModelGPU : public NeuronModelGPU {
 public:
+    PoissonModelGPU() = default;
     PoissonModelGPU(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
         std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator, double x_0, double tau_x, unsigned int refractory_period);
 
