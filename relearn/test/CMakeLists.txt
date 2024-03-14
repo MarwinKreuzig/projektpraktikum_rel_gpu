@@ -152,14 +152,16 @@ target_sources(
         timers/test_timers.cpp
 
         vec3/test_vec3.cpp
-
-        # for visual studio
+        
+       # for visual studio
         ${relearn_tests_additional_files})
 
 if (CUDA_FOUND)
-    target_sources(relearn_tests PRIVATE gpu/octree/test_octree_gpu.cpp)
-    target_sources(relearn_tests PRIVATE gpu/vec3/test_vec3_gpu.cpp)
-    target_link_libraries(relearn_tests PUBLIC relearn_gpu)
+        target_sources(relearn_tests PRIVATE 
+        gpu/octree/test_octree_gpu.cpp
+        gpu/barnes_hut/test_barnes_hut_gpu.cpp
+        gpu/vec3/test_vec3_gpu.cpp)
+        target_link_libraries(relearn_tests PUBLIC relearn_gpu)
 endif ()
 
 target_include_directories(relearn_tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

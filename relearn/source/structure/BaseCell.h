@@ -17,6 +17,7 @@
 
 #include <optional>
 #include <ostream>
+#include <iostream>
 
 #ifdef WIN32
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
@@ -480,6 +481,9 @@ public:
     constexpr void set_position_for(const ElementType element_type, const SignalType signal_type, const std::optional<position_type>& virtual_position)
         requires(has_excitatory_dendrite || has_inhibitory_dendrite || has_excitatory_axon || has_inhibitory_axon)
     {
+
+
+
         if (element_type == ElementType::Axon && signal_type == SignalType::Excitatory) {
             if constexpr (has_excitatory_axon) {
                 excitatory_axon.set_position(virtual_position);

@@ -300,12 +300,29 @@ public:
     }
 
     /**
+     * @brief Returns the index of this node on the device
+     * @return The index of this node on the device
+     */
+    [[nodiscard]] constexpr std::uint64_t get_index_on_device() const noexcept {
+        return index_on_device;
+    }
+
+    /**
+     * @brief Sets the index of this node on the device
+     * @param new_index_on_device The new index of this node on the device
+     */
+    constexpr void set_index_on_device(std::uint64_t new_index_on_device) noexcept {
+        index_on_device = new_index_on_device;
+    }
+
+    /**
      * @brief Resets the current object:
      *      (a) The children are newly constructed with nullptr
      *      (b) The cell is newly constructed
      *      (c) level is -1
      *      (d) parent is false
      *      (e) rank is MPIRank::uninitialized_rank()
+     *      (f) the index of this node on the device is -1
      */
     constexpr void reset() noexcept {
         children = std::array<OctreeNodePtr, Constants::number_oct>{ nullptr };
@@ -313,6 +330,7 @@ public:
         level = -1;
         parent = false;
         rank = MPIRank::uninitialized_rank();
+        index_on_device = -1;
     }
 
     /**
@@ -428,6 +446,8 @@ private:
     bool parent{ false };
 
     MPIRank rank{ MPIRank::uninitialized_rank() }; // MPI rank who owns this octree node
+
+    std::uint64_t index_on_device{ std::numeric_limits<std::uint64_t>::max() };
 
 public:
     /**

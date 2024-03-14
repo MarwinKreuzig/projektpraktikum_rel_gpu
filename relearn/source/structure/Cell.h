@@ -19,6 +19,8 @@
 #include <optional>
 #include <ostream>
 #include <tuple>
+#include <iostream>
+
 
 /**
  * This class summarizes all 'octree-relevant' data from a neuron.

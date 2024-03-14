@@ -13,6 +13,8 @@
 #include "Types.h"
 #include "util/RelearnException.h"
 #include "util/Vec3.h"
+#include "gpu/algorithm/kernel/KernelGPUInterface.h"
+#include "gpu/utils/CudaHelper.h"
 
 #include <cmath>
 #include <numeric>
@@ -39,6 +41,10 @@ public:
         RelearnException::check(k > 0.0, "In GammaDistributionKernel::set_k, k was not greater than 0.0");
         GammaDistributionKernel::k = k;
         GammaDistributionKernel::gamma_divisor_inv = 1.0 / (std::tgamma(k) * std::pow(theta, k));
+
+        if (get_gpu_handle()) {
+            get_gpu_handle()->set_k_theta(k, theta);
+        }
     }
 
     /**
@@ -59,6 +65,10 @@ public:
         GammaDistributionKernel::theta = theta;
         GammaDistributionKernel::gamma_divisor_inv = 1.0 / (std::tgamma(k) * std::pow(theta, k));
         GammaDistributionKernel::theta_divisor = -1.0 / theta;
+
+        if (get_gpu_handle()) {
+            get_gpu_handle()->set_k_theta(k, theta);
+        }
     }
 
     /**
@@ -67,6 +77,18 @@ public:
      */
     [[nodiscard]] static double get_theta() noexcept {
         return theta;
+    }
+
+    /**
+    * @brief Get the handle to the GPU version of this class
+    * @return The GPU Handle
+    */
+    [[nodiscard]] static const std::shared_ptr<gpu::kernel::GammaDistributionKernelHandle> &get_gpu_handle() {
+        RelearnException::check(CudaHelper::is_cuda_available(), "GammaDistributionKernel::get_gpu_handle: GPU not supported");
+        
+        static std::shared_ptr<gpu::kernel::GammaDistributionKernelHandle> gpu_handle{gpu::kernel::create_gamma(default_k, default_theta)};
+
+        return gpu_handle;
     }
 
     /**

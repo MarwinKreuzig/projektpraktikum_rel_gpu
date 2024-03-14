@@ -66,4 +66,8 @@ void SynapticElementsHandleImpl::update_connected_elements(const RelearnGPUTypes
     cuda_memcpy_to_device((void*)(connected_elements_gpu + neuron_id), (void*)&to_set, sizeof(unsigned int), 1);
 }
 
+void SynapticElementsHandleImpl::set_signal_types(const std::vector<SignalType>& types) {
+    handle_signal_types.copy_to_device(types);
+}
+
 };

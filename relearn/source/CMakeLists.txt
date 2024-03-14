@@ -14,6 +14,7 @@ target_sources(
 
         # gpu
         gpu/utils/Interface.cpp
+        gpu/algorithm/BarnesHutGPU.cpp
         gpu/utils/CudaHelper.cpp
 
         # io

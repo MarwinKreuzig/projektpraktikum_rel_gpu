@@ -13,6 +13,8 @@
 #include "Types.h"
 #include "util/RelearnException.h"
 #include "util/Vec3.h"
+#include "gpu/algorithm/kernel/KernelGPUInterface.h"
+#include "gpu/utils/CudaHelper.h"
 
 #include <cmath>
 
@@ -37,6 +39,10 @@ public:
     static void set_cutoff(const double cutoff_point) {
         RelearnException::check(cutoff_point >= 0.0, "In LinearDistributionKernel::set_sigma, sigma was less than 0.0");
         LinearDistributionKernel::cutoff_point = cutoff_point;
+
+        if (get_gpu_handle()) {
+            get_gpu_handle()->set_cutoff(cutoff_point);
+        }
     }
 
     /**
@@ -45,6 +51,18 @@ public:
      */
     [[nodiscard]] static double get_cutoff() noexcept {
         return cutoff_point;
+    }
+
+    /**
+    * @brief Get the handle to the GPU version of this class
+    * @return The GPU Handle
+    */
+    [[nodiscard]] static const std::shared_ptr<gpu::kernel::LinearDistributionKernelHandle> &get_gpu_handle() {
+        RelearnException::check(CudaHelper::is_cuda_available(), "LinearDistributionKernel::get_gpu_handle: GPU not supported");
+        
+        static std::shared_ptr<gpu::kernel::LinearDistributionKernelHandle> gpu_handle{gpu::kernel::create_linear(default_cutoff)};
+
+        return gpu_handle;
     }
 
     /**

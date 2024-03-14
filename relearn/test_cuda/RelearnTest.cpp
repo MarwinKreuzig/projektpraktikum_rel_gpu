@@ -10,6 +10,14 @@
 
 #include "RelearnTest.hpp"
 
+#include "algorithm/Cells.h"
+#include "../source/gpu/utils/CudaHelper.h"
+#include "io/LogFiles.h"
+
+#include "mpi/MPIWrapper.h"
+#include "structure/OctreeNode.h"
+#include "util/MemoryHolder.h"
+
 #include <chrono>
 #include <iostream>
 
@@ -17,7 +25,9 @@ int RelearnGPUTest::iterations = 10;
 double RelearnGPUTest::eps = 0.001;
 
 bool RelearnGPUTest::use_predetermined_seed = false;
-unsigned int RelearnGPUTest::predetermined_seed = 2818124801;
+unsigned int RelearnGPUTest::predetermined_seed = 1699227193;
+
+std::vector<OctreeNode<BarnesHutCell>> holder_bh_cells{};
 
 RelearnGPUTest::RelearnGPUTest() {
 }
@@ -41,6 +51,9 @@ void RelearnGPUTest::SetUp() {
         std::cerr << "Test seed: " << seed << '\n';
         mt.seed(seed);
     }
+
+    // This is needed between tests so that building a new tree from scratch is possible
+    MemoryHolder<BarnesHutCell>::make_all_available();
 }
 
 void RelearnGPUTest::TearDown() {
@@ -56,7 +69,11 @@ void RelearnGPUTest::TearDown() {
 }
 
 int main(int argc, char** argv) {
+    MPIWrapper::init(1, argv);
     ::testing::InitGoogleTest(&argc, argv);
+
+    holder_bh_cells.resize(1024 * 1024);
+    MemoryHolder<BarnesHutCell>::init(holder_bh_cells);
 
     const auto tests_return_code = RUN_ALL_TESTS();
 
