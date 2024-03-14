@@ -3,7 +3,8 @@
 
 namespace gpu::models {
 PoissonModelGPU::PoissonModelGPU(const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
-    std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator, double x_0, double tau_x, unsigned int refractory_period) { }
+    std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator, double x_0, double tau_x, unsigned int refractory_period) { 
+}
 
 void PoissonModelGPU::update_activity(RelearnGPUTypes::step_type step) {
     init_poisson_kernel(step, gpu_handle.get(), number_neurons, model_data_handle.get(), x_0, tau_x, refractory_period);

@@ -89,7 +89,18 @@ RelearnGPUTypes::number_neurons_type NeuronModelDataHandleImpl::get_extra_infos_
     return host_result;
 }
 
+std::shared_ptr<NeuronModelDataHandle> create_neuron_model_data() {
+
+    // auto a = std::make_shared<NeuronModelDataHandleImpl>();
+    // return std::move(a);
+}
+
 namespace models {
+    std::unique_ptr<ModelDataHandle> create_aeif_model_data() {}
+    std::unique_ptr<ModelDataHandle> create_fitzhughnagumo_model_data() {}
+    std::unique_ptr<ModelDataHandle> create_izhikevich_model_data() {}
+    std::unique_ptr<ModelDataHandle> create_poisson_model_data() {}
+
     void AEIFModelDataHandleImpl::init(const RelearnGPUTypes::number_neurons_type number_neurons) {
         w_handle.resize(number_neurons, 0);
     }

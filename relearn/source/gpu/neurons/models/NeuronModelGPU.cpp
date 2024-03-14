@@ -4,7 +4,9 @@ namespace gpu {
 NeuronModelGPU::NeuronModelGPU(std::unique_ptr<models::ModelDataHandle> model_data_handle_, const unsigned int h, std::unique_ptr<SynapticInputCalculator>&& synaptic_input_calculator,
     std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator)
     : model_data_handle{ std::move(model_data_handle_) }
-    , NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator) } { }
+    , NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator) } {
+    gpu_handle = create_neuron_model_data();
+}
 
 std::unique_ptr<NeuronModelDataHandle> gpu_handle;
 RelearnGPUTypes::number_neurons_type number_neurons;

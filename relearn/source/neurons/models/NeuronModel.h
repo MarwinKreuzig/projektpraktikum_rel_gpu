@@ -87,7 +87,7 @@ public:
      * @brief Returns the handle to the NeuronModel on the GPU.
      * @exception Throws a RelearnException if not using CUDA.
      */
-    [[nodiscard]] virtual gpu::NeuronModelDataHandle* device_handle() {
+    [[nodiscard]] virtual std::shared_ptr<gpu::NeuronModelDataHandle> device_handle() {
         RelearnException::fail("not using gpu");
     }
 

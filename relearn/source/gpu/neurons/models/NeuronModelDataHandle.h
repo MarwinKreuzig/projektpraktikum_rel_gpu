@@ -21,6 +21,8 @@ public:
     virtual std::vector<FiredStatus> get_fired() const noexcept = 0;
 };
 
+std::shared_ptr<NeuronModelDataHandle> create_neuron_model_data();
+
 namespace models {
     class ModelDataHandle {
     public:
@@ -34,5 +36,10 @@ namespace models {
 
         virtual double get_secondary_variable(const RelearnGPUTypes::neuron_id_type neuron_id) const = 0;
     };
+
+    std::unique_ptr<ModelDataHandle> create_aeif_model_data();
+    std::unique_ptr<ModelDataHandle> create_fitzhughnagumo_model_data();
+    std::unique_ptr<ModelDataHandle> create_izhikevich_model_data();
+    std::unique_ptr<ModelDataHandle> create_poisson_model_data();
 }
 }
