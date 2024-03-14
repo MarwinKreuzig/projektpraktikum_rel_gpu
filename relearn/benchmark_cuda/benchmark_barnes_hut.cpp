@@ -8,7 +8,7 @@
  *
  */
 
-#include "main.h"
+#include "../benchmark/main.h"
 
 #include "gpu/algorithm/BarnesHutGPU.h"
 #include "util/MemoryHolder.h"
@@ -243,6 +243,8 @@ static void BM_BarnesHut_Update_Connectivity(benchmark::State& state) {
 
         state.ResumeTiming();
     }
+
+    MemoryHolder<BarnesHutCell>::make_all_available();
 }
 
 BENCHMARK(BM_BarnesHutGPU_Update_Connectivity)->Unit(benchmark::kMillisecond)->Args({800000, 10000, 4})->Iterations(10);
