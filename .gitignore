@@ -360,3 +360,6 @@ ASALocalRun/
 **/out
 /relearn/build*
 /relearn/external
+
+# created logs
+/jobscripts_relearn/*.txt

@@ -31,23 +31,44 @@ public:
     NeuronsExtraInfosHandleImpl(NeuronsExtraInfos* _dev_ptr);
 
     /**
-     * @brief Gets called by constructor to init class, do not call from outside
-     */
+    * @brief Init function called by the constructor, has to be public in order to be allowed to use device lamdas in it, do not call from outside
+    */
     void _init();
 
+    /**
+     * @brief Returns a pointer to the data on the GPU
+     */
     void* get_device_pointer() override;
 
-    // Generally, functionality like this can be done on the cpu here, but somtimes we will need in on a kernel on the GPU
-    // In this case, outsource it as a device function into the above struct and call it indirictly over a global function here, if it is also needed on the GPU
+    /**
+     * @brief Save neurons as disabled. Neurons must be enabled beforehand
+     * @param neuron_ids Vector with neuron ids that we disable
+     */
     void disable_neurons(const std::vector<RelearnGPUTypes::neuron_id_type>& neuron_ids) override;
 
+    /**
+     * @brief Save neurons as enabled. Neurons must be disabled beforehand
+     * @param neuron_ids Vector with neuron ids that we enable
+     */
     void enable_neurons(const std::vector<RelearnGPUTypes::neuron_id_type>& neuron_ids) override;
 
+    /**
+     * @brief Initialize the class when the number of neurons is known
+     * @param Number Number local neurons
+     */
     void init(const RelearnGPUTypes::number_neurons_type _num_neurons) override;
 
-    // currently only updates disable_flags, size and positions. Add more parameters as needed
+    /**
+     * @brief Creates new neurons
+     * @param new_size The new number of neurons
+     * @param positions The positions of all neurons, including the new ones
+     */
     void create_neurons(RelearnGPUTypes::number_neurons_type new_size, const std::vector<gpu::Vec3d>& positions) override;
 
+    /**
+     * @brief Overwrites the current positions with the supplied ones
+     * @param pos The new positions, must have the same size as neurons are stored
+     */
     void set_positions(const std::vector<gpu::Vec3d>& pos) override;
 
 private:

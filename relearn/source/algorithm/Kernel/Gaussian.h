@@ -13,6 +13,8 @@
 #include "Types.h"
 #include "util/RelearnException.h"
 #include "util/Vec3.h"
+#include "gpu/algorithm/kernel/KernelGPUInterface.h"
+#include "gpu/utils/CudaHelper.h"
 
 #include <numeric>
 
@@ -38,6 +40,10 @@ public:
         RelearnException::check(sigma > 0.0, "In GaussianDistributionKernel::set_sigma, sigma was not greater than 0.0");
         GaussianDistributionKernel::sigma = sigma;
         GaussianDistributionKernel::squared_sigma_inv = 1.0 / (sigma * sigma);
+
+        if (get_gpu_handle()) {
+            get_gpu_handle()->set_sigma(sigma);
+        }
     }
 
     /**
@@ -54,6 +60,10 @@ public:
      */
     static void set_mu(const double mu) noexcept {
         GaussianDistributionKernel::mu = mu;
+
+        if (get_gpu_handle()) {
+            get_gpu_handle()->set_mu(mu);
+        }
     }
 
     /**
@@ -62,6 +72,18 @@ public:
      */
     [[nodiscard]] static double get_mu() noexcept {
         return mu;
+    }
+
+    /**
+    * @brief Get the handle to the GPU version of this class
+    * @return The GPU Handle
+    */
+    [[nodiscard]] static const std::shared_ptr<gpu::kernel::GaussianDistributionKernelHandle> &get_gpu_handle() {
+        RelearnException::check(CudaHelper::is_cuda_available(), "GaussianDistributionKernel::get_gpu_handle: GPU not supported");
+        
+        static std::shared_ptr<gpu::kernel::GaussianDistributionKernelHandle> gpu_handle{gpu::kernel::create_gaussian(default_mu, default_sigma)};
+
+        return gpu_handle;
     }
 
     /**

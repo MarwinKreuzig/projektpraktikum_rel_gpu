@@ -308,6 +308,10 @@ public:
     void set_signal_types(std::vector<SignalType>&& types) {
         RelearnException::check(types.size() == size, "SynapticElements::set_signal_type: Mismatching size of type vectors");
         signal_types = std::move(types);
+
+        if (CudaHelper::is_cuda_available()) {
+            gpu_handle->set_signal_types(signal_types);
+        }
     }
 
     /**

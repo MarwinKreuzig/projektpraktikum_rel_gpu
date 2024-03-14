@@ -24,7 +24,6 @@ if (WIN32) # GPU
     list(APPEND relearn_gpu_additional_files "gpu/structure/CudaArray.cuh")
     list(APPEND relearn_gpu_additional_files "gpu/structure/Octree.cuh")
     list(APPEND relearn_gpu_additional_files "gpu/structure/OctreeCPUCopy.h")
-    list(APPEND relearn_gpu_additional_files "gpu/structure/VectorTypes.h")
     list(APPEND relearn_gpu_additional_files "gpu/utils/CudaHelper.h")
     list(APPEND relearn_gpu_additional_files "gpu/utils/GpuTypes.h")
     list(APPEND relearn_gpu_additional_files "gpu/utils/Interface.h")

@@ -27,6 +27,7 @@
 #include "util/Timers.h"
 #include "util/Utility.h"
 #include "util/ranges/Functional.hpp"
+#include "gpu/utils/CudaHelper.h"
 
 #include <algorithm>
 #include <iomanip>
@@ -301,6 +302,10 @@ void Neurons::create_neurons(const number_neurons_type creation_count) {
     dendrites_exc->create_neurons(creation_count);
     dendrites_inh->create_neurons(creation_count);
 
+    if (CudaHelper::is_cuda_available()) {
+        global_tree->overwrite_cpu_tree_with_gpu();
+    }
+
     for (const auto& neuron_id : NeuronID::range(current_size, new_size)) {
         dendrites_exc->set_signal_type(neuron_id, SignalType::Excitatory);
         dendrites_inh->set_signal_type(neuron_id, SignalType::Inhibitory);
@@ -310,6 +315,11 @@ void Neurons::create_neurons(const number_neurons_type creation_count) {
     }
 
     global_tree->initializes_leaf_nodes(new_size);
+
+    if (CudaHelper::is_cuda_available()) {
+        global_tree->update_gpu_octree_structure();
+    }
+    
 
     number_neurons = new_size;
 }

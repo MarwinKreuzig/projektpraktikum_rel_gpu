@@ -9,7 +9,7 @@
  */
 
 #include "test_vec3_gpu.h"
-#include "../../../source/gpu/structure/VectorTypes.h"
+#include "../../../source/gpu/structure/GpuDataStructures.h"
 
 #include <sstream>
 #include <random>

@@ -13,7 +13,7 @@
 #include "../../RelearnTest.hpp"
 
 #include "util/Vec3.h"
-#include "gpu/structure/VectorTypes.h"
+#include "gpu/structure/GpuDataStructures.h"
 
 /**
  * @brief converts a gpu::Vec3 to an util::Vec3

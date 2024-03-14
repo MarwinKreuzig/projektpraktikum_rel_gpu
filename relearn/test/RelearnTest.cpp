@@ -26,7 +26,7 @@ int RelearnTest::iterations = 10;
 double RelearnTest::eps = 0.001;
 
 bool RelearnTest::use_predetermined_seed = false;
-unsigned int RelearnTest::predetermined_seed = 2818124801;
+unsigned int RelearnTest::predetermined_seed = 750592357;
 
 std::vector<OctreeNode<BarnesHutCell>> holder_bh_cells{};
 std::vector<OctreeNode<BarnesHutInvertedCell>> holder_bhi_cells{};

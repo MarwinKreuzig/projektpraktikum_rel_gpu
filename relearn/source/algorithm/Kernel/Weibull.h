@@ -13,6 +13,8 @@
 #include "Types.h"
 #include "util/RelearnException.h"
 #include "util/Vec3.h"
+#include "gpu/algorithm/kernel/KernelGPUInterface.h"
+#include "gpu/utils/CudaHelper.h"
 
 #include <cmath>
 #include <numeric>
@@ -38,6 +40,10 @@ public:
     static void set_k(const double k) {
         RelearnException::check(k > 0.0, "In WeibullDistributionKernel::set_k, k was not greater than 0.0");
         WeibullDistributionKernel::k = k;
+
+        if (get_gpu_handle()) {
+            get_gpu_handle()->set_k(k);
+        }
     }
 
     /**
@@ -56,6 +62,10 @@ public:
     static void set_b(const double b) {
         RelearnException::check(b > 0.0, "In WeibullDistributionKernel::set_b, b was not greater than 0.0");
         WeibullDistributionKernel::b = b;
+
+        if (get_gpu_handle()) {
+            get_gpu_handle()->set_b(b);
+        }
     }
 
     /**
@@ -64,6 +74,18 @@ public:
      */
     [[nodiscard]] static double get_b() noexcept {
         return b;
+    }
+
+    /**
+    * @brief Get the handle to the GPU version of this class
+    * @return The GPU Handle
+    */
+    [[nodiscard]] static const std::shared_ptr<gpu::kernel::WeibullDistributionKernelHandle> &get_gpu_handle() {
+        RelearnException::check(CudaHelper::is_cuda_available(), "WeibullDistributionKernel::get_gpu_handle: GPU not supported");
+        
+        static std::shared_ptr<gpu::kernel::WeibullDistributionKernelHandle> gpu_handle{gpu::kernel::create_weibull(default_k, default_b)};
+
+        return gpu_handle;
     }
 
     /**

@@ -91,12 +91,12 @@ protected:
         return global_tree->get_level_of_branch_nodes();
     }
 
-private:
+protected:
     /**
      * @brief Updates all leaf nodes in the octree by the algorithm if the extra infos specify so.
      * @exception Throws a RelearnException if the number of flags is different than the number of leaf nodes, or if there is an internal error
      */
-    void update_leaf_nodes() {
+    virtual void update_leaf_nodes() {
         const auto& dendrites_excitatory_counts = excitatory_dendrites->get_grown_elements();
         const auto& dendrites_excitatory_connected_counts = excitatory_dendrites->get_connected_elements();
 

@@ -9,4 +9,7 @@ using step_type = std::uint32_t;
 using number_neurons_type = std::uint64_t;
 using neuron_id_type = size_t;
 
+using neuron_index_type = std::uint64_t;
+using number_elements_type = int;
+
 };
