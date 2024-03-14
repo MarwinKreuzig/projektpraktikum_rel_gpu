@@ -61,6 +61,7 @@ add_subdirectory(source)
 
 if (NOT ENABLE_SCOREP)
     add_subdirectory(benchmark)
+    add_subdirectory(benchmark_cuda)
     add_subdirectory(harness)
     add_subdirectory(test)
     add_subdirectory(test_cuda)
