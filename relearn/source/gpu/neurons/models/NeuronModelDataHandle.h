@@ -9,6 +9,13 @@
 #include "../../utils/Interface.h"
 
 namespace gpu {
+namespace neurons {
+    class NeuronsExtraInfos;
+}
+namespace background {
+    class BackgroundActivity;
+}
+
 class NeuronModelDataHandle {
 public:
     virtual void set_x(const RelearnGPUTypes::neuron_id_type neuron_id, double new_value) = 0;
@@ -19,9 +26,10 @@ public:
     virtual void set_extra_infos(const std::unique_ptr<gpu::neurons::NeuronsExtraInfosHandle>& extra_infos_handle) = 0;
     virtual RelearnGPUTypes::number_neurons_type get_extra_infos_number_local_neurons() = 0;
     virtual std::vector<FiredStatus> get_fired() const noexcept = 0;
+    virtual void* get_device_ptr() = 0;
 };
 
-std::shared_ptr<NeuronModelDataHandle> create_neuron_model_data();
+std::shared_ptr<NeuronModelDataHandle> create_neuron_model_data(std::vector<double>* x, gpu::neurons::NeuronsExtraInfos* extra_infos, unsigned int h, double scale, size_t cur_step, gpu::background::BackgroundHandle* background_calculator, std::vector<double>* stimulus, std::vector<double>* syn_input, std::vector<FiredStatus>* fired);
 
 namespace models {
     class ModelDataHandle {
@@ -37,9 +45,9 @@ namespace models {
         virtual double get_secondary_variable(const RelearnGPUTypes::neuron_id_type neuron_id) const = 0;
     };
 
-    std::unique_ptr<ModelDataHandle> create_aeif_model_data();
-    std::unique_ptr<ModelDataHandle> create_fitzhughnagumo_model_data();
-    std::unique_ptr<ModelDataHandle> create_izhikevich_model_data();
+    std::unique_ptr<ModelDataHandle> create_aeif_model_data(double E_L);
+    std::unique_ptr<ModelDataHandle> create_fitzhughnagumo_model_data(double init_w, double init_x);
+    std::unique_ptr<ModelDataHandle> create_izhikevich_model_data(double c);
     std::unique_ptr<ModelDataHandle> create_poisson_model_data();
 }
 }

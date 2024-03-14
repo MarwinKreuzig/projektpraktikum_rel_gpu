@@ -29,10 +29,6 @@ PoissonModel::PoissonModel(
     , x_0{ x_0 }
     , tau_x{ tau_x }
     , refractory_period{ refractory_period } {
-
-    if (CudaHelper::is_cuda_available()) {
-        gpu_handle = gpu::models::poisson::construct_gpu(get_background_activity_calculator()->get_gpu_handle(), h, x_0, tau_x, refractory_period);
-    }
 }
 
 [[nodiscard]] std::unique_ptr<NeuronModel> PoissonModel::clone() const {

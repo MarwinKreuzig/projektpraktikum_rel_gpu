@@ -5,7 +5,11 @@ NeuronModelGPU::NeuronModelGPU(std::unique_ptr<models::ModelDataHandle> model_da
     std::unique_ptr<BackgroundActivityCalculator>&& background_activity_calculator, std::unique_ptr<Stimulus>&& stimulus_calculator)
     : model_data_handle{ std::move(model_data_handle_) }
     , NeuronModel{ h, std::move(synaptic_input_calculator), std::move(background_activity_calculator), std::move(stimulus_calculator) } {
-    gpu_handle = create_neuron_model_data();
+    std::vector<double> x_{};
+    std::vector<double> stimulus_{};
+    std::vector<double> syn_input_{};
+    std::vector<FiredStatus> fired_{};
+    gpu_handle = create_neuron_model_data(&x_, nullptr, h, scale, 0, background_activity_calculator->get_gpu_handle().get(), &stimulus_, &syn_input_, &fired_);
 }
 
 std::unique_ptr<NeuronModelDataHandle> gpu_handle;

@@ -15,7 +15,7 @@ void init_aeif_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelDataHandl
     const auto num_threads = get_number_threads(aeif_model_kernel, number_neurons);
     const auto num_blocks = get_number_blocks(num_threads, number_neurons);
 
-    aeif_model_kernel<<<num_threads, num_blocks>>>(step, ((NeuronModelDataHandleImpl*)gpu_data_handle)->get_device_ptr(), ((models::AEIFModelDataHandleImpl*)model_data_handle)->device_ptr, number_neurons, C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike, d_T_inverse, tau_w_inverse, C_inverse, scale, h);
+    aeif_model_kernel<<<num_threads, num_blocks>>>(step, (NeuronModelData*)((NeuronModelDataHandleImpl*)gpu_data_handle)->get_device_ptr(), ((models::AEIFModelDataHandleImpl*)model_data_handle)->device_ptr, number_neurons, C, g_L, E_L, V_T, d_T, tau_w, a, b, V_spike, d_T_inverse, tau_w_inverse, C_inverse, scale, h);
 
     cudaDeviceSynchronize();
     gpu_check_last_error();
@@ -25,7 +25,7 @@ void init_fitzhughnagumo_kernel(RelearnGPUTypes::step_type step, gpu::NeuronMode
     const auto num_threads = get_number_threads(fitzhughnagumo_model_kernel, number_neurons);
     const auto num_blocks = get_number_blocks(num_threads, number_neurons);
 
-    fitzhughnagumo_model_kernel<<<num_threads, num_blocks>>>(step, ((NeuronModelDataHandleImpl*)gpu_data_handle)->get_device_ptr(), ((models::FitzHughNagumoModelDataHandleImpl*)model_data_handle)->device_ptr, number_neurons, a, b, phi, init_w, init_x, scale, h);
+    fitzhughnagumo_model_kernel<<<num_threads, num_blocks>>>(step, (NeuronModelData*)((NeuronModelDataHandleImpl*)gpu_data_handle)->get_device_ptr(), ((models::FitzHughNagumoModelDataHandleImpl*)model_data_handle)->device_ptr, number_neurons, a, b, phi, init_w, init_x, scale, h);
 
     cudaDeviceSynchronize();
     gpu_check_last_error();
@@ -35,7 +35,7 @@ void init_izhikevich_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelDat
     const auto num_threads = get_number_threads(izhikevich_model_kernel, number_neurons);
     const auto num_blocks = get_number_blocks(num_threads, number_neurons);
 
-    izhikevich_model_kernel<<<num_threads, num_blocks>>>(step, ((NeuronModelDataHandleImpl*)gpu_data_handle)->get_device_ptr(), ((models::IzhikevichModelDataHandleImpl*)model_data_handle)->device_ptr, V_spike, a, b, c, d, k1, k2, k3, scale, h);
+    izhikevich_model_kernel<<<num_threads, num_blocks>>>(step, (NeuronModelData*)((NeuronModelDataHandleImpl*)gpu_data_handle)->get_device_ptr(), ((models::IzhikevichModelDataHandleImpl*)model_data_handle)->device_ptr, V_spike, a, b, c, d, k1, k2, k3, scale, h);
 
     cudaDeviceSynchronize();
     gpu_check_last_error();
@@ -44,7 +44,7 @@ void init_izhikevich_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelDat
 void init_poisson_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelDataHandle* gpu_data_handle, RelearnGPUTypes::number_neurons_type number_neurons, gpu::models::ModelDataHandle* model_data_handle, double x_0, double tau_x, unsigned int refractory_period) {
     const auto num_threads = get_number_threads(poisson_model_kernel, number_neurons);
     const auto num_blocks = get_number_blocks(num_threads, number_neurons);
-    poisson_model_kernel<<<num_threads, num_blocks>>>(step, ((NeuronModelDataHandleImpl*)gpu_data_handle)->get_device_ptr(), ((models::PoissonModelDataHandleImpl*)model_data_handle)->device_ptr, x_0, tau_x, refractory_period);
+    poisson_model_kernel<<<num_threads, num_blocks>>>(step, (NeuronModelData*)((NeuronModelDataHandleImpl*)gpu_data_handle)->get_device_ptr(), ((models::PoissonModelDataHandleImpl*)model_data_handle)->device_ptr, x_0, tau_x, refractory_period);
 
     cudaDeviceSynchronize();
     gpu_check_last_error();

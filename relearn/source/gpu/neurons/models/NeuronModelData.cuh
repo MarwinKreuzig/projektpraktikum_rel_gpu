@@ -32,6 +32,7 @@ struct NeuronModelData {
 class NeuronModelDataHandleImpl : public NeuronModelDataHandle {
 public:
     NeuronModelDataHandleImpl(NeuronModelData* dev_ptr, std::vector<double>* x, gpu::neurons::NeuronsExtraInfos* extra_infos, unsigned int h, double scale, size_t cur_step, gpu::background::BackgroundActivity* background_calculator, std::vector<double>* stimulus, std::vector<double>* syn_input, std::vector<FiredStatus>* fired);
+    void _init(std::vector<double>* x, gpu::neurons::NeuronsExtraInfos* extra_infos, unsigned int h, double scale, size_t cur_step, gpu::background::BackgroundActivity* background_calculator, std::vector<double>* stimulus, std::vector<double>* syn_input, std::vector<FiredStatus>* fired);
 
     ~NeuronModelDataHandleImpl();
 
@@ -44,8 +45,7 @@ public:
     virtual RelearnGPUTypes::number_neurons_type get_extra_infos_number_local_neurons() override;
 
     virtual std::vector<FiredStatus> get_fired() const noexcept override;
-
-    NeuronModelData* get_device_ptr();
+    virtual void* get_device_ptr() override;
 
 private:
     NeuronModelData* device_ptr;
@@ -67,6 +67,9 @@ namespace models {
 
     class AEIFModelDataHandleImpl : public ModelDataHandle {
     public:
+        AEIFModelDataHandleImpl(AEIFModelData* device_ptr, std::vector<double>* w_data, double E_L);
+        void _init(std::vector<double>* w_data);
+
         virtual ~AEIFModelDataHandleImpl() override {
             cudaFree(device_ptr);
         }
@@ -91,6 +94,9 @@ namespace models {
 
     class FitzHughNagumoModelDataHandleImpl : public ModelDataHandle {
     public:
+        FitzHughNagumoModelDataHandleImpl(FitzHughNagumoModelData* device_ptr, std::vector<double>* w_data, double init_w, double init_x);
+        void _init(std::vector<double>* w_data);
+
         virtual ~FitzHughNagumoModelDataHandleImpl() override {
             cudaFree(device_ptr);
         }
@@ -116,6 +122,10 @@ namespace models {
 
     class IzhikevichModelDataHandleImpl : public ModelDataHandle {
     public:
+        IzhikevichModelDataHandleImpl(IzhikevichModelData* device_ptr, std::vector<double>* u_data, double c);
+
+        void _init(std::vector<double>* u_data);
+
         virtual ~IzhikevichModelDataHandleImpl() override {
             cudaFree(device_ptr);
         }
@@ -140,6 +150,9 @@ namespace models {
 
     class PoissonModelDataHandleImpl : public ModelDataHandle {
     public:
+        PoissonModelDataHandleImpl(PoissonModelData* device_ptr, std::vector<double>* refractory_time_data);
+        void _init(std::vector<double>* refractory_time_data);
+
         virtual ~PoissonModelDataHandleImpl() override {
             cudaFree(device_ptr);
         }
