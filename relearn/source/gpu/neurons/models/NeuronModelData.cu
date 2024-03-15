@@ -123,7 +123,7 @@ std::vector<FiredStatus> NeuronModelDataHandleImpl::get_fired() const noexcept {
 RelearnGPUTypes::number_neurons_type NeuronModelDataHandleImpl::get_extra_infos_number_local_neurons() {
     auto result = (RelearnGPUTypes::number_neurons_type*)cuda_malloc(sizeof(RelearnGPUTypes::number_neurons_type));
 
-    cuda_generic_kernel<<<1, 1>>>([=] __device__(gpu::neurons::NeuronsExtraInfos * extra_infos_handle, RelearnGPUTypes::number_neurons_type * number_neurons) { *number_neurons = extra_infos_handle->get_number_local_neurons(); }, extra_infos_handle, result);
+    cuda_generic_kernel<<<1, 1>>>([=] __device__(gpu::neurons::NeuronsExtraInfos * extra_infos_handle, RelearnGPUTypes::number_neurons_type * number_neurons) { *number_neurons = extra_infos_handle->num_neurons; }, extra_infos_handle, result);
     cudaDeviceSynchronize();
     gpu_check_last_error();
 

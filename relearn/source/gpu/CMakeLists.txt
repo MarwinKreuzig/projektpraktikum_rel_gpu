@@ -7,7 +7,6 @@ if (CUDA_FOUND)
             structure/CudaVector.cuh
             neurons/NeuronsExtraInfos.cuh
             utils/Random.cuh
-            utils/Random.cuh
             RelearnGPUException.h
             Commons.cuh
             structure/Octree.cuh
@@ -39,10 +38,10 @@ if (CUDA_FOUND)
             PRIVATE
             structure/Octree.cu
 
+            neurons/models/NeuronModelData.cu
             neurons/models/ModelKernels.cu
 
             neurons/input/BackgroundActivity.cu
-            neurons/NeuronsExtraInfos.cu
             neurons/NeuronsExtraInfos.cu
             structure/Octree.cu
             algorithm/BarnesHutKernel.cu

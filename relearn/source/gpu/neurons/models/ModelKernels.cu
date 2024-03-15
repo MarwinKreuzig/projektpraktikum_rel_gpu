@@ -53,7 +53,7 @@ void init_poisson_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelDataHa
 __global__ void aeif_model_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelData* gpu_data_handle, models::AEIFModelData* model_data_handle, RelearnGPUTypes::number_neurons_type number_neurons, double C, double g_L, double E_L, double V_T, double d_T, double tau_w, double a, double b, double V_spike, double d_T_inverse, double tau_w_inverse, double C_inverse, double scale, unsigned int h) {
     const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
 
-    if (neuron_id >= gpu_data_handle->extra_infos->get_number_local_neurons()) {
+    if (neuron_id >= gpu_data_handle->extra_infos->num_neurons) {
         return;
     }
 
@@ -78,7 +78,7 @@ __global__ void aeif_model_kernel(RelearnGPUTypes::step_type step, gpu::NeuronMo
 __global__ void fitzhughnagumo_model_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelData* gpu_data_handle, models::FitzHughNagumoModelData* model_data_handle, RelearnGPUTypes::number_neurons_type number_neurons, double a, double b, double phi, double init_w, double init_x, double scale, unsigned int h) {
     const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
 
-    if (neuron_id >= gpu_data_handle->extra_infos->get_number_local_neurons()) {
+    if (neuron_id >= gpu_data_handle->extra_infos->num_neurons) {
         return;
     }
 
@@ -103,7 +103,7 @@ __global__ void fitzhughnagumo_model_kernel(RelearnGPUTypes::step_type step, gpu
 __global__ void izhikevich_model_kernel(RelearnGPUTypes::step_type step, gpu::NeuronModelData* gpu_data_handle, models::IzhikevichModelData* model_data_handle, double V_spike, double a, double b, double c, double d, double k1, double k2, double k3, double scale, unsigned int h) {
     const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
 
-    if (neuron_id >= gpu_data_handle->extra_infos->get_number_local_neurons()) {
+    if (neuron_id >= gpu_data_handle->extra_infos->num_neurons) {
         return;
     }
 
@@ -133,12 +133,12 @@ __global__ void poisson_model_kernel(RelearnGPUTypes::step_type step, gpu::Neuro
 
     const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
 
-    if (neuron_id >= gpu_data_handle->extra_infos->get_number_local_neurons()) {
+    if (neuron_id >= gpu_data_handle->extra_infos->num_neurons) {
         return;
     }
 
     // Init
-    auto curand_state = gpu::RandomHolder::init(step, gpu_data_handle->extra_infos->get_number_local_neurons(), gpu::RandomHolder::POISSON, neuron_id);
+    auto curand_state = gpu::RandomHolder::init(step, gpu_data_handle->extra_infos->num_neurons, gpu::RandomHolder::POISSON, neuron_id);
     const auto random_value = gpu::RandomHolder::get_percentage(&curand_state);
 
     if (gpu_data_handle->extra_infos->disable_flags[neuron_id] == UpdateStatus::Disabled) {
