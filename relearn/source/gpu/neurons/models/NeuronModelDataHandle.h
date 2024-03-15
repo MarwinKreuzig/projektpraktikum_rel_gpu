@@ -16,8 +16,14 @@ namespace background {
     class BackgroundActivity;
 }
 
+/**
+ * This handle contains the gpu data for NeuronModelGPU. Its only implementation is
+ * NeuronModelDataHandleImpl in NeuronModelData.cuh.
+ */
 class NeuronModelDataHandle {
 public:
+    virtual ~NeuronModelDataHandle() = default;
+
     virtual void set_x(const RelearnGPUTypes::neuron_id_type neuron_id, double new_value) = 0;
     virtual void fill_x(RelearnGPUTypes::neuron_id_type start_id, RelearnGPUTypes::neuron_id_type end_id, double new_value) = 0;
     virtual void set_fired(const RelearnGPUTypes::neuron_id_type neuron_id, const FiredStatus new_value) = 0;
@@ -33,6 +39,10 @@ public:
 std::shared_ptr<NeuronModelDataHandle> create_neuron_model_data(std::vector<double>* x, gpu::neurons::NeuronsExtraInfos* extra_infos, unsigned int h, double scale, size_t cur_step, gpu::background::BackgroundHandle* background_calculator, std::vector<double>* stimulus, std::vector<double>* syn_input, std::vector<FiredStatus>* fired);
 
 namespace models {
+    /**
+     * This handle contains the gpu data for the specific neuron models.
+     * There is an implementation for every neuron model in NeuronModelData.cuh.
+     */
     class ModelDataHandle {
     public:
         virtual ~ModelDataHandle() = default;
@@ -46,9 +56,21 @@ namespace models {
         virtual double get_secondary_variable(const RelearnGPUTypes::neuron_id_type neuron_id) const = 0;
     };
 
+    /**
+     * @brief Creates an new AEIFModelGPU instance.
+     */
     std::unique_ptr<ModelDataHandle> create_aeif_model_data(double E_L);
+    /**
+     * @brief Creates an new FitzHughNagumoModelGPU instance.
+     */
     std::unique_ptr<ModelDataHandle> create_fitzhughnagumo_model_data(double init_w, double init_x);
+    /**
+     * @brief Creates an new IzhikevichModelGPU instance.
+     */
     std::unique_ptr<ModelDataHandle> create_izhikevich_model_data(double c);
+    /**
+     * @brief Creates an new PoissonModelGPU instance.
+     */
     std::unique_ptr<ModelDataHandle> create_poisson_model_data();
 }
 }

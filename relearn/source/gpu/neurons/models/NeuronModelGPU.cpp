@@ -15,15 +15,6 @@ NeuronModelGPU::NeuronModelGPU(std::unique_ptr<models::ModelDataHandle> model_da
     gpu_handle = create_neuron_model_data(&x_, nullptr, h, scale, 0, get_background_activity_calculator()->get_gpu_handle().get(), &stimulus_, &syn_input_, &fired_);
 }
 
-std::unique_ptr<NeuronModelDataHandle> gpu_handle;
-RelearnGPUTypes::number_neurons_type number_neurons;
-std::unique_ptr<models::ModelDataHandle> model_data_handle;
-
-unsigned int h;
-double scale;
-
-size_t cur_step;
-
 // This looks sketchy, but the CPU neuron models don't do anything either in these functions
 void NeuronModelGPU::enable_neurons(const std::span<const NeuronID> neuron_ids) { }
 

@@ -7,6 +7,9 @@
 #include "../../utils/GpuTypes.h"
 
 namespace gpu {
+/**
+ * The data for NeuronModelGPU. Only exists on the GPU.
+ */
 struct NeuronModelData {
     gpu::Vector::CudaArray<double> x;
     gpu::neurons::NeuronsExtraInfos* extra_infos;
@@ -29,6 +32,9 @@ struct NeuronModelData {
     __device__ void set_fired(gpu::Vector::CudaArray<FiredStatus> new_values);
 };
 
+/**
+ * Handle to NeuronModelData.
+ */
 class NeuronModelDataHandleImpl : public NeuronModelDataHandle {
 public:
     NeuronModelDataHandleImpl(NeuronModelData* dev_ptr, std::vector<double>* x, gpu::neurons::NeuronsExtraInfos* extra_infos, unsigned int h, double scale, size_t cur_step, gpu::background::BackgroundActivity* background_calculator, std::vector<double>* stimulus, std::vector<double>* syn_input, std::vector<FiredStatus>* fired);
@@ -61,6 +67,9 @@ private:
     gpu::Vector::CudaArrayDeviceHandle<FiredStatus> fired_handle;
 };
 
+/**
+ * Model specific data and handles to manage them.
+ */
 namespace models {
     struct AEIFModelData {
         gpu::Vector::CudaArray<double> w;

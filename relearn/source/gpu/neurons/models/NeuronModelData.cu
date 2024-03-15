@@ -94,6 +94,7 @@ void NeuronModelDataHandleImpl::set_fired(std::vector<FiredStatus>* new_values) 
 }
 
 bool NeuronModelDataHandleImpl::get_fired(const RelearnGPUTypes::neuron_id_type neuron_id) {
+    // This just accesses a single member of the array. This should probably be a method of CudaArrayDeviceHandle.
     FiredStatus* result = (FiredStatus*)malloc(sizeof(FiredStatus));
     cuda_memcpy_to_host(result, fired_handle.data() + neuron_id, sizeof(FiredStatus), 1);
     bool has_fired = *result == FiredStatus::Fired;
@@ -198,6 +199,7 @@ namespace models {
     }
 
     double AEIFModelDataHandleImpl::get_secondary_variable(const RelearnGPUTypes::neuron_id_type neuron_id) const {
+        // This just accesses a single member of the array. This should probably be a method of CudaArrayDeviceHandle.
         double* result = (double*)malloc(sizeof(double));
         cuda_memcpy_to_host(result, w_handle.data() + neuron_id, sizeof(double), 1);
         double host_result = *result;
@@ -232,6 +234,8 @@ namespace models {
     }
 
     double FitzHughNagumoModelDataHandleImpl::get_secondary_variable(const RelearnGPUTypes::neuron_id_type neuron_id) const {
+        // This just accesses a single member of the array. This should probably be a method of CudaArrayDeviceHandle.
+        // This just accesses a single member of the array. This should probably be a method of CudaArrayDeviceHandle.
         double* result = (double*)malloc(sizeof(double));
         cuda_memcpy_to_host(result, w_handle.data() + neuron_id, sizeof(double), 1);
         double host_result = *result;
@@ -265,6 +269,7 @@ namespace models {
     }
 
     double IzhikevichModelDataHandleImpl::get_secondary_variable(const RelearnGPUTypes::neuron_id_type neuron_id) const {
+        // This just accesses a single member of the array. This should probably be a method of CudaArrayDeviceHandle.
         double* result = (double*)malloc(sizeof(double));
         cuda_memcpy_to_host(result, u_handle.data() + neuron_id, sizeof(double), 1);
         double host_result = *result;
@@ -294,6 +299,7 @@ namespace models {
     void PoissonModelDataHandleImpl::init_neurons(NeuronModelDataHandle* gpu_handle, RelearnGPUTypes::number_neurons_type start_id, RelearnGPUTypes::number_neurons_type end_id) { }
 
     double PoissonModelDataHandleImpl::get_secondary_variable(const RelearnGPUTypes::neuron_id_type neuron_id) const {
+        // This just accesses a single member of the array. This should probably be a method of CudaArrayDeviceHandle.
         double* result = (double*)malloc(sizeof(double));
         cuda_memcpy_to_host(result, refractory_time_handle.data() + neuron_id, sizeof(double), 1);
         double host_result = *result;

@@ -6,6 +6,12 @@
 #include "NeuronModelDataHandle.h"
 
 namespace gpu {
+/**
+ * The GPU version of NeuronModel. This overwrites the necessary methods in NeuronModel with
+ * implementations that use the GPU. In practice, most methods delegate to NeuronModelDataHandleImpl
+ * which contains the full implementation. update_activity is further overwritten by the derived
+ * classes for the individual neuron models.
+ */
 class NeuronModelGPU : public NeuronModel {
 public:
     /**
@@ -66,10 +72,10 @@ public:
         return model_data_handle->get_secondary_variable(neuron_id.get_neuron_id());
     }
 
-    std::shared_ptr<NeuronModelDataHandle> gpu_handle;
+    std::shared_ptr<NeuronModelDataHandle> gpu_handle; // Handle to the general neuron model data
 
 protected:
-    std::unique_ptr<models::ModelDataHandle> model_data_handle;
+    std::unique_ptr<models::ModelDataHandle> model_data_handle; // Handle to the model specific data. The derived neuron models cast this pointer to the specific implementation to gain full access to the contained data.
 
     unsigned int h;
     double scale;
