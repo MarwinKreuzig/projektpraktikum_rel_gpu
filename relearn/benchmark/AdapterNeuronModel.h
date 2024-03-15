@@ -48,7 +48,7 @@ public:
     }
 
     void update_activity() {
-        model.update_activity_cpu();
+        model.update_activity(0);
     }
 
     void update_activity_benchmark() {
