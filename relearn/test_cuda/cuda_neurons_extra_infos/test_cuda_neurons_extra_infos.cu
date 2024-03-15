@@ -43,7 +43,7 @@ TEST_F(CudaNeuronsExtraInfosTest, cudaNeuronsExtraInfosTest) {
 
     neurons_extra_infos->set_positions(positions);
     double3* gpu_pos = (double3*)cuda_malloc(sizeof(double3) * num_neurons);
-    get_positions<<<1,num_neurons>>>((gpu::neurons::NeuronsExtraInfos*)neurons_extra_infos->get_device_pointer(), gpu_pos);
+    get_positions<<<1, num_neurons>>>((gpu::neurons::NeuronsExtraInfos*)neurons_extra_infos->get_device_pointer(), gpu_pos);
     double3 cpu_pos[num_neurons];
     cuda_memcpy_to_host(gpu_pos, &cpu_pos, sizeof(double3), num_neurons);
 
@@ -55,7 +55,7 @@ TEST_F(CudaNeuronsExtraInfosTest, cudaNeuronsExtraInfosTest) {
 
     // disable flag check
     UpdateStatus* gpu_disable_flags = (UpdateStatus*)cuda_malloc(sizeof(UpdateStatus) * num_neurons);
-    get_disable_flags<<<1,num_neurons>>>((gpu::neurons::NeuronsExtraInfos*)neurons_extra_infos->get_device_pointer(), gpu_disable_flags);
+    get_disable_flags<<<1, num_neurons>>>((gpu::neurons::NeuronsExtraInfos*)neurons_extra_infos->get_device_pointer(), gpu_disable_flags);
     UpdateStatus cpu_disable_flags[num_neurons];
     cuda_memcpy_to_host(gpu_disable_flags, &cpu_disable_flags, sizeof(UpdateStatus), num_neurons);
 
@@ -65,10 +65,10 @@ TEST_F(CudaNeuronsExtraInfosTest, cudaNeuronsExtraInfosTest) {
 
     RelearnGPUTypes::neuron_id_type neuron_to_disable = RandomAdapter::get_random_integer(0, (int)num_neurons - 1, this->mt);
     RelearnGPUTypes::neuron_id_type neuron_to_disable2 = RandomAdapter::get_random_integer(0, (int)num_neurons - 1, this->mt);
-    neurons_extra_infos->disable_neurons({neuron_to_disable, neuron_to_disable2});
-    neurons_extra_infos->enable_neurons({neuron_to_disable2});
+    neurons_extra_infos->disable_neurons({ neuron_to_disable, neuron_to_disable2 });
+    neurons_extra_infos->enable_neurons({ neuron_to_disable2 });
 
-    get_disable_flags<<<1,num_neurons>>>((gpu::neurons::NeuronsExtraInfos*)neurons_extra_infos->get_device_pointer(), gpu_disable_flags);
+    get_disable_flags<<<1, num_neurons>>>((gpu::neurons::NeuronsExtraInfos*)neurons_extra_infos->get_device_pointer(), gpu_disable_flags);
     cuda_memcpy_to_host(gpu_disable_flags, &cpu_disable_flags, sizeof(UpdateStatus), num_neurons);
 
     ASSERT_EQ(cpu_disable_flags[neuron_to_disable], UpdateStatus::Disabled);

@@ -31,13 +31,12 @@ TEST_F(CudaDouble3Test, testCudaDouble3Constructor) {
         double y = (double)rand();
         double z = (double)rand();
 
-        const gpu::Vector::CudaDouble3 v{x, y, z};
+        const gpu::Vector::CudaDouble3 v{ x, y, z };
 
         EXPECT_NEAR(v.get_x(), x, 0.001);
         EXPECT_NEAR(v.get_y(), y, 0.001);
         EXPECT_NEAR(v.get_z(), z, 0.001);
     }
-
 }
 
 TEST_F(CudaDouble3Test, testCudaDouble3Equal) {
@@ -46,12 +45,11 @@ TEST_F(CudaDouble3Test, testCudaDouble3Equal) {
         double x = (double)rand();
         double y = (double)rand();
         double z = (double)rand();
-        const gpu::Vector::CudaDouble3 v1{x, y, z};
-        const gpu::Vector::CudaDouble3 v2{x, y, z};
+        const gpu::Vector::CudaDouble3 v1{ x, y, z };
+        const gpu::Vector::CudaDouble3 v2{ x, y, z };
 
         EXPECT_TRUE(v1 == v2);
     }
-
 }
 
 TEST_F(CudaDouble3Test, testCudaDouble3Unequal) {
@@ -60,15 +58,15 @@ TEST_F(CudaDouble3Test, testCudaDouble3Unequal) {
         double x1 = (double)rand();
 
         double x2 = (double)rand();
-        while(x1 == x2) {
+        while (x1 == x2) {
             x2 = (double)rand();
         }
 
         double y = (double)rand();
         double z = (double)rand();
 
-        const gpu::Vector::CudaDouble3 v1{x1, y, z};
-        const gpu::Vector::CudaDouble3 v2{x2, y, z};
+        const gpu::Vector::CudaDouble3 v1{ x1, y, z };
+        const gpu::Vector::CudaDouble3 v2{ x2, y, z };
 
         EXPECT_TRUE(v1 != v2);
     }
@@ -78,14 +76,14 @@ TEST_F(CudaDouble3Test, testCudaDouble3Unequal) {
         double y1 = (double)rand();
 
         double y2 = (double)rand();
-        while(y1 == y2) {
+        while (y1 == y2) {
             y2 = (double)rand();
         }
 
         double z = (double)rand();
 
-        const gpu::Vector::CudaDouble3 v1{x, y1, z};
-        const gpu::Vector::CudaDouble3 v2{x, y2, z};
+        const gpu::Vector::CudaDouble3 v1{ x, y1, z };
+        const gpu::Vector::CudaDouble3 v2{ x, y2, z };
 
         EXPECT_TRUE(v1 != v2);
     }
@@ -96,12 +94,12 @@ TEST_F(CudaDouble3Test, testCudaDouble3Unequal) {
         double z1 = (double)rand();
 
         double z2 = (double)rand();
-        while(z1 == z2) {
+        while (z1 == z2) {
             z2 = (double)rand();
         }
 
-        const gpu::Vector::CudaDouble3 v1{x, y, z1};
-        const gpu::Vector::CudaDouble3 v2{x, y, z2};
+        const gpu::Vector::CudaDouble3 v1{ x, y, z1 };
+        const gpu::Vector::CudaDouble3 v2{ x, y, z2 };
 
         EXPECT_TRUE(v1 != v2);
     }
@@ -122,9 +120,8 @@ TEST_F(CudaDouble3Test, testCudaDouble3Sub) {
         double z2 = (double)rand();
         double z = z1 - z2;
 
-
-        const gpu::Vector::CudaDouble3 v1{x1, y1, z1};
-        const gpu::Vector::CudaDouble3 v2{x2, y2, z2};
+        const gpu::Vector::CudaDouble3 v1{ x1, y1, z1 };
+        const gpu::Vector::CudaDouble3 v2{ x2, y2, z2 };
         const gpu::Vector::CudaDouble3 v = v1 - v2;
 
         EXPECT_EQ(x, v.get_x());
@@ -147,8 +144,7 @@ TEST_F(CudaDouble3Test, testCudaDouble3SubInt) {
         double z = (double)rand();
         double zs = z - s;
 
-
-        const gpu::Vector::CudaDouble3 v{x, y, z};
+        const gpu::Vector::CudaDouble3 v{ x, y, z };
         const gpu::Vector::CudaDouble3 vs = v - s;
 
         EXPECT_EQ(xs, vs.get_x());
@@ -157,26 +153,23 @@ TEST_F(CudaDouble3Test, testCudaDouble3SubInt) {
     }
 }
 
-
-
 TEST_F(CudaDouble3Test, testCudaDouble3Add) {
 
     for (int i = 0; i < 100; ++i) {
-        double x1 = (double) rand();
-        double x2 = (double) rand();
+        double x1 = (double)rand();
+        double x2 = (double)rand();
         double x = x1 + x2;
 
-        double y1 = (double) rand();
-        double y2 = (double) rand();
+        double y1 = (double)rand();
+        double y2 = (double)rand();
         double y = y1 + y2;
 
-        double z1 = (double) rand();
-        double z2 = (double) rand();
+        double z1 = (double)rand();
+        double z2 = (double)rand();
         double z = z1 + z2;
 
-
-        const gpu::Vector::CudaDouble3 v1{x1, y1, z1};
-        const gpu::Vector::CudaDouble3 v2{x2, y2, z2};
+        const gpu::Vector::CudaDouble3 v1{ x1, y1, z1 };
+        const gpu::Vector::CudaDouble3 v2{ x2, y2, z2 };
         const gpu::Vector::CudaDouble3 v = v1 + v2;
 
         EXPECT_EQ(x, v.get_x());
@@ -190,17 +183,16 @@ TEST_F(CudaDouble3Test, testCudaDouble3AddInt) {
     for (int i = 0; i < 100; ++i) {
         int s = (int)rand();
 
-        double x = (double) rand();
+        double x = (double)rand();
         double xs = x + s;
 
-        double y = (double) rand();
+        double y = (double)rand();
         double ys = y + s;
 
-        double z = (double) rand();
+        double z = (double)rand();
         double zs = z + s;
 
-
-        const gpu::Vector::CudaDouble3 v{x, y, z};
+        const gpu::Vector::CudaDouble3 v{ x, y, z };
         const gpu::Vector::CudaDouble3 vs = v + s;
 
         EXPECT_EQ(xs, vs.get_x());
@@ -212,30 +204,27 @@ TEST_F(CudaDouble3Test, testCudaDouble3AddInt) {
 TEST_F(CudaDouble3Test, testCudaDouble3Mul) {
 
     for (int i = 0; i < 100; ++i) {
-        double x1 = (double) rand();
-        double x2 = (double) rand();
+        double x1 = (double)rand();
+        double x2 = (double)rand();
         double x = x1 * x2;
 
-        double y1 = (double) rand();
-        double y2 = (double) rand();
+        double y1 = (double)rand();
+        double y2 = (double)rand();
         double y = y1 * y2;
 
-        double z1 = (double) rand();
-        double z2 = (double) rand();
+        double z1 = (double)rand();
+        double z2 = (double)rand();
         double z = z1 * z2;
 
-
-        const gpu::Vector::CudaDouble3 v1{x1, y1, z1};
-        const gpu::Vector::CudaDouble3 v2{x2, y2, z2};
+        const gpu::Vector::CudaDouble3 v1{ x1, y1, z1 };
+        const gpu::Vector::CudaDouble3 v2{ x2, y2, z2 };
         const gpu::Vector::CudaDouble3 v = v1 * v2;
 
         EXPECT_EQ(x, v.get_x());
         EXPECT_EQ(y, v.get_y());
         EXPECT_EQ(z, v.get_z());
     }
-
 }
-
 
 TEST_F(CudaDouble3Test, testCudaDouble3MulInt) {
 
@@ -245,7 +234,7 @@ TEST_F(CudaDouble3Test, testCudaDouble3MulInt) {
         double x = (double)rand();
         double y = (double)rand();
         double z = (double)rand();
-        const gpu::Vector::CudaDouble3 v{x, y, z};
+        const gpu::Vector::CudaDouble3 v{ x, y, z };
 
         const gpu::Vector::CudaDouble3 vs = v * s;
 
@@ -253,7 +242,6 @@ TEST_F(CudaDouble3Test, testCudaDouble3MulInt) {
         EXPECT_EQ(v.get_y() * s, vs.get_y());
         EXPECT_EQ(v.get_z() * s, vs.get_z());
     }
-
 }
 
 TEST_F(CudaDouble3Test, testCudaDouble3Max) {
@@ -262,13 +250,12 @@ TEST_F(CudaDouble3Test, testCudaDouble3Max) {
         double x = (double)rand();
         double y = (double)rand();
         double z = (double)rand();
-        const gpu::Vector::CudaDouble3 v{x, y, z};
+        const gpu::Vector::CudaDouble3 v{ x, y, z };
 
         double m = std::max(std::max(x, y), z);
 
         EXPECT_EQ(m, v.max());
     }
-
 }
 
 TEST_F(CudaDouble3Test, testCudaDouble3Min) {
@@ -277,12 +264,10 @@ TEST_F(CudaDouble3Test, testCudaDouble3Min) {
         double x = (double)rand();
         double y = (double)rand();
         double z = (double)rand();
-        const gpu::Vector::CudaDouble3 v{x, y, z};
+        const gpu::Vector::CudaDouble3 v{ x, y, z };
 
         double m = std::min(std::min(x, y), z);
 
         EXPECT_EQ(m, v.min());
     }
-
 }
-

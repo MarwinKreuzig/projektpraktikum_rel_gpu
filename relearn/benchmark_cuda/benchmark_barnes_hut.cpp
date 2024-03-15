@@ -104,13 +104,12 @@ static void BM_BarnesHutGPU_Update_Connectivity(benchmark::State& state) {
     octree_shared_ptr->initializes_leaf_nodes(neurons_to_place.size());
 
     octree_shared_ptr->construct_on_gpu(neurons_to_place.size());
-    
+
     auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutCell>>(octree_shared_ptr);
     auto barnes_hut_gpu = std::make_shared<BarnesHutGPU>(std::move(cast), num_gather, neurons_per_thread);
     auto cast2 = std::static_pointer_cast<OctreeImplementation<BarnesHutCell>>(octree_shared_ptr);
     auto barnes_hut_cpu = std::make_shared<BarnesHut>(std::move(cast2));
 
-    
     auto axs = SynapticElementsAdapter::create_axons(neurons_to_place.size(), 5, 10, mt);
     auto dends_ex = SynapticElementsAdapter::create_dendrites(neurons_to_place.size(), SignalType::Excitatory, 0, 2, mt);
     auto dends_in = SynapticElementsAdapter::create_dendrites(neurons_to_place.size(), SignalType::Inhibitory, 0, 2, mt);
@@ -191,7 +190,7 @@ static void BM_BarnesHut_Update_Connectivity(benchmark::State& state) {
     }
 
     octree_shared_ptr->initializes_leaf_nodes(neurons_to_place.size());
-    
+
     auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutCell>>(octree_shared_ptr);
     auto barnes_hut_cpu = std::make_shared<BarnesHut>(std::move(cast));
 
@@ -218,13 +217,11 @@ static void BM_BarnesHut_Update_Connectivity(benchmark::State& state) {
         return p.first;
     };
     std::transform(neurons_to_place.begin(), neurons_to_place.end(), neuron_positions.begin(), convert_pair);
-    
+
     axs->set_signal_types(std::move(signal_types));
     extra_infos->set_positions(std::move(neuron_positions));
 
-
     barnes_hut_cpu->update_octree();
-
 
     for (auto _ : state) {
         const auto& tuple = barnes_hut_cpu->update_connectivity(neurons_to_place.size());
@@ -247,6 +244,6 @@ static void BM_BarnesHut_Update_Connectivity(benchmark::State& state) {
     MemoryHolder<BarnesHutCell>::make_all_available();
 }
 
-BENCHMARK(BM_BarnesHutGPU_Update_Connectivity)->Unit(benchmark::kMillisecond)->Args({800000, 10000, 4})->Iterations(10);
+BENCHMARK(BM_BarnesHutGPU_Update_Connectivity)->Unit(benchmark::kMillisecond)->Args({ 800000, 10000, 4 })->Iterations(10);
 
-//BENCHMARK(BM_BarnesHut_Update_Connectivity)->Unit(benchmark::kMillisecond)->Args({800000})->Iterations(1);
+// BENCHMARK(BM_BarnesHut_Update_Connectivity)->Unit(benchmark::kMillisecond)->Args({800000})->Iterations(1);

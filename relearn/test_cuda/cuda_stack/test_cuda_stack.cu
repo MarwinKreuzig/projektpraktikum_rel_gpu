@@ -49,7 +49,7 @@ TEST_F(CudaStackTest, cudaStackBasicOpTestAndResize) {
     gpu::Vector::CudaStackDeviceHandle<StackType> stack(dev_stack);
     stack.resize(3);
     size_t* device_max_size = (size_t*)cuda_malloc(sizeof(size_t));
-    give_max_size<<<1,1>>>(dev_stack, device_max_size);
+    give_max_size<<<1, 1>>>(dev_stack, device_max_size);
     cudaDeviceSynchronize();
     gpu_check_last_error();
     size_t max_size;
@@ -61,7 +61,7 @@ TEST_F(CudaStackTest, cudaStackBasicOpTestAndResize) {
     StackType cpu_return;
     size_t* device_new_size = (size_t*)cuda_malloc(sizeof(size_t));
     size_t new_size;
-    do_push<<<1,1>>>(dev_stack, device_return, device_new_size, 0.5);
+    do_push<<<1, 1>>>(dev_stack, device_return, device_new_size, 0.5);
     cudaDeviceSynchronize();
     gpu_check_last_error();
     cuda_memcpy_to_host(device_return, &cpu_return, sizeof(StackType), 1);
@@ -70,14 +70,14 @@ TEST_F(CudaStackTest, cudaStackBasicOpTestAndResize) {
     ASSERT_EQ(cpu_return, 0.5);
 
     // Pop
-    do_push<<<1,1>>>(dev_stack, device_return, device_new_size, 0.9);
+    do_push<<<1, 1>>>(dev_stack, device_return, device_new_size, 0.9);
     cudaDeviceSynchronize();
     gpu_check_last_error();
-    do_push<<<1,1>>>(dev_stack, device_return, device_new_size, 0.8);
+    do_push<<<1, 1>>>(dev_stack, device_return, device_new_size, 0.8);
     cudaDeviceSynchronize();
     gpu_check_last_error();
 
-    do_pop<<<1,1>>>(dev_stack, device_return, device_new_size);
+    do_pop<<<1, 1>>>(dev_stack, device_return, device_new_size);
     cudaDeviceSynchronize();
     gpu_check_last_error();
     cuda_memcpy_to_host(device_return, &cpu_return, sizeof(StackType), 1);
@@ -86,7 +86,7 @@ TEST_F(CudaStackTest, cudaStackBasicOpTestAndResize) {
     ASSERT_EQ(cpu_return, 0.9);
 
     // Reset
-    do_reset<<<1,1>>>(dev_stack, device_new_size);
+    do_reset<<<1, 1>>>(dev_stack, device_new_size);
     cudaDeviceSynchronize();
     gpu_check_last_error();
     cuda_memcpy_to_host(device_new_size, &new_size, sizeof(size_t), 1);
@@ -95,16 +95,16 @@ TEST_F(CudaStackTest, cudaStackBasicOpTestAndResize) {
     // Empty
     bool* device_empty = (bool*)cuda_malloc(sizeof(bool));
     bool empty;
-    do_empty<<<1,1>>>(dev_stack, device_empty);
+    do_empty<<<1, 1>>>(dev_stack, device_empty);
     cudaDeviceSynchronize();
     gpu_check_last_error();
     cuda_memcpy_to_host(device_empty, &empty, sizeof(bool), 1);
     ASSERT_EQ(empty, true);
 
-    do_push<<<1,1>>>(dev_stack, device_return, device_new_size, 0.9);
+    do_push<<<1, 1>>>(dev_stack, device_return, device_new_size, 0.9);
     cudaDeviceSynchronize();
     gpu_check_last_error();
-    do_empty<<<1,1>>>(dev_stack, device_empty);
+    do_empty<<<1, 1>>>(dev_stack, device_empty);
     cudaDeviceSynchronize();
     gpu_check_last_error();
     cuda_memcpy_to_host(device_empty, &empty, sizeof(bool), 1);
@@ -113,11 +113,11 @@ TEST_F(CudaStackTest, cudaStackBasicOpTestAndResize) {
 
 // Checks if the copy functionality works
 TEST_F(CudaStackTest, cudaStackCopyToAndBack) {
-    
+
     gpu::Vector::CudaStack<StackType>* dev_stack = init_class_on_device<gpu::Vector::CudaStack<StackType>>();
     gpu::Vector::CudaStackDeviceHandle<StackType> stack(dev_stack);
 
-    std::vector<StackType> copy_to = {0.4, 5.3, 1.0};
+    std::vector<StackType> copy_to = { 0.4, 5.3, 1.0 };
     stack.copy_to_device(copy_to);
 
     std::vector<StackType> copy_back;
@@ -127,7 +127,7 @@ TEST_F(CudaStackTest, cudaStackCopyToAndBack) {
         ASSERT_EQ(copy_to[i], copy_back[i]);
     }
 
-    copy_to = {0.4, 5.3};
+    copy_to = { 0.4, 5.3 };
     copy_back.clear();
     stack.copy_to_device(copy_to);
     stack.copy_to_host(copy_back);

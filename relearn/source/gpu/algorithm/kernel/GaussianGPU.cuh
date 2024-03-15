@@ -25,9 +25,9 @@
 namespace gpu::kernel {
 
 struct GaussianDistributionKernel {
-/**
-* Struct representing GaussianDistributionKernel on the gpu. Contains most of the data contained by the original cpu class
-*/
+    /**
+     * Struct representing GaussianDistributionKernel on the gpu. Contains most of the data contained by the original cpu class
+     */
 
     double mu;
     double sigma;
@@ -36,12 +36,13 @@ struct GaussianDistributionKernel {
     double squared_sigma_inv;
 
     /**
-     * @brief Constructs a GaussianDistributionKernel on the GPU 
+     * @brief Constructs a GaussianDistributionKernel on the GPU
      * @param mu The mu algorithm parameter
      * @param sigma The theta algorithm parameter
      */
     __device__ GaussianDistributionKernel(double mu, double sigma)
-        : mu(mu), sigma(sigma) {
+        : mu(mu)
+        , sigma(sigma) {
         squared_sigma_inv = 1.0 / (sigma * sigma);
     }
 
@@ -70,42 +71,41 @@ struct GaussianDistributionKernel {
 
         return ret_val;
     }
-    
 };
 
 class GaussianDistributionKernelHandleImpl : public GaussianDistributionKernelHandle {
-/**
-* Implementation of the handle for the cpu that controls the gpu object
-*/
+    /**
+     * Implementation of the handle for the cpu that controls the gpu object
+     */
 
 public:
-     /**
+    /**
      * @brief Constructs the GaussianDistributionKernelHandle Implementation
      * @param _dev_ptr The pointer to the GaussianDistributionKernel object on the GPU
      */
     GaussianDistributionKernelHandleImpl(GaussianDistributionKernel* _dev_ptr);
 
     /**
-    * @brief Init function called by the constructor, has to be public in order to be allowed to use device lamdas in it, do not call from outside
-    */
+     * @brief Init function called by the constructor, has to be public in order to be allowed to use device lamdas in it, do not call from outside
+     */
     void _init();
 
     /**
-    * @brief Sets the mu kernel parameter used in calculation
-    * @param mu The mu kernel parameter used in calculation
-    */
+     * @brief Sets the mu kernel parameter used in calculation
+     * @param mu The mu kernel parameter used in calculation
+     */
     void set_mu(const double mu) override;
 
     /**
-    * @brief Sets the sigma kernel parameter used in calculation
-    * @param sigma The sigma kernel parameter used in calculation
-    */
+     * @brief Sets the sigma kernel parameter used in calculation
+     * @param sigma The sigma kernel parameter used in calculation
+     */
     void set_sigma(const double sigma) override;
 
     /**
-    * @brief Returns the pointer to the GaussianDistributionKernel stored on the GPU
-    * @return The pointer to the GaussianDistributionKernel stored on the GPU
-    */
+     * @brief Returns the pointer to the GaussianDistributionKernel stored on the GPU
+     * @return The pointer to the GaussianDistributionKernel stored on the GPU
+     */
     [[nodiscard]] void* get_device_pointer() override;
 
 private:

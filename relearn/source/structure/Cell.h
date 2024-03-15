@@ -21,7 +21,6 @@
 #include <tuple>
 #include <iostream>
 
-
 /**
  * This class summarizes all 'octree-relevant' data from a neuron.
  * It contains a size in the octree (min and max), a neuron id (value Constants::uninitialized for virtual neurons, aka. inner nodes in the octree).

@@ -33,7 +33,6 @@
 #include "structure/Octree.h"
 #include "structure/Partition.h"
 
-
 #include "util/Vec3.h"
 #include "util/Utility.h"
 

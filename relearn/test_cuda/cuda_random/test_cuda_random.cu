@@ -30,7 +30,7 @@ TEST_F(CudaRandomTest, cudaRandomTestPercentage) {
     double* gpu_result = (double*)cuda_malloc(sizeof(double) * block_size * grid_size);
     double cpu_result[block_size * grid_size];
 
-    do_percentage<<<2,2>>>(gpu::random::RandomHolder::get_instance().get_device_pointer(), gpu_result);
+    do_percentage<<<2, 2>>>(gpu::random::RandomHolder::get_instance().get_device_pointer(), gpu_result);
     cudaDeviceSynchronize();
     gpu_check_last_error();
     cuda_memcpy_to_host(gpu_result, cpu_result, sizeof(double), block_size * grid_size);

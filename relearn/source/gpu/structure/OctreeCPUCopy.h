@@ -16,7 +16,7 @@ struct OctreeCPUCopy {
     std::vector<RelearnGPUTypes::neuron_id_type> neuron_ids;
 
     std::vector<RelearnGPUTypes::neuron_index_type> child_indices;
-        
+
     std::vector<unsigned int> num_children;
 
     std::vector<gpu::Vec3d> minimum_cell_position;

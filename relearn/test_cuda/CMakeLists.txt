@@ -23,7 +23,7 @@ if (CUDA_FOUND)
     target_include_directories(cuda_tests PRIVATE ../source/shared)
     target_include_directories(cuda_tests PRIVATE ../source)
     target_link_libraries(cuda_tests PRIVATE relearn_harness)
-    target_sources( cuda_tests PRIVATE cuda_vector/test_cuda_vector.cu
+    target_sources(cuda_tests PRIVATE cuda_vector/test_cuda_vector.cu
             cuda_double3/test_cuda_double3.cu
             cuda_barnes_hut/test_cuda_barnes_hut.cu
             cuda_kernel/test_cuda_bh_kernel.cu
@@ -43,7 +43,6 @@ if (CUDA_FOUND)
     set_target_properties(cuda_tests PROPERTIES ENABLE_EXPORTS 1)
     target_compile_features(cuda_tests PRIVATE cxx_std_17 cuda_std_17)
     set_target_properties(cuda_tests PROPERTIES CMAKE_CUDA_STANDARD 17 CMAKE_CXX_STANDARD 17 CMAKE_CUDA_STANDARD_REQUIRED ON CMAKE_CXX_STANDARD_REQUIRED ON)
-
 
 
     add_executable(relearn_tests_cuda ${SRC_TST} RelearnTest.cpp)
