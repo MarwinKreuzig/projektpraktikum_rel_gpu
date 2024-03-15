@@ -43,7 +43,7 @@ __device__ Normal::Normal(double _mean, double _stddev)
 __global__ void update_input_for_all_neurons_kernel(gpu::background::BackgroundActivity* calculator, size_t step) {
     const auto neuron_id = block_thread_to_neuron_id(blockIdx.x, threadIdx.x, blockDim.x);
 
-    if (neuron_id >= calculator->get_extra_infos()->get_number_local_neurons()) {
+    if (neuron_id >= calculator->get_extra_infos()->num_neurons) {
         return;
     }
 

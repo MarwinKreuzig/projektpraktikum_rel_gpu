@@ -19,6 +19,7 @@ target_sources(
         gpu/neurons/models/AEIFModelGPU.cpp
         gpu/neurons/models/IzhikevichModelGPU.cpp
         gpu/utils/Interface.cpp
+        gpu/algorithm/BarnesHutGPU.cpp
         gpu/utils/CudaHelper.cpp
 
         # io

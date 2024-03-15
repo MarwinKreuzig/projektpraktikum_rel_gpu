@@ -3,8 +3,11 @@
 #include "Macros.h"
 #include "GpuTypes.h"
 #include "../../shared/enums/FiredStatus.h"
-#include "../structure/OctreeCPUCopy.h"
 #include "../../shared/enums/ElementType.h"
+#include "enums/SignalType.h"
+
+#include "../structure/OctreeCPUCopy.h"
+#include "../structure/GpuDataStructures.h"
 
 #include <memory>
 #include <vector>
@@ -24,74 +27,96 @@
 #endif
 
 namespace gpu::algorithm {
-class OctreeHandle {
-    /**
-     * Virtual class that is the equivalent of its host class. Call the virtual methods from the corresponding cpu methods.
-     * This class can only be created with the create_octree() function.
-     */
-public:
-    /**
-     * @brief Copies the GPU data structure version of the octree, which was constructed on the CPU, to the GPU
-     * @param octree_cpu_copy Struct which holds the octree data to be copied to the GPU
-     */
-    virtual void copy_to_device(OctreeCPUCopy&& octree_cpu_copy) = 0;
+    class OctreeHandle {
+    public:
+        /**
+         * @brief Copies the GPU data structure version of the octree, which was constructed on the CPU, to the GPU
+         * @param octree_cpu_copy Struct which holds the octree data to be copied to the GPU
+         */
+        virtual void copy_to_device(OctreeCPUCopy&& octree_cpu_copy) = 0;
 
-    /**
-     * @brief Returns the number of virtual neurons in the octree on the GPU
-     * @return The number of virtual neurons in the tree
-     */
-    [[nodiscard]] virtual RelearnGPUTypes::number_neurons_type get_number_virtual_neurons() const = 0;
-    /**
-     * @brief Returns the number of neurons in the octree on the GPU
-     * @return The number of neurons in the tree
-     */
-    [[nodiscard]] virtual RelearnGPUTypes::number_neurons_type get_number_neurons() const = 0;
+        /**
+         * @brief Returns the number of virtual neurons in the octree on the GPU
+         * @return The number of virtual neurons in the tree
+         */
+        [[nodiscard]] virtual RelearnGPUTypes::number_neurons_type get_number_virtual_neurons() const = 0;
 
-    /**
-     * @brief Copies the GPU data structure version of the octree to the CPU
-     * @param number_neurons The number of leaf nodes
-     * @param number_virtual_neurons The number of virtual neurons
-     */
-    virtual OctreeCPUCopy copy_to_host(
-        const RelearnGPUTypes::number_neurons_type number_neurons,
-        const RelearnGPUTypes::number_neurons_type number_virtual_neurons)
-        = 0;
+        /**
+         * @brief Returns the number of neurons in the octree on the GPU
+         * @return The number of neurons in the tree
+         */
+        [[nodiscard]] virtual RelearnGPUTypes::number_neurons_type get_number_neurons() const = 0;
 
-    /**
-     * @brief Calls the kernel that updates the octree
-     */
-    virtual void update_tree() = 0;
+        /**
+         * @brief Copies the GPU data structure version of the octree to the CPU
+         * @param number_neurons The number of leaf nodes
+         * @param number_virtual_neurons The number of virtual neurons
+         */
+        virtual OctreeCPUCopy copy_to_host(
+            const RelearnGPUTypes::number_neurons_type number_neurons,
+            const RelearnGPUTypes::number_neurons_type number_virtual_neurons)
+            = 0;
 
-    /**
-     * @brief Updates the octree leaf nodes
-     */
-    virtual void update_leaf_nodes(std::vector<gpu::Vec3d> position_excitatory_element,
-        std::vector<gpu::Vec3d> position_inhibitory_element,
-        std::vector<unsigned int> num_free_elements_excitatory,
-        std::vector<unsigned int> num_free_elements_inhibitory)
-        = 0;
+        /**
+         * @brief Calls the kernel that updates the octree
+         */
+        virtual void update_virtual_neurons() = 0;
 
-    /**
-     * @brief Getter for octree_dev_ptr
-     * @return octree_dev_ptr
-     */
-    [[nodiscard]] virtual void* get_device_pointer() = 0;
+        /**
+         * @brief Updates the octree leaf nodes
+         */
+        virtual void update_leaf_nodes(std::vector<gpu::Vec3d> position_excitatory_element,
+                               std::vector<gpu::Vec3d> position_inhibitory_element,
+                               std::vector<RelearnGPUTypes::number_elements_type> num_free_elements_excitatory,
+                               std::vector<RelearnGPUTypes::number_elements_type> num_free_elements_inhibitory) = 0;
 
-    /**
-     * @brief Getter for Neuron IDs
-     * @return Neuron IDs
-     */
-    // TODO once plasticity is on the GPU, this serves no purpose and can be deleted
-    [[nodiscard]] virtual std::vector<uint64_t> get_neuron_ids() = 0;
-};
+        /**
+         * @brief Getter for octree_dev_ptr
+         * @return octree_dev_ptr
+         */
+        [[nodiscard]] virtual void* get_device_pointer() = 0;
 
-/**
- * @brief Returns a shared pointer to a newly created handle to the Octree on the GPU
- * @param number_neurons Number of neurons, influences how much memory will be allocated on the GPU
- * @param number_virtual_neurons Number of virtual neurons, influences how much memory will be allocated on the GPU
- * @param stored_element_type Type of elements (Axon or Dendrites)
- */
-std::shared_ptr<OctreeHandle> create_octree(RelearnGPUTypes::number_neurons_type number_neurons, RelearnGPUTypes::number_neurons_type number_virtual_neurons, ElementType stored_element_type) CUDA_PTR_DEFINITION
+        /**
+         * @brief Getter for Neuron IDs
+         * @return Neuron IDs
+         */
+        [[nodiscard]] virtual std::vector<RelearnGPUTypes::neuron_id_type> get_neuron_ids() = 0;
+
+        /**
+         * @brief Returns the total excitatory elements in the tree through the root node
+         * @return The total excitatory elements in the tree
+         */
+        [[nodiscard]] virtual RelearnGPUTypes::number_elements_type get_total_excitatory_elements() = 0; 
+
+        /**
+         * @brief Returns the total inhibitory elements in the tree through the root node
+         * @return The total inhibitory elements in the tree
+         */
+        [[nodiscard]] virtual RelearnGPUTypes::number_elements_type get_total_inhibitory_elements() = 0;
+
+        /**
+         * @brief Returns the position of a node for a given signal type
+         * @param node_index The index of the node
+         * @param signal_type The signal type
+         * @return The position of the node
+         */
+        [[nodiscard]] virtual gpu::Vec3d get_node_position(RelearnGPUTypes::neuron_index_type node_index, SignalType signal_type) = 0;
+
+        /**
+         * @brief Returns the bounding box of the given cell of the node index given
+         * @param node_index The index of the node
+         * @return The bounding box of the given cell
+         */
+        [[nodiscard]] virtual std::pair<gpu::Vec3d, gpu::Vec3d> get_bounding_box(RelearnGPUTypes::neuron_index_type node_index) = 0;
+    };
+    
+    /**
+     * @brief Returns a shared pointer to a newly created handle to the Octree on the GPU
+     * @param number_neurons Number of neurons, influences how much memory will be allocated on the GPU
+     * @param number_virtual_neurons Number of virtual neurons, influences how much memory will be allocated on the GPU
+     * @param stored_element_type Type of elements (Axon or Dendrites)
+     */
+    std::shared_ptr<OctreeHandle> create_octree(RelearnGPUTypes::number_neurons_type number_neurons, RelearnGPUTypes::number_neurons_type number_virtual_neurons, ElementType stored_element_type) CUDA_PTR_DEFINITION
 };
 
 namespace gpu::neurons {
@@ -102,34 +127,102 @@ class NeuronsExtraInfosHandle {
      */
 public:
     /**
-     * Save neurons as disabled. Neurons must be enabled beforehand
+     * @brief Save neurons as disabled. Neurons must be enabled beforehand
      * @param neuron_ids Vector with neuron ids that we disable
      */
     virtual void disable_neurons(const std::vector<RelearnGPUTypes::neuron_id_type>& neuron_ids) = 0;
 
     /**
-     * Save neurons as enabled. Neurons must be disabled beforehand
+     * @brief Save neurons as enabled. Neurons must be disabled beforehand
      * @param neuron_ids Vector with neuron ids that we enable
      */
     virtual void enable_neurons(const std::vector<RelearnGPUTypes::neuron_id_type>& neuron_ids) = 0;
 
     /**
-     * Initialize the class when the number of neurons is known
-     * @param Number Number local neurons
+     * @brief Initialize the class when the number of neurons is known
+     * @param number_neurons Number local neurons
      */
     virtual void init(RelearnGPUTypes::number_neurons_type number_neurons) = 0;
 
     /**
-     * Creates new neurons
-     * @param num_created_neuron Number of newly created neurons
+     * @brief Creates new neurons
+     * @param new_size The new number of neurons
+     * @param positions The positions of all neurons, including the new ones
      */
-    virtual void create_neurons(RelearnGPUTypes::number_neurons_type num_created_neurons) = 0;
+    virtual void create_neurons(RelearnGPUTypes::number_neurons_type new_size, const std::vector<gpu::Vec3d>& positions) = 0;
+
+    /**
+     * @brief Overwrites the current positions with the supplied ones
+     * @param pos The new positions, must have the same size as neurons are stored
+     */
+    virtual void set_positions(const std::vector<gpu::Vec3d>& pos) = 0;
+
+    /**
+     * @brief Returns a pointer to the data on the GPU
+     */
+    [[nodiscard]] virtual void* get_device_pointer() = 0;
 };
 
 /**
  * @return Pointer to the class that handles the NeuronExtraInfos on the gpu
  */
 std::unique_ptr<NeuronsExtraInfosHandle> create() CUDA_PTR_DEFINITION
+
+};
+
+namespace gpu::models {
+class SynapticElementsHandle {
+    /**
+     * Virtual class that is the equivalent of its host class. Call the virtual methods from the corresponding cpu methods.
+     * This class can only be created with the create() method.
+     */
+
+public:
+    /**
+     * @brief Copies the initial values from the CPU version of the class
+     * @param number_neurons The number of neurons that should be stored
+     * @param grown_elements The grown elements generated in the cpu version of init()
+     */
+    virtual void init(RelearnGPUTypes::number_neurons_type number_neurons, const std::vector<double>& grown_elements) = 0;
+
+    /**
+     * @brief Copies the on the CPU created neurons on to the GPU
+     * @param new_size The new number of neurons
+     * @param grown_elements All grown elements of all neurons, including the new ones
+     */
+    virtual void create_neurons(const RelearnGPUTypes::number_neurons_type new_size, const std::vector<double>& grown_elements) = 0;
+
+    /**
+     * @brief Returns a pointer to the data on the GPU
+     */
+    [[nodiscard]] virtual void* get_device_pointer() = 0;
+    
+    /**
+     * @brief Updates the counts the grown elements of the specified neuron by the specified delta, should not be called since it skips the commit step
+     * @param neuron_id The local neuron id
+     * @param delta The delta by which the number of elements changes (can be positive and negative)
+     */
+    virtual void update_grown_elements(const RelearnGPUTypes::neuron_id_type neuron_id, const double delta) = 0;
+
+    /**
+     * @brief Updates the connected elements for the specified neuron by the specified delta
+     * @param neuron_id The local neuron id
+     * @param delta The delta by which the number of elements changes (can be positive and negative)
+     */
+    virtual void update_connected_elements(const RelearnGPUTypes::neuron_id_type neuron_id, const int delta) = 0;
+
+    /**
+     * @brief Sets the signal types on the GPU
+     * @param types The signal types to copy over to the GPU
+     */
+    virtual void set_signal_types(const std::vector<SignalType>& types) = 0;
+};
+
+/**
+ * @return Pointer to the class that handles the SynapticElements on the gpu
+ */
+std::unique_ptr<SynapticElementsHandle> create_synaptic_elements(const ElementType type) CUDA_PTR_DEFINITION
+
 };
 
 namespace gpu::background {
@@ -313,3 +406,5 @@ namespace gpu::models::fitz_hugh_nagumo {
  */
 std::shared_ptr<NeuronModelHandle> construct_gpu(std::shared_ptr<gpu::background::BackgroundHandle> background_handle, const unsigned int _h, double _a, double _b, double _phi, double _init_w, double _init_x) CUDA_PTR_DEFINITION
 };
+
+

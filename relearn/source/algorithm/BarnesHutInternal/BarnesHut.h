@@ -51,7 +51,7 @@ public:
      * @param acceptance_criterion The acceptance criterion, > 0.0
      * @exception Throws a RelearnException if acceptance_criterion <= 0.0
      */
-    void set_acceptance_criterion(double acceptance_criterion);
+    virtual void set_acceptance_criterion(double acceptance_criterion);
 
     /**
      * @brief Returns the currently used acceptance criterion

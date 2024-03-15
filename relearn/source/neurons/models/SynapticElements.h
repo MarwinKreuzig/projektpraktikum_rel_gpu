@@ -16,6 +16,8 @@
 #include "neurons/models/ModelParameter.h"
 #include "util/RelearnException.h"
 #include "util/NeuronID.h"
+#include "../../gpu/utils/Interface.h"
+#include "../../gpu/utils/CudaHelper.h"
 
 #include <cmath>
 #include <map>
@@ -95,6 +97,10 @@ public:
         , vacant_retract_ratio(vacant_retract_ratio)
         , initial_vacant_elements_lower_bound(initial_vacant_elements_lb)
         , initial_vacant_elements_upper_bound(initial_vacant_elements_ub) {
+
+        if (CudaHelper::is_cuda_available()) {
+            this->gpu_handle = std::move(gpu::models::create_synaptic_elements(type));
+        }
     }
 
     SynapticElements(const SynapticElements& other) = delete;
@@ -126,6 +132,17 @@ public:
     void init(number_neurons_type number_neurons);
 
     /**
+     * @brief Returns the GPU handle to the SynapticElements on the GPU
+     * @returns The GPU handle to the SynapticElements on the GPU
+     * @exception Throws a RelearnException if the gpu_handle was not initialized or cuda is not available
+     */
+    const std::unique_ptr<gpu::models::SynapticElementsHandle>& get_gpu_handle() {
+        RelearnException::check(CudaHelper::is_cuda_available(), "SynapticElements::get_gpu_handle: GPU not supported");
+        RelearnException::check(gpu_handle != nullptr, "SynapticElements::get_gpu_handle: GPU handle not set");
+        return gpu_handle;
+    }
+
+    /**
      * @brief Creates additional creation_count elements.
      *      For those, creates initially free elements, uniformly and independently drawn from [initial_vacant_elements_lb, initial_vacant_elements_ub].
      *      For those, sets the number of connected elements to 0 for all neurons.
@@ -152,6 +169,10 @@ public:
         RelearnException::check(local_neuron_id < grown_elements.size(), "SynapticElements::update_grown_elements: neuron_id is too large: {}", neuron_id);
         grown_elements[local_neuron_id] += delta;
         RelearnException::check(grown_elements[local_neuron_id] >= 0.0, "SynapticElements::update_grown_elements: Grown elements for {} are now negative", neuron_id);
+
+        if (CudaHelper::is_cuda_available()) {
+            gpu_handle->update_grown_elements(neuron_id.get_neuron_id(), delta);
+        }
     }
 
     /**
@@ -179,6 +200,10 @@ public:
         }
 
         connected_elements[local_neuron_id] += delta;
+
+        if (CudaHelper::is_cuda_available()) {
+            gpu_handle->update_connected_elements(neuron_id.get_neuron_id(), delta);
+        }
     }
 
     /**
@@ -283,6 +308,10 @@ public:
     void set_signal_types(std::vector<SignalType>&& types) {
         RelearnException::check(types.size() == size, "SynapticElements::set_signal_type: Mismatching size of type vectors");
         signal_types = std::move(types);
+
+        if (CudaHelper::is_cuda_available()) {
+            gpu_handle->set_signal_types(signal_types);
+        }
     }
 
     /**
@@ -525,4 +554,6 @@ private:
 
     double initial_vacant_elements_lower_bound{ default_vacant_elements_initially_lower_bound }; // Minimum number of vacant elements that are available at the start of the simulation
     double initial_vacant_elements_upper_bound{ default_vacant_elements_initially_upper_bound }; // Maximum number of vacant elements that are available at the start of the simulation
+
+    std::unique_ptr<gpu::models::SynapticElementsHandle> gpu_handle{};
 };

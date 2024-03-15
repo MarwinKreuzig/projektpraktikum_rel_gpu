@@ -2,6 +2,8 @@
 
 #include "curand_kernel.h"
 
+// TODO This file implementation is outdated, but still used for the poisson and background calculations on the GPU
+// these should also use the new Random implementation, as it is more efficient
 namespace gpu::RandomHolder {
 
 __device__ extern int seed;

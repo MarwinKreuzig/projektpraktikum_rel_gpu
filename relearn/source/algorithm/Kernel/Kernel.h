@@ -23,6 +23,8 @@
 #include "util/Random.h"
 #include "util/RelearnException.h"
 #include "util/NeuronID.h"
+#include "gpu/algorithm/kernel/KernelGPUInterface.h"
+#include "gpu/utils/CudaHelper.h"
 
 #include "fmt/ostream.h"
 
@@ -39,11 +41,11 @@
  * This enum reflects the different probability kernels, it must
  * be kept in sync with the classes to allow a seamless integration
  */
-enum class KernelType {
-    Gaussian,
-    Linear,
-    Gamma,
-    Weibull
+enum class KernelType : uint16_t {
+    Gaussian = 0,
+    Linear = 1,
+    Gamma = 2,
+    Weibull = 3
 };
 
 /**
@@ -88,14 +90,30 @@ public:
      */
     static void set_kernel_type(const KernelType kernel_type) noexcept {
         currently_used_kernel = kernel_type;
+
+        if (get_gpu_handle()) {
+            get_gpu_handle()->set_kernel_type((gpu::kernel::KernelType)kernel_type);
+        }
     }
 
     /**
      * @brief Returns the currently used kernel type
      * @return The currently used kernel type
      */
-    [[nodiscard]] KernelType get_kernel_type() noexcept {
+    [[nodiscard]] static KernelType get_kernel_type() noexcept {
         return currently_used_kernel;
+    }
+
+    /**
+    * @brief Get the handle to the GPU version of this class
+    * @return The GPU Handle
+    */
+    [[nodiscard]] static const std::shared_ptr<gpu::kernel::KernelHandle> &get_gpu_handle() {
+        RelearnException::check(CudaHelper::is_cuda_available(), "Kernel::get_gpu_handle: GPU not supported");
+        
+        static std::shared_ptr<gpu::kernel::KernelHandle> gpu_handle{gpu::kernel::create_kernel(GammaDistributionKernel::get_gpu_handle()->get_device_pointer(), GaussianDistributionKernel::get_gpu_handle()->get_device_pointer(), LinearDistributionKernel::get_gpu_handle()->get_device_pointer(), WeibullDistributionKernel::get_gpu_handle()->get_device_pointer())};
+
+        return gpu_handle;
     }
 
     /**

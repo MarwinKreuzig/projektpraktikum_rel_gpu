@@ -1,5 +1,15 @@
 #pragma once
 
+/*
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
+
 #include "../Commons.cuh"
 #include "../RelearnGPUException.h"
 
@@ -17,6 +27,7 @@ struct CudaArray {
     size_t max_size = 0;
 
     __device__ T& operator[](size_t index) {
+        RelearnGPUException::device_check(index < size, "CudaVector::[]: Out of bounds array access");
         return data[index];
     }
 };
@@ -206,6 +217,19 @@ public:
         RelearnGPUException::check(usable(), "CudaVector::free: Vector was already freed");
         // host_data.resize(struct_copy.size);
         cuda_memcpy_to_host(struct_copy.data, host_data, sizeof(T), struct_copy.size);
+    }
+
+    /**
+     * @brief Copys num_elements from gpu to host from begin to end index, begin is inclusive, end exclusive
+     * @param host_data Destination of data transfer
+     * @param begin Index of the first element to copy
+     * @param end Index of the element before the last element to copy
+     */
+    void copy_to_host_from_to(T* host_data, size_t begin, size_t end) {
+        RelearnGPUException::check(usable(), "CudaVector::copy_to_host_from_to: Vector was already freed");
+        RelearnGPUException::check(end > begin, "CudaVector::copy_to_host_from_to: end index is not greater than begin index");
+
+        cuda_memcpy_to_host(struct_copy.data + begin, host_data, sizeof(T), end - begin);
     }
 
     /**
