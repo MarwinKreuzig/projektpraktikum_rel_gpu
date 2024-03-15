@@ -482,8 +482,6 @@ public:
         requires(has_excitatory_dendrite || has_inhibitory_dendrite || has_excitatory_axon || has_inhibitory_axon)
     {
 
-
-
         if (element_type == ElementType::Axon && signal_type == SignalType::Excitatory) {
             if constexpr (has_excitatory_axon) {
                 excitatory_axon.set_position(virtual_position);

@@ -28,25 +28,28 @@
 namespace gpu::kernel {
 
 struct Kernel {
-/**
-* Struct representing Kernel on the gpu. Contains most of the data contained by the original cpu class
-*/
+    /**
+     * Struct representing Kernel on the gpu. Contains most of the data contained by the original cpu class
+     */
 
     KernelType currently_used_kernel{ KernelType::Gaussian };
     GammaDistributionKernel* gamma;
     GaussianDistributionKernel* gaussian;
     LinearDistributionKernel* linear;
     WeibullDistributionKernel* weibull;
-    
+
     /**
-     * @brief Constructs the Kernel on the GPU 
+     * @brief Constructs the Kernel on the GPU
      * @param gamma The pointer to the gamma kernel on the GPU
      * @param gaussian The pointer to the gaussian kernel on the GPU
      * @param linear The pointer to the linear kernel on the GPU
      * @param weibull TThe pointer to the weibull kernel on the GPU
      */
     __device__ Kernel(GammaDistributionKernel* gamma, GaussianDistributionKernel* gaussian, LinearDistributionKernel* linear, WeibullDistributionKernel* weibull)
-        : gamma(gamma), gaussian(gaussian), linear(linear), weibull(weibull) {}
+        : gamma(gamma)
+        , gaussian(gaussian)
+        , linear(linear)
+        , weibull(weibull) { }
 
     /**
      * @brief Calculates the attractiveness to connect on the basis of the set kernel type.
@@ -84,32 +87,32 @@ struct Kernel {
 };
 
 class KernelHandleImpl : public KernelHandle {
-/**
-* Implementation of the handle for the cpu that controls the gpu object
-*/
+    /**
+     * Implementation of the handle for the cpu that controls the gpu object
+     */
 
 public:
-     /**
+    /**
      * @brief Constructs the KernelHandle Implementation
      * @param _dev_ptr The pointer to the Kernel object on the GPU
      */
     KernelHandleImpl(Kernel* _dev_ptr);
 
     /**
-    * @brief Init function called by the constructor, has to be public in order to be allowed to use device lamdas in it, do not call from outside
-    */
+     * @brief Init function called by the constructor, has to be public in order to be allowed to use device lamdas in it, do not call from outside
+     */
     void _init();
 
     /**
-    * @brief Sets the kernel type to be used during the Barnes Hut algorithm
-    * @param kernel_type The kernel type to be used during the Barnes Hut algorithm
-    */
+     * @brief Sets the kernel type to be used during the Barnes Hut algorithm
+     * @param kernel_type The kernel type to be used during the Barnes Hut algorithm
+     */
     void set_kernel_type(const KernelType kernel_type) override;
 
     /**
-    * @brief Returns the pointer to the Kernel stored on the GPU
-    * @return The pointer to the Kernel stored on the GPU
-    */
+     * @brief Returns the pointer to the Kernel stored on the GPU
+     * @return The pointer to the Kernel stored on the GPU
+     */
     [[nodiscard]] void* get_device_pointer() override;
 
 private:

@@ -56,11 +56,11 @@ public:
      * @param level_of_branch_nodes The level at which the branch nodes (that are exchanged via MPI) are
      * @exception Throws a RelearnException if min is not componentwise smaller than max
      */
-    Octree(const box_size_type &min, const box_size_type &max, const std::uint16_t level_of_branch_nodes)
-            : level_of_branch_nodes(level_of_branch_nodes) {
+    Octree(const box_size_type& min, const box_size_type& max, const std::uint16_t level_of_branch_nodes)
+        : level_of_branch_nodes(level_of_branch_nodes) {
 
-        const auto &[min_x, min_y, min_z] = min;
-        const auto &[max_x, max_y, max_z] = max;
+        const auto& [min_x, min_y, min_z] = min;
+        const auto& [max_x, max_y, max_z] = max;
 
         RelearnException::check(min_x <= max_x,
             "Octree::Octree: The x component of the simulation box minimum was larger than that of the maximum");
@@ -87,7 +87,7 @@ public:
      * @brief Returns the minimum position in the Octree
      * @return The minimum position in the Octree
      */
-    [[nodiscard]] const box_size_type &get_simulation_box_minimum() const noexcept {
+    [[nodiscard]] const box_size_type& get_simulation_box_minimum() const noexcept {
         return simulation_box_minimum;
     }
 
@@ -95,7 +95,7 @@ public:
      * @brief Returns the maximum position in the Octree
      * @return The maximum position in the Octree
      */
-    [[nodiscard]] const box_size_type &get_simulation_box_maximum() const noexcept {
+    [[nodiscard]] const box_size_type& get_simulation_box_maximum() const noexcept {
         return simulation_box_maximum;
     }
 
@@ -124,7 +124,7 @@ public:
      *      (d) Something went wrong within the insertion
      * @return A pointer to the newly created and inserted node
      */
-    virtual void insert(const box_size_type &position, const NeuronID &neuron_id) = 0;
+    virtual void insert(const box_size_type& position, const NeuronID& neuron_id) = 0;
 
     /**
      * @brief Gathers all leaf nodes and makes them available via get_leaf_nodes
@@ -163,7 +163,7 @@ public:
      * @brief Records the memory footprint of the current object as "Octree"
      * @param footprint Where to store the current footprint
      */
-    virtual void record_memory_footprint(const std::unique_ptr<MemoryFootprint> &footprint) {
+    virtual void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) {
         const auto my_footprint = sizeof(*this);
         footprint->emplace("Octree", my_footprint);
     }
@@ -176,10 +176,10 @@ protected:
     virtual void print(std::stringstream& ss) const = 0;
 
 private:
-    box_size_type simulation_box_minimum{0};
-    box_size_type simulation_box_maximum{0};
+    box_size_type simulation_box_minimum{ 0 };
+    box_size_type simulation_box_maximum{ 0 };
 
-    std::uint16_t level_of_branch_nodes{std::numeric_limits<std::uint16_t>::max()};
+    std::uint16_t level_of_branch_nodes{ std::numeric_limits<std::uint16_t>::max() };
 };
 
 /**
@@ -188,7 +188,7 @@ private:
  * update from the bottom up, and synchronize parts with MPI.
  * It is templated by the additional cell attributes that the algorithm will need the cell to have.
  */
-template<typename AdditionalCellAttributes>
+template <typename AdditionalCellAttributes>
 class OctreeImplementation : public Octree {
 public:
     /**
@@ -198,21 +198,20 @@ public:
      * @param level_of_branch_nodes The level at which the branch nodes (that are exchanged via MPI) are
      * @exception Throws a RelearnException if min is not componentwise smaller than max
      */
-    OctreeImplementation(const box_size_type &min, const box_size_type &max, const std::uint16_t level_of_branch_nodes)
-            : Octree(min, max, level_of_branch_nodes) {
+    OctreeImplementation(const box_size_type& min, const box_size_type& max, const std::uint16_t level_of_branch_nodes)
+        : Octree(min, max, level_of_branch_nodes) {
 
         const auto num_local_trees = 1ULL << (3U * level_of_branch_nodes);
         branch_nodes.resize(num_local_trees, nullptr);
 
         construct_global_tree_part();
-
     }
 
     /**
      * @brief Returns the root of the Octree
      * @return The root of the Octree. Ownership is not transferred
      */
-    [[nodiscard]] const OctreeNode<AdditionalCellAttributes> *get_root() const noexcept {
+    [[nodiscard]] const OctreeNode<AdditionalCellAttributes>* get_root() const noexcept {
         return &root;
     }
 
@@ -220,7 +219,7 @@ public:
      * @brief Returns the root of the Octree
      * @return The root of the Octree. Ownership is not transferred
      */
-    [[nodiscard]] OctreeNode<AdditionalCellAttributes> *get_root() noexcept {
+    [[nodiscard]] OctreeNode<AdditionalCellAttributes>* get_root() noexcept {
         return &root;
     }
 
@@ -236,20 +235,20 @@ public:
      * @brief Get all local branch nodes
      * @return All local branch nodes
      */
-    [[nodiscard]] std::vector<const OctreeNode<AdditionalCellAttributes> *> get_local_branch_nodes() const {
+    [[nodiscard]] std::vector<const OctreeNode<AdditionalCellAttributes>*> get_local_branch_nodes() const {
         return branch_nodes
-               | ranges::views::filter(ranges::indirect(&OctreeNode<AdditionalCellAttributes>::is_local))
-               | ranges::to_vector;
+            | ranges::views::filter(ranges::indirect(&OctreeNode<AdditionalCellAttributes>::is_local))
+            | ranges::to_vector;
     }
 
     /**
      * @brief Get all local branch nodes
      * @return All local branch nodes
      */
-    [[nodiscard]] std::vector<OctreeNode<AdditionalCellAttributes> *> get_local_branch_nodes() {
+    [[nodiscard]] std::vector<OctreeNode<AdditionalCellAttributes>*> get_local_branch_nodes() {
         return branch_nodes
-               | ranges::views::filter(ranges::indirect(&OctreeNode<AdditionalCellAttributes>::is_local))
-               | ranges::to_vector;
+            | ranges::views::filter(ranges::indirect(&OctreeNode<AdditionalCellAttributes>::is_local))
+            | ranges::to_vector;
     }
 
     /**
@@ -276,13 +275,13 @@ public:
      * @param num_neurons The number of neurons
      */
     void initializes_leaf_nodes(const RelearnTypes::number_neurons_type num_neurons) override {
-        std::vector<OctreeNode<AdditionalCellAttributes> *> leaf_nodes(num_neurons);
+        std::vector<OctreeNode<AdditionalCellAttributes>*> leaf_nodes(num_neurons);
 
-        Stack<OctreeNode<AdditionalCellAttributes> *> stack{num_neurons};
+        Stack<OctreeNode<AdditionalCellAttributes>*> stack{ num_neurons };
         stack.emplace_back(&root);
 
         while (!stack.empty()) {
-            OctreeNode<AdditionalCellAttributes> *node = stack.pop_back();
+            OctreeNode<AdditionalCellAttributes>* node = stack.pop_back();
 
             if (node->is_leaf()) {
                 const auto neuron_id = node->get_cell_neuron_id();
@@ -294,14 +293,12 @@ public:
                 continue;
             }
 
-            for (auto *child: node->get_children()) {
+            for (auto* child : node->get_children()) {
                 if (child == nullptr) {
                     continue;
                 }
 
-                if (const auto neuron_id = child->get_cell_neuron_id(); !child->is_parent() &&
-                                                                        (neuron_id.is_virtual() ||
-                                                                         !neuron_id.is_initialized())) {
+                if (const auto neuron_id = child->get_cell_neuron_id(); !child->is_parent() && (neuron_id.is_virtual() || !neuron_id.is_initialized())) {
                     continue;
                 }
 
@@ -313,8 +310,8 @@ public:
             "Octree::initializes_leaf_nodes: Less number of leaf nodes than number of local neurons {} != {}",
             leaf_nodes.size(), num_neurons);
 
-        for (const auto neuron_id: NeuronID::range(num_neurons)) {
-            const auto &node = leaf_nodes[neuron_id.get_neuron_id()];
+        for (const auto neuron_id : NeuronID::range(num_neurons)) {
+            const auto& node = leaf_nodes[neuron_id.get_neuron_id()];
             RelearnException::check(node != nullptr, "Octree::initializes_leaf_nodes: Leaf node {} is null", neuron_id);
             RelearnException::check(node->is_leaf(), "Octree::initializes_leaf_nodes: Leaf node {} is not a leaf node",
                 neuron_id);
@@ -344,7 +341,7 @@ public:
      *      The reference is never invalidated
      * @return All leaf nodes
      */
-    [[nodiscard]] const std::vector<OctreeNode<AdditionalCellAttributes> *> &get_leaf_nodes() const noexcept {
+    [[nodiscard]] const std::vector<OctreeNode<AdditionalCellAttributes>*>& get_leaf_nodes() const noexcept {
         return all_leaf_nodes;
     }
 
@@ -368,10 +365,10 @@ public:
      * @exception Throws a RelearnException if the root is nullptr, the position is not in the box,
      *      neuron_id is uninitialized, or OctreeNode::insert throws a RelearnException
      */
-    void insert(const box_size_type &position, const NeuronID &neuron_id) override {
-        const auto &[min_x, min_y, min_z] = get_simulation_box_minimum();
-        const auto &[max_x, max_y, max_z] = get_simulation_box_maximum();
-        const auto &[pos_x, pos_y, pos_z] = position;
+    void insert(const box_size_type& position, const NeuronID& neuron_id) override {
+        const auto& [min_x, min_y, min_z] = get_simulation_box_minimum();
+        const auto& [max_x, max_y, max_z] = get_simulation_box_maximum();
+        const auto& [pos_x, pos_y, pos_z] = position;
 
         RelearnException::check(min_x <= pos_x && pos_x <= max_x, "Octree::insert: x was not in range: {} vs [{}, {}]",
             pos_x, min_x, max_x);
@@ -383,7 +380,7 @@ public:
         RelearnException::check(neuron_id.is_initialized(), "Octree::insert: neuron_id {} was uninitialized",
             neuron_id);
 
-        auto *res = root.insert(position, neuron_id);
+        auto* res = root.insert(position, neuron_id);
         RelearnException::check(res != nullptr, "Octree::insert: res was nullptr");
 
         if (res->get_level() > max_level) {
@@ -395,14 +392,13 @@ public:
      * @brief Records the memory footprint of the current object as "Octree", "OctreeImplementation", and "OctreeNode"
      * @param footprint Where to store the current footprint
      */
-    void record_memory_footprint(const std::unique_ptr<MemoryFootprint> &footprint) override {
+    void record_memory_footprint(const std::unique_ptr<MemoryFootprint>& footprint) override {
         const auto my_footprint = sizeof(*this) - sizeof(Octree)
-                                  + branch_nodes.capacity() * sizeof(OctreeNode<AdditionalCellAttributes> *)
-                                  + all_leaf_nodes.capacity() * sizeof(OctreeNode<AdditionalCellAttributes> *);
+            + branch_nodes.capacity() * sizeof(OctreeNode<AdditionalCellAttributes>*)
+            + all_leaf_nodes.capacity() * sizeof(OctreeNode<AdditionalCellAttributes>*);
         footprint->emplace("OctreeImplementation", my_footprint);
 
-        const auto octree_node_footprint =
-                MemoryHolder<AdditionalCellAttributes>::get_size() * sizeof(OctreeNode<AdditionalCellAttributes>);
+        const auto octree_node_footprint = MemoryHolder<AdditionalCellAttributes>::get_size() * sizeof(OctreeNode<AdditionalCellAttributes>);
         footprint->emplace("OctreeNode", octree_node_footprint);
 
         Octree::record_memory_footprint(footprint);
@@ -617,8 +613,7 @@ public:
             ElementType elem_type;
             if constexpr (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
                 elem_type = ElementType::Dendrite;
-            }
-            else {
+            } else {
                 elem_type = ElementType::Axon;
             }
 
@@ -647,7 +642,7 @@ public:
                 gpu::Vec3d pos_in_elem = octree_cpu_copy.position_inhibitory_element.at(current_node_gpu);
                 current_node_cpu->set_cell_position_for(elem_type, SignalType::Inhibitory, std::make_optional<Vec3d>(Vec3d(pos_in_elem.x, pos_in_elem.y, pos_in_elem.z)));
             }
-            
+
             // The order of the children should in theory be correct here
             if (current_node_cpu->is_parent() && current_node_gpu >= num_neurons) {
                 const auto& children_cpu = current_node_cpu->get_children();
@@ -676,7 +671,7 @@ protected:
      * Print a visualization of this tree to a stringstream
      * @param ss stringstream
      */
-    void print(std::stringstream &ss) const override {
+    void print(std::stringstream& ss) const override {
         ss << root.to_string() << "\n";
         root.printSubtree(ss, "");
         ss << "\n";
@@ -692,11 +687,11 @@ protected:
         std::vector<box_size_type> branch_nodes_positions{};
         branch_nodes_positions.reserve(num_cells_per_dimension * num_cells_per_dimension * num_cells_per_dimension);
 
-        const auto &xyz_min = get_simulation_box_minimum();
-        const auto &xyz_max = get_simulation_box_maximum();
+        const auto& xyz_min = get_simulation_box_minimum();
+        const auto& xyz_max = get_simulation_box_maximum();
 
-        const auto &[x_min, y_min, z_min] = xyz_min;
-        const auto &[x_max, y_max, z_max] = xyz_max;
+        const auto& [x_min, y_min, z_min] = xyz_min;
+        const auto& [x_max, y_max, z_max] = xyz_max;
 
         const auto box_x = (x_max - x_min) / num_cells_per_dimension;
         const auto box_y = (y_max - y_min) / num_cells_per_dimension;
@@ -724,10 +719,10 @@ protected:
         root.set_level(0);
 
         for (auto pos_it = 1; pos_it < branch_nodes_positions.size(); pos_it++) {
-            auto *ptr = root.insert(branch_nodes_positions[pos_it], NeuronID::virtual_id());
+            auto* ptr = root.insert(branch_nodes_positions[pos_it], NeuronID::virtual_id());
         }
 
-        SpaceFillingCurve<Morton> space_curve{static_cast<uint8_t>(level_of_branch_nodes)};
+        SpaceFillingCurve<Morton> space_curve{ static_cast<uint8_t>(level_of_branch_nodes) };
 
         Stack<std::pair<OctreeNode<AdditionalCellAttributes>*, Vec3s>> stack{
             Constants::number_oct * level_of_branch_nodes
@@ -750,7 +745,7 @@ protected:
                 const auto larger_y = ((id & 2ULL) == 0) ? 0ULL : 1ULL;
                 const auto larger_z = ((id & 4ULL) == 0) ? 0ULL : 1ULL;
 
-                const Vec3s offset{larger_x, larger_y, larger_z};
+                const Vec3s offset{ larger_x, larger_y, larger_z };
                 const Vec3s pos = (index3d * 2) + offset;
                 stack.emplace_back(child_node, pos);
             }
@@ -764,7 +759,7 @@ protected:
     void update_local_trees() {
         Timers::start(TimerRegion::UPDATE_LOCAL_TREES);
 
-        const auto update_tree = [this](auto *local_tree) {
+        const auto update_tree = [this](auto* local_tree) {
             update_tree_parallel(local_tree);
         };
 
@@ -796,14 +791,14 @@ protected:
 
         Timers::start(TimerRegion::INSERT_BRANCH_NODES_INTO_GLOBAL_TREE);
         for (size_t i = 0; i < number_branch_nodes; i++) {
-            auto &received_node = exchange_branch_nodes[i];
+            auto& received_node = exchange_branch_nodes[i];
             if (received_node.is_parent()) {
                 /*
-                * This part exists for the location-aware Barnes-Hut algorithm.
-                * If the branch node is a leaf, it uses the leaf-case without problems.
-                * Otherwise, we need to store the index of the branch node so that we
-                * can later send it around.
-                */
+                 * This part exists for the location-aware Barnes-Hut algorithm.
+                 * If the branch node is a leaf, it uses the leaf-case without problems.
+                 * Otherwise, we need to store the index of the branch node so that we
+                 * can later send it around.
+                 */
                 // received_node.set_cell_neuron_id(NeuronID::virtual_id(i));
             }
 
@@ -844,21 +839,21 @@ protected:
         // Gather all subtrees two levels down from the current node, update the induced trees in parallel, and then update the upper portion serially
 
         constexpr auto maximum_number_subtrees = 64;
-        std::vector<OctreeNode<AdditionalCellAttributes> *> subtrees{};
+        std::vector<OctreeNode<AdditionalCellAttributes>*> subtrees{};
         subtrees.reserve(maximum_number_subtrees);
 
         constexpr auto maximum_number_nodes = 64 + 8 + 1;
-        Stack<OctreeNode<AdditionalCellAttributes> *> tree_upper_part{maximum_number_nodes};
+        Stack<OctreeNode<AdditionalCellAttributes>*> tree_upper_part{ maximum_number_nodes };
         tree_upper_part.emplace_back(local_tree_root);
 
-        for (const auto &root_child: local_tree_root->get_children()) {
+        for (const auto& root_child : local_tree_root->get_children()) {
             if (root_child == nullptr) {
                 continue;
             }
 
             tree_upper_part.emplace_back(root_child);
 
-            for (const auto &root_child_child: root_child->get_children()) {
+            for (const auto& root_child_child : root_child->get_children()) {
                 if (root_child_child == nullptr) {
                     continue;
                 }
@@ -870,12 +865,12 @@ protected:
 
 #pragma omp parallel for shared(subtrees, max_depth) default(none)
         for (auto i = 0; i < subtrees.size(); i++) {
-            auto *local_tree_root = subtrees[i];
+            auto* local_tree_root = subtrees[i];
             OctreeNodeUpdater<AdditionalCellAttributes>::update_tree(local_tree_root, max_depth);
         }
 
         while (!tree_upper_part.empty()) {
-            auto *node = tree_upper_part.top();
+            auto* node = tree_upper_part.top();
             tree_upper_part.pop();
 
             if (node->is_parent()) {
@@ -890,9 +885,8 @@ private:
     // Root of the tree
     OctreeNode<AdditionalCellAttributes> root{};
 
-    std::vector<OctreeNode<AdditionalCellAttributes> *> branch_nodes{};
-    std::vector<OctreeNode<AdditionalCellAttributes> *> all_leaf_nodes{};
+    std::vector<OctreeNode<AdditionalCellAttributes>*> branch_nodes{};
+    std::vector<OctreeNode<AdditionalCellAttributes>*> all_leaf_nodes{};
 
-    std::uint16_t max_level{0};
+    std::uint16_t max_level{ 0 };
 };
-

@@ -263,7 +263,7 @@
 //
 //    const auto expected_a = FitzHughNagumoModel::default_a;
 //    const auto expected_b = FitzHughNagumoModel::default_b;
-//    const auto expected_phi = FitzHughNagumoModel::default_phi;
+//    const auto expected_phi = FitzHughNaglpat-XpvsytbRsqZBdzzTWyLygumoModel::default_phi;
 //
 //    ASSERT_EQ(expected_a, model->get_a());
 //    ASSERT_EQ(expected_b, model->get_b());

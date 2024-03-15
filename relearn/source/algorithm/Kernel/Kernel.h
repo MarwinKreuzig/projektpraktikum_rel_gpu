@@ -105,13 +105,13 @@ public:
     }
 
     /**
-    * @brief Get the handle to the GPU version of this class
-    * @return The GPU Handle
-    */
-    [[nodiscard]] static const std::shared_ptr<gpu::kernel::KernelHandle> &get_gpu_handle() {
+     * @brief Get the handle to the GPU version of this class
+     * @return The GPU Handle
+     */
+    [[nodiscard]] static const std::shared_ptr<gpu::kernel::KernelHandle>& get_gpu_handle() {
         RelearnException::check(CudaHelper::is_cuda_available(), "Kernel::get_gpu_handle: GPU not supported");
-        
-        static std::shared_ptr<gpu::kernel::KernelHandle> gpu_handle{gpu::kernel::create_kernel(GammaDistributionKernel::get_gpu_handle()->get_device_pointer(), GaussianDistributionKernel::get_gpu_handle()->get_device_pointer(), LinearDistributionKernel::get_gpu_handle()->get_device_pointer(), WeibullDistributionKernel::get_gpu_handle()->get_device_pointer())};
+
+        static std::shared_ptr<gpu::kernel::KernelHandle> gpu_handle{ gpu::kernel::create_kernel(GammaDistributionKernel::get_gpu_handle()->get_device_pointer(), GaussianDistributionKernel::get_gpu_handle()->get_device_pointer(), LinearDistributionKernel::get_gpu_handle()->get_device_pointer(), WeibullDistributionKernel::get_gpu_handle()->get_device_pointer()) };
 
         return gpu_handle;
     }

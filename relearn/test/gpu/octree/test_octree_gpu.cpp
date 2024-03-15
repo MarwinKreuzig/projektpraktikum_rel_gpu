@@ -102,48 +102,47 @@ const auto print_octree = [](const gpu::algorithm::OctreeCPUCopy octreeCpuCopy) 
     std::cout << "====OctreeCPUCopy====" << std::endl;
 
     std::cout << "Neuron IDs: " << std::endl;
-    for (const auto &element : octreeCpuCopy.neuron_ids) {
+    for (const auto& element : octreeCpuCopy.neuron_ids) {
         std::cout << element << " ";
     }
     std::cout << std::endl;
 
     std::cout << "Child Indices: " << std::endl;
-    for (const auto &element : octreeCpuCopy.child_indices) {
+    for (const auto& element : octreeCpuCopy.child_indices) {
         std::cout << element << " ";
     }
     std::cout << std::endl;
 
     std::cout << "Number of Children: " << std::endl;
-    for (const auto &element : octreeCpuCopy.num_children) {
+    for (const auto& element : octreeCpuCopy.num_children) {
         std::cout << element << " ";
     }
     std::cout << std::endl;
 
     std::cout << "Number of free excitatory elements: ";
-    for (const auto &element : octreeCpuCopy.num_free_elements_excitatory) {
-          std::cout << element << " ";
+    for (const auto& element : octreeCpuCopy.num_free_elements_excitatory) {
+        std::cout << element << " ";
     }
     std::cout << std::endl;
 
     std::cout << "Number of free inhibitory elements: ";
-    for (const auto &element : octreeCpuCopy.num_free_elements_inhibitory) {
-          std::cout << element << " ";
+    for (const auto& element : octreeCpuCopy.num_free_elements_inhibitory) {
+        std::cout << element << " ";
     }
     std::cout << std::endl;
 
     std::cout << "Position of excitatory elements: ";
-    for (const auto &element : octreeCpuCopy.position_excitatory_element) {
+    for (const auto& element : octreeCpuCopy.position_excitatory_element) {
         std::cout << "(" << element.x << ", " << element.y << ", " << element.z << ")" << std::endl;
     }
     std::cout << std::endl;
 
     std::cout << "Position of inhibitory elements: ";
-    for (const auto &element : octreeCpuCopy.position_inhibitory_element) {
+    for (const auto& element : octreeCpuCopy.position_inhibitory_element) {
         std::cout << "(" << element.x << ", " << element.y << ", " << element.z << ")";
     }
     std::cout << std::endl;
 };
-
 
 /**
  * @brief tests the Octree.octree_to_octree_cpu_copy() function using a handcrafted example
@@ -375,9 +374,9 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
         ASSERT_EQ(num_in_elem, current_node_cpu->get_cell().get_number_elements_for(elem_type, SignalType::Inhibitory)) << " Correct nodes before fail:" << correct_counts;
 
         correct_counts++;
-            
+
         if (current_node_cpu->is_parent() && current_node_gpu >= num_neurons) {
-            const auto &children_cpu = current_node_cpu->get_children();
+            const auto& children_cpu = current_node_cpu->get_children();
             int children_processed = 0;
             for (auto i = 0; i < 8; i++) {
                 const auto child = children_cpu[7 - i];
@@ -390,7 +389,7 @@ TYPED_TEST(OctreeTestGpu, OctreeConstructAndCopyTest) {
 
             if (children_processed != octree_cpu_copy.num_children.at(current_node_gpu - num_neurons)) {
                 RelearnException::fail("Octree::overwrite_cpu_tree_with_gpu: GPU and CPU Octree structure differs");
-            }  
+            }
         }
     }
 
@@ -421,13 +420,12 @@ TYPED_TEST(OctreeTestGpu, OctreeLeafNodeUpdateTest) {
     octree_shared_ptr->initializes_leaf_nodes(neurons_to_place.size());
 
     octree_shared_ptr->construct_on_gpu(neurons_to_place.size());
-    
+
     auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutCell>>(octree_shared_ptr);
     auto barnes_hut_gpu = std::make_shared<BarnesHutGPU>(std::move(cast));
     auto cast2 = std::static_pointer_cast<OctreeImplementation<BarnesHutCell>>(octree_shared_ptr);
     auto barnes_hut_cpu = std::make_shared<BarnesHut>(std::move(cast2));
 
-    
     auto axs = SynapticElementsAdapter::create_axons(neurons_to_place.size(), 5, 10, this->mt);
     auto dends_ex = SynapticElementsAdapter::create_dendrites(neurons_to_place.size(), SignalType::Excitatory, 0, 2, this->mt);
     auto dends_in = SynapticElementsAdapter::create_dendrites(neurons_to_place.size(), SignalType::Inhibitory, 0, 2, this->mt);
@@ -458,7 +456,7 @@ TYPED_TEST(OctreeTestGpu, OctreeLeafNodeUpdateTest) {
     extra_infos->set_positions(std::move(neuron_positions));
 
     barnes_hut_gpu->update_octree();
-    
+
     octree_shared_ptr->overwrite_cpu_tree_with_gpu();
 
     auto all_leaf_nodes = octree_shared_ptr->get_leaf_nodes();
@@ -508,42 +506,39 @@ TYPED_TEST(OctreeTestGpu, OctreeUpdateVirtualNeuronsTest) {
     //    |--(9, 1)
     //    |--(6, 1)
 
-
     num_neurons_gpu num_virtual_neurons = 3;
     const int num_leafs = 10;
 
-    OctreeImplementation<TypeParam> octree({0, 0, 0 }, {10, 10, 10 }, 1);
+    OctreeImplementation<TypeParam> octree({ 0, 0, 0 }, { 10, 10, 10 }, 1);
 
-    octree.insert(box_size_type(6, 0, 0 ) , NeuronID{false, 0} ); //vorne rechts unten
-    octree.insert(box_size_type(9, 0, 4 ) , NeuronID{false, 1} ); //vorne rechts unten
-    octree.insert(box_size_type(0, 0, 6 ) , NeuronID{false, 2} ); //vorne links oben
-    octree.insert(box_size_type(4, 0, 9 ) , NeuronID{false, 3} ); //vorne links oben
-    octree.insert(box_size_type(4, 0, 4 ) , NeuronID{false, 5} ); //vorne links unten
-    octree.insert(box_size_type(9, 0, 9 ) , NeuronID{false, 4} ); //vorne rechts oben
-    octree.insert(box_size_type(9, 6, 9 ) , NeuronID{false, 6} ); //hinten rechts oben
-    octree.insert(box_size_type(9, 6, 4 ) , NeuronID{false, 7} ); //hinten rechts unten
-    octree.insert(box_size_type(4, 6, 4 ) , NeuronID{false, 8} ); //hinten links unten
-    octree.insert(box_size_type(4, 6, 7 ) , NeuronID{false, 9} ); //hinten links oben
+    octree.insert(box_size_type(6, 0, 0), NeuronID{ false, 0 }); // vorne rechts unten
+    octree.insert(box_size_type(9, 0, 4), NeuronID{ false, 1 }); // vorne rechts unten
+    octree.insert(box_size_type(0, 0, 6), NeuronID{ false, 2 }); // vorne links oben
+    octree.insert(box_size_type(4, 0, 9), NeuronID{ false, 3 }); // vorne links oben
+    octree.insert(box_size_type(4, 0, 4), NeuronID{ false, 5 }); // vorne links unten
+    octree.insert(box_size_type(9, 0, 9), NeuronID{ false, 4 }); // vorne rechts oben
+    octree.insert(box_size_type(9, 6, 9), NeuronID{ false, 6 }); // hinten rechts oben
+    octree.insert(box_size_type(9, 6, 4), NeuronID{ false, 7 }); // hinten rechts unten
+    octree.insert(box_size_type(4, 6, 4), NeuronID{ false, 8 }); // hinten links unten
+    octree.insert(box_size_type(4, 6, 7), NeuronID{ false, 9 }); // hinten links oben
     octree.initializes_leaf_nodes(num_leafs);
     octree.synchronize_tree();
-
 
     octree.construct_on_gpu(num_leafs);
     const std::shared_ptr<gpu::algorithm::OctreeHandle> gpu_handle = octree.get_gpu_handle();
 
-    //create new values
+    // create new values
 
     std::vector<gpu::Vec3d> pos_ex(0);
     std::vector<gpu::Vec3d> pos_in(0);
     std::vector<int> num_free_elements_ex(0);
     std::vector<int> num_free_elements_in(0);
 
-
-    for (int i = 0; i < num_leafs; i++)  {
-        Vec3d v = {RandomAdapter::get_random_double(0., 10., this->mt), RandomAdapter::get_random_double(0., 10., this->mt), RandomAdapter::get_random_double(0., 10., this->mt)};
+    for (int i = 0; i < num_leafs; i++) {
+        Vec3d v = { RandomAdapter::get_random_double(0., 10., this->mt), RandomAdapter::get_random_double(0., 10., this->mt), RandomAdapter::get_random_double(0., 10., this->mt) };
         pos_ex.push_back(convert_vec_to_gpu_vec(v));
 
-        Vec3d v2 = {RandomAdapter::get_random_double(0., 10., this->mt), RandomAdapter::get_random_double(0., 10., this->mt), RandomAdapter::get_random_double(0., 10., this->mt)};
+        Vec3d v2 = { RandomAdapter::get_random_double(0., 10., this->mt), RandomAdapter::get_random_double(0., 10., this->mt), RandomAdapter::get_random_double(0., 10., this->mt) };
         pos_in.push_back(convert_vec_to_gpu_vec(v2));
 
         auto free_elements_ex = RandomAdapter::get_random_integer(0, 10, this->mt);
@@ -553,64 +548,46 @@ TYPED_TEST(OctreeTestGpu, OctreeUpdateVirtualNeuronsTest) {
         num_free_elements_in.push_back(free_elements_in);
     }
 
-    //update
+    // update
     gpu_handle->update_leaf_nodes(pos_ex, pos_in, num_free_elements_ex, num_free_elements_in);
     gpu_handle->update_virtual_neurons();
 
+    // expected values
 
-
-    //expected values
-
-    //X1
+    // X1
     num_free_elements_ex.push_back(num_free_elements_ex[3] + num_free_elements_ex[4]);
     num_free_elements_in.push_back(num_free_elements_in[3] + num_free_elements_in[4]);
 
-    pos_ex.push_back(num_free_elements_ex[10] == 0 ? gpu::Vec3d(0., 0., 0.) : gpu::Vec3d( (((pos_ex[3].x * num_free_elements_ex[3]) + (pos_ex[4].x * num_free_elements_ex[4])) / num_free_elements_ex[10]),
-        ((pos_ex[3].y * num_free_elements_ex[3]) + (pos_ex[4].y * num_free_elements_ex[4])) / num_free_elements_ex[10],
-        ((pos_ex[3].z * num_free_elements_ex[3]) + (pos_ex[4].z * num_free_elements_ex[4])) / num_free_elements_ex[10] ));
-    pos_in.push_back(num_free_elements_in[10] == 0 ? gpu::Vec3d(0., 0., 0.) : gpu::Vec3d( ((pos_in[3].x * num_free_elements_in[3]) + (pos_in[4].x * num_free_elements_in[4])) / num_free_elements_in[10],
-        ((pos_in[3].y * num_free_elements_in[3]) + (pos_in[4].y * num_free_elements_in[4])) / num_free_elements_in[10],
-        ((pos_in[3].z * num_free_elements_in[3]) + (pos_in[4].z * num_free_elements_in[4])) / num_free_elements_in[10] ));
+    pos_ex.push_back(num_free_elements_ex[10] == 0 ? gpu::Vec3d(0., 0., 0.) : gpu::Vec3d((((pos_ex[3].x * num_free_elements_ex[3]) + (pos_ex[4].x * num_free_elements_ex[4])) / num_free_elements_ex[10]), ((pos_ex[3].y * num_free_elements_ex[3]) + (pos_ex[4].y * num_free_elements_ex[4])) / num_free_elements_ex[10], ((pos_ex[3].z * num_free_elements_ex[3]) + (pos_ex[4].z * num_free_elements_ex[4])) / num_free_elements_ex[10]));
+    pos_in.push_back(num_free_elements_in[10] == 0 ? gpu::Vec3d(0., 0., 0.) : gpu::Vec3d(((pos_in[3].x * num_free_elements_in[3]) + (pos_in[4].x * num_free_elements_in[4])) / num_free_elements_in[10], ((pos_in[3].y * num_free_elements_in[3]) + (pos_in[4].y * num_free_elements_in[4])) / num_free_elements_in[10], ((pos_in[3].z * num_free_elements_in[3]) + (pos_in[4].z * num_free_elements_in[4])) / num_free_elements_in[10]));
 
-    //X2
+    // X2
     num_free_elements_ex.push_back(num_free_elements_ex[7] + num_free_elements_ex[8]);
     num_free_elements_in.push_back(num_free_elements_in[7] + num_free_elements_in[8]);
 
-    pos_ex.push_back(num_free_elements_ex[11] == 0 ? gpu::Vec3d(0., 0., 0.) : gpu::Vec3d( ((pos_ex[7].x * num_free_elements_ex[7]) + (pos_ex[8].x * num_free_elements_ex[8])) / num_free_elements_ex[11],
-        ((pos_ex[7].y * num_free_elements_ex[7]) + (pos_ex[8].y * num_free_elements_ex[8])) / num_free_elements_ex[11],
-        ((pos_ex[7].z * num_free_elements_ex[7]) + (pos_ex[8].z * num_free_elements_ex[8])) / num_free_elements_ex[11] ));
+    pos_ex.push_back(num_free_elements_ex[11] == 0 ? gpu::Vec3d(0., 0., 0.) : gpu::Vec3d(((pos_ex[7].x * num_free_elements_ex[7]) + (pos_ex[8].x * num_free_elements_ex[8])) / num_free_elements_ex[11], ((pos_ex[7].y * num_free_elements_ex[7]) + (pos_ex[8].y * num_free_elements_ex[8])) / num_free_elements_ex[11], ((pos_ex[7].z * num_free_elements_ex[7]) + (pos_ex[8].z * num_free_elements_ex[8])) / num_free_elements_ex[11]));
 
-    pos_in.push_back(num_free_elements_in[11] == 0 ? gpu::Vec3d(0., 0., 0.) : gpu::Vec3d( ((pos_in[7].x * num_free_elements_in[7]) + (pos_in[8].x * num_free_elements_in[8])) / num_free_elements_in[11],
-        ((pos_in[7].y * num_free_elements_in[7]) + (pos_in[8].y * num_free_elements_in[8])) / num_free_elements_in[11],
-        ((pos_in[7].z * num_free_elements_in[7]) + (pos_in[8].z * num_free_elements_in[8])) / num_free_elements_in[11] ));
+    pos_in.push_back(num_free_elements_in[11] == 0 ? gpu::Vec3d(0., 0., 0.) : gpu::Vec3d(((pos_in[7].x * num_free_elements_in[7]) + (pos_in[8].x * num_free_elements_in[8])) / num_free_elements_in[11], ((pos_in[7].y * num_free_elements_in[7]) + (pos_in[8].y * num_free_elements_in[8])) / num_free_elements_in[11], ((pos_in[7].z * num_free_elements_in[7]) + (pos_in[8].z * num_free_elements_in[8])) / num_free_elements_in[11]));
 
-
-    //X3
+    // X3
     num_free_elements_ex.push_back(num_free_elements_ex[0] + num_free_elements_ex[1] + num_free_elements_ex[2] + num_free_elements_ex[10] + num_free_elements_ex[5] + num_free_elements_ex[6] + num_free_elements_ex[11] + num_free_elements_ex[9]);
     num_free_elements_in.push_back(num_free_elements_in[0] + num_free_elements_in[1] + num_free_elements_in[2] + num_free_elements_in[10] + num_free_elements_in[5] + num_free_elements_in[6] + num_free_elements_in[11] + num_free_elements_in[9]);
 
-    pos_ex.push_back(num_free_elements_ex[12] == 0 ? gpu::Vec3d(0., 0., 0.) : gpu::Vec3d(((pos_ex[0].x * num_free_elements_ex[0]) + (pos_ex[1].x * num_free_elements_ex[1]) + (pos_ex[2].x * num_free_elements_ex[2]) + (pos_ex[10].x * num_free_elements_ex[10]) + (pos_ex[5].x * num_free_elements_ex[5]) + (pos_ex[6].x * num_free_elements_ex[6]) + (pos_ex[11].x * num_free_elements_ex[11]) + (pos_ex[9].x * num_free_elements_ex[9])) / num_free_elements_ex[12],
-        ((pos_ex[0].y * num_free_elements_ex[0]) + (pos_ex[1].y * num_free_elements_ex[1]) + (pos_ex[2].y * num_free_elements_ex[2]) + (pos_ex[10].y * num_free_elements_ex[10]) + (pos_ex[5].y * num_free_elements_ex[5]) + (pos_ex[6].y * num_free_elements_ex[6]) + (pos_ex[11].y * num_free_elements_ex[11]) + (pos_ex[9].y * num_free_elements_ex[9])) / num_free_elements_ex[12],
-        ((pos_ex[0].z * num_free_elements_ex[0]) + (pos_ex[1].z * num_free_elements_ex[1]) + (pos_ex[2].z * num_free_elements_ex[2]) + (pos_ex[10].z * num_free_elements_ex[10]) + (pos_ex[5].z * num_free_elements_ex[5]) + (pos_ex[6].z * num_free_elements_ex[6]) + (pos_ex[11].z * num_free_elements_ex[11]) + (pos_ex[9].z * num_free_elements_ex[9])) / num_free_elements_ex[12]));
+    pos_ex.push_back(num_free_elements_ex[12] == 0 ? gpu::Vec3d(0., 0., 0.) : gpu::Vec3d(((pos_ex[0].x * num_free_elements_ex[0]) + (pos_ex[1].x * num_free_elements_ex[1]) + (pos_ex[2].x * num_free_elements_ex[2]) + (pos_ex[10].x * num_free_elements_ex[10]) + (pos_ex[5].x * num_free_elements_ex[5]) + (pos_ex[6].x * num_free_elements_ex[6]) + (pos_ex[11].x * num_free_elements_ex[11]) + (pos_ex[9].x * num_free_elements_ex[9])) / num_free_elements_ex[12], ((pos_ex[0].y * num_free_elements_ex[0]) + (pos_ex[1].y * num_free_elements_ex[1]) + (pos_ex[2].y * num_free_elements_ex[2]) + (pos_ex[10].y * num_free_elements_ex[10]) + (pos_ex[5].y * num_free_elements_ex[5]) + (pos_ex[6].y * num_free_elements_ex[6]) + (pos_ex[11].y * num_free_elements_ex[11]) + (pos_ex[9].y * num_free_elements_ex[9])) / num_free_elements_ex[12], ((pos_ex[0].z * num_free_elements_ex[0]) + (pos_ex[1].z * num_free_elements_ex[1]) + (pos_ex[2].z * num_free_elements_ex[2]) + (pos_ex[10].z * num_free_elements_ex[10]) + (pos_ex[5].z * num_free_elements_ex[5]) + (pos_ex[6].z * num_free_elements_ex[6]) + (pos_ex[11].z * num_free_elements_ex[11]) + (pos_ex[9].z * num_free_elements_ex[9])) / num_free_elements_ex[12]));
 
-    pos_in.push_back(num_free_elements_in[12] == 0 ? gpu::Vec3d(0., 0., 0.) : gpu::Vec3d(((pos_in[0].x * num_free_elements_in[0]) + (pos_in[1].x * num_free_elements_in[1]) + (pos_in[2].x * num_free_elements_in[2]) + (pos_in[10].x * num_free_elements_in[10]) + (pos_in[5].x * num_free_elements_in[5]) + (pos_in[6].x * num_free_elements_in[6]) + (pos_in[11].x * num_free_elements_in[11]) + (pos_in[9].x * num_free_elements_in[9])) / num_free_elements_in[12],
-        ((pos_in[0].y * num_free_elements_in[0]) + (pos_in[1].y * num_free_elements_in[1]) + (pos_in[2].y * num_free_elements_in[2]) + (pos_in[10].y * num_free_elements_in[10]) + (pos_in[5].y * num_free_elements_in[5]) + (pos_in[6].y * num_free_elements_in[6]) + (pos_in[11].y * num_free_elements_in[11]) + (pos_in[9].y * num_free_elements_in[9])) / num_free_elements_in[12],
-        ((pos_in[0].z * num_free_elements_in[0]) + (pos_in[1].z * num_free_elements_in[1]) + (pos_in[2].z * num_free_elements_in[2]) + (pos_in[10].z * num_free_elements_in[10]) + (pos_in[5].z * num_free_elements_in[5]) + (pos_in[6].z * num_free_elements_in[6]) + (pos_in[11].z * num_free_elements_in[11]) + (pos_in[9].z * num_free_elements_in[9])) / num_free_elements_in[12]));
+    pos_in.push_back(num_free_elements_in[12] == 0 ? gpu::Vec3d(0., 0., 0.) : gpu::Vec3d(((pos_in[0].x * num_free_elements_in[0]) + (pos_in[1].x * num_free_elements_in[1]) + (pos_in[2].x * num_free_elements_in[2]) + (pos_in[10].x * num_free_elements_in[10]) + (pos_in[5].x * num_free_elements_in[5]) + (pos_in[6].x * num_free_elements_in[6]) + (pos_in[11].x * num_free_elements_in[11]) + (pos_in[9].x * num_free_elements_in[9])) / num_free_elements_in[12], ((pos_in[0].y * num_free_elements_in[0]) + (pos_in[1].y * num_free_elements_in[1]) + (pos_in[2].y * num_free_elements_in[2]) + (pos_in[10].y * num_free_elements_in[10]) + (pos_in[5].y * num_free_elements_in[5]) + (pos_in[6].y * num_free_elements_in[6]) + (pos_in[11].y * num_free_elements_in[11]) + (pos_in[9].y * num_free_elements_in[9])) / num_free_elements_in[12], ((pos_in[0].z * num_free_elements_in[0]) + (pos_in[1].z * num_free_elements_in[1]) + (pos_in[2].z * num_free_elements_in[2]) + (pos_in[10].z * num_free_elements_in[10]) + (pos_in[5].z * num_free_elements_in[5]) + (pos_in[6].z * num_free_elements_in[6]) + (pos_in[11].z * num_free_elements_in[11]) + (pos_in[9].z * num_free_elements_in[9])) / num_free_elements_in[12]));
 
+    // compare
 
-    //compare
-
-    //OctreeCPUCopy actual(num_leafs, num_virtual_neurons);
-    //gpu_handle->copy_to_host(actual);
+    // OctreeCPUCopy actual(num_leafs, num_virtual_neurons);
+    // gpu_handle->copy_to_host(actual);
     auto actual = gpu_handle->copy_to_host(num_leafs, num_virtual_neurons);
-
 
     ASSERT_EQ(actual.num_free_elements_excitatory, num_free_elements_ex);
     ASSERT_EQ(actual.num_free_elements_inhibitory, num_free_elements_in);
 
-    for(int i = 0; i < pos_ex.size(); i++)  {
+    for (int i = 0; i < pos_ex.size(); i++) {
         assert_eq_vec(convert_gpu_vec_to_vec(actual.position_excitatory_element[i]), convert_gpu_vec_to_vec(pos_ex[i]));
         assert_eq_vec(convert_gpu_vec_to_vec(actual.position_inhibitory_element[i]), convert_gpu_vec_to_vec(pos_in[i]));
     }
-
 }

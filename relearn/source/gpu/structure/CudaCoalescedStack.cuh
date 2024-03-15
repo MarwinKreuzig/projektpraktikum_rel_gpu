@@ -93,7 +93,7 @@ public:
     CudaCoalescedStackDeviceHandle(CudaCoalescedStack<T>* struct_device_ptr)
         : struct_dev_ptr((void*)struct_device_ptr) {
     }
-    
+
     /**
      * @param struct_device_pointer Pointer to a CudaCoalescedStack instance on the gpu
      */
@@ -107,7 +107,7 @@ public:
         }
     }
 
-     /**
+    /**
      * @brief Creates num_threads stacks and resizes all of them to new_size, any existing data concerning the stack on the GPU is overriden
      * @param new_size The new size of the stacks
      * @param num_threads The number of threads for which to manage a stack each
@@ -117,7 +117,7 @@ public:
 
         void* new_dev_ptr = cuda_calloc(new_size * num_threads * sizeof(T));
         void* new_sizes_ptr = cuda_calloc(num_threads * sizeof(size_t));
-        
+
         if (struct_copy.data != nullptr) {
             cudaFree(struct_copy.data);
             gpu_check_last_error();

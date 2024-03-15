@@ -32,7 +32,7 @@ void RandomHolder::init() {
     gpu_check_last_error();
 
     for (int i = 0; i < RandomKeyHolder::COUNT; i++) {
-        void* random_states_ptr = execute_and_copy<void*>([=] __device__(RandomStateData* random_state_data, int index) { return (void*)(&(random_state_data->random_states[index])); }, device_ptr, i);
+        void* random_states_ptr = execute_and_copy<void*>([=] __device__(RandomStateData * random_state_data, int index) { return (void*)(&(random_state_data->random_states[index])); }, device_ptr, i);
         handle_random_states[i] = gpu::Vector::CudaArrayDeviceHandle<random_state_type>(random_states_ptr);
     }
 
@@ -45,7 +45,7 @@ void RandomHolder::init_allocation(RandomKeyHolder kernel, size_t block_size, si
 
     auto [_grid_size, _block_size] = get_number_blocks_and_threads(init_state, block_size * grid_size);
 
-    init_state<<<_grid_size,_block_size>>>(kernel, device_ptr);
+    init_state<<<_grid_size, _block_size>>>(kernel, device_ptr);
     cudaDeviceSynchronize();
     gpu_check_last_error();
 }

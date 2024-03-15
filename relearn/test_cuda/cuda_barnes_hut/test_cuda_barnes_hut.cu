@@ -23,7 +23,6 @@ static constexpr int number_neurons_for_one_neuron = 1000;
 static constexpr int subtract_for_smaller_gather_for_parallel = 30;
 static constexpr int subtract_for_smaller_gather_for_one_neuron = 400;
 
-
 __global__ void deploy_pick_target(gpu::algorithm::Octree* octree, gpu::algorithm::BarnesHutData* barnes_hut_data, gpu::random::RandomStateData* random_state_data,
     gpu::kernel::Kernel* kernel, uint64_t* picks_gpu) {
 
@@ -36,23 +35,22 @@ __global__ void deploy_pick_target(gpu::algorithm::Octree* octree, gpu::algorith
     extern __shared__ gpu::Vector::CudaDouble3 shared_data[];
     gpu::Vector::CudaDouble3* ptr_shared_target_positions = shared_data;
     int* ptr_shared_number_elements = (int*)&shared_data[number_neurons_for_parallel];
-    
 
-    picks_gpu[thread_id] = gpu::kernel::pick_target(thread_id, 
-                                    octree->get_position_for_signal(SignalType::Excitatory, thread_id),
-                                    root_index,
-                                    barnes_hut_data, 
-                                    SignalType::Excitatory, 
-                                    octree,
-                                    kernel,
-                                    random_state_data,
-                                    ptr_shared_number_elements,
-                                    ptr_shared_target_positions);
+    picks_gpu[thread_id] = gpu::kernel::pick_target(thread_id,
+        octree->get_position_for_signal(SignalType::Excitatory, thread_id),
+        root_index,
+        barnes_hut_data,
+        SignalType::Excitatory,
+        octree,
+        kernel,
+        random_state_data,
+        ptr_shared_number_elements,
+        ptr_shared_target_positions);
 }
 
 __global__ void deploy_acceptance_criterion(double acceptance_criterion, gpu::algorithm::Octree* octree, int number_elements, gpu::kernel::AcceptanceStatus* result_gpu,
     uint64_t source_index, uint64_t target_index) {
-    
+
     auto source_position = octree->position_excitatory_element[source_index];
     auto target_position = octree->position_excitatory_element[target_index];
 
@@ -67,16 +65,16 @@ TEST_F(CudaBarnesHutTest, cudaPickTargetTestNoAutopsyFull) {
     auto barnes_hut_data = gpu::algorithm::create_barnes_hut_data(number_neurons_for_parallel * 2, number_neurons_for_parallel, 1);
     barnes_hut_data->update_kernel_allocation_sizes(number_neurons_for_parallel, max_level);
 
-    auto kernel = OctreeGPUAdapter::get_kernel(); 
+    auto kernel = OctreeGPUAdapter::get_kernel();
 
     uint64_t* picks_gpu = (uint64_t*)cuda_malloc(64 * sizeof(uint64_t));
     uint64_t picks_cpu[64];
 
     deploy_pick_target<<<1, 64, number_neurons_for_parallel * sizeof(gpu::Vector::CudaDouble3) + number_neurons_for_parallel * sizeof(int)>>>((gpu::algorithm::Octree*)octree->get_device_pointer(),
-                                    (gpu::algorithm::BarnesHutData*)barnes_hut_data->get_device_pointer(),
-                                    gpu::random::RandomHolder::get_instance().get_device_pointer(),
-                                    (gpu::kernel::Kernel*)kernel->get_device_pointer(),
-                                    picks_gpu);
+        (gpu::algorithm::BarnesHutData*)barnes_hut_data->get_device_pointer(),
+        gpu::random::RandomHolder::get_instance().get_device_pointer(),
+        (gpu::kernel::Kernel*)kernel->get_device_pointer(),
+        picks_gpu);
     cudaDeviceSynchronize();
     gpu_check_last_error();
 
@@ -94,16 +92,16 @@ TEST_F(CudaBarnesHutTest, cudaPickTargetTestNoAutopsyPartial) {
     auto barnes_hut_data = gpu::algorithm::create_barnes_hut_data(number_neurons_for_parallel * 2, number_neurons_for_parallel - subtract_for_smaller_gather_for_parallel, 1);
     barnes_hut_data->update_kernel_allocation_sizes(number_neurons_for_parallel, max_level);
 
-    auto kernel = OctreeGPUAdapter::get_kernel(); 
+    auto kernel = OctreeGPUAdapter::get_kernel();
 
     uint64_t* picks_gpu = (uint64_t*)cuda_malloc(64 * sizeof(uint64_t));
     uint64_t picks_cpu[64];
 
     deploy_pick_target<<<1, 64, number_neurons_for_parallel * sizeof(gpu::Vector::CudaDouble3) + number_neurons_for_parallel * sizeof(int)>>>((gpu::algorithm::Octree*)octree->get_device_pointer(),
-                                    (gpu::algorithm::BarnesHutData*)barnes_hut_data->get_device_pointer(),
-                                    gpu::random::RandomHolder::get_instance().get_device_pointer(),
-                                    (gpu::kernel::Kernel*)kernel->get_device_pointer(),
-                                    picks_gpu);
+        (gpu::algorithm::BarnesHutData*)barnes_hut_data->get_device_pointer(),
+        gpu::random::RandomHolder::get_instance().get_device_pointer(),
+        (gpu::kernel::Kernel*)kernel->get_device_pointer(),
+        picks_gpu);
     cudaDeviceSynchronize();
     gpu_check_last_error();
 
@@ -122,16 +120,16 @@ TEST_F(CudaBarnesHutTest, cudaPickTargetTestAgainstCPUFull) {
 
     barnes_hut_data->update_kernel_allocation_sizes(number_neurons_for_one_neuron, max_level);
 
-    auto kernel = OctreeGPUAdapter::get_kernel(); 
+    auto kernel = OctreeGPUAdapter::get_kernel();
 
     uint64_t* pick_gpu = (uint64_t*)cuda_malloc(1 * sizeof(uint64_t));
     uint64_t pick_cpu;
 
     deploy_pick_target<<<1, 1, number_neurons_for_parallel * sizeof(gpu::Vector::CudaDouble3) + number_neurons_for_parallel * sizeof(int)>>>((gpu::algorithm::Octree*)octree->get_device_pointer(),
-                                    (gpu::algorithm::BarnesHutData*)barnes_hut_data->get_device_pointer(),
-                                    gpu::random::RandomHolder::get_instance().get_device_pointer(),
-                                    (gpu::kernel::Kernel*)kernel->get_device_pointer(),
-                                    pick_gpu);
+        (gpu::algorithm::BarnesHutData*)barnes_hut_data->get_device_pointer(),
+        gpu::random::RandomHolder::get_instance().get_device_pointer(),
+        (gpu::kernel::Kernel*)kernel->get_device_pointer(),
+        pick_gpu);
     cudaDeviceSynchronize();
     gpu_check_last_error();
 
@@ -148,16 +146,16 @@ TEST_F(CudaBarnesHutTest, cudaPickTargetTestAgainstCPUPartial) {
 
     barnes_hut_data->update_kernel_allocation_sizes(number_neurons_for_one_neuron, max_level);
 
-    auto kernel = OctreeGPUAdapter::get_kernel(); 
+    auto kernel = OctreeGPUAdapter::get_kernel();
 
     uint64_t* pick_gpu = (uint64_t*)cuda_malloc(1 * sizeof(uint64_t));
     uint64_t pick_cpu;
 
     deploy_pick_target<<<1, 1, number_neurons_for_parallel * sizeof(gpu::Vector::CudaDouble3) + number_neurons_for_parallel * sizeof(int)>>>((gpu::algorithm::Octree*)octree->get_device_pointer(),
-                                    (gpu::algorithm::BarnesHutData*)barnes_hut_data->get_device_pointer(),
-                                    gpu::random::RandomHolder::get_instance().get_device_pointer(),
-                                    (gpu::kernel::Kernel*)kernel->get_device_pointer(),
-                                    pick_gpu);
+        (gpu::algorithm::BarnesHutData*)barnes_hut_data->get_device_pointer(),
+        gpu::random::RandomHolder::get_instance().get_device_pointer(),
+        (gpu::kernel::Kernel*)kernel->get_device_pointer(),
+        pick_gpu);
     cudaDeviceSynchronize();
     gpu_check_last_error();
 

@@ -87,7 +87,6 @@ public:
         : struct_dev_ptr((void*)struct_device_ptr) {
     }
 
-    
     /**
      * @param struct_device_pointer Pointer to a CudaStack instance on the gpu
      */

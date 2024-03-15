@@ -11,13 +11,13 @@ NeuronsExtraInfosHandleImpl::NeuronsExtraInfosHandleImpl(NeuronsExtraInfos* _dev
 }
 
 void NeuronsExtraInfosHandleImpl::_init() {
-    void* disable_flags_ptr = execute_and_copy<void*>([=] __device__(NeuronsExtraInfos * extra_infos) { return (void*)&extra_infos->disable_flags; }, /*(neurons::NeuronsExtraInfos*)*/device_ptr);
+    void* disable_flags_ptr = execute_and_copy<void*>([=] __device__(NeuronsExtraInfos * extra_infos) { return (void*)&extra_infos->disable_flags; }, /*(neurons::NeuronsExtraInfos*)*/ device_ptr);
     handle_disable_flags = gpu::Vector::CudaArrayDeviceHandle<UpdateStatus>(disable_flags_ptr);
 
-    void* positions_ptr = execute_and_copy<void*>([=] __device__(NeuronsExtraInfos * extra_infos) { return (void*)&extra_infos->positions; }, /*(neurons::NeuronsExtraInfos*)*/device_ptr);
+    void* positions_ptr = execute_and_copy<void*>([=] __device__(NeuronsExtraInfos * extra_infos) { return (void*)&extra_infos->positions; }, /*(neurons::NeuronsExtraInfos*)*/ device_ptr);
     handle_positions = gpu::Vector::CudaArrayDeviceHandle<double3>(positions_ptr);
 
-    RelearnGPUTypes::number_neurons_type* num_neurons_ptr = execute_and_copy<RelearnGPUTypes::number_neurons_type*>([=] __device__(NeuronsExtraInfos* extra_infos) { return &extra_infos->num_neurons; }, /*(neurons::NeuronsExtraInfos*)*/device_ptr);
+    RelearnGPUTypes::number_neurons_type* num_neurons_ptr = execute_and_copy<RelearnGPUTypes::number_neurons_type*>([=] __device__(NeuronsExtraInfos * extra_infos) { return &extra_infos->num_neurons; }, /*(neurons::NeuronsExtraInfos*)*/ device_ptr);
     handle_num_neurons = num_neurons_ptr;
 }
 
@@ -63,7 +63,7 @@ void NeuronsExtraInfosHandleImpl::set_positions(const std::vector<gpu::Vec3d>& p
 
     std::vector<double3> pos_gpu(pos.size());
     std::transform(pos.begin(), pos.end(), pos_gpu.begin(), convert);
-        
+
     handle_positions.copy_to_device(pos_gpu);
 }
 

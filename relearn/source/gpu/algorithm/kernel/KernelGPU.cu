@@ -12,13 +12,13 @@
 
 namespace gpu::kernel {
 
-KernelHandleImpl::KernelHandleImpl(Kernel* _dev_ptr) 
+KernelHandleImpl::KernelHandleImpl(Kernel* _dev_ptr)
     : device_ptr(_dev_ptr) {
     _init();
 }
 
 void KernelHandleImpl::_init() {
-    handle_currently_used_kernel = execute_and_copy<KernelType*>([=] __device__(Kernel* kernel) { return &kernel->currently_used_kernel; }, device_ptr);
+    handle_currently_used_kernel = execute_and_copy<KernelType*>([=] __device__(Kernel * kernel) { return &kernel->currently_used_kernel; }, device_ptr);
 }
 
 void KernelHandleImpl::set_kernel_type(const KernelType kernel_type) {

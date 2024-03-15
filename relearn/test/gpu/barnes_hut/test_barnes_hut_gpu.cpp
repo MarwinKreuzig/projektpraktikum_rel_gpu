@@ -1,5 +1,5 @@
 /*
-* This file is part of the RELeARN software developed at Technical University Darmstadt
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
  *
  * Copyright (c) 2020, Technical University of Darmstadt, Germany
  *
@@ -97,13 +97,12 @@ TEST_F(BarnesHutTestGpu, testBarnesHutUpdateConnectivity) {
     octree_shared_ptr->initializes_leaf_nodes(neurons_to_place.size());
 
     octree_shared_ptr->construct_on_gpu(neurons_to_place.size());
-    
+
     auto cast = std::static_pointer_cast<OctreeImplementation<BarnesHutCell>>(octree_shared_ptr);
     auto barnes_hut_gpu = std::make_shared<BarnesHutGPU>(std::move(cast));
     auto cast2 = std::static_pointer_cast<OctreeImplementation<BarnesHutCell>>(octree_shared_ptr);
     auto barnes_hut_cpu = std::make_shared<BarnesHut>(std::move(cast2));
 
-    
     auto axs = SynapticElementsAdapter::create_axons(neurons_to_place.size(), 5, 10, mt);
     auto dends_ex = SynapticElementsAdapter::create_dendrites(neurons_to_place.size(), SignalType::Excitatory, 0, 2, mt);
     auto dends_in = SynapticElementsAdapter::create_dendrites(neurons_to_place.size(), SignalType::Inhibitory, 0, 2, mt);

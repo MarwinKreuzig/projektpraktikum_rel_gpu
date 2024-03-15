@@ -77,13 +77,13 @@ public:
     }
 
     /**
-    * @brief Get the handle to the GPU version of this class
-    * @return The GPU Handle
-    */
-    [[nodiscard]] static const std::shared_ptr<gpu::kernel::WeibullDistributionKernelHandle> &get_gpu_handle() {
+     * @brief Get the handle to the GPU version of this class
+     * @return The GPU Handle
+     */
+    [[nodiscard]] static const std::shared_ptr<gpu::kernel::WeibullDistributionKernelHandle>& get_gpu_handle() {
         RelearnException::check(CudaHelper::is_cuda_available(), "WeibullDistributionKernel::get_gpu_handle: GPU not supported");
-        
-        static std::shared_ptr<gpu::kernel::WeibullDistributionKernelHandle> gpu_handle{gpu::kernel::create_weibull(default_k, default_b)};
+
+        static std::shared_ptr<gpu::kernel::WeibullDistributionKernelHandle> gpu_handle{ gpu::kernel::create_weibull(default_k, default_b) };
 
         return gpu_handle;
     }

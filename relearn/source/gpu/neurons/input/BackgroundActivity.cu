@@ -69,7 +69,7 @@ std::vector<double> BackgroundActivityHandleImpl::get_background_activity() {
 }
 
 void BackgroundActivityHandleImpl::set_extra_infos(const std::unique_ptr<gpu::neurons::NeuronsExtraInfosHandle>& extra_infos_handle) {
-    cuda_generic_kernel<<<1, 1>>>([=] __device__(BackgroundActivity * calculator, gpu::neurons::NeuronsExtraInfos * extra_infos) { calculator->set_extra_infos(extra_infos); }, (BackgroundActivity*)background_calculator, (neurons::NeuronsExtraInfos*)static_cast<neurons::NeuronsExtraInfosHandleImpl*>(extra_infos_handle.get())->get_device_pointer());
+    cuda_generic_kernel<<<1, 1>>>([=] __device__(BackgroundActivity * calculator, gpu::neurons::NeuronsExtraInfos * extra_infos) { calculator->set_extra_infos(extra_infos); }, (BackgroundActivity*)background_calculator, (neurons::NeuronsExtraInfos*)(extra_infos_handle.get()->get_device_pointer()));
 }
 
 void BackgroundActivityHandleImpl::update_input_for_all_neurons_on_gpu(RelearnGPUTypes::step_type step, RelearnGPUTypes::number_neurons_type number_local_neurons) {

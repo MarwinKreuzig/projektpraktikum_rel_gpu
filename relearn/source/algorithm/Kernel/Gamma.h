@@ -80,13 +80,13 @@ public:
     }
 
     /**
-    * @brief Get the handle to the GPU version of this class
-    * @return The GPU Handle
-    */
-    [[nodiscard]] static const std::shared_ptr<gpu::kernel::GammaDistributionKernelHandle> &get_gpu_handle() {
+     * @brief Get the handle to the GPU version of this class
+     * @return The GPU Handle
+     */
+    [[nodiscard]] static const std::shared_ptr<gpu::kernel::GammaDistributionKernelHandle>& get_gpu_handle() {
         RelearnException::check(CudaHelper::is_cuda_available(), "GammaDistributionKernel::get_gpu_handle: GPU not supported");
-        
-        static std::shared_ptr<gpu::kernel::GammaDistributionKernelHandle> gpu_handle{gpu::kernel::create_gamma(default_k, default_theta)};
+
+        static std::shared_ptr<gpu::kernel::GammaDistributionKernelHandle> gpu_handle{ gpu::kernel::create_gamma(default_k, default_theta) };
 
         return gpu_handle;
     }

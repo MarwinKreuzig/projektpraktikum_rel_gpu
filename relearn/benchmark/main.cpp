@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     ::benchmark::Initialize(&argc, argv);
     if (::benchmark::ReportUnrecognizedArguments(argc, argv))
         return 1;
-    
+
     holder_bh_cells.resize(1024 * 1024 * 4);
     MemoryHolder<BarnesHutCell>::init(holder_bh_cells);
 
