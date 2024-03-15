@@ -171,7 +171,7 @@ public:
 
             std::vector<gpu::Vec3d> pos_gpu(positions.size());
             std::transform(positions.begin(), positions.end(), pos_gpu.begin(), convert);
-            
+
             gpu_handle->set_positions(pos_gpu);
         }
     }

@@ -9,23 +9,23 @@
 namespace gpu::models {
 
 struct SynapticElements {
-/**
-* Struct representing SynapticElements on the gpu. Contains most of the data contained by the original cpu class
-*/
+    /**
+     * Struct representing SynapticElements on the gpu. Contains most of the data contained by the original cpu class
+     */
 
     ElementType type;
     RelearnGPUTypes::number_neurons_type size;
 
     gpu::Vector::CudaArray<double> grown_elements;
     gpu::Vector::CudaArray<unsigned int> connected_elements;
-    gpu::Vector::CudaArray<SignalType> signal_types; 
+    gpu::Vector::CudaArray<SignalType> signal_types;
 
     /**
-     * @brief Constructs the SynapticElements on the GPU 
+     * @brief Constructs the SynapticElements on the GPU
      * @param type The element type of these synaptic elements
      */
     __device__ SynapticElements(const ElementType type)
-        : type(type) {}
+        : type(type) { }
 
     /**
      * @brief Returns the number of free elements for the specified neuron id
@@ -39,12 +39,12 @@ struct SynapticElements {
 };
 
 class SynapticElementsHandleImpl : public SynapticElementsHandle {
-/**
-* Implementation of the handle for the cpu that controls the gpu object
-*/
+    /**
+     * Implementation of the handle for the cpu that controls the gpu object
+     */
 
 public:
-     /**
+    /**
      * @brief Constructs the SynapticElementsHandle Implementation
      * @param _dev_ptr The pointer to the SynapticElements object on the GPU
      * @param type The element type the SynapticElements belong to
@@ -52,10 +52,10 @@ public:
     SynapticElementsHandleImpl(SynapticElements* _dev_ptr, const ElementType type);
 
     /**
-    * @brief Init function called by the constructor, has to be public in order to be allowed to use device lamdas in it, do not call from outside
-    */
+     * @brief Init function called by the constructor, has to be public in order to be allowed to use device lamdas in it, do not call from outside
+     */
     void _init();
-    
+
     /**
      * @brief Copies the initial values from the CPU version of the class
      * @param number_neurons The number of neurons that should be stored
@@ -89,7 +89,7 @@ public:
      */
     void update_connected_elements(const RelearnGPUTypes::neuron_id_type neuron_id, const int delta) override;
 
-     /**
+    /**
      * @brief Sets the signal types on the GPU
      * @param types The signal types to copy over to the GPU
      */

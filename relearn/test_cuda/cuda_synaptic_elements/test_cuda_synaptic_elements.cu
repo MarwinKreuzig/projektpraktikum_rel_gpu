@@ -8,7 +8,6 @@
  *
  */
 
-
 #include "test_cuda_synaptic_elements.cuh"
 
 #include "../harness/adapter/random/RandomAdapter.h"
@@ -24,7 +23,6 @@ __global__ void do_get_free_elements(gpu::models::SynapticElements* syn, unsigne
     _return[thread_id] = syn->get_free_elements(thread_id);
 }
 
-
 TEST_F(CudaSynapticElementsTest, cudaSynapticElementsTest) {
     auto axons = gpu::models::create_synaptic_elements(ElementType::Axon);
 
@@ -32,10 +30,10 @@ TEST_F(CudaSynapticElementsTest, cudaSynapticElementsTest) {
     for (int i = 0; i < num_neurons; i++) {
         grown_elements.push_back(RandomAdapter::get_random_double(1.0, 5.0, this->mt));
     }
-    
+
     axons->init(num_neurons, grown_elements);
     unsigned int* free_elements_gpu = (unsigned int*)cuda_malloc(sizeof(unsigned int) * num_neurons);
-    do_get_free_elements<<<1,num_neurons>>>((gpu::models::SynapticElements*)axons->get_device_pointer(), free_elements_gpu);
+    do_get_free_elements<<<1, num_neurons>>>((gpu::models::SynapticElements*)axons->get_device_pointer(), free_elements_gpu);
     unsigned int free_elements_cpu[num_neurons];
     cuda_memcpy_to_host(free_elements_gpu, &free_elements_cpu, sizeof(unsigned int), num_neurons);
 
@@ -49,7 +47,7 @@ TEST_F(CudaSynapticElementsTest, cudaSynapticElementsTest) {
     axons->update_connected_elements(neuron_to_connect, 1);
     axons->update_grown_elements(neuron_to_connect, -1);
 
-    do_get_free_elements<<<1,num_neurons>>>((gpu::models::SynapticElements*)axons->get_device_pointer(), free_elements_gpu);
+    do_get_free_elements<<<1, num_neurons>>>((gpu::models::SynapticElements*)axons->get_device_pointer(), free_elements_gpu);
     cuda_memcpy_to_host(free_elements_gpu, &free_elements_cpu, sizeof(unsigned int), num_neurons);
     grown_elements[neuron_to_connect] = grown_elements[neuron_to_connect] - 2;
     for (int i = 0; i < num_neurons; i++) {
@@ -64,7 +62,7 @@ TEST_F(CudaSynapticElementsTest, cudaSynapticElementsTest) {
 
     axons->create_neurons(num_neurons + 50, new_grown_elements);
     unsigned int* new_free_elements_gpu = (unsigned int*)cuda_malloc(sizeof(unsigned int) * (num_neurons + 50));
-    do_get_free_elements<<<1,num_neurons + 50>>>((gpu::models::SynapticElements*)axons->get_device_pointer(), new_free_elements_gpu);
+    do_get_free_elements<<<1, num_neurons + 50>>>((gpu::models::SynapticElements*)axons->get_device_pointer(), new_free_elements_gpu);
     unsigned int new_free_elements_cpu[num_neurons + 50];
     cuda_memcpy_to_host(new_free_elements_gpu, &new_free_elements_cpu, sizeof(unsigned int), num_neurons + 50);
     new_grown_elements[neuron_to_connect] = new_grown_elements[neuron_to_connect] - 1;

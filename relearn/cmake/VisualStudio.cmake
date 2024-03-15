@@ -13,6 +13,19 @@ endif ()
 if (WIN32) # GPU
     list(APPEND relearn_gpu_additional_files "gpu/RelearnGPUException.h")
     list(APPEND relearn_gpu_additional_files "gpu/Commons.cuh")
+
+    list(APPEND relearn_gpu_additional_files "gpu/algorithm/BarnesHutData.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/algorithm/BarnesHutGPU.h")
+    list(APPEND relearn_gpu_additional_files "gpu/algorithm/BarnesHutKernel.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/algorithm/BarnesHutKernel.h")
+
+    list(APPEND relearn_gpu_additional_files "gpu/algorithm/kernel/GammaGPU.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/algorithm/kernel/GaussianGPU.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/algorithm/kernel/KernelGPU.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/algorithm/kernel/KernelGPUInterface.h")
+    list(APPEND relearn_gpu_additional_files "gpu/algorithm/kernel/LinearGPU.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/algorithm/kernel/WeibullGPU.cuh")
+
     list(APPEND relearn_gpu_additional_files "gpu/neurons/NeuronsExtraInfos.cuh")
     list(APPEND relearn_gpu_additional_files "gpu/neurons/input/BackgroundActivity.cuh")
     list(APPEND relearn_gpu_additional_files "gpu/neurons/models/AEIFModel.cuh")
@@ -20,15 +33,24 @@ if (WIN32) # GPU
     list(APPEND relearn_gpu_additional_files "gpu/neurons/models/IzhikevichModel.cuh")
     list(APPEND relearn_gpu_additional_files "gpu/neurons/models/NeuronModel.cuh")
     list(APPEND relearn_gpu_additional_files "gpu/neurons/models/PoissonModel.cuh")
-    list(APPEND relearn_gpu_additional_files "gpu/structure/CudaVector.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/neurons/models/SynapticElements.cuh")
+
     list(APPEND relearn_gpu_additional_files "gpu/structure/CudaArray.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/structure/CudaCoalescedStack.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/structure/CudaDouble3.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/structure/CudaStack.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/structure/CudaVector.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/structure/GpuDataStructures.h")
     list(APPEND relearn_gpu_additional_files "gpu/structure/Octree.cuh")
     list(APPEND relearn_gpu_additional_files "gpu/structure/OctreeCPUCopy.h")
+
     list(APPEND relearn_gpu_additional_files "gpu/utils/CudaHelper.h")
+    list(APPEND relearn_gpu_additional_files "gpu/utils/CudaMath.h")
     list(APPEND relearn_gpu_additional_files "gpu/utils/GpuTypes.h")
     list(APPEND relearn_gpu_additional_files "gpu/utils/Interface.h")
     list(APPEND relearn_gpu_additional_files "gpu/utils/Macros.h")
     list(APPEND relearn_gpu_additional_files "gpu/utils/Random.cuh")
+    list(APPEND relearn_gpu_additional_files "gpu/utils/RandomNew.cuh")
 endif ()
 
 if (WIN32) # Harness

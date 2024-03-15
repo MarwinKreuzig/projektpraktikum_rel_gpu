@@ -25,19 +25,20 @@
 namespace gpu::kernel {
 
 struct WeibullDistributionKernel {
-/**
-* Struct representing WeibullDistributionKernel on the gpu. Contains most of the data contained by the original cpu class
-*/
+    /**
+     * Struct representing WeibullDistributionKernel on the gpu. Contains most of the data contained by the original cpu class
+     */
     double k;
     double b;
 
     /**
-     * @brief Constructs a WeibullDistributionKernel on the GPU 
+     * @brief Constructs a WeibullDistributionKernel on the GPU
      * @param k The k algorithm parameter
      * @param b The b algorithm parameter
      */
     __device__ WeibullDistributionKernel(double k, double b)
-        : k(k), b(b) {}
+        : k(k)
+        , b(b) { }
 
     /**
      * @brief Calculates the attractiveness to connect on the basis of the Weibull distribution
@@ -65,42 +66,41 @@ struct WeibullDistributionKernel {
 
         return result;
     }
-    
 };
 
 class WeibullDistributionKernelHandleImpl : public WeibullDistributionKernelHandle {
-/**
-* Implementation of the handle for the cpu that controls the gpu object
-*/
+    /**
+     * Implementation of the handle for the cpu that controls the gpu object
+     */
 
 public:
-     /**
+    /**
      * @brief Constructs the WeibullDistributionKernelHandle Implementation
      * @param _dev_ptr The pointer to the WeibullDistributionKernel object on the GPU
      */
     WeibullDistributionKernelHandleImpl(WeibullDistributionKernel* _dev_ptr);
 
     /**
-    * @brief Init function called by the constructor, has to be public in order to be allowed to use device lamdas in it, do not call from outside
-    */
+     * @brief Init function called by the constructor, has to be public in order to be allowed to use device lamdas in it, do not call from outside
+     */
     void _init();
 
     /**
-    * @brief Sets the k kernel parameter used in calculation
-    * @param k The k kernel parameter used in calculation
-    */
+     * @brief Sets the k kernel parameter used in calculation
+     * @param k The k kernel parameter used in calculation
+     */
     void set_k(const double k) override;
 
     /**
-    * @brief Sets the b kernel parameter used in calculation
-    * @param b The b kernel parameter used in calculation
-    */
+     * @brief Sets the b kernel parameter used in calculation
+     * @param b The b kernel parameter used in calculation
+     */
     void set_b(const double b) override;
 
     /**
-    * @brief Returns the pointer to the WeibullDistributionKernel stored on the GPU
-    * @return The pointer to the WeibullDistributionKernel stored on the GPU
-    */
+     * @brief Returns the pointer to the WeibullDistributionKernel stored on the GPU
+     * @return The pointer to the WeibullDistributionKernel stored on the GPU
+     */
     [[nodiscard]] void* get_device_pointer() override;
 
 private:

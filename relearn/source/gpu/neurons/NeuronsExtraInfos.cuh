@@ -12,7 +12,7 @@ struct NeuronsExtraInfos {
      * Struct representing NeuronsExtraInfos on the gpu. Contains most of the data contained by the original cpu class
      */
 
-    RelearnGPUTypes::number_neurons_type num_neurons{0};
+    RelearnGPUTypes::number_neurons_type num_neurons{ 0 };
 
     gpu::Vector::CudaArray<UpdateStatus> disable_flags;
 
@@ -31,8 +31,8 @@ public:
     NeuronsExtraInfosHandleImpl(NeuronsExtraInfos* _dev_ptr);
 
     /**
-    * @brief Init function called by the constructor, has to be public in order to be allowed to use device lamdas in it, do not call from outside
-    */
+     * @brief Init function called by the constructor, has to be public in order to be allowed to use device lamdas in it, do not call from outside
+     */
     void _init();
 
     /**

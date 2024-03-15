@@ -12,22 +12,23 @@ std::unique_ptr<SynapticElementsHandle> create_synaptic_elements(const ElementTy
     return std::move(a);
 }
 
-SynapticElementsHandleImpl::SynapticElementsHandleImpl(SynapticElements* _dev_ptr, const ElementType type) 
-    : device_ptr(_dev_ptr), type(type) {
+SynapticElementsHandleImpl::SynapticElementsHandleImpl(SynapticElements* _dev_ptr, const ElementType type)
+    : device_ptr(_dev_ptr)
+    , type(type) {
     _init();
 }
 
 void SynapticElementsHandleImpl::_init() {
-    void* grown_elements_ptr = execute_and_copy<void*>([=] __device__(SynapticElements* synaptic_elements) { return (void*)&synaptic_elements->grown_elements; }, /*(neurons::NeuronsExtraInfos*)*/device_ptr);
+    void* grown_elements_ptr = execute_and_copy<void*>([=] __device__(SynapticElements * synaptic_elements) { return (void*)&synaptic_elements->grown_elements; }, /*(neurons::NeuronsExtraInfos*)*/ device_ptr);
     handle_grown_elements = gpu::Vector::CudaArrayDeviceHandle<double>(grown_elements_ptr);
 
-    void* connected_elements_ptr = execute_and_copy<void*>([=] __device__(SynapticElements* synaptic_elements) { return (void*)&synaptic_elements->connected_elements; }, /*(neurons::NeuronsExtraInfos*)*/device_ptr);
+    void* connected_elements_ptr = execute_and_copy<void*>([=] __device__(SynapticElements * synaptic_elements) { return (void*)&synaptic_elements->connected_elements; }, /*(neurons::NeuronsExtraInfos*)*/ device_ptr);
     handle_connected_elements = gpu::Vector::CudaArrayDeviceHandle<unsigned int>(connected_elements_ptr);
 
-    void* signal_types_ptr = execute_and_copy<void*>([=] __device__(SynapticElements* synaptic_elements) { return (void*)&synaptic_elements->signal_types; }, /*(neurons::NeuronsExtraInfos*)*/device_ptr);
+    void* signal_types_ptr = execute_and_copy<void*>([=] __device__(SynapticElements * synaptic_elements) { return (void*)&synaptic_elements->signal_types; }, /*(neurons::NeuronsExtraInfos*)*/ device_ptr);
     handle_signal_types = gpu::Vector::CudaArrayDeviceHandle<SignalType>(signal_types_ptr);
 
-    RelearnGPUTypes::number_neurons_type* size_ptr = execute_and_copy<RelearnGPUTypes::number_neurons_type*>([=] __device__(SynapticElements* synaptic_elements) { return &synaptic_elements->size; }, /*(neurons::NeuronsExtraInfos*)*/device_ptr);
+    RelearnGPUTypes::number_neurons_type* size_ptr = execute_and_copy<RelearnGPUTypes::number_neurons_type*>([=] __device__(SynapticElements * synaptic_elements) { return &synaptic_elements->size; }, /*(neurons::NeuronsExtraInfos*)*/ device_ptr);
     handle_size = size_ptr;
 }
 

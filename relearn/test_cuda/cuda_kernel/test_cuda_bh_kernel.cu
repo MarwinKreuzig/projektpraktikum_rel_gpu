@@ -25,7 +25,7 @@ static constexpr double default_cutoff = std::numeric_limits<double>::infinity()
 
 static constexpr double default_b = 1.0;
 
-__global__ void deploy_kernel(uint64_t source_index, gpu::Vector::CudaDouble3 source_position, uint64_t target_index, int number_elements, 
+__global__ void deploy_kernel(uint64_t source_index, gpu::Vector::CudaDouble3 source_position, uint64_t target_index, int number_elements,
     gpu::Vector::CudaDouble3 target_position, gpu::kernel::Kernel* kernel, double* result) {
 
     result[0] = kernel->calculate_attractiveness_to_connect(source_index, source_position, target_index, number_elements, target_position);
@@ -84,7 +84,6 @@ double precompute_linear(double cutoff_point, int number_elements, gpu::Vector::
     const auto sum = xx + yy + zz;
     const auto x = sqrt(sum);
 
-
     if (x > cutoff_point) {
         return 0.0;
     }
@@ -122,7 +121,7 @@ TEST_F(CudaKernelTest, cudaKernelTestGamma) {
     auto linear = gpu::kernel::create_linear(default_cutoff);
     auto weibull = gpu::kernel::create_weibull(default_k, default_b);
 
-    auto kernel = gpu::kernel::create_kernel(gamma->get_device_pointer(), gaussian->get_device_pointer(), linear->get_device_pointer(), weibull->get_device_pointer()); 
+    auto kernel = gpu::kernel::create_kernel(gamma->get_device_pointer(), gaussian->get_device_pointer(), linear->get_device_pointer(), weibull->get_device_pointer());
 
     double* result = (double*)cuda_malloc(1 * sizeof(double));
     double result_cpu[1];
@@ -168,7 +167,7 @@ TEST_F(CudaKernelTest, cudaKernelTestGaussian) {
     auto linear = gpu::kernel::create_linear(default_cutoff);
     auto weibull = gpu::kernel::create_weibull(default_k, default_b);
 
-    auto kernel = gpu::kernel::create_kernel(gamma->get_device_pointer(), gaussian->get_device_pointer(), linear->get_device_pointer(), weibull->get_device_pointer()); 
+    auto kernel = gpu::kernel::create_kernel(gamma->get_device_pointer(), gaussian->get_device_pointer(), linear->get_device_pointer(), weibull->get_device_pointer());
 
     double* result = (double*)cuda_malloc(1 * sizeof(double));
     double result_cpu[1];
@@ -215,7 +214,7 @@ TEST_F(CudaKernelTest, cudaKernelTestLinear) {
     auto linear = gpu::kernel::create_linear(default_cutoff);
     auto weibull = gpu::kernel::create_weibull(default_k, default_b);
 
-    auto kernel = gpu::kernel::create_kernel(gamma->get_device_pointer(), gaussian->get_device_pointer(), linear->get_device_pointer(), weibull->get_device_pointer()); 
+    auto kernel = gpu::kernel::create_kernel(gamma->get_device_pointer(), gaussian->get_device_pointer(), linear->get_device_pointer(), weibull->get_device_pointer());
 
     double* result = (double*)cuda_malloc(1 * sizeof(double));
     double result_cpu[1];
@@ -271,7 +270,7 @@ TEST_F(CudaKernelTest, cudaKernelTestWeibull) {
     auto linear = gpu::kernel::create_linear(default_cutoff);
     auto weibull = gpu::kernel::create_weibull(default_k, default_b);
 
-    auto kernel = gpu::kernel::create_kernel(gamma->get_device_pointer(), gaussian->get_device_pointer(), linear->get_device_pointer(), weibull->get_device_pointer()); 
+    auto kernel = gpu::kernel::create_kernel(gamma->get_device_pointer(), gaussian->get_device_pointer(), linear->get_device_pointer(), weibull->get_device_pointer());
 
     double* result = (double*)cuda_malloc(1 * sizeof(double));
     double result_cpu[1];

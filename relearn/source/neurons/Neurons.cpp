@@ -319,7 +319,6 @@ void Neurons::create_neurons(const number_neurons_type creation_count) {
     if (CudaHelper::is_cuda_available()) {
         global_tree->update_gpu_octree_structure();
     }
-    
 
     number_neurons = new_size;
 }

@@ -14,7 +14,7 @@ if (CUDA_FOUND)
             structure/Octree.cuh
 
             structure/OctreeCPUCopy.h
-            
+
             algorithm/BarnesHutKernel.h
             algorithm/BarnesHutData.cuh
             algorithm/kernel/KernelGPU.cuh
@@ -29,7 +29,7 @@ if (CUDA_FOUND)
     target_include_directories(relearn_gpu PRIVATE ../shared)
 
     target_compile_features(relearn_gpu PRIVATE cxx_std_17 cuda_std_17)
-    
+
     # Watch the -G for benchmarks and stuff cause it makes things slower
     target_compile_options(relearn_gpu PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
             --expt-relaxed-constexpr --expt-extended-lambda -rdc=true
@@ -57,7 +57,7 @@ if (CUDA_FOUND)
             neurons/models/PoissonModel.cu
             utils/Random.cu
             RelearnGPUException.cu
-            
+
             # for visual studio
             ${relearn_gpu_additional_files})
 

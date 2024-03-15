@@ -1,12 +1,12 @@
 /*
-* This file is part of the RELeARN software developed at Technical University Darmstadt
-*
-* Copyright (c) 2020, Technical University of Darmstadt, Germany
-*
-* This software may be modified and distributed under the terms of a BSD-style license.
-* See the LICENSE file in the base directory for details.
-*
-*/
+ * This file is part of the RELeARN software developed at Technical University Darmstadt
+ *
+ * Copyright (c) 2020, Technical University of Darmstadt, Germany
+ *
+ * This software may be modified and distributed under the terms of a BSD-style license.
+ * See the LICENSE file in the base directory for details.
+ *
+ */
 
 #include "../benchmark/main.h"
 
@@ -24,47 +24,44 @@
 #include "gpu/utils/GpuTypes.h"
 
 /**
-* @brief Tests the overhead of parsing and copying the cpu octree to the gpu
-*/
+ * @brief Tests the overhead of parsing and copying the cpu octree to the gpu
+ */
 static void BM_octree_update(benchmark::State& state) {
-   using number_neurons_type = RelearnTypes::number_neurons_type;
-   std::mt19937 mt;
-   const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(mt);
-   const auto level_of_branch_nodes = SimulationAdapter::get_small_refinement_level(mt);
+    using number_neurons_type = RelearnTypes::number_neurons_type;
+    std::mt19937 mt;
+    const auto& [min, max] = SimulationAdapter::get_random_simulation_box_size(mt);
+    const auto level_of_branch_nodes = SimulationAdapter::get_small_refinement_level(mt);
 
-   OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
+    OctreeImplementation<BarnesHutCell> octree(min, max, level_of_branch_nodes);
 
-   number_neurons_type number_neurons = state.range(0);
-   auto num_additional_ids = NeuronIdAdapter::get_random_number_neurons(mt);
+    number_neurons_type number_neurons = state.range(0);
+    auto num_additional_ids = NeuronIdAdapter::get_random_number_neurons(mt);
 
-   std::vector<std::pair<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
+    std::vector<std::pair<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
 
+    const auto my_rank = MPIWrapper::get_my_rank();
+    for (const auto& [position, id] : neurons_to_place) {
+        octree.insert(position, id);
+    }
 
-   const auto my_rank = MPIWrapper::get_my_rank();
-   for (const auto& [position, id] : neurons_to_place) {
-       octree.insert(position, id);
-   }
+    octree.initializes_leaf_nodes(neurons_to_place.size());
 
-   octree.initializes_leaf_nodes(neurons_to_place.size());
+    for (auto _ : state) {
+        octree.construct_on_gpu(neurons_to_place.size());
+        const std::shared_ptr<gpu::algorithm::OctreeHandle> gpu_handle = octree.get_gpu_handle();
+        gpu_handle->update_virtual_neurons();
 
+        state.PauseTiming();
 
-   for (auto _ : state) {
-       octree.construct_on_gpu(neurons_to_place.size());
-       const std::shared_ptr<gpu::algorithm::OctreeHandle> gpu_handle = octree.get_gpu_handle();
-       gpu_handle->update_virtual_neurons();
+        auto sum = 0.0;
+        const auto& num_neurons = gpu_handle->get_number_neurons();
+        sum += num_neurons;
 
-       state.PauseTiming();
+        benchmark::DoNotOptimize(sum);
+        state.ResumeTiming();
+    }
 
-       auto sum = 0.0;
-       const auto& num_neurons = gpu_handle->get_number_neurons();
-       sum += num_neurons;
-
-       benchmark::DoNotOptimize(sum);
-       state.ResumeTiming();
-   }
-
-   MemoryHolder<BarnesHutCell>::make_all_available();
-
+    MemoryHolder<BarnesHutCell>::make_all_available();
 }
 
 /**
@@ -84,13 +81,11 @@ static void BM_octree_copy(benchmark::State& state) {
 
     std::vector<std::pair<Vec3d, NeuronID>> neurons_to_place = NeuronsAdapter::generate_random_neurons(min, max, number_neurons, number_neurons + num_additional_ids, mt);
 
-
     for (const auto& [position, id] : neurons_to_place) {
         octree.insert(position, id);
     }
 
     octree.initializes_leaf_nodes(neurons_to_place.size());
-
 
     for (auto _ : state) {
         octree.construct_on_gpu(neurons_to_place.size());

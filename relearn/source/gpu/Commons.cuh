@@ -124,11 +124,11 @@ inline void* cuda_malloc(size_t size, void* devPtr) {
 
 inline void* cuda_malloc(size_t size) {
     void* devPtrMalloc;
-    //cudaDeviceSynchronize();
+    // cudaDeviceSynchronize();
     gpu_check_last_error();
     cudaMalloc(&devPtrMalloc, size);
     gpu_check_last_error();
-    //cudaDeviceSynchronize();
+    // cudaDeviceSynchronize();
 
     return devPtrMalloc;
 }
@@ -196,7 +196,7 @@ __host__ std::tuple<unsigned int, unsigned int> get_number_blocks_and_threads(fu
     int threads_per_block = get_number_threads(kernel, number_neurons);
     int blocks_per_grid = get_number_blocks(threads_per_block, number_neurons);
 
-    return {blocks_per_grid, threads_per_block};
+    return { blocks_per_grid, threads_per_block };
 }
 
 template <typename func_type>

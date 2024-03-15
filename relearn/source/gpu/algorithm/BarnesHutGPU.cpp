@@ -17,13 +17,12 @@ using number_elements_type = RelearnGPUTypes::number_elements_type;
 using neuron_id_type = RelearnGPUTypes::neuron_id_type;
 
 BarnesHutGPU::BarnesHutGPU(const std::shared_ptr<OctreeImplementation<BarnesHutCell>>& octree)
-    : BarnesHut(octree) 
-{
+    : BarnesHut(octree) {
     ElementType element_type;
     if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
-		    element_type = ElementType::Dendrite;
+        element_type = ElementType::Dendrite;
     } else {
-		    element_type = ElementType::Axon;
+        element_type = ElementType::Axon;
     }
 
     // Determine initial synapse space to allocate
@@ -37,15 +36,14 @@ BarnesHutGPU::BarnesHutGPU(const std::shared_ptr<OctreeImplementation<BarnesHutC
     gpu_handle = gpu::algorithm::create_barnes_hut_data(synapse_space, global_tree->get_leaf_nodes().size());
 }
 
-BarnesHutGPU::BarnesHutGPU(const std::shared_ptr<OctreeImplementation<BarnesHutCell>>& octree, uint64_t num_nodes_gathered_before_pick, 
-    RelearnGPUTypes::number_neurons_type neurons_per_thread) 
-    : BarnesHut(octree) 
-{
+BarnesHutGPU::BarnesHutGPU(const std::shared_ptr<OctreeImplementation<BarnesHutCell>>& octree, uint64_t num_nodes_gathered_before_pick,
+    RelearnGPUTypes::number_neurons_type neurons_per_thread)
+    : BarnesHut(octree) {
     ElementType element_type;
     if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
-		    element_type = ElementType::Dendrite;
+        element_type = ElementType::Dendrite;
     } else {
-		    element_type = ElementType::Axon;
+        element_type = ElementType::Axon;
     }
 
     // Determine initial synapse space to allocate
@@ -61,13 +59,13 @@ BarnesHutGPU::BarnesHutGPU(const std::shared_ptr<OctreeImplementation<BarnesHutC
 
 void BarnesHutGPU::update_leaf_nodes() {
     gpu::kernel::update_leaf_nodes(global_tree->get_gpu_handle()->get_device_pointer(),
-                                   axons->get_gpu_handle()->get_device_pointer(),
-                                   excitatory_dendrites->get_gpu_handle()->get_device_pointer(),
-                                   inhibitory_dendrites->get_gpu_handle()->get_device_pointer(),
-                                   extra_infos->get_gpu_handle()->get_device_pointer(),
-                                   global_tree->get_leaf_nodes().size(),
-                                   update_leaf_nodes_kernel_grid_size,
-                                   update_leaf_nodes_kernel_block_size);
+        axons->get_gpu_handle()->get_device_pointer(),
+        excitatory_dendrites->get_gpu_handle()->get_device_pointer(),
+        inhibitory_dendrites->get_gpu_handle()->get_device_pointer(),
+        extra_infos->get_gpu_handle()->get_device_pointer(),
+        global_tree->get_leaf_nodes().size(),
+        update_leaf_nodes_kernel_grid_size,
+        update_leaf_nodes_kernel_block_size);
 }
 
 void BarnesHutGPU::update_octree() {
@@ -81,11 +79,11 @@ void BarnesHutGPU::update_octree() {
 
     ElementType element_type;
     if (Cell<AdditionalCellAttributes>::has_excitatory_dendrite) {
-		    element_type = ElementType::Dendrite;
+        element_type = ElementType::Dendrite;
     } else {
-		    element_type = ElementType::Axon;
+        element_type = ElementType::Axon;
     }
-    
+
     number_elements_type num_free_elements_ex = global_tree->get_gpu_handle()->get_total_excitatory_elements();
     number_elements_type num_free_elements_in = global_tree->get_gpu_handle()->get_total_inhibitory_elements();
     unsigned int new_synapse_space = num_free_elements_ex + num_free_elements_in;
@@ -102,13 +100,13 @@ void BarnesHutGPU::update_octree() {
         gpu_handle->update_kernel_allocation_sizes(this->number_neurons, global_tree->get_max_level());
     }
 
-    //Once everything is on the GPU, these will not have to be given as a return parameter and they should be directly processed on the GPU
+    // Once everything is on the GPU, these will not have to be given as a return parameter and they should be directly processed on the GPU
     std::vector<gpu::Synapse> gpu_synapses = gpu::kernel::update_connectivity_gpu(gpu_handle.get(),
-                                                                                  global_tree->get_gpu_handle()->get_device_pointer(),
-                                                                                  axons->get_gpu_handle()->get_device_pointer(),
-                                                                                  extra_infos->get_gpu_handle()->get_device_pointer(),
-                                                                                  Kernel<BarnesHutCell>::get_gpu_handle()->get_device_pointer());
-                                                                                  
+        global_tree->get_gpu_handle()->get_device_pointer(),
+        axons->get_gpu_handle()->get_device_pointer(),
+        extra_infos->get_gpu_handle()->get_device_pointer(),
+        Kernel<BarnesHutCell>::get_gpu_handle()->get_device_pointer());
+
     PlasticLocalSynapses cpu_synapses(gpu_synapses.size(), PlasticLocalSynapse(NeuronID(0), NeuronID(0), 0));
 
     auto convert_gpu_synapse_to_cpu = [](const gpu::Synapse& synapse) -> PlasticLocalSynapse {
